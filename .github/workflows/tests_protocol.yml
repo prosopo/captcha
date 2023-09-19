@@ -14,7 +14,7 @@ env:
     GH_TOKEN: ${{ github.token }}
 
 jobs:
-    build:
+    required:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
