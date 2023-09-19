@@ -7,8 +7,8 @@ on:
 
 env:
     CARGO_TERM_COLOR: always
-    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
+    NODE_ENV: test
 
 jobs:
     check:
@@ -47,7 +47,7 @@ jobs:
             # run typechain
             - run: npm run -w @prosopo/scripts build
             - run: npm run -w @prosopo/scripts cli -- import_all_contracts
-            
+
             # build all packages in workspace
             - run: npm run build:all
 
@@ -62,8 +62,7 @@ jobs:
                   cp demos/client-example/env.development demos/client-example/.env.test
                   cp dev/scripts/env.test dev/scripts/.env.test
                   cp dev/scripts/env.test packages/cli/.env.test
-                  echo "NODE_ENV=test" >> $GITHUB_ENV
-                  echo $NODE_ENV
+                  echo NODE_ENV: $NODE_ENV
 
             - run: npm run deploy_protocol
             - run: npm run deploy_dapp
