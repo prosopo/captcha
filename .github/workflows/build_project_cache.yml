@@ -1,6 +1,6 @@
 name: build_project_cache
 
-# on push to main when contract code has changed
+# on push to main, or manually triggered
 # we do this because any branch can use caches built on main, whereas caches built on other branches are only available to that branch and its children
 on:
     push:
