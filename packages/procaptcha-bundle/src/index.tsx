@@ -13,16 +13,18 @@
 // limitations under the License.
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
+import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+import React from 'react'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
         siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || ''
     }
     return {
-        logLevel: LogLevel.Info,
+        logLevel: LogLevel.enum.info,
         defaultEnvironment:
             (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         userAccountAddress: '',
@@ -40,8 +42,18 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
                 },
                 accounts: [],
             },
+            [EnvironmentTypesSchema.enum.rococo]: {
+                endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
+                contract: {
+                    address:
+                        process.env.PROTOCOL_CONTRACT_ADDRESS || '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u',
+                    name: 'prosopo',
+                },
+                accounts: [],
+            },
         },
         solutionThreshold: 80,
+        serverUrl: process.env.SERVER_URL || '',
     }
 }
 
@@ -56,34 +68,44 @@ function getParentForm(element: Element): HTMLFormElement | null {
     return null
 }
 
-export function render() {
+export function render(callbacks?: ProcaptchaCallbacks) {
     const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
-    const siteKey = elements[0].getAttribute('data-sitekey') || undefined
+    const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
     const config = getConfig(siteKey)
-    console.log('Config', config)
+    if (!callbacks) {
+        callbacks = {}
+    }
+
     for (const element of elements) {
-        const callbacks = {
-            // add a listener to the onSubmit event of the parent form of element, appending the payload as
-            // procaptcha-response
-            onHuman: (payload: ProcaptchaOutput) => {
+        // get the custom callback functions for procaptcha events, if set
+        for (const callbackName of ProcapchaEventNames) {
+            const dataCallbackName = `data-${callbackName.toLowerCase()}` // e.g. data-onhuman
+            const callback = element.getAttribute(dataCallbackName)
+            if (callback) {
+                callbacks[callbackName] = (window as any)[callback.replace('window.', '')]
+            }
+        }
+        // get the custom theme, if set
+        const customTheme = element.getAttribute(`data-custom-theme`)
+        if (customTheme) {
+            config['sx'] = JSON.parse(customTheme)
+        }
+
+        // set a default callback for onHuman, if not set
+        if (!callbacks['onHuman']) {
+            // append the prosopo payload to the containing form
+            callbacks['onHuman'] = function (payload: ProcaptchaOutput) {
                 // get form
                 const form = getParentForm(element)
                 // add a listener to the onSubmit event of the form
                 if (form) {
-                    form.addEventListener('submit', (event) => {
-                        event.preventDefault()
-                        // add the payload to the form
-                        const input = document.createElement('input')
-                        input.type = 'hidden'
-                        ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
-                        form.appendChild(input)
-                        // submit the form
-                        const procaptchaEvent = new Event('procaptchaSubmit')
-                        // Dispatch the event.
-                        element.dispatchEvent(procaptchaEvent)
-                    })
+                    // add the payload to the form
+                    const input = document.createElement('input')
+                    input.type = 'hidden'
+                    ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
+                    form.appendChild(input)
                 }
-            },
+            }
         }
         const root = createRoot(element)
         root.render(<Procaptcha config={config} callbacks={callbacks} />) //wrap in fn and give user access to func
@@ -91,7 +113,7 @@ export function render() {
 }
 
 //https://stackoverflow.com/questions/41174095/do-i-need-to-use-onload-to-start-my-webpack-bundled-code
-export default function ready(fn) {
+export default function ready(fn: () => void) {
     if (document && document.readyState != 'loading') {
         console.log('document.readyState ready!')
         fn()

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
-import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
-import { expect } from 'chai'
+import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../..'
+import { beforeAll, describe, expect, test } from 'vitest'
 import { hexHashArray } from '@prosopo/common'
-import { it } from 'mocha'
 
 async function getDataset(): Promise<Dataset> {
     return {
@@ -57,13 +56,13 @@ async function getDataset(): Promise<Dataset> {
 
 describe('DATASETS MERKLE TREE', async function () {
     let DATASET: Dataset
-    before(async () => {
+    beforeAll(async () => {
         DATASET = await getDataset()
         DATASET.captchas[0].solution = matchItemsToSolutions([1, 2], DATASET.captchas[0].items)
         DATASET.captchas[1].solution = matchItemsToSolutions([2], DATASET.captchas[1].items)
     })
 
-    it('Tree contains correct leaf hashes when computing leaf hashes', () => {
+    test('Tree contains correct leaf hashes when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
@@ -76,7 +75,7 @@ describe('DATASETS MERKLE TREE', async function () {
             '0xfd248874ff5b5606fbad7f2327a31e7ca8833f9f4c8f9afedc3b6483d9866abc',
         ])
     })
-    it('Tree root is correct when computing leaf hashes', () => {
+    test('Tree root is correct when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
@@ -84,7 +83,7 @@ describe('DATASETS MERKLE TREE', async function () {
         tree.build(captchaHashes)
         expect(tree.root!.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
     })
-    it('Tree proof works when computing leaf hashes', () => {
+    test('Tree proof works when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
@@ -98,7 +97,7 @@ describe('DATASETS MERKLE TREE', async function () {
 
         expect(tree.layers[2].indexOf(layerOneHash) > -1)
     })
-    it('Tree contains correct leaf hashes when not computing leaf hashes', () => {
+    test('Tree contains correct leaf hashes when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
@@ -106,13 +105,13 @@ describe('DATASETS MERKLE TREE', async function () {
 
         expect(leafHashes).to.deep.equal(['1', '2', '3'])
     })
-    it('Tree root is correct when not computing leaf hashes', () => {
+    test('Tree root is correct when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
         expect(tree.root!.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
     })
-    it('Tree proof works when not computing leaf hashes', () => {
+    test('Tree proof works when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
@@ -135,7 +134,7 @@ describe('DATASETS MERKLE TREE', async function () {
         expect(proof2.length).to.equal(proof1.length)
     })
 
-    it('Larger tree proof works', () => {
+    test('Larger tree proof works', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16'])
@@ -152,7 +151,7 @@ describe('DATASETS MERKLE TREE', async function () {
         expect(proof[proof.length - 1].length).to.equal(1)
     })
 
-    it('Larger odd tree proof works', () => {
+    test('Larger odd tree proof works', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17'])
@@ -169,7 +168,7 @@ describe('DATASETS MERKLE TREE', async function () {
         expect(proof[proof.length - 1].length).to.equal(1)
     })
 
-    it('Tree proof works when there is only one leaf', () => {
+    test('Tree proof works when there is only one leaf', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1'])

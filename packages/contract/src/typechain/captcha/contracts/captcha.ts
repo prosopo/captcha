@@ -14,13 +14,13 @@
 /* This file is auto-generated */
 
 import { Abi } from '@polkadot/api-contract'
-import { ContractAbi } from '../contract-info/captcha'
+import { ContractAbi } from '../contract-info/captcha.js'
 import { ContractPromise } from '@polkadot/api-contract'
-import BuildExtrinsicMethods from '../build-extrinsic/captcha'
-import EventsClass from '../events/captcha'
-import MixedMethods from '../mixed-methods/captcha'
-import QueryMethods from '../query/captcha'
-import TxSignAndSendMethods from '../tx-sign-and-send/captcha'
+import BuildExtrinsicMethods from '../build-extrinsic/captcha.js'
+import EventsClass from '../events/captcha.js'
+import MixedMethods from '../mixed-methods/captcha.js'
+import QueryMethods from '../query/captcha.js'
+import TxSignAndSendMethods from '../tx-sign-and-send/captcha.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
 

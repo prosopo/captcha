@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { hexToU8a } from '@polkadot/util'
+import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import { stdin } from 'process'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
-import yargs from 'yargs'
+import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
 
 const contractSrcFileExtension = '.rs'
-
+const dir = path.resolve()
 // string to string map of env variables
 interface Env {
     [key: string]: string
@@ -147,9 +148,9 @@ const exec = (
 }
 
 export async function processArgs(args: string[]) {
-    const repoDir = path.join(__dirname, '../..')
-    const contractsDir = path.join(__dirname, '../../contracts')
-    const cratesDir = path.join(__dirname, '../../crates')
+    const repoDir = path.join(dir, '../..')
+    const contractsDir = path.join(dir, '../contracts')
+    const cratesDir = path.join(dir, '../crates')
     const crates = readdirSync(cratesDir, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
@@ -169,7 +170,7 @@ export async function processArgs(args: string[]) {
     // console.log(`cratesDir: ${cratesDir}`)
     // console.log(`outputDir: ${outputDir}`)
 
-    const addContractOption = (yargs: yargs.Argv, customContracts?: string[]) => {
+    const addContractOption = (yargs: Argv, customContracts?: string[]) => {
         return yargs.option('contract', {
             type: 'array',
             demand: false,
@@ -179,7 +180,7 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const addToolchainOption = (yargs: yargs.Argv) => {
+    const addToolchainOption = (yargs: Argv) => {
         return yargs.option('toolchain', {
             type: 'string',
             demand: false,
@@ -188,7 +189,7 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const addDockerOption = (yargs: yargs.Argv) => {
+    const addDockerOption = (yargs: Argv) => {
         return yargs.option('docker', {
             type: 'string',
             demand: false,
@@ -196,7 +197,7 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, dir?: string) => {
+    const execCargo = async (argv: ArgumentsCamelCase, cmd: string, dir?: string) => {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
@@ -253,7 +254,7 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    await yargs
+    await yargs(hideBin(args))
         .usage(
             `Usage: $0 [global options] <command> [options]
 
@@ -321,10 +322,8 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                for (const contract of contracts) {
-                    await exec(
-                        `cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${argv._}`
-                    )
+                for (const contract in contracts) {
+                    await exec(`cd ${contractsDir}/${contract} && cargo contract instantiate ${argv._}`)
                 }
             },
             []
@@ -371,6 +370,9 @@ Cargo pass-through commands:
                 const cmd = argv._[0] // the first arg (the command)
                 if (!cmd) {
                     throw new Error('No command specified')
+                }
+                if (!cmd.toString().match(/^[a-z0-9]+/gims)) {
+                    throw new Error(`unknown command: ${cmd}`)
                 }
                 await execCargo(argv, cmd.toString())
             },

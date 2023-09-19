@@ -1,28 +1,34 @@
 {
     "name": "@prosopo/procaptcha-bundle",
-    "version": "0.1.17",
+    "version": "0.1.18",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
+    "type": "module",
     "types": "./dist/index.d.ts",
-    "source": "./src/index.ts",
+    "source": "./src/index.tsx",
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "start": "webpack serve --mode development",
-        "build:webpack:prod": "webpack --mode production",
-        "build:webpack:prod:copy": "webpack --mode production && cp dist/procaptcha_bundle.main.bundle.js ../../demos/client-bundle-example/src",
-        "build:webpack:dev": "webpack --mode development",
-        "build:webpack:dev:copy": "webpack --mode development && cp dist/procaptcha_bundle.main.bundle.js ../../demos/client-bundle-example/src",
+        "start": "vite serve --mode development --host",
+        "build:dev": "npm run build && vite build --mode development --debug",
+        "build:prod": "npm run build && vite build --mode production",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@prosopo/common": "^0.1.17",
-        "@prosopo/procaptcha-react": "^0.1.17"
+        "@emotion/react": "^11.11.1",
+        "@emotion/styled": "^11.11.0",
+        "@mui/icons-material": "^5.14.3",
+        "@mui/material": "^5.14.5",
+        "@prosopo/common": "^0.1.18",
+        "@prosopo/procaptcha": "^0.1.18",
+        "@prosopo/procaptcha-react": "^0.1.18",
+        "@prosopo/types": "^0.1.18",
+        "@prosopo/util": "^0.1.18"
     },
     "repository": {
         "type": "git",
@@ -37,41 +43,12 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
-        "@babel/core": "^7.21.5",
-        "@babel/plugin-proposal-class-properties": "^7.18.6",
-        "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
-        "@babel/preset-env": "^7.21.5",
-        "@babel/preset-react": "^7.18.6",
-        "@babel/preset-typescript": "^7.21.5",
-        "@rollup/plugin-babel": "^6.0.3",
-        "@rollup/plugin-commonjs": "^24.1.0",
-        "@rollup/plugin-node-resolve": "^15.0.2",
-        "@types/react": "^18.2.7",
-        "@types/react-dom": "^18.2.4",
-        "@typescript-eslint/eslint-plugin": "^5.59.5",
-        "@typescript-eslint/parser": "^5.30.7",
-        "babel-loader": "^9.1.2",
-        "babel-plugin-lodash": "^3.3.4",
-        "compression-webpack-plugin": "^10.0.0",
-        "css-loader": "^6.7.3",
-        "dotenv-webpack": "^8.0.1",
-        "eslint": "^8.40.0",
-        "eslint-config-prettier": "^8.5.0",
-        "eslint-plugin-prettier": "^4.2.1",
-        "eslint-plugin-unused-imports": "^2.0.0",
-        "eslint-webpack-plugin": "^4.0.1",
-        "html-webpack-plugin": "^5.5.1",
-        "mini-css-extract-plugin": "^2.7.5",
-        "parcel": "^2.8.3",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "style-loader": "^3.3.2",
-        "terser-webpack-plugin": "^5.3.7",
-        "typescript": "^4.7.4",
-        "webpack": "^5.82.0",
-        "webpack-bundle-analyzer": "^4.8.0",
-        "webpack-dev-server": "^4.13.3",
-        "webpack-json-access-optimizer": "^1.1.0",
-        "webpack-cli": "^5.1.1"
+        "@originjs/vite-plugin-commonjs": "^1.0.3",
+        "@prosopo/config": "^0.1.18",
+        "@rollup/plugin-typescript": "^11.1.2",
+        "@vitejs/plugin-react": "^4.0.4",
+        "tslib": "^2.6.2",
+        "typescript": "^5.1.6",
+        "webpack-merge": "^5.9.0"
     }
 }

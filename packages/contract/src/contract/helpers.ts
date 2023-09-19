@@ -30,9 +30,8 @@ import { Bytes } from '@polkadot/types-codec'
 import { Compact } from '@polkadot/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Logger, capitaliseFirstLetter } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { ProsopoContractError } from '../handlers.js'
 import { Registry } from '@polkadot/types-codec/types/registry'
-import { Weight } from '@polkadot/types/interfaces/runtime/index'
 
 /**
  * Get the event name from the contract method name
@@ -86,11 +85,10 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
 /** Handle errors returned from contract queries by throwing them
  */
 export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
-    const isOk = 'isOk'
-    const asOk = 'asOk'
     if (response.output) {
-        if (response.output[isOk]) {
-            const responseOk = response.output[asOk]
+        const out: any = response.output
+        if (out.isOk) {
+            const responseOk = out.asOk
             if (responseOk.isErr) {
                 throw new ProsopoContractError(responseOk.toPrimitive().err.toString(), contractMethodName, {})
             }
@@ -117,9 +115,15 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         .filter(
             ({ event }) =>
                 function () {
+                    const data = event.toPrimitive().data
+                    if (data instanceof Array) {
+                        return false
+                    }
+                    if (!(data instanceof Object)) {
+                        return false
+                    }
                     return (
-                        event.toPrimitive().section === 'contracts' &&
-                        event.toPrimitive().data!['contract'] === contractAddress.toString()
+                        event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
                     )
                 }
         )
@@ -166,12 +170,12 @@ export function getOptions(
     api: ApiBase<'promise'>,
     isMutating?: boolean,
     value?: number | BN,
-    gasLimit?: Weight | WeightV2,
+    gasLimit?: WeightV2,
     storageDeposit?: StorageDeposit,
     increaseGas?: boolean
 ): ContractOptions {
     const gasIncreaseFactor = increaseGas ? GAS_INCREASE_FACTOR : 1
-    const _gasLimit: Weight | WeightV2 | undefined = gasLimit
+    const _gasLimit: WeightV2 | undefined = gasLimit
         ? api.registry.createType('WeightV2', {
               refTime: gasLimit.refTime.toBn().muln(gasIncreaseFactor),
               proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),

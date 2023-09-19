@@ -14,15 +14,16 @@
 import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'http'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { loadEnv } from './env'
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
-import express from 'express'
+import esMain from 'es-main'
+import express, { NextFunction, Request, Response } from 'express'
 
 let apiAppSrv: Server
 
-export const handleErrors = (err: ProsopoApiError, req, res, next) => {
+export const handleErrors = (err: ProsopoApiError, req: Request, res: Response, next: NextFunction) => {
     let message = err.message
     try {
         message = JSON.parse(err.message)
@@ -36,6 +37,7 @@ export const handleErrors = (err: ProsopoApiError, req, res, next) => {
 }
 
 function startApi(env: ProviderEnvironment) {
+    env.logger.info(`Starting Prosopo API`)
     const apiApp = express()
     const apiPort = env.config.server.port
 
@@ -70,7 +72,7 @@ function stop() {
     apiAppSrv.close()
 }
 //if main process
-if (typeof require !== undefined && require.main === module) {
+if (esMain(import.meta)) {
     start().catch((error) => {
         console.error(error)
     })

@@ -1,4 +1,4 @@
-import { argsSchema as parentSchema } from '../args'
+import { argsSchema as parentSchema } from '../args.js'
 // Args for generating a dataset
 
 import { z } from 'zod'

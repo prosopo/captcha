@@ -24,9 +24,9 @@ import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
-import { Tasks } from '../tasks/tasks'
+import { Tasks } from '../tasks/tasks.js'
 import { UserCommitmentRecord } from '@prosopo/types-database'
-import { parseBlockNumber } from '../util'
+import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto'
 import express, { Router } from 'express'
@@ -53,8 +53,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         async (req, res, next) => {
             try {
                 const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
-
-                validateAddress(user, false, env.api.registry.chainSS58)
+                const api = env.api
+                if (api === undefined) {
+                    throw new Error('api not setup')
+                }
+                validateAddress(user, false, api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
                 await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
@@ -69,7 +72,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 }))
                 return res.json(taskData)
             } catch (err) {
-                return next(new ProsopoApiError(err, undefined, 400))
+                // TODO fix error handling
+                return next(new ProsopoApiError(err as Error, undefined, 400))
             }
         }
     )
@@ -87,7 +91,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
 
         try {
@@ -103,7 +108,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 ...result,
             })
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
@@ -118,7 +124,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
         try {
             let solution: UserCommitmentRecord | undefined
@@ -145,7 +152,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 solutionApproved: false,
             })
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
@@ -157,7 +165,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const status = await tasks.providerStatus()
             return res.json({ status })
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
@@ -169,7 +178,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const details = await tasks.getProviderDetails()
             return res.json(details)
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 

@@ -15,6 +15,7 @@ import './App.css'
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react/dist/components'
+import { LogLevel } from '@prosopo/common'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { useState } from 'react'
 
@@ -37,14 +38,53 @@ function App() {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const serverUrl = process.env.REACT_APP_SERVER_URL || ''
+    const config: ProcaptchaConfigOptional = {
+        logLevel: LogLevel.enum.info,
+        userAccountAddress: account,
+        account: {
+            address: process.env.REACT_APP_DAPP_SITE_KEY || '',
+        },
+        web2: process.env.REACT_APP_WEB2 === 'true',
+        dappName: 'client-example',
+        defaultEnvironment:
+            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+        accountCreator: {
+            area: { width: 300, height: 300 },
+            offsetParameter: 2001000001,
+            multiplier: 15000,
+            fontSizeFactor: 1.5,
+            maxShadowBlur: 50,
+            numberOfRounds: 5,
+            seed: 42,
+        },
+        networks: {
+            development: {
+                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || '',
+                contract: {
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
+                    name: 'prosopo',
+                },
+                accounts: [],
+            },
+            rococo: {
+                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'wss://rococo-contracts-rpc.polkadot.io:443',
+                contract: {
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
+                    name: 'prosopo',
+                },
+                accounts: [],
+            },
+        },
+        solutionThreshold: 80,
+        serverUrl: process.env.REACT_APP_SERVER_URL || '',
+    }
 
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
-    const onLoggedIn = (token) => {
+    const onLoggedIn = (token: string) => {
         console.log('getting private resource with token ', token)
-        fetch(`${serverUrl}/private`, {
+        fetch(`${config.serverUrl}/private`, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -78,7 +118,7 @@ function App() {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(`${serverUrl}/${urlPath}`, {
+        fetch(`${config.serverUrl}/${urlPath}`, {
             method: 'POST',
             headers: {
                 ...corsHeaders,
@@ -136,43 +176,6 @@ function App() {
 
     const onExpired = () => {
         alert('Challenge has expired')
-    }
-
-    const config: ProcaptchaConfigOptional = {
-        userAccountAddress: account,
-        account: {
-            address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
-        },
-        web2: process.env.REACT_APP_WEB2 === 'true',
-        dappName: 'client-example',
-        defaultEnvironment:
-            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        accountCreator: {
-            area: { width: 300, height: 300 },
-            offsetParameter: 2001000001,
-            multiplier: 15000,
-            fontSizeFactor: 1.5,
-            maxShadowBlur: 50,
-            numberOfRounds: 5,
-            seed: 42,
-        },
-        networks: {
-            development: {
-                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
-                contract: {
-                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
-                    name: 'prosopo',
-                },
-            },
-            rococo: {
-                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'wss://rococo-contracts-rpc.polkadot.io:443',
-                contract: {
-                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
-                    name: 'prosopo',
-                },
-            },
-        },
-        solutionThreshold: 80,
     }
 
     return (

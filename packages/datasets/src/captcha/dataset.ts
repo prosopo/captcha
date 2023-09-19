@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
-import { CaptchaMerkleTree } from './merkle'
-import { ProsopoEnvError } from '@prosopo/common'
-import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
+import { CaptchaMerkleTree } from './merkle.js'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
+import { at } from '@prosopo/util'
+import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
+
+const logger = getLogger(`Info`, `dataset.ts`)
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     return datasetRaw.captchas.map(async (captcha) => {
@@ -44,7 +47,7 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
             'captchaId' in captchaRaw ? captchaRaw.captchaId === captcha.captchaId : false
         )
         if (captchaRaw) {
-            return captcha.items.every((item, index) => item.hash === captchaRaw.items[index].hash)
+            return captcha.items.every((item, index) => item.hash === at(captchaRaw.items, index).hash)
         } else {
             return false
         }
@@ -54,19 +57,20 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
+    logger.info(`Adding solution hashes to dataset`)
     const dataset = await addSolutionHashesToDataset(datasetRaw)
-
+    logger.info(`Building dataset merkle trees`)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
         (captcha: CaptchaWithoutId, index: number) =>
             ({
                 ...captcha,
-                captchaId: solutionTree.leaves[index].hash,
-                captchaContentId: contentTree.leaves[index].hash,
+                captchaId: at(solutionTree.leaves, index).hash,
+                captchaContentId: at(contentTree.leaves, index).hash,
                 datasetId: solutionTree.root?.hash,
                 datasetContentId: contentTree.root?.hash,
-            } as Captcha)
+            }) as Captcha
     )
     dataset.solutionTree = solutionTree.layers
     dataset.contentTree = contentTree.layers

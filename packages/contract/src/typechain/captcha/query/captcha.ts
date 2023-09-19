@@ -14,8 +14,8 @@
 /* This file is auto-generated */
 
 import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
-import type * as ArgumentTypes from '../types-arguments/captcha'
-import type * as ReturnTypes from '../types-returns/captcha'
+import type * as ArgumentTypes from '../types-arguments/captcha.js'
+import type * as ReturnTypes from '../types-returns/captcha.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'
@@ -23,8 +23,10 @@ import type { QueryReturnType } from '@727-ventures/typechain-types'
 import type BN from 'bn.js'
 //@ts-ignore
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { getTypeDescription } from './../shared/utils'
-import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json'
+import { getTypeDescription } from '../shared/utils.js'
+import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json' assert {
+    type: 'json'
+}
 
 export default class Methods {
     readonly __nativeContract: ContractPromise

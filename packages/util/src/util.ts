@@ -3,7 +3,7 @@ import seedrandom from 'seedrandom'
 
 // set the seed for the global rng, i.e. seed `Math.random()`
 export const setSeedGlobal = (seed: number | string) => {
-    seedrandom(seed, { global: true })
+    seedrandom(seed.toString(), { global: true })
 }
 
 // create a new lodash instance with the current Math.random() and other global state
@@ -16,7 +16,7 @@ export const seedLodash = (seed: number | string) => {
     // take a snapshot of the current Math.random() fn
     const orig = Math.random
     // replace Math.random with the seeded random
-    seedrandom(seed, { global: true })
+    seedrandom(seed.toString(), { global: true })
     // runInContext() creates a new lodash instance using the seeded Math.random()
     // the context is a snapshot of the state of the global javascript environment, i.e. Math.random() updated to the seedrandom instance
     const lodash = _lodash.runInContext()
@@ -28,7 +28,7 @@ export const seedLodash = (seed: number | string) => {
 
 // create a new rng with the given seed
 export const rng = (seed: number | string) => {
-    const rng = seedrandom(seed)
+    const rng = seedrandom(seed.toString())
     return {
         double: () => rng.double(),
         float: () => rng.quick(),
@@ -90,4 +90,93 @@ export function* permutations(
         }
         i = arr.length - 1
     }
+}
+
+// Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
+// Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
+export const at = <T>(
+    arr: T[],
+    i: number,
+    options: {
+        required?: boolean // whether to allow undefined elements in the array
+        checkBounds?: boolean // whether to check the index against the bounds of the array
+        wrap?: boolean // whether to wrap the index around the bounds of the array
+    } = {
+        required: true,
+        checkBounds: true,
+        wrap: false,
+    }
+): T => {
+    if (options.wrap) {
+        if (arr.length !== 0) {
+            i %= arr.length
+        }
+        if (i < 0) {
+            i += arr.length
+        }
+    }
+    if (options.checkBounds) {
+        if (i >= arr.length || i < 0) {
+            throw new Error(
+                `Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
+            )
+        }
+    }
+    const el = arr[i]
+    if (options.required && el === undefined) {
+        throw new Error(
+            `Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
+        )
+    }
+    return el as T
+}
+
+export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
+export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
+export function get<V>(obj: unknown, key: unknown, required?: true): V
+export function get<T, V>(obj: T, key: unknown, required = true): V {
+    const value = obj[key as unknown as keyof T]
+    if (required && value === undefined) {
+        throw new Error(`Object has no property '${String(key)}': ${JSON.stringify(obj, null, 2)}`)
+    }
+    return value as V
+}
+
+export const choice = <T>(
+    items: T[],
+    n: number,
+    random: () => number,
+    options?: {
+        withReplacement?: boolean
+    }
+): {
+    choices: T[]
+    indices: number[]
+} => {
+    if (n > items.length) {
+        throw new Error(`n (${n}) cannot be greater than items.length (${items.length})`)
+    }
+    options = options || {}
+
+    const indicesSet = new Set<number>()
+    const indices: number[] = []
+    const choices: T[] = []
+    while (indices.length < n) {
+        const index = Math.abs(Math.round(random())) % items.length
+        // with replacement == allow duplicates
+        // without replacement == don't allow duplicates
+        if (options.withReplacement || indicesSet.add(index)) {
+            indices.push(index)
+            choices.push(at(items, index, { required: false }))
+        }
+    }
+
+    return {
+        choices,
+        indices,
+    }
+}
+
+export function getCurrentFileDirectory(url: string) {
+    return new URL(url).pathname.split('/').slice(0, -1).join('/')
 }

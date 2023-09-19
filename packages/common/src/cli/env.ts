@@ -14,7 +14,7 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { ProsopoEnvError } from '../error'
+import { ProsopoEnvError } from '../error.js'
 import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
 import { hexToU8a, isHex } from '@polkadot/util'
 

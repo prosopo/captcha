@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // export * from './build-extrinsic'
-// export * from './constructors'
+// export * from './constructors.js'
 // export * from './contract-info'
-export * from './contracts'
-import { ContractAbi } from './contract-info'
+export * from './contracts/index.js'
+import { ContractAbi } from './contract-info/index.js'
 export const abiJson = JSON.parse(ContractAbi)
 // export * from './event-data'
 // export * from './event-types'
-// export * from './events'
+// export * from './events.js'
 // export * from './mixed-methods'
-// export * from './query'
-// export * from './shared'
+// export * from './query.js'
+// export * from './shared.js'
 // export * from './tx-sign-and-send'
 // export * from './types-arguments'
 // export * from './types-returns'

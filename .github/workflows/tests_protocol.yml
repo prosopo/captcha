@@ -7,13 +7,14 @@ on:
         paths:
             - 'protocol/**'
             - '.github/workflows/**'
+    workflow_dispatch:
 
 env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
 
 jobs:
-    build:
+    check:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3

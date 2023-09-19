@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
-import { ContractPromise } from '@polkadot/api-contract'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { DispatchError, Event } from '@polkadot/types/interfaces'
 import { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
 import { Logger } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { ProsopoContractError } from '../handlers.js'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers'
-import { oneUnit } from '../balances'
+import { at } from '@prosopo/util'
+import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
+import { oneUnit } from '../balances/index.js'
+
 /**
  * Batch commits an array of transactions to the contract
  * @param contract
@@ -67,20 +69,23 @@ export async function batch(
             const extrinsicSuccess = result.events.filter((e) => e.event.method === 'ExtrinsicSuccess')
             if (tooManyCallsEvent.length > 0) {
                 logger.error('Too many calls')
-                const message = formatEvent(tooManyCallsEvent[0].event)
+                const item = at(tooManyCallsEvent, 0)
+                const message = formatEvent(item.event)
                 reject(new ProsopoContractError(message))
             }
 
             if (batchInterruptedEvent.length > 0) {
                 logger.error('Batch interrupted')
-                const message = formatBatchInterruptedEvent(batchInterruptedEvent[0].event)
+                const item = at(batchInterruptedEvent, 0)
+                const message = formatBatchInterruptedEvent(item.event)
                 reject(new ProsopoContractError(message))
             }
 
             if (result.status.isFinalized || result.status.isInBlock) {
                 unsub()
                 const events = filterAndDecodeContractEvents(result, contract.abi, logger)
-                logger.debug('extrinsicSuccess', JSON.stringify(extrinsicSuccess[0].toHuman(), null, 4))
+                const item = at(extrinsicSuccess, 0)
+                logger.debug('extrinsicSuccess', JSON.stringify(item.toHuman(), null, 4))
                 logger.debug('block number', result.blockNumber?.toString())
                 logger.debug('events', events)
                 const balance = await contract.api.query.system.account(pair.address)
@@ -100,5 +105,6 @@ export async function batch(
 
 // Get the error from inside the batch interrupted event
 function formatBatchInterruptedEvent({ data: [index, error] }: Event): string {
-    return `error: ${index.toString()}: ${getDispatchError(error as DispatchError)}`
+    const err = index === undefined ? 'unknown' : index.toString()
+    return `error: ${err}: ${getDispatchError(error as DispatchError)}`
 }

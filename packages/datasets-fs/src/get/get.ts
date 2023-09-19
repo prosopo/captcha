@@ -1,5 +1,7 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { get } from '@prosopo/util'
+import { z } from 'zod'
 import fetch from 'node-fetch'
 import fs from 'fs'
 
@@ -8,7 +10,7 @@ export default async (args: Args, loggerOpt?: Logger) => {
 
     logger.debug(args, 'getting...')
 
-    const traverse = async (data: JSON) => {
+    const traverse = async (data: any) => {
         if (data instanceof Array) {
             for (let i = 0; i < data.length; i++) {
                 data[i] = await traverse(data[i])
@@ -16,7 +18,8 @@ export default async (args: Args, loggerOpt?: Logger) => {
         } else if (data instanceof Object) {
             for (const key of Object.keys(data)) {
                 if (key == 'data') {
-                    const url = data[key]
+                    const value = get(data, key)
+                    const url = z.string().parse(value)
                     if (url.startsWith('http')) {
                         try {
                             const response = await fetch(url)
@@ -38,7 +41,7 @@ export default async (args: Args, loggerOpt?: Logger) => {
                         }
                     }
                 } else {
-                    await traverse(data[key])
+                    await traverse(get(data, key))
                 }
             }
         }
@@ -51,6 +54,6 @@ export default async (args: Args, loggerOpt?: Logger) => {
     }
 
     // read the map file
-    const data: JSON = JSON.parse(fs.readFileSync(file, 'utf8'))
+    const data: any = JSON.parse(fs.readFileSync(file, 'utf8'))
     await traverse(data)
 }

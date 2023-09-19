@@ -1,26 +1,28 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
-import flatten from './flatten/cli'
-import generate from './generate/cli'
-import get from './get/cli'
-import labels from './labels/cli'
-import relocate from './relocate/cli'
-import scale from './scale/cli'
+import esMain from 'es-main'
+import flatten from './flatten/cli.js'
+import generate from './generate/cli.js'
+import get from './get/cli.js'
+import labels from './labels/cli.js'
+import process from 'process'
+import relocate from './relocate/cli.js'
+import scale from './scale/cli.js'
 import yargs from 'yargs'
-
-const logger = getLogger(LogLevel.Info, `${__dirname}/${__filename}`)
+const dirname = process.cwd()
+const logger = getLogger(LogLevel.enum.info, `${dirname}`)
 
 const main = async () => {
     await yargs(hideBin(process.argv))
         .help()
         .option('log-level', {
             type: 'string',
-            choices: Object.values(LogLevel),
-            default: LogLevel.Info,
+            choices: Object.values(LogLevel.options),
+            default: LogLevel.enum.info,
             description: 'The log level',
         })
-        .middleware((argv) => {
-            logger.setLogLevel(argv.logLevel as unknown as LogLevel)
+        .middleware((argv: any) => {
+            logger.setLogLevel(argv.logLevel)
         })
         .command(generate({ logger }))
         .command(flatten({ logger }))
@@ -35,7 +37,7 @@ const main = async () => {
 }
 
 //if main process
-if (typeof require !== 'undefined' && require.main === module) {
+if (esMain(import.meta)) {
     main()
         .then(() => {
             logger.debug('done')

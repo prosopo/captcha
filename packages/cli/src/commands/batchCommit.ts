@@ -1,12 +1,13 @@
-import { Argv } from 'yargs'
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { BatchCommitmentsTask } from '@prosopo/provider'
-import { Logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { cwd } from 'process'
-import { validateScheduleExpression } from './validators'
-import pm2 from 'pm2'
-export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
+import { validateScheduleExpression } from './validators.js'
+
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.batch_commit')
     return {
         command: 'batch_commit',
         describe: 'Batch commit user solutions to contract' as const,
@@ -17,37 +18,16 @@ export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
                 desc: 'A Recurring schedule expression',
             } as const)
         },
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
+            const env = new ProviderEnvironment(pair, config)
+            await env.isReady()
             if (argv.schedule) {
-                pm2.connect((err) => {
-                    if (err) {
-                        console.error(err)
-                        process.exit(2)
-                    }
-
-                    pm2.start(
-                        {
-                            script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
-                            name: 'scheduler',
-                            cwd: cwd() + '/dist/src',
-                        },
-                        (err, apps) => {
-                            if (err) {
-                                console.error(err)
-
-                                return pm2.disconnect()
-                            }
-
-                            logger.info(apps)
-                            process.exit()
-                        }
-                    )
-                })
+                throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
             } else {
                 if (env.db) {
                     const batchCommitter = new BatchCommitmentsTask(
                         env.config.batchCommit,
-                        env.contractInterface,
+                        env.getContractInterface(),
                         env.db,
                         0n,
                         env.logger
