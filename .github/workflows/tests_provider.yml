@@ -16,7 +16,7 @@ env:
     GH_TOKEN: ${{ github.token }}
 
 jobs:
-    required:
+    check:
         runs-on: ubuntu-latest
         steps:
             # Checkout the repo
