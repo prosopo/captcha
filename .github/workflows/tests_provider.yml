@@ -24,6 +24,7 @@ jobs:
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
+            
             - run: mkdir -p node_modules
             - run: mkdir -p .cache/Cypress
 
