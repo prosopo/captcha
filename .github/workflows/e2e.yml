@@ -41,7 +41,7 @@ jobs:
             - run: npm install
 
             # build contracts
-            - run: npm run -w @prosopo/protocol cli -- build
+            - run: npm run -w @prosopo/protocol-dev cli -- build
             # run typechain
             - run: npm run -w @prosopo/scripts cli -- import_all_contracts
             # build all packages in workspace
