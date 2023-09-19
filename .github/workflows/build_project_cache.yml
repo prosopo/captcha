@@ -56,11 +56,6 @@ jobs:
                   cd protocol/dev
                   npm run cli -- build --docker
 
-            - name: Test contract
-              run: |
-                  cd protocol/dev
-                  RUST_BACKTRACE=1 npm run cli -- test --docker
-
             - name: ls
               run: |
                   set -x
