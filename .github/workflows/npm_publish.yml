@@ -70,12 +70,12 @@ jobs:
             - name: Npm publish
               if: steps.bump_provider_version.outputs.BUMP == 'true'
               run: |
-                if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
-                  echo "Running on GitHub Actions"
-                  # Write the npm token to ~/.npmrc
-                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-                  echo "Publishing to npm..."
-                  npx --workspaces npm publish
-                else
-                  echo "Running locally via act, skipping npm publish."
-                fi
+                  if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
+                    echo "Running on GitHub Actions"
+                    # Write the npm token to ~/.npmrc
+                    echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+                    echo "Publishing to npm..."
+                    npx --workspaces npm publish
+                  else
+                    echo "Running locally via act, skipping npm publish."
+                  fi
