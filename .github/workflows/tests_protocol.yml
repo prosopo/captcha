@@ -6,7 +6,7 @@ on:
             - 'main'
         paths:
             - 'protocol/**'
-            - '.github/workflows/**'
+            - '.github/workflows/tests_protocol.yml'
     workflow_dispatch:
 
 env:
