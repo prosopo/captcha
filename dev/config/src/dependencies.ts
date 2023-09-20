@@ -36,11 +36,12 @@ export function getTsConfigs(
     ignorePatterns: RegExp[] = [],
     tsConfigPaths: string[] = []
 ): string[] {
+    let tsConfigs = [...tsConfigPaths]
     const references = JSON.parse(fs.readFileSync(tsConfigPath).toString()).references
-    if (!tsConfigPaths.includes(tsConfigPath)) {
+    if (!tsConfigs.includes(tsConfigPath)) {
         const ignore =
             ignorePatterns && ignorePatterns.length > 0 ? new RegExp(`${ignorePatterns.join('|')}`) : undefined
-        tsConfigPaths.push(tsConfigPath)
+        tsConfigs.push(tsConfigPath)
         if (references) {
             for (const reference of references) {
                 // ignore the packages we don't want to bundle
@@ -54,14 +55,14 @@ export function getTsConfigs(
                 if (!refTSConfigPath.endsWith('.json')) {
                     refTSConfigPath = path.resolve(refTSConfigPath, 'tsconfig.json')
                 }
-                const newTsConfigs = getTsConfigs(refTSConfigPath, ignorePatterns, tsConfigPaths)
+                const newTsConfigs = getTsConfigs(refTSConfigPath, ignorePatterns, tsConfigs)
                 if (newTsConfigs.length > 0) {
-                    tsConfigPaths = tsConfigPaths.concat()
+                    tsConfigs = tsConfigs.concat()
                 }
             }
         }
     }
-    return tsConfigPaths
+    return tsConfigs
 }
 
 /**
@@ -74,9 +75,12 @@ export function getExternalsFromReferences(tsConfigPath: string, ignorePatterns:
     const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns)
     for (const tsConfigPath of tsConfigPaths) {
         const packageJsonPath = path.resolve(tsConfigPath.replace(tsConfigRegex, ''), 'package.json')
-        const packageJson = JSON.parse(fs.readFileSync(new URL(packageJsonPath, import.meta.url)).toString())
-        const pkg = packageJson.name
-        externals.push(pkg)
+        // if package.json exists
+        if (!fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(fs.readFileSync(new URL(packageJsonPath, import.meta.url)).toString())
+            const pkg = packageJson.name
+            externals.push(pkg)
+        }
     }
     return externals
 }
