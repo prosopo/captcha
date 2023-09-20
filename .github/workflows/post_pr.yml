@@ -1,4 +1,4 @@
-name: build_project_cache
+name: post_pr
 
 # on push to main, or manually triggered
 # we do this because any branch can use caches built on main, whereas caches built on other branches are only available to that branch and its children
@@ -86,6 +86,7 @@ jobs:
                       gh actions-cache delete $cacheKey -R $REPO --confirm
                   done
 
+            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
             - name: Save cache
               uses: actions/cache/save@v3
               if: always()
