@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/common",
-    "version": "0.1.19",
+    "version": "0.2.0",
     "description": "Prosopo common library",
     "main": "./dist/index.js",
     "type": "module",
@@ -18,7 +18,7 @@
         "@polkadot/keyring": "12.3.2",
         "@polkadot/util": "12.3.2",
         "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/util": "^0.1.19",
+        "@prosopo/util": "0.2.0",
         "@types/react": "^18.0.25",
         "consola": "^3.2.3",
         "dotenv": "^16.0.1",
