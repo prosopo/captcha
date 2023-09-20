@@ -81,6 +81,7 @@ jobs:
 
             - name: Create Release
               if: steps.check_provider_image_version.outputs.bump == 'true'
+              id: create_release
               uses: actions/create-release@v1
               with:
                   tag_name: ${{ env.PROVIDER_IMAGE_VERSION }}
