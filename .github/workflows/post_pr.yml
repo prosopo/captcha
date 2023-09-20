@@ -45,6 +45,8 @@ jobs:
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
                   ls -la node_modules
+                  ls -la .cache
+                  ls -la .cache/Cypress
 
             - run: npm install
 
@@ -63,6 +65,8 @@ jobs:
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
                   ls -la node_modules
+                  ls -la .cache
+                  ls -la .cache/Cypress
 
             # remove all but the latest cache (this ensures there's at least one cache available for the next run, just in case this takes place while we're clearing up caches)
             # this means there will be the previous cache (the latest) and the current cache (the one we're building now) after this workflow finishes
