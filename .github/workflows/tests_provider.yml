@@ -109,4 +109,5 @@ jobs:
                   ls
                   sleep 30s
                   cat client-example.log
+                  npx cypress install
                   cd demos/client-example && NODE_ENV=test npm run cypress:run
