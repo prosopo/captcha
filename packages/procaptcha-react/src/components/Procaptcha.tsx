@@ -171,7 +171,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
+            <Box p={0} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
                 {' '}
                 <Box
                     p={1}
