@@ -34,14 +34,17 @@ async function getPackageDir(packageName: string): Promise<string> {
 export function getTsConfigs(
     tsConfigPath: string,
     ignorePatterns: RegExp[] = [],
-    tsConfigPaths: string[] = []
+    tsConfigPaths: string[] = [],
+    initial = false
 ): string[] {
     let tsConfigs = [...tsConfigPaths]
     const references = JSON.parse(fs.readFileSync(tsConfigPath).toString()).references
     if (!tsConfigs.includes(tsConfigPath)) {
         const ignore =
             ignorePatterns && ignorePatterns.length > 0 ? new RegExp(`${ignorePatterns.join('|')}`) : undefined
-        tsConfigs.push(tsConfigPath)
+        if (!initial) {
+            tsConfigs.push(tsConfigPath)
+        }
         if (references) {
             for (const reference of references) {
                 // ignore the packages we don't want to bundle
@@ -57,7 +60,7 @@ export function getTsConfigs(
                 }
                 const newTsConfigs = getTsConfigs(refTSConfigPath, ignorePatterns, tsConfigs)
                 if (newTsConfigs.length > 0) {
-                    tsConfigs = tsConfigs.concat()
+                    tsConfigs = [...new Set(tsConfigs.concat(newTsConfigs))]
                 }
             }
         }
@@ -70,18 +73,37 @@ export function getTsConfigs(
  * @param tsConfigPath
  * @param ignorePatterns
  */
-export function getExternalsFromReferences(tsConfigPath: string, ignorePatterns: RegExp[] = []): string[] {
-    const externals: string[] = []
-    const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns)
-    for (const tsConfigPath of tsConfigPaths) {
-        const packageJsonPath = path.resolve(tsConfigPath.replace(tsConfigRegex, ''), 'package.json')
-        // if package.json exists
-        if (!fs.existsSync(packageJsonPath)) {
-            const packageJson = JSON.parse(fs.readFileSync(new URL(packageJsonPath, import.meta.url)).toString())
-            const pkg = packageJson.name
-            externals.push(pkg)
-        }
+export async function getExternalsFromReferences(
+    tsConfigPath: string,
+    ignorePatterns: RegExp[] = []
+): Promise<string[]> {
+    const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns, [], true)
+    logger.debug('tsConfigPaths', tsConfigPaths)
+    const promises: Promise<string>[] = []
+    for (const refTsConfigPath of tsConfigPaths) {
+        const packageJsonPath = path.resolve(refTsConfigPath.replace(tsConfigRegex, ''), 'package.json')
+        promises.push(
+            new Promise((resolve, reject) => {
+                // if package.json exists, read it and get the package name
+                fs.stat(packageJsonPath, (err) => {
+                    if (err) {
+                        reject(err)
+                    }
+                    fs.readFile(new URL(packageJsonPath, import.meta.url), function (err, buffer) {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            const packageJson = JSON.parse(buffer.toString())
+                            const pkg = packageJson.name
+                            resolve(pkg)
+                        }
+                    })
+                })
+            })
+        )
     }
+    const externals = await Promise.all(promises)
+    logger.debug('externals', externals)
     return externals
 }
 

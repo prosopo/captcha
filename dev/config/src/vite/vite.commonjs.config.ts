@@ -7,9 +7,9 @@ import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
 import path from 'path'
 import tsconfigPaths from 'vite-tsconfig-paths'
 const log = getLogger(`Info`, `vite.commonjs.config.ts`)
-export default function (name: string, tsConfigPath: string, entry?: string): UserConfig {
-    log.info(`ViteCommonJSConfig: ${name}, ${tsConfigPath}, ${entry}`)
-    const projectExternal = getExternalsFromReferences(tsConfigPath, [/dev/])
+export default async function (name: string, tsConfigPath: string, entry?: string): Promise<UserConfig> {
+    log.info(`ViteCommonJSConfig: ${name}`)
+    const projectExternal = await getExternalsFromReferences(tsConfigPath, [/dev/])
     const allExternal = [...builtinModules, ...builtinModules.map((m) => `node:${m}`), ...projectExternal]
     return defineConfig({
         ssr: { external: allExternal },
@@ -24,6 +24,7 @@ export default function (name: string, tsConfigPath: string, entry?: string): Us
             VitePluginCloseAndCopy(),
         ],
         build: {
+            emptyOutDir: true,
             ssr: true,
             target: 'node16',
             outDir: 'dist/cjs',
