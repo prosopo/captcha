@@ -59,11 +59,9 @@ jobs:
                   elif [[ $NEXT_PATCH -gt $CURRENT_PATCH ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                    echo "publish_dockerhub_js_bundle=true" >> $GITHUB_OUTPUT
                   else
                     echo "no version bump detected"
-                    echo "publish_dockerhub_provider=true" >> $GITHUB_OUTPUT
-                    echo "publish_dockerhub_js_bundle=true" >> $GITHUB_OUTPUT
+                    echo "bump=false" >> $GITHUB_OUTPUT
                   fi
                   echo "PROVIDER_IMAGE_VERSION=$NEXT" >> $GITHUB_ENV
 
