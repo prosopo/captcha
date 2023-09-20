@@ -26,9 +26,9 @@
         "@polkadot/keyring": "12.3.2",
         "@polkadot/rpc-provider": "10.9.1",
         "@polkadot/types": "10.9.1",
-        "@prosopo/api": "^0.1.19",
-        "@prosopo/contract": "^0.1.19",
-        "@prosopo/procaptcha": "^0.1.19",
+        "@prosopo/api": "0.2.0",
+        "@prosopo/contract": "0.2.0",
+        "@prosopo/procaptcha": "0.2.0",
         "@prosopo/types": "^0.1.19"
     },
     "devDependencies": {

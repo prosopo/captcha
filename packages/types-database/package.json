@@ -22,8 +22,8 @@
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
         "@polkadot/types": "10.9.1",
-        "@prosopo/common": "^0.1.19",
-        "@prosopo/types": "^0.1.19",
+        "@prosopo/common": "0.2.0",
+        "@prosopo/types": "0.2.0",
         "mongodb": "5.8.0",
         "mongoose": "^7.3.3",
         "zod": "^3.17.9"
