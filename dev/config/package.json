@@ -20,7 +20,7 @@
     },
     "devDependencies": {
         "@polkadot/dev": "^0.76.11",
-        "@prosopo/util": "^0.1.17",
+        "@prosopo/util": "0.2.0",
         "@rollup/plugin-alias": "^5.0.0",
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-commonjs": "^24.1.0",
