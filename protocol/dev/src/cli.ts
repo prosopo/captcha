@@ -162,8 +162,8 @@ export async function processArgs(args: string[]) {
         ...crates.map((p) => path.join(cratesDir, p)),
         ...contracts.map((p) => path.join(contractsDir, p)),
     ]
-    const targetDir = path.join(repoDir, 'target')
-    const cargoCacheDir = path.join(repoDir, 'cargo-cache')
+    const targetDir = path.join(repoDir, 'protocol/target')
+    const cargoCacheDir = path.join(repoDir, 'protocol/cargo-cache')
 
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
