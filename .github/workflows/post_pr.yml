@@ -1,4 +1,4 @@
-name: build_project_cache
+name: post_pr
 
 # on push to main, or manually triggered
 # we do this because any branch can use caches built on main, whereas caches built on other branches are only available to that branch and its children
@@ -45,6 +45,8 @@ jobs:
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
                   ls -la node_modules
+                  ls -la .cache
+                  ls -la .cache/Cypress
 
             - run: npm install
 
@@ -63,6 +65,8 @@ jobs:
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
                   ls -la node_modules
+                  ls -la .cache
+                  ls -la .cache/Cypress
 
             # remove all but the latest cache (this ensures there's at least one cache available for the next run, just in case this takes place while we're clearing up caches)
             # this means there will be the previous cache (the latest) and the current cache (the one we're building now) after this workflow finishes
@@ -82,6 +86,7 @@ jobs:
                       gh actions-cache delete $cacheKey -R $REPO --confirm
                   done
 
+            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
             - name: Save cache
               uses: actions/cache/save@v3
               if: always()
