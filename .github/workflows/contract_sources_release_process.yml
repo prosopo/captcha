@@ -57,16 +57,16 @@ jobs:
                   # Condition 1: If version is equal to the npm version, exit successfully
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
                     echo "Condition 1: Current npm version detected. No action needed."
-                    # contract_sources_release="false"
-                    # exit 0
+                    contract_sources_release="false"
+                    exit 0
                   fi
 
                   # Condition 2: If version is less than the npm version, exit with error
                   # Note: This is technically less than or equal, but equality is checked above
                   if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
                     echo "Condition 2: Version bump required. Exiting with error."
-                    # contract_sources_release="false"
-                    # exit 1
+                    contract_sources_release="false"
+                    exit 1
                   fi
 
                   # Condition 3: If greater than npm version, consider for new release
@@ -78,7 +78,7 @@ jobs:
                       echo "Running on GitHub Actions. Continuing with Docker Hub publish."
                     else
                       echo "Running locally via act. Skipping Docker Hub publish."
-                      # contract_sources_release="false"
+                      contract_sources_release="false"
                     fi
                   fi
 
@@ -87,7 +87,6 @@ jobs:
                   echo "contract_sources_release=$contract_sources_release" >> $GITHUB_ENV
 
                   echo "::set-output name=contract_sources_release::$contract_sources_release"
-                  
 
             - name: Build the contract sources
               if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
@@ -97,7 +96,9 @@ jobs:
                   npm ci
 
                   cd protocol/dev
-                  npm run build && npm run cli -- build --docker
+                  npm run build
+                  npm run cli -- clean --docker
+                  npm run cli -- build --docker
 
                   cd ../..
 
@@ -105,46 +106,82 @@ jobs:
               if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
               uses: actions/create-release@v1
               with:
-                tag_name: ${{ env.PROVIDER_IMAGE_VERSION }}
-                release_name: Release ${{ env.PROVIDER_IMAGE_VERSION }}
-                body: Automated release of contract sources for npm version ${{ env.PROVIDER_IMAGE_VERSION }}
-                draft: false
-                prerelease: false
+                  tag_name: ${{ env.PROVIDER_IMAGE_VERSION }}
+                  release_name: Release ${{ env.PROVIDER_IMAGE_VERSION }}
+                  body: Automated release of contract sources for npm version ${{ env.PROVIDER_IMAGE_VERSION }}
+                  draft: false
+                  prerelease: false
               env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract ABI
               if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
               id: upload-release-asset-abi
               uses: actions/upload-release-asset@v1
               with:
-                upload_url: ${{ steps.create_release.outputs.upload_url }}
-                asset_path: ./protocol/target/ink/captcha/captcha.json
-                asset_name: captcha.json
-                asset_content_type: application/json
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./protocol/target/ink/captcha/captcha.json
+                  asset_name: captcha.json
+                  asset_content_type: application/json
               env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract WASM
               if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
               id: upload-release-asset-wasm
               uses: actions/upload-release-asset@v1
               with:
-                upload_url: ${{ steps.create_release.outputs.upload_url }}
-                asset_path: ./protocol/target/ink/captcha/captcha.wasm
-                asset_name: captcha.wasm
-                asset_content_type: application/octet-stream
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./protocol/target/ink/captcha/captcha.wasm
+                  asset_name: captcha.wasm
+                  asset_content_type: application/octet-stream
               env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract
               if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
               id: upload-release-asset-contract
               uses: actions/upload-release-asset@v1
               with:
-                upload_url: ${{ steps.create_release.outputs.upload_url }}
-                asset_path: ./protocol/target/ink/captcha/captcha.contract
-                asset_name: captcha.contract
-                asset_content_type: application/octet-stream
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./protocol/target/ink/captcha/captcha.contract
+                  asset_name: captcha.contract
+                  asset_content_type: application/octet-stream
               env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Proxy ABI
+              if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
+              id: upload-release-asset-abi-proxy
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./protocol/target/ink/proxy/proxy.json
+                  asset_name: proxy.json
+                  asset_content_type: application/json
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Proxy WASM
+              if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
+              id: upload-release-asset-wasm-proxy
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./protocol/target/ink/proxy/proxy.wasm
+                  asset_name: proxy.wasm
+                  asset_content_type: application/octet-stream
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Proxy
+              if: steps.check_provider_image_version.outputs.contract_sources_release == 'true'
+              id: upload-release-asset-contract-proxy
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./protocol/target/ink/proxy/proxy.contract
+                  asset_name: proxy.contract
+                  asset_content_type: application/octet-stream
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
