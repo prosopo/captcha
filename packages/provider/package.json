@@ -5,12 +5,19 @@
     "license": "Apache-2.0",
     "main": "./dist/index.js",
     "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.js"
+        }
+    },
     "scripts": {
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose",
+        "build": "tsc --build --verbose tsconfig.json",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "build:debug": "tsc --build --verbose",
         "build:test": "tsc --build --verbose tsconfig.test.json",
-        "build:config": "tsc --project",
+        "build:config": "tsc -project",
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
         "populate-data": "ts-node ./tests/dataUtils/populateDatabase.ts",

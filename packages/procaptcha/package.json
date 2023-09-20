@@ -9,18 +9,19 @@
     "scripts": {
         "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" && exit 0",
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose",
+        "build": "tsc --build --verbose tsconfig.json",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "exports": {
         ".": {
             "import": "./dist/index.js",
-            "require": "./dist/index.js"
+            "require": "./dist/cjs/index.js"
         },
         "./modules/Manager": {
             "import": "./dist/modules/Manager.js",
-            "require": "./dist/modules/Manager.js"
+            "require": "./dist/cjs/modules/Manager.js"
         }
     },
     "dependencies": {
@@ -41,7 +42,7 @@
         "@prosopo/datasets": "0.2.0",
         "@prosopo/types": "0.2.0",
         "@prosopo/util": "0.2.0",
-        "axios": "^0.27.2"
+        "axios": "^1.5.0"
     },
     "devDependencies": {
         "mocha": "^10.0.0",

@@ -5,11 +5,18 @@
     "license": "Apache-2.0",
     "main": "./dist/index.js",
     "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.js"
+        }
+    },
     "types": "./dist/index.d.ts",
     "source": "./src/index.tsx",
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "vite serve --mode development --host",
         "build:dev": "npm run build && vite build --mode development --debug",
         "build:prod": "npm run build && vite build --mode production",
