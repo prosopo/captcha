@@ -7,7 +7,7 @@ import path from 'path'
 import util from 'util'
 const logger = getLogger(`Info`, `config.dependencies.js`)
 const exec = util.promisify(child_process.exec)
-
+const tsConfigRegex = /\/[a-z.]*\.json$/
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w-/._]+)@/
 const depsRegex = /\s+(@*[\w-/._]+)@/
 async function getPackageDir(packageName: string): Promise<string> {
@@ -37,11 +37,9 @@ export function getTsConfigs(
     tsConfigPaths: string[] = []
 ): string[] {
     const references = JSON.parse(fs.readFileSync(tsConfigPath).toString()).references
-    if (tsConfigPaths.indexOf(tsConfigPath) === -1) {
-        let ignore = undefined
-        if (ignorePatterns && ignorePatterns.length > 0) {
-            ignore = new RegExp(`${ignorePatterns.join('|')}`)
-        }
+    if (!tsConfigPaths.includes(tsConfigPath)) {
+        const ignore =
+            ignorePatterns && ignorePatterns.length > 0 ? new RegExp(`${ignorePatterns.join('|')}`) : undefined
         tsConfigPaths.push(tsConfigPath)
         if (references) {
             for (const reference of references) {
@@ -51,8 +49,8 @@ export function getTsConfigs(
                         continue
                     }
                 }
-                // remove tsconfig.json from the path and get the path to the new directory via the reference path
-                let refTSConfigPath = path.resolve(tsConfigPath.replace(/\/[a-z.]*\.json$/, ''), reference.path)
+                // remove tsconfig.*.json from the path and get the path to the new directory via the reference path
+                let refTSConfigPath = path.resolve(tsConfigPath.replace(tsConfigRegex, ''), reference.path)
                 if (!refTSConfigPath.endsWith('.json')) {
                     refTSConfigPath = path.resolve(refTSConfigPath, 'tsconfig.json')
                 }
@@ -75,7 +73,7 @@ export function getExternalsFromReferences(tsConfigPath: string, ignorePatterns:
     const externals: string[] = []
     const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns)
     for (const tsConfigPath of tsConfigPaths) {
-        const packageJsonPath = path.resolve(tsConfigPath.replace(/\/[a-z.]*\.json$/, ''), 'package.json')
+        const packageJsonPath = path.resolve(tsConfigPath.replace(tsConfigRegex, ''), 'package.json')
         const packageJson = JSON.parse(fs.readFileSync(new URL(packageJsonPath, import.meta.url)).toString())
         const pkg = packageJson.name
         externals.push(pkg)
