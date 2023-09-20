@@ -12,5 +12,8 @@
     },
     "[json]": {
         "editor.formatOnSave": true
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }
