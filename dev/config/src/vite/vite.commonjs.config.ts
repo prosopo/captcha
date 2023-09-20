@@ -34,6 +34,7 @@ export default async function (name: string, tsConfigPath: string, entry?: strin
                 entry: entry || 'src/index.ts', // required
             },
             rollupOptions: {
+                treeshake: false,
                 external: allExternal,
             },
         },
