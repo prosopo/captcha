@@ -79,6 +79,7 @@ jobs:
                   npm ci
                   echo "Building packages..."
                   npm run build:all
+                  npm run build:all:cjs
 
             - name: Log in to Docker Hub
               # Only log in if either provider or JS bundle needs to be published
