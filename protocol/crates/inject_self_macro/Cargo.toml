@@ -3,7 +3,7 @@ proc-macro = true
 
 [package]
 name = "inject_self_macro"
-version = "0.3.0"
+version = "0.2.2"
 authors = ["George Oastler <goastler4@gmail.com>"]
 edition = "2021"
 
