@@ -9,7 +9,8 @@ import util from 'util'
 
 const logger = getLogger(`Info`, `config.dependencies.js`)
 const exec = util.promisify(child_process.exec)
-const tsConfigRegex = /\/[a-z.]*\.json$/
+// find a tScOnFiG.jSoN file
+const tsConfigRegex = /\/[A-Za-z.]*\.json$/
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w-/._]+)@/
 const depsRegex = /\s+(@*[\w-/._]+)@/
 async function getPackageDir(packageName: string): Promise<string> {
@@ -64,26 +65,24 @@ export function getTsConfigs(
         if (includeInitialTsConfig) {
             tsConfigs.push(tsConfigPath)
         }
-        if (references) {
-            for (const reference of references) {
-                // ignore the packages we don't want to bundle
-                if (ignore) {
-                    if (ignore.test(reference.path)) {
-                        continue
-                    }
-                }
-                // remove tsconfig.*.json from the path and get the path to the new directory via the reference path
-                const refTSConfigPath = getReferenceTsConfigPath(tsConfigPath, reference)
 
-                // take the reference TS config path (refTSConfigPath) and get the tsconfig paths for it (newTsConfigs),
-                // adding both to a distinct list, as there may be duplicates
-                const newTsConfigs = getTsConfigs(refTSConfigPath, ignorePatterns, tsConfigs)
-                if (newTsConfigs.length > 0) {
-                    const distinctTsConfigPaths = new Set(tsConfigs.concat(newTsConfigs))
-                    tsConfigs = [...distinctTsConfigPaths]
-                }
+        // ignore the packages we don't want to bundle
+        const filteredReferences = references.filter((reference: ProjectReference) =>
+            ignore ? !ignore.test(reference.path) : false
+        )
+        // for each reference, get the tsconfig paths - recursively calling this function
+        filteredReferences.map((reference: ProjectReference) => {
+            // remove tsconfig.*.json from the path and get the path to the new directory via the reference path
+            const refTSConfigPath = getReferenceTsConfigPath(tsConfigPath, reference)
+
+            // take the reference TS config path (refTSConfigPath) and get the tsconfig paths for it (newTsConfigs),
+            // adding both to a distinct list, as there may be duplicates
+            const newTsConfigs = getTsConfigs(refTSConfigPath, ignorePatterns, tsConfigs)
+            if (newTsConfigs.length > 0) {
+                const distinctTsConfigPaths = new Set(tsConfigs.concat(newTsConfigs))
+                tsConfigs = [...distinctTsConfigPaths]
             }
-        }
+        })
     }
     return tsConfigs
 }
