@@ -8,30 +8,11 @@ edition = "2021"
 ink = { git = "https://github.com/prosopo/ink_sr25519", branch="goastler-add-sr25519_verify", default-features = false }
 scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
 scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
+disable_macro = { version = "0.3.0", path = "../../crates/disable_macro" }
+common = { version = "0.3.0", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
 
-[dependencies.inject_self_macro]
-version = "0.3.0"
-path = "../../crates/inject_self_macro"
-
-[dependencies.named_functions_macro]
-version = "0.3.0"
-path = "../../crates/named_functions_macro"
-
-[dependencies.disable_macro]
-version = "0.3.0"
-path = "../../crates/disable_macro"
-
-[dependencies.common]
-version = "0.3.0"
-path = "../../contracts/common"
-default-features = false
-features = ["ink-as-dependency"]
-
-[dev-dependencies.common]
-version = "0.3.0"
-path = "../../contracts/common"
-default-features = false
-features = ["test-dependency"]
+[dev-dependencies]
+common = { version = "0.3.0", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
 
 [lib]
 path = "src/lib.rs"
