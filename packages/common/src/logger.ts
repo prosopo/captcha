@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { LogLevels as ConsolaLogLevels, createConsola } from 'consola/browser'
 import { ProsopoEnvError } from './error.js'
 import { z } from 'zod'
-import consola, { LogLevels as ConsolaLogLevels } from 'consola/browser'
 
 export interface Logger {
     log(message: unknown, ...args: unknown[]): void
@@ -50,7 +50,7 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = consola.create({}).withTag(scope)
+    const logger = createConsola({}).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
