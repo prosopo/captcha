@@ -1,10 +1,12 @@
 import { Glob } from 'glob'
+import { ProjectReference } from 'typescript'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import child_process from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import util from 'util'
+
 const logger = getLogger(`Info`, `config.dependencies.js`)
 const exec = util.promisify(child_process.exec)
 const tsConfigRegex = /\/[a-z.]*\.json$/
@@ -26,23 +28,40 @@ async function getPackageDir(packageName: string): Promise<string> {
 }
 
 /**
+ * Resolve the tsconfig path for a reference using the initial tsconfig path and the reference path. If the reference
+ * does not contain a tsconfig filename, `tsconfig.json` will be appended to the path.
+ * @param initialTsConfigPath
+ * @param reference
+ */
+function getReferenceTsConfigPath(initialTsConfigPath: string, reference: ProjectReference) {
+    // remove tsconfig.*.json from the path and get the path to the new directory via the reference path
+    let refTSConfigPath = path.resolve(initialTsConfigPath.replace(tsConfigRegex, ''), reference.path)
+    if (!refTSConfigPath.endsWith('.json')) {
+        refTSConfigPath = path.resolve(refTSConfigPath, 'tsconfig.json')
+    }
+    return refTSConfigPath
+}
+
+/**
  * Get the tsconfig paths for a package
- * @param tsConfigPath
- * @param ignorePatterns
- * @param tsConfigPaths
+ * @param tsConfigPath the tsconfig path to start with
+ * @param ignorePatterns the patterns to ignore
+ * @param tsConfigPaths the tsconfig paths to add to
+ * @param includeInitialTsConfig return the initial tsconfig path in the returned array
  */
 export function getTsConfigs(
     tsConfigPath: string,
     ignorePatterns: RegExp[] = [],
     tsConfigPaths: string[] = [],
-    initial = false
+    includeInitialTsConfig = true
 ): string[] {
     let tsConfigs = [...tsConfigPaths]
+    //TODO use dynamic import with JSON assertion (TS complains that resolveJsonModule is not set)
     const references = JSON.parse(fs.readFileSync(tsConfigPath).toString()).references
     if (!tsConfigs.includes(tsConfigPath)) {
         const ignore =
             ignorePatterns && ignorePatterns.length > 0 ? new RegExp(`${ignorePatterns.join('|')}`) : undefined
-        if (!initial) {
+        if (includeInitialTsConfig) {
             tsConfigs.push(tsConfigPath)
         }
         if (references) {
@@ -54,13 +73,14 @@ export function getTsConfigs(
                     }
                 }
                 // remove tsconfig.*.json from the path and get the path to the new directory via the reference path
-                let refTSConfigPath = path.resolve(tsConfigPath.replace(tsConfigRegex, ''), reference.path)
-                if (!refTSConfigPath.endsWith('.json')) {
-                    refTSConfigPath = path.resolve(refTSConfigPath, 'tsconfig.json')
-                }
+                const refTSConfigPath = getReferenceTsConfigPath(tsConfigPath, reference)
+
+                // take the reference TS config path (refTSConfigPath) and get the tsconfig paths for it (newTsConfigs),
+                // adding both to a distinct list, as there may be duplicates
                 const newTsConfigs = getTsConfigs(refTSConfigPath, ignorePatterns, tsConfigs)
                 if (newTsConfigs.length > 0) {
-                    tsConfigs = [...new Set(tsConfigs.concat(newTsConfigs))]
+                    const distinctTsConfigPaths = new Set(tsConfigs.concat(newTsConfigs))
+                    tsConfigs = [...distinctTsConfigPaths]
                 }
             }
         }
@@ -77,7 +97,7 @@ export async function getExternalsFromReferences(
     tsConfigPath: string,
     ignorePatterns: RegExp[] = []
 ): Promise<string[]> {
-    const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns, [], true)
+    const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns, [], false)
     logger.debug('tsConfigPaths', tsConfigPaths)
     const promises: Promise<string>[] = []
     for (const refTsConfigPath of tsConfigPaths) {
