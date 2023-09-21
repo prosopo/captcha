@@ -71,8 +71,8 @@ pub mod common {
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
             let env_git_commit_id: [u8; 20] = [
-                71, 47, 107, 235, 234, 94, 65, 192, 76, 183, 94, 9, 67, 167, 211, 138, 217, 64, 93,
-                2,
+                69, 149, 90, 113, 202, 170, 187, 252, 16, 56, 34, 251, 69, 10, 250, 70, 200, 190,
+                145, 15,
             ];
             env_git_commit_id
         }
@@ -85,6 +85,13 @@ pub mod common {
             ];
             AccountId::from(env_admin_bytes)
         }
+    }
+
+    pub fn check_is_admin(account: AccountId) -> Result<(), Error> {
+        if account != config::get_admin() {
+            return Err(Error::NotAuthorised);
+        }
+        Ok(())
     }
 
     /// The errors that can be returned by the Proxy contract.
