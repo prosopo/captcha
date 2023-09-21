@@ -226,7 +226,6 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                                     '&::before': {
                                                         content: '""',
                                                         position: 'absolute',
-                                                        background: 'white',
                                                         height: '100%',
                                                         width: '100%',
                                                     },
