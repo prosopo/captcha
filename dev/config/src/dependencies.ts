@@ -71,7 +71,7 @@ export function getTsConfigs(
             ignore ? !ignore.test(reference.path) : false
         )
         // for each reference, get the tsconfig paths - recursively calling this function
-        filteredReferences.map((reference: ProjectReference) => {
+        for (const reference of filteredReferences) {
             // remove tsconfig.*.json from the path and get the path to the new directory via the reference path
             const refTSConfigPath = getReferenceTsConfigPath(tsConfigPath, reference)
 
@@ -82,7 +82,7 @@ export function getTsConfigs(
                 const distinctTsConfigPaths = new Set(tsConfigs.concat(newTsConfigs))
                 tsConfigs = [...distinctTsConfigPaths]
             }
-        })
+        }
     }
     return tsConfigs
 }
