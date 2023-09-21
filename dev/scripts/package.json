@@ -39,7 +39,7 @@
         "@prosopo/types-database": "0.2.1",
         "@prosopo/types-env": "0.2.1",
         "@prosopo/util": "0.2.1",
-        "@prosopo/consola": "4.0.0",
+        "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
         "yargs": "^17.5.1",

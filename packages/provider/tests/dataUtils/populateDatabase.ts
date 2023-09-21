@@ -21,7 +21,7 @@ import { ProsopoEnvironment } from '@prosopo/types-env'
 import { ProviderEnvironment } from '@prosopo/env'
 import { promiseQueue } from '../../src/util'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
-import consola from '@prosopo/consola'
+import consola from 'consola'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
