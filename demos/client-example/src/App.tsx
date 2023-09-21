@@ -14,7 +14,7 @@
 import './App.css'
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react/dist/components'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { LogLevel } from '@prosopo/common'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { useState } from 'react'

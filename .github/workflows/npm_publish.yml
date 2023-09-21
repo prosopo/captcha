@@ -38,6 +38,9 @@ jobs:
 
             - run: npm run build:all
 
+            # Create the CommonJS build for each package
+            - run: npm run build:all:cjs
+
             # Get the provider image version from the root package.json and the latest package version from npm
             - name: Check provider version bump
               id: bump_provider_version
