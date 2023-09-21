@@ -262,7 +262,7 @@ Cargo pass-through commands:
     test
     clean
     fmt --all --verbose
-    clippy -- -D warnings -A clippy::too_many_arguments
+    clippy -- -- -D warnings -A clippy::too_many_arguments
     "contract <xyz>" <-- speech marks important! 'xyz' is the cargo contract command
 `
         )
