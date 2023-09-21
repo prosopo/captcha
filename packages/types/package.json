@@ -34,7 +34,7 @@
         "@polkadot/types": "10.9.1",
         "@polkadot/types-codec": "10.9.1",
         "@prosopo/common": "0.2.1",
-        "consola": "git+https://github.com/prosopo/consola.git",
+        "@prosopo/consola": "4.0.0",
         "zod": "^3.17.9"
     },
     "devDependencies": {
