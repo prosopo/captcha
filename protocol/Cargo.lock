@@ -83,9 +83,7 @@ version = "4.2.0"
 dependencies = [
  "common",
  "disable_macro",
- "inject_self_macro",
  "ink",
- "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
 ]
@@ -308,14 +306,6 @@ checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown",
-]
-
-[[package]]
-name = "inject_self_macro"
-version = "0.3.0"
-dependencies = [
- "proc-macro2",
- "quote",
 ]
 
 [[package]]
@@ -568,14 +558,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "named_functions_macro"
-version = "0.3.0"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -653,9 +635,7 @@ version = "4.0.0"
 dependencies = [
  "common",
  "disable_macro",
- "inject_self_macro",
  "ink",
- "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
 ]
