@@ -7,9 +7,9 @@
     "type": "module",
     "types": "./dist/index.d.ts",
     "scripts": {
-        "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" && exit 0",
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose tsconfig.json",
+        "prebuild": "node prebuild-write-version.js",
+        "build": "npm run prebuild && tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"

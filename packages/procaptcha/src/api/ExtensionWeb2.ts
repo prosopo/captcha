@@ -25,6 +25,7 @@ import { getNetwork } from '../modules/Manager.js'
 import { hexHash } from '@prosopo/common'
 import { picassoCanvas } from '../modules/canvas.js'
 import { stringToU8a, u8aToHex } from '@polkadot/util'
+import { version } from '../utils/version.js'
 import Extension from './Extension.js'
 import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
 import Signer from '@polkadot/extension-base/page/Signer'
@@ -76,7 +77,7 @@ export default class ExtWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.11',
+            version,
             signer,
         }
     }
