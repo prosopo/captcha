@@ -89,7 +89,7 @@ const CaptchaComponent = ({
                         sx={{
                             color: '#ffffff',
                             fontWeight: 700,
-                            textTransform: 'uppercase',
+                            textTransform: 'capitalize',
                             fontSize: theme.typography.h6.fontSize,
                         }}
                     >
@@ -109,7 +109,7 @@ const CaptchaComponent = ({
                         width: '100%',
                     }}
                     {...addDataAttr({ dev: { cy: 'dots-captcha' } })}
-                ></Box>
+                />
                 <Box
                     px={2}
                     pt={0}
