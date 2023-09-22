@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename)
 
 export function getEnv() {
     if (process.env.NODE_ENV) {
-        return process.env.NODE_ENV.replace(/[^0-9a-z_]/gi, '')
+        return process.env.NODE_ENV.replace(/\W/g, '')
     }
     return 'development'
 }
