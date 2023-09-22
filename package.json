@@ -47,8 +47,8 @@
         "about:stylelint": "echo run stylelint on all top-level configs files, settings files, and workflow files, then each workspace",
         "stylelint": "stylelint '.**.{css,sass,scss}' '**.{css,sass,scss}' --config $(pwd)/.stylelintrc.json --allow-empty-input --ignore-path $(pwd)/.eslintignore",
         "stylelint:fix": "npm run stylelint -- --fix",
-        "lint": "npm run eslint && npm run prettier && npm run stylelint",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix && npm run stylelint:fix"
+        "lint": "npm run eslint && npm run stylelint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run stylelint:fix && npm run prettier:fix"
     },
     "private": true,
     "engines": {
