@@ -26,8 +26,8 @@ See the [client example](https://github.com/prosopo/client-example) for a minima
       </CaptchaContextManager.Provider>
 
       {!showCaptchas &&
-        <Button onClick={showCaptchaClick} className={"iAmHumanButton"}>
-          <Typography className={"iAmHumanButtonLabel"}>
+        <Button onClick={showCaptchaClick} className={"i-am-human-button"}>
+          <Typography className={"i-am-human-button-label"}>
             I am human
           </Typography>
         </Button>}

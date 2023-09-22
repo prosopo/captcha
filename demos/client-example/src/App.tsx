@@ -180,7 +180,7 @@ function App() {
 
     return (
         <div>
-            <Box className={'App'} sx={{ display: 'flex' }}>
+            <Box className={'app'} sx={{ display: 'flex' }}>
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
                     {!config.web2 ? (

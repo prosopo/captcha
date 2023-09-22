@@ -1,4 +1,4 @@
-.App {
+.app {
   display: flex;
   width: 100vw;
   height: 100vh;
@@ -33,14 +33,14 @@
   visibility: visible;
 }
 
-.iAmHumanButton {
+.i-am-human-button {
   height: 76;
   width: 300;
   background-color: "#FAFAFA !important";
   border: "1px solid #E0E0E0 !important";
 }
 
-.iAmHumanButtonLabel {
+.i-am-human-button-label {
   color: "#555555";
   text-transform: "none";
 }
