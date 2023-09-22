@@ -11,8 +11,8 @@ const logger = getLogger(`Info`, `config.dependencies.js`)
 const exec = util.promisify(child_process.exec)
 // find a tScOnFiG.jSoN file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/
-const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w-/._]+)@/
-const depsRegex = /\s+(@*[\w-/._]+)@/
+const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/
+const depsRegex = /\s+(@*[\w\-/.]+)@/
 async function getPackageDir(packageName: string): Promise<string> {
     let pkg = packageName
     if (packageName && !packageName.startsWith('@prosopo/')) {
