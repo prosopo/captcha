@@ -7,6 +7,7 @@ module.exports = {
     extends: [
         'plugin:yaml/recommended',
         'plugin:json/recommended',
+        'plugin:toml/standard',
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
         'plugin:prettier/recommended', // must be last!
