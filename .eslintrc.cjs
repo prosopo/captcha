@@ -8,6 +8,7 @@ module.exports = {
         'plugin:yaml/recommended',
         'plugin:json/recommended',
         'eslint:recommended',
+        'plugin:regexp/recommended',
         'plugin:@typescript-eslint/recommended',
         'plugin:prettier/recommended', // must be last!
     ],
