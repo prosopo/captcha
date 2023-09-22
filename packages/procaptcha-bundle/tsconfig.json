@@ -11,6 +11,9 @@
             "path": "../../dev/config"
         },
         {
+            "path": "../procaptcha"
+        },
+        {
             "path": "../procaptcha-react"
         },
         {
