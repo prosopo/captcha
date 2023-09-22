@@ -12,14 +12,20 @@ module.exports = {
         'plugin:regexp/recommended',
         'plugin:css/recommended',
         'plugin:@typescript-eslint/recommended',
-        'plugin:prettier/recommended', // must be last!
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: ['workspaces', 'unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix', 'prettier', 'html'],
+    plugins: [
+        'workspaces',
+        'unused-imports',
+        '@typescript-eslint',
+        'sort-imports-es6-autofix',
+        'html',
+        '@html-eslint',
+    ],
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
@@ -50,4 +56,11 @@ module.exports = {
             },
         ],
     },
+    overrides: [
+        {
+            files: ['*.html'],
+            parser: '@html-eslint/parser',
+            extends: ['plugin:@html-eslint/recommended'],
+        },
+    ],
 }
