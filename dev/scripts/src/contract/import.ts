@@ -34,7 +34,8 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             } else if (filePath.endsWith('.ts')) {
                 // replace the relative imports with .js extension applied
                 // eslint-disable-next-line no-useless-escape
-                const regex = /import[\s]+(.+?)[\s]+from[\s]+([\"\']\..+)/gm
+                // eslint-disable-next-line regexp/no-super-linear-backtracking
+                const regex = /import\s+(.+?)\s+from\s+(["']\..+)/g
                 const fileContents = fs.readFileSync(filePath, 'utf8')
                 let replaced = fileContents.replace(regex, (match, p1, p2) => {
                     const name = p1.toString()
@@ -56,6 +57,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     return `${result}`
                 })
                 // eslint-disable-next-line no-useless-escape
+                // eslint-disable-next-line regexp/no-super-linear-backtracking
                 replaced = replaced.replace(/(^(?!\s*\/\/\s*eslint).*)\n+(\s*)\/\/\s*@ts-ignore/gm, (match, p1, p2) => {
                     const result = `${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
                     console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
