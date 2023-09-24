@@ -39,7 +39,7 @@ jobs:
 
             - run: npm install -g npm@8.9
             - run: npm install
-            
+
             # build contracts
             - run: npm run -w @prosopo/protocol-dev build
             - run: npm run -w @prosopo/protocol-dev cli -- build --docker
