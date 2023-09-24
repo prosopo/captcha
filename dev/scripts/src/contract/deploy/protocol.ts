@@ -14,17 +14,17 @@
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { ContractAbi } from '@prosopo/captcha-contract'
 import { ContractDeployer } from '@prosopo/contract'
+import { ContractFile } from '@prosopo/captcha-contract'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
+import { hexToU8a } from '@polkadot/util'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
-import { ContractFile } from '@prosopo/captcha-contract'
-import { hexToU8a } from '@polkadot/util'
-import { ContractAbi } from '@prosopo/captcha-contract'
 
 const log = getLogger(LogLevel.enum.info, 'dev.deploy')
 
@@ -45,9 +45,13 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     return await deployer.deploy()
 }
 
-export async function run(wasmPath: string | undefined, abiPath: string | undefined, deployer?: string): Promise<AccountId> {
+export async function run(
+    wasmPath: string | undefined,
+    abiPath: string | undefined,
+    deployer?: string
+): Promise<AccountId> {
     // if wasmPath not provided then default to the captcha contract's wasm
-    let wasm: Uint8Array;
+    let wasm: Uint8Array
     if (wasmPath === undefined) {
         log.info('Using wasm from captcha contract')
         const hex = JSON.parse(ContractFile)['wasm']
@@ -57,7 +61,7 @@ export async function run(wasmPath: string | undefined, abiPath: string | undefi
         wasm = await Wasm(path.resolve(wasmPath))
     }
     // if abiPath not provided then default to the captcha contract's abi
-    let abi: Abi;
+    let abi: Abi
     if (abiPath === undefined) {
         log.info('Using abi from captcha contract')
         abi = new Abi(ContractAbi)
