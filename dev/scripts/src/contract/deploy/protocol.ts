@@ -60,7 +60,7 @@ export async function run(wasmPath: string | undefined, abiPath: string | undefi
     let abi: Abi;
     if (abiPath === undefined) {
         log.info('Using abi from captcha contract')
-        abi = ContractAbi
+        abi = new Abi(ContractAbi)
     } else {
         log.info('ABI Path', abiPath)
         abi = await AbiJSON(path.resolve(abiPath))
