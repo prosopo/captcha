@@ -32,7 +32,6 @@
         "build:prod": "tsc --build --verbose && vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
         "build:dev": "tsc --build --verbose && vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
-        "test": "ts-node src/test",
         "cypress:open": "cypress open",
         "cypress:run": "cypress run",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
