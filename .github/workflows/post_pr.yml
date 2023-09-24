@@ -58,6 +58,11 @@ jobs:
               run: |
                   cd protocol/dev
                   npm run cli -- build --docker
+                
+            - name: Test contracts
+              run: |
+                  cd protocol/dev
+                  npm run cli -- test --docker
 
             # install cypress so we don't have to do that every time
             - run: npx cypress install
