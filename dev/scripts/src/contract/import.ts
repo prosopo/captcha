@@ -56,7 +56,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             } else if (filePath.endsWith('.ts')) {
                 // replace the relative imports with .js extension applied
                 // eslint-disable-next-line no-useless-escape
-                const regex = /(import(?:(?!from).)+from\s+)(['"]\.[.\/a-zA-Z0-9-_]+?['"])(\s+assert\s+{[^}]*})?/gms
+                const regex = /(import(?:(?!from).)+from\s+)(['"]\.[./\w-]+['"])(\s+assert\s+\{[^}]*\})?/gs
                 const fileContents = fs.readFileSync(filePath, 'utf8')
                 let replaced = fileContents.replace(regex, (match, p1, p2, p3) => {
                     const start = p1.toString()
@@ -85,7 +85,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     return `${result}`
                 })
                 // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/\n(.*)\n(\s*)\/\/\s*@ts-ignore/gm, (match, p1, p2) => {
+                replaced = replaced.replace(/\n(.*)\n(\s*)\/\/\s*@ts-ignore/g, (match, p1, p2) => {
                     // don't replace if already ignored by eslint
                     if (p1.includes('eslint-disable-next-line')) return match
                     const result = `\n${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
@@ -95,7 +95,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
 
                 // replace EventRecord with EventRecord[]
                 // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/EventRecord/gm, (match) => {
+                replaced = replaced.replace(/EventRecord/g, (match) => {
                     const result = `EventRecord[]`
                     console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
@@ -104,7 +104,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                 // replace EventRecord incorrect imports
                 // eslint-disable-next-line no-useless-escape
                 replaced = replaced.replace(
-                    /import\s+type\s+\{\s*EventRecord\[\]\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/gm,
+                    /import\s+type\s+\{\s*EventRecord\[\]\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
                     (match) => {
                         const result = `import type { EventRecord } from '@polkadot/types/interfaces'`
                         console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
@@ -212,7 +212,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
         rootExports.push(`export * from './shared/utils.js'`)
 
         // type-arguments and type-returns often have duplicate types. We want to export only a single type for each type, so go through and detect duplicates
-        const regex = /export\s+([a-z]+)\s+([A-Za-z0-9_]+)/gm
+        const regex = /export\s+([a-z]+)\s+(\w+)/g
         const fileTs = replaceExtension(file, 'ts')
         const typesArgumentsFileContent = fs.readFileSync(`${src}/types-arguments/${fileTs}`, 'utf8')
         const typesReturnsFileContent = fs.readFileSync(`${src}/types-returns/${fileTs}`, 'utf8')
