@@ -14,10 +14,10 @@
 
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { ApiPromise } from '@polkadot/api'
-import { CaptchaStatus } from '@prosopo/captcha-contract'
-import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
 import { BatchCommitmentsTask } from '../../src/batch/commitments.js'
+import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
+import { CaptchaStatus } from '@prosopo/captcha-contract'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair } from '@prosopo/common'

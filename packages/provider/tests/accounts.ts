@@ -13,8 +13,8 @@
 // limitations under the License.
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { Payee } from '@prosopo/captcha-contract'
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../src/index'
 import { getPair } from '@prosopo/common'
