@@ -46,10 +46,15 @@ jobs:
               run: |
                   set -x
                   ls -la
+                  sleep 1
                   ls -la protocol/cargo-cache
+                  sleep 1
                   ls -la protocol/target/* || true
+                  sleep 1
                   ls -la node_modules
+                  sleep 1
                   ls -la .cache
+                  sleep 1
                   ls -la .cache/Cypress
 
             - run: npm install
@@ -78,7 +83,7 @@ jobs:
 
             # install cypress so we don't have to do that every time
             - name: Cypress install
-                run: |
+              run: |
                     npm i --save-dev cypress
                     npx cypress install
 
@@ -86,10 +91,15 @@ jobs:
               run: |
                   set -x
                   ls -la
+                  sleep 1
                   ls -la protocol/cargo-cache
+                  sleep 1
                   ls -la protocol/target/* || true
+                  sleep 1
                   ls -la node_modules
+                  sleep 1
                   ls -la .cache
+                  sleep 1
                   ls -la .cache/Cypress
 
             # remove all but the latest cache (this ensures there's at least one cache available for the next run, just in case this takes place while we're clearing up caches)
