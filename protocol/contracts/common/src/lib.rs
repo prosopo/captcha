@@ -87,6 +87,13 @@ pub mod common {
         }
     }
 
+    pub fn check_is_admin(account: AccountId) -> Result<(), Error> {
+        if account != config::get_admin() {
+            return Err(Error::NotAuthorised);
+        }
+        Ok(())
+    }
+
     /// The errors that can be returned by the Proxy contract.
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(
