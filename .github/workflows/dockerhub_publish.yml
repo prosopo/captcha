@@ -63,6 +63,7 @@ jobs:
                     echo "no version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   fi
+                  echo "PROVIDER_IMAGE_VERSION=$NEXT" >> $GITHUB_ENV
 
             - name: Install dependencies and build packages
               # Install dependencies and build packages if either provider or JS bundle needs to be published
