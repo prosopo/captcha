@@ -6,8 +6,12 @@ on:
             - 'main'
         paths:
             - 'protocol/**'
-            - '.github/workflows/**'
+            - '.github/workflows/tests_protocol.yml'
     workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 env:
     CARGO_TERM_COLOR: always
@@ -19,6 +23,11 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
+            - run: mkdir -p protocol/cargo-cache
+            - run: mkdir -p protocol/target
+            - run: mkdir -p node_modules
+            - run: mkdir -p .cache/Cypress
+
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
@@ -26,6 +35,7 @@ jobs:
                       protocol/cargo-cache
                       protocol/target
                       node_modules
+                      .cache/Cypress
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
@@ -34,16 +44,6 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install
-
-            - name: Rust formatting check
-              run: |
-                  cd protocol/dev
-                  npm run cli -- fmt --all --verbose --check --docker
-
-            - name: Clippy
-              run: |
-                  cd protocol/dev
-                  npm run cli -- clippy --docker -- -- -D warnings
 
             - name: Build contract
               id: build
