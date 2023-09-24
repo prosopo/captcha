@@ -63,11 +63,11 @@ jobs:
               run: |
                   cd protocol/dev
                   npm run cli -- build --docker
-                
+
             - name: Test contracts
               run: |
                   cd protocol/dev
-                  npm run cli -- test --docker
+                  RUST_BACKTRACE=1 npm run cli -- test --docker
 
             - name: Clippy
               run: |
@@ -84,8 +84,8 @@ jobs:
             # install cypress so we don't have to do that every time
             - name: Cypress install
               run: |
-                    npm i --save-dev cypress
-                    npx cypress install
+                  npm i --save-dev cypress
+                  npx cypress install
 
             - name: ls
               run: |
