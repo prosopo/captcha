@@ -1,23 +1,18 @@
 [package]
 name = "proxy"
-version = "0.1.17"
-authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
+version = "0.2.2"
+authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io"]
 edition = "2021"
-documentation = "https://github.com/prosopo/captcha"
-repository = "https://github.com/prosopo/captcha"
-homepage = "https://github.com/prosopo/captcha"
-license-file="../../../LICENSE"
-rust-version="1.68"
 
 [dependencies]
-ink = { git = "https://github.com/prosopo/ink_sr25519", branch="4.3.0-custom", default-features = false }
+ink = { git = "https://github.com/prosopo/ink_sr25519", branch="goastler-add-sr25519_verify", default-features = false }
 scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
 scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
-common = { version = "0.1.17", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
-disable_macro = { version = "0.1.17", path = "../../crates/disable_macro" }
+disable_macro = { version = "0.2.2", path = "../../crates/disable_macro" }
+common = { version = "0.2.2", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
 
 [dev-dependencies]
-common = { version = "0.1.17", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
+common = { version = "0.2.2", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
 
 [lib]
 path = "src/lib.rs"
