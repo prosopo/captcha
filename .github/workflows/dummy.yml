@@ -29,4 +29,4 @@ jobs:
                   echo ${{ needs.job1.outputs.bump }}
                   echo ${{ needs.job1.outputs.current_version }}
                   echo ${{ needs.job1.outputs.next_version }}
-                  
+                  echo hello
