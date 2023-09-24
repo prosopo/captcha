@@ -55,6 +55,7 @@ jobs:
               run: |
                   docker compose --file ./docker/docker-compose.test.yml up -d
                   docker container ls
+                  sleep 10s
 
             - name: Setup env
               run: |
