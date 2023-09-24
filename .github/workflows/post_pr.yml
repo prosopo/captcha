@@ -64,6 +64,13 @@ jobs:
                   cd protocol/dev
                   npm run cli -- test --docker
 
+            - name: Clippy
+              run: |
+                  cd protocol/dev
+                  npm run build
+                  npm run cli -- clippy --docker -- -- -D warnings
+
+
             # install cypress so we don't have to do that every time
             - run: npx cypress install
 
