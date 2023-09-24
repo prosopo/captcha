@@ -77,7 +77,10 @@ jobs:
                   npm run cli -- fmt --all --verbose --check --docker
 
             # install cypress so we don't have to do that every time
-            - run: npx cypress install
+            - name: Cypress install
+                run: |
+                    npm i --save-dev cypress
+                    npx cypress install
 
             - name: ls
               run: |
