@@ -22,6 +22,9 @@ import { getPair } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
+import { ContractFile } from '@prosopo/captcha-contract'
+import { hexToU8a } from '@polkadot/util'
+import { ContractAbi } from '@prosopo/captcha-contract'
 
 const log = getLogger(LogLevel.enum.info, 'dev.deploy')
 
@@ -42,11 +45,26 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     return await deployer.deploy()
 }
 
-export async function run(wasmPath: string, abiPath: string, deployer?: string): Promise<AccountId> {
-    log.info('WASM Path', wasmPath)
-    log.info('ABI Path', abiPath)
-    const wasm = await Wasm(path.resolve(wasmPath))
-    const abi = await AbiJSON(path.resolve(abiPath))
+export async function run(wasmPath: string | undefined, abiPath: string | undefined, deployer?: string): Promise<AccountId> {
+    // if wasmPath not provided then default to the captcha contract's wasm
+    let wasm: Uint8Array;
+    if (wasmPath === undefined) {
+        log.info('Using wasm from captcha contract')
+        const hex = JSON.parse(ContractFile)['wasm']
+        wasm = hexToU8a(hex)
+    } else {
+        log.info('WASM Path', wasmPath)
+        wasm = await Wasm(path.resolve(wasmPath))
+    }
+    // if abiPath not provided then default to the captcha contract's abi
+    let abi: Abi;
+    if (abiPath === undefined) {
+        log.info('Using abi from captcha contract')
+        abi = ContractAbi
+    } else {
+        log.info('ABI Path', abiPath)
+        abi = await AbiJSON(path.resolve(abiPath))
+    }
     const deployResult = await deploy(wasm, abi, deployer)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
@@ -59,9 +77,6 @@ export async function run(wasmPath: string, abiPath: string, deployer?: string):
 if (typeof require !== 'undefined' && require.main === module) {
     log.info('Loading env from', path.resolve('.'))
     loadEnv(path.resolve('.'))
-    if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
-        throw new Error('Missing protocol wasm or abi path')
-    }
     run(process.env.CAPTCHA_WASM_PATH, process.env.CAPTCHA_ABI_PATH)
         .then((deployResult) => {
             log.info('Deployed with address', deployResult)

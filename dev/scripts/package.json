@@ -38,6 +38,7 @@
         "@prosopo/types": "0.2.2",
         "@prosopo/types-database": "0.2.2",
         "@prosopo/types-env": "0.2.2",
+        "@prosopo/captcha-contract": "0.2.2",
         "@prosopo/util": "0.2.2",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
