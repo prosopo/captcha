@@ -9,6 +9,10 @@ on:
             - '.github/workflows/tests_protocol.yml'
     workflow_dispatch:
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
@@ -18,7 +22,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
-            
+
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
