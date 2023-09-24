@@ -11,6 +11,10 @@
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {

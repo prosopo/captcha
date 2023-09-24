@@ -4,6 +4,10 @@
     "description": "Simple static file server",
     "main": "dist/index.js",
     "type": "module",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "exports": {
         ".": {
             "import": "./dist/index.js",
