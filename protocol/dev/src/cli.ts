@@ -28,6 +28,8 @@ interface Env {
     [key: string]: string
 }
 
+const cargoCmd = 'CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse cargo'
+
 // add in the git commit to env
 const getGitCommitId = async () => {
     // get the git commit id
@@ -223,9 +225,9 @@ export async function processArgs(args: string[]) {
                 // if not, pull it
                 await exec(`docker pull ${dockerImage}`)
             }
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh ${dockerImage} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh ${dockerImage} -c '${cargoCmd} ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
-            script = `cargo ${toolchain} ${cmd} ${rest}`
+            script = `${cargoCmd} ${toolchain} ${cmd} ${rest}`
             if (dir) {
                 script = `cd ${dir} && ${script}`
             }
@@ -282,7 +284,7 @@ Cargo pass-through commands:
                 console.log(contracts)
                 for (const contract of contracts) {
                     await exec(
-                        `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
+                        `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && ${cargoCmd} expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
                     )
                 }
             },
@@ -303,7 +305,7 @@ Cargo pass-through commands:
                 delete argv.contract
                 for (const contract of contracts) {
                     await exec(
-                        `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
+                        `cd ${repoDir} && ${cargoCmd} metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
                     )
                 }
             },
@@ -323,7 +325,7 @@ Cargo pass-through commands:
                 const contracts = argv.contract as string[]
                 delete argv.contract
                 for (const contract in contracts) {
-                    await exec(`cd ${contractsDir}/${contract} && cargo contract instantiate ${argv._}`)
+                    await exec(`cd ${contractsDir}/${contract} && ${cargoCmd} contract instantiate ${argv._}`)
                 }
             },
             []
