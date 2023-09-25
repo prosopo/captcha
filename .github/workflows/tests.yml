@@ -1,23 +1,17 @@
-name: tests_provider
+name: tests
 
 on:
     pull_request:
         branches: [main]
         paths:
-            - '**.ts'
-            - '**.js'
-            - '.github/workflows/tests_provider.yml'
-            - 'packages/**.json'
-            - 'dev/**.json'
-
-concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+            - 'protocol/**'
+            - '.github/workflows/tests.yml'
+    workflow_dispatch:
 
 env:
     CARGO_TERM_COLOR: always
-    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
+    NODE_ENV: test
 
 jobs:
     check:
@@ -46,72 +40,50 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - run: docker pull prosopo/substrate-contracts-node:v0.25
-            - run: docker pull mongo:5.0.4
-
-            - name: Start the docker images
-              run: |
-                  docker compose --file ./docker/docker-compose.test.yml up -d
-                  docker container ls
-
-            - run: ls -lah
-
-            # pin npm as later version (9.7.X) causes an issue with npm ls -ap
-            #      npm ERR! code ELSPROBLEMS
-            #      npm ERR! invalid: @pm2/pm2-version-check@1.0.4 .../captcha/node_modules/@pm2/pm2-version-check
             - run: npm install -g npm@8.9
-
             - run: npm install
 
-            - name: Build provider and dependencies
-              # Next few lines should contain the number of packages that provider depends on (check tsconfig.json)
-              run: |
-                  echo $(npx tsc --version)
-                  cd dev/scripts && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
-                  cp env.test .env.test
-                  echo "NODE_ENV=test" >> $GITHUB_ENV
-                  echo $NODE_ENV
+            # build all packages in workspace
+            - run: npm run build:all
 
-            - name: Deploy the contracts and run the unit tests
-              run: |
-                  npm run deploy_protocol
-                  npm run deploy_dapp
-                  git status | head -n 1
-                  cd dev/scripts
-                  git status | head -n 1
-                  docker container ls
-                  cat .env.test
-                  npm run test
-
-            - name: Reset the docker containers
-              run: |
-                  docker compose --file ./docker/docker-compose.test.yml down
-                  docker compose --file ./docker/docker-compose.test.yml up -d
-                  docker container ls
-
-            - name: Sleep for 10 seconds to give the containers time to start up
-              run: sleep 10s
-              shell: bash
-
-            - name: Deploy the contracts and run the cypress tests on client-example
+            - name: Setup env
               run: |
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
                   cp demos/client-example/env.development demos/client-example/.env.test
                   cp dev/scripts/env.test dev/scripts/.env.test
                   cp dev/scripts/env.test packages/cli/.env.test
-                  NODE_ENV=test npm run deploy_protocol
-                  NODE_ENV=test npm run deploy_dapp
-                  NODE_ENV=test npm run setup
-                  NODE_ENV=test npm run start:provider 1>provider.log 2>&1 &
-                  cd demos/client-example-server && NODE_ENV=test npm run build && cd ../..
-                  NODE_ENV=test npm run start:server 1>server.log 2>&1 &
-                  sleep 20s
-                  cat provider.log
-                  cat server.log
-                  cd demos/client-example && NODE_ENV=test npm run build && cd ../..
-                  cd demos/client-example && `NODE_ENV=test npm run start 1>../../client-example.log 2>&1 &` && cd ../..
-                  ls
-                  sleep 30s
-                  cat client-example.log
-                  npx cypress install
-                  cd demos/client-example && NODE_ENV=test npm run cypress:run
+                  echo NODE_ENV: $NODE_ENV
+
+            - name: Start the docker images
+              run: |
+                  docker compose --file ./docker/docker-compose.test.yml up -d
+                  docker container ls
+                  sleep 10s
+
+            # deploy dapp + protocol and run the unit tests
+            - run: npm run deploy_protocol
+            - run: npm run deploy_dapp
+            - run: npm run test
+
+            # restart the docker images to drop any changes made by the unit tests to the contract(s) before running cypress tests
+            - name: Reset the docker containers
+              run: |
+                  docker compose --file ./docker/docker-compose.test.yml down
+                  docker compose --file ./docker/docker-compose.test.yml up -d
+                  docker container ls
+                  sleep 10s
+
+            # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider 
+            - run: npm run deploy_protocol
+            - run: npm run deploy_dapp
+            - run: npm run setup
+
+            - name: Run the cypress tests on client-example
+              run: |
+                  npm run start:provider &
+                  sleep 10s
+                  npm run start:server &
+                  sleep 10s
+                  npm run start:demo &
+                  sleep 10s
+                  npm -w @prosopo/client-example run cypress:run
