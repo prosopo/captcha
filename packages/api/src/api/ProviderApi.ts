@@ -11,14 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { AccountId } from '@prosopo/types'
 import {
-    AccountId,
     ApiPaths,
     CaptchaSolution,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
-    Provider,
-    RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
 import {
@@ -28,6 +26,7 @@ import {
     VerificationResponse,
 } from '../types/index.js'
 import { NetworkConfig } from '@prosopo/types'
+import { Provider, RandomProvider } from '@prosopo/captcha-contract'
 import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase {

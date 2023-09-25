@@ -1,11 +1,11 @@
 {
     "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "target": "ES6",
+        "importHelpers": true
     },
-    "include": ["./src/**/*.ts", "./src/*.ts"],
-    "exclude": ["**/*.test.ts"],
+    "include": ["**/*.test.ts", "src"],
     "references": [
         {
             "path": "../common"
@@ -30,6 +30,9 @@
         },
         {
             "path": "../types-env"
+        },
+        {
+            "path": "../util"
         }
     ]
 }
