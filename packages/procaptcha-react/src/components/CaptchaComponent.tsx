@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Box, Button, Typography } from '@mui/material'
-import { GetCaptchaResponse } from '@prosopo/api'
-import { useTranslation } from '@prosopo/common'
-import { at } from '@prosopo/util'
-import { useMemo } from 'react'
-import addDataAttr from '../util/index.js'
 import { CaptchaWidget } from './CaptchaWidget.js'
+import { GetCaptchaResponse } from '@prosopo/api'
+import { at } from '@prosopo/util'
 import { darkTheme, lightTheme } from './theme.js'
+import { useMemo } from 'react'
+import { useTranslation } from '@prosopo/common'
+import addDataAttr from '../util/index.js'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
