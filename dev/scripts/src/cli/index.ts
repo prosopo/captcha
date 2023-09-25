@@ -14,16 +14,17 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
+import { getContractNames, getPaths } from '@prosopo/config'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { loadEnv } from '@prosopo/cli'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
-import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
 
+const paths = getPaths()
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -137,13 +138,6 @@ export async function processArgs(args: string[]) {
                         desc: 'The path to the output directory',
                     }),
             handler: async (argv) => {
-                const abiPath = path.resolve(argv.in)
-                const cwd = path.resolve('.')
-                if (!fs.existsSync(abiPath)) {
-                    throw new Error(`abiPath ${abiPath} does not exist. The command is running relative to ${cwd}`)
-                }
-                const outPath = path.resolve(argv.out)
-                // pass in relative path as typechain will resolve it relative to the cwd
                 await importContract(argv.in, argv.out)
             },
         })
@@ -152,23 +146,14 @@ export async function processArgs(args: string[]) {
             describe: 'Update all contracts into the contract package.',
             builder: (yargs) => yargs,
             handler: async (argv) => {
-                const contracts = ['captcha', 'proxy']
+                const contracts = getContractNames()
                 for (const contract of contracts) {
-                    const inDir = `../protocol/target/ink/${contract}`
-                    const outDir = `../packages/contract/src/typechain/${contract}`
-                    await exec(`mkdir -p ${outDir}`)
-                    await exec(`mkdir -p ${inDir}`)
-                    // console.log(`${outDir}`)
-                    // console.log(`${inDir}`)
-                    await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
-                    // console.log(`${path.resolve('../packages/contract/src/typechain/captcha/types-arguments')}`)
-                    // console.log(`${path.resolve('../packages/types/src/contract/typechain/captcha/types-arguments')}`)
-                    await exec(`mkdir -p ../packages/types/src/contract/typechain/captcha`)
+                    const inDir = `${paths.protocolDist}/${contract}`
                     await exec(
-                        `cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractTypechain}/${contract}`
                     )
                     await exec(
-                        `cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.typesTypechain}/${contract}`
                     )
                 }
             },
