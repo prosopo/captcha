@@ -16,7 +16,7 @@ import { Account, accountAddress, accountContract, accountMnemonic } from '../ac
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN, stringToU8a } from '@polkadot/util'
 import { ContractDeployer, ProsopoContractError, wrapQuery } from '@prosopo/contract'
-import { DappPayee, Payee } from '@prosopo/types'
+import { DappPayee, Payee } from '@prosopo/captcha-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
 import { MockEnvironment } from '@prosopo/env'

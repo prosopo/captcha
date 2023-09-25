@@ -18,6 +18,9 @@
         },
         {
             "path": "../util"
+        },
+        {
+            "path": "../../contracts/captcha"
         }
     ]
 }
