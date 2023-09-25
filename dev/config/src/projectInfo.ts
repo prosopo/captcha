@@ -34,7 +34,6 @@ export type Paths = {
     typesDatabase: string
     typesEnv: string
     types: string
-    typechain: string
     contractPackagesDir: string
 }
 
@@ -70,7 +69,6 @@ export const getPaths = (): Paths => {
     const server = `${packages}/server`
     const typesDatabase = `${packages}/types-database`
     const typesEnv = `${packages}/types-env`
-    const typechain = `${packages}/typechain`
     const contractPackagesDir = `${root}/contracts`
 
     return {
@@ -106,6 +104,5 @@ export const getPaths = (): Paths => {
         typesDatabase,
         typesEnv,
         types,
-        typechain,
     }
 }
