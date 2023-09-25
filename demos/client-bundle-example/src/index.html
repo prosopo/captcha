@@ -1,24 +1,25 @@
 <html>
-<head>
-    <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha demo: Simple page</title>
-    <script src="procaptcha.bundle.js" async defer></script>
-</head>
-<body>
-<div class="mui-container">
-    <form action="?" class="mui-form">
-        <legend>Login</legend>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label>Email Address</label>
-            <input type="email" required>
+    <head>
+        <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+        <title>Procaptcha demo: Simple page</title>
+        <script src="procaptcha.bundle.js" async defer></script>
+    </head>
+    <body>
+        <div class="mui-container">
+            <form action="?" class="mui-form">
+                <legend>Login</legend>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <label>Email Address</label>
+                    <input type="email" required>
+                </div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <label>Password</label>
+                    <input type="password" required>
+                </div>
+                <!-- Dev sitekey -->
+                <div class="procaptcha" data-sitekey="5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg" data-theme="dark"></div>
+                <input type="submit" class="mui-btn mui-btn--raised">
+            </form>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label>Password</label>
-            <input type="password" required>
-        </div>
-        <div class="procaptcha" data-sitekey="5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg"></div>
-        <input type="submit" class="mui-btn mui-btn--raised">
-    </form>
-</div>
-</body>
+    </body>
 </html>

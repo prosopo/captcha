@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { LogLevel } from '@prosopo/common'
-import { SxProps } from '@mui/material/styles'
 import { z } from 'zod'
 
 export const DatabaseTypes = z.enum(['mongo', 'mongoMemory'])
@@ -140,11 +139,12 @@ export const AccountCreatorConfigSchema = z.object({
 
 export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
 
-const SxProps = z.record(z.string(), z.string())
+const ThemeType = z.union([z.literal('light'), z.literal('dark')])
+
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
-        sx: SxProps.optional(),
+        theme: ThemeType.optional(),
     })
 )
 
