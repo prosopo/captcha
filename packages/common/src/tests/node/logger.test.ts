@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger } from '../../src/logger.js'
+import { LogLevel, getLogger } from '../../logger.js'
 import { describe, expect, test } from 'vitest'
 
 describe('logging', () => {

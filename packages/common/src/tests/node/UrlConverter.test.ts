@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import UrlConverter from '../../src/node/UrlConverter'
+import UrlConverter from '../../node/UrlConverter.js'
 describe('URL converter', () => {
     const urlAsBytes = new Uint8Array([178, 214, 156, 101, 214, 90, 103, 32])
     const url = 'https://www.prosopo.io'
