@@ -19,6 +19,11 @@ export default function () {
             exclude: ['../../demos/**/*'], // '../!packages/**/*'],
             singleThread: true,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
+            testTimeout: 120000, // 2mins
+            logHeapUsage: true,
+            coverage: {
+                enabled: true,
+            },
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true })],
     })
