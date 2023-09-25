@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel } from '@prosopo/common'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
-import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import { LogLevel } from '@prosopo/common'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
