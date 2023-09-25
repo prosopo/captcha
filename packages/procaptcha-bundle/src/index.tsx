@@ -17,7 +17,6 @@ import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } fr
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
-import React from 'react'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
@@ -85,11 +84,11 @@ export function render(callbacks?: ProcaptchaCallbacks) {
                 callbacks[callbackName] = (window as any)[callback.replace('window.', '')]
             }
         }
+
         // get the custom theme, if set
-        const customTheme = element.getAttribute(`data-custom-theme`)
-        if (customTheme) {
-            config['sx'] = JSON.parse(customTheme)
-        }
+        const customThemeList = ['light', 'dark']
+        const themeAttribute = element.getAttribute('data-theme') ?? 'light'
+        config['theme'] = (customThemeList.includes(themeAttribute) ? themeAttribute : 'light') as 'light' | 'dark'
 
         // set a default callback for onHuman, if not set
         if (!callbacks['onHuman']) {
@@ -107,19 +106,17 @@ export function render(callbacks?: ProcaptchaCallbacks) {
                 }
             }
         }
-        const root = createRoot(element)
-        root.render(<Procaptcha config={config} callbacks={callbacks} />) //wrap in fn and give user access to func
+        //wrap in fn and give user access to func
+        createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
     }
 }
 
-//https://stackoverflow.com/questions/41174095/do-i-need-to-use-onload-to-start-my-webpack-bundled-code
 export default function ready(fn: () => void) {
     if (document && document.readyState != 'loading') {
         console.log('document.readyState ready!')
         fn()
     } else {
         console.log('DOMContentLoaded listener!')
-        // note sure if this is the correct event listener
         document.addEventListener('DOMContentLoaded', fn)
     }
 }
