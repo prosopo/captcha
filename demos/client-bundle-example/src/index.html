@@ -1,8 +1,8 @@
 <html>
     <head>
-        <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+        <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
         <title>Procaptcha demo: Simple page</title>
-        <script src="procaptcha.bundle.js" async defer></script>
+        <script src="procaptcha.bundle.js"></script>
     </head>
     <body>
         <div class="mui-container">
@@ -10,16 +10,34 @@
                 <legend>Login</legend>
                 <div class="mui-textfield mui-textfield--float-label">
                     <label>Email Address</label>
-                    <input type="email" required>
+                    <input type="email" required />
                 </div>
                 <div class="mui-textfield mui-textfield--float-label">
                     <label>Password</label>
-                    <input type="password" required>
+                    <input type="password" required />
                 </div>
-                <!-- Dev sitekey -->
-                <div class="procaptcha" data-sitekey="5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg" data-theme="dark"></div>
-                <input type="submit" class="mui-btn mui-btn--raised">
+                <div id="procaptcha-container"></div>
+                <div
+                    class="procaptcha"
+                    data-theme="dark"
+                    data-sitekey="5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg"
+                ></div>
+                <input type="submit" class="mui-btn mui-btn--raised" />
             </form>
         </div>
+        <hr />
+        <script>
+            // Define a callback function to be called when the CAPTCHA is verified
+            window.onCaptchaVerified = function (output) {
+                console.log('Captcha verified, output: ' + JSON.stringify(output))
+            }
+
+            // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
+            procaptcha.render('procaptcha-container', {
+                siteKey: '5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg',
+                theme: 'dark',
+                callback: 'onCaptchaVerified',
+            })
+        </script>
     </body>
 </html>

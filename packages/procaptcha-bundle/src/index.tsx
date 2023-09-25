@@ -19,6 +19,7 @@ import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
 interface ProcaptchaRenderOptions {
+    siteKey: string
     theme?: 'light' | 'dark'
     callback?: string
     'chalexpired-callback'?: string
@@ -84,7 +85,11 @@ const getWindowCallback = (callbackName: string) => {
 
 const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
     const form = getParentForm(element)
-    if (!form) return
+
+    if (!form) {
+        console.error('Parent form not found for the element:', element)
+        return
+    }
 
     const input = document.createElement('input')
     input.type = 'hidden'
@@ -93,19 +98,15 @@ const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
     form.appendChild(input)
 }
 
-const validateTheme = (themeAttribute: string): 'light' | 'dark' => {
-    const customThemeList = ['light', 'dark']
-    return customThemeList.includes(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
-}
+const customThemeSet = new Set(['light', 'dark'])
+const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
+    customThemeSet.has(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
 
-export const render = (siteKey?: string, renderOptions?: ProcaptchaRenderOptions) => {
-    // Get elements with class 'procaptcha'
-    const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
-
-    // Set siteKey from renderOptions or from the first element's data-sitekey attribute
-    siteKey = siteKey || at(elements, 0).getAttribute('data-sitekey') || undefined
-    const config = getConfig(siteKey)
-
+const renderLogic = (
+    elements: Element[],
+    config: ProcaptchaConfigOptional,
+    renderOptions?: ProcaptchaRenderOptions
+) => {
     elements.forEach((element) => {
         const callbackName = renderOptions?.callback || element.getAttribute('data-callback')
         const chalExpiredCallbackName =
@@ -116,10 +117,10 @@ export const render = (siteKey?: string, renderOptions?: ProcaptchaRenderOptions
         const callbacks = {
             onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
             onChallengeExpired: () => {
-                'temp'
+                console.log('Challenge expired')
             },
             onError: (error: Error) => {
-                'temp'
+                console.error(error)
             },
         }
 
@@ -128,11 +129,37 @@ export const render = (siteKey?: string, renderOptions?: ProcaptchaRenderOptions
         if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
 
         // Getting and setting the theme
-        const themeAttribute = element.getAttribute('data-theme') || 'light'
+        const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
         config.theme = validateTheme(themeAttribute)
 
         createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
     })
+}
+
+// Implicit render for targeting all elements with class 'procaptcha'
+const implicitRender = () => {
+    // Get elements with class 'procaptcha'
+    const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
+
+    // Set siteKey from renderOptions or from the first element's data-sitekey attribute
+    const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
+    const config = getConfig(siteKey)
+
+    renderLogic(elements, config)
+}
+
+// Explicit render for targeting specific elements
+export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
+    const siteKey = renderOptions.siteKey
+    const config = getConfig(siteKey)
+    const element = document.getElementById(elementId)
+
+    if (!element) {
+        console.error('Element not found:', elementId)
+        return
+    }
+
+    renderLogic([element], config, renderOptions)
 }
 
 export default function ready(fn: () => void) {
@@ -145,4 +172,4 @@ export default function ready(fn: () => void) {
     }
 }
 
-ready(render)
+ready(implicitRender)
