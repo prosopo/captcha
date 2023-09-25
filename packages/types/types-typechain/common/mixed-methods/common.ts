@@ -9,7 +9,7 @@ import type { GasLimit, Result } from '@727-ventures/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { QueryReturnType } from '@727-ventures/typechain-types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
+// @ts-ignore
 import { getTypeDescription } from './../shared/utils.js'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

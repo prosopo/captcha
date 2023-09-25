@@ -9,7 +9,7 @@ import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/t
 import type { QueryReturnType } from '@727-ventures/typechain-types'
 import type BN from 'bn.js'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
+// @ts-ignore
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { getTypeDescription } from './../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json' assert { type: 'json' }
