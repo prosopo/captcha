@@ -20,7 +20,6 @@ export type Paths = {
     common: string
     api: string
     cli: string
-    contractTypechain: string
     util: string
     database: string
     datasets: string
@@ -35,7 +34,7 @@ export type Paths = {
     typesDatabase: string
     typesEnv: string
     types: string
-    typesTypechain: string
+    contractPackagesDir: string
 }
 
 export const getPaths = (): Paths => {
@@ -57,7 +56,6 @@ export const getPaths = (): Paths => {
     const common = `${packages}/common`
     const api = `${packages}/api`
     const cli = `${packages}/cli`
-    const contractTypechain = `${contract}/src/typechain`
     const util = `${packages}/util`
     const database = `${packages}/database`
     const datasets = `${packages}/datasets`
@@ -71,9 +69,10 @@ export const getPaths = (): Paths => {
     const server = `${packages}/server`
     const typesDatabase = `${packages}/types-database`
     const typesEnv = `${packages}/types-env`
-    const typesTypechain = `${types}/types-typechain`
+    const contractPackagesDir = `${root}/contracts`
 
     return {
+        contractPackagesDir,
         root,
         dev,
         demos,
@@ -91,7 +90,6 @@ export const getPaths = (): Paths => {
         common,
         api,
         cli,
-        contractTypechain,
         util,
         database,
         datasets,
@@ -106,6 +104,5 @@ export const getPaths = (): Paths => {
         typesDatabase,
         typesEnv,
         types,
-        typesTypechain,
     }
 }

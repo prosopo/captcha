@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes } from '@prosopo/types'
 import {
     Captcha,
     CaptchaSolution,
@@ -22,14 +21,16 @@ import {
     DatasetWithIds,
     Item,
 } from '@prosopo/types'
+import { CaptchaStatus, Commit } from '@prosopo/captcha-contract'
 import { Connection, Model, Schema } from 'mongoose'
 import { DeleteResult } from 'mongodb'
+import { Hash } from '@prosopo/types'
 import { Logger } from '@prosopo/common'
 import { PendingCaptchaRequest } from '@prosopo/types'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { z } from 'zod'
 
-export interface UserCommitmentRecord extends Omit<ArgumentTypes.Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
+export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
     userSignature: number[]
     processed: boolean
     batched: boolean
@@ -41,7 +42,7 @@ export const UserCommitmentSchema = z.object({
     datasetId: z.string(),
     providerAccount: z.string(),
     id: z.string(),
-    status: z.nativeEnum(ArgumentTypes.CaptchaStatus),
+    status: z.nativeEnum(CaptchaStatus),
     userSignature: z.array(z.number()),
     completedAt: z.number(),
     requestedAt: z.number(),
@@ -211,11 +212,7 @@ export interface Database {
 
     getDataset(datasetId: string): Promise<DatasetWithIds>
 
-    getRandomCaptcha(
-        solved: boolean,
-        datasetId: ArgumentTypes.Hash | string,
-        size?: number
-    ): Promise<Captcha[] | undefined>
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>
 
@@ -223,7 +220,7 @@ export interface Database {
 
     removeCaptchas(captchaIds: string[]): Promise<void>
 
-    getDatasetDetails(datasetId: ArgumentTypes.Hash | string | Uint8Array): Promise<DatasetBase>
+    getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>
 
     storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void>
 
@@ -255,9 +252,9 @@ export interface Database {
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeProcessedDappUserSolutions(commitmentIds: ArgumentTypes.Hash[]): Promise<DeleteResult | undefined>
+    removeProcessedDappUserSolutions(commitmentIds: Hash[]): Promise<DeleteResult | undefined>
 
-    removeProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<DeleteResult | undefined>
+    removeProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<DeleteResult | undefined>
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
@@ -267,11 +264,11 @@ export interface Database {
 
     getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>
 
-    flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void>
+    flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>
 
-    flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void>
+    flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>
 
-    flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void>
+    flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void>
 
     getLastBatchCommitTime(): Promise<Date>
 
