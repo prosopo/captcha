@@ -23,16 +23,11 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { Alert, Backdrop, CircularProgress, ThemeProvider } from '@mui/material'
-import { Box, Checkbox, Link, Typography } from '@mui/material'
+import { Alert, Backdrop, Box, Checkbox, CircularProgress, Link, ThemeProvider, Typography } from '@mui/material'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-// import Box from '@mui/material/Box/Box.js'
-// import Checkbox from '@mui/material/Checkbox/Checkbox.js'
-// import Link from '@mui/material/Link/Link.js'
-// import Typography from '@mui/material/Typography/Typography.js'
 
 const logoStyle = css`
     align-items: center;
@@ -177,7 +172,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         p={1}
                         border={1}
                         bgcolor={theme.palette.background.default}
-                        borderColor="grey.300"
+                        borderColor={theme.palette.grey[300]}
                         borderRadius={2}
                         sx={{
                             display: 'flex',
