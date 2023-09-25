@@ -13,16 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
-import {
-    ArgumentTypes,
-    CaptchaSolution,
-    CaptchaStatus,
-    Commit,
-    DappPayee,
-    DappUserSolutionResult,
-} from '@prosopo/types'
 import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
+import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
+import { CaptchaStatus, DappPayee, Payee } from '@prosopo/captcha-contract'
 import { ContractDeployer, ProsopoContractError, getBlockNumber, getDispatchError, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
@@ -49,7 +43,7 @@ export async function sleep(timeout) {
     await delay(timeout)
 }
 
-const PROVIDER_PAYEE = ArgumentTypes.Payee.dapp
+const PROVIDER_PAYEE = Payee.dapp
 declare module 'vitest' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     export interface TestContext extends ViteTestContext {}

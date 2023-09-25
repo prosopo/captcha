@@ -59,7 +59,7 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     name = 'env_' + name // add the env prefix to the name
     // names could be lower, upper or specific case
     for (const declaration of ['let', 'const']) {
-        const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gmsi')
+        const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gims')
         const regexMatch = regex.test(result)
         if (!regexMatch) {
             // console.log('no match for', regex, 'in', filePath);
@@ -371,7 +371,7 @@ Cargo pass-through commands:
                 if (!cmd) {
                     throw new Error('No command specified')
                 }
-                if (!cmd.toString().match(/^[a-z0-9]+/gims)) {
+                if (!cmd.toString().match(/^[a-z\d]+/gim)) {
                     throw new Error(`unknown command: ${cmd}`)
                 }
                 await execCargo(argv, cmd.toString())
