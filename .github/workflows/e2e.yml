@@ -51,12 +51,6 @@ jobs:
             # build all packages in workspace
             - run: npm run build:all
 
-            - name: Start the docker images
-              run: |
-                  docker compose --file ./docker/docker-compose.test.yml up -d
-                  docker container ls
-                  sleep 10s
-
             - name: Setup env
               run: |
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
@@ -65,22 +59,31 @@ jobs:
                   cp dev/scripts/env.test packages/cli/.env.test
                   echo NODE_ENV: $NODE_ENV
 
+            - name: Start the docker images
+              run: |
+                  docker compose --file ./docker/docker-compose.test.yml up -d
+                  docker container ls
+                  sleep 10s
+
+            # deploy dapp + protocol and run the unit tests
             - run: npm run deploy_protocol
             - run: npm run deploy_dapp
+            - run: npm run test
 
+            # restart the docker images to drop any changes made by the unit tests to the contract(s) before running cypress tests
             - name: Reset the docker containers
               run: |
                   docker compose --file ./docker/docker-compose.test.yml down
                   docker compose --file ./docker/docker-compose.test.yml up -d
                   docker container ls
                   sleep 10s
-              shell: bash
 
-            - run: npm run setup:all
-            - run: npm run test:all
+            # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider 
+            - run: npm run deploy_protocol
+            - run: npm run deploy_dapp
+            - run: npm run setup
 
             - name: Run the cypress tests on client-example
-              shell: bash
               run: |
                   npm run start:provider &
                   sleep 10s
