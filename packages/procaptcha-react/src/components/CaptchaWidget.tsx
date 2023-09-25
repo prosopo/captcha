@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Box, Fade, useTheme } from '@mui/material'
+import { Box, Fade, SvgIcon, Theme, useTheme } from '@mui/material'
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
 import { default as CheckIcon } from '@mui/icons-material/Check.js'
-import { SvgIcon, Theme } from '@mui/material'
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
@@ -79,11 +78,11 @@ export const CaptchaWidget = ({ challenge, solution, onClick }: CaptchaWidgetPro
                             onClick={isTouchDevice ? undefined : () => onClick(hash)}
                             onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
                         >
-                            <Box sx={{ border: 1, borderColor: 'lightgray' }}>
+                            <Box sx={{ border: 1, borderColor: theme.palette.grey[300] }}>
                                 <img
                                     style={{
                                         width: '100%', // image should be full width / height of the item
-                                        backgroundColor: 'lightgray', // colour of the bands when letterboxing and image
+                                        backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
                                         opacity: solution.includes(hash) && isTouchDevice ? '50%' : '100%', // iphone workaround
                                         display: 'block', // removes whitespace below imgs
                                         objectFit: 'contain', // contain the entire image in the img tag

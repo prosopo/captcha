@@ -14,9 +14,10 @@
 
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { ApiPromise } from '@polkadot/api'
-import { ArgumentTypes, CaptchaSolution, CaptchaStatus, ScheduledTaskNames } from '@prosopo/types'
 import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
 import { BatchCommitmentsTask } from '../../src/batch/commitments.js'
+import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
+import { CaptchaStatus } from '@prosopo/captcha-contract'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
@@ -178,7 +179,7 @@ describe('BATCH TESTS', function () {
                 // n/2 commitments should be approved and n/2 disapproved
                 expect(
                     commitmentsBeforeBatching
-                        .map((c) => +(c.status === ArgumentTypes.CaptchaStatus.approved))
+                        .map((c) => +(c.status === CaptchaStatus.approved))
                         .reduce((prev, next) => prev + next)
                 ).to.equal(Math.round(commitmentCount / 2))
 
