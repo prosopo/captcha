@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
-import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
@@ -74,7 +74,13 @@ const getParentForm = (element: Element): HTMLFormElement | null => {
     return null
 }
 
-const getWindowCallback = (callbackName: string) => (window as any)[callbackName.replace('window.', '')]
+const getWindowCallback = (callbackName: string) => {
+    const fn = (window as any)[callbackName.replace('window.', '')]
+    if (typeof fn !== 'function') {
+        throw new Error(`Callback ${callbackName} is not defined`)
+    }
+    return fn
+}
 
 const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
     const form = getParentForm(element)
@@ -109,8 +115,12 @@ export const render = (siteKey?: string, renderOptions?: ProcaptchaRenderOptions
         // Setting up default callbacks object
         const callbacks = {
             onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
-            onChallengeExpired: () => {}, // Leave it empty or add a handler as per your requirements
-            onError: (error: Error) => {}, // Leave it empty or add a handler as per your requirements
+            onChallengeExpired: () => {
+                'temp'
+            },
+            onError: (error: Error) => {
+                'temp'
+            },
         }
 
         if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
