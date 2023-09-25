@@ -336,14 +336,21 @@ Cargo pass-through commands:
                 yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
+                yargs = yargs.option('skip-env', {
+                    type: 'boolean',
+                    demand: false,
+                    desc: 'skip setting env variables before building contract(s)',
+                })
                 return yargs
             },
             async (argv) => {
-                // set the env variables using find and replace
-                const env: Env = {
-                    git_commit_id: await getGitCommitId(),
+                if (!argv.skipEnv) {
+                    // set the env variables using find and replace
+                    const env: Env = {
+                        git_commit_id: await getGitCommitId(),
+                    }
+                    setEnvVariables(packagePaths, env)
                 }
-                setEnvVariables(packagePaths, env)
 
                 const contracts = argv.contract as string[]
                 delete argv.contract
