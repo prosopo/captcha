@@ -52,7 +52,7 @@ jobs:
                   cd protocol/dev
                   npm run cli -- build --docker
 
-            - name: Check typechain
+            - name: Check typechain is up-to-date
               run: |
                   cd dev/scripts
                   npm run build
