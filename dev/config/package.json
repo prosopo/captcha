@@ -4,7 +4,6 @@
     "description": "Prosopo config library",
     "main": "./dist/index.js",
     "type": "module",
-    "types": "./dist/webpack/index.d.ts",
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
