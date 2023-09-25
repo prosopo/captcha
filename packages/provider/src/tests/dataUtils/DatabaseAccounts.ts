@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at, get } from '@prosopo/util'
 import { Account } from '../accounts.js'
 import { IDatabasePopulatorMethods } from './DatabasePopulator.js'
+import { at, get } from '@prosopo/util'
 import { readFile, writeFile } from 'fs'
 import path from 'path'
 
@@ -108,7 +108,6 @@ class DatabaseAccounts implements IDatabaseAccounts {
                     console.log(`Imported accounts from ${getPath('import')}`)
                     const data = JSON.parse(stringData)
                     keys.forEach((key) => {
-
                         self[`_registered${key.replace(/^./, at(key, 0).toUpperCase())}`] = get(data, key)
                     })
                 }

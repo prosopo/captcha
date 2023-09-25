@@ -27,6 +27,7 @@ import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { at, get } from '@prosopo/util'
 import { captchaData } from '../data/captchas.js'
 import { createType } from '@polkadot/types'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
@@ -34,7 +35,6 @@ import { getUser } from '../getUser.js'
 import { parseBlockNumber } from '../../index.js'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { testConfig } from '@prosopo/config'
-import { at, get } from '@prosopo/util'
 
 function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))

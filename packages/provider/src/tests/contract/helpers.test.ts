@@ -21,9 +21,9 @@ import { ReturnNumber } from '@727-ventures/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { at } from '@prosopo/util'
 import { encodeStringArgs, wrapQuery } from '@prosopo/contract'
 import { testConfig } from '@prosopo/config'
-import { at } from '@prosopo/util'
 
 declare module 'vitest' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface

@@ -26,12 +26,12 @@ import { UserCommitmentRecord } from '@prosopo/types-database'
 import { ViteTestContext } from '@prosopo/env'
 import { accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { at } from '@prosopo/util'
 import { getUser } from '../getUser.js'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test.js'
 import { testConfig } from '@prosopo/config'
 import { wrapQuery } from '@prosopo/contract'
-import { at } from '@prosopo/util'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against

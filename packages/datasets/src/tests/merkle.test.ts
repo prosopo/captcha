@@ -13,9 +13,9 @@
 // limitations under the License.
 import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
 import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
+import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { hexHashArray } from '@prosopo/common'
-import { at } from '@prosopo/util'
 
 async function getDataset(): Promise<Dataset> {
     return {

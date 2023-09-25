@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Captcha, CaptchaItemTypes, CaptchaSolution, CaptchaTypes, Dataset, Item } from '@prosopo/types'
+import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { computeItemHash, matchItemsToSolutions } from '../index.js'
 import { validateDatasetContent } from '../index.js'
 import path from 'path'
-import { at } from '@prosopo/util'
 
 describe('DATASET FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]

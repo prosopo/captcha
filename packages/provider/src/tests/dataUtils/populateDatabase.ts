@@ -15,14 +15,12 @@ import { Abi } from '@polkadot/api-contract'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoConfig } from '@prosopo/types'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
+import { get } from '@prosopo/util'
 import { promiseQueue } from '../../util.js'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
-import consola from 'consola'
-import { at, get } from '@prosopo/util'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
