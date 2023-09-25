@@ -50,7 +50,7 @@ jobs:
               id: build
               run: |
                   cd protocol/dev
-                  npm run cli -- build --docker
+                  npm run cli -- build --docker --skip-env
 
             - name: Check typechain is up-to-date
               run: |
