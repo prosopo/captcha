@@ -215,8 +215,7 @@ export class BatchCommitmentsTask {
 
         return {
             ...commit,
-            userSignaturePart1: userSignature.slice(0, userSignature.length / 2),
-            userSignaturePart2: userSignature.slice(userSignature.length / 2),
+            userSignature: userSignature,
             // to satisfy typescript
             requestedAt: new BN(requestedAt).toNumber(),
             completedAt: new BN(completedAt).toNumber(),
