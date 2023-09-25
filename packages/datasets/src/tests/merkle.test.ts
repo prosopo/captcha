@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
-import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../..'
+import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { hexHashArray } from '@prosopo/common'
+import { at } from '@prosopo/util'
 
 async function getDataset(): Promise<Dataset> {
     return {
@@ -23,9 +24,9 @@ async function getDataset(): Promise<Dataset> {
             {
                 salt: '0x01020304',
                 items: await Promise.all([
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: '1' }),
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'b' }),
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'c' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: '1', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'b', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'c', hash: '' }),
                 ]),
                 target: 'letters',
                 solution: [0] as RawSolution[],
@@ -33,18 +34,18 @@ async function getDataset(): Promise<Dataset> {
             {
                 salt: '0x02020304',
                 items: await Promise.all([
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'c' }),
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'e' }),
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: '3' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'c', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'e', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: '3', hash: '' }),
                 ]),
                 target: 'letters',
             },
             {
                 salt: '0x03020304',
                 items: await Promise.all([
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'h' }),
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'f' }),
-                    computeItemHash({ type: CaptchaItemTypes.Text, data: '5' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'h', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'f', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: '5', hash: '' }),
                 ]),
                 target: 'letters',
                 solution: [1] as RawSolution[],
@@ -58,8 +59,8 @@ describe('DATASETS MERKLE TREE', async function () {
     let DATASET: Dataset
     beforeAll(async () => {
         DATASET = await getDataset()
-        DATASET.captchas[0].solution = matchItemsToSolutions([1, 2], DATASET.captchas[0].items)
-        DATASET.captchas[1].solution = matchItemsToSolutions([2], DATASET.captchas[1].items)
+        at(DATASET.captchas, 0).solution = matchItemsToSolutions([1, 2], at(DATASET.captchas, 0).items)
+        at(DATASET.captchas, 1).solution = matchItemsToSolutions([2], at(DATASET.captchas, 1).items)
     })
 
     test('Tree contains correct leaf hashes when computing leaf hashes', () => {
@@ -90,12 +91,12 @@ describe('DATASETS MERKLE TREE', async function () {
 
         tree.build(captchaHashes)
         const proof = tree.proof('0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a')
-        const layerZeroHash = hexHashArray(proof[0])
+        const layerZeroHash = hexHashArray(at(proof, 0))
 
-        expect(tree.layers[1].indexOf(layerZeroHash) > -1)
-        const layerOneHash = hexHashArray(proof[1])
+        expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1)
+        const layerOneHash = hexHashArray(at(proof, 1))
 
-        expect(tree.layers[2].indexOf(layerOneHash) > -1)
+        expect(at(tree.layers, 2).indexOf(layerOneHash) > -1)
     })
     test('Tree contains correct leaf hashes when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()
@@ -116,14 +117,14 @@ describe('DATASETS MERKLE TREE', async function () {
 
         tree.build(['1', '2', '3'])
         const proof1 = tree.proof('1')
-        const layerZeroHash = hexHashArray(proof1[0])
+        const layerZeroHash = hexHashArray(at(proof1, 0))
 
-        expect(tree.layers[1].indexOf(layerZeroHash) > -1)
-        const layerOneHash = hexHashArray(proof1[1])
+        expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1)
+        const layerOneHash = hexHashArray(at(proof1, 1))
 
-        expect(tree.layers[2].indexOf(layerOneHash) > -1)
+        expect(at(tree.layers, 2).indexOf(layerOneHash) > -1)
 
-        expect(proof1[proof1.length - 1].length).to.equal(1)
+        expect(at(proof1, proof1.length - 1).length).to.equal(1)
 
         const proof3 = tree.proof('3')
         const proof2 = tree.proof('2')
@@ -139,16 +140,16 @@ describe('DATASETS MERKLE TREE', async function () {
 
         tree.build(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16'])
         const proof = tree.proof('16')
-        const layerZeroHash = hexHashArray(proof[0])
+        const layerZeroHash = hexHashArray(at(proof, 0))
 
-        expect(tree.layers[1].indexOf(layerZeroHash) > -1)
-        const layerOneHash = hexHashArray(proof[1])
+        expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1)
+        const layerOneHash = hexHashArray(at(proof, 1))
 
-        expect(tree.layers[2].indexOf(layerOneHash) > -1)
+        expect(at(tree.layers, 2).indexOf(layerOneHash) > -1)
 
-        expect(tree.layers[tree.layers.length - 1].length === 1)
+        expect(at(tree.layers, tree.layers.length - 1).length === 1)
 
-        expect(proof[proof.length - 1].length).to.equal(1)
+        expect(at(proof, proof.length - 1).length).to.equal(1)
     })
 
     test('Larger odd tree proof works', () => {
@@ -156,16 +157,16 @@ describe('DATASETS MERKLE TREE', async function () {
 
         tree.build(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17'])
         const proof = tree.proof('17')
-        const layerZeroHash = hexHashArray(proof[0])
+        const layerZeroHash = hexHashArray(at(proof, 0))
 
-        expect(tree.layers[1].indexOf(layerZeroHash) > -1)
-        const layerOneHash = hexHashArray(proof[1])
+        expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1)
+        const layerOneHash = hexHashArray(at(proof, 1))
 
-        expect(tree.layers[2].indexOf(layerOneHash) > -1)
+        expect(at(tree.layers, 2).indexOf(layerOneHash) > -1)
 
-        expect(tree.layers[tree.layers.length - 1].length === 1)
+        expect(at(tree.layers, tree.layers.length - 1).length === 1)
 
-        expect(proof[proof.length - 1].length).to.equal(1)
+        expect(at(proof, proof.length - 1).length).to.equal(1)
     })
 
     test('Tree proof works when there is only one leaf', () => {

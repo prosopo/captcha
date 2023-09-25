@@ -13,9 +13,10 @@
 // limitations under the License.
 import { Captcha, CaptchaItemTypes, CaptchaSolution, CaptchaTypes, Dataset, Item } from '@prosopo/types'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { computeItemHash, matchItemsToSolutions } from '../..'
-import { validateDatasetContent } from '../../src'
+import { computeItemHash, matchItemsToSolutions } from '../index.js'
+import { validateDatasetContent } from '../index.js'
 import path from 'path'
+import { at } from '@prosopo/util'
 
 describe('DATASET FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]
@@ -28,6 +29,7 @@ describe('DATASET FUNCTIONS', async function () {
                 computeItemHash({
                     data: path.join('http://localhost', `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`),
                     type: CaptchaItemTypes.Text,
+                    hash: '',
                 })
             )
         )
@@ -138,7 +140,7 @@ describe('DATASET FUNCTIONS', async function () {
 
     test('Validates a captcha dataset correctly', async () => {
         // duplicate the CAPTCHAS in DATASET.captchas by 1000 times
-        DATASET.captchas = new Array(10000).fill(0).map(() => DATASET.captchas[0])
+        DATASET.captchas = new Array(10000).fill(0).map(() => at(DATASET.captchas, 0))
         const validated = await validateDatasetContent(DATASET)
         expect(validated).to.be.true
     })
