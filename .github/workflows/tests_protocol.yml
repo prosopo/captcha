@@ -16,6 +16,7 @@ concurrency:
 env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
+    NODE_ENV: test
 
 jobs:
     check:
@@ -45,13 +46,21 @@ jobs:
 
             - run: npm install
 
-            - name: Build contract
+            - name: Build contracts
               id: build
               run: |
                   cd protocol/dev
                   npm run cli -- build --docker
 
-            - name: Test contract
+            - name: Check typechain
+              run: |
+                    cd dev/scripts
+                    npm run build
+                    npm run cli -- import_all_contracts
+                    # expect no changes so typechain is up to date with the contract
+                    git diff --exit-code
+
+            - name: Test contracts
               run: |
                   cd protocol/dev
                   RUST_BACKTRACE=1 npm run cli -- test --docker
