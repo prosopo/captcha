@@ -64,7 +64,7 @@ jobs:
             # deploy dapp + protocol and run the unit tests
             - run: npm run deploy_protocol
             - run: npm run deploy_dapp
-            - run: npm run test
+            - run: npm run test -- --watch=false --coverage.enabled --logHeapUsage
 
             # restart the docker images to drop any changes made by the unit tests to the contract(s) before running cypress tests
             - name: Reset the docker containers
