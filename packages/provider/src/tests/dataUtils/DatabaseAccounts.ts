@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { at, get } from '@prosopo/util'
 import { Account } from '../accounts.js'
 import { IDatabasePopulatorMethods } from './DatabasePopulator.js'
 import { readFile, writeFile } from 'fs'
@@ -50,7 +51,7 @@ export async function exportDatabaseAccounts(database: IDatabaseAccounts) {
         const jsonData = keys.reduce((prev, curr) => {
             return {
                 ...prev,
-                [curr]: database[curr],
+                [curr]: get(database, curr),
             }
         }, {})
 
@@ -96,7 +97,9 @@ class DatabaseAccounts implements IDatabaseAccounts {
 
     public importDatabaseAccounts() {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const self = this
+        const self: {
+            [key: string]: Account[]
+        } = this as any
         return new Promise((resolve) => {
             readFile(getPath('import'), { encoding: 'utf-8' }, function (err, stringData) {
                 if (err) {
@@ -105,7 +108,8 @@ class DatabaseAccounts implements IDatabaseAccounts {
                     console.log(`Imported accounts from ${getPath('import')}`)
                     const data = JSON.parse(stringData)
                     keys.forEach((key) => {
-                        self[`_registered${key.replace(/^./, key[0].toUpperCase())}`] = data[key]
+
+                        self[`_registered${key.replace(/^./, at(key, 0).toUpperCase())}`] = get(data, key)
                     })
                 }
 

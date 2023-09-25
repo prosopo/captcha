@@ -16,30 +16,31 @@ import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
-import { CaptchaStatus, DappPayee, Payee } from '@prosopo/captcha-contract'
+import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract'
 import { ContractDeployer, ProsopoContractError, getBlockNumber, getDispatchError, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { MockEnvironment } from '@prosopo/env'
+import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
 import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { ViteTestContext } from '@prosopo/env/mockenv.js'
+import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { captchaData } from '../data/captchas.js'
 import { createType } from '@polkadot/types'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
 import { getUser } from '../getUser.js'
-import { parseBlockNumber } from '../../src/index.js'
+import { parseBlockNumber } from '../../index.js'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { testConfig } from '@prosopo/config'
+import { at, get } from '@prosopo/util'
 
-function delay(ms) {
+function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function sleep(timeout) {
+export async function sleep(timeout: number) {
     await delay(timeout)
 }
 
@@ -59,11 +60,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         try {
             await context.env.isReady()
         } catch (e) {
-            throw new ProsopoEnvError(e, 'isReady')
+            throw new ProsopoEnvError(e as Error)
         }
         const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
-            context.env.contractInterface.query.getProviderStakeThreshold,
-            context.env.contractInterface.query
+            context.env.getContractInterface().query.getProviderStakeThreshold,
+            context.env.getContractInterface().query
         )()
         context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
     })
@@ -76,7 +77,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
      *  Computes the request hash for these captchas and the dappUser and then stores the request hash in the mock db
      *  @return {CaptchaSolution[], string} captchaSolutions and requestHash
      */
-    async function createMockCaptchaSolutionsAndRequestHash(env, pairType, ss58Format) {
+    async function createMockCaptchaSolutionsAndRequestHash(
+        env: ProviderEnvironment,
+        pairType: KeypairType,
+        ss58Format: number
+    ) {
         // There must exist a dappUser who can receive a captcha
         const dappUserAccount = await getUser(env, AccountKey.dappUsers)
         // There must exist a provider with a dataset for us to get a random dataset with solutions
@@ -109,7 +114,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             pendingRequestSalt
         )
 
-        const blockNumber = (await getBlockNumber(env.api)).toNumber()
+        const blockNumber = (await getBlockNumber(env.getApi())).toNumber()
 
         if ('storeDappUserPending' in env.db!) {
             await env.db.storeDappUserPending(
@@ -255,10 +260,10 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
-        const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+        const completedAt = (await env.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
         const requestedAt = completedAt - 1
         const providerTasks = await getSignedTasks(env, providerAccount)
-        const commit = {
+        const commit: Commit = {
             dappContract: accountContract(dappContractAccount),
             datasetId: provider.datasetId,
             id: commitmentId,
@@ -267,8 +272,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             status: CaptchaStatus.approved,
             requestedAt,
             completedAt,
-            userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-            userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+            userSignature: [...userSignature],
         }
         const queryResult = await providerTasks.contract.query.providerCommit(commit)
         if (queryResult.value.err) {
@@ -308,7 +312,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             .unwrap()
             .unwrap()
 
-        const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+        const completedAt = (await env.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
         const requestedAt = completedAt - 1
         const providerTasks = await getSignedTasks(env, providerAccount)
         await providerTasks.contract.tx.providerCommit({
@@ -320,8 +324,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             status: CaptchaStatus.disapproved,
             requestedAt,
             completedAt,
-            userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-            userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+            userSignature: [...userSignature],
         })
     })
 
@@ -348,7 +351,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             .unwrap()
             .unwrap()
 
-        const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+        const completedAt = (await env.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
         const requestedAt = completedAt - 1
         const providerTasks = await getSignedTasks(env, providerAccount)
         await providerTasks.contract.tx.providerCommit({
@@ -360,8 +363,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             status: CaptchaStatus.approved,
             completedAt,
             requestedAt,
-            userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-            userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+            userSignature: [...userSignature],
         })
 
         const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
@@ -391,7 +393,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
                 .unwrap()
             expect(result).to.have.a.property('status')
         } catch (err) {
-            throw new ProsopoEnvError(err, 'providerDetails')
+            throw new ProsopoEnvError(err as Error)
         }
     })
 
@@ -411,10 +413,10 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const stakeAmount = getStakeAmount(env, providerStakeThreshold)
         const sendAmount = getSendAmount(env, stakeAmount)
         await sendFunds(env, accountAddress(newAccount), 'Dapp', sendAmount)
-        const dappParams = ['1000000000000000000', 1000, env.contractInterface.address, 65, 1000000]
+        const dappParams = ['1000000000000000000', 1000, env.getContractInterface().address, 65, 1000000]
 
         const deployer = new ContractDeployer(
-            env.api,
+            env.getApi(),
             await DappAbiJSON(),
             await DappWasm(),
             env.pair,
@@ -427,7 +429,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const instantiateEvent: EventRecord | undefined = deployResult.events.find(
             (event) => event.event.section === 'contracts'
         )
-        const contractAddress = instantiateEvent?.event.data['contract'].toString()
+        const contractAddress = String(get(instantiateEvent?.event.data, 'contract'))
         const result = (await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)).result
         expect(result?.isError).to.be.false
         const dapp = (await tasks.contract.query.getDapp(contractAddress)).value.unwrap().unwrap()
@@ -457,7 +459,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     test('Dapp fund', async ({ env }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(env, dappAccount)
-        const value = createType(env.contractInterface.abi.registry, 'u128', '10')
+        const value = createType(env.getContractInterface().abi.registry, 'u128', '10')
         const dappContractAddress = accountContract(dappAccount)
         const dappBefore = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
         const result = (await tasks.contract.tx.dappFund(dappContractAddress, { value })).result
@@ -519,7 +521,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             .unwrap()
             .unwrap()
 
-        const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+        const completedAt = (await env.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
         const requestedAt = completedAt - 1
         // next part contains internal contract calls that must be run by provider
         const providerTasks = await getSignedTasks(env, providerAccount)
@@ -532,14 +534,13 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             status: CaptchaStatus.approved,
             completedAt,
             requestedAt,
-            userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-            userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+            userSignature: [...userSignature],
         })
 
         const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
 
         // next part contains internal contract calls that must be run by provider
-        await env.api.rpc.chain.getBlockHash(commitment.completedAt)
+        await env.getApi().rpc.chain.getBlockHash(commitment.completedAt)
         const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
             accountAddress(dappUserAccount),
             accountContract(dappContractAccount),
@@ -548,16 +549,19 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             u8aToHex(userSignature)
         )
         expect(result.captchas.length).to.be.eq(2)
-        const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
-        const filteredResult = result.captchas.filter((res) => res.captchaId == captchaSolutionsSalted[0].captchaId)[0]
+        const expectedProof = tree.proof(at(captchaSolutionsSalted, 0).captchaId)
+        const filteredResult = at(
+            result.captchas.filter((res) => res.captchaId == at(captchaSolutionsSalted, 0).captchaId),
+            0
+        )
         expect(filteredResult.proof).to.deep.eq(expectedProof)
-        expect(filteredResult.captchaId).to.eq(captchaSolutionsSalted[0].captchaId)
+        expect(filteredResult.captchaId).to.eq(at(captchaSolutionsSalted, 0).captchaId)
     })
 
     // test('Dapp User sending an invalid captchas causes error', async ({env}): Promise<void> => {
     //     const { requestHash } = await createMockCaptchaSolutionsAndRequestHash( env, pairType, ss58Format );
     //
-    //     await env.contractInterface!.changeSigner(env,  provider.mnemonic as string);
+    //     await env.getContractInterface()!.changeSigner(env,  provider.mnemonic as string);
     //     const providerTasks = new Tasks(env);
     //     const captchaSolutions = [
     //         { captchaId: 'blah', solution: [21], salt: 'blah' }
@@ -583,7 +587,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     // test('Dapp User sending solutions without committing to blockchain causes error', async ({env}): Promise<void> => {
     //     const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash( env, pairType, ss58Format );
     //
-    //     await env.contractInterface!.changeSigner(env,  provider.mnemonic as string);
+    //     await env.getContractInterface()!.changeSigner(env,  provider.mnemonic as string);
     //     const providerTasks = new Tasks(env);
     //     const tree = new CaptchaMerkleTree();
     //     const captchasHashed = captchaSolutions.map((captcha) =>
@@ -626,7 +630,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     //     tree.build(solutionsHashed);
     //     const commitmentId = tree.root!.hash;
     //
-    //     await env.contractInterface!.changeSigner(env,  dappUser.mnemonic);
+    //     await env.getContractInterface()!.changeSigner(env,  dappUser.mnemonic);
     //     const dappUserTasks = new Tasks(env);
     //
     //     await ,dappUserTasks.contractApi.dappUserCommtest(
@@ -636,7 +640,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     //         provider.address as string
     //     );
     //     // next part contains internal contract calls that must be run by provider
-    //     await env.contractInterface!.changeSigner(env,  provider.mnemonic as string);
+    //     await env.getContractInterface()!.changeSigner(env,  provider.mnemonic as string);
     //     const providerTasks = new Tasks(env);
     //     const result = await providerTasks.dappUserSolution(
     //         dappUser.address,
@@ -685,9 +689,9 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
                 .unwrap()
                 .unwrap()
             const providerTasks = await getSignedTasks(env, providerAccount)
-            const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+            const completedAt = (await env.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
             const requestedAt = completedAt - 1
-            const commit = {
+            const commit: Commit = {
                 dappContract: accountContract(dappAccount),
                 datasetId: provider.datasetId.toString(),
                 id: initialCommitmentId,
@@ -696,8 +700,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
                 status: CaptchaStatus.approved,
                 completedAt,
                 requestedAt,
-                userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-                userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+                userSignature: [...userSignature],
             }
             const queryResult = await providerTasks.contract.query.providerCommit(commit)
             const error: string | undefined = queryResult.value.err || queryResult.value.ok?.err
@@ -741,8 +744,8 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }))
         const commitmentPromise = tasks.buildTreeAndGetCommitmentId(captchaSolutionsSalted)
 
-        commitmentPromise.catch((e) =>
-            e.message.should.match(`/${i18n.t('CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST')}/`)
+        commitmentPromise.catch((e: Error) =>
+            e.message.should.match(new RegExp(i18n.t('CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST')))
         )
     })
 
@@ -822,7 +825,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
 
             expect(pendingRequest).to.not.be.null
         } catch (err) {
-            throw new ProsopoEnvError(err, 'RandomCaptchasAndRequestHash')
+            throw new ProsopoEnvError(err as Error)
         }
     })
 

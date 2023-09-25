@@ -13,11 +13,11 @@
 // limitations under the License.
 // Create a user of specified type using the databasePopulator
 import { Account } from './accounts.js'
-import { AccountKey, IDatabaseAccounts } from './dataUtils/DatabaseAccounts'
-import { DappAbiJSON, DappWasm } from './dataUtils/dapp-example-contract/loadFiles'
+import { AccountKey, IDatabaseAccounts } from './dataUtils/DatabaseAccounts.js'
+import { DappAbiJSON, DappWasm } from './dataUtils/dapp-example-contract/loadFiles.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { populateDatabase, userFundMapDefault } from './dataUtils/populateDatabase'
+import { ProviderEnvironment } from '@prosopo/env'
+import { populateDatabase, userFundMapDefault } from './dataUtils/populateDatabase.js'
 
 export async function getUser(env: ProviderEnvironment, accountType: AccountKey, fund = true): Promise<Account> {
     const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))

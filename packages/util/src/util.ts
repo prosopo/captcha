@@ -94,15 +94,14 @@ export function* permutations(
 
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
 // Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
-export const at = <T>(
-    arr: T[],
-    i: number,
-    options: {
-        required?: boolean // whether to allow undefined elements in the array
-        checkBounds?: boolean // whether to check the index against the bounds of the array
-        wrap?: boolean // whether to wrap the index around the bounds of the array
-    } = {}
-): T => {
+export type AtOptions = {
+    required?: boolean // whether to allow undefined elements in the array
+    checkBounds?: boolean // whether to check the index against the bounds of the array
+    wrap?: boolean // whether to wrap the index around the bounds of the array
+}
+export function at<T extends string>(arr: string, i: number, options?: AtOptions): T
+export function at<T>(arr: T[], i: number, options?: AtOptions): T
+export function at<T>(arr: T[] | string, i: number, options: AtOptions = {}): T {
     options.checkBounds = options.checkBounds ?? true
     options.required = options.required ?? true
     options.wrap = options.wrap ?? true

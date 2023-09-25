@@ -19,14 +19,15 @@ import { ContractDeployer, ProsopoContractError, wrapQuery } from '@prosopo/cont
 import { DappPayee, Payee } from '@prosopo/captcha-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
-import { MockEnvironment } from '@prosopo/env'
+import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, TranslationKey, getPair } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { Tasks } from '../../src/tasks'
+import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
-import { captchaData } from '../data/captchas'
+import { captchaData } from '../data/captchas.js'
 import { createType } from '@polkadot/types'
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
+import { get } from '@prosopo/util'
 
 const urlBase = 'http://localhost:'
 
@@ -43,16 +44,28 @@ export enum IDatabasePopulatorMethodNames {
 }
 
 export class IDatabasePopulatorMethods {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     registerProvider: (fund: boolean, url?: string, noPush?: boolean) => Promise<Account>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     registerProviderWithStake: (fund: boolean) => Promise<Account>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     registerProviderWithStakeAndDataset: (fund: boolean) => Promise<Account>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     registerDapp: (fund: boolean, url?: string, noPush?: boolean) => Promise<Account>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     registerDappWithStake: (fund: boolean) => Promise<Account>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     registerDappUser: (fund: boolean) => Promise<Account>
 }
 
 class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods {
-    private mockEnv: MockEnvironment
+    private mockEnv: ProviderEnvironment
 
     private _registeredProviders: Account[] = []
 
@@ -75,7 +88,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     private _isReady: Promise<void>
 
-    constructor(env, dappAbiMetadata: Abi, dappWasm: Uint8Array) {
+    constructor(env: ProviderEnvironment, dappAbiMetadata: Abi, dappWasm: Uint8Array) {
         this.mockEnv = env
         this.dappAbiMetadata = dappAbiMetadata
         this.dappWasm = dappWasm
@@ -92,7 +105,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                     this.sendAmount = getSendAmount(env, this.stakeAmount)
                 })
             } catch (e) {
-                throw new Error(e)
+                throw new Error(String(e))
             }
         })
     }
@@ -166,19 +179,17 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return [mnemonic, address]
     }
 
-    private sendFunds(account: Account, payee: string, amount: AnyNumber)
-    private sendFunds(address: string, payee: string, amount: AnyNumber)
-
-    private sendFunds(account: Account | string, payee: string, amount: AnyNumber) {
+    private sendFunds(account: Account, payee: string, amount: AnyNumber): Promise<void>
+    private sendFunds(address: string, payee: string, amount: AnyNumber): Promise<void>
+    private sendFunds(account: Account | string, payee: string, amount: AnyNumber): Promise<void> {
         const address = typeof account === 'string' ? account : accountAddress(account)
 
         return _sendFunds(this.mockEnv, address, payee.toString(), amount)
     }
 
-    private async changeSigner(account: Account)
-    private async changeSigner(mnemonic: string)
-
-    private async changeSigner(account: Account | string) {
+    private async changeSigner(account: Account): Promise<void>
+    private async changeSigner(mnemonic: string): Promise<void>
+    private async changeSigner(account: Account | string): Promise<void> {
         const mnemonic = typeof account === 'string' ? account : accountMnemonic(account)
 
         if (!this.mockEnv.contractInterface) {
@@ -225,7 +236,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             }
             return account
         } catch (e) {
-            throw this.createError(e, this.registerProvider.name)
+            throw this.createError(e as Error, this.registerProvider.name)
         }
     }
 
@@ -237,7 +248,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             await tasks.contract.tx.providerUpdate(
                 Array.from(stringToU8a(url)),
-                createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
+                createType(this.mockEnv.getContractInterface().abi.registry, 'Balance', PROVIDER_FEE),
                 PROVIDER_PAYEE,
                 { value: this.stakeAmount }
             )
@@ -245,7 +256,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             //const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
             //console.log('provider', provider)
         } catch (e) {
-            throw this.createError(e, this.updateProvider.name)
+            throw this.createError(e as Error, this.updateProvider.name)
         }
     }
 
@@ -261,7 +272,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw this.createError(e, this.registerProviderWithStake.name)
+            throw this.createError(e as Error, this.registerProviderWithStake.name)
         }
     }
 
@@ -273,7 +284,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             await tasks.providerSetDatasetFromFile(datasetJSON)
         } catch (e) {
-            throw this.createError(e, this.addDataset.name)
+            throw this.createError(e as Error, this.addDataset.name)
         }
     }
 
@@ -290,7 +301,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw this.createError(e, this.registerProviderWithStakeAndDataset.name)
+            throw this.createError(e as Error, this.registerProviderWithStakeAndDataset.name)
         }
     }
 
@@ -307,10 +318,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             this.mockEnv.logger.debug('Pair address`', this.mockEnv.pair.address, '`')
             const tasks = new Tasks(this.mockEnv)
-            const dappParams = ['1000000000000000000', 1000, this.mockEnv.contractInterface.address, 65, 1000000]
+            const dappParams = ['1000000000000000000', 1000, this.mockEnv.getContractInterface().address, 65, 1000000]
 
             const deployer = new ContractDeployer(
-                this.mockEnv.api,
+                this.mockEnv.getApi(),
                 this.dappAbiMetadata,
                 this.dappWasm,
                 this.mockEnv.pair,
@@ -325,7 +336,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const instantiateEvent: EventRecord | undefined = deployResult.events.find(
                 (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
             )
-            const contractAddress = instantiateEvent?.event.data['contract'].toString()
+            const contractAddress = String(get<unknown>(instantiateEvent?.event.data, 'contract'))
 
             account.push(contractAddress)
 
@@ -351,7 +362,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw this.createError(e, this.registerDapp.name)
+            throw this.createError(e as Error, this.registerDapp.name)
         }
     }
 
@@ -373,7 +384,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw new Error(e)
+            throw new Error(String(e))
         }
     }
 
@@ -388,12 +399,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return account
     }
 
-    createError(e, functionName: string): ProsopoEnvError {
-        let errorKey = e
-        if (e.error && e.error.message && e.error.message === 'Module') {
-            errorKey = 'DEVELOPER.CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS' as TranslationKey
+    createError(err: Error, functionName: string): ProsopoEnvError {
+        const e: {
+            error?: Error
+        } = {
+            error: err,
         }
-        return new ProsopoEnvError(errorKey, functionName, undefined, e)
+        return new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED' as TranslationKey, functionName, undefined, e)
     }
 }
 

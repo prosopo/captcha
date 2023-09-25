@@ -13,15 +13,16 @@
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
-import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
+import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfig } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { ProviderEnvironment } from '@prosopo/env'
-import { promiseQueue } from '../../src/util'
+import { promiseQueue } from '../../util.js'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
 import consola from 'consola'
+import { at, get } from '@prosopo/util'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
@@ -68,7 +69,7 @@ async function populateStep(
     fund: boolean,
     text: string,
     userCount: number,
-    logger: typeof consola
+    logger: Logger
 ) {
     const startDate = Date.now()
     logger.debug(text)
@@ -90,7 +91,7 @@ async function populateStep(
 }
 
 export async function populateDatabase(
-    env: ProsopoEnvironment,
+    env: ProviderEnvironment,
     userCounts: UserCount,
     fundMap: UserFund,
     exportData: boolean,
@@ -103,11 +104,11 @@ export async function populateDatabase(
 
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {
-            env.logger.debug(`Fund ${userType}`, fundMap[userType])
+            env.logger.debug(`Fund ${userType}`, get(fundMap, userType))
             await populateStep(
                 databasePopulator,
-                userPopulatorMethodMap[userType],
-                fundMap[userType],
+                get(userPopulatorMethodMap, userType),
+                get(fundMap, userType),
                 `Running ${userType}...`,
                 userCount,
                 env.logger
@@ -117,7 +118,7 @@ export async function populateDatabase(
     try {
         const promiseResult = await Promise.all(userPromises)
     } catch (e) {
-        throw new Error(e)
+        throw new Error(String(e))
     }
 
     if (exportData) {

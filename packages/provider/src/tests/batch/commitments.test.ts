@@ -15,7 +15,7 @@
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { ApiPromise } from '@polkadot/api'
 import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
-import { BatchCommitmentsTask } from '../../src/batch/commitments.js'
+import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { CaptchaStatus } from '@prosopo/captcha-contract'
 import { KeypairType } from '@polkadot/util-crypto/types'
@@ -23,7 +23,7 @@ import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { UserCommitmentRecord } from '@prosopo/types-database'
-import { ViteTestContext } from '@prosopo/env/mockenv.js'
+import { ViteTestContext } from '@prosopo/env'
 import { accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { getUser } from '../getUser.js'
@@ -31,6 +31,7 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test.js'
 import { testConfig } from '@prosopo/config'
 import { wrapQuery } from '@prosopo/contract'
+import { at } from '@prosopo/util'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
@@ -73,11 +74,11 @@ describe('BATCH TESTS', function () {
         try {
             await context.env.isReady()
         } catch (e) {
-            throw new ProsopoEnvError(e, 'isReady')
+            throw new ProsopoEnvError(e as Error)
         }
         const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
-            context.env.contractInterface.query.getProviderStakeThreshold,
-            context.env.contractInterface.query
+            context.env.getContractInterface().query.getProviderStakeThreshold,
+            context.env.getContractInterface().query
         )()
         context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
     })
@@ -125,17 +126,17 @@ describe('BATCH TESTS', function () {
             const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
 
             if (randomCaptchasResult) {
-                const unsolvedCaptcha = randomCaptchasResult[0]
+                const unsolvedCaptcha = at(randomCaptchasResult, 0)
                 const solution = [
-                    unsolvedCaptcha.items[0].hash || '',
-                    unsolvedCaptcha.items[2].hash || '',
-                    unsolvedCaptcha.items[3].hash || '',
+                    at(unsolvedCaptcha.items, 0).hash || '',
+                    at(unsolvedCaptcha.items, 2).hash || '',
+                    at(unsolvedCaptcha.items, 3).hash || '',
                 ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
 
                 // Store 10 commitments in the local db
-                const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+                const completedAt = (await env.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
                 const requestedAt = completedAt - 1
                 const requestHash = 'requestHash'
                 for (let count = 0; count < commitmentCount; count++) {

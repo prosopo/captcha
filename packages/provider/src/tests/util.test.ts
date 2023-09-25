@@ -15,7 +15,7 @@ import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair, hexHash } from '@prosopo/common'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../src/util.js'
+import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util.js'
 import { describe, expect, test } from 'vitest'
 import { testConfig } from '@prosopo/config'
 
@@ -55,7 +55,7 @@ describe('UTIL FUNCTIONS', async () => {
         try {
             await env.isReady()
         } catch (e) {
-            throw new ProsopoEnvError(e, 'isReady')
+            throw new ProsopoEnvError(e as Error)
         }
         // insert a task into the database
         await env.db?.storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)

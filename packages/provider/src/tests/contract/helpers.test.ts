@@ -19,10 +19,11 @@ import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create'
-import { ViteTestContext } from '@prosopo/env/mockenv.js'
+import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { encodeStringArgs, wrapQuery } from '@prosopo/contract'
 import { testConfig } from '@prosopo/config'
+import { at } from '@prosopo/util'
 
 declare module 'vitest' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -41,11 +42,12 @@ describe('CONTRACT HELPERS', function () {
         try {
             await context.env.isReady()
         } catch (e) {
-            throw new ProsopoEnvError(e, 'isReady')
+            // TODO fix error handling
+            throw new ProsopoEnvError(e as Error)
         }
         const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
-            context.env.contractInterface.query.getProviderStakeThreshold,
-            context.env.contractInterface.query
+            context.env.getContractInterface().query.getProviderStakeThreshold,
+            context.env.getContractInterface().query
         )()
         context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
     })
@@ -73,12 +75,12 @@ describe('CONTRACT HELPERS', function () {
                     return {} as AbiMessage
                 },
             }
-            expect(encodeStringArgs(env.contractInterface.abi, methodObj, args)[0].toString()).to.equal(
+            expect(at(encodeStringArgs(env.getContractInterface().abi, methodObj, args), 0).toString()).to.equal(
                 hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a39323239').toString()
             )
             log.info('end of test')
         } catch (e) {
-            throw new Error(e)
+            throw new Error(String(e))
         }
     })
 })
