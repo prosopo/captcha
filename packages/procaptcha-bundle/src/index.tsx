@@ -11,12 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
-import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+
+interface ProcaptchaRenderOptions {
+    theme?: 'light' | 'dark'
+    callback?: string
+    'chalexpired-callback'?: string
+    'error-callback'?: string
+}
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
@@ -56,7 +63,7 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     }
 }
 
-function getParentForm(element: Element): HTMLFormElement | null {
+const getParentForm = (element: Element): HTMLFormElement | null => {
     let parent = element.parentElement
     while (parent) {
         if (parent.tagName === 'FORM') {
@@ -67,48 +74,55 @@ function getParentForm(element: Element): HTMLFormElement | null {
     return null
 }
 
-export function render(callbacks?: ProcaptchaCallbacks) {
+const getWindowCallback = (callbackName: string) => (window as any)[callbackName.replace('window.', '')]
+
+const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
+    const form = getParentForm(element)
+    if (!form) return
+
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = ApiParams.procaptchaResponse
+    input.value = JSON.stringify(payload)
+    form.appendChild(input)
+}
+
+const validateTheme = (themeAttribute: string): 'light' | 'dark' => {
+    const customThemeList = ['light', 'dark']
+    return customThemeList.includes(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
+}
+
+export const render = (siteKey?: string, renderOptions?: ProcaptchaRenderOptions) => {
+    // Get elements with class 'procaptcha'
     const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
-    const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
+
+    // Set siteKey from renderOptions or from the first element's data-sitekey attribute
+    siteKey = siteKey || at(elements, 0).getAttribute('data-sitekey') || undefined
     const config = getConfig(siteKey)
-    if (!callbacks) {
-        callbacks = {}
-    }
 
-    for (const element of elements) {
-        // get the custom callback functions for procaptcha events, if set
-        for (const callbackName of ProcapchaEventNames) {
-            const dataCallbackName = `data-${callbackName.toLowerCase()}` // e.g. data-onhuman
-            const callback = element.getAttribute(dataCallbackName)
-            if (callback) {
-                callbacks[callbackName] = (window as any)[callback.replace('window.', '')]
-            }
+    elements.forEach((element) => {
+        const callbackName = renderOptions?.callback || element.getAttribute('data-callback')
+        const chalExpiredCallbackName =
+            renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
+        const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
+
+        // Setting up default callbacks object
+        const callbacks = {
+            onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
+            onChallengeExpired: () => {}, // Leave it empty or add a handler as per your requirements
+            onError: (error: Error) => {}, // Leave it empty or add a handler as per your requirements
         }
 
-        // get the custom theme, if set
-        const customThemeList = ['light', 'dark']
-        const themeAttribute = element.getAttribute('data-theme') ?? 'light'
-        config['theme'] = (customThemeList.includes(themeAttribute) ? themeAttribute : 'light') as 'light' | 'dark'
+        if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
+        if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
+        if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
 
-        // set a default callback for onHuman, if not set
-        if (!callbacks['onHuman']) {
-            // append the prosopo payload to the containing form
-            callbacks['onHuman'] = function (payload: ProcaptchaOutput) {
-                // get form
-                const form = getParentForm(element)
-                // add a listener to the onSubmit event of the form
-                if (form) {
-                    // add the payload to the form
-                    const input = document.createElement('input')
-                    input.type = 'hidden'
-                    ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
-                    form.appendChild(input)
-                }
-            }
-        }
-        //wrap in fn and give user access to func
+        // Getting and setting the theme
+        const themeAttribute = element.getAttribute('data-theme') || 'light'
+        config.theme = validateTheme(themeAttribute)
+
         createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
-    }
+    })
 }
 
 export default function ready(fn: () => void) {
