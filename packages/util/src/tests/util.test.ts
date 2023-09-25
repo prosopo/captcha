@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at, get, permutations, rng, seedLodash } from '../src/util'
+import { at, get, permutations, rng, seedLodash } from '../util.js'
 import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
