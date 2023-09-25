@@ -8,7 +8,7 @@ import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, Result } from '@727-ventures/typechain-types'
 import type { QueryReturnType } from '@727-ventures/typechain-types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
+// @ts-ignore
 import { getTypeDescription } from './../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/common.json' assert { type: 'json' }
 

@@ -8,7 +8,8 @@ import { queryJSON, queryOkJSON, handleReturnType } from '@727-ventures/typechai
 import type * as ArgumentTypes from '../types-arguments/proxy.js'
 import type * as ReturnTypes from '../types-returns/proxy.js'
 import type BN from 'bn.js';
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import {ReturnNumber} from '@727-ventures/typechain-types';
 import {getTypeDescription} from './../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json' assert { type: 'json' }
