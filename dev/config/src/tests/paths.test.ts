@@ -21,9 +21,9 @@ describe('paths', () => {
         const paths = getPaths()
         const flat = flattenObj(paths)
         for (const [key, value] of Object.entries(flat)) {
-            expect(value).not.to.be.undefined()
-            expect(value).not.to.be.null()
-            expect(fs.existsSync(value)).to.be.true()
+            expect(value).to.not.be.undefined
+            expect(value).to.not.be.null
+            expect(fs.existsSync(String(value))).to.be.true
         }
     })
 })
