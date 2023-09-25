@@ -54,11 +54,11 @@ jobs:
 
             - name: Check typechain
               run: |
-                    cd dev/scripts
-                    npm run build
-                    npm run cli -- import_all_contracts
-                    # expect no changes so typechain is up to date with the contract
-                    git diff --exit-code
+                  cd dev/scripts
+                  npm run build
+                  npm run cli -- import_all_contracts
+                  # expect no changes so typechain is up to date with the contract
+                  git diff --exit-code
 
             - name: Test contracts
               run: |

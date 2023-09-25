@@ -73,7 +73,7 @@ jobs:
                   docker container ls
                   sleep 10s
 
-            # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider 
+            # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
             - run: npm run deploy_protocol
             - run: npm run deploy_dapp
             - run: npm run setup
