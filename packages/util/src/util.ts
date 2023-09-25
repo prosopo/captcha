@@ -101,12 +101,12 @@ export const at = <T>(
         required?: boolean // whether to allow undefined elements in the array
         checkBounds?: boolean // whether to check the index against the bounds of the array
         wrap?: boolean // whether to wrap the index around the bounds of the array
-    } = {
-        required: true,
-        checkBounds: true,
-        wrap: false,
-    }
+    } = {}
 ): T => {
+    options.checkBounds = options.checkBounds ?? true
+    options.required = options.required ?? true
+    options.wrap = options.wrap ?? true
+
     if (options.wrap) {
         if (arr.length !== 0) {
             i %= arr.length
@@ -179,4 +179,16 @@ export const choice = <T>(
 
 export function getCurrentFileDirectory(url: string) {
     return new URL(url).pathname.split('/').slice(0, -1).join('/')
+}
+
+export const flattenObj = (obj: object, prefix = ''): Record<string, unknown> => {
+    const flattenedObj: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(obj)) {
+        if (value instanceof Object) {
+            Object.assign(flattenedObj, flattenObj(value, prefix + '.' + key))
+        } else {
+            flattenedObj[prefix + '.' + key] = value
+        }
+    }
+    return flattenedObj
 }

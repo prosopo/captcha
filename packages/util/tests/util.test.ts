@@ -21,11 +21,11 @@ describe('util', () => {
         })
 
         test('throw on index out of bounds high', () => {
-            expect(() => at([1, 2, 3], 3)).to.throw()
+            expect(() => at([1, 2, 3], 3, { wrap: false })).to.throw()
         })
 
         test('throw on index out of bounds low', () => {
-            expect(() => at([1, 2, 3], -1)).to.throw()
+            expect(() => at([1, 2, 3], -1, { wrap: false })).to.throw()
         })
 
         test('returns correct value', () => {

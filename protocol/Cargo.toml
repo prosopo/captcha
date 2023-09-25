@@ -1,2 +1,12 @@
 [workspace]
 members = ["crates/*", "contracts/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.17"
+authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
+edition = "2021"
+documentation = "https://github.com/prosopo/captcha"
+repository = "https://github.com/prosopo/captcha"
+homepage = "https://github.com/prosopo/captcha"
+license-file="../LICENSE"

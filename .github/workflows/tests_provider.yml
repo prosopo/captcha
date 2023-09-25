@@ -10,6 +10,10 @@ on:
             - 'packages/**.json'
             - 'dev/**.json'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 env:
     CARGO_TERM_COLOR: always
     ENVIRONMENT: development
