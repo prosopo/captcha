@@ -101,12 +101,12 @@ export const at = <T>(
         required?: boolean // whether to allow undefined elements in the array
         checkBounds?: boolean // whether to check the index against the bounds of the array
         wrap?: boolean // whether to wrap the index around the bounds of the array
-    } = {
-        required: true,
-        checkBounds: true,
-        wrap: false,
-    }
+    } = {}
 ): T => {
+    options.checkBounds = options.checkBounds ?? true
+    options.required = options.required ?? true
+    options.wrap = options.wrap ?? true
+
     if (options.wrap) {
         if (arr.length !== 0) {
             i %= arr.length
