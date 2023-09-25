@@ -17,7 +17,7 @@ placed anywhere on the page. Inside the <head> tag or immediately after the .pro
 
 ```html
 
-<script src="https://prosopo.io/js/prosopo.procaptcha.bundle.js" async defer></script>
+<script src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
 ```
 
 Second, you must add an empty DOM container where the Procaptcha widget will be inserted automatically. The container is
@@ -38,7 +38,8 @@ verification.
 You can retrieve it server side with POST parameter `procaptcha-response`.
 
 Here's a full example where Procaptcha is being used to protect a signup form from automated abuse. When the form is
-submitted, the `procaptcha-response` token will be included with the email and password POST data after the captcha is
+submitted, the `procaptcha-response`  JSON data will be included with the email and password POST data after the captcha
+is
 solved.
 
 ```html
@@ -46,7 +47,7 @@ solved.
 <html>
 <head>
     <title>Procaptcha Demo</title>
-    <script src="https://js.prosopo.io/prosopo.procaptcha.bundle.js" async defer></script>
+    <script src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
 </head>
 <body>
 <form action="" method="POST">
@@ -60,54 +61,37 @@ solved.
 </html>
 ```
 
-## Add the Procaptcha Widget to your Web page using a React Component
+You can check out the current implementation of the
+config [here](https://github.com/prosopo/captcha/blob/main/packages/types/src/config/config.ts).
 
-You can see Procaptcha being used as a React component in
-our [React Demo](https://github.com/prosopo/captcha/blob/8b8663bf0412e5fd349d40c270dd5b1b9f56dc2a/demos/client-example/src/App.tsx#L224-L227).
+### Procaptcha-response
 
-The Procaptcha component is called as follows:
+The procaptcha-response JSON data contains the following fields:
 
-```tsx
+| Key          | Type   | Description                                                                                                                   |
+|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
+| commitmentId | string | The commitment ID of the captcha challenge. This is used to verify the user's response on-chain.                              |
+| providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
+| dapp         | string | The SITE_KEY of your application / website                                                                                    |
+| user         | string | The user's account address                                                                                                    |
+| blockNumber  | number | The block number of the captcha challenge. This is used to verify that the contacted provider was randomly selected on-chain. |
 
+## Verify the User Response Server Side
 
-<Procaptcha
-    config={config}
-    callbacks={{onAccountNotFound, onError, onHuman, onExpired}}
-/>
-```
+To verify a user's response on the server side, simpy import the `verify` function from `@prosopo/server` and pass it
+the `procaptcha-response` POST data. Types can be imported from `@prosopo/types`.
 
-A config object is required and must contain your sitekey. The callbacks are optional and can be used to handle the
-various procaptcha events. The following config demonstrates the `REACT_APP_DAPP_SITE_KEY` variable being pulled from
-environment variables.
+```typescript
+import {ProsopoServer} from '@prosopo/server'
+import {ApiParams} from '@prosopo/types'
 
-```tsx
-const config: ProcaptchaConfigOptional = {
-    account: {
-        address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
-    },
-    web2: 'true',
-    dappName: 'client-example',
-    defaultEnvironment: 'rococo',
-    networks: {
-        rococo: {
-            endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443',
-            contract: {
-                address: '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u',
-                name: 'prosopo',
-            },
-        },
-    },
-    solutionThreshold: 80,
+...
+
+if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+    // perform CAPTCHA protected action
 }
 ```
 
-### Config Options
-| Key                | Type   | Description                                                                             |
-|--------------------|--------|-----------------------------------------------------------------------------------------|
-| account            | string | The site key you received when you signed up                                            |
-| web2               | string | Set to 'true' to enable web2 support                                                    |
-| dappName           | string | The name of your application / website                                                  |
-| defaultEnvironment | string | The default environment to use - set to `rococo`                                        |
-| networks           | object | The networks your application supports - copy paste this from the config above          |
-| solutionThreshold  | number | The percentage of captcha that a user must have answered correctly to identify as human |
+There is an example server side implementation
+in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
 
