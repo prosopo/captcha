@@ -52,27 +52,23 @@ jobs:
                   # compare major versions for bump
                   if [[ $NEXT_MAJOR -gt $CURRENT_MAJOR ]]; then
                     echo "major version bump detected"
-                    echo "publish_dockerhub_provider=true" >> $GITHUB_OUTPUT
-                    echo "publish_dockerhub_js_bundle=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   elif [[ $NEXT_MINOR -gt $CURRENT_MINOR ]]; then
                     echo "minor version bump detected"
-                    echo "publish_dockerhub_provider=true" >> $GITHUB_OUTPUT
-                    echo "publish_dockerhub_js_bundle=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   elif [[ $NEXT_PATCH -gt $CURRENT_PATCH ]]; then
                     echo "patch version bump detected"
-                    echo "publish_dockerhub_provider=true" >> $GITHUB_OUTPUT
-                    echo "publish_dockerhub_js_bundle=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   else
                     echo "no version bump detected"
-                    echo "publish_dockerhub_provider=true" >> $GITHUB_OUTPUT
-                    echo "publish_dockerhub_js_bundle=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   fi
+                  echo "PROVIDER_IMAGE_VERSION=$NEXT" >> $GITHUB_ENV
 
             - name: Install dependencies and build packages
               # Install dependencies and build packages if either provider or JS bundle needs to be published
               if: >-
-                  steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true' ||
-                  steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
+                  steps.check_provider_image_version.outputs.bump == 'true'
               run: |
                   set -e  # Exit immediately if a command exits with a non-zero status.
                   echo "Installing dependencies..."
@@ -84,20 +80,24 @@ jobs:
             - name: Log in to Docker Hub
               # Only log in if either provider or JS bundle needs to be published
               if: >-
-                  steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true' ||
-                  steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
+                  steps.check_provider_image_version.outputs.bump == 'true'
               run: |
                   echo "Logging into Docker Hub."
                   echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
 
             - name: Build JS Bundle and Publish to Docker Hub
               # Build JS bundle and publish to Docker Hub if publish_dockerhub_js_bundle is true
-              if: steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
+              if: steps.check_provider_image_version.outputs.bump == 'true'
               run: |
+                  # Copy the rococo env file to production env file
+                  echo "Copying the rococo env to production env file in procaptcha-bundle"
+                  cp ./dev/scripts/env.rococo ./packages/procaptcha-bundle/.env.production
+                  
                   # Navigate to the JS bundle directory and build
                   echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                   cd packages/procaptcha-bundle
-                  npm run build:prod
+
+                  NODE_ENV=production npm run build:prod
 
                   # Navigate back to the project root
                   echo "Navigating back to project root..."
@@ -110,9 +110,13 @@ jobs:
                   docker push prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
 
             - name: Build and Push the Provider Bundle
-              # Build and push the provider bundle to Docker Hub if publish_dockerhub_provider is true
-              if: steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true'
+              # Build and push the provider bundle to Docker Hub if bump is true
+              if: steps.check_provider_image_version.outputs.bump == 'true'
               run: |
+                  # Copy the rococo env file to production env file
+                  echo "Copying the rococo env to production env file in cli package"
+                  cp ./dev/scripts/env.rococo ./packages/cli/.env.production
+                  
                   # Navigate to the provider CLI directory and build
                   echo "Navigating to 'packages/cli' and building..."
                   cd packages/cli
