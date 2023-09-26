@@ -10,7 +10,7 @@ describe('provider bundle', () => {
         const dir = getCurrentFileDirectory(import.meta.url)
 
         // get root directory of this package
-        const rootDir = dir.split('/').slice(0, -2).join('/')
+        const rootDir = dir.split('/').slice(0, -3).join('/')
 
         // build bundle
         await execPromise(`cd ${rootDir} && npm run build:prod`)
