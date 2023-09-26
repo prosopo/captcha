@@ -2,8 +2,8 @@
 
 React components for integrating the Prosopo [procaptcha](https://github.com/prosopo/procaptcha) into a React app.
 
-Prosopo is a distributed human verification service that can be used to stop bots from interacting with smart contracts.
-Sign up to be a network [alpha tester](https://5b06hrhtlmh.typeform.com/to/vNpyOUfg).
+Prosopo is a distributed human verification service that can be used to stop bots from interacting with your apps.
+Sign up to be a network [beta tester](https://prosopo.io/#signup).
 
 ## Installation
 
@@ -18,37 +18,13 @@ npm install @prosopo/procaptcha-react --save
 See the [client example](https://github.com/prosopo/client-example) for a minimal example of these components being used
 in a frontend app.
 
-```typescript
-<Box className = {"App"} >
-
-
-<CaptchaContextManager.Provider value = {manager} >
-    {showCaptchas &&
-    <CaptchaComponent {...{clientInterface}}
-/>}
-< /CaptchaContextManager.Provider>
-
-{
-    !showCaptchas &&
-    <Button onClick = {showCaptchaClick}
-    className = {"iAmHumanButton"} >
-    <Typography className = {"iAmHumanButtonLabel"} >
-        I
-    am
-    human
-    < /Typography>
-    < /Button>}
-
-    < /Box>
+```jsx
+<Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}/>
 ```
 
 ### Callbacks
 
-`CaptchaEventCallbacks` are passed to the captcha component at creation.
-
-```typescript
-const clientInterface = useCaptcha({config}, {onAccountChange, onChange, onSubmit, onSolved, onCancel});
-```
+`ProcaptchaEvents` are passed to the captcha component at creation.
 
 The captcha event callbacks are defined as follows:
 
