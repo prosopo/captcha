@@ -11,15 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
 import {
-    ArgumentTypes,
     Captcha,
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
-    CaptchaStatus,
     CaptchaWithProof,
-    Dapp,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
@@ -27,11 +25,8 @@ import {
     Hash,
     PendingCaptchaRequest,
     ProsopoConfig,
-    Provider,
     ProviderRegistered,
-    RandomProvider,
 } from '@prosopo/types'
-import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
 import {
     CaptchaMerkleTree,
     buildDataset,
@@ -41,6 +36,7 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
+import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract'
 import { ContractPromise } from '@polkadot/api-contract'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
@@ -132,11 +128,7 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof(
-        datasetId: ArgumentTypes.Hash,
-        solved: boolean,
-        size: number
-    ): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof(datasetId: Hash, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
@@ -526,7 +518,7 @@ export class Tasks {
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {
-                if (dappUserSolution.status === ArgumentTypes.CaptchaStatus.approved) {
+                if (dappUserSolution.status === CaptchaStatus.approved) {
                     return dappUserSolution
                 }
             }
