@@ -87,4 +87,5 @@ jobs:
                   sleep 10s
                   npm run start:demo &
                   sleep 10s
+                  npm i cypress
                   npm -w @prosopo/client-example run cypress:run
