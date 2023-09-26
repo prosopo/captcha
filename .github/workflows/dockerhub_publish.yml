@@ -125,7 +125,7 @@ jobs:
                   # Navigate to the provider CLI directory and build
                   echo "Navigating to 'packages/cli' and building..."
                   cd packages/cli
-                  npm run build:prod
+                  NODE_ENV=production npm run build:prod
 
                   # Navigate back to the project root
                   echo "Navigating back to project root..."
