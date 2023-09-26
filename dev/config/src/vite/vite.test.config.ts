@@ -15,7 +15,7 @@ export default function () {
             },
         },
         test: {
-            include: ['../../packages/*/tests/**/*.test.ts'],
+            include: ['../../packages/*/src/**/*.test.ts'],
             exclude: ['../../demos/**/*'], // '../!packages/**/*'],
             singleThread: true,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
