@@ -97,7 +97,7 @@ jobs:
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
                   cp ./dev/scripts/env.rococo ./packages/procaptcha-bundle/.env.production
-                  
+
                   # Navigate to the JS bundle directory and build
                   echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                   cd packages/procaptcha-bundle
@@ -121,7 +121,7 @@ jobs:
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in cli package"
                   cp ./dev/scripts/env.rococo ./packages/cli/.env.production
-                  
+
                   # Navigate to the provider CLI directory and build
                   echo "Navigating to 'packages/cli' and building..."
                   cd packages/cli
