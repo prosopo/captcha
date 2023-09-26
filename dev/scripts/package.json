@@ -7,7 +7,7 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest --config ./vite.config.ts",
+        "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest run --config ./vite.config.ts",
         "deploy": "node dist/deploy/protocol.js",
         "cli": "node dist/cli/index.js",
         "setup": "node dist/cli/index.js setup",
