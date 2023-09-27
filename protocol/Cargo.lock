@@ -94,7 +94,7 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "captcha"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "common",
  "disable_macro",
@@ -117,7 +117,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "common"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "ink",
  "parity-scale-codec",
@@ -224,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "disable_macro"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -344,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "impl-trait-for-tuples"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11d7a9f6330b71fea57921c9b61c47ee6e84f72d394754eff6163ae67e7395eb"
 dependencies = [
@@ -700,7 +700,7 @@ dependencies = [
 
 [[package]]
 name = "proxy"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "common",
  "disable_macro",
