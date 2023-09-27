@@ -58,7 +58,9 @@ jobs:
                   npm run build
                   npm run cli -- import_all_contracts
                   # run prettier to put typechain output in correct format
+                  cd ../..
                   npm run prettier:fix
+                  cd dev/scripts
                   # expect no changes so typechain is up to date with the contract
                   git diff --exit-code
 
