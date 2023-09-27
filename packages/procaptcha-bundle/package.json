@@ -58,8 +58,8 @@
         "@prosopo/config": "0.2.2",
         "@rollup/plugin-typescript": "^11.1.2",
         "@vitejs/plugin-react": "^4.0.4",
-        "tslib": "^2.6.2",
-        "typescript": "^5.1.6",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6",
         "webpack-merge": "^5.9.0"
     }
 }

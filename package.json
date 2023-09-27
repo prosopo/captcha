@@ -53,10 +53,11 @@
         "npm": "8.9"
     },
     "workspaces": [
-        "packages/*",
-        "demos/*",
+        "protocol/dev",
+        "contracts/*",
         "dev/*",
-        "protocol/dev"
+        "packages/*",
+        "demos/*"
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
@@ -82,7 +83,7 @@
         "prettier": "^3.0.3",
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
-        "tslib": "^2.5.2",
+        "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
     "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes",
