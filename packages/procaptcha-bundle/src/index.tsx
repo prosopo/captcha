@@ -163,7 +163,7 @@ export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions
 }
 
 export default function ready(fn: () => void) {
-    if (document && document.readyState != 'loading') {
+    if (document && document.readyState !== 'loading') {
         console.log('document.readyState ready!')
         fn()
     } else {
