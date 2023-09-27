@@ -11,6 +11,10 @@
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "type": "module",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "files": [

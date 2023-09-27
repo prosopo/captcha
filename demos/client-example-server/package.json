@@ -4,6 +4,10 @@
     "description": "Backend for client-example",
     "main": "dist/app.js",
     "type": "module",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "scripts": {
         "dev": "vite serve --mode=development --config ./vite.config.ts --host",
         "start": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
