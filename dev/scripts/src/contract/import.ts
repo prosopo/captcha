@@ -46,6 +46,10 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     await exec(`mkdir -p ${pathToOutput}`)
     const cmd = `npx @727-ventures/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
+    const name = path.basename(pathToAbis)
+    // copy the metadata
+    // TODO this is a temp fix. This functionality should be in typechain!
+    await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`)
     // walk each file in the output directory
     const walk = (dir: string) => {
         const files = fs.readdirSync(dir)
