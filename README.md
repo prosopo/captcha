@@ -4,24 +4,27 @@ Prosopo Procaptcha is a drop-replacement for reCAPTCHA and hCaptcha that protect
 
 Sign up at [Prosopo](https://prosopo.io/#signup) to get your sitekey today. You need a sitekey to use this library.
 
-# Implementation
+# Configuration
 
 Prosopo captcha can be easily implemented in your application via a script tag or a React component.
 
 ## Add the Procaptcha Widget to your Web page via a script tag
 
-Procaptcha requires two small pieces of client side code to render a captcha widget on an HTML page. First, you must
-include the Procaptcha JavaScript resource somewhere in your HTML page. The `<script>` must be loaded via HTTPS and can
-be
-placed anywhere on the page. Inside the <head> tag or immediately after the .procaptcha container are both fine.
+First, you must include the Procaptcha JavaScript resource somewhere in your HTML page. The `<script>` must be loaded
+via HTTPS and can
+be placed anywhere on the page. Inside the <head> tag or immediately after the `.procaptcha` container are both fine.
 
 ```html
 
 <script src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
 ```
 
-Second, you must add an empty DOM container where the Procaptcha widget will be inserted automatically. The container is
-typically a <div> (but can be any element) and must have class `procaptcha` and a `data-sitekey` attribute set to your
+Now, you can either render the Procaptcha widget implicitly or explicitly.
+
+### Implicit Rendering Using `.procaptcha` Container
+
+Add an empty DOM container where the Procaptcha widget will be inserted automatically. The container is
+typically a `<div>` (but can be any element) and must have class `procaptcha` and a `data-sitekey` attribute set to your
 public
 site key.
 
@@ -42,6 +45,8 @@ submitted, the `procaptcha-response`  JSON data will be included with the email 
 is
 solved.
 
+#### Example of implicit rendering
+
 ```html
 
 <html>
@@ -61,12 +66,52 @@ solved.
 </html>
 ```
 
-You can check out the current implementation of the
-config [here](https://github.com/prosopo/captcha/blob/main/packages/types/src/config/config.ts).
+### Explicit Rendering
+
+If you prefer to render the widget yourself, you can use the `Procaptcha.render()` method. The `Procaptcha.render()`
+must be called after the procaptcha.bundle.js script has loaded.
+
+#### Example of explicit rendering
+
+The script is loaded in the head of the document and given the id `procaptcha-script`. A container is created with the
+id `procaptcha-container` where the widget will be rendered.
+
+```html
+
+<html>
+<head>
+    <script id="procaptcha-script" src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
+</head>
+<body>
+<div id="procaptcha-container"></div>
+</body>
+</html>
+```
+
+An `onload` event is added to the script tag to call the render function when the script has loaded.
+
+```javascript
+// A function that will call the render Procaptcha function when the procaptcha script has loaded
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+
+    // Define a callback function to be called when the CAPTCHA is verified
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+
+    // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+    })
+})
+```
 
 ### Procaptcha-response
 
-The procaptcha-response JSON data contains the following fields:
+The output from the `onCaptchaVerified` function is the `procaptcha-response` JSON data. The `procaptcha-response` JSON
+data contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
 |--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
