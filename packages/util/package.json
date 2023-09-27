@@ -4,6 +4,10 @@
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",

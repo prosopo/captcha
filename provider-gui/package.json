@@ -2,6 +2,10 @@
     "name": "provider-gui",
     "version": "0.1.0",
     "private": true,
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "scripts": {
         "dev": "next dev -p 9231",
         "build": "next build",
