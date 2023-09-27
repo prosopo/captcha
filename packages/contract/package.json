@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/contract",
-    "version": "0.2.2",
+    "version": "0.2.4",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
@@ -11,6 +11,10 @@
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "type": "module",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "files": [
@@ -43,9 +47,9 @@
         "@polkadot/types-create": "10.9.1",
         "@polkadot/util": "12.3.2",
         "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/common": "0.2.2",
-        "@prosopo/types": "0.2.2",
-        "@prosopo/util": "0.2.2",
+        "@prosopo/common": "0.2.4",
+        "@prosopo/types": "0.2.4",
+        "@prosopo/util": "0.2.4",
         "@prosopo/captcha-contract": "^0.2.2",
         "rxjs": "^7.8.1"
     },
