@@ -13,11 +13,28 @@
 // limitations under the License.
 import { createTheme } from '@mui/material'
 
-export default createTheme({
+export const lightTheme = createTheme({
     palette: {
+        mode: 'light',
+        primary: {
+            main: '#1976d2',
+            contrastText: '#000',
+        },
+        background: {
+            default: '#fff',
+        },
+    },
+})
+
+export const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
         primary: {
             main: '#1976d2',
             contrastText: '#fff',
+        },
+        background: {
+            default: '#303030',
         },
     },
 })
