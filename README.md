@@ -2,7 +2,10 @@
 
 Prosopo Procaptcha is a drop-replacement for reCAPTCHA and hCaptcha that protects user privacy and collects zero data.
 
-Sign up at [Prosopo](https://prosopo.io/#signup) to get your sitekey today. You need a sitekey to use this library.
+Prosopo is a distributed human verification service that can be used to stop bots from interacting with your apps.
+
+Sign up to be a network [beta tester](https://prosopo.io/#signup) to get your sitekey today. You need a sitekey to use
+this library.
 
 # Configuration
 
