@@ -105,9 +105,9 @@ jobs:
 
                   # Build and push the JS Docker image
                   echo "Building Docker image for JS bundle..."
-                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{env.PROVIDER_IMAGE_VERSION}}
                   echo "Pushing Docker image for JS bundle..."
-                  docker push prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
+                  docker push prosopo/js_server:${{env.PROVIDER_IMAGE_VERSION}}
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
@@ -128,6 +128,6 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${env.PROVIDER_IMAGE_VERSION}
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{env.PROVIDER_IMAGE_VERSION}}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${env.PROVIDER_IMAGE_VERSION}
+                  docker push prosopo/provider:${{env.PROVIDER_IMAGE_VERSION}}
