@@ -1,6 +1,10 @@
 {
     "name": "@prosopo/client-bundle-example",
     "main": "index.js",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "scripts": {
         "start": "light-server -s ./src -p 9231 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\"",
         "clean": "echo 'nothing to clean'"
