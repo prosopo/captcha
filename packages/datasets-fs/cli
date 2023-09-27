@@ -1,3 +1,5 @@
+#! /bin/bash
+
 set -eu
 
 dir=$(dirname "$0")
