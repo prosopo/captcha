@@ -77,8 +77,10 @@ jobs:
                     echo "Running on GitHub Actions"
                     # Write the npm token to ~/.npmrc
                     echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+                    echo "Publishing to npm dry-run..."
+                    npm run publish:dry-run
                     echo "Publishing to npm..."
-                    npx --workspaces npm publish
+                    npm run publish
                   else
                     echo "Running locally via act, skipping npm publish."
                   fi
