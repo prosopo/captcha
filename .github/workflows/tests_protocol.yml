@@ -57,6 +57,8 @@ jobs:
                   cd dev/scripts
                   npm run build
                   npm run cli -- import_all_contracts
+                  # run linter to put typechain output in correct format
+                  npm run lint:fix
                   # expect no changes so typechain is up to date with the contract
                   git diff --exit-code
 
