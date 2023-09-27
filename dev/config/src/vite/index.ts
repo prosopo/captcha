@@ -4,3 +4,4 @@ export { default as VitePluginSourceMapExclude } from './vite-plugin-sourcemap-e
 export { default as ViteFrontendConfig } from './vite.frontend.config.js'
 export { default as ViteBackendConfig } from './vite.backend.config.js'
 export { default as VitePluginFixAbsoluteImports } from './vite-plugin-fix-absolute-imports.js'
+export { default as ViteCommonJSConfig } from './vite.commonjs.config.js'

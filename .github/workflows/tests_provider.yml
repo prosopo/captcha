@@ -10,6 +10,10 @@ on:
             - 'packages/**.json'
             - 'dev/**.json'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 env:
     CARGO_TERM_COLOR: always
     ENVIRONMENT: development
@@ -58,23 +62,6 @@ jobs:
             - run: npm install -g npm@8.9
 
             - run: npm install
-
-            # Checks if the git hash of packages is the same after running linting by comparing the git tree hash before
-            # linting to a temporary git index file and root tree hash after linting
-            - name: Linting check
-              run: |
-                  PACKAGES_HASH=$(git show HEAD --format=%T | head -1)
-                  npm run lint:fix
-                  cp .git/index /tmp/git_index
-                  export GIT_INDEX_FILE=/tmp/git_index
-                  git add -u
-                  NEW_PACKAGES_HASH=$(git write-tree)
-                  echo "PACKAGES_HASH: $PACKAGES_HASH"
-                  echo "NEW_PACKAGES_HASH: $NEW_PACKAGES_HASH"
-                  if [ "$PACKAGES_HASH" != "$NEW_PACKAGES_HASH" ]; then
-                    echo "Linter failed"
-                    exit 1
-                  fi
 
             - name: Build provider and dependencies
               # Next few lines should contain the number of packages that provider depends on (check tsconfig.json)

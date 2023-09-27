@@ -1,12 +1,19 @@
 {
     "name": "@prosopo/server",
-    "version": "0.2.0",
+    "version": "0.2.2",
     "description": "NodeJS package for server side communication with the prosopo captcha client",
     "main": "./dist/index.js",
     "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        }
+    },
     "scripts": {
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose",
+        "build": "tsc --build --verbose tsconfig.json",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
@@ -26,13 +33,14 @@
         "@polkadot/keyring": "12.3.2",
         "@polkadot/rpc-provider": "10.9.1",
         "@polkadot/types": "10.9.1",
-        "@prosopo/api": "0.2.0",
-        "@prosopo/contract": "0.2.0",
-        "@prosopo/procaptcha": "0.2.0",
-        "@prosopo/types": "0.2.0"
+        "@prosopo/api": "0.2.2",
+        "@prosopo/contract": "0.2.2",
+        "@prosopo/procaptcha": "0.2.2",
+        "@prosopo/captcha-contract": "^0.2.2",
+        "@prosopo/types": "0.2.2"
     },
     "devDependencies": {
-        "tslib": "^2.6.2",
-        "typescript": "^5.1.6"
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
     }
 }
