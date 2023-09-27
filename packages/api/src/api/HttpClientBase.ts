@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import { AxiosInstance, AxiosResponse, default as axios } from 'axios'
 
 export class HttpClientBase {
     protected readonly axios: AxiosInstance
 
     constructor(baseURL: string, prefix = '') {
         baseURL = baseURL + prefix
-        this.axios = axios.default.create({ baseURL })
+        this.axios = axios.create({ baseURL })
         this.axios.interceptors.response.use(this.responseHandler, this.errorHandler)
     }
 

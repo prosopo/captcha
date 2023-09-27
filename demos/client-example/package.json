@@ -1,13 +1,13 @@
 {
     "name": "@prosopo/client-example",
-    "version": "0.2.0",
+    "version": "0.2.2",
     "private": true,
     "type": "module",
     "dependencies": {
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
-        "@prosopo/procaptcha-react": "0.2.0",
+        "@prosopo/procaptcha-react": "0.2.2",
         "@types/react-dom": "^18.2.4",
         "electron": "25.5.0",
         "react": "^18.2.0",
@@ -16,15 +16,15 @@
     },
     "devDependencies": {
         "@cypress/xpath": "^2.0.3",
-        "@prosopo/cli": "0.2.0",
-        "@prosopo/config": "0.2.0",
+        "@prosopo/cli": "0.2.2",
+        "@prosopo/config": "0.2.2",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
         "cypress": "^12.14.0",
         "cypress-promise": "^1.1.0",
         "eslint-config-react-app": "^7.0.1",
-        "tslib": "^2.6.2",
-        "typescript": "^5.1.6"
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
     },
     "scripts": {
         "start": "tsc --build --verbose && vite serve --mode=development --config vite.config.ts --port 9230 --host --force",

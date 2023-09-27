@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes } from '../contract/typechain/captcha/types-arguments/index.js'
 import { Captcha, CaptchaTypes, CaptchaWithoutId, CaptchasSchema, SelectAllCaptchaSchema } from './captcha.js'
+import { Hash } from '@prosopo/captcha-contract'
 import { z } from 'zod'
 
 export type DatasetBase = {
-    datasetId?: ArgumentTypes.Hash
-    datasetContentId?: ArgumentTypes.Hash
+    datasetId?: Hash
+    datasetContentId?: Hash
     format: CaptchaTypes
     contentTree?: string[][]
     solutionTree?: string[][]
@@ -32,8 +32,8 @@ export interface DatasetRaw extends DatasetBase {
 }
 
 export type DatasetWithIds = {
-    datasetId: ArgumentTypes.Hash
-    datasetContentId: ArgumentTypes.Hash
+    datasetId: Hash
+    datasetContentId: Hash
     captchas: Captcha[]
     format: CaptchaTypes
     contentTree?: string[][]
