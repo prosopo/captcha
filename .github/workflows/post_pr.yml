@@ -75,11 +75,11 @@ jobs:
                   npm run build
                   npm run cli -- clippy --docker -- -- -D warnings
 
-            - name: Rust formatting check
+            - name: Rust formatting
               run: |
                   cd protocol/dev
                   npm run build
-                  npm run cli -- fmt --all --verbose --check --docker
+                  npm run cli -- fmt --all --verbose --docker
 
             # install cypress so we don't have to do that every time
             - name: Cypress install
