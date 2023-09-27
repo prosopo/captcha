@@ -3,13 +3,17 @@
     "version": "0.2.2",
     "private": true,
     "type": "module",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "dependencies": {
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
         "@prosopo/procaptcha-react": "0.2.2",
         "@types/react-dom": "^18.2.4",
-        "electron": "25.5.0",
+        "electron": "25.8.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "web-vitals": "^2.1.4"
