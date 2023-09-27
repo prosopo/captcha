@@ -1,6 +1,6 @@
 [package]
 name = "proxy"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io"]
 edition = "2021"
 
@@ -8,11 +8,11 @@ edition = "2021"
 ink = { git = "https://github.com/prosopo/ink_sr25519", branch="4.3.0-custom", default-features = false }
 scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
 scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
-disable_macro = { version = "0.2.3", path = "../../crates/disable_macro" }
-common = { version = "0.2.3", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
+disable_macro = { version = "0.2.4", path = "../../crates/disable_macro" }
+common = { version = "0.2.4", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
 
 [dev-dependencies]
-common = { version = "0.2.3", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
+common = { version = "0.2.4", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
 
 [lib]
 path = "src/lib.rs"
