@@ -12,10 +12,6 @@ scale-info = { version = "2.7.0", default-features = false, features = ["derive"
 [lib]
 path = "src/lib.rs"
 
-# Needed until https://github.com/paritytech/ink/issues/364 is resolved.
-[profile.release]
-overflow-checks = false
-
 [features]
 default = ["std"]
 std = ["ink/std", "scale/std", "scale-info/std"]

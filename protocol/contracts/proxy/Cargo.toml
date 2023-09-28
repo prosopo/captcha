@@ -17,10 +17,6 @@ common = { version = "0.2.4", path = "../../contracts/common", default-features 
 [lib]
 path = "src/lib.rs"
 
-# Needed until https://github.com/paritytech/ink/issues/364 is resolved.
-[profile.release]
-overflow-checks = false
-
 [features]
 default = ["std"]
 std = [
