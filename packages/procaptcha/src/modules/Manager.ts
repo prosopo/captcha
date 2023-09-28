@@ -43,9 +43,9 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
         loading: false,
+        index: 0,
         challenge: undefined,
-        solutions: [],
-        index: -1,
+        solutions: undefined,
         isHuman: false,
         captchaApi: undefined,
         account: undefined,
