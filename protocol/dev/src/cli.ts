@@ -229,7 +229,7 @@ export async function processArgs(args: string[]) {
             }
             const uid = process.getuid?.() ?? '1000'
             const gid = process.getgid?.() ?? '1000'
-            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
+            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/usr/local/cargo/registry ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
