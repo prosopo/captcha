@@ -227,7 +227,9 @@ export async function processArgs(args: string[]) {
                 // if not, pull it
                 await exec(`docker pull ${dockerImage}`)
             }
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
+            const uid = process.getuid?.() ?? '1000'
+            const gid = process.getgid?.() ?? '1000'
+            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
@@ -242,11 +244,6 @@ export async function processArgs(args: string[]) {
             // error should be printed to console in the exec function
             // error out after cleanup
             error = true
-        }
-
-        if (dockerImage) {
-            // docker ci image runs as root, so chown the target dir
-            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ${targetDir} || true`)
         }
 
         await new Promise((resolve, reject) => {
