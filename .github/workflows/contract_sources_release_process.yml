@@ -9,7 +9,10 @@ on:
     workflow_dispatch:
 
 jobs:
+    check_version:
+      uses: prosopo/captcha/.github/workflows/check_version.yml@main
     build:
+        needs: check_version
         runs-on: ubuntu-latest
         steps:
             # Checkout the repo
@@ -35,38 +38,8 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            # Get the provider image version from the root package.json and the latest package version from npm
-            - name: Check provider version bump
-              id: check_provider_image_version
-              run: |
-                  # get the next provider version number from the package.json
-                  NEXT=$(cat package.json | jq -r '.version')
-                  # get the current provider version number from npm
-                  CURRENT=$(npm view @prosopo/provider version)
-                  NEXT_MAJOR=$(echo $NEXT | cut -d '.' -f 1)
-                  NEXT_MINOR=$(echo $NEXT | cut -d '.' -f 2)
-                  NEXT_PATCH=$(echo $NEXT | cut -d '.' -f 3)
-                  CURRENT_MAJOR=$(echo $CURRENT | cut -d '.' -f 1)
-                  CURRENT_MINOR=$(echo $CURRENT | cut -d '.' -f 2)
-                  CURRENT_PATCH=$(echo $CURRENT | cut -d '.' -f 3)
-                  # compare major versions for bump
-                  if [[ $NEXT_MAJOR -gt $CURRENT_MAJOR ]]; then
-                    echo "major version bump detected"
-                    echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ $NEXT_MINOR -gt $CURRENT_MINOR ]]; then
-                    echo "minor version bump detected"
-                    echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ $NEXT_PATCH -gt $CURRENT_PATCH ]]; then
-                    echo "patch version bump detected"
-                    echo "bump=true" >> $GITHUB_OUTPUT
-                  else
-                    echo "no version bump detected"
-                    echo "bump=false" >> $GITHUB_OUTPUT
-                  fi
-                  echo "PROVIDER_IMAGE_VERSION=$NEXT" >> $GITHUB_ENV
-
             - name: Build the contract sources
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               run: |
                   set -e  # Exit immediately if a command exits with a non-zero status.
 
@@ -80,20 +53,20 @@ jobs:
                   cd ../..
 
             - name: Create Release
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: create_release
               uses: actions/create-release@v1
               with:
-                  tag_name: ${{ env.PROVIDER_IMAGE_VERSION }}
-                  release_name: Release ${{ env.PROVIDER_IMAGE_VERSION }}
-                  body: Automated release of contract sources for npm version ${{ env.PROVIDER_IMAGE_VERSION }}
+                  tag_name: ${{ needs.check_version.next_version }}
+                  release_name: Release ${{ needs.check_version.next_version }}
+                  body: Automated release of contract sources for npm version ${{ needs.check_version.next_version }}
                   draft: false
                   prerelease: false
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract ABI
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: upload-release-asset-abi
               uses: actions/upload-release-asset@v1
               with:
@@ -105,7 +78,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract WASM
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: upload-release-asset-wasm
               uses: actions/upload-release-asset@v1
               with:
@@ -117,7 +90,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: upload-release-asset-contract
               uses: actions/upload-release-asset@v1
               with:
@@ -129,7 +102,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Proxy ABI
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: upload-release-asset-abi-proxy
               uses: actions/upload-release-asset@v1
               with:
@@ -141,7 +114,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Proxy WASM
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: upload-release-asset-wasm-proxy
               uses: actions/upload-release-asset@v1
               with:
@@ -153,7 +126,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Proxy
-              if: steps.check_provider_image_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true'
               id: upload-release-asset-contract-proxy
               uses: actions/upload-release-asset@v1
               with:
