@@ -202,7 +202,8 @@ export async function processArgs(args: string[]) {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
         const dockerImage = argv.docker === '' ? 'prosopo/contracts-ci-linux:3.0.1' : argv.docker ?? ''
-        console.log('dockerImage', dockerImage)
+        console.log(`dockerImage=${dockerImage}`)
+        console.log(`cmd=${cmd}`)
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
@@ -226,7 +227,9 @@ export async function processArgs(args: string[]) {
                 // if not, pull it
                 await exec(`docker pull ${dockerImage}`)
             }
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh ${dockerImage} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            const uid = process.getuid?.() ?? '1000'
+            const gid = process.getgid?.() ?? '1000'
+            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
@@ -241,11 +244,6 @@ export async function processArgs(args: string[]) {
             // error should be printed to console in the exec function
             // error out after cleanup
             error = true
-        }
-
-        if (dockerImage) {
-            // docker ci image runs as root, so chown the target dir
-            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ${targetDir} || true`)
         }
 
         await new Promise((resolve, reject) => {
@@ -353,6 +351,8 @@ Cargo pass-through commands:
                         git_commit_id: await getGitCommitId(),
                     }
                     setEnvVariables(packagePaths, env)
+                } else {
+                    console.log('Skipping setting env variables')
                 }
 
                 const contracts = argv.contract as string[]
