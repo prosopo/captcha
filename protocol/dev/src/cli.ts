@@ -202,7 +202,8 @@ export async function processArgs(args: string[]) {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
         const dockerImage = argv.docker === '' ? 'prosopo/contracts-ci-linux:3.0.1' : argv.docker ?? ''
-        console.log('dockerImage', dockerImage)
+        console.log(`dockerImage=${dockerImage}`)
+        console.log(`cmd=${cmd}`)
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
@@ -215,8 +216,8 @@ export async function processArgs(args: string[]) {
 
         let script = ''
         if (dockerImage) {
-            if (toolchain !== undefined) {
-                throw new Error('Cannot specify toolchain when using docker')
+            if (toolchain !== '') {
+                throw new Error('Cannot specify toolchain when using docker: ' + toolchain)
             }
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             // check if the docker image is already pulled
@@ -226,7 +227,7 @@ export async function processArgs(args: string[]) {
                 // if not, pull it
                 await exec(`docker pull ${dockerImage}`)
             }
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
@@ -339,6 +340,12 @@ Cargo pass-through commands:
                 yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
+                yargs = yargs.option('skip-env', {
+                    type: 'boolean',
+                    demand: false,
+                    desc: 'Skip setting env variables',
+                    default: false,
+                })
                 return yargs
             },
             async (argv) => {
@@ -346,7 +353,11 @@ Cargo pass-through commands:
                 const env: Env = {
                     git_commit_id: await getGitCommitId(),
                 }
-                setEnvVariables(packagePaths, env)
+                if (!argv.skipEnv) {
+                    setEnvVariables(packagePaths, env)
+                } else {
+                    console.log('Skipping setting env variables')
+                }
 
                 const contracts = argv.contract as string[]
                 delete argv.contract
