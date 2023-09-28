@@ -215,6 +215,9 @@ export async function processArgs(args: string[]) {
 
         let script = ''
         if (dockerImage) {
+            if (toolchain !== undefined) {
+                throw new Error('Cannot specify toolchain when using docker')
+            }
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             // check if the docker image is already pulled
             try {
@@ -223,7 +226,7 @@ export async function processArgs(args: string[]) {
                 // if not, pull it
                 await exec(`docker pull ${dockerImage}`)
             }
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh ${dockerImage} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache ${dockerImage} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
