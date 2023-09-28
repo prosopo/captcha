@@ -42,8 +42,8 @@ const CaptchaComponent = ({
     themeColor,
 }: CaptchaComponentProps) => {
     const { t } = useTranslation()
-    const captcha = at(challenge.captchas, index)
-    const solution = at(solutions, index)
+    const captcha = challenge.captchas ? at(challenge.captchas, index) : null
+    const solution = solutions ? at(solutions, index) : []
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
     return (
@@ -97,7 +97,7 @@ const CaptchaComponent = ({
                     </Typography>
                 </Box>
                 <Box {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
-                    <CaptchaWidget challenge={captcha} solution={solution} onClick={onClick} />
+                    {captcha && <CaptchaWidget challenge={captcha} solution={solution} onClick={onClick} />}
                 </Box>
                 <Box
                     px={2}
