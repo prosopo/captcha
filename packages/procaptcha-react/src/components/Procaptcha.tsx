@@ -87,7 +87,7 @@ const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
 
 const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [isHuman, setIsHuman] = useState(false)
-    const [index, setIndex] = useState(-1)
+    const [index, setIndex] = useState(0)
     const [solutions, setSolutions] = useState([] as string[][])
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
     const [showModal, setShowModal] = useState(false)
