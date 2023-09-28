@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
-import { css } from '@emotion/react'
-import { Alert, Backdrop, Box, Checkbox, CircularProgress, Link, ThemeProvider, Typography } from '@mui/material'
 import {
     Account,
     GetCaptchaResponse,
@@ -25,9 +23,11 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
+import { Alert, Backdrop, Box, Checkbox, CircularProgress, Link, ThemeProvider, Typography } from '@mui/material'
+import { css } from '@emotion/react'
+import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-import { darkTheme, lightTheme } from './theme.js'
 
 const logoStyle = css`
     align-items: center;
