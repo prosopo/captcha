@@ -340,7 +340,8 @@ Cargo pass-through commands:
                 yargs = yargs.option('skip-env', {
                     type: 'boolean',
                     demand: false,
-                    desc: 'skip setting env variables before building contract(s)',
+                    desc: 'Skip setting env variables',
+                    default: false,
                 })
                 return yargs
             },
