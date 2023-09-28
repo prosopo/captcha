@@ -150,7 +150,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-                <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Backdrop open={state.showModal} sx={{ zIndex: 2147483647 }}>
                     {state.challenge ? (
                         <CaptchaComponent
                             challenge={state.challenge}
