@@ -216,7 +216,7 @@ export async function processArgs(args: string[]) {
         let script = ''
         if (dockerImage) {
             console.log(
-                `Using cargo from docker can take a long time the first time it is run. This is due to the downloading + compiling of git dependencies. Subsequent runs will be much faster.`
+                `Using cargo from docker can take a long time the first time it is run. This is due to the downloading + compiling of git dependencies. Subsequent runs will be much faster if cargo-cache is mounted as a volume.`
             )
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             // check if the docker image is already pulled
