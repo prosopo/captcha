@@ -10,7 +10,7 @@ on:
 
 jobs:
     check_version:
-      uses: prosopo/captcha/.github/workflows/check_version.yml@main
+        uses: prosopo/captcha/.github/workflows/check_version.yml@main
     build:
         needs: check_version
         runs-on: ubuntu-latest
