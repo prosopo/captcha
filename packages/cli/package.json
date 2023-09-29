@@ -30,6 +30,7 @@
         "@prosopo/common": "0.2.4",
         "@prosopo/contract": "0.2.4",
         "@prosopo/env": "0.2.4",
+        "@prosopo/networks": "0.2.4",
         "@prosopo/provider": "0.2.4",
         "@prosopo/types": "0.2.4",
         "@prosopo/util": "0.2.4",

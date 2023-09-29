@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoServer } from '@prosopo/server'
+import { ProsopoServer, getServerConfig } from '@prosopo/server'
 import { getPair } from '@prosopo/common'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
@@ -20,7 +20,6 @@ import dotenv from 'dotenv'
 import express from 'express'
 import memoryServerSetup from './utils/database.js'
 import path from 'path'
-import prosopoConfig from './prosopo.config.js'
 import routesFactory from './routes/routes.js'
 
 export function loadEnv() {
@@ -61,7 +60,7 @@ async function main() {
         throw new Error('No mnemonic found')
     }
 
-    const config = prosopoConfig()
+    const config = getServerConfig()
 
     console.log('config', config)
     const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)

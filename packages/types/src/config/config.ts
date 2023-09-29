@@ -17,14 +17,14 @@ import { z } from 'zod'
 
 export const DatabaseTypes = z.enum(['mongo', 'mongoMemory'])
 
-export const EnvironmentTypesSchema = z.enum(['development', 'rococo', 'kusama', 'polkadot', 'shiden'])
+export const EnvironmentTypesSchema = z.enum(['development', 'staging', 'production'])
 
 export type EnvironmentTypes = z.infer<typeof EnvironmentTypesSchema>
 
 // TODO decide if environment should be development / staging / production instead of rococo / kusama / polkadot
-export const NetworkNamesSchema = EnvironmentTypesSchema
+export const NetworkNamesSchema = z.enum(['development', 'rococo', 'kusama', 'polkadot', 'shiden'])
 
-export type NetworkNames = typeof NetworkNamesSchema
+export type NetworkNames = z.infer<typeof NetworkNamesSchema>
 
 export const DatabaseConfigSchema = z
     .record(
@@ -50,6 +50,7 @@ export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 export const ProsopoBaseConfigSchema = z.object({
     logLevel: LogLevel,
     defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.development),
+    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.development),
     // The account with which to query the contract and sign transactions
     account: z.object({
         address: z.string(),
@@ -59,7 +60,7 @@ export const ProsopoBaseConfigSchema = z.object({
 })
 
 export const NetworkConfigSchema = z.object({
-    endpoint: z.string().url(),
+    endpoint: z.string().url().optional(),
     contract: z.object({
         address: z.string(),
         name: z.string(),

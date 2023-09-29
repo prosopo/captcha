@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
-import { AssetsResolver, EnvironmentTypes } from '@prosopo/types'
+import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { ContractAbi } from '@prosopo/types'
 import { Database } from '@prosopo/types-database' // config
 import { Keyring } from '@polkadot/keyring'
@@ -28,6 +28,7 @@ export interface ProsopoEnvironment {
     contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
+    defaultNetwork: NetworkNames
     contractName: string
     abi: ContractAbi
     logger: Logger

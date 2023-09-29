@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiPromise } from '@polkadot/api'
-import { AssetsResolver, ContractAbi, EnvironmentTypes } from '@prosopo/types'
+import { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
@@ -32,6 +32,7 @@ export class Environment implements ProsopoEnvironment {
     contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
+    defaultNetwork: NetworkNames
     contractName: string
     abi: ContractAbi
     logger: Logger
@@ -44,18 +45,20 @@ export class Environment implements ProsopoEnvironment {
     constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
         this.config = config
         this.defaultEnvironment = this.config.defaultEnvironment
+        this.defaultNetwork = this.config.defaultNetwork
         this.pair = pair
         this.logger = getLogger(this.config.logLevel, `ProsopoEnvironment`)
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment) &&
             this.config.networks &&
-            this.config.networks[this.defaultEnvironment]
+            this.config.networks[this.defaultNetwork]
         ) {
-            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment]?.endpoint}`)
-            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment]?.endpoint)
-            this.contractAddress = this.config.networks[this.defaultEnvironment]?.contract.address || ''
-            this.contractName = this.config.networks[this.defaultEnvironment]?.contract.name || ''
+            const network = this.config.networks[this.defaultNetwork]
+            this.logger.info(`Endpoint: ${network?.endpoint}`)
+            this.wsProvider = new WsProvider(network?.endpoint)
+            this.contractAddress = network?.contract.address || ''
+            this.contractName = network?.contract.name || ''
 
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain

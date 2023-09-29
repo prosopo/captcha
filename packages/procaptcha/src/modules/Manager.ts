@@ -68,7 +68,7 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
 }
 
 export const getNetwork = (config: ProsopoClientConfig) => {
-    const network = config.networks[config.defaultEnvironment]
+    const network = config.networks[config.defaultNetwork]
     if (!network) {
         throw new Error(`No network found for environment ${config.defaultEnvironment}`)
     }

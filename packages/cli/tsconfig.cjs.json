@@ -19,6 +19,9 @@
             "path": "../env/tsconfig.cjs.json"
         },
         {
+            "path": "../networks/tsconfig.cjs.json"
+        },
+        {
             "path": "../provider/tsconfig.cjs.json"
         },
         {

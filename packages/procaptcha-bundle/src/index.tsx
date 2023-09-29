@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import { ApiParams, EnvironmentTypesSchema, NetworkNamesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
-
+import networks from '@prosopo/networks'
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
@@ -28,37 +28,23 @@ interface ProcaptchaRenderOptions {
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
-        siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || ''
+        siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || process.env.REACT_APP_DAPP_SITE_KEY || ''
     }
     return {
         logLevel: LogLevel.enum.info,
-        defaultEnvironment:
-            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
+            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
+            : EnvironmentTypesSchema.enum.development,
+        defaultNetwork: process.env.DEFAULT_NETWORK
+            ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
+            : NetworkNamesSchema.enum.development,
         userAccountAddress: '',
         web2: true,
         dappName: 'Prosopo',
         account: {
             address: siteKey,
         },
-        networks: {
-            [EnvironmentTypesSchema.enum.development]: {
-                endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
-                contract: {
-                    address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                    name: 'prosopo',
-                },
-                accounts: [],
-            },
-            [EnvironmentTypesSchema.enum.rococo]: {
-                endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
-                contract: {
-                    address:
-                        process.env.PROTOCOL_CONTRACT_ADDRESS || '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u',
-                    name: 'prosopo',
-                },
-                accounts: [],
-            },
-        },
+        networks,
         solutionThreshold: 80,
         serverUrl: process.env.SERVER_URL || '',
     }

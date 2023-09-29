@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import {ProsopoConfig} from './types';
+import networks from '@prosopo/networks'
 
 import { EnvironmentTypesSchema, ProsopoServerConfig } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 
-export default () =>
+export const getServerConfig = () =>
     ({
         logLevel: process.env.LOG_LEVEL || LogLevel.enum.debug,
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || EnvironmentTypesSchema.enum.development, // enviromental variables
+        defaultNetwork: process.env.DEFAULT_NETWORK || 'rococo',
         web2: process.env.REACT_APP_WEB2 || true,
         serverUrl:
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
@@ -31,30 +32,5 @@ export default () =>
             password: '',
             address: process.env.REACT_APP_SERVER_ACCOUNT_ADDRESS || '',
         },
-        networks: {
-            development: {
-                endpoint: process.env.REACT_APP_SUBSTRATE_NODE_URL || 'ws://localhost:9944',
-                contract: {
-                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
-                    name: 'prosopo',
-                },
-                dappAccount: {
-                    address: process.env.REACT_APP_DAPP_SITE_KEY,
-                    name: 'dapp',
-                },
-                accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
-            },
-            shiden: {
-                endpoint: 'wss://shiden.public.blastapi.io',
-                contract: {
-                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
-                    name: 'prosopo',
-                },
-                dappAccount: {
-                    address: process.env.REACT_APP_DAPP_SITE_KEY,
-                    name: 'dapp',
-                },
-                accounts: [],
-            },
-        },
+        networks,
     }) as ProsopoServerConfig

@@ -13,8 +13,16 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types.js';
 
-import { DatabaseTypes, EnvironmentTypes, EnvironmentTypesSchema, ProsopoConfig } from '@prosopo/types'
+import {
+    DatabaseTypes,
+    EnvironmentTypes,
+    EnvironmentTypesSchema,
+    NetworkNames,
+    NetworkNamesSchema,
+    ProsopoConfig,
+} from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
+import networks from '@prosopo/networks'
 
 function getMongoURI(): string {
     const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
@@ -31,28 +39,12 @@ export default (): ProsopoConfig => ({
     logLevel: getLogLevel(),
     defaultEnvironment:
         (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+    defaultNetwork: (process.env.DEFAULT_NETWORK as NetworkNames) || NetworkNamesSchema.enum.development,
     account: {
         address: process.env.PROVIDER_ADDRESS || '',
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },
-    networks: {
-        development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. WsProvider takes array and has failover.
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
-            },
-            accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
-        },
-        rococo: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
-            },
-            accounts: [],
-        },
-    },
+    networks,
     captchas: {
         solved: {
             count: 1, // TODO add env var

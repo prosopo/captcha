@@ -34,6 +34,7 @@
         "@prosopo/datasets-fs": "0.2.4",
         "@prosopo/env": "0.2.4",
         "@prosopo/file-server": "0.2.4",
+        "@prosopo/networks": "0.2.4",
         "@prosopo/procaptcha": "0.2.4",
         "@prosopo/procaptcha-bundle": "0.2.4",
         "@prosopo/procaptcha-react": "0.2.4",
