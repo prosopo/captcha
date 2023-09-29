@@ -94,15 +94,28 @@ export function* permutations(
 
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
 // Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
-export const at = <T>(
+export type AtOptions = {
+    optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
+    noBoundsCheck?: boolean // whether to check the index against the bounds of the array (true == no bounds check, false == bounds check)
+    noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
+}
+export function at(
+    str: string,
+    i: number,
+    options: {
+        optional: true
+        noBoundsCheck?: boolean
+        noWrap?: boolean
+    }
+): string | undefined
+export function at(str: string, i: number, options?: AtOptions): string
+export function at<T>(
     arr: T[],
     i: number,
-    options?: {
-        optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
-        noBoundsCheck?: boolean // whether to check the index against the bounds of the array (true == no bounds check, false == bounds check)
-        noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
-    }
-): T => {
+    options: { optional: true; noBoundsCheck?: boolean; noWrap?: boolean }
+): T | undefined
+export function at<T>(arr: T[], i: number, options?: AtOptions): T
+export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | undefined {
     if (!options?.noWrap) {
         if (arr.length !== 0) {
             i %= arr.length
