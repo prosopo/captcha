@@ -41,7 +41,7 @@ const getGitCommitId = async () => {
     return gitCommitIdBytesString
 }
 
-const setEnvVariable = (filePath: string, name: string, value: string) => {
+const setEnvVariable = async (filePath: string, name: string, value: string) => {
     // console.log("setting env variable", name, "in", filePath)
     const content = fs.readFileSync(filePath, 'utf8')
     let result = content
@@ -70,7 +70,6 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     }
     if (result === content) {
         // no change has been made
-        return
     }
     console.log('set env variable', name, 'in', filePath)
     // else change has been made
@@ -78,14 +77,14 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     fs.writeFileSync(filePath, result)
 }
 
-const setEnvVariables = (filePaths: string[], env: Env) => {
+const setEnvVariables = async (filePaths: string[], env: Env, recursiveCall?: boolean) => {
     for (const filePath of filePaths) {
         const stats = fs.lstatSync(filePath)
         if (stats.isDirectory()) {
             // recurse into directory
             const files = fs.readdirSync(filePath)
-            files.forEach((file) => {
-                setEnvVariables([path.join(filePath, file)], env)
+            files.forEach(async (file) => {
+                await setEnvVariables([path.join(filePath, file)], env, true)
             })
         } else if (stats.isFile()) {
             // process file
@@ -93,12 +92,17 @@ const setEnvVariables = (filePaths: string[], env: Env) => {
                 // loop through all env variables and set them
                 for (const [name, value] of Object.entries(env)) {
                     // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
-                    setEnvVariable(filePath, name, value)
+                    await setEnvVariable(filePath, name, value)
                 }
             }
         } else {
             throw new Error(`Unknown file type: ${filePath}`)
         }
+    }
+    if (!recursiveCall) {
+        // finished setting env variables
+        // format the code
+        await exec(`npm run cli -- fmt --verbose --all`)
     }
 }
 
@@ -351,7 +355,7 @@ Cargo pass-through commands:
                     const env: Env = {
                         git_commit_id: await getGitCommitId(),
                     }
-                    setEnvVariables(packagePaths, env)
+                    await setEnvVariables(packagePaths, env)
                 } else {
                     console.log('Skipping setting env variables')
                 }
