@@ -82,8 +82,8 @@ describe('util', () => {
             const v1: number = get({ a: 1 }, 'a')
             const v2: number | undefined = get({ a: 1 }, 'a', false)
             const v3: number = get({ a: 1 }, 'a', true)
-            const v4: number | undefined = get({ a: 1, b: undefined }, 'b')
-            const v5: number | undefined = get({ a: 1, b: undefined }, 'b', false)
+            const v4: number | undefined = get({ a: 1, b: undefined }, 'a')
+            const v5: number | undefined = get({ a: 1, b: undefined }, 'a', false)
             // cast from any
             const v6: number = get(JSON.parse('{"a": 1}') as any, 'a')
             // cast from unknown
