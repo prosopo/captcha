@@ -11,6 +11,9 @@
             "path": "../../packages/common"
         },
         {
+            "path": "../../packages/networks"
+        },
+        {
             "path": "../../packages/types"
         }
     ]

@@ -1,26 +1,18 @@
-import { DatabaseTypes, EnvironmentTypesSchema } from '@prosopo/types'
+import { DatabaseTypes, EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
+import networks from '@prosopo/networks'
 
 const logLevel = getLogLevel()
 export default {
     logLevel,
     contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
     defaultEnvironment: EnvironmentTypesSchema.Values.development,
+    defaultNetwork: NetworkNamesSchema.Values.development,
     account: {
         password: '',
         address: '',
     },
-    networks: {
-        development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://localhost:9944',
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
-            },
-            accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
-        },
-    },
-
+    networks,
     captchas: {
         solved: {
             count: 1,
