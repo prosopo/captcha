@@ -25,6 +25,11 @@ jobs:
         steps:
             # Checkout the repo
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                node-version: 16
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -55,11 +60,6 @@ jobs:
                   docker container ls
 
             - run: ls -lah
-
-            # pin npm as later version (9.7.X) causes an issue with npm ls -ap
-            #      npm ERR! code ELSPROBLEMS
-            #      npm ERR! invalid: @pm2/pm2-version-check@1.0.4 .../captcha/node_modules/@pm2/pm2-version-check
-            - run: npm install -g npm@8.9
 
             - run: npm install
 
