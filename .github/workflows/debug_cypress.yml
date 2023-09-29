@@ -45,4 +45,3 @@ jobs:
             - run: npx cypress install --force
             - run: ls -la ~/.cache || true
             - run: ls -la ~/.cache/Cypress || true
-                  
