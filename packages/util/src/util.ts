@@ -109,11 +109,6 @@ export function at(
     }
 ): string | undefined
 export function at(str: string, i: number, options?: AtOptions): string
-export function at<T>(
-    arr: T[],
-    i: number,
-    options: { optional: true; noBoundsCheck?: boolean; noWrap?: boolean }
-): T | undefined
 export function at<T>(arr: T[], i: number, options?: AtOptions): T
 export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | undefined {
     if (!options?.noWrap) {
@@ -177,7 +172,7 @@ export const choice = <T>(
         // without replacement == don't allow duplicates
         if (options.withReplacement || indicesSet.add(index)) {
             indices.push(index)
-            choices.push(at(items, index, { required: false }))
+            choices.push(at(items, index, { optional: true }))
         }
     }
 
