@@ -97,17 +97,13 @@ export function* permutations(
 export const at = <T>(
     arr: T[],
     i: number,
-    options: {
-        required?: boolean // whether to allow undefined elements in the array
-        checkBounds?: boolean // whether to check the index against the bounds of the array
-        wrap?: boolean // whether to wrap the index around the bounds of the array
-    } = {}
+    options?: {
+        optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
+        noBoundsCheck?: boolean // whether to check the index against the bounds of the array (true == no bounds check, false == bounds check)
+        noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
+    }
 ): T => {
-    options.checkBounds = options.checkBounds ?? true
-    options.required = options.required ?? true
-    options.wrap = options.wrap ?? true
-
-    if (options.wrap) {
+    if (!options?.noWrap) {
         if (arr.length !== 0) {
             i %= arr.length
         }
@@ -115,7 +111,7 @@ export const at = <T>(
             i += arr.length
         }
     }
-    if (options.checkBounds) {
+    if (!options?.noBoundsCheck) {
         if (i >= arr.length || i < 0) {
             throw new Error(
                 `Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
@@ -123,7 +119,7 @@ export const at = <T>(
         }
     }
     const el = arr[i]
-    if (options.required && el === undefined) {
+    if (!options?.optional && el === undefined) {
         throw new Error(
             `Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
         )
