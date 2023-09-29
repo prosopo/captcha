@@ -16,6 +16,17 @@ import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
     describe('at', () => {
+        test('types', () => {
+            // check the types are picked up correctly by ts
+            const v1: number = at([1, 2, 3], 0)
+            const v2: number | undefined = at([1, 2, 3, undefined], 0)
+            const v3: string = at('abc', 0)
+            const v4: string | undefined = at('abc', 0, { optional: true })
+            const v5: number | undefined = at([1, 2, 3], 0, { optional: true })
+            const v6: string = at('abc', 0, { optional: false })
+            const v7: number = at([1, 2, 3], 0, { optional: false })
+        })
+
         test('throw on empty array', () => {
             expect(() => at([], 0)).to.throw()
         })
@@ -66,6 +77,19 @@ describe('util', () => {
     })
 
     describe('get', () => {
+        test('types', () => {
+            // check the types are picked up correctly by ts
+            const v1: number = get({ a: 1 }, 'a')
+            const v2: number | undefined = get({ a: 1 }, 'a', false)
+            const v3: number = get({ a: 1 }, 'a', true)
+            const v4: number | undefined = get({ a: 1, b: undefined }, 'b')
+            const v5: number | undefined = get({ a: 1, b: undefined }, 'b', false)
+            // cast from any
+            const v6: number = get(JSON.parse('{"a": 1}') as any, 'a')
+            // cast from unknown
+            const v7: number = get(JSON.parse('{"a": 1}') as unknown, 'a')
+        })
+
         test('throw on undefined field string', () => {
             expect(() => get({ a: 1 }, 'b')).to.throw()
         })
