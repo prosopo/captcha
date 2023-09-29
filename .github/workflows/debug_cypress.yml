@@ -34,15 +34,15 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm list | grep cypress
-            - run: ls -la .cache
-            - run: ls -la .cache/Cypress
+            - run: ls -la ~/.cache
+            - run: ls -la ~/.cache/Cypress
             - run: npm i cypress
-            - run: ls -la .cache
-            - run: ls -la .cache/Cypress
+            - run: ls -la ~/.cache
+            - run: ls -la ~/.cache/Cypress
             - run: npx cypress install
-            - run: ls -la .cache
-            - run: ls -la .cache/Cypress
+            - run: ls -la ~/.cache
+            - run: ls -la ~/.cache/Cypress
             - run: npx cypress install --force
-            - run: ls -la .cache
-            - run: ls -la .cache/Cypress
+            - run: ls -la ~/.cache
+            - run: ls -la ~/.cache/Cypress
                   
