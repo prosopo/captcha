@@ -37,3 +37,5 @@ jobs:
             - run: ls -la protocol/cargo-cache || true
             - run: ls -la protocol/target/ink || true
             - run: ls -la node_modules || true
+            - run: ls -la ~/
+            - run: ls -la .
