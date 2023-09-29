@@ -14,8 +14,6 @@
 import { hexToU8a } from '@polkadot/util'
 import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
-import { spawn } from 'child_process'
-import { argv, stdin } from 'process'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
@@ -289,7 +287,7 @@ Cargo pass-through commands:
                 delete argv.contract
                 for (const contract of contracts) {
                     const dir = `${contractsDir}/${contract}`
-                    await exec(`${buildCargoCmd(argv, 'metadata', dir)}`)
+                    await exec(`${buildCargoCmd(argv, 'contract metadata', dir)}`)
                 }
             },
             []
@@ -309,7 +307,7 @@ Cargo pass-through commands:
                 delete argv.contract
                 for (const contract of contracts) {
                     const dir = `${contractsDir}/${contract}`
-                    await exec(`${buildCargoCmd(argv, 'instantiate', dir)}`)
+                    await exec(`${buildCargoCmd(argv, 'contract instantiate', dir)}`)
                 }
             },
             []
@@ -348,7 +346,6 @@ Cargo pass-through commands:
                     const contractPath = `${contractsDir}/${contract}`
                     await exec(buildCargoCmd(argv, 'contract build', contractPath))
                 }
-                console.log(argv)
             },
             []
         )
@@ -364,13 +361,11 @@ Cargo pass-through commands:
                 if (argv._ && argv._.length == 0) {
                     throw new Error('No command specified')
                 }
-                const cmd = argv._[0] // the first arg (the command)
+                const cmd = String(argv._[0] || '') // the first arg (the command)
                 if (!cmd) {
                     throw new Error('No command specified')
                 }
-                if (!cmd.toString().match(/^[a-z\d]+/gim)) {
-                    throw new Error(`unknown command: ${cmd}`)
-                }
+
                 await exec(buildCargoCmd(argv, cmd.toString()))
             },
             []
