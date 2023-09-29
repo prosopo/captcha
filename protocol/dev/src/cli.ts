@@ -15,7 +15,7 @@ import { hexToU8a } from '@polkadot/util'
 import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
-import { stdin } from 'process'
+import { argv, stdin } from 'process'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
@@ -77,14 +77,14 @@ const setEnvVariable = async (filePath: string, name: string, value: string) => 
     fs.writeFileSync(filePath, result)
 }
 
-const setEnvVariables = async (filePaths: string[], env: Env, recursiveCall?: boolean) => {
+const setEnvVariables = async (filePaths: string[], env: Env, argv: ArgumentsCamelCase, recursiveCall?: boolean) => {
     for (const filePath of filePaths) {
         const stats = fs.lstatSync(filePath)
         if (stats.isDirectory()) {
             // recurse into directory
             const files = fs.readdirSync(filePath)
             files.forEach(async (file) => {
-                await setEnvVariables([path.join(filePath, file)], env, true)
+                await setEnvVariables([path.join(filePath, file)], env, argv, true)
             })
         } else if (stats.isFile()) {
             // process file
@@ -115,40 +115,47 @@ const exec = (
     code: number | null
 }> => {
     console.log(`> ${command}`)
-
-    const prc = spawn(command, {
-        shell: true,
-    })
-
-    if (pipe || pipe === undefined) {
-        prc.stdout.pipe(process.stdout)
-        prc.stderr.pipe(process.stderr)
-    }
-    stdin.pipe(prc.stdin)
-
-    const stdoutData: string[] = []
-    const stderrData: string[] = []
-    prc.stdout.on('data', (data) => {
-        stdoutData.push(data.toString())
-    })
-    prc.stderr.on('data', (data) => {
-        stderrData.push(data.toString())
-    })
-
     return new Promise((resolve, reject) => {
-        prc.on('close', function (code) {
-            const output = {
-                stdout: stdoutData.join(''),
-                stderr: stderrData.join(''),
-                code,
-            }
-            if (code === 0) {
-                resolve(output)
-            } else {
-                reject(output)
-            }
+        resolve({
+            stdout: '',
+            stderr: '',
+            code: 0,
         })
     })
+
+    // const prc = spawn(command, {
+    //     shell: true,
+    // })
+
+    // if (pipe || pipe === undefined) {
+    //     prc.stdout.pipe(process.stdout)
+    //     prc.stderr.pipe(process.stderr)
+    // }
+    // stdin.pipe(prc.stdin)
+
+    // const stdoutData: string[] = []
+    // const stderrData: string[] = []
+    // prc.stdout.on('data', (data) => {
+    //     stdoutData.push(data.toString())
+    // })
+    // prc.stderr.on('data', (data) => {
+    //     stderrData.push(data.toString())
+    // })
+
+    // return new Promise((resolve, reject) => {
+    //     prc.on('close', function (code) {
+    //         const output = {
+    //             stdout: stdoutData.join(''),
+    //             stderr: stderrData.join(''),
+    //             code,
+    //         }
+    //         if (code === 0) {
+    //             resolve(output)
+    //         } else {
+    //             reject(output)
+    //         }
+    //     })
+    // })
 }
 
 export async function processArgs(args: string[]) {
@@ -201,7 +208,7 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const execCargo = async (argv: ArgumentsCamelCase, cmd: string, dir?: string) => {
+    const buildCargoCmd = (argv: ArgumentsCamelCase, cmd: string, dir?: string) => {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
@@ -220,17 +227,7 @@ export async function processArgs(args: string[]) {
 
         let script = ''
         if (dockerImage) {
-            console.log(
-                `Using cargo from docker can take a long time the first time it is run. This is due to the downloading + compiling of git dependencies. Subsequent runs will be much faster if cargo-cache is mounted as a volume.`
-            )
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
-            // check if the docker image is already pulled
-            try {
-                await exec(`docker images -q ${dockerImage}`)
-            } catch (e: any) {
-                // if not, pull it
-                await exec(`docker pull ${dockerImage}`)
-            }
             const uid = process.getuid?.() ?? '1000'
             const gid = process.getgid?.() ?? '1000'
             script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/usr/local/cargo/registry ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
@@ -241,22 +238,7 @@ export async function processArgs(args: string[]) {
             }
         }
 
-        let error = false
-        try {
-            await exec(script)
-        } catch (e: any) {
-            // error should be printed to console in the exec function
-            // error out after cleanup
-            error = true
-        }
-
-        await new Promise((resolve, reject) => {
-            if (error) {
-                reject()
-            } else {
-                resolve({})
-            }
-        })
+        return script
     }
 
     await yargs(hideBin(args))
@@ -284,11 +266,10 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                console.log(contracts)
+                await exec(`cd ${repoDir} && mkdir -p expanded`)
                 for (const contract of contracts) {
-                    await exec(
-                        `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
-                    )
+                    const dir = `${contractsDir}/${contract}`
+                    await exec(`${buildCargoCmd(argv, 'expand', dir)} > ${repoDir}/expanded/${contract}.rs`)
                 }
             },
             []
@@ -307,9 +288,8 @@ Cargo pass-through commands:
                 const contracts = argv.contract as string[]
                 delete argv.contract
                 for (const contract of contracts) {
-                    await exec(
-                        `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
-                    )
+                    const dir = `${contractsDir}/${contract}`
+                    await exec(`${buildCargoCmd(argv, 'metadata', dir)}`)
                 }
             },
             []
@@ -327,8 +307,9 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                for (const contract in contracts) {
-                    await exec(`cd ${contractsDir}/${contract} && cargo contract instantiate ${argv._}`)
+                for (const contract of contracts) {
+                    const dir = `${contractsDir}/${contract}`
+                    await exec(`${buildCargoCmd(argv, 'instantiate', dir)}`)
                 }
             },
             []
@@ -355,7 +336,7 @@ Cargo pass-through commands:
                     const env: Env = {
                         git_commit_id: await getGitCommitId(),
                     }
-                    await setEnvVariables(packagePaths, env)
+                    await setEnvVariables(packagePaths, env, argv)
                 } else {
                     console.log('Skipping setting env variables')
                 }
@@ -365,8 +346,9 @@ Cargo pass-through commands:
 
                 for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
-                    await execCargo(argv, 'contract build', contractPath)
+                    await exec(buildCargoCmd(argv, 'contract build', contractPath))
                 }
+                console.log(argv)
             },
             []
         )
@@ -389,7 +371,7 @@ Cargo pass-through commands:
                 if (!cmd.toString().match(/^[a-z\d]+/gim)) {
                     throw new Error(`unknown command: ${cmd}`)
                 }
-                await execCargo(argv, cmd.toString())
+                await exec(buildCargoCmd(argv, cmd.toString()))
             },
             []
         )
