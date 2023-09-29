@@ -133,7 +133,8 @@ export const at = <T>(
 
 export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
 export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
-export function get<V>(obj: unknown, key: unknown, required?: true): V
+export function get<T>(obj: unknown, key: string | number | symbol, required?: true): Exclude<T, undefined>
+export function get<T>(obj: unknown, key: string | number | symbol, required: false): T | undefined
 export function get<T, V>(obj: T, key: unknown, required = true): V {
     const value = obj[key as unknown as keyof T]
     if (required && value === undefined) {
