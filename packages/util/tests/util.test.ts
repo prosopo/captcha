@@ -32,11 +32,11 @@ describe('util', () => {
         })
 
         test('throw on index out of bounds high', () => {
-            expect(() => at([1, 2, 3], 3, { noWrap: false })).to.throw()
+            expect(() => at([1, 2, 3], 3, { noWrap: true })).to.throw()
         })
 
         test('throw on index out of bounds low', () => {
-            expect(() => at([1, 2, 3], -1, { noWrap: false })).to.throw()
+            expect(() => at([1, 2, 3], -1, { noWrap: true })).to.throw()
         })
 
         test('returns correct value', () => {
