@@ -61,6 +61,20 @@ macro_rules! lazy {
     };
 }
 
+pub trait ContractArchitecture {
+    fn abc(&self) -> u8 {
+        1
+    }
+}
+
+pub fn def<T: ink::env::ContractEnv<Env = ink::env::DefaultEnvironment>>(
+) -> <<T as ::ink::env::ContractEnv>::Env as ::ink::env::Environment>::AccountId {
+    let bytes = [5u8; 32];
+    let a =
+        <<T as ::ink::env::ContractEnv>::Env as ::ink::env::Environment>::AccountId::from(bytes);
+    a
+}
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common {
