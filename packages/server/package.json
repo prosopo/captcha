@@ -40,7 +40,7 @@
         "@prosopo/api": "0.2.5",
         "@prosopo/contract": "0.2.5",
         "@prosopo/procaptcha": "0.2.5",
-        "@prosopo/captcha-contract": "^0.2.2",
+        "@prosopo/captcha-contract": "0.2.5",
         "@prosopo/types": "0.2.5"
     },
     "devDependencies": {
