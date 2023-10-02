@@ -14,12 +14,12 @@
 import { hexToU8a } from '@polkadot/util'
 import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
+import { spawn } from 'child_process'
+import chalk from 'chalk'
 import fs from 'fs'
 import path from 'path'
-import process, { stdin } from 'process'
+import process from 'process'
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
-import { spawn } from 'child_process'
-import chalk from 'chalk';
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
