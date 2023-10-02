@@ -22,8 +22,8 @@ import { loadEnv } from '@prosopo/cli'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
-import yargs from 'yargs'
 import setVersion from '../scripts/setVersion.js'
+import yargs from 'yargs'
 
 const paths = getPaths()
 const rootDir = path.resolve('.')
