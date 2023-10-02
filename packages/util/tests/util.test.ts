@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import exp from 'constants'
 import { at, get, permutations, rng, seedLodash } from '../src/util'
 import { describe, expect, test } from 'vitest'
 
@@ -25,6 +26,21 @@ describe('util', () => {
             const v5: number | undefined = at([1, 2, 3], 0, { optional: true })
             const v6: string = at('abc', 0, { optional: false })
             const v7: number = at([1, 2, 3], 0, { optional: false })
+        })
+
+        test('compatible with string', () => {
+            expect(at('abc', 0)).to.equal('a')
+            expect(at('abc', 1)).to.equal('b')
+            expect(at('abc', 2)).to.equal('c')
+            expect(at('abc', 3)).to.equal('a')
+            expect(at('abc', 4)).to.equal('b')
+            expect(at('abc', 5)).to.equal('c')
+            expect(at('abc', -1)).to.equal('c')
+            expect(at('abc', -2)).to.equal('b')
+            expect(at('abc', -3)).to.equal('a')
+            expect(at('abc', -4)).to.equal('c')
+            expect(at('abc', -5)).to.equal('b')
+            expect(at('abc', -6)).to.equal('a')
         })
 
         test('throw on empty array', () => {
