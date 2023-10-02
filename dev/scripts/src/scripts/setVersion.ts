@@ -29,15 +29,16 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
         const fullPath = path.join(pth, file)
         if (filter(fullPath)) {
             results.push(fullPath)
-            if (fs.statSync(fullPath).isDirectory()) {
-                results.push(...find(fullPath, filter))
-            }
+        }
+        if (fs.statSync(fullPath).isDirectory()) {
+            results.push(...find(fullPath, filter))
         }
     }
     return results
 }
 
 export default async function setVersion(version: string) {
+    console.log('setting version to ', version)
     version = parseVersion(version)
     const root = getPaths().root
     // walk through all files finding .json or .toml
@@ -45,18 +46,18 @@ export default async function setVersion(version: string) {
         if (pth.includes('node_modules')) {
             return false
         }
-        if (pth.endsWith('-lock.json')) {
-            return false
+        // if basename is pakcage.json or Cargo.toml, return true
+        const basename = path.basename(pth)
+        if (basename === 'package.json' || basename === 'Cargo.toml') {
+            return true
         }
-        const ext = path.extname(pth)
-        return ext === '.json' || ext === '.toml'
+        return false
     })
-    console.log(files)
-    process.exit(1)
     // split into json and toml
     files
         .filter((pth) => path.extname(pth) === '.json')
         .forEach((pth) => {
+            console.log('setting version in ', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all json files
             const jsonContent = JSON.parse(content)
@@ -80,6 +81,7 @@ export default async function setVersion(version: string) {
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
+            console.log('setting version in ', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent = parse(content)

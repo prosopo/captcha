@@ -159,9 +159,9 @@ export async function processArgs(args: string[]) {
         .command({
             command: 'version',
             describe: 'Set the version of packages',
-            builder: (yargs) => yargs.option('version', { type: 'string', demand: true }).demandOption('version'),
+            builder: (yargs) => yargs.option('v', { type: 'string', demand: true }),
             handler: async (argv) => {
-                setVersion(String(argv.version))
+                await setVersion(String(argv.v))
             },
         }).argv
 }
