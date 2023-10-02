@@ -1,5 +1,5 @@
 import { getPaths } from '@prosopo/config'
-import { parse, stringify } from 'smol-toml'
+import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
 
@@ -73,7 +73,7 @@ export default async function setVersion(version: string) {
     //                 }
     //             }
     //         }
-    //         fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4) + '\n')
+    //         fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
     //     })
 
     // replace version in tomls
@@ -83,12 +83,18 @@ export default async function setVersion(version: string) {
             console.log('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
-            const tomlContent = parse(content)
-            // replace dependency versions in all toml files
-            tomlContent.version = version
+            const tomlContent: any = parse(content)
+            if (tomlContent.workspace) {
+                if ((tomlContent.workspace as any).version) {
+                    ;(tomlContent.workspace as any).version = version
+                }
+            } else {
+                // replace dependency versions in all toml files
+                tomlContent['package'].version = version
+            }
             fs.writeFileSync(pth, stringify(tomlContent))
         })
-    
+
     // go through tomls again now versions have updated and update the version field for dependencies with paths set, as we can follow the path to get the version
     files
         .filter((pth) => path.extname(pth) === '.toml')
@@ -97,18 +103,24 @@ export default async function setVersion(version: string) {
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent = parse(content)
-            for (const obj of [tomlContent.dependencies ?? {}, tomlContent['dev-dependencies'] ?? {}]) {
-                // detect any prosopo dependencies
-                for (const [key, value] of Object.entries(obj)) {
-                    if (value.path) {
-                        // trace path to get version
-                        path.join(value.path, 'Cargo.toml')
-                        const depContent = fs.readFileSync(pth, 'utf8')
-                        const depTomlContent = parse(depContent)
-                        value.version = depTomlContent.version
+            if (tomlContent.workspace) {
+                if ((tomlContent.workspace as any).version) {
+                    ;(tomlContent.workspace as any).version = version
+                }
+            } else {
+                for (const obj of [tomlContent.dependencies ?? {}, tomlContent['dev-dependencies'] ?? {}]) {
+                    // detect any prosopo dependencies
+                    for (const [key, value] of Object.entries(obj)) {
+                        if (value.path) {
+                            // trace path to get version
+                            path.join(value.path, 'Cargo.toml')
+                            const depContent = fs.readFileSync(pth, 'utf8')
+                            const depTomlContent = parse(depContent)
+                            value.version = depTomlContent.version
+                        }
                     }
                 }
             }
-            fs.writeFileSync(pth, stringify(tomlContent))
+            fs.writeFileSync(pth, stringify(tomlContent as any))
         })
 }
