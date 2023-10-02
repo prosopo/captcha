@@ -1,27 +1,52 @@
 [package]
 name = "captcha"
 version = "0.2.5"
-authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
+authors = [
+  "Chris Taylor <chris@prosopo.io>",
+  "George Oastler <george@prosopo.io>",
+  "Vincenzo Ferrara",
+  "Siniša Čanak"
+]
 edition = "2021"
 
-[dependencies]
-ink = { git = "https://github.com/prosopo/ink_sr25519", branch="4.3.0-custom", default-features = false }
-scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
-scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
-disable_macro = { version = "0.2.5", path = "../../crates/disable_macro" }
-common = { version = "0.2.5", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
+[dependencies.ink]
+git = "https://github.com/prosopo/ink_sr25519"
+branch = "4.3.0-custom"
+default-features = false
 
-[dev-dependencies]
-common = { version = "0.2.5", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
+[dependencies.scale]
+package = "parity-scale-codec"
+version = "3.4"
+default-features = false
+features = [ "derive" ]
+
+[dependencies.scale-info]
+version = "2.7.0"
+default-features = false
+features = [ "derive" ]
+optional = true
+
+[dependencies.disable_macro]
+path = "../../crates/disable_macro"
+
+[dependencies.common]
+path = "../../contracts/common"
+default-features = false
+features = [ "ink-as-dependency" ]
+
+[dev-dependencies.common]
+path = "../../contracts/common"
+default-features = false
+features = [ "test-dependency" ]
 
 [lib]
 path = "src/lib.rs"
 
-# Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]
 overflow-checks = false
 
 [features]
-default = ["std"]
-std = ["ink/std", "scale/std", "scale-info/std"]
-ink-as-dependency = []
+default = [ "std" ]
+std = [ "ink/std", "scale/std", "scale-info/std" ]
+ink-as-dependency = [ ]
+
