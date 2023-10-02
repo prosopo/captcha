@@ -35,7 +35,7 @@
         "@polkadot/types": "10.9.1",
         "@prosopo/common": "0.2.5",
         "@prosopo/types": "0.2.5",
-        "@prosopo/captcha-contract": "^0.2.2",
+        "@prosopo/captcha-contract": "0.2.5",
         "mongodb": "5.8.0",
         "mongoose": "^7.3.3",
         "zod": "^3.17.9"
