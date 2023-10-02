@@ -20,6 +20,7 @@
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {
+        "@iarna/toml": "^2.2.5",
         "@polkadot/api": "10.9.1",
         "@polkadot/api-contract": "10.9.1",
         "@polkadot/types": "10.9.1",
@@ -47,7 +48,6 @@
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
-        "smol-toml": "^1.1.2",
         "yargs": "^17.5.1",
         "yargs-parser": "^21.0.1"
     },
