@@ -73,7 +73,7 @@ export default async function setVersion(version: string) {
                     }
                 }
             }
-            // fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
+            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4) + '\n')
         })
     files
         .filter((pth) => path.extname(pth) === '.toml')
