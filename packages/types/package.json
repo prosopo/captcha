@@ -37,7 +37,7 @@
         "@polkadot/types": "10.9.1",
         "@polkadot/types-codec": "10.9.1",
         "@prosopo/common": "0.2.5",
-        "@prosopo/captcha-contract": "^0.2.2",
+        "@prosopo/captcha-contract": "0.2.5",
         "consola": "^3.2.3",
         "zod": "^3.17.9"
     },
