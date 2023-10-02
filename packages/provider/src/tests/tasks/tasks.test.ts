@@ -55,7 +55,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType
         const alicePair = await getPair(context.pairType, context.ss58Format, '//Alice')
-        console.log(testConfig)
+        console.log('testConfig', testConfig)
         context.env = new MockEnvironment(alicePair, testConfig)
         try {
             await context.env.isReady()
