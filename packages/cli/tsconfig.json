@@ -20,9 +20,6 @@
             "path": "../env"
         },
         {
-            "path": "../networks"
-        },
-        {
             "path": "../provider"
         },
         {

@@ -11,13 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, EnvironmentTypesSchema, NetworkNamesSchema, ProcaptchaOutput } from '@prosopo/types'
-import { LogLevel } from '@prosopo/common'
+import {
+    ApiParams,
+    EnvironmentTypesSchema,
+    NetworkNamesSchema,
+    ProcaptchaConfigSchema,
+    ProcaptchaOutput,
+} from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
-import networks from '@prosopo/networks'
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
@@ -30,8 +34,7 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
         siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || process.env.REACT_APP_DAPP_SITE_KEY || ''
     }
-    return {
-        logLevel: LogLevel.enum.info,
+    return ProcaptchaConfigSchema.parse({
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
             ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
             : EnvironmentTypesSchema.enum.development,
@@ -39,15 +42,11 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
             ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
             : NetworkNamesSchema.enum.development,
         userAccountAddress: '',
-        web2: true,
-        dappName: 'Prosopo',
         account: {
             address: siteKey,
         },
-        networks,
-        solutionThreshold: 80,
         serverUrl: process.env.SERVER_URL || '',
-    }
+    })
 }
 
 const getParentForm = (element: Element): HTMLFormElement | null => {

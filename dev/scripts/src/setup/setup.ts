@@ -13,11 +13,11 @@
 // limitations under the License.
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { Payee } from '@prosopo/captcha-contract'
-import { ProviderEnvironment } from '@prosopo/env'
+import { ProviderEnvironment, getPair } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
+import { defaultConfig, getSecret } from '@prosopo/cli'
 import { generateMnemonic, wrapQuery } from '@prosopo/contract'
 import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
@@ -121,10 +121,12 @@ export async function setup(force: boolean) {
             throw new ProsopoEnvError('DEVELOPER.DAPP_SITE_KEY_MISSING')
         }
 
-        const pairType = getPairType()
-        const ss58Format = getSs58Format()
         const secret = '//Alice'
-        const pair = await getPair(pairType, ss58Format, secret)
+        const config = defaultConfig()
+        const pair = await getPair(secret, config)
+
+        console.log(config)
+
         const env = new ProviderEnvironment(pair, defaultConfig())
         await env.isReady()
 
@@ -146,13 +148,13 @@ export async function setup(force: boolean) {
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
-        defaultProvider.pair = await getPair(pairType, ss58Format, mnemonic)
+        defaultProvider.pair = await getPair(secret, config)
 
         await registerProvider(env, defaultProvider, force)
 
         defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
-        defaultDapp.pair = await getPair(pairType, ss58Format, defaultDapp.secret)
+        defaultDapp.pair = await getPair(secret, config)
 
         env.logger.info('Registering dapp...')
         await registerDapp(env, defaultDapp)

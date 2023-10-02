@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, getLogger, getPair } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { LogLevel, getLogger } from '@prosopo/common'
+import { ProviderEnvironment, getPair } from '@prosopo/env'
+import { getConfig, getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import { start } from './start.js'
@@ -24,10 +24,8 @@ async function main() {
     loadEnv()
 
     const secret = getSecret()
-    const ss58Format = getSs58Format()
-    const pairType = getPairType()
     const config = getConfig()
-    const pair = await getPair(pairType, ss58Format, secret)
+    const pair = await getPair(secret, config)
 
     log.info(`Pair address: ${pair.address}`)
 

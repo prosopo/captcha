@@ -14,9 +14,6 @@
             "path": "../contract/tsconfig.cjs.json"
         },
         {
-            "path": "../networks/tsconfig.cjs.json"
-        },
-        {
             "path": "../types/tsconfig.cjs.json"
         },
         {

@@ -14,3 +14,4 @@
 export { Environment } from './env.js'
 export { ProviderEnvironment } from './provider.js'
 export { MockEnvironment } from './mockenv.js'
+export { getPair } from './getPair.js'

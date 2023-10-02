@@ -22,6 +22,7 @@ import { loadEnv } from '@prosopo/cli'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
+import setVersion from '../scripts/setVersion.js'
 import yargs from 'yargs'
 
 const paths = getPaths()
@@ -119,7 +120,7 @@ export async function processArgs(args: string[]) {
 
             handler: async (argv) => {
                 log.info('Running setup scripts')
-                await setup(argv.force)
+                await setup(!!argv.force)
             },
         })
         .command({
@@ -153,6 +154,14 @@ export async function processArgs(args: string[]) {
                         `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractPackagesDir}/${contract}/src`
                     )
                 }
+            },
+        })
+        .command({
+            command: 'version',
+            describe: 'Set the version of packages',
+            builder: (yargs) => yargs.option('v', { type: 'string', demand: true }),
+            handler: async (argv) => {
+                await setVersion(String(argv.v))
             },
         }).argv
 }

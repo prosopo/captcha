@@ -41,9 +41,6 @@
             "path": "../../packages/file-server"
         },
         {
-            "path": "../../packages/networks"
-        },
-        {
             "path": "../../packages/procaptcha"
         },
         {

@@ -16,13 +16,13 @@ import { Environment } from '@prosopo/env'
 import { at } from '@prosopo/util'
 import { config } from 'dotenv'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
-import { getPair } from '@prosopo/common'
+import { getPair } from '@prosopo/env'
 import { sendFunds } from '../setup/index.js'
 
 config()
 
 async function main(account: string) {
-    const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
+    const pair = await getPair('//Alice', undefined, getPairType(), getSs58Format())
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN('100000000000000000'))

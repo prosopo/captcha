@@ -17,7 +17,7 @@ import { KeypairType } from '@polkadot/util-crypto/types'
 import { Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../src/index'
-import { getPair } from '@prosopo/common'
+import { getPair } from '@prosopo/env'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
@@ -48,7 +48,7 @@ export const DAPP: IDappAccount = {
 
 export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
     const ss58Format = 42
-    const pair = await getPair('sr25519' as KeypairType, ss58Format, accountMnemonic(account))
+    const pair = await getPair(ss58Format, 'sr25519' as KeypairType, accountMnemonic(account))
 
     await env.changeSigner(pair)
     return new Tasks(env)

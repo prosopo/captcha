@@ -11,9 +11,6 @@
             "path": "../../dev/config"
         },
         {
-            "path": "../networks"
-        },
-        {
             "path": "../procaptcha"
         },
         {

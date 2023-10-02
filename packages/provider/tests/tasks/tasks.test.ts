@@ -20,7 +20,6 @@ import { CaptchaStatus, DappPayee, Payee } from '@prosopo/captcha-contract'
 import { ContractDeployer, ProsopoContractError, getBlockNumber, getDispatchError, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
@@ -51,9 +50,7 @@ declare module 'vitest' {
 
 describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     beforeEach(async function (context) {
-        context.ss58Format = 42
-        context.pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(context.pairType, context.ss58Format, '//Alice')
+        const alicePair = await getPair(context.testConfig[context.testConfg.defaultNetwork], '//Alice')
         console.log(testConfig)
         context.env = new MockEnvironment(alicePair, testConfig)
         try {

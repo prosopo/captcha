@@ -17,7 +17,7 @@ import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractDeployer } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
-import { getPair } from '@prosopo/common'
+import { getPair } from '@prosopo/env'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
@@ -25,7 +25,7 @@ import path from 'path'
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-    const pair = await getPair(pairType, ss58Format, '//Alice')
+    const pair = await getPair('//Alice', undefined, pairType, ss58Format)
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold

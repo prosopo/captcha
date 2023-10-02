@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
+import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
+import { ProviderEnvironment, getPair } from '@prosopo/env'
 import { Server } from 'http'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { getConfig, getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
@@ -56,12 +56,9 @@ export async function start(env?: ProviderEnvironment) {
     if (!env) {
         loadEnv()
 
-        const ss58Format = getSs58Format()
-        const pairType = getPairType()
         const secret = getSecret()
         const config = getConfig()
-        const pair = await getPair(pairType, ss58Format, secret)
-
+        const pair = await getPair(secret, config)
         env = new ProviderEnvironment(pair, config)
     }
     await env.isReady()

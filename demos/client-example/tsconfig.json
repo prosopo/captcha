@@ -8,23 +8,13 @@
     "include": ["src"],
     "references": [
         {
+            "path": "../../packages/procaptcha-react"
+        },
+        {
             "path": "../../packages/cli"
         },
         {
-            "path": "../../packages/common"
-        },
-        {
             "path": "../../dev/config"
-        },
-        {
-            "path": "../../packages/networks"
-        },
-        {
-            "path": "../../packages/procaptcha"
-        },
-        {
-            "path": "../../packages/procaptcha-react"
-        },
-
+        }
     ]
 }

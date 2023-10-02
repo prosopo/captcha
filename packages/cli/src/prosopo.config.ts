@@ -14,15 +14,17 @@
 // import {ProsopoConfig} from './types.js';
 
 import {
+    BatchCommitConfigSchema,
     DatabaseTypes,
-    EnvironmentTypes,
     EnvironmentTypesSchema,
-    NetworkNames,
     NetworkNamesSchema,
+    ProsopoCaptchaCountConfigSchema,
+    ProsopoCaptchaSolutionConfigSchema,
     ProsopoConfig,
+    ProsopoConfigSchema,
+    ProsopoNetworksSchema,
 } from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
-import networks from '@prosopo/networks'
 
 function getMongoURI(): string {
     const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
@@ -35,44 +37,38 @@ function getMongoURI(): string {
     return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
 
-export default (): ProsopoConfig => ({
-    logLevel: getLogLevel(),
-    defaultEnvironment:
-        (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-    defaultNetwork: (process.env.DEFAULT_NETWORK as NetworkNames) || NetworkNamesSchema.enum.development,
-    account: {
-        address: process.env.PROVIDER_ADDRESS || '',
-        password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
-    },
-    networks,
-    captchas: {
-        solved: {
-            count: 1, // TODO add env var
+export default (
+    networksConfig?: typeof ProsopoNetworksSchema,
+    captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
+    batchCommitConfig?: typeof BatchCommitConfigSchema,
+    captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
+): ProsopoConfig =>
+    ProsopoConfigSchema.parse({
+        logLevel: getLogLevel(),
+        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
+            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENDPOINT)
+            : EnvironmentTypesSchema.enum.development,
+        defaultNetwork: process.env.DEFAULT_NETWORK
+            ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
+            : NetworkNamesSchema.enum.development,
+        account: {
+            address: process.env.PROVIDER_ADDRESS || '',
+            password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
         },
-        unsolved: {
-            count: 1, // TODO add env var
+        database: {
+            development: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.DATABASE_NAME || '',
+                authSource: 'admin',
+            },
         },
-    },
-    captchaSolutions: {
-        captchaBlockRecency: 10, // TODO add env var
-        requiredNumberOfSolutions: 3, // TODO add env var
-        solutionWinningPercentage: 80, // TODO add env var
-        captchaFilePath: '../../data/captchas_big.json', // TODO add env var
-    },
-    database: {
-        development: {
-            type: DatabaseTypes.enum.mongo,
-            endpoint: getMongoURI(),
-            dbname: process.env.DATABASE_NAME || '',
-            authSource: 'admin',
+        server: {
+            baseURL: process.env.API_BASE_URL || 'http://localhost',
+            port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
         },
-    },
-    batchCommit: {
-        interval: 300, // TODO add env var
-        maxBatchExtrinsicPercentage: 59, // TODO add env var
-    },
-    server: {
-        baseURL: process.env.API_BASE_URL || '',
-        port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
-    },
-})
+        networks: ProsopoNetworksSchema.parse(networksConfig),
+        captchaSolutions: ProsopoCaptchaSolutionConfigSchema.parse(captchaSolutionsConfig),
+        batchCommit: BatchCommitConfigSchema.parse(batchCommitConfig),
+        captchas: ProsopoCaptchaCountConfigSchema.parse(captchaServeConfig),
+    })

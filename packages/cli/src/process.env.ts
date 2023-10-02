@@ -11,8 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+    BatchCommitConfigSchema,
+    ProsopoCaptchaCountConfigSchema,
+    ProsopoCaptchaSolutionConfigSchema,
+    ProsopoConfig,
+    ProsopoConfigSchema,
+    ProsopoNetworksSchema,
+} from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import prosopoConfig from './prosopo.config.js'
 
@@ -41,6 +48,13 @@ export function getSecret(who?: string): string {
     return secret
 }
 
-export function getConfig(): ProsopoConfig {
-    return prosopoConfig() as ProsopoConfig
+export function getConfig(
+    networksConfig?: typeof ProsopoNetworksSchema,
+    captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
+    batchCommitConfig?: typeof BatchCommitConfigSchema,
+    captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
+): ProsopoConfig {
+    return ProsopoConfigSchema.parse(
+        prosopoConfig(networksConfig, captchaSolutionsConfig, batchCommitConfig, captchaServeConfig)
+    )
 }

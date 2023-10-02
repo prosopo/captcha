@@ -11,9 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoServer, getServerConfig } from '@prosopo/server'
-import { getPair } from '@prosopo/common'
+import { getPair } from '@prosopo/env'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -63,9 +62,8 @@ async function main() {
     const config = getServerConfig()
 
     console.log('config', config)
-    const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
-    const ss58Format = parseInt(process.env.SS58_FORMAT || '') || 42
-    const pair = await getPair(pairType, ss58Format, process.env.REACT_APP_SERVER_MNEMONIC)
+
+    const pair = await getPair(process.env.REACT_APP_SERVER_MNEMONIC, config)
     const prosopoServer = new ProsopoServer(pair, config)
 
     app.use(routesFactory(mongoose, prosopoServer))

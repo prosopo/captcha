@@ -11,26 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import networks from '@prosopo/networks'
-
-import { EnvironmentTypesSchema, ProsopoServerConfig } from '@prosopo/types'
-import { LogLevel } from '@prosopo/common'
+import { EnvironmentTypesSchema, ProsopoServerConfigSchema } from '@prosopo/types'
 
 export const getServerConfig = () =>
-    ({
-        logLevel: process.env.LOG_LEVEL || LogLevel.enum.debug,
+    ProsopoServerConfigSchema.parse({
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || EnvironmentTypesSchema.enum.development, // enviromental variables
         defaultNetwork: process.env.DEFAULT_NETWORK || 'rococo',
-        web2: process.env.REACT_APP_WEB2 || true,
         serverUrl:
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
                 ? `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`
                 : 'http://localhost:9228',
-        solutionThreshold: process.env.REACT_APP_SOLUTION_THRESHOLD || 0.5,
         dappName: process.env.REACT_APP_DAPP_NAME || 'client-example-server',
         account: {
             password: '',
             address: process.env.REACT_APP_SERVER_ACCOUNT_ADDRESS || '',
         },
-        networks,
-    }) as ProsopoServerConfig
+    })
