@@ -50,31 +50,31 @@ export default async function setVersion(version: string) {
         return basename === 'package.json' || basename === 'Cargo.toml'
     })
     // split into json and toml
-    // files
-    //     .filter((pth) => path.extname(pth) === '.json')
-    //     .forEach((pth) => {
-    //         console.log('setting version in', pth)
-    //         const content = fs.readFileSync(pth, 'utf8')
-    //         // replace version in all json files
-    //         const jsonContent = JSON.parse(content)
-    //         jsonContent.version = version
-    //         // go through dependencies
-    //         for (const obj of [
-    //             jsonContent.dependencies ?? {},
-    //             jsonContent.devDependencies ?? {},
-    //             jsonContent.peerDependencies ?? {},
-    //         ]) {
-    //             // detect any prosopo dependencies
-    //             for (const key of Object.keys(obj)) {
-    //                 if (key.startsWith('@prosopo')) {
-    //                     // and replace version
-    //                     console.log(`setting ${key} to ${version} in ${pth}`)
-    //                     obj[key] = version
-    //                 }
-    //             }
-    //         }
-    //         fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
-    //     })
+    files
+        .filter((pth) => path.extname(pth) === '.json')
+        .forEach((pth) => {
+            console.log('setting version in', pth)
+            const content = fs.readFileSync(pth, 'utf8')
+            // replace version in all json files
+            const jsonContent = JSON.parse(content)
+            jsonContent.version = version
+            // go through dependencies
+            for (const obj of [
+                jsonContent.dependencies ?? {},
+                jsonContent.devDependencies ?? {},
+                jsonContent.peerDependencies ?? {},
+            ]) {
+                // detect any prosopo dependencies
+                for (const key of Object.keys(obj)) {
+                    if (key.startsWith('@prosopo')) {
+                        // and replace version
+                        console.log(`setting ${key} to ${version} in ${pth}`)
+                        obj[key] = version
+                    }
+                }
+            }
+            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
+        })
 
     // replace version in tomls
     files
