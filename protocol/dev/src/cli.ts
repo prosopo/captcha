@@ -19,6 +19,7 @@ import path from 'path'
 import process, { stdin } from 'process'
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
 import { spawn } from 'child_process'
+import chalk from 'chalk';
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
@@ -113,7 +114,7 @@ const exec = (
     stderr: string
     code: number | null
 }> => {
-    console.log(`> ${command}`)
+    console.log(chalk.bgBlack.cyan.bold(`> ${command}`))
 
     const prc = spawn(command, {
         shell: true,
@@ -135,6 +136,7 @@ const exec = (
 
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
+            prc.stdout.push('\n')
             const output = {
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
