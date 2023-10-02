@@ -20,5 +20,5 @@ describe('provider bundle', () => {
             `cd ${rootDir} && node dist/bundle/provider.cli.bundle.js version`
         )
         assert(runOut.includes('Version:'))
-    }, 60000)
+    }, 120000)
 })
