@@ -146,5 +146,3 @@ export const CaptchaWidget = ({ challenge, solution, onClick }: CaptchaWidgetPro
         </Box>
     )
 }
-
-//export default CaptchaWidget
