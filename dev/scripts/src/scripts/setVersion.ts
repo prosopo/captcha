@@ -57,7 +57,10 @@ export default async function setVersion(version: string) {
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all json files
             const jsonContent = JSON.parse(content)
-            jsonContent.version = version
+            if (jsonContent.version) {
+                // only replace if version is set
+                jsonContent.version = version
+            }
             // go through dependencies
             for (const obj of [
                 jsonContent.dependencies ?? {},
