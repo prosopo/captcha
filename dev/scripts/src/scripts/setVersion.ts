@@ -50,31 +50,33 @@ export default async function setVersion(version: string) {
         return basename === 'package.json' || basename === 'Cargo.toml'
     })
     // split into json and toml
-    files
-        .filter((pth) => path.extname(pth) === '.json')
-        .forEach((pth) => {
-            console.log('setting version in', pth)
-            const content = fs.readFileSync(pth, 'utf8')
-            // replace version in all json files
-            const jsonContent = JSON.parse(content)
-            jsonContent.version = version
-            // go through dependencies
-            for (const obj of [
-                jsonContent.dependencies ?? {},
-                jsonContent.devDependencies ?? {},
-                jsonContent.peerDependencies ?? {},
-            ]) {
-                // detect any prosopo dependencies
-                for (const key of Object.keys(obj)) {
-                    if (key.startsWith('@prosopo')) {
-                        // and replace version
-                        console.log(`setting ${key} to ${version} in ${pth}`)
-                        obj[key] = version
-                    }
-                }
-            }
-            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4) + '\n')
-        })
+    // files
+    //     .filter((pth) => path.extname(pth) === '.json')
+    //     .forEach((pth) => {
+    //         console.log('setting version in', pth)
+    //         const content = fs.readFileSync(pth, 'utf8')
+    //         // replace version in all json files
+    //         const jsonContent = JSON.parse(content)
+    //         jsonContent.version = version
+    //         // go through dependencies
+    //         for (const obj of [
+    //             jsonContent.dependencies ?? {},
+    //             jsonContent.devDependencies ?? {},
+    //             jsonContent.peerDependencies ?? {},
+    //         ]) {
+    //             // detect any prosopo dependencies
+    //             for (const key of Object.keys(obj)) {
+    //                 if (key.startsWith('@prosopo')) {
+    //                     // and replace version
+    //                     console.log(`setting ${key} to ${version} in ${pth}`)
+    //                     obj[key] = version
+    //                 }
+    //             }
+    //         }
+    //         fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4) + '\n')
+    //     })
+
+    // replace version in tomls
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
@@ -84,15 +86,29 @@ export default async function setVersion(version: string) {
             const tomlContent = parse(content)
             // replace dependency versions in all toml files
             tomlContent.version = version
-            for (const obj of [tomlContent.dependencies ?? {}, tomlContent.devDependencies ?? {}]) {
+            fs.writeFileSync(pth, stringify(tomlContent))
+        })
+    
+    // go through tomls again now versions have updated and update the version field for dependencies with paths set, as we can follow the path to get the version
+    files
+        .filter((pth) => path.extname(pth) === '.toml')
+        .forEach((pth) => {
+            console.log('setting dependency versions in', pth)
+            const content = fs.readFileSync(pth, 'utf8')
+            // replace version in all toml files
+            const tomlContent = parse(content)
+            for (const obj of [tomlContent.dependencies ?? {}, tomlContent['dev-dependencies'] ?? {}]) {
                 // detect any prosopo dependencies
-                for (const key of Object.keys(obj)) {
-                    if (key.startsWith('@prosopo')) {
-                        // and replace version
-                        // obj[key] = version
+                for (const [key, value] of Object.entries(obj)) {
+                    if (value.path) {
+                        // trace path to get version
+                        path.join(value.path, 'Cargo.toml')
+                        const depContent = fs.readFileSync(pth, 'utf8')
+                        const depTomlContent = parse(depContent)
+                        value.version = depTomlContent.version
                     }
                 }
             }
-            // fs.writeFileSync(pth, stringify(tomlContent))
+            fs.writeFileSync(pth, stringify(tomlContent))
         })
 }
