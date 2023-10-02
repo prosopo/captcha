@@ -16,16 +16,27 @@ import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
     describe('at', () => {
+        test('types', () => {
+            // check the types are picked up correctly by ts
+            const v1: number = at([1, 2, 3], 0)
+            const v2: number | undefined = at([1, 2, 3, undefined], 0)
+            const v3: string = at('abc', 0)
+            const v4: string | undefined = at('abc', 0, { optional: true })
+            const v5: number | undefined = at([1, 2, 3], 0, { optional: true })
+            const v6: string = at('abc', 0, { optional: false })
+            const v7: number = at([1, 2, 3], 0, { optional: false })
+        })
+
         test('throw on empty array', () => {
             expect(() => at([], 0)).to.throw()
         })
 
         test('throw on index out of bounds high', () => {
-            expect(() => at([1, 2, 3], 3, { wrap: false })).to.throw()
+            expect(() => at([1, 2, 3], 3, { noWrap: true })).to.throw()
         })
 
         test('throw on index out of bounds low', () => {
-            expect(() => at([1, 2, 3], -1, { wrap: false })).to.throw()
+            expect(() => at([1, 2, 3], -1, { noWrap: true })).to.throw()
         })
 
         test('returns correct value', () => {
@@ -35,37 +46,50 @@ describe('util', () => {
         })
 
         test('wraps index high', () => {
-            expect(at([1, 2, 3], 3, { wrap: true })).to.equal(1)
-            expect(at([1, 2, 3], 4, { wrap: true })).to.equal(2)
-            expect(at([1, 2, 3], 5, { wrap: true })).to.equal(3)
+            expect(at([1, 2, 3], 3, { noWrap: false })).to.equal(1)
+            expect(at([1, 2, 3], 4, { noWrap: false })).to.equal(2)
+            expect(at([1, 2, 3], 5, { noWrap: false })).to.equal(3)
         })
 
         test('wraps index low', () => {
-            expect(at([1, 2, 3], -1, { wrap: true })).to.equal(3)
-            expect(at([1, 2, 3], -2, { wrap: true })).to.equal(2)
-            expect(at([1, 2, 3], -3, { wrap: true })).to.equal(1)
-            expect(at([1, 2, 3], -4, { wrap: true })).to.equal(3)
-            expect(at([1, 2, 3], -5, { wrap: true })).to.equal(2)
-            expect(at([1, 2, 3], -6, { wrap: true })).to.equal(1)
+            expect(at([1, 2, 3], -1, { noWrap: false })).to.equal(3)
+            expect(at([1, 2, 3], -2, { noWrap: false })).to.equal(2)
+            expect(at([1, 2, 3], -3, { noWrap: false })).to.equal(1)
+            expect(at([1, 2, 3], -4, { noWrap: false })).to.equal(3)
+            expect(at([1, 2, 3], -5, { noWrap: false })).to.equal(2)
+            expect(at([1, 2, 3], -6, { noWrap: false })).to.equal(1)
         })
 
         test('allow undefined in bounds', () => {
-            expect(at([undefined, undefined, undefined], 0, { required: false })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], 1, { required: false })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], 2, { required: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 0, { optional: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 1, { optional: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 2, { optional: true })).to.equal(undefined)
         })
 
         test('allow undefined out of bounds', () => {
-            expect(at([undefined, undefined, undefined], 3, { required: false, checkBounds: false })).to.equal(
+            expect(at([undefined, undefined, undefined], 3, { optional: true, noBoundsCheck: true })).to.equal(
                 undefined
             )
-            expect(at([undefined, undefined, undefined], -1, { required: false, checkBounds: false })).to.equal(
+            expect(at([undefined, undefined, undefined], -1, { optional: true, noBoundsCheck: true })).to.equal(
                 undefined
             )
         })
     })
 
     describe('get', () => {
+        test('types', () => {
+            // check the types are picked up correctly by ts
+            const v1: number = get({ a: 1 }, 'a')
+            const v2: number | undefined = get({ a: 1 }, 'a', false)
+            const v3: number = get({ a: 1 }, 'a', true)
+            const v4: number | undefined = get({ a: 1, b: undefined }, 'a')
+            const v5: number | undefined = get({ a: 1, b: undefined }, 'a', false)
+            // cast from any
+            const v6: number = get(JSON.parse('{"a": 1}') as any, 'a')
+            // cast from unknown
+            const v7: number = get(JSON.parse('{"a": 1}') as unknown, 'a')
+        })
+
         test('throw on undefined field string', () => {
             expect(() => get({ a: 1 }, 'b')).to.throw()
         })

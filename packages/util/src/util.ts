@@ -95,18 +95,23 @@ export function* permutations(
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
 // Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
 export type AtOptions = {
-    required?: boolean // whether to allow undefined elements in the array
-    checkBounds?: boolean // whether to check the index against the bounds of the array
-    wrap?: boolean // whether to wrap the index around the bounds of the array
+    optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
+    noBoundsCheck?: boolean // whether to check the index against the bounds of the array (true == no bounds check, false == bounds check)
+    noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
 }
-export function at<T extends string>(arr: string, i: number, options?: AtOptions): T
+export function at(
+    str: string,
+    i: number,
+    options: {
+        optional: true
+        noBoundsCheck?: boolean
+        noWrap?: boolean
+    }
+): string | undefined
+export function at(str: string, i: number, options?: AtOptions): string
 export function at<T>(arr: T[], i: number, options?: AtOptions): T
-export function at<T>(arr: T[] | string, i: number, options: AtOptions = {}): T {
-    options.checkBounds = options.checkBounds ?? true
-    options.required = options.required ?? true
-    options.wrap = options.wrap ?? true
-
-    if (options.wrap) {
+export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | undefined {
+    if (!options?.noWrap) {
         if (arr.length !== 0) {
             i %= arr.length
         }
@@ -114,7 +119,7 @@ export function at<T>(arr: T[] | string, i: number, options: AtOptions = {}): T 
             i += arr.length
         }
     }
-    if (options.checkBounds) {
+    if (!options?.noBoundsCheck) {
         if (i >= arr.length || i < 0) {
             throw new Error(
                 `Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
@@ -122,7 +127,7 @@ export function at<T>(arr: T[] | string, i: number, options: AtOptions = {}): T 
         }
     }
     const el = arr[i]
-    if (options.required && el === undefined) {
+    if (!options?.optional && el === undefined) {
         throw new Error(
             `Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
         )
@@ -132,7 +137,8 @@ export function at<T>(arr: T[] | string, i: number, options: AtOptions = {}): T 
 
 export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
 export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
-export function get<V>(obj: unknown, key: unknown, required?: true): V
+export function get<T>(obj: unknown, key: string | number | symbol, required?: true): Exclude<T, undefined>
+export function get<T>(obj: unknown, key: string | number | symbol, required: false): T | undefined
 export function get<T, V>(obj: T, key: unknown, required = true): V {
     const value = obj[key as unknown as keyof T]
     if (required && value === undefined) {
@@ -166,7 +172,7 @@ export const choice = <T>(
         // without replacement == don't allow duplicates
         if (options.withReplacement || indicesSet.add(index)) {
             indices.push(index)
-            choices.push(at(items, index, { required: false }))
+            choices.push(at(items, index, { optional: true }))
         }
     }
 
