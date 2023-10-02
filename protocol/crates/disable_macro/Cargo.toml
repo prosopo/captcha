@@ -4,11 +4,11 @@ proc-macro = true
 [package]
 name = "disable_macro"
 version = "0.2.5"
-authors = ["George Oastler <goastler4@gmail.com>"]
+authors = [ "George Oastler <goastler4@gmail.com>" ]
 edition = "2021"
-
 description = "macro that disables all functions"
 
 [dependencies]
 quote = "1.0"
 proc-macro2 = "1.0.51"
+
