@@ -46,18 +46,14 @@ export default async function setVersion(version: string) {
         if (pth.includes('node_modules')) {
             return false
         }
-        // if basename is pakcage.json or Cargo.toml, return true
         const basename = path.basename(pth)
-        if (basename === 'package.json' || basename === 'Cargo.toml') {
-            return true
-        }
-        return false
+        return basename === 'package.json' || basename === 'Cargo.toml'
     })
     // split into json and toml
     files
         .filter((pth) => path.extname(pth) === '.json')
         .forEach((pth) => {
-            console.log('setting version in ', pth)
+            console.log('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all json files
             const jsonContent = JSON.parse(content)
@@ -72,16 +68,17 @@ export default async function setVersion(version: string) {
                 for (const key of Object.keys(obj)) {
                     if (key.startsWith('@prosopo')) {
                         // and replace version
-                        jsonContent.dependencies[key] = version
+                        console.log(`setting ${key} to ${version} in ${pth}`)
+                        obj[key] = version
                     }
                 }
             }
-            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
+            // fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
         })
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
-            console.log('setting version in ', pth)
+            console.log('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent = parse(content)
@@ -92,10 +89,10 @@ export default async function setVersion(version: string) {
                 for (const key of Object.keys(obj)) {
                     if (key.startsWith('@prosopo')) {
                         // and replace version
-                        // tomlContent.dependencies[key] = version
+                        // obj[key] = version
                     }
                 }
             }
-            fs.writeFileSync(pth, stringify(tomlContent))
+            // fs.writeFileSync(pth, stringify(tomlContent))
         })
 }
