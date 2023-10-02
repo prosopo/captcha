@@ -23,6 +23,7 @@ import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
 import yargs from 'yargs'
+import setVersion from '../scripts/setVersion.js'
 
 const paths = getPaths()
 const rootDir = path.resolve('.')
@@ -153,6 +154,14 @@ export async function processArgs(args: string[]) {
                         `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractPackagesDir}/${contract}/src`
                     )
                 }
+            },
+        })
+        .command({
+            command: 'version',
+            describe: 'Set the version of packages',
+            builder: (yargs) => yargs.option('version', { type: 'string', demand: true }).demandOption('version'),
+            handler: async (argv) => {
+                setVersion(String(argv.version))
             },
         }).argv
 }
