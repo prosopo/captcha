@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import exp from 'constants'
 import { at, get, permutations, rng, seedLodash } from '../src/util'
 import { describe, expect, test } from 'vitest'
 
