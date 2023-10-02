@@ -16,8 +16,9 @@ import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
 import fs from 'fs'
 import path from 'path'
-import process from 'process'
+import process, { stdin } from 'process'
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
+import { spawn } from 'child_process'
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
@@ -113,47 +114,39 @@ const exec = (
     code: number | null
 }> => {
     console.log(`> ${command}`)
-    return new Promise((resolve, reject) => {
-        resolve({
-            stdout: '',
-            stderr: '',
-            code: 0,
-        })
+
+    const prc = spawn(command, {
+        shell: true,
     })
 
-    // const prc = spawn(command, {
-    //     shell: true,
-    // })
+    if (pipe ?? true) {
+        prc.stdout.pipe(process.stdout)
+        prc.stderr.pipe(process.stderr)
+    }
 
-    // if (pipe || pipe === undefined) {
-    //     prc.stdout.pipe(process.stdout)
-    //     prc.stderr.pipe(process.stderr)
-    // }
-    // stdin.pipe(prc.stdin)
+    const stdoutData: string[] = []
+    const stderrData: string[] = []
+    prc.stdout.on('data', (data) => {
+        stdoutData.push(data.toString())
+    })
+    prc.stderr.on('data', (data) => {
+        stderrData.push(data.toString())
+    })
 
-    // const stdoutData: string[] = []
-    // const stderrData: string[] = []
-    // prc.stdout.on('data', (data) => {
-    //     stdoutData.push(data.toString())
-    // })
-    // prc.stderr.on('data', (data) => {
-    //     stderrData.push(data.toString())
-    // })
-
-    // return new Promise((resolve, reject) => {
-    //     prc.on('close', function (code) {
-    //         const output = {
-    //             stdout: stdoutData.join(''),
-    //             stderr: stderrData.join(''),
-    //             code,
-    //         }
-    //         if (code === 0) {
-    //             resolve(output)
-    //         } else {
-    //             reject(output)
-    //         }
-    //     })
-    // })
+    return new Promise((resolve, reject) => {
+        prc.on('close', function (code) {
+            const output = {
+                stdout: stdoutData.join(''),
+                stderr: stderrData.join(''),
+                code,
+            }
+            if (code === 0) {
+                resolve(output)
+            } else {
+                reject(output)
+            }
+        })
+    })
 }
 
 export async function processArgs(args: string[]) {
