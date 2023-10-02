@@ -36,12 +36,8 @@
         "@polkadot/api-contract": "10.9.1",
         "@polkadot/types": "10.9.1",
         "@polkadot/types-codec": "10.9.1",
-<<<<<<< Updated upstream
         "@prosopo/common": "0.2.5",
         "@prosopo/captcha-contract": "0.2.5",
-=======
-        "@prosopo/common": "0.2.4",
->>>>>>> Stashed changes
         "consola": "^3.2.3",
         "zod": "^3.17.9"
     },
