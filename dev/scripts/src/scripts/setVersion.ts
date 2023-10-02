@@ -73,7 +73,7 @@ export default async function setVersion(version: string) {
                     }
                 }
             }
-            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4))
+            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4) + '\n')
         })
 
     // replace version in tomls
@@ -92,7 +92,7 @@ export default async function setVersion(version: string) {
                 // replace dependency versions in all toml files
                 tomlContent['package'].version = version
             }
-            fs.writeFileSync(pth, stringify(tomlContent))
+            fs.writeFileSync(pth, stringify(tomlContent) + '\n')
         })
 
     // go through tomls again now versions have updated and update the version field for dependencies with paths set, as we can follow the path to get the version
@@ -121,6 +121,6 @@ export default async function setVersion(version: string) {
                     }
                 }
             }
-            fs.writeFileSync(pth, stringify(tomlContent as any))
+            fs.writeFileSync(pth, stringify(tomlContent as any) + '\n')
         })
 }
