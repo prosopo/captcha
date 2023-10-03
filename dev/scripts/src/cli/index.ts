@@ -119,7 +119,7 @@ export async function processArgs(args: string[]) {
 
             handler: async (argv) => {
                 log.info('Running setup scripts')
-                await setup(argv.force)
+                await setup(!!argv.force)
             },
         })
         .command({
