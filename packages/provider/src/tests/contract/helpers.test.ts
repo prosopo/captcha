@@ -15,15 +15,15 @@ import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
-import { MockEnvironment } from '@prosopo/env'
+import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { MockEnvironment, getPair } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at } from '@prosopo/util'
 import { encodeStringArgs, wrapQuery } from '@prosopo/contract'
-import { testConfig } from '@prosopo/config'
+import { getTestConfig } from '@prosopo/config'
 
 declare module 'vitest' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -36,9 +36,8 @@ describe('CONTRACT HELPERS', function () {
     beforeEach(async function (context) {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(context.pairType, context.ss58Format, '//Alice')
-        console.log(testConfig)
-        context.env = new MockEnvironment(alicePair, testConfig)
+        const alicePair = await getPair('//Alice', undefined, context.pairType, context.ss58Format)
+        context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
         } catch (e) {

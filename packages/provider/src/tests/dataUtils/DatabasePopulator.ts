@@ -19,8 +19,8 @@ import { ContractDeployer, ProsopoContractError, wrapQuery } from '@prosopo/cont
 import { DappPayee, Payee } from '@prosopo/captcha-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
-import { ProsopoEnvError, TranslationKey, getPair } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
+import { ProsopoEnvError, TranslationKey } from '@prosopo/common'
+import { ProviderEnvironment, getPair } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
@@ -197,7 +197,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
         const ss58Format = 42
         const pairType = 'sr25519'
-        const pair = await getPair(pairType, ss58Format, mnemonic)
+        const pair = await getPair(mnemonic, undefined, pairType, ss58Format)
 
         return this.mockEnv.changeSigner(pair)
     }

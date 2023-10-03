@@ -51,8 +51,7 @@ describe('UTIL FUNCTIONS', async () => {
         ss58Format = 42
         pairType = 'sr25519' as KeypairType
         const alicePair = await getPair('//Alice', undefined, pairType, ss58Format)
-        const testConfig = getTestConfig()
-        env = new MockEnvironment(alicePair, testConfig)
+        env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await env.isReady()
         } catch (e) {
