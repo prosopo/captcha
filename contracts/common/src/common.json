@@ -1,0 +1,439 @@
+{
+    "source": {
+        "hash": "0x96f2336841b1c02ea699fef4e71cbde9a2f7591ca2cd7aab61af8458e7255d27",
+        "language": "ink! 4.3.0",
+        "compiler": "rustc 1.69.0",
+        "build_info": {
+            "build_mode": "Debug",
+            "cargo_contract_version": "3.0.1",
+            "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
+            "wasm_opt_settings": {
+                "keep_debug_symbols": false,
+                "optimization_passes": "Z"
+            }
+        }
+    },
+    "contract": {
+        "name": "common",
+        "version": "0.2.5",
+        "authors": [
+            "Chris Taylor chris@prosopo.io",
+            "George Oastler george@prosopo.io",
+            "Vincenzo Ferrara",
+            "Siniša Čanak"
+        ]
+    },
+    "spec": {
+        "constructors": [
+            {
+                "args": [],
+                "default": false,
+                "docs": [],
+                "label": "new",
+                "payable": false,
+                "returnType": {
+                    "displayName": ["ink_primitives", "ConstructorResult"],
+                    "type": 0
+                },
+                "selector": "0x9bae9d5e"
+            }
+        ],
+        "docs": [" An ink contract must be defined in order to import functions into another contract"],
+        "environment": {
+            "accountId": {
+                "displayName": ["AccountId"],
+                "type": 4
+            },
+            "balance": {
+                "displayName": ["Balance"],
+                "type": 10
+            },
+            "blockNumber": {
+                "displayName": ["BlockNumber"],
+                "type": 13
+            },
+            "chainExtension": {
+                "displayName": ["ChainExtension"],
+                "type": 14
+            },
+            "hash": {
+                "displayName": ["Hash"],
+                "type": 11
+            },
+            "maxEventTopics": 4,
+            "timestamp": {
+                "displayName": ["Timestamp"],
+                "type": 12
+            }
+        },
+        "events": [],
+        "lang_error": {
+            "displayName": ["ink", "LangError"],
+            "type": 2
+        },
+        "messages": [
+            {
+                "args": [],
+                "default": false,
+                "docs": [
+                    " Print and get the caller of this function",
+                    " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
+                ],
+                "label": "get_caller",
+                "mutates": false,
+                "payable": false,
+                "returnType": {
+                    "displayName": ["ink", "MessageResult"],
+                    "type": 3
+                },
+                "selector": "0x8dd15f8f"
+            },
+            {
+                "args": [],
+                "default": false,
+                "docs": [
+                    " Print and get the caller bytes of this function",
+                    " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
+                ],
+                "label": "get_caller_bytes",
+                "mutates": false,
+                "payable": false,
+                "returnType": {
+                    "displayName": ["ink", "MessageResult"],
+                    "type": 7
+                },
+                "selector": "0x0a7ff7cd"
+            },
+            {
+                "args": [
+                    {
+                        "label": "account",
+                        "type": {
+                            "displayName": ["AccountId"],
+                            "type": 4
+                        }
+                    }
+                ],
+                "default": false,
+                "docs": [
+                    " Print and get the caller bytes of this function",
+                    " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
+                ],
+                "label": "get_account_bytes",
+                "mutates": false,
+                "payable": false,
+                "returnType": {
+                    "displayName": ["ink", "MessageResult"],
+                    "type": 7
+                },
+                "selector": "0xf2f184d4"
+            },
+            {
+                "args": [],
+                "default": false,
+                "docs": [" Get the git commit id from when this contract was built"],
+                "label": "get_git_commit_id",
+                "mutates": false,
+                "payable": false,
+                "returnType": {
+                    "displayName": ["ink", "MessageResult"],
+                    "type": 8
+                },
+                "selector": "0x3685e994"
+            }
+        ]
+    },
+    "storage": {
+        "root": {
+            "layout": {
+                "struct": {
+                    "fields": [],
+                    "name": "Common"
+                }
+            },
+            "root_key": "0x00000000"
+        }
+    },
+    "types": [
+        {
+            "id": 0,
+            "type": {
+                "def": {
+                    "variant": {
+                        "variants": [
+                            {
+                                "fields": [
+                                    {
+                                        "type": 1
+                                    }
+                                ],
+                                "index": 0,
+                                "name": "Ok"
+                            },
+                            {
+                                "fields": [
+                                    {
+                                        "type": 2
+                                    }
+                                ],
+                                "index": 1,
+                                "name": "Err"
+                            }
+                        ]
+                    }
+                },
+                "params": [
+                    {
+                        "name": "T",
+                        "type": 1
+                    },
+                    {
+                        "name": "E",
+                        "type": 2
+                    }
+                ],
+                "path": ["Result"]
+            }
+        },
+        {
+            "id": 1,
+            "type": {
+                "def": {
+                    "tuple": []
+                }
+            }
+        },
+        {
+            "id": 2,
+            "type": {
+                "def": {
+                    "variant": {
+                        "variants": [
+                            {
+                                "index": 1,
+                                "name": "CouldNotReadInput"
+                            }
+                        ]
+                    }
+                },
+                "path": ["ink_primitives", "LangError"]
+            }
+        },
+        {
+            "id": 3,
+            "type": {
+                "def": {
+                    "variant": {
+                        "variants": [
+                            {
+                                "fields": [
+                                    {
+                                        "type": 4
+                                    }
+                                ],
+                                "index": 0,
+                                "name": "Ok"
+                            },
+                            {
+                                "fields": [
+                                    {
+                                        "type": 2
+                                    }
+                                ],
+                                "index": 1,
+                                "name": "Err"
+                            }
+                        ]
+                    }
+                },
+                "params": [
+                    {
+                        "name": "T",
+                        "type": 4
+                    },
+                    {
+                        "name": "E",
+                        "type": 2
+                    }
+                ],
+                "path": ["Result"]
+            }
+        },
+        {
+            "id": 4,
+            "type": {
+                "def": {
+                    "composite": {
+                        "fields": [
+                            {
+                                "type": 5,
+                                "typeName": "[u8; 32]"
+                            }
+                        ]
+                    }
+                },
+                "path": ["ink_primitives", "types", "AccountId"]
+            }
+        },
+        {
+            "id": 5,
+            "type": {
+                "def": {
+                    "array": {
+                        "len": 32,
+                        "type": 6
+                    }
+                }
+            }
+        },
+        {
+            "id": 6,
+            "type": {
+                "def": {
+                    "primitive": "u8"
+                }
+            }
+        },
+        {
+            "id": 7,
+            "type": {
+                "def": {
+                    "variant": {
+                        "variants": [
+                            {
+                                "fields": [
+                                    {
+                                        "type": 5
+                                    }
+                                ],
+                                "index": 0,
+                                "name": "Ok"
+                            },
+                            {
+                                "fields": [
+                                    {
+                                        "type": 2
+                                    }
+                                ],
+                                "index": 1,
+                                "name": "Err"
+                            }
+                        ]
+                    }
+                },
+                "params": [
+                    {
+                        "name": "T",
+                        "type": 5
+                    },
+                    {
+                        "name": "E",
+                        "type": 2
+                    }
+                ],
+                "path": ["Result"]
+            }
+        },
+        {
+            "id": 8,
+            "type": {
+                "def": {
+                    "variant": {
+                        "variants": [
+                            {
+                                "fields": [
+                                    {
+                                        "type": 9
+                                    }
+                                ],
+                                "index": 0,
+                                "name": "Ok"
+                            },
+                            {
+                                "fields": [
+                                    {
+                                        "type": 2
+                                    }
+                                ],
+                                "index": 1,
+                                "name": "Err"
+                            }
+                        ]
+                    }
+                },
+                "params": [
+                    {
+                        "name": "T",
+                        "type": 9
+                    },
+                    {
+                        "name": "E",
+                        "type": 2
+                    }
+                ],
+                "path": ["Result"]
+            }
+        },
+        {
+            "id": 9,
+            "type": {
+                "def": {
+                    "array": {
+                        "len": 20,
+                        "type": 6
+                    }
+                }
+            }
+        },
+        {
+            "id": 10,
+            "type": {
+                "def": {
+                    "primitive": "u128"
+                }
+            }
+        },
+        {
+            "id": 11,
+            "type": {
+                "def": {
+                    "composite": {
+                        "fields": [
+                            {
+                                "type": 5,
+                                "typeName": "[u8; 32]"
+                            }
+                        ]
+                    }
+                },
+                "path": ["ink_primitives", "types", "Hash"]
+            }
+        },
+        {
+            "id": 12,
+            "type": {
+                "def": {
+                    "primitive": "u64"
+                }
+            }
+        },
+        {
+            "id": 13,
+            "type": {
+                "def": {
+                    "primitive": "u32"
+                }
+            }
+        },
+        {
+            "id": 14,
+            "type": {
+                "def": {
+                    "variant": {}
+                },
+                "path": ["ink_env", "types", "NoChainExtension"]
+            }
+        }
+    ],
+    "version": "4"
+}
