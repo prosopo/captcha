@@ -86,9 +86,7 @@ const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
     }
 }
 
-const getParentForm = (element: Element): HTMLFormElement | null => {
-    return element.closest('form') as HTMLFormElement
-}
+const getParentForm = (element: Element): HTMLFormElement | null => element.closest('form') as HTMLFormElement
 
 const getWindowCallback = (callbackName: string) => {
     const fn = (window as any)[callbackName.replace('window.', '')]
