@@ -31,6 +31,8 @@ type ProcaptchaUrlParams = {
     renderExplicit: string | undefined
 }
 
+const BUNDLE_NAME = 'procaptcha.bundle.js'
+
 const getCurrentScript = () =>
     document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
         ? document.currentScript
@@ -189,7 +191,7 @@ export default function ready(fn: () => void) {
 
 // onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 // onRenderExplicit takes values of either explicit or implicit
-const { onloadUrlCallback, renderExplicit } = extractParams('procaptcha.bundle.js')
+const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME)
 
 // Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 if (renderExplicit !== 'explicit') {
