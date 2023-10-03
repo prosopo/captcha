@@ -26,7 +26,33 @@ interface ProcaptchaRenderOptions {
     'error-callback'?: string
 }
 
-function getConfig(siteKey?: string): ProcaptchaConfigOptional {
+type ProcaptchaUrlParams = {
+    onloadUrlCallback: string | undefined
+    renderExplicit: string | undefined
+}
+
+const getCurrentScript = () =>
+    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
+        ? document.currentScript
+        : undefined
+
+const extractParams = (name: string): ProcaptchaUrlParams => {
+    const script = getCurrentScript()
+    if (script && script.src.indexOf(`${name}.js`) !== -1) {
+        const params = new URLSearchParams(script.src.split('?')[1])
+        return {
+            onloadUrlCallback: params.get('onload') || undefined,
+            renderExplicit: params.get('render') || undefined,
+        }
+    }
+    return { onloadUrlCallback: undefined, renderExplicit: undefined }
+}
+
+// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
+// onRenderExplicit takes values of either explicit or implicit
+const { onloadUrlCallback, renderExplicit } = extractParams('yourScriptName')
+
+const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
     if (!siteKey) {
         siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || ''
     }
@@ -65,20 +91,13 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
 }
 
 const getParentForm = (element: Element): HTMLFormElement | null => {
-    let parent = element.parentElement
-    while (parent) {
-        if (parent.tagName === 'FORM') {
-            return parent as HTMLFormElement
-        }
-        parent = parent.parentElement
-    }
-    return null
+    return element.closest('form') as HTMLFormElement
 }
 
 const getWindowCallback = (callbackName: string) => {
     const fn = (window as any)[callbackName.replace('window.', '')]
     if (typeof fn !== 'function') {
-        throw new Error(`Callback ${callbackName} is not defined`)
+        throw new Error(`Callback ${callbackName} is not defined on the window object`)
     }
     return fn
 }
@@ -133,6 +152,12 @@ const renderLogic = (
         config.theme = validateTheme(themeAttribute)
 
         createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+
+        // Execute the onload callback if it exists
+        if (onloadUrlCallback) {
+            const onloadCallback = getWindowCallback(onloadUrlCallback)
+            onloadCallback()
+        }
     })
 }
 
@@ -142,10 +167,12 @@ const implicitRender = () => {
     const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
 
     // Set siteKey from renderOptions or from the first element's data-sitekey attribute
-    const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
-    const config = getConfig(siteKey)
+    if (elements.length) {
+        const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
+        const config = getConfig(siteKey)
 
-    renderLogic(elements, config)
+        renderLogic(elements, config)
+    }
 }
 
 // Explicit render for targeting specific elements
@@ -172,4 +199,7 @@ export default function ready(fn: () => void) {
     }
 }
 
-ready(implicitRender)
+// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
+if (renderExplicit !== 'explicit') {
+    ready(implicitRender)
+}
