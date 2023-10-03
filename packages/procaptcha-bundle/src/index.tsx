@@ -38,7 +38,7 @@ const getCurrentScript = () =>
 
 const extractParams = (name: string): ProcaptchaUrlParams => {
     const script = getCurrentScript()
-    if (script && script.src.indexOf(`${name}.js`) !== -1) {
+    if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
         return {
             onloadUrlCallback: params.get('onload') || undefined,
@@ -47,10 +47,6 @@ const extractParams = (name: string): ProcaptchaUrlParams => {
     }
     return { onloadUrlCallback: undefined, renderExplicit: undefined }
 }
-
-// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
-// onRenderExplicit takes values of either explicit or implicit
-const { onloadUrlCallback, renderExplicit } = extractParams('yourScriptName')
 
 const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
     if (!siteKey) {
@@ -152,12 +148,6 @@ const renderLogic = (
         config.theme = validateTheme(themeAttribute)
 
         createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
-
-        // Execute the onload callback if it exists
-        if (onloadUrlCallback) {
-            const onloadCallback = getWindowCallback(onloadUrlCallback)
-            onloadCallback()
-        }
     })
 }
 
@@ -199,7 +189,19 @@ export default function ready(fn: () => void) {
     }
 }
 
+// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
+// onRenderExplicit takes values of either explicit or implicit
+const { onloadUrlCallback, renderExplicit } = extractParams('procaptcha.bundle.js')
+
 // Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 if (renderExplicit !== 'explicit') {
     ready(implicitRender)
+}
+
+if (onloadUrlCallback) {
+    const onloadCallback = getWindowCallback(onloadUrlCallback)
+    // Add event listener to the script tag to call the callback function when the script is loaded
+    getCurrentScript()?.addEventListener('load', () => {
+        ready(onloadCallback)
+    })
 }
