@@ -123,7 +123,7 @@ export async function setup(force: boolean) {
 
         const secret = '//Alice'
         const config = defaultConfig()
-        const pair = await getPair(secret, config)
+        const pair = await getPair(secret)
 
         console.log(config)
 
@@ -148,13 +148,13 @@ export async function setup(force: boolean) {
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
-        defaultProvider.pair = await getPair(secret, config)
+        defaultProvider.pair = await getPair(secret)
 
         await registerProvider(env, defaultProvider, force)
 
         defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
-        defaultDapp.pair = await getPair(secret, config)
+        defaultDapp.pair = await getPair(secret)
 
         env.logger.info('Registering dapp...')
         await registerDapp(env, defaultDapp)

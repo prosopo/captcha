@@ -16,7 +16,7 @@ import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './Databas
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { get } from '@prosopo/util'
 import { promiseQueue } from '../../util.js'
@@ -126,7 +126,7 @@ export async function populateDatabase(
     return databasePopulator
 }
 
-export default async function run(pair: KeyringPair, config: ProsopoConfig) {
+export default async function run(pair: KeyringPair, config: ProsopoConfigOutput) {
     const dappAbiMetadata = await DappAbiJSON()
     const dappWasm = await DappWasm()
 

@@ -18,16 +18,13 @@
 // https://create-react-app.dev/docs/adding-custom-environment-variables/
 
 import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
-import { LogLevel } from '@prosopo/common'
-import { ProsopoClientConfig } from '@prosopo/types'
-import networks from '@prosopo/networks'
+import { ProsopoClientConfigInput } from '@prosopo/types'
 
-const config: ProsopoClientConfig = {
+const config: ProsopoClientConfigInput = {
     account: {
         address: process.env.REACT_APP_DAPP_SITE_KEY || '',
     },
     userAccountAddress: '',
-    solutionThreshold: 80,
     web2: process.env.REACT_APP_WEB2 ? process.env.REACT_APP_WEB2 === 'true' : true,
     defaultEnvironment: process.env.REACT_APP_DEFAULT_ENVIRONMENT
         ? EnvironmentTypesSchema.parse(process.env.REACT_APP_DEFAULT_ENVIRONMENT)
@@ -35,8 +32,6 @@ const config: ProsopoClientConfig = {
     defaultNetwork: process.env.REACT_APP_DEFAULT_NETWORK
         ? NetworkNamesSchema.parse(process.env.REACT_APP_DEFAULT_NETWORK)
         : NetworkNamesSchema.enum.development,
-    logLevel: LogLevel.enum.info,
-    networks,
     dappName: 'client-example',
     serverUrl: process.env.REACT_APP_SERVER_URL || '',
 }

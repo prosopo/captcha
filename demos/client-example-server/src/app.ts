@@ -63,7 +63,7 @@ async function main() {
 
     console.log('config', config)
 
-    const pair = await getPair(process.env.REACT_APP_SERVER_MNEMONIC, config)
+    const pair = await getPair(process.env.REACT_APP_SERVER_MNEMONIC)
     const prosopoServer = new ProsopoServer(pair, config)
 
     app.use(routesFactory(mongoose, prosopoServer))

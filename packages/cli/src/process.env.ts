@@ -15,9 +15,9 @@ import {
     BatchCommitConfigSchema,
     ProsopoCaptchaCountConfigSchema,
     ProsopoCaptchaSolutionConfigSchema,
-    ProsopoConfig,
+    ProsopoConfigOutput,
     ProsopoConfigSchema,
-    ProsopoNetworksSchema,
+    ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvError } from '@prosopo/common'
@@ -49,11 +49,11 @@ export function getSecret(who?: string): string {
 }
 
 export function getConfig(
-    networksConfig?: typeof ProsopoNetworksSchema,
+    networksConfig?: ProsopoNetworksSchemaInput,
     captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
     batchCommitConfig?: typeof BatchCommitConfigSchema,
     captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
-): ProsopoConfig {
+): ProsopoConfigOutput {
     return ProsopoConfigSchema.parse(
         prosopoConfig(networksConfig, captchaSolutionsConfig, batchCommitConfig, captchaServeConfig)
     )

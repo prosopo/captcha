@@ -21,7 +21,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 async function main() {
-    const pair = await getPair('//Alice', undefined, getPairType(), getSs58Format())
+    const pair = await getPair('//Alice', getPairType(), getSs58Format())
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)

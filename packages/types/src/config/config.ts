@@ -9,7 +9,7 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// See the License for the specific language governing permissions.merge
 // limitations under the License.
 
 import { LogLevel } from '@prosopo/common'
@@ -43,15 +43,17 @@ export const BatchCommitConfigSchema = z.object({
     maxBatchExtrinsicPercentage: z.number().positive().optional().default(59),
 })
 
-export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
+export type BatchCommitConfigInput = z.input<typeof BatchCommitConfigSchema>
+export type BatchCommitConfigOutput = z.output<typeof BatchCommitConfigSchema>
 
-export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
+export type DatabaseConfigInput = z.input<typeof DatabaseConfigSchema>
+export type DatabaseConfigOutput = z.output<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
     logLevel: LogLevel.optional().default(LogLevel.enum.info),
     defaultEnvironment: EnvironmentTypesSchema.optional().default(EnvironmentTypesSchema.Values.production),
     defaultNetwork: NetworkNamesSchema.optional().default(NetworkNamesSchema.Values.rococo),
-    // The account with which to query the contract and sign transactions
+    // The account with which to query the contract.merge sign transactions
     account: z.object({
         address: z.string(),
         secret: z.string().optional(),
@@ -65,26 +67,34 @@ export const NetworkConfigSchema = z.object({
         address: z.string(),
         name: z.string(),
     }),
-    pairType: z.union([z.literal('sr25519'), z.literal('ed25519'), z.literal('ecdsa')]),
+    pairType: z.union([z.literal('sr25519'), z.literal('ed25519'), z.literal('ecdsa'), z.literal('ethereum')]),
     ss58Format: z.number().positive().default(42),
 })
 
 export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
 
 export const ProsopoNetworksSchema = z
-    .record(NetworkNamesSchema, NetworkConfigSchema.required())
+    .record(
+        NetworkNamesSchema,
+        NetworkConfigSchema.required({
+            endpoint: true,
+            pairType: true,
+            ss58Format: true,
+        })
+    )
     .refine((data) => Object.keys(data).length > 0, 'Required at least one network config')
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     z.object({
-        networks: ProsopoNetworksSchema.optional()
-            .default(networks)
-            .refine((data) => Object.keys(data).length > 0, 'Required at least one network config'),
+        networks: ProsopoNetworksSchema.optional().default(networks),
         database: DatabaseConfigSchema.optional(),
     })
 )
+export type ProsopoNetworksSchemaInput = z.input<typeof ProsopoNetworksSchema>
+export type ProsopoNetworksSchemaOutput = z.output<typeof ProsopoNetworksSchema>
 
-export type ProsopoBasicConfig = z.infer<typeof ProsopoBasicConfigSchema>
+export type ProsopoBasicConfigInput = z.input<typeof ProsopoBasicConfigSchema>
+export type ProsopoBasicConfigOutput = z.output<typeof ProsopoBasicConfigSchema>
 
 export const ProsopoCaptchaCountConfigSchema = z.object({
     solved: z
@@ -121,11 +131,12 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         dappName: z.string().optional().default('ProsopoClientDapp'),
         serverUrl: z.string().url(),
     })
-)
+).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
 
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema
 
-export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
+export type ProsopoServerConfigInput = z.input<typeof ProsopoClientConfigSchema>
+export type ProsopoServerConfigOutput = z.output<typeof ProsopoClientConfigSchema>
 
 export const AccountCreatorConfigSchema = z.object({
     area: z.object({
@@ -140,18 +151,20 @@ export const AccountCreatorConfigSchema = z.object({
     seed: z.number().positive(),
 })
 
-export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
+export type ProsopoClientConfigInput = z.input<typeof ProsopoClientConfigSchema>
+export type ProsopoClientConfigOutput = z.output<typeof ProsopoClientConfigSchema>
 
 const ThemeType = z.union([z.literal('light'), z.literal('dark')])
 
-export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
+export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
     })
 )
 
-export type ProcaptchaClientConfig = z.infer<typeof ProcaptchaConfigSchema>
+export type ProcaptchaClientConfigInput = z.input<typeof ProcaptchaConfigSchema>
+export type ProcaptchaClientConfigOutput = z.output<typeof ProcaptchaConfigSchema>
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
     z.object({
@@ -171,6 +184,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         }),
         server: ProsopoImageServerConfigSchema,
     })
-)
+).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
 
-export type ProsopoConfig = z.infer<typeof ProsopoConfigSchema>
+export type ProsopoConfigInput = z.input<typeof ProsopoConfigSchema>
+export type ProsopoConfigOutput = z.output<typeof ProsopoConfigSchema>

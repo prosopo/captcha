@@ -58,7 +58,7 @@ export async function start(env?: ProviderEnvironment) {
 
         const secret = getSecret()
         const config = getConfig()
-        const pair = await getPair(secret, config)
+        const pair = await getPair(secret)
         env = new ProviderEnvironment(pair, config)
     }
     await env.isReady()

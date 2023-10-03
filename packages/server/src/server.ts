@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
 import { BlockHash } from '@polkadot/types/interfaces'
-import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfig } from '@prosopo/types'
+import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfigOutput } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
@@ -26,7 +26,7 @@ import { WsProvider } from '@polkadot/rpc-provider'
 import { get } from '@prosopo/util'
 
 export class ProsopoServer {
-    config: ProsopoServerConfig
+    config: ProsopoServerConfigOutput
     contract: ProsopoCaptchaContract | undefined
     prosopoContractAddress: string
     dappContractAddress: string
@@ -40,7 +40,7 @@ export class ProsopoServer {
     api: ApiPromise | undefined
     network: NetworkConfig
 
-    constructor(pair: KeyringPair, config: ProsopoServerConfig) {
+    constructor(pair: KeyringPair, config: ProsopoServerConfigOutput) {
         this.config = config
         this.pair = pair
         if (

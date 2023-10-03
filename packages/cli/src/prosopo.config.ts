@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import {ProsopoConfig} from './types.js';
 
 import {
     BatchCommitConfigSchema,
@@ -20,9 +19,10 @@ import {
     NetworkNamesSchema,
     ProsopoCaptchaCountConfigSchema,
     ProsopoCaptchaSolutionConfigSchema,
-    ProsopoConfig,
+    ProsopoConfigInput,
     ProsopoConfigSchema,
     ProsopoNetworksSchema,
+    ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
 
@@ -38,11 +38,11 @@ function getMongoURI(): string {
 }
 
 export default (
-    networksConfig?: typeof ProsopoNetworksSchema,
+    networksConfig?: ProsopoNetworksSchemaInput,
     captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
     batchCommitConfig?: typeof BatchCommitConfigSchema,
     captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
-): ProsopoConfig =>
+): ProsopoConfigInput =>
     ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT

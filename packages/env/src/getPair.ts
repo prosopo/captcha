@@ -14,22 +14,11 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { NetworkConfigSchema, ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
 import { hexToU8a, isHex } from '@polkadot/util'
 
-export async function getPair(
-    secret: string,
-    config?: ProsopoBasicConfig,
-    pairType?: KeypairType,
-    ss58Format?: number
-): Promise<KeyringPair> {
-    if ((!pairType || !ss58Format) && config) {
-        const network = NetworkConfigSchema.parse(config.networks[config.defaultNetwork])
-        pairType = network?.pairType || 'sr25519'
-        ss58Format = network?.ss58Format || 42
-    }
+export async function getPair(secret: string, pairType: KeypairType, ss58Format: number): Promise<KeyringPair> {
     await cryptoWaitReady()
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (mnemonicValidate(secret)) {

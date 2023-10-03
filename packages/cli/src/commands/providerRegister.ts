@@ -4,7 +4,7 @@ import { CommandModule } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { Payee } from '@prosopo/captcha-contract'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { stringToU8a } from '@polkadot/util'
@@ -16,7 +16,7 @@ const providerRegisterArgsParser = z.object({
     fee: z.number(),
     payee: z.nativeEnum(Payee),
 })
-export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_register')
     return {
         command: 'provider_register',

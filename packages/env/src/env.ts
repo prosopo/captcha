@@ -19,7 +19,7 @@ import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoBasicConfig } from '@prosopo/types'
+import { ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -27,7 +27,7 @@ import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {
-    config: ProsopoBasicConfig
+    config: ProsopoBasicConfigOutput
     db: Database | undefined
     contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
@@ -42,7 +42,7 @@ export class Environment implements ProsopoEnvironment {
     pair: KeyringPair
     api: ApiPromise | undefined
 
-    constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
+    constructor(pair: KeyringPair, config: ProsopoBasicConfigOutput) {
         this.config = config
         this.defaultEnvironment = this.config.defaultEnvironment
         this.defaultNetwork = this.config.defaultNetwork

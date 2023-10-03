@@ -13,7 +13,7 @@
 // limitations under the License.
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProcaptchaClientConfig, ProcaptchaOutput } from '@prosopo/types'
+import { ProcaptchaClientConfigOutput, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
 /**
@@ -28,7 +28,7 @@ export interface Account {
  * The config to be passed to procaptcha. Some fields can be optional, e.g.
  * userAccountAddress and web2, depending on the mode of Procaptcha (web2 or web3).
  */
-export type ProcaptchaConfigOptional = ProcaptchaClientConfig
+export type ProcaptchaConfigOptional = ProcaptchaClientConfigOutput
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha

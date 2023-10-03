@@ -21,7 +21,7 @@ import {
 } from '../types/manager.js'
 import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import { CaptchaSolution, ProcaptchaClientConfig, ProsopoClientConfig } from '@prosopo/types'
+import { CaptchaSolution, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
@@ -67,7 +67,7 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
     return updateCurrentState
 }
 
-export const getNetwork = (config: ProsopoClientConfig) => {
+export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
     if (!network) {
         throw new Error(`No network found for environment ${config.defaultEnvironment}`)
@@ -131,7 +131,7 @@ export function Manager(
      * @returns the config for procaptcha
      */
     const getConfig = () => {
-        const config: ProcaptchaClientConfig = {
+        const config: ProcaptchaClientConfigOutput = {
             userAccountAddress: '',
             ...configOptional,
         }

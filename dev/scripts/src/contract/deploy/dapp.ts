@@ -25,7 +25,7 @@ import path from 'path'
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-    const pair = await getPair('//Alice', undefined, pairType, ss58Format)
+    const pair = await getPair('//Alice', pairType, ss58Format)
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
