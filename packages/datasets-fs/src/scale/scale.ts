@@ -45,7 +45,7 @@ export default async (args: Args, logger?: Logger) => {
                 fit: square ? 'fill' : 'inside',
             })
             .png()
-        const tmpFilePath = `${imgDir}/tmp.png`
+        const tmpFilePath = `/tmp/tmp.png`
         await resized.toFile(tmpFilePath)
         // read the resized image
         const resizedImg = fs.readFileSync(tmpFilePath)
