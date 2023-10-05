@@ -11,10 +11,227 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at, get, permutations, rng, seedLodash } from '../util.js'
+import { at, get, merge, permutations, rng, seedLodash } from '../util.js'
 import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
+    describe('merge', () => {
+        // factors:
+        // - types
+        //     - primitive
+        //     - array
+        //     - object
+        // - nesting
+        //     - 0 levels
+        //     - 1 levels
+        //     - 2 levels
+        // - array strat
+        //     - 'update'
+        //     - 'replace'
+        // - merge nested els in array
+        //     - true
+        //     - false
+        // - merge nested fields in obj
+        //     - true
+        //     - false
+
+        test('merge object with nesting', () => {
+            expect(merge({ a: { b: 1, c: 2 } }, { a: { b: 3 } }, { ignoreNestedInObject: false })).to.deep.equal({
+                a: { b: 3, c: 2 },
+            })
+        })
+        test('merge object with nesting disabled', () => {
+            expect(merge({ a: { b: 1, c: 2 } }, { a: { b: 3 } }, { ignoreNestedInObject: true })).to.deep.equal({
+                a: { b: 3 },
+            })
+        })
+
+        test('update array with nesting', () => {
+            expect(
+                merge(
+                    {
+                        a: [
+                            [1, 2, 3],
+                            [4, 5, 6],
+                        ],
+                    },
+                    {
+                        a: [
+                            [7, 8],
+                            [9, 10],
+                        ],
+                    },
+                    { arrayStrategy: 'update', ignoreNestedInArray: false }
+                )
+            ).to.deep.equal({
+                a: [
+                    [7, 8, 3],
+                    [9, 10, 6],
+                ],
+            })
+        })
+        test('update array with nesting disabled', () => {
+            expect(
+                merge(
+                    {
+                        a: [
+                            [1, 2, 3],
+                            [4, 5, 6],
+                        ],
+                    },
+                    {
+                        a: [
+                            [7, 8],
+                            [9, 10],
+                        ],
+                    },
+                    { arrayStrategy: 'update', ignoreNestedInArray: true }
+                )
+            ).to.deep.equal({
+                a: [
+                    [7, 8],
+                    [9, 10],
+                ],
+            })
+        })
+        test('replace array with nesting', () => {
+            expect(
+                merge(
+                    {
+                        a: [
+                            [1, 2, 3],
+                            [4, 5, 6],
+                        ],
+                    },
+                    {
+                        a: [
+                            [7, 8],
+                            [9, 10],
+                        ],
+                    },
+                    { arrayStrategy: 'replace', ignoreNestedInArray: false }
+                )
+            ).to.deep.equal({
+                a: [
+                    [7, 8],
+                    [9, 10],
+                ],
+            })
+        })
+        test('replace array with nesting disabled', () => {
+            expect(
+                merge(
+                    {
+                        a: [
+                            [1, 2, 3],
+                            [4, 5, 6],
+                        ],
+                    },
+                    {
+                        a: [
+                            [7, 8],
+                            [9, 10],
+                        ],
+                    },
+                    { arrayStrategy: 'replace', ignoreNestedInArray: true }
+                )
+            ).to.deep.equal({
+                a: [
+                    [7, 8],
+                    [9, 10],
+                ],
+            })
+        })
+        test('concat array with nesting', () => {
+            expect(
+                merge(
+                    {
+                        a: [
+                            [1, 2, 3],
+                            [4, 5, 6],
+                        ],
+                    },
+                    {
+                        a: [
+                            [7, 8],
+                            [9, 10],
+                        ],
+                    },
+                    { arrayStrategy: 'concat', ignoreNestedInArray: false }
+                )
+            ).to.deep.equal({
+                a: [
+                    [1, 2, 3, 7, 8],
+                    [4, 5, 6, 9, 10],
+                ],
+            })
+        })
+        test('concat array with nesting disabled', () => {
+            expect(
+                merge(
+                    {
+                        a: [
+                            [1, 2, 3],
+                            [4, 5, 6],
+                        ],
+                    },
+                    {
+                        a: [
+                            [7, 8],
+                            [9, 10],
+                        ],
+                    },
+                    { arrayStrategy: 'concat', ignoreNestedInArray: true }
+                )
+            ).to.deep.equal({
+                a: [
+                    [1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8],
+                    [9, 10],
+                ],
+            })
+        })
+
+        test('update array', () => {
+            expect(merge({ a: [1, 2, 3] }, { a: [4, 5] }, { arrayStrategy: 'update' })).to.deep.equal({ a: [4, 5, 3] })
+        })
+        test('replace array', () => {
+            expect(merge({ a: [1, 2, 3] }, { a: [4, 5] }, { arrayStrategy: 'replace' })).to.deep.equal({ a: [4, 5] })
+        })
+        test('concat array', () => {
+            expect(merge({ a: [1, 2, 3] }, { a: [4, 5] }, { arrayStrategy: 'concat' })).to.deep.equal({ a: [1, 2, 3, 4, 5] })
+        })
+
+        test('primitive replaces array', () => {
+            expect(merge({ a: [1] }, { a: 1 })).to.deep.equal({ a: 1 })
+        })
+        test('primitive replaces object', () => {
+            expect(merge({ a: { b: 1 } }, { a: 1 })).to.deep.equal({ a: 1 })
+        })
+        test('primitive replaces primitive', () => {
+            expect(merge({ a: 1 }, { a: 2 })).to.deep.equal({ a: 2 })
+        })
+        test('array replaces primitive', () => {
+            expect(merge({ a: 1 }, { a: [1] })).to.deep.equal({ a: [1] })
+        })
+        test('array replaces array', () => {
+            expect(merge({ a: [1] }, { a: [2] })).to.deep.equal({ a: [2] })
+        })
+        test('array replaces object', () => {
+            expect(merge({ a: { b: 1 } }, { a: [1] })).to.deep.equal({ a: [1] })
+        })
+        test('object replaces primitive', () => {
+            expect(merge({ a: 1 }, { a: { b: 1 } })).to.deep.equal({ a: { b: 1 } })
+        })
+        test('object replaces array', () => {
+            expect(merge({ a: [1] }, { a: { b: 1 } })).to.deep.equal({ a: { b: 1 } })
+        })
+        test('object replaces object', () => {
+            expect(merge({ a: { b: 1 } }, { a: { c: 1 } })).to.deep.equal({ a: { b: 1, c: 1 } })
+        })
+    })
+
     describe('at', () => {
         test('types', () => {
             // check the types are picked up correctly by ts

@@ -197,3 +197,136 @@ export const flattenObj = (obj: object, prefix = ''): Record<string, unknown> =>
     }
     return flattenedObj
 }
+
+type MergeOptions = {
+    arrayStrategy?: 'concat' | 'update' | 'replace'
+    ignoreNestedInArray?: boolean
+    ignoreNestedInObject?: boolean
+}
+const arrayStrategyDefault = 'update'
+const mergeNestedInArrayDefault = true
+const mergeNestedInObjectDefault = true
+
+// Merge two objects or arrays together. There are three options for handling arrays:
+//     replace - replace the array (e.g. [1,2,3] + [4,5] = [4,5])
+//     update - update the array element by element (e.g. [1,2,3] + [4,5] = [4,5,3])
+// When arrayStrategy is set to 'replace' or 'update', nested merging options apply:
+//      Enabling mergeNestedInArray will handle arrays of objects/arrays by merging them together, otherwise they will be treated as primitives
+//          E.g. [[1]] + [[3]] = [[1,3]]
+//      Enabling mergeNestedInObject will handle objects of objects/arrays by merging them together, otherwise they will be treated as primitives
+//          E.g. [{a:1}] + [{c:3}] = [{a:1,c:3}]
+// Nesting can be infinitely deep.
+// Arrays can be homogeneous or hetrogeneous.
+// The destination object/array is mutated directly.
+export function merge<T extends object | A[], U extends object | B[], A, B>(
+    dest: T,
+    src: U,
+    options?: MergeOptions
+): T & U {
+    const arrayStrategy = options?.arrayStrategy ?? arrayStrategyDefault
+    const mergeNestedInArray = !options?.ignoreNestedInArray ?? mergeNestedInArrayDefault
+    const mergeNestedInObject = !options?.ignoreNestedInObject ?? mergeNestedInObjectDefault
+    // maintain a queue of object sources/destinations to merge
+    const queue: {
+        src: unknown
+        dest: unknown
+    }[] = [
+        {
+            src,
+            dest,
+        },
+    ]
+    while (queue.length > 0) {
+        const task = queue.pop()
+        if (task === undefined) {
+            throw new Error('queue is empty')
+        }
+        if (isArray(task.dest)) {
+            // handling arrays
+            const src = task.src as unknown[]
+            const dest = task.dest as unknown[]
+            if (arrayStrategy === 'concat') {
+                if (mergeNestedInArray && src.every(isArray) && dest.every(isArray)) {
+                    // e.g. src is [[1],[2]] and dest is [[3],[4]]
+                    // want to produce [[1,2],[3,4]] instead of [[1],[2],[3],[4]]
+                    // detect this by checking if all elements are arrays
+                    // if so, then add them onto the queue to be merged
+                    for (let i = 0; i < src.length; i++) {
+                        // populate dest with empty array in case it is shorter than src
+                        dest[i] = dest[i] ?? []
+                        queue.push({
+                            src: src[i],
+                            dest: dest[i],
+                        })
+                    }
+                } else {
+                    // just do a normal concat
+                    for (const el of src) {
+                        dest.push(el)
+                    }
+                }
+            } else if (arrayStrategy === 'replace' || arrayStrategy === 'update') {
+                if (arrayStrategy === 'replace') {
+                    // delete any items beyond the length of src
+                    while (dest.length > src.length) {
+                        dest.pop()
+                    }
+                }
+                // copy the elements from src into dest
+                for (let i = 0; i < src.length; i++) {
+                    // mergeNestedInArray can stop us from merging arrays/objects and treat nested arrays/objects as primitives
+                    if (
+                        mergeNestedInArray &&
+                        ((isArray(dest[i]) && isArray(src[i])) || (isObject(dest[i]) && isObject(src[i])))
+                    ) {
+                        // need to merge arrays or objects
+                        queue.push({
+                            src: src[i],
+                            dest: dest[i],
+                        })
+                    } else {
+                        // primitive, so replace
+                        // or src[i] is array but dest[i] is not, so replace
+                        // or src[i] is object but dest[i] is not, so replace
+                        dest[i] = src[i]
+                    }
+                }
+            } else {
+                throw new Error(`unknown array strategy: ${arrayStrategy}`)
+            }
+        } else if (isObject(task.dest)) {
+            const src = task.src as object
+            const destAny = task.dest as any
+            // for every entry in src
+            for (const [key, value] of Object.entries(src)) {
+                if (
+                    mergeNestedInObject &&
+                    ((isArray(value) && isArray(destAny[key])) || (isObject(value) && isObject(destAny[key])))
+                ) {
+                    // need to merge arrays or objects
+                    queue.push({
+                        src: value,
+                        dest: destAny[key],
+                    })
+                } else {
+                    // primitive, so replace
+                    // or value is array but dest[key] is not, so replace
+                    // or value is object but dest[key] is not, so replace
+                    destAny[key] = value
+                }
+            }
+        } else {
+            throw new Error(`cannot handle type in queue: ${typeof task.dest}`)
+        }
+    }
+
+    return dest as T & U
+}
+
+export const isArray = (value: unknown): boolean => {
+    return Array.isArray(value)
+}
+
+export const isObject = (value: unknown): boolean => {
+    return value instanceof Object && !isArray(value)
+}
