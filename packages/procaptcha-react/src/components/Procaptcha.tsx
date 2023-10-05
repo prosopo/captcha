@@ -87,7 +87,7 @@ const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
 
 const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [isHuman, setIsHuman] = useState(false)
-    const [index, setIndex] = useState(-1)
+    const [index, setIndex] = useState(0)
     const [solutions, setSolutions] = useState([] as string[][])
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
     const [showModal, setShowModal] = useState(false)
@@ -150,7 +150,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-                <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Backdrop open={state.showModal} sx={{ zIndex: 2147483647 }}>
                     {state.challenge ? (
                         <CaptchaComponent
                             challenge={state.challenge}

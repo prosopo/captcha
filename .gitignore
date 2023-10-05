@@ -119,6 +119,7 @@ secrets.json
 
 # Ingnore build target
 protocol/target
+protocol/cargo-cache/*
 
 /db/
 /data/
