@@ -6,6 +6,7 @@ on:
             - 'main'
         paths:
             - 'package.json'
+            - '.github/workflows/dockerhub_publish.yml'
     workflow_dispatch:
 
 jobs:

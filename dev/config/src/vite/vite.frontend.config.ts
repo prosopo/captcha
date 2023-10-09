@@ -1,4 +1,5 @@
 import { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
+import { Drop } from 'esbuild'
 import { UserConfig } from 'vite'
 import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
@@ -69,6 +70,9 @@ export default async function (
     proto['toJSON'] = RegExp.prototype.toString
     logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
 
+    // drop console logs if in production mode
+    const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
+
     return {
         server: {
             host: '127.0.0.1',
@@ -81,6 +85,7 @@ export default async function (
         esbuild: {
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
+            drop,
         },
         define,
         // resolve: {

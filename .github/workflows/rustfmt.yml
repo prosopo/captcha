@@ -5,6 +5,7 @@ on:
         branches: [main]
         paths:
             - '**.rs'
+            - '.github/workflows/rustfmt.yml'
     workflow_dispatch:
 
 concurrency:

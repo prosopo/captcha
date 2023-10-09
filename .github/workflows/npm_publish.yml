@@ -6,6 +6,7 @@ on:
             - 'main'
         paths:
             - 'package.json'
+            - '.github/workflows/npm_publish.yml'
     workflow_dispatch:
 
 jobs:
@@ -37,7 +38,7 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - run: npm install
+            - run: npm ci
 
             - run: npm run build:all
 
