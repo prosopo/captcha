@@ -33,6 +33,10 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         return ArgsSchema
     }
 
+    public override getDescription(): string {
+        return 'Generate distinct captchas producing captcha challenges comprising one or more rounds, mixing labelled and unlabelled data into a single round'
+    }
+
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             count: {

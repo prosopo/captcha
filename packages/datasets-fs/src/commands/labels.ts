@@ -46,4 +46,8 @@ export class Labels extends InputOutputCliBuilder<ArgsSchemaType> {
 
         fs.writeFileSync(args.output, JSON.stringify({ labels: labelArray }, null, 4))
     }
+
+    public override getDescription(): string {
+        return 'get all labels from some data'
+    }
 }

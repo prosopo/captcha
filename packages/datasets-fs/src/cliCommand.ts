@@ -47,4 +47,8 @@ export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
     public getCommandName(): string {
         return kebabCase(this.constructor.name)
     }
+
+    public abstract getDescription(): string
 }
+
+export type CliCommandAny = CliCommand<z.ZodTypeAny>

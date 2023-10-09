@@ -109,4 +109,8 @@ export class Resize extends InputOutputCliBuilder<ArgsSchemaType> {
 
         fs.writeFileSync(outputMapFile, JSON.stringify(outputItems, null, 4))
     }
+
+    public override getDescription(): string {
+        return 'Resize images to a given size'
+    }
 }

@@ -67,4 +67,8 @@ export class Get extends InputCliBuilder<ArgsSchemaType> {
         const data: any = JSON.parse(fs.readFileSync(file, 'utf8'))
         await traverse(data)
     }
+
+    public override getDescription(): string {
+        return 'Test a GET request at image URLs'
+    }
 }

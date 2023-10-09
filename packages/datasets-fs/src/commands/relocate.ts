@@ -73,4 +73,8 @@ export class Relocate extends InputOutputCliBuilder<ArgsSchemaType> {
         // write the file
         fs.writeFileSync(args.output, JSON.stringify(data, null, 4))
     }
+
+    public override getDescription(): string {
+        return 'Relocate urls in a JSON file using string substitution'
+    }
 }

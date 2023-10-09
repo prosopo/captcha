@@ -15,6 +15,10 @@ export class Flatten extends InputOutputCliBuilder<ArgsSchemaType> {
         return ArgsSchema
     }
 
+    public override getDescription(): string {
+        return 'Restructure a directory containing directories for each image classification into a single directory with a file containing the labels'
+    }
+
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             input: {
