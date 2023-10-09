@@ -60,9 +60,6 @@ export async function processArgs(args: string[]) {
                         default: undefined,
                     }),
             async (argv) => {
-                if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
-                    throw new Error('Missing protocol wasm or json path')
-                }
                 const protocolContractAddress = await deployProtocol(
                     process.env.CAPTCHA_WASM_PATH,
                     process.env.CAPTCHA_ABI_PATH,

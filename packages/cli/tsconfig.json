@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "module": "NodeNext"
     },
-    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "include": ["src", "src/**/*.json"],
     "references": [
         {
             "path": "../../dev/config"
