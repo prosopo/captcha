@@ -9,7 +9,7 @@ export const InputArgsSchema = z.object({
 
 export type InputArgs = z.infer<typeof InputArgsSchema>
 
-export abstract class InputCliBuilder<T extends typeof InputArgsSchema> extends CliCommand<T> {
+export abstract class InputCliCommand<T extends typeof InputArgsSchema> extends CliCommand<T> {
     public getOptions() {
         return {
             input: {

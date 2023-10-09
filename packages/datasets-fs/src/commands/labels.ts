@@ -1,4 +1,4 @@
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliBuilder } from '../utils/inputOutput.js'
+import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { lodash } from '@prosopo/util'
@@ -9,7 +9,7 @@ export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export class Labels extends InputOutputCliBuilder<ArgsSchemaType> {
+export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
     public override getArgSchema() {
         return ArgsSchema
     }

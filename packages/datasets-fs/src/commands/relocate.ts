@@ -1,4 +1,4 @@
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliBuilder } from '../utils/inputOutput.js'
+import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { get, lodash } from '@prosopo/util'
 import { z } from 'zod'
 import fs from 'fs'
@@ -10,7 +10,7 @@ export const ArgsSchema = InputOutputArgsSchema.extend({
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export class Relocate extends InputOutputCliBuilder<ArgsSchemaType> {
+export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
     public override getArgSchema() {
         return ArgsSchema
     }

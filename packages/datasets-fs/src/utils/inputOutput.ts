@@ -1,4 +1,4 @@
-import { InputArgsSchema, InputCliBuilder } from './input.js'
+import { InputArgsSchema, InputCliCommand } from './input.js'
 import { ProsopoEnvError } from '@prosopo/common'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
@@ -15,7 +15,7 @@ export const InputOutputArgsSchema = InputArgsSchema.merge(OutputArgsSchema)
 
 export type InputOutputArgs = z.infer<typeof InputOutputArgsSchema>
 
-export abstract class InputOutputCliBuilder<T extends typeof InputOutputArgsSchema> extends InputCliBuilder<T> {
+export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSchema> extends InputCliCommand<T> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             output: {

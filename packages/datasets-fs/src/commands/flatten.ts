@@ -1,5 +1,5 @@
 import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliBuilder } from '../utils/inputOutput.js'
+import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util'
 import { u8aToHex } from '@polkadot/util'
@@ -10,7 +10,7 @@ export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export class Flatten extends InputOutputCliBuilder<ArgsSchemaType> {
+export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
     public override getArgSchema() {
         return ArgsSchema
     }

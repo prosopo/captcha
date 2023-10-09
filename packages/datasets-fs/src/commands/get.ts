@@ -1,4 +1,4 @@
-import { InputArgsSchema, InputCliBuilder } from '../utils/input.js'
+import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
 import fs from 'fs'
@@ -7,7 +7,7 @@ import { get } from '@prosopo/util'
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
-export class Get extends InputCliBuilder<ArgsSchemaType> {
+export class Get extends InputCliCommand<ArgsSchemaType> {
     public override getArgSchema() {
         return ArgsSchema
     }
