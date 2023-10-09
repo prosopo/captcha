@@ -2,11 +2,12 @@ import { InputArgsSchema, InputCliBuilder } from '../utils/input.js'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
 import fs from 'fs'
+import { get } from '@prosopo/util'
 
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
-export class Flatten extends InputCliBuilder<ArgsSchemaType> {
+export class Get extends InputCliBuilder<ArgsSchemaType> {
     public override getArgSchema() {
         return ArgsSchema
     }
@@ -14,10 +15,7 @@ export class Flatten extends InputCliBuilder<ArgsSchemaType> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             input: {
-                description: 'Path to the data directory containing subdirectories for each image classification',
-            },
-            output: {
-                description: 'Where to put the output file containing the labels and single directory of images',
+                description: 'JSON file containing urls under a "data" key',
             },
         })
     }
@@ -39,20 +37,20 @@ export class Flatten extends InputCliBuilder<ArgsSchemaType> {
                             try {
                                 const response = await fetch(url)
                                 if (!response.ok) {
-                                    logger.error(`GET ${url} ${response.status} ${response.statusText}`)
+                                    this.logger.error(`GET ${url} ${response.status} ${response.statusText}`)
                                 } else {
-                                    logger.log(`GET ${url} OK`)
+                                    this.logger.log(`GET ${url} OK`)
                                 }
                             } catch (err) {
-                                logger.error(err)
+                                this.logger.error(err)
                             }
                         } else {
                             // resolve locally
                             try {
                                 fs.readFileSync(url)
-                                logger.log(`GET ${url} OK`)
+                                this.logger.log(`GET ${url} OK`)
                             } catch (err) {
-                                logger.error(`GET ${url} ${err}`)
+                                this.logger.error(`GET ${url} ${err}`)
                             }
                         }
                     } else {
