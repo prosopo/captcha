@@ -123,11 +123,9 @@ export class ProsopoServer {
         if (providerUrlTrimmed !== providerUrl) {
             return false
         }
-        console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed && commitmentId) {
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(user, commitmentId)
-            console.log(result)
             return result.solutionApproved
         } else {
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value

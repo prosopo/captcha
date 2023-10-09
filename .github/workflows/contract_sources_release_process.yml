@@ -6,6 +6,7 @@ on:
             - 'main'
         paths:
             - 'package.json'
+            - '.github/workflows/contract_release_process.yml'
     workflow_dispatch:
 
 jobs:
