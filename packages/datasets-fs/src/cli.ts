@@ -4,7 +4,7 @@ import { GenerateV1 } from './commands/generateV1.js'
 import { GenerateV2 } from './commands/generateV2.js'
 import { Get } from './commands/get.js'
 import { Labels } from './commands/labels.js'
-import { LogLevel, getLogger } from '@prosopo/common'
+import { LogLevel, Loggable, getLogger } from '@prosopo/common'
 import { Relocate } from './commands/relocate.js'
 import { Resize } from './commands/resize.js'
 import { hideBin } from 'yargs/helpers'
@@ -14,11 +14,13 @@ import yargs from 'yargs'
 const dirname = process.cwd()
 const logger = getLogger(LogLevel.enum.info, `${dirname}`)
 
-export class Cli {
+export class Cli extends Loggable {
     #commands: CliCommandAny[]
 
     constructor(commands: CliCommandAny[]) {
+        super()
         this.#commands = commands
+        this.logger = logger
     }
 
     private config() {
@@ -31,7 +33,7 @@ export class Cli {
                 description: 'The log level',
             })
             .middleware((argv: any) => {
-                logger.setLogLevel(argv.logLevel)
+                this.logger.setLogLevel(argv.logLevel)
             })
             .strictCommands()
             .showHelpOnFail(false, 'Specify --help for available options')
