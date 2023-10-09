@@ -198,7 +198,11 @@ export const flattenObj = (obj: object, prefix = ''): Record<string, unknown> =>
     return flattenedObj
 }
 
-type MergeOptions = {
+// https://stackoverflow.com/questions/63116039/camelcase-to-kebab-case
+export const kebabCase = (str: string) =>
+    str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
+
+export type MergeOptions = {
     atomicArrays?: boolean
 }
 
