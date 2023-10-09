@@ -42,7 +42,7 @@
         "cors": "^2.8.5",
         "jsonwebtoken": "^9.0.0",
         "mongoose": "^7.3.3",
-        "zod": "^3.17.9"
+        "zod": "^3.22.3"
     },
     "devDependencies": {
         "@types/jsonwebtoken": "^9.0.2",
