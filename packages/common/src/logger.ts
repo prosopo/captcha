@@ -45,7 +45,7 @@ export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
 
 // Get the default logger (i.e. the global logger)
 export function getLoggerDefault(): Logger {
-    return getLoggerAdapterConsola(LogLevel.enum.info, 'global')
+    return defaultLogger
 }
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
@@ -107,5 +107,23 @@ export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
         return LogLevel.parse(logLevel)
     } catch (e) {
         throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', logLevel)
+    }
+}
+
+const defaultLogger = getLoggerAdapterConsola(LogLevel.enum.info, 'global')
+
+export class Loggable {
+    #logger: Logger
+
+    constructor() {
+        this.#logger = getLoggerDefault()
+    }
+
+    public get logger(): Logger {
+        return this.#logger
+    }
+
+    public set logger(logger: Logger) {
+        this.#logger = logger
     }
 }
