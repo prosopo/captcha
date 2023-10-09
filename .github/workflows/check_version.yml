@@ -13,6 +13,7 @@ on:
             next_version:
                 description: 'The next version'
                 value: ${{ jobs.check_version.outputs.next_version }}
+    workflow_dispatch:
 
 jobs:
     check_version:
@@ -44,16 +45,16 @@ jobs:
                   # compare major versions for bump
                   if [[ $NEXT_MAJOR -gt $CURRENT_MAJOR ]]; then
                     echo "major version bump detected"
-                    echo "BUMP=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   elif [[ $NEXT_MINOR -gt $CURRENT_MINOR ]]; then
                     echo "minor version bump detected"
-                    echo "BUMP=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   elif [[ $NEXT_PATCH -gt $CURRENT_PATCH ]]; then
                     echo "patch version bump detected"
-                    echo "BUMP=true" >> $GITHUB_OUTPUT
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   else
                     echo "no version bump detected"
-                    echo "BUMP=false" >> $GITHUB_OUTPUT
+                    echo "bump=false" >> $GITHUB_OUTPUT
                   fi
-                  echo "CURRENT_VERSION=$CURRENT" >> $GITHUB_OUTPUT
-                  echo "NEXT_VERSION=$NEXT" >> $GITHUB_OUTPUT
+                  echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
+                  echo "next_version=$NEXT" >> $GITHUB_OUTPUT
