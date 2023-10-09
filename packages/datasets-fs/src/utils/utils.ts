@@ -1,38 +1,65 @@
-import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { CliBuilder } from '../cliBuilder.js'
+import { ProsopoEnvError } from '@prosopo/common'
 import { z } from 'zod'
 import fs from 'fs'
 
-export const argsSchema = z.object({
-    data: z.string(),
-    out: z.string(),
+export const IOArgsSchema = z.object({
+    input: z.string(),
+    output: z.string(),
     overwrite: z.boolean().optional(),
 })
 
-export type Args = z.infer<typeof argsSchema>
+export type IOArgs = z.infer<typeof IOArgsSchema>
 
-export const setup = async (args: Args, logger?: Logger) => {
-    logger = logger || getLoggerDefault()
-
-    logger.debug(args, 'setting up...')
-
-    // input cannot equal output, otherwise we have issues with overwriting things / doing checks for duplicate files if stuff already exists in the destination
-    if (args.in === args.out) {
-        throw new ProsopoEnvError(new Error('output path must be different to input path'), 'FS.SAME_FILE')
-    }
-
-    // input must exist
-    if (!fs.existsSync(args.in)) {
-        throw new ProsopoEnvError(new Error(`input path does not exist: ${args.in}`), 'FS.FILE_NOT_FOUND')
-    }
-
-    // output must not exist, unless overwrite is true
-    if (fs.existsSync(args.out)) {
-        if (args.overwrite) {
-            // if overwrite is true, delete the output directory
-            logger.info('cleaning output directory...')
-            fs.rmSync(args.out, { recursive: true })
-        } else {
-            throw new ProsopoEnvError(new Error(`output path already exists: ${args.out}`), 'FS.FILE_ALREADY_EXISTS')
+export abstract class IOCliBuilder<T extends typeof IOArgsSchema> extends CliBuilder<T> {
+    public getOptions() {
+        return {
+            input: {
+                string: true,
+                alias: 'in',
+                demand: true,
+                description: 'The input path',
+            },
+            output: {
+                alias: 'out',
+                string: true,
+                demand: true,
+                description: 'The output path',
+            },
+            overwrite: {
+                string: true,
+                description: 'Overwrite files in the output path if they already exist',
+            },
         }
+    }
+
+    protected override run(args: IOArgs): Promise<void> {
+        this.logger.debug(args, 'setting up IO...')
+
+        // input cannot equal output, otherwise we have issues with overwriting things / doing checks for duplicate files if stuff already exists in the destination
+        if (args.input === args.output) {
+            throw new ProsopoEnvError(new Error('output path must be different to input path'), 'FS.SAME_FILE')
+        }
+
+        // input must exist
+        if (!fs.existsSync(args.input)) {
+            throw new ProsopoEnvError(new Error(`input path does not exist: ${args.input}`), 'FS.FILE_NOT_FOUND')
+        }
+
+        // output must not exist, unless overwrite is true
+        if (fs.existsSync(args.output)) {
+            if (args.overwrite) {
+                // if overwrite is true, delete the output directory
+                this.logger.info('cleaning output directory...')
+                fs.rmSync(args.output, { recursive: true })
+            } else {
+                throw new ProsopoEnvError(
+                    new Error(`output path already exists: ${args.output}`),
+                    'FS.FILE_ALREADY_EXISTS'
+                )
+            }
+        }
+
+        return Promise.resolve()
     }
 }
