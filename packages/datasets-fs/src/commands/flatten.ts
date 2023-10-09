@@ -26,7 +26,7 @@ export class Flatten extends InputOutputCliBuilder<ArgsSchemaType> {
     }
 
     public override async run(args: Args) {
-        super.run(args)
+        await super.run(args)
 
         const dataDir = args.input
         const outDir = args.output
