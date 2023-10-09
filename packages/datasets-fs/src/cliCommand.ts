@@ -28,7 +28,9 @@ export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
     }
 
     // the main run function. This should be the function that does the work
-    protected abstract run(args: z.infer<T>): Promise<void>
+    protected run(args: z.infer<T>): Promise<void> {
+        return Promise.resolve()
+    }
 
     // run any checks after the main run function. This should teardown anything that was setup in preRun, if necessary
     protected postRun(args: z.infer<T>): Promise<void> {

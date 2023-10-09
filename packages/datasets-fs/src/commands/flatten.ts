@@ -9,6 +9,7 @@ import fs from 'fs'
 export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
+
 export class Flatten extends InputOutputCliBuilder<ArgsSchemaType> {
     public override getArgSchema() {
         return ArgsSchema
