@@ -3,15 +3,15 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { z } from 'zod'
 import fs from 'fs'
 
-export const IOArgsSchema = z.object({
+export const InputOutputArgsSchema = z.object({
     input: z.string(),
     output: z.string(),
     overwrite: z.boolean().optional(),
 })
 
-export type IOArgs = z.infer<typeof IOArgsSchema>
+export type InputOutputArgs = z.infer<typeof InputOutputArgsSchema>
 
-export abstract class IOCliBuilder<T extends typeof IOArgsSchema> extends CliBuilder<T> {
+export abstract class InputOutputCliBuilder<T extends typeof InputOutputArgsSchema> extends CliBuilder<T> {
     public getOptions() {
         return {
             input: {
@@ -33,7 +33,7 @@ export abstract class IOCliBuilder<T extends typeof IOArgsSchema> extends CliBui
         }
     }
 
-    protected override run(args: IOArgs): Promise<void> {
+    protected override run(args: InputOutputArgs): Promise<void> {
         this.logger.debug(args, 'setting up IO...')
 
         // input cannot equal output, otherwise we have issues with overwriting things / doing checks for duplicate files if stuff already exists in the destination
