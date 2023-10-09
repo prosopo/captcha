@@ -38,7 +38,7 @@
         "@prosopo/captcha-contract": "0.2.5",
         "mongodb": "5.8.0",
         "mongoose": "^7.3.3",
-        "zod": "^3.17.9"
+        "zod": "^3.22.3"
     },
     "devDependencies": {
         "tslib": "2.6.2",
