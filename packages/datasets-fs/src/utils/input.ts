@@ -1,4 +1,4 @@
-import { CliBuilder } from '../cliBuilder.js'
+import { CliCommand } from '../cliCommand.js'
 import { ProsopoEnvError } from '@prosopo/common'
 import { z } from 'zod'
 import fs from 'fs'
@@ -9,7 +9,7 @@ export const InputArgsSchema = z.object({
 
 export type InputArgs = z.infer<typeof InputArgsSchema>
 
-export abstract class InputCliBuilder<T extends typeof InputArgsSchema> extends CliBuilder<T> {
+export abstract class InputCliBuilder<T extends typeof InputArgsSchema> extends CliCommand<T> {
     public getOptions() {
         return {
             input: {

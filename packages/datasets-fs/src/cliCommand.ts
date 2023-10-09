@@ -3,7 +3,7 @@ import { kebabCase } from 'lodash'
 import { Options } from 'yargs'
 import { z } from 'zod'
 
-export abstract class CliBuilder<T extends z.ZodTypeAny> extends Loggable {
+export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
     // get the options for the CLI
     public abstract getOptions(): {
         [key: string]: Options
