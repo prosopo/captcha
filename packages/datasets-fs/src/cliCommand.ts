@@ -1,5 +1,5 @@
 import { Loggable } from '@prosopo/common'
-import { kebabCase } from 'lodash'
+import { kebabCase } from '@prosopo/util'
 import { Options } from 'yargs'
 import { z } from 'zod'
 
