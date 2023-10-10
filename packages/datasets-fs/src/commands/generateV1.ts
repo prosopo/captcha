@@ -14,8 +14,10 @@ import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
 import { ProsopoEnvError } from '@prosopo/common'
 import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
-import { checkDuplicates } from '../util.js'
+import { checkDuplicates } from './generate.js'
 import { z } from 'zod'
+import bcrypt from 'bcrypt'
+import cliProgress from 'cli-progress'
 import fs from 'fs'
 
 export const ArgsSchema = GenerateArgsSchema.extend({

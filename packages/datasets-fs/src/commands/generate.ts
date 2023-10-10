@@ -1,3 +1,4 @@
+import { Item, LabelledItem } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
@@ -62,5 +63,32 @@ export abstract class Generate<T extends ArgsSchemaType> extends InputOutputCliC
                 description: 'If true, allow duplicates in the unlabelled data',
             },
         })
+    }
+}
+
+export const checkDuplicates = (
+    labelled: LabelledItem[],
+    unlabelled: Item[],
+    options: {
+        allowDuplicatesLabelled?: boolean
+        allowDuplicatesUnlabelled?: boolean
+    }
+) => {
+    // check for duplicates
+    const all = new Set<string>()
+    if (!options.allowDuplicatesLabelled) {
+        for (const entry of labelled) {
+            if (all.has(entry.data)) {
+                throw new Error(`Duplicate data entry in labelled data: ${JSON.stringify(entry)}`)
+            }
+            all.add(entry.data)
+        }
+    }
+    if (!options.allowDuplicatesUnlabelled) {
+        for (const entry of unlabelled) {
+            if (all.has(entry.data)) {
+                throw new Error(`Duplicate data entry in unlabelled data: ${JSON.stringify(entry)}`)
+            }
+        }
     }
 }
