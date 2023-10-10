@@ -5,6 +5,7 @@ on:
         branches: [main]
         paths:
             - '**.rs'
+            - '.github/workflows/clippy.yml'
     workflow_dispatch:
 
 concurrency:

@@ -38,6 +38,7 @@ const replaceExtension = (file: string, ext: string): string => {
 }
 
 async function importContract(pathToAbis: string, pathToOutput: string) {
+    const verbose = false
     pathToAbis = path.relative(process.cwd(), pathToAbis)
     pathToOutput = path.relative(process.cwd(), pathToOutput)
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
@@ -45,6 +46,10 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     await exec(`mkdir -p ${pathToOutput}`)
     const cmd = `npx @727-ventures/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
+    const name = path.basename(pathToAbis)
+    // copy the metadata
+    // TODO this is a temp fix. This functionality should be in typechain!
+    await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`)
     // walk each file in the output directory
     const walk = (dir: string) => {
         const files = fs.readdirSync(dir)
@@ -63,9 +68,9 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     const srcQuoted = p2.toString()
                     const src = getPath(srcQuoted)
                     const extension = getExtension(src)
-                    console.log(`src: ${src}`)
-                    console.log(`extension: ${extension}`)
-                    console.log('p3: ', p3)
+                    if (verbose) console.log(`src: ${src}`)
+                    if (verbose) console.log(`extension: ${extension}`)
+                    if (verbose) console.log('p3: ', p3)
                     let result = ''
                     if (extension === 'js') {
                         // already has .js extension
@@ -81,7 +86,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                         // needs .js extension
                         result = `${start}'${src}.js'`
                     }
-                    console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
+                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return `${result}`
                 })
                 // eslint-disable-next-line no-useless-escape
@@ -89,7 +94,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     // don't replace if already ignored by eslint
                     if (p1.includes('eslint-disable-next-line')) return match
                     const result = `\n${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
-                    console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
+                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
                 })
 
@@ -97,7 +102,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                 // eslint-disable-next-line no-useless-escape
                 replaced = replaced.replace(/EventRecord/g, (match) => {
                     const result = `EventRecord[]`
-                    console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
+                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
                 })
 
@@ -107,7 +112,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     /import\s+type\s+\{\s*EventRecord\[\]\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
                     (match) => {
                         const result = `import type { EventRecord } from '@polkadot/types/interfaces'`
-                        console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
+                        if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                         return result
                     }
                 )

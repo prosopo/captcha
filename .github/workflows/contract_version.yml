@@ -51,7 +51,7 @@ jobs:
               run: |
                   set -eu
                     provider=$(cat packages/provider/package.json | jq -r '.version')
-                    find protocol/*/ -name "Cargo.toml" | while read line; do
+                    find protocol/target/ink/*/ -name "Cargo.toml" | while read line; do
                         contract=$(cat $line | grep -m 1 "version = " | cut -d '"' -f 2)
                         echo "checking version in $line"
                         if [[ "$contract" != "$provider" ]]; then
