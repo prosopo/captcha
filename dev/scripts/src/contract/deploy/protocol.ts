@@ -54,7 +54,8 @@ export async function run(
     let wasm: Uint8Array
     if (wasmPath === undefined) {
         log.info('Using wasm from captcha contract')
-        const hex = JSON.parse(ContractFile)['wasm']
+        const jsonContent = JSON.parse(ContractFile)
+        const hex = jsonContent['source']['wasm']
         wasm = hexToU8a(hex)
     } else {
         log.info('WASM Path', wasmPath)
