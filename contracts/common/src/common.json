@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0x96f2336841b1c02ea699fef4e71cbde9a2f7591ca2cd7aab61af8458e7255d27",
+        "hash": "0x34b73f3beb028c606f7c0489e0d46be3533702847993ebf2ff3d73edac18389c",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -17,8 +17,8 @@
         "name": "common",
         "version": "0.2.5",
         "authors": [
-            "Chris Taylor chris@prosopo.io",
-            "George Oastler george@prosopo.io",
+            "Chris Taylor <chris@prosopo.io>",
+            "George Oastler <george@prosopo.io>",
             "Vincenzo Ferrara",
             "Siniša Čanak"
         ]
