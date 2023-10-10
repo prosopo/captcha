@@ -149,7 +149,7 @@ export class ProsopoServer {
 }
 
 export const PublicProsopoServer = async (config: ProsopoServerConfig, publicAccountNetwork: PublicAccountNetwork) => {
-    const publicProsopoPai = await getPublicProsopoPair(publicAccountNetwork)
+    const publicProsopoPair = await getPublicProsopoPair(publicAccountNetwork)
 
-    return new ProsopoServer(publicProsopoPai, config)
+    return new ProsopoServer(publicProsopoPair, config)
 }
