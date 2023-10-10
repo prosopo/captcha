@@ -43,7 +43,7 @@ describe('util', () => {
         })
 
         test('empty string', () => {
-            expect(at('', 0)).to.throw()
+            expect(() => at('', 0)).to.throw()
         })
 
         test('throw on empty array', () => {
