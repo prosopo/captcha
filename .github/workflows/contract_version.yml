@@ -4,7 +4,8 @@ on:
     pull_request:
         branches: [main]
         paths:
-            - 'protocol/**/Cargo.toml'
+            - '**/package.json'
+            - '**/Cargo.toml'
             - '.github/workflows/contract_version.yml'
     workflow_dispatch:
 
