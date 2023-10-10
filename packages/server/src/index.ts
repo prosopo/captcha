@@ -16,7 +16,7 @@ import { BlockHash } from '@polkadot/types/interfaces'
 import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfig } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import { LogLevel, Logger, getLogger, getPair } from '@prosopo/common'
 import { ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
@@ -24,6 +24,8 @@ import { ProviderApi } from '@prosopo/api'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { get } from '@prosopo/util'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getPublicProsopoPair } from './publicProsopoPair.js'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
@@ -147,4 +149,10 @@ export class ProsopoServer {
         )
         return this.contract
     }
+}
+
+export const PublicProsopoServer = async (config: ProsopoServerConfig) => {
+    const publicProsopoPai = await getPublicProsopoPair()
+
+    return new ProsopoServer(publicProsopoPai, config)
 }
