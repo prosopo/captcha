@@ -42,6 +42,10 @@ describe('util', () => {
             expect(at('abc', -6)).to.equal('a')
         })
 
+        test('empty string', () => {
+            expect(at('', 0)).to.throw()
+        })
+
         test('throw on empty array', () => {
             expect(() => at([], 0)).to.throw()
         })
