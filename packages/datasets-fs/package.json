@@ -14,7 +14,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js",
-        "cli": "node ./dist/js/cli.js",
+        "cli": "node ./dist/cli.js",
         "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
     },
     "main": "./dist/index.js",
@@ -41,7 +41,7 @@
         "seedrandom": "^3.0.5",
         "sharp": "^0.32.1",
         "yargs": "^17.7.2",
-        "zod": "^3.21.4"
+        "zod": "^3.22.3"
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.0",
