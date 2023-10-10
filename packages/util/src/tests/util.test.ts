@@ -129,6 +129,25 @@ describe('util', () => {
             const v7: number = at([1, 2, 3], 0, { optional: false })
         })
 
+        test('compatible with string', () => {
+            expect(at('abc', 0)).to.equal('a')
+            expect(at('abc', 1)).to.equal('b')
+            expect(at('abc', 2)).to.equal('c')
+            expect(at('abc', 3)).to.equal('a')
+            expect(at('abc', 4)).to.equal('b')
+            expect(at('abc', 5)).to.equal('c')
+            expect(at('abc', -1)).to.equal('c')
+            expect(at('abc', -2)).to.equal('b')
+            expect(at('abc', -3)).to.equal('a')
+            expect(at('abc', -4)).to.equal('c')
+            expect(at('abc', -5)).to.equal('b')
+            expect(at('abc', -6)).to.equal('a')
+        })
+
+        test('empty string', () => {
+            expect(() => at('', 0)).to.throw()
+        })
+
         test('throw on empty array', () => {
             expect(() => at([], 0)).to.throw()
         })
