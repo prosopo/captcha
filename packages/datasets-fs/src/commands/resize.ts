@@ -76,6 +76,8 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
                     height: size,
                     fit: square ? 'fill' : 'inside',
                 })
+                .removeAlpha() // remove the alpha channel
+                .toColorspace('srgb') // 8-bits per channel
                 .png()
             const tmpFilePath = `/tmp/tmp.png`
             await resized.toFile(tmpFilePath)
