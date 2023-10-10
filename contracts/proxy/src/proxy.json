@@ -16,7 +16,7 @@
     "contract": {
         "name": "proxy",
         "version": "0.2.5",
-        "authors": ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io"]
+        "authors": ["Chris Taylor <chris@prosopo.io>", "George Oastler <george@prosopo.io>"]
     },
     "spec": {
         "constructors": [
