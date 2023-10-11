@@ -45,6 +45,17 @@ export class Cli extends Loggable {
                 },
             })
         })
+        if (!this.#commands.find((c) => c.getCommandName() === '$0')) {
+            // no default command
+            y = y.command(
+                '$0',
+                'default command',
+                (y: Argv) => y,
+                (argv: any) => {
+                    throw new Error(`no command specified`)
+                }
+            )
+        }
         y = y.demandCommand().strict().showHelpOnFail(false, 'Specify --help for available options')
         return y
     }
