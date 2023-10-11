@@ -8,7 +8,7 @@ import fs from 'fs'
 describe('flatten', () => {
     test('flattens hierarchical data', async () => {
         const input = `${__dirname}/data/hierarchical`
-        const output = `${__dirname}/results/flat`
+        const output = `${__dirname}/test_results/flat`
         const flatten = new Flatten()
         flatten.logger.setLogLevel('error')
         // await flatten.exec({

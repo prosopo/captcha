@@ -136,3 +136,6 @@ chain-data
 
 # ignore vite config timestamps
 vite.config.ts.timestamp*
+
+# ignore test results dir
+tests/**/test_results
