@@ -30,10 +30,12 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
                     'Where to put the output directory containing the map file and single directory of images. The map file will contain the new urls of the scaled images, new hashes and pass through any other information, e.g. labels.',
             },
             size: {
+                number: true,
                 description:
                     'The dimension (height/width) of the scaled image. If the image is not square, the other dimension will be scaled to maintain the aspect ratio.',
             },
             square: {
+                boolean: true,
                 description:
                     'If true, the image will be cropped to a square before scaling. If false, the image will be scaled to the given size, maintaining the aspect ratio.',
             },
