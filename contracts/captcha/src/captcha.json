@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0x12a40708e2d3f86b94d6cf5d1951d580d6e2302c045ea468df56125e92b2b0cf",
+        "hash": "0x95f32f3aba8c5decee09fb1733ddf0b1f734d49ca0752efa49081454d3712a4e",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -15,7 +15,7 @@
     },
     "contract": {
         "name": "captcha",
-        "version": "0.2.5",
+        "version": "0.2.6",
         "authors": [
             "Chris Taylor <chris@prosopo.io>",
             "George Oastler <george@prosopo.io>",
