@@ -22,10 +22,9 @@ export abstract class InputCliCommand<T extends typeof InputArgsSchema> extends 
     }
 
     protected override async preRun(args: InputArgs) {
-        console.log('input prerun')
+        this.logger.debug('input prerun')
         await super.preRun(args)
         // input must exist
-        console.log('input prerun 2')
         if (!fs.existsSync(args.input)) {
             throw new ProsopoEnvError(new Error(`input path does not exist: ${args.input}`), 'FS.FILE_NOT_FOUND')
         }

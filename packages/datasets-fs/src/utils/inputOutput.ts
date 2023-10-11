@@ -32,9 +32,8 @@ export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSche
     }
 
     protected override async preRun(args: InputOutputArgs) {
-        console.log('inputoutput prerun')
+        this.logger.debug('inputoutput prerun')
         await super.preRun(args)
-        console.log('inputoutput prerun 2')
         // input cannot equal output, otherwise we have issues with overwriting things / doing checks for duplicate files if stuff already exists in the destination
         if (args.input === args.output) {
             throw new ProsopoEnvError(new Error('output path must be different to input path'), 'FS.SAME_FILE')
@@ -52,7 +51,7 @@ export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSche
     }
 
     protected override async run(args: InputOutputArgs) {
-        console.log('inputoutput run')
+        this.logger.debug('inputoutput run')
         await super.run(args)
         if (args.overwrite) {
             // if overwrite is true, delete the output directory

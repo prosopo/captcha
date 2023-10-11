@@ -50,7 +50,7 @@ export class Cli extends Loggable {
 
     public exec = async (args: string[] = process.argv.slice(2)) => {
         const config = this.config()
-        console.log('parsing', args)
+        this.logger.debug('parsing', args)
         await config.parse(args)
     }
 }
@@ -73,11 +73,10 @@ const main = async () => {
 if (esMain(import.meta)) {
     main()
         .then(() => {
-            console.log('done')
             process.exit(0)
         })
         .catch((err) => {
-            console.log('error', err)
+            logger.error('error', err)
             process.exit(1)
         })
 }
