@@ -35,8 +35,8 @@ export const fsEq = (pth1: string, pth2: string) => {
     }
     // compare contents of each file
     for (let i = 0; i < files1.length; i++) {
-        const file1 = at(files1, i)
-        const file2 = at(files2, i)
+        const file1 = pth1 + at(files1, i)
+        const file2 = pth2 + at(files2, i)
         const stat1 = fs.statSync(file1)
         if (stat1.isDirectory()) {
             // already checked above

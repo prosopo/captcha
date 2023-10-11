@@ -1,14 +1,21 @@
 import { Flatten } from '../commands/flatten.js'
-import { fsEq, fsWalk, readDataJson } from './utils.js'
-import fs from 'fs'
 import { blake2b } from '@noble/hashes/blake2b'
+import { describe, test } from 'vitest'
+import { fsEq, fsWalk, readDataJson } from './utils.js'
 import { u8aToHex } from '@polkadot/util'
+import fs from 'fs'
 
 describe('flatten', () => {
     test('flattens hierarchical data', async () => {
         const input = `${__dirname}/data/hierarchical`
         const output = `${__dirname}/results/flat`
-        await new Flatten().parseThenExec([`--input=${input}`, `--output=${output}`])
+        const flatten = new Flatten()
+        flatten.logger.setLogLevel('error')
+        // await flatten.exec({
+        //     input,
+        //     output,
+        //     overwrite: true,
+        // })
 
         // make sure the results are the same as the expected results
         const expected = `${__dirname}/data/flat`
@@ -34,7 +41,7 @@ describe('flatten', () => {
                     continue
                 }
                 const content2 = fs.readFileSync(pth2)
-                if (content === content2) {
+                if (content.equals(content2)) {
                     const str = pth2.split('/').slice(-1)[0]
                     if (str === undefined) {
                         throw new Error(`unable to parse ${pth2}`)
@@ -43,6 +50,7 @@ describe('flatten', () => {
                     break
                 }
             }
+
             if (!name) {
                 throw new Error(`unable to find image ${pth} in output`)
             }
