@@ -53,7 +53,7 @@ export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSche
     protected override async run(args: InputOutputArgs) {
         this.logger.debug('inputoutput run')
         await super.run(args)
-        if (args.overwrite) {
+        if (args.overwrite && fs.existsSync(args.output)) {
             // if overwrite is true, delete the output directory
             this.logger.info('cleaning output directory...')
             fs.rmSync(args.output, { recursive: true })
