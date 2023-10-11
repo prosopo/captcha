@@ -25,15 +25,16 @@ export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSche
                 description: 'The output path',
             },
             overwrite: {
-                string: true,
+                boolean: true,
                 description: 'Overwrite files in the output path if they already exist',
             },
         })
     }
 
-    protected override async preRun(args: InputOutputArgs): Promise<void> {
+    protected override async preRun(args: InputOutputArgs) {
+        console.log('inputoutput prerun')
         await super.preRun(args)
-
+        console.log('inputoutput prerun 2')
         // input cannot equal output, otherwise we have issues with overwriting things / doing checks for duplicate files if stuff already exists in the destination
         if (args.input === args.output) {
             throw new ProsopoEnvError(new Error('output path must be different to input path'), 'FS.SAME_FILE')
@@ -48,17 +49,15 @@ export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSche
                 )
             }
         }
-
-        return Promise.resolve()
     }
 
-    protected override run(args: InputOutputArgs): Promise<void> {
+    protected override async run(args: InputOutputArgs) {
+        console.log('inputoutput run')
+        await super.run(args)
         if (args.overwrite) {
             // if overwrite is true, delete the output directory
             this.logger.info('cleaning output directory...')
             fs.rmSync(args.output, { recursive: true })
         }
-
-        return Promise.resolve()
     }
 }

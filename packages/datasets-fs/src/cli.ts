@@ -23,9 +23,8 @@ export class Cli extends Loggable {
         this.logger = logger
     }
 
-    private config() {
+    private config = () => {
         let y = yargs(hideBin(process.argv))
-            .help()
             .option('log-level', {
                 type: 'string',
                 choices: Object.values(LogLevel.options),
@@ -34,26 +33,25 @@ export class Cli extends Loggable {
             })
             .middleware((argv: any) => {
                 this.logger.setLogLevel(argv.logLevel)
-            })
-            .strictCommands()
-            .showHelpOnFail(false, 'Specify --help for available options')
-            .fail(false)
+            }, true)
         this.#commands.forEach((command) => {
             y = y.command({
                 command: command.getCommandName(),
                 describe: command.getDescription(),
                 builder: command.getOptions(),
-                handler: (argv: any) => {
-                    command.parseThenExec(argv)
+                handler: async (argv: any) => {
+                    await command.parseThenExec(argv)
                 },
             })
         })
+        y = y.strict().showHelpOnFail(false, 'Specify --help for available options')
         return y
     }
 
-    public async exec() {
+    public exec = async (args: string[] = process.argv.slice(2)) => {
         const config = this.config()
-        await config.parse()
+        console.log('parsing', args)
+        await config.parse(args)
     }
 }
 
@@ -75,11 +73,11 @@ const main = async () => {
 if (esMain(import.meta)) {
     main()
         .then(() => {
-            logger.debug('done')
+            console.log('done')
             process.exit(0)
         })
         .catch((err) => {
-            logger.error('error:', err)
+            console.log('error', err)
             process.exit(1)
         })
 }

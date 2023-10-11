@@ -1,6 +1,6 @@
 import { Loggable } from '@prosopo/common'
-import { kebabCase } from '@prosopo/util'
 import { Options } from 'yargs'
+import { kebabCase } from '@prosopo/util'
 import { z } from 'zod'
 
 export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
@@ -13,38 +13,41 @@ export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
     public abstract getArgSchema(): T
 
     // parse args using the schema
-    public parse(args: unknown): z.infer<T> {
+    public async parse(args: unknown): Promise<z.infer<T>> {
         const argsSchema = this.getArgSchema()
-        return argsSchema.parse(args)
+        const parsed = await argsSchema.parse(args)
+        console.log('parsed args:', parsed)
+        return parsed
     }
 
-    public parseThenExec(args: unknown): Promise<void> {
-        return this.exec(this.parse(args))
+    public async parseThenExec(args: unknown) {
+        await this.exec(await this.parse(args))
     }
 
     // run any checks before the main run function. This function should have no side effects, i.e. not write to disk. It's purely for conducting checks / setting up
-    protected preRun(args: z.infer<T>): Promise<void> {
-        return Promise.resolve()
+    protected async preRun(args: z.infer<T>) {
+        console.log('preRun')
     }
 
     // the main run function. This should be the function that does the work
-    protected run(args: z.infer<T>): Promise<void> {
-        return Promise.resolve()
+    protected async run(args: z.infer<T>) {
+        console.log('run')
     }
 
     // run any checks after the main run function. This should teardown anything that was setup in preRun, if necessary
-    protected postRun(args: z.infer<T>): Promise<void> {
-        return Promise.resolve()
+    protected async postRun(args: z.infer<T>) {
+        console.log('postRun')
     }
 
     // exec is a public facing function that should be called by the CLI. It will run the preRun, run, and postRun functions in order
-    public async exec(args: z.infer<T>): Promise<void> {
+    public async exec(args: z.infer<T>) {
+        console.log('exec')
         await this.preRun(args)
         await this.run(args)
         await this.postRun(args)
     }
 
-    public getCommandName(): string {
+    public getCommandName() {
         return kebabCase(this.constructor.name)
     }
 
