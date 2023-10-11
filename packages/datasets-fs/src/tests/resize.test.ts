@@ -13,13 +13,13 @@ describe('resize', () => {
         const output = `${__dirname}/test_results/flat_resized`
         const resize = new Resize()
         resize.logger.setLogLevel('error')
-        // await resize.exec({
-        //     input,
-        //     output,
-        //     overwrite: true,
-        //     square: true,
-        //     size: 128,
-        // })
+        await resize.exec({
+            input,
+            output,
+            overwrite: true,
+            square: true,
+            size: 128,
+        })
 
         // make sure the results are the same as the expected results
         const expected = `${__dirname}/data/flat_resized`

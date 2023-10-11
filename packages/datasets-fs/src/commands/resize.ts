@@ -102,7 +102,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         }
 
         // write the map file
-        const outputMapFile = `${outDir}/map.json`
+        const outputMapFile = `${outDir}/data.json`
 
         const data: Data = {
             items: outputItems,
