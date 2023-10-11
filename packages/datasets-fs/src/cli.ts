@@ -68,16 +68,13 @@ export class Cli extends Loggable {
 }
 
 const main = async () => {
-    const f = new Relocate()
-    f.logger.setLogLevel('debug')
     const commands: CliCommandAny[] = [
         new Flatten(),
         new GenerateV1(),
         new GenerateV2(),
         new Get(),
         new Labels(),
-        f,
-        // new Relocate(),
+        new Relocate(),
         new Resize(),
     ]
     const cli = new Cli(commands)
