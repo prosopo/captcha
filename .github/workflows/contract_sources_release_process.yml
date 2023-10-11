@@ -58,9 +58,9 @@ jobs:
               id: create_release
               uses: actions/create-release@v1
               with:
-                  tag_name: ${{ needs.check_version.next_version }}
-                  release_name: Release ${{ needs.check_version.next_version }}
-                  body: Automated release of contract sources for npm version ${{ needs.check_version.next_version }}
+                  tag_name: ${{ needs.check_version.outputs.next_version }}
+                  release_name: Release ${{ needs.check_version.outputs.next_version }}
+                  body: Automated release of contract sources for npm version ${{ needs.check_version.outputs.next_version }}
                   draft: false
                   prerelease: false
               env:
