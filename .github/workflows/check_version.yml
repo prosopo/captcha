@@ -58,3 +58,5 @@ jobs:
                   fi
                   echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
                   echo "next_version=$NEXT" >> $GITHUB_OUTPUT
+                  # print github output for debugging
+                  echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
