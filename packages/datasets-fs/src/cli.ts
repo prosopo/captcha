@@ -9,7 +9,7 @@ import { Relocate } from './commands/relocate.js'
 import { Resize } from './commands/resize.js'
 import { hideBin } from 'yargs/helpers'
 import esMain from 'es-main'
-import yargs from 'yargs'
+import yargs, { Argv } from 'yargs'
 
 const dirname = process.cwd()
 const logger = getLogger(LogLevel.enum.info, `${dirname}`)
@@ -40,11 +40,12 @@ export class Cli extends Loggable {
                 describe: command.getDescription(),
                 builder: command.getOptions(),
                 handler: async (argv: any) => {
+                    this.logger.debug(`running ${command.getCommandName()}}`)
                     await command.parseThenExec(argv)
                 },
             })
         })
-        y = y.strict().showHelpOnFail(false, 'Specify --help for available options')
+        y = y.demandCommand().strict().showHelpOnFail(false, 'Specify --help for available options')
         return y
     }
 
@@ -56,16 +57,20 @@ export class Cli extends Loggable {
 }
 
 const main = async () => {
+    const f = new Relocate()
+    f.logger.setLogLevel('debug')
     const commands: CliCommandAny[] = [
         new Flatten(),
         new GenerateV1(),
         new GenerateV2(),
         new Get(),
         new Labels(),
-        new Relocate(),
+        f,
+        // new Relocate(),
         new Resize(),
     ]
     const cli = new Cli(commands)
+    cli.logger.setLogLevel('debug')
     await cli.exec()
 }
 
