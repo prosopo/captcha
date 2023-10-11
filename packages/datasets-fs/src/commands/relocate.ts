@@ -51,9 +51,11 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
                 for (const key of Object.keys(obj)) {
                     if (key === 'data') {
                         const value = get(obj, key)
-                        if (value instanceof String) {
+                        if (typeof value === 'string') {
                             if (value.startsWith(from)) {
+                                this.logger.debug('replacing', value)
                                 obj[key] = to + value.slice(from.length)
+                                this.logger.debug('replaced', obj[key])
                             }
                         }
                     } else {
