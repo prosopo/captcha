@@ -1,6 +1,7 @@
-import { DataSchema, CaptchasContainerSchema } from '@prosopo/types'
+import { CaptchasContainerSchema, DataSchema } from '@prosopo/types'
 import { Flatten } from '../commands/flatten.js'
 import { GenerateV1 } from '../commands/generateV1.js'
+import { GenerateV2 } from '../commands/generateV2.js'
 import { Labels } from '../commands/labels.js'
 import { Relocate } from '../commands/relocate.js'
 import { Resize } from '../commands/resize.js'
@@ -10,7 +11,6 @@ import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from '.
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 import sharp from 'sharp'
-import { GenerateV2 } from '../commands/generateV2.js'
 
 describe('dataset commands', () => {
     beforeAll(() => {
@@ -50,6 +50,10 @@ describe('dataset commands', () => {
     test('generate v2', async () => {
         const input = `${__dirname}/data/flat_resized/data.json`
         const output = `${__dirname}/test_results/captchas_v2.json`
+        const minIncorrect = 1
+        const minCorrect = 1
+        const minLabelled = 2
+        const maxLabelled = 7
         const generate = new GenerateV2()
         generate.logger.setLogLevel('error')
         await generate.exec({
@@ -59,15 +63,14 @@ describe('dataset commands', () => {
             output,
             count: 100,
             seed: 0,
-            minCorrect: 1,
-            minIncorrect: 1,
-            minLabelled: 2,
-            maxLabelled: 7,
+            minIncorrect,
+            minCorrect,
+            minLabelled,
+            maxLabelled,
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        if(!
-            captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)) {
+        if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)) {
             throw new Error(`captchas not equal`)
         }
 
@@ -81,13 +84,33 @@ describe('dataset commands', () => {
             // both should not be undefined
             if (solutions === undefined || unlabelled === undefined) {
                 console.log(captcha)
-                throw new Error(`solutions or unlabelled array is undefined`)   
+                throw new Error(`solutions or unlabelled array is undefined`)
             }
             for (const solution of solutions) {
                 // solution should not be in unlabelled
                 if (unlabelled.includes(solution)) {
                     throw new Error(`solution ${solution} is also in unlabelled array`)
                 }
+            }
+            // check the correct, incorrect, labelled and unlabelled distribution
+            const nCorrect = solutions.length
+            const nUnlabelled = unlabelled.length
+            const nIncorrect = 9 - nCorrect - nUnlabelled
+            const nLabelled = nCorrect + nIncorrect
+            if (nCorrect < minCorrect) {
+                throw new Error(`expected at least ${minCorrect} correct but found ${nCorrect}`)
+            }
+            if (nIncorrect < minIncorrect) {
+                throw new Error(`expected at least ${minIncorrect} incorrect but found ${nIncorrect}`)
+            }
+            if (nLabelled < minLabelled) {
+                throw new Error(`expected at least ${minLabelled} labelled but found ${nLabelled}`)
+            }
+            if (nLabelled > maxLabelled) {
+                throw new Error(`expected at most ${maxLabelled} labelled but found ${nLabelled}`)
+            }
+            if (nUnlabelled !== 9 - nLabelled) {
+                throw new Error(`expected ${9 - nLabelled} unlabelled but found ${nUnlabelled}`)
             }
         }
     })
@@ -110,8 +133,7 @@ describe('dataset commands', () => {
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        if(!
-            captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)) {
+        if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)) {
             throw new Error(`captchas not equal`)
         }
     })
