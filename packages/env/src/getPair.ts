@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 import { NetworkConfig } from '@prosopo/types'
@@ -20,21 +19,13 @@ import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
 import { hexToU8a, isHex } from '@polkadot/util'
 
 export async function getPair(
-    account?: string | Uint8Array,
+    networkConfig: NetworkConfig,
     secret?: string,
-    networkConfig?: NetworkConfig,
-    pairType?: KeypairType,
-    ss58Format?: number
+    account?: string | Uint8Array
 ): Promise<KeyringPair> {
     await cryptoWaitReady()
-    if (networkConfig) {
-        if (!pairType) {
-            pairType = networkConfig.pairType
-        }
-        if (!ss58Format) {
-            ss58Format = networkConfig.ss58Format
-        }
-    }
+    const pairType = networkConfig.pairType
+    const ss58Format = networkConfig.ss58Format
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (!secret && account) {
         return keyring.addFromAddress(account)

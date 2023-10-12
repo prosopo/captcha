@@ -26,7 +26,7 @@ async function main() {
 
     const secret = getSecret()
     const config: ProsopoConfigOutput = getConfig()
-    const pair = await getPair(config.account.address, secret, config.networks[config.defaultNetwork])
+    const pair = await getPair(config.networks[config.defaultNetwork], secret, '')
 
     log.info(`Pair address: ${pair.address}`)
 

@@ -19,7 +19,7 @@ import { ContractDeployer } from '@prosopo/contract'
 import { ContractFile } from '@prosopo/captcha-contract'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
+import { defaultConfig, getSecret } from '@prosopo/cli'
 import { getPair } from '@prosopo/env'
 import { hexToU8a } from '@polkadot/util'
 import { loadEnv } from '@prosopo/cli'
@@ -29,10 +29,9 @@ import path from 'path'
 const log = getLogger(LogLevel.enum.info, 'dev.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
-    const pairType = getPairType()
-    const ss58Format = getSs58Format()
+    const network = defaultConfig().networks[defaultConfig().defaultNetwork]
     const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
-    const pair = await getPair(undefined, secret, undefined, pairType, ss58Format)
+    const pair = await getPair(network, secret)
     const config = defaultConfig()
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()

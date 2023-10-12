@@ -13,7 +13,6 @@
 // limitations under the License.
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
@@ -47,14 +46,7 @@ export const DAPP: IDappAccount = {
 }
 
 export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
-    const ss58Format = 42
-    const pair = await getPair(
-        accountAddress(account),
-        accountMnemonic(account),
-        undefined,
-        'sr25519' as KeypairType,
-        ss58Format
-    )
+    const pair = await getPair(env.config.networks[env.config.defaultNetwork], accountMnemonic(account), '')
     await env.changeSigner(pair)
     return new Tasks(env)
 }

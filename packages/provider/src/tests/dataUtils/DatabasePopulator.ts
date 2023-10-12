@@ -195,9 +195,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         if (!this.mockEnv.contractInterface) {
             throw new ProsopoEnvError('DEVELOPER.NO_MOCK_ENV')
         }
-        const ss58Format = 42
-        const pairType = 'sr25519'
-        const pair = await getPair(undefined, mnemonic, undefined, pairType, ss58Format)
+        const network = this.mockEnv.config.networks[this.mockEnv.defaultNetwork]
+        const pair = await getPair(network, mnemonic, '')
 
         return this.mockEnv.changeSigner(pair)
     }

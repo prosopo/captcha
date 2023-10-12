@@ -68,7 +68,7 @@ describe('BATCH TESTS', function () {
     beforeEach(async function (context: ViteTestContext) {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(undefined, '//Alice', undefined, context.pairType, context.ss58Format)
+        const alicePair = await getPair(context.env.config.networks[context.env.config.defaultNetwork], '//Alice', '')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
@@ -93,7 +93,7 @@ describe('BATCH TESTS', function () {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
             await env.changeSigner(
-                await getPair(undefined, accountMnemonic(providerAccount), undefined, pairType, ss58Format)
+                await getPair(env.config.networks[env.config.defaultNetwork], accountMnemonic(providerAccount), '')
             )
             // contract API must be initialized with an account that has funds or the error StorageDepositLimitExhausted
             // will be thrown when trying to batch commitments

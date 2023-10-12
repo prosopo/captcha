@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { defaultConfig } from '@prosopo/cli'
 import { generateMnemonic } from '@prosopo/contract'
 import { getPair } from '@prosopo/env'
 import dotenv from 'dotenv'
@@ -21,7 +21,9 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 async function main() {
-    const pair = await getPair(undefined, '//Alice', undefined, getPairType(), getSs58Format())
+    const config = defaultConfig()
+    const network = config.networks[config.defaultNetwork]
+    const pair = await getPair(network, '//Alice')
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)

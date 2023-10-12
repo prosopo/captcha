@@ -1,4 +1,4 @@
-import { NetworkNamesSchema, NetworkPairTypeSchema } from '../config/config.js'
+import { NetworkNamesSchema, NetworkPairTypeSchema } from '../config/network.js'
 const pairTypeSr25519 = NetworkPairTypeSchema.parse('sr25519')
 export default {
     [NetworkNamesSchema.Values.development]: {

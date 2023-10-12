@@ -48,9 +48,7 @@ describe('UTIL FUNCTIONS', async () => {
         )
     })
     test('correctly determines if a task is still running', async () => {
-        ss58Format = 42
-        pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(undefined, '//Alice', undefined, pairType, ss58Format)
+        const alicePair = await getPair(env.config.networks[env.config.defaultNetwork], '//Alice', '')
         env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await env.isReady()

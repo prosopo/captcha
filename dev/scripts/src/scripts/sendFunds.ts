@@ -15,15 +15,17 @@ import { BN } from '@polkadot/util'
 import { Environment } from '@prosopo/env'
 import { at } from '@prosopo/util'
 import { config } from 'dotenv'
-import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { defaultConfig } from '@prosopo/cli'
 import { getPair } from '@prosopo/env'
 import { sendFunds } from '../setup/index.js'
 
 config()
 
 async function main(account: string) {
-    const pair = await getPair(undefined, '//Alice', undefined, getPairType(), getSs58Format())
-    const env = new Environment(pair, defaultConfig())
+    const config = defaultConfig()
+    const network = config.networks[config.defaultNetwork]
+    const pair = await getPair(network, '//Alice')
+    const env = new Environment(pair, config)
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN('100000000000000000'))
     process.exit()

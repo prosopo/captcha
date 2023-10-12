@@ -123,9 +123,8 @@ export async function setup(force: boolean) {
 
         const secret = '//Alice'
         const config = defaultConfig()
-        const pairType = config.networks[config.defaultNetwork].pairType
-        const ss58Format = config.networks[config.defaultNetwork].ss58Format
-        const pair = await getPair(undefined, secret, undefined, pairType, ss58Format)
+        const network = config.networks[config.defaultNetwork]
+        const pair = await getPair(network, secret)
 
         console.log(config)
 
@@ -150,13 +149,13 @@ export async function setup(force: boolean) {
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
-        defaultProvider.pair = await getPair(undefined, secret, undefined, pairType, ss58Format)
+        defaultProvider.pair = await getPair(network, secret)
 
         await registerProvider(env, defaultProvider, force)
 
         defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
-        defaultDapp.pair = await getPair(undefined, secret, undefined, pairType, ss58Format)
+        defaultDapp.pair = await getPair(network, secret)
 
         env.logger.info('Registering dapp...')
         await registerDapp(env, defaultDapp)
