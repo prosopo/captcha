@@ -58,3 +58,12 @@ jobs:
                   fi
                   echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
                   echo "next_version=$NEXT" >> $GITHUB_OUTPUT
+    print_version:
+        needs: check_version
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print version
+              run: |
+                  echo "bump: ${{ needs.check_version.outputs.bump }}"
+                  echo "current_version: ${{ needs.check_version.outputs.current_version }}"
+                  echo "next_version: ${{ needs.check_version.outputs.next_version }}"

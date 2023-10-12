@@ -1,6 +1,6 @@
 [package]
 name = "proxy"
-version = "0.2.5"
+version = "0.2.7"
 authors = [
   "Chris Taylor <chris@prosopo.io>",
   "George Oastler <george@prosopo.io>"

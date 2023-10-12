@@ -22,7 +22,7 @@ jobs:
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
-            - run: mkdir -p .cache/Cypress
+            - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore cache
               uses: actions/cache/restore@v3
@@ -31,7 +31,7 @@ jobs:
                       protocol/cargo-cache
                       protocol/target
                       node_modules
-                      .cache/Cypress
+                      ~/.cache/Cypress
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
@@ -79,9 +79,9 @@ jobs:
 
                   # Build and push the JS Docker image
                   echo "Building Docker image for JS bundle..."
-                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{needs.check_version.next_version}}
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{needs.check_version.outputs.next_version}}
                   echo "Pushing Docker image for JS bundle..."
-                  docker push prosopo/js_server:${{needs.check_version.next_version}}
+                  docker push prosopo/js_server:${{needs.check_version.outputs.next_version}}
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
@@ -102,6 +102,6 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{needs.check_version.next_version}}
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{needs.check_version.outputs.next_version}}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${{needs.check_version.next_version}}
+                  docker push prosopo/provider:${{needs.check_version.outputs.next_version}}

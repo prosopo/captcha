@@ -15,10 +15,10 @@
     },
     "contract": {
         "name": "common",
-        "version": "0.2.5",
+        "version": "0.2.7",
         "authors": [
-            "Chris Taylor chris@prosopo.io",
-            "George Oastler george@prosopo.io",
+            "Chris Taylor <chris@prosopo.io>",
+            "George Oastler <george@prosopo.io>",
             "Vincenzo Ferrara",
             "Siniša Čanak"
         ]
