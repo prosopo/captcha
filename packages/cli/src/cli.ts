@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput, networks } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment, getPair } from '@prosopo/env'
 import { getConfig, getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
@@ -26,11 +26,11 @@ async function main() {
 
     const secret = getSecret()
     const config: ProsopoConfigOutput = getConfig()
-    console.log(config.networks[config.defaultNetwork].pairType)
+
     const pair = await getPair(
         secret,
-        config.networks[config.defaultNetwork],
-        config.networks[config.defaultNetwork]?.ss58Format
+        config.networks[config.defaultNetwork].pairType,
+        config.networks[config.defaultNetwork].ss58Format
     )
 
     log.info(`Pair address: ${pair.address}`)
@@ -39,7 +39,7 @@ async function main() {
 
     const processedArgs = await processArgs(process.argv, pair, config)
     if (processedArgs.api) {
-        const env = new ProviderEnvironment(pair, networks[config.defaultNetwork])
+        const env = new ProviderEnvironment(pair, config)
         await env.isReady()
         log.info('Starting API')
         await start(env)

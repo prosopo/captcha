@@ -20,6 +20,7 @@ import {
     ProsopoCaptchaCountConfigSchema,
     ProsopoCaptchaSolutionConfigSchema,
     ProsopoConfigInput,
+    ProsopoConfigOutput,
     ProsopoConfigSchema,
     ProsopoNetworksSchema,
     ProsopoNetworksSchemaInput,
@@ -42,7 +43,7 @@ export default (
     captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
     batchCommitConfig?: typeof BatchCommitConfigSchema,
     captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
-): ProsopoConfigInput =>
+): ProsopoConfigOutput =>
     ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
@@ -71,4 +72,4 @@ export default (
         captchaSolutions: ProsopoCaptchaSolutionConfigSchema.parse(captchaSolutionsConfig),
         batchCommit: BatchCommitConfigSchema.parse(batchCommitConfig),
         captchas: ProsopoCaptchaCountConfigSchema.parse(captchaServeConfig),
-    })
+    } as ProsopoConfigInput)

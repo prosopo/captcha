@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { LogLevel } from '@prosopo/common'
+import { enumMap } from './helper.js'
 import { z } from 'zod'
 import networks from '../networks/index.js'
 
@@ -51,8 +52,8 @@ export type DatabaseConfigOutput = z.output<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
     logLevel: LogLevel.optional().default(LogLevel.enum.info),
-    defaultEnvironment: EnvironmentTypesSchema.optional().default(EnvironmentTypesSchema.Values.production),
-    defaultNetwork: NetworkNamesSchema.optional().default(NetworkNamesSchema.Values.rococo),
+    defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.production),
+    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.rococo),
     // The account with which to query the contract.merge sign transactions
     account: z.object({
         address: z.string(),
@@ -60,33 +61,39 @@ export const ProsopoBaseConfigSchema = z.object({
         password: z.string().optional(),
     }),
 })
-
+export const NetworkPairTypeSchema = z.union([
+    z.literal('sr25519'),
+    z.literal('ed25519'),
+    z.literal('ecdsa'),
+    z.literal('ethereum'),
+])
 export const NetworkConfigSchema = z.object({
     endpoint: z.string().url(),
     contract: z.object({
         address: z.string(),
         name: z.string(),
     }),
-    pairType: z.union([z.literal('sr25519'), z.literal('ed25519'), z.literal('ecdsa'), z.literal('ethereum')]),
+    pairType: NetworkPairTypeSchema,
     ss58Format: z.number().positive().default(42),
 })
 
 export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
 
-export const ProsopoNetworksSchema = z
-    .record(
-        NetworkNamesSchema,
-        NetworkConfigSchema.required({
-            endpoint: true,
-            pairType: true,
-            ss58Format: true,
-        })
-    )
-    .refine((data) => Object.keys(data).length > 0, 'Required at least one network config')
+// Force all enum keys to be present in record: https://github.com/colinhacks/zod/issues/1092.
+// Unfortunately there doesn't seem to be a way to force at least one key, but not all keys, to be present. See attempt
+// below using refine / transform and reported issue: https://github.com/colinhacks/zod/issues/2528
+export const ProsopoNetworksSchema = enumMap(
+    NetworkNamesSchema,
+    NetworkConfigSchema.required({
+        endpoint: true,
+        pairType: true,
+        ss58Format: true,
+    })
+)
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     z.object({
-        networks: ProsopoNetworksSchema.optional().default(networks),
+        networks: ProsopoNetworksSchema.default(networks),
         database: DatabaseConfigSchema.optional(),
     })
 )
@@ -184,7 +191,22 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         }),
         server: ProsopoImageServerConfigSchema,
     })
-).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
+)
+    .refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
+    .transform((val, ctx) => {
+        if (!val.networks) {
+            val.networks = networks
+        }
+        if (!(val.defaultNetwork in val.networks)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'defaultNetwork must be in networks',
+                path: ['defaultNetwork'],
+            })
+            return z.NEVER
+        }
+        return val
+    })
 
 export type ProsopoConfigInput = z.input<typeof ProsopoConfigSchema>
 export type ProsopoConfigOutput = z.output<typeof ProsopoConfigSchema>

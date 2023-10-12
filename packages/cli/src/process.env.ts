@@ -18,6 +18,7 @@ import {
     ProsopoConfigOutput,
     ProsopoConfigSchema,
     ProsopoNetworksSchemaInput,
+    networks,
 } from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvError } from '@prosopo/common'
@@ -54,6 +55,9 @@ export function getConfig(
     batchCommitConfig?: typeof BatchCommitConfigSchema,
     captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
 ): ProsopoConfigOutput {
+    if (!networksConfig) {
+        networksConfig = networks
+    }
     return ProsopoConfigSchema.parse(
         prosopoConfig(networksConfig, captchaSolutionsConfig, batchCommitConfig, captchaServeConfig)
     )
