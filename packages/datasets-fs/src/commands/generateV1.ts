@@ -63,7 +63,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         await super._run(args)
 
         const outFile: string = args.output
-        
+
         // get lodash (with seeded rng)
         const _ = lodash()
 
@@ -169,7 +169,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             barUnsolved.update(i + 1)
             if (this.unlabelled.length <= size) {
                 throw new ProsopoEnvError(
-                    new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`),
+                    new Error(`unlabelled map file does not contain enough data`),
                     'DATASET.NOT_ENOUGH_IMAGES'
                 )
             }
