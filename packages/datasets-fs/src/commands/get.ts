@@ -1,8 +1,8 @@
 import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
+import { get } from '@prosopo/util'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
 import fs from 'fs'
-import { get } from '@prosopo/util'
 
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema

@@ -1,20 +1,8 @@
-import {
-    CaptchaTypes,
-    CaptchaWithoutId,
-    Captchas,
-    CaptchasContainerSchema,
-    DataSchema,
-    Item,
-    LabelledDataSchema,
-    LabelledItem,
-    LabelsContainerSchema,
-    RawSolution,
-} from '@prosopo/types'
+import { CaptchaTypes, CaptchaWithoutId, Captchas, CaptchasContainerSchema, Item, RawSolution } from '@prosopo/types'
 import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
+import { at, get, lodash } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
-import { checkDuplicates } from './generate.js'
 import { z } from 'zod'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
@@ -73,7 +61,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         const maxCorrect: number = args.maxCorrect || size - 1
         const solved: number = args.solved || 0
         const unsolved: number = args.unsolved || 0
-        
+
         // generate n solved captchas
         const solvedCaptchas: CaptchaWithoutId[] = []
         // create a new progress bar instance and use shades_classic theme

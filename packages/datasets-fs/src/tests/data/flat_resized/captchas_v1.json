@@ -50,13 +50,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                1,
-                2,
-                4,
-                7
-            ]
+            "solution": [0, 1, 2, 4, 7]
         },
         {
             "salt": "0x299bb9fa1e7a4a2423c5d84b1f78c1843759752bec6fd4802a671ee0dbb33b7e",
@@ -108,9 +102,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                8
-            ]
+            "solution": [8]
         },
         {
             "salt": "0x556438908cce025d251f8c168045e39b6025bce54b6d95cbdfeb3df4940c0897",
@@ -162,11 +154,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                3,
-                4
-            ]
+            "solution": [1, 3, 4]
         },
         {
             "salt": "0xac23fb6ba38d98bf5b7b2e3d2a2d5d3d220a1be37ea2b629c475b937b9c19606",

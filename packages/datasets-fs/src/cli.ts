@@ -1,14 +1,13 @@
-import { logger } from "@polkadot/util"
-import esMain from "es-main"
-import { CliCommandAny } from "./cli/cliCommand.js"
-import { Flatten } from "./commands/flatten.js"
-import { GenerateV1 } from "./commands/generateV1.js"
-import { GenerateV2 } from "./commands/generateV2.js"
-import { Get } from "./commands/get.js"
-import { Labels } from "./commands/labels.js"
-import { Relocate } from "./commands/relocate.js"
-import { Resize } from "./commands/resize.js"
-import { Cli } from "./index.js"
+import { Cli } from './index.js'
+import { CliCommandAny } from './cli/cliCommand.js'
+import { Flatten } from './commands/flatten.js'
+import { GenerateV1 } from './commands/generateV1.js'
+import { GenerateV2 } from './commands/generateV2.js'
+import { Get } from './commands/get.js'
+import { Labels } from './commands/labels.js'
+import { Relocate } from './commands/relocate.js'
+import { Resize } from './commands/resize.js'
+import esMain from 'es-main'
 
 const main = async () => {
     const commands: CliCommandAny[] = [

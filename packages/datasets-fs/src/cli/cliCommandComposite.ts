@@ -1,8 +1,6 @@
-import { Loggable } from '@prosopo/common'
-import { Options } from 'yargs'
-import { kebabCase } from '@prosopo/util'
-import { z } from 'zod'
 import { CliCommand, CliCommandAny } from './cliCommand.js'
+import { Options } from 'yargs'
+import { z } from 'zod'
 
 export abstract class CliCommandComposite<T extends z.ZodTypeAny> extends CliCommand<T> {
     #commands: CliCommandAny[] = []
@@ -37,5 +35,4 @@ export abstract class CliCommandComposite<T extends z.ZodTypeAny> extends CliCom
             await command._check(args)
         }, Promise.resolve())
     }
-
 }

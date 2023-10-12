@@ -1,14 +1,6 @@
 import { CliCommandAny } from './cliCommand.js'
-import { Flatten } from '../commands/flatten.js'
-import { GenerateV1 } from '../commands/generateV1.js'
-import { GenerateV2 } from '../commands/generateV2.js'
-import { Get } from '../commands/get.js'
-import { Labels } from '../commands/labels.js'
 import { LogLevel, Loggable, getLogger } from '@prosopo/common'
-import { Relocate } from '../commands/relocate.js'
-import { Resize } from '../commands/resize.js'
 import { hideBin } from 'yargs/helpers'
-import esMain from 'es-main'
 import yargs, { Argv } from 'yargs'
 
 const dirname = process.cwd()

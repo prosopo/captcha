@@ -1,9 +1,8 @@
 import { DataSchema, Item, LabelledDataSchema, LabelledItem, LabelsContainerSchema } from '@prosopo/types'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { lodash, setSeedGlobal } from '@prosopo/util'
-import { z } from 'zod'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
 import { ProsopoEnvError } from '@prosopo/common'
+import { lodash, setSeedGlobal } from '@prosopo/util'
+import { z } from 'zod'
 import fs from 'fs'
 
 export const ArgsSchema = OutputArgsSchema.extend({
@@ -20,7 +19,7 @@ export const ArgsSchema = OutputArgsSchema.extend({
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export abstract class Generate<T extends ArgsSchemaType> extends OutputCliCommand<T> {    
+export abstract class Generate<T extends ArgsSchemaType> extends OutputCliCommand<T> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             output: {
@@ -117,7 +116,6 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
             allowDuplicatesUnlabelled,
         })
 
-
         // split the labelled data by label
         this.labelToImages = {}
         for (const entry of this.labelled) {
@@ -132,7 +130,9 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
         // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
         this.labels = []
         if (args.labels && fs.existsSync(args.labels)) {
-            this.labels.push(...[...LabelsContainerSchema.parse(JSON.parse(fs.readFileSync(args.labels, 'utf8'))).labels])
+            this.labels.push(
+                ...[...LabelsContainerSchema.parse(JSON.parse(fs.readFileSync(args.labels, 'utf8'))).labels]
+            )
         } else {
             // else default to the labels in the labelled data
             this.labels.push(...[...this.targets])

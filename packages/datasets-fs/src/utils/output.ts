@@ -1,9 +1,8 @@
-import { InputArgsSchema, InputCliCommand } from './input.js'
+import { CliCommand } from '../cli/cliCommand.js'
 import { ProsopoEnvError } from '@prosopo/common'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
 import fs from 'fs'
-import { CliCommand } from '../cli/cliCommand.js'
 
 export const OutputArgsSchema = z.object({
     output: z.string(),
@@ -13,8 +12,7 @@ export const OutputArgsSchema = z.object({
 export type OutputArgs = z.infer<typeof OutputArgsSchema>
 
 export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliCommand<T> {
-
-    #outputExists: boolean = false
+    #outputExists = false
 
     public outputExists() {
         return this.#outputExists

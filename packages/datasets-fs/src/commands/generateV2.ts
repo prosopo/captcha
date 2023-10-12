@@ -1,20 +1,8 @@
-import {
-    CaptchaTypes,
-    CaptchaWithoutId,
-    Captchas,
-    CaptchasContainerSchema,
-    DataSchema,
-    Item,
-    LabelledDataSchema,
-    LabelledItem,
-    LabelsContainerSchema,
-    RawSolution,
-} from '@prosopo/types'
+import { CaptchaTypes, CaptchaWithoutId, Captchas, CaptchasContainerSchema, Item, RawSolution } from '@prosopo/types'
 import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
+import { at, get, lodash } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
-import { checkDuplicates } from './generate.js'
 import { z } from 'zod'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
@@ -70,7 +58,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 
         // get lodash (with seeded rng)
         const _ = lodash()
-        
+
         const labelsFile: string | undefined = args.labels
         const size: number = args.size || 9
         const minCorrect: number = args.minCorrect || 1
@@ -82,12 +70,11 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         const maxLabelled: number = Math.min(args.maxLabelled || size, size) // at least 1 labelled image
         const count: number = args.count || 0
 
-
         // the captcha contains n images. Each of these images are either labelled, being correct or incorrect against the target, or unlabelled. To construct one of these captchas, we need to decide how many of the images should be labelled vs unlabelled, and then how many of the labelled images should be correct vs incorrect
         // in the traditional captcha, two rounds are produced, one with labelled images and the other with unlabelled images. This gives 18 images overall, 9 labels produced.
         // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
         // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
-        
+
         // generate n captchas
         const captchas: CaptchaWithoutId[] = []
         for (let i = 0; i < count; i++) {

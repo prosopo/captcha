@@ -2,7 +2,7 @@ import _lodash from 'lodash'
 import seedrandom from 'seedrandom'
 
 // sleep for some milliseconds
-export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // set the seed for the global rng, i.e. seed `Math.random()`
 export const setSeedGlobal = (seed: number | string) => {

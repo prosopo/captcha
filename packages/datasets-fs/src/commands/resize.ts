@@ -1,12 +1,12 @@
 import { Data, DataSchema, Item } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import fs from 'fs'
 import sharp from 'sharp'
-import { ProsopoEnvError } from '@prosopo/common'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     size: z.number(),

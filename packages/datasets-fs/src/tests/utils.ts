@@ -1,11 +1,14 @@
 import { CaptchasContainer, CaptchasContainerSchema, DataSchema } from '@prosopo/types'
-import { at, sleep } from '@prosopo/util'
+import { at } from '@prosopo/util'
 import fs from 'fs'
 
 // recursively list files in a directory
-export function* fsWalk(pth: string, options?: {
-    filesFirst?: boolean // if true, depth first (i.e. yield files inside a dir before the dir itself, recursively), else yield in encounter order (i.e. dir first, then files inside, recursively)
-}): Generator<string> {
+export function* fsWalk(
+    pth: string,
+    options?: {
+        filesFirst?: boolean // if true, depth first (i.e. yield files inside a dir before the dir itself, recursively), else yield in encounter order (i.e. dir first, then files inside, recursively)
+    }
+): Generator<string> {
     // if path is a directory, recurse
     const isDir = fs.existsSync(pth) && fs.statSync(pth).isDirectory()
     let subpaths = isDir ? fs.readdirSync(pth) : []
@@ -13,10 +16,10 @@ export function* fsWalk(pth: string, options?: {
     if (!options?.filesFirst) {
         yield pth
     }
-    for(const subpath of subpaths) {
+    for (const subpath of subpaths) {
         yield* fsWalk(subpath, options)
     }
-    if(options?.filesFirst) {
+    if (options?.filesFirst) {
         yield pth
     }
 }
@@ -102,8 +105,8 @@ export const captchasEq = (first: CaptchasContainer, second: CaptchasContainer) 
 
 export const substituteRepoDir = () => {
     // read all json files in the test data dir
-    for(const pth of fsWalk(__dirname + '/data')) {
-        if(!pth.endsWith('.json')) {
+    for (const pth of fsWalk(__dirname + '/data')) {
+        if (!pth.endsWith('.json')) {
             continue
         }
         // make a backup of each file
@@ -119,8 +122,8 @@ export const substituteRepoDir = () => {
 
 export const restoreRepoDir = () => {
     // read all json files in the test data dir
-    for(const pth of fsWalk(__dirname + '/data')) {
-        if(!pth.endsWith('.json')) {
+    for (const pth of fsWalk(__dirname + '/data')) {
+        if (!pth.endsWith('.json')) {
             continue
         }
         // restore the backup of each file
