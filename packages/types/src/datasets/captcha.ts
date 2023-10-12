@@ -110,6 +110,18 @@ export const CaptchaSchema = z.object({
     solution: z.number().array().optional(),
     unlabelled: z.number().array().optional(),
     timeLimit: z.number().optional(),
+}).refine(captcha => {
+    if (captcha.unlabelled && captcha.solution) {
+        // the solution array and unlabelled array should be distinct
+        for (const i of captcha.unlabelled) {
+            if (captcha.solution.includes(i)) {
+                return false
+            }
+        }
+    }
+    return true
+}, {
+    message: 'the solution array and unlabelled array should be distinct',
 })
 
 export const CaptchaItemSchema = z.object({
