@@ -50,13 +50,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                1,
-                2,
-                4,
-                7
-            ]
+            "solution": [0, 1, 2, 4, 7]
         },
         {
             "salt": "0x55d26855efc07ec0c774e8dd5ab7380acbb6c61ae13ddf15304ef0105735a568",
@@ -108,9 +102,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                8
-            ]
+            "solution": [8]
         },
         {
             "salt": "0x0f7c811d81a913d14fa4965552eb070e9da8a997757a178b7d6d09672b0ec549",
@@ -162,11 +154,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                3,
-                4
-            ]
+            "solution": [1, 3, 4]
         },
         {
             "salt": "0x160891a39c9eca027f49671a276dee6289e639b9f738dcddd31b22202dd1576b",
@@ -218,12 +206,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                2,
-                4,
-                8
-            ]
+            "solution": [0, 2, 4, 8]
         },
         {
             "salt": "0x564d8e21f55d67dfc9661b9c378b3f859bdf6f432dfe6876045615998b8e4f4c",
@@ -275,10 +258,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                6,
-                7
-            ]
+            "solution": [6, 7]
         },
         {
             "salt": "0xd4e30476e4f64dabfe021aa7b6b0333be045709f3a28fc1c0003826a04e8349a",
@@ -330,10 +310,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                4,
-                8
-            ]
+            "solution": [4, 8]
         },
         {
             "salt": "0x5b97a2c37e98b8792992349c603a921496346acba5441a3c9abeefe5c4ea1792",
@@ -385,11 +362,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                4,
-                7
-            ]
+            "solution": [2, 4, 7]
         },
         {
             "salt": "0x7bd085f947787734ae7905cee05dc4b52f2e83cfd3c10da41a85a86a27d74f59",
@@ -441,14 +414,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                2,
-                3,
-                4,
-                5,
-                8
-            ]
+            "solution": [0, 2, 3, 4, 5, 8]
         },
         {
             "salt": "0xbadacc8057093516cdb2ee4c73a104142a324d7a3846698a9844a3c90431faa2",
@@ -500,14 +466,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                2,
-                3,
-                5,
-                6,
-                8
-            ]
+            "solution": [0, 2, 3, 5, 6, 8]
         },
         {
             "salt": "0x9e9db68764a77b4452d198b9eb4b8133eaa32c57198c718ce15a37c1162faad1",
@@ -559,11 +518,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                2,
-                4
-            ]
+            "solution": [0, 2, 4]
         },
         {
             "salt": "0xcfbf36ae0575af89fa490743aaf3259073626d7018aca503e844c22d5ce40d3b",
@@ -615,12 +570,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                4,
-                6,
-                7,
-                8
-            ]
+            "solution": [4, 6, 7, 8]
         },
         {
             "salt": "0x4b38ce112b28b15cd5903850606d2e46eb436b6e2fb6e1400a74566d60e08de8",
@@ -672,12 +622,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                2,
-                6,
-                7
-            ]
+            "solution": [1, 2, 6, 7]
         },
         {
             "salt": "0x1d1a72fd17cdf4ccc52a4e884f5233c6b464baa0513bc46cdfa7f78e73fa4b58",
@@ -729,10 +674,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                5,
-                8
-            ]
+            "solution": [5, 8]
         },
         {
             "salt": "0x3ad6a448fb8d26ea7fc8f8ea86e7b3b3dda3250631565db67a2c445b65c27d7d",
@@ -784,10 +726,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                4,
-                6
-            ]
+            "solution": [4, 6]
         },
         {
             "salt": "0x2c334650fb6e56d7681fb213f956b7e101e7ed9a83baddc066c02034d20a2b8f",
@@ -839,9 +778,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                7
-            ]
+            "solution": [7]
         },
         {
             "salt": "0x9a7fa1d7743c93d186adbc2805b51f467cf7119362d10e6684c55d979567a8ca",
@@ -893,13 +830,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                3,
-                4,
-                6,
-                7
-            ]
+            "solution": [1, 3, 4, 6, 7]
         },
         {
             "salt": "0x07a1c79a9ff9043f17a269c9ea38f5ddb70ee03af9a014100f510f4c08de253e",
@@ -951,14 +882,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                1,
-                3,
-                5,
-                6,
-                7
-            ]
+            "solution": [0, 1, 3, 5, 6, 7]
         },
         {
             "salt": "0x4ec3b4048d26214d6d45e5732e7707b0eeea525eda7f760ab54247fdfb03f9ae",
@@ -1010,9 +934,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                8
-            ]
+            "solution": [8]
         },
         {
             "salt": "0x1e9b80a2a4210005c8900eb83bbd936ff73390e5131026a7ef041b2645cae0db",
@@ -1064,11 +986,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                4,
-                7
-            ]
+            "solution": [1, 4, 7]
         },
         {
             "salt": "0x30c3ed65d9bbf3b8f98a97c4531be71165bcfd174277cd9c219d6e330eb1b6a1",
@@ -1120,13 +1038,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                1,
-                3,
-                6,
-                8
-            ]
+            "solution": [0, 1, 3, 6, 8]
         },
         {
             "salt": "0xecd8994f73a2994cc2c0aba99f0a2b00d4b0c0fa6d7fdb19e451263ed5a6572d",
@@ -1178,13 +1090,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                3,
-                4,
-                5,
-                8
-            ]
+            "solution": [2, 3, 4, 5, 8]
         },
         {
             "salt": "0xcc3112bff5092040ee94df6e4c317a028f7bf6b7b745e33d844f4e3179ceed3e",
@@ -1236,12 +1142,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                5,
-                6,
-                7
-            ]
+            "solution": [1, 5, 6, 7]
         },
         {
             "salt": "0x9c86d6b19961aac9207393f6eeba2d75afd8b61af91fb8823db1fbd0d8a42043",
@@ -1293,12 +1194,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                2,
-                4,
-                8
-            ]
+            "solution": [1, 2, 4, 8]
         },
         {
             "salt": "0xa311e9fa2604fb7799c8b3fdeaf302f998dde939e81a34d049339ba2e41cd24f",
@@ -1350,11 +1246,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                3,
-                8
-            ]
+            "solution": [0, 3, 8]
         },
         {
             "salt": "0xc42a9a29d8f3e252f7e74e43fcd64bc7e25cf03e284ddce8465001bdee8e4711",
@@ -1406,13 +1298,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                1,
-                4,
-                6,
-                8
-            ]
+            "solution": [0, 1, 4, 6, 8]
         },
         {
             "salt": "0xb2cf2a225723f84893f20a771c73f7111357820a2b813a5ea91f06b65683c3e5",
@@ -1464,11 +1350,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                6,
-                7
-            ]
+            "solution": [1, 6, 7]
         },
         {
             "salt": "0x1d7d04381816e2234363cf063127b04afd61403d4e712a98cf6154eb90bd4087",
@@ -1520,13 +1402,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                3,
-                4,
-                5,
-                8
-            ]
+            "solution": [2, 3, 4, 5, 8]
         },
         {
             "salt": "0x9a1063c5409e0d1302e3ac7918c5aff8bc9b662c9eaa65f2fce3a881beaee27f",
@@ -1578,14 +1454,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                1,
-                2,
-                4,
-                5,
-                6
-            ]
+            "solution": [0, 1, 2, 4, 5, 6]
         },
         {
             "salt": "0x09804ea505ae81c62fb007f79532c70b5b7c976148b32b733feb457e1ea82095",
@@ -1637,11 +1506,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                3,
-                5,
-                6
-            ]
+            "solution": [3, 5, 6]
         },
         {
             "salt": "0x9dfd3ea47ed5b7fb9c3230da0eaba8df5ffdf072ff0c9e3425fd4b07e7b048d6",
@@ -1693,11 +1558,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                5,
-                7,
-                8
-            ]
+            "solution": [5, 7, 8]
         },
         {
             "salt": "0xcbbb84ddaecf7aa89a672e6ef35a6188b9b002c99835b549300d524cd369c334",
@@ -1749,11 +1610,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                5,
-                7
-            ]
+            "solution": [2, 5, 7]
         },
         {
             "salt": "0x4ff31779ccfbeeced0eafcb64ece88d53e174aefa7b0d686e49e40d3eb1fe3b0",
@@ -1805,12 +1662,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                3,
-                4,
-                7
-            ]
+            "solution": [0, 3, 4, 7]
         },
         {
             "salt": "0xddfa5e8689e905518add56202f8113023d1294b1aa5609d03549bda68d507331",
@@ -1862,13 +1714,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                4,
-                5,
-                6,
-                7,
-                8
-            ]
+            "solution": [4, 5, 6, 7, 8]
         },
         {
             "salt": "0x36d1c55622f6002f12df287379713383fbab19352ecfd8fc296ed91e92cf06da",
@@ -1920,11 +1766,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                5,
-                6,
-                8
-            ]
+            "solution": [5, 6, 8]
         },
         {
             "salt": "0xc3224158c4879391e8153633c0255e30bee691de91967b4773505433045ac0f8",
@@ -1976,9 +1818,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                3
-            ]
+            "solution": [3]
         },
         {
             "salt": "0x38c43406c850aedba5334f7ce2bdd9aba1d7411d20f26db64e2a4ffddb6ac823",
@@ -2030,10 +1870,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                7
-            ]
+            "solution": [2, 7]
         },
         {
             "salt": "0xfd40dccfd9e7adde083130ed1ac9dc4193f1c2f6aa1b5b4b8a6b4a7c106e6314",
@@ -2085,12 +1922,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                3,
-                5,
-                7
-            ]
+            "solution": [2, 3, 5, 7]
         },
         {
             "salt": "0x6fb8c140b030fce8e6275d09fb1929023e47834c07dc57c9b6374a1bfeaff797",
@@ -2142,10 +1974,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                7
-            ]
+            "solution": [1, 7]
         },
         {
             "salt": "0xb4900dcae7441f6f21f99e1f095f3730d34fc869c2f747ed4d32910cfe55edf8",
@@ -2197,14 +2026,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                2,
-                4,
-                5,
-                7,
-                8
-            ]
+            "solution": [0, 2, 4, 5, 7, 8]
         },
         {
             "salt": "0xfe9a84b7372418b3489989741fed55c320ead933dbc611d1a69e6623de64c557",
@@ -2256,13 +2078,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                3,
-                4,
-                5,
-                6
-            ]
+            "solution": [2, 3, 4, 5, 6]
         },
         {
             "salt": "0xcd5cc562b769ee03c3249825ba00a0e1a2536438cd7d8fdfb8aa64090cfb32af",
@@ -2314,9 +2130,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                3
-            ]
+            "solution": [3]
         },
         {
             "salt": "0x6f5a0e4db642dcc31e4b4bbc11674fcd7318dcc5ce96a139848ce8187f9f9eac",
@@ -2368,11 +2182,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                2,
-                5
-            ]
+            "solution": [1, 2, 5]
         },
         {
             "salt": "0xcc6a38be27fa09dd33883257431bce29a884031927e1ceaaa0e83b389e45c6dc",
@@ -2424,10 +2234,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                3,
-                7
-            ]
+            "solution": [3, 7]
         },
         {
             "salt": "0x9c28844d97eefb36fd57aeac9963913546a7c7c4f3a3059792e393126301a169",
@@ -2479,14 +2286,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                2,
-                3,
-                6,
-                7,
-                8
-            ]
+            "solution": [1, 2, 3, 6, 7, 8]
         },
         {
             "salt": "0x31c248437d66b72b54893438698e845305fd1d4dee44d0d1380e6730a4cfcc6b",
@@ -2538,13 +2338,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                0,
-                2,
-                4,
-                5,
-                7
-            ]
+            "solution": [0, 2, 4, 5, 7]
         },
         {
             "salt": "0x60f64d9b01f81736b57fb3715c0f42eead25d7f0b6612e61f57ea59246b8cc24",
@@ -2596,11 +2390,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                4,
-                7
-            ]
+            "solution": [2, 4, 7]
         },
         {
             "salt": "0x4fc54aa3e9636331510e024828f37873c6e24e5ae9c177a4387a3b1b2bd19f8a",
@@ -2652,14 +2442,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                3,
-                4,
-                5,
-                6,
-                7
-            ]
+            "solution": [1, 3, 4, 5, 6, 7]
         },
         {
             "salt": "0x39acb14d3c051e2ec84f8b25a6ff871017401d6b0d8105aa09cd54fbb66c65b3",
@@ -2711,10 +2494,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                5,
-                8
-            ]
+            "solution": [5, 8]
         },
         {
             "salt": "0xa26178cccaef3faf7c1d55073d2eb14854799c63c4cb43b0f9fff32d8e61eff8",
@@ -2766,10 +2546,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                1,
-                3
-            ]
+            "solution": [1, 3]
         },
         {
             "salt": "0x8eac2f4271d56b02828f6323c0728c29370caa388d26dc962d2ffafd257e5537",
@@ -2821,13 +2598,7 @@
                     "type": "image"
                 }
             ],
-            "solution": [
-                2,
-                3,
-                5,
-                6,
-                8
-            ]
+            "solution": [2, 3, 5, 6, 8]
         },
         {
             "salt": "0xd3cd900f8e267c5257287dc35aacaa7820dd15e6547dd50d465067143b582637",
