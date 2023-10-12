@@ -1,18 +1,23 @@
 import { DataSchema } from '@prosopo/types'
-import { at } from '@prosopo/util'
+import { at, sleep } from '@prosopo/util'
 import fs from 'fs'
 
 // recursively list files in a directory
-export function* fsWalk(pth: string): Generator<string> {
-    yield pth
-    const stat = fs.statSync(pth)
+export function* fsWalk(pth: string, options?: {
+    filesFirst?: boolean // if true, depth first (i.e. yield files inside a dir before the dir itself, recursively), else yield in encounter order (i.e. dir first, then files inside, recursively)
+}): Generator<string> {
     // if path is a directory, recurse
-    if (stat.isDirectory()) {
-        const files = fs.readdirSync(pth)
-        for (const file of files) {
-            const subpath = `${pth}/${file}`
-            yield* fsWalk(subpath)
-        }
+    const isDir = fs.existsSync(pth) && fs.statSync(pth).isDirectory()
+    let subpaths = isDir ? fs.readdirSync(pth) : []
+    subpaths = subpaths.map((f) => `${pth}/${f}`)
+    if (!options?.filesFirst) {
+        yield pth
+    }
+    for(const subpath of subpaths) {
+        yield* fsWalk(subpath, options)
+    }
+    if(options?.filesFirst) {
+        yield pth
     }
 }
 
@@ -84,8 +89,6 @@ export const restoreRepoDir = () => {
             continue
         }
         // restore the backup of each file
-        fs.copyFileSync(pth + '.bak', pth)
-        // delete the backup
-        fs.unlinkSync(pth + '.bak')
+        fs.renameSync(pth + '.bak', pth)
     }
 }
