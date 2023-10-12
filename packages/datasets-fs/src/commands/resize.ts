@@ -76,7 +76,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
                 .resize({
                     width: size,
                     height: size,
-                    fit: square ? 'fill' : 'inside',
+                    fit: square ? 'cover' : 'inside',
                 })
                 .removeAlpha() // remove the alpha channel
                 .toColorspace('srgb') // 8-bits per channel
