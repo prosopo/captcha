@@ -109,10 +109,11 @@ export const substituteRepoDir = () => {
         // make a backup of each file
         fs.copyFileSync(pth, pth + '.bak')
         // replace ${repo} with the path to the repo
-        const data = readDataJson(pth)
-        const json = JSON.stringify(data, null, 4)
+        let content = fs.readFileSync(pth).toString()
+        // TODO use getPaths() here to find the repo dir
+        content = content.replaceAll('${repo}', __dirname + '/../../../..')
         // rewrite the file
-        fs.writeFileSync(pth, json)
+        fs.writeFileSync(pth, content)
     }
 }
 
