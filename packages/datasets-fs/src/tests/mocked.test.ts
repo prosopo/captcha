@@ -5,16 +5,68 @@ import { fsEq, fsWalk, readDataJson, restoreRepoDir, substituteRepoDir } from '.
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 import { DataSchema } from '@prosopo/types'
+import { Relocate } from '../commands/relocate.js'
+import { Resize } from '../commands/resize.js'
+import sharp from 'sharp'
 
-describe('flatten', () => {
+describe('dataset commands', () => {
     beforeAll(() => {
-        // substitute the repo path
+        // substitute the repo path in the data for tests
         substituteRepoDir()
     })
 
     afterAll(() => {
-        // restore repo path
+        // restore repo path back to placeholder
         restoreRepoDir()
+    })
+
+    test('resizes data', async () => {
+        const input = `${__dirname}/data/flat/data.json`
+        const output = `${__dirname}/test_results/flat_resized`
+        const resize = new Resize()
+        resize.logger.setLogLevel('error')
+        await resize.exec({
+            input,
+            output,
+            overwrite: true,
+            square: true,
+            size: 128,
+        })
+
+        // make sure the results are the same as the expected results
+        const expected = `${__dirname}/data/flat_resized`
+        fsEq(output, expected)
+
+        // check data in resized dir is all 128x128
+        for (const pth of fsWalk(output)) {
+            // if pth is not img, ignore
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.png')) {
+                continue
+            }
+            const image = sharp(pth)
+            const metadata = await image.metadata()
+            if (metadata.width !== 128 || metadata.height !== 128) {
+                throw new Error(`image ${pth} is not 128x128`)
+            }
+        }
+    })
+
+    test('relocates data', async () => {
+        const input = `${__dirname}/data/flat_resized/data.json`
+        const output = `${__dirname}/test_results/relocated_data.json`
+        const relocate = new Relocate()
+        relocate.logger.setLogLevel('error')
+        await relocate.exec({
+            input,
+            output,
+            overwrite: true,
+            to: 'newwebsite.com',
+            from: '${repo}',
+        })
+
+        // make sure the results are the same as the expected results
+        const expected = `${__dirname}/data/relocated_data.json`
+        fsEq(output, expected)
     })
 
     test('flattens hierarchical data', async () => {
