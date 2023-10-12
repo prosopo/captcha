@@ -52,7 +52,7 @@ declare module 'vitest' {
 describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     beforeEach(async function (context) {
         const network = context.env.config.networks[context.env.config.defaultNetwork]
-        const alicePair = await getPair(network, '//Alice', '')
+        const alicePair = await getPair(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()

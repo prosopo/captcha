@@ -37,7 +37,7 @@ describe('CONTRACT HELPERS', function () {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType
         const network = context.env.config.networks[context.env.config.defaultNetwork]
-        const alicePair = await getPair(network, '//Alice', '')
+        const alicePair = await getPair(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
