@@ -71,7 +71,7 @@ export const substituteRepoDir = () => {
         fs.copyFileSync(pth, pth + '.bak')
         // replace ${repo} with the path to the repo
         const data = readDataJson(pth)
-        const json = JSON.stringify(data)
+        const json = JSON.stringify(data, null, 4)
         // rewrite the file
         fs.writeFileSync(pth, json)
     }
