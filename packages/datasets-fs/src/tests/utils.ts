@@ -1,4 +1,4 @@
-import { DataSchema } from '@prosopo/types'
+import { CaptchasContainer, CaptchasContainerSchema, DataSchema } from '@prosopo/types'
 import { at, sleep } from '@prosopo/util'
 import fs from 'fs'
 
@@ -64,6 +64,40 @@ export const readDataJson = (pth: string) => {
     const dataJson = JSON.parse(content.toString())
     const data = DataSchema.parse(dataJson)
     return data
+}
+
+export const readCaptchasJson = (pth: string) => {
+    const content = fs.readFileSync(pth).toString()
+    const dataJson = JSON.parse(content.toString())
+    const captchas = CaptchasContainerSchema.parse(dataJson)
+    return captchas
+}
+
+export const captchasEqFs = (pth1: string, pth2: string) => {
+    const data1 = readCaptchasJson(pth1)
+    const data2 = readCaptchasJson(pth2)
+    return captchasEq(data1, data2)
+}
+
+export const captchasEq = (first: CaptchasContainer, second: CaptchasContainer) => {
+    if (first.captchas.length !== second.captchas.length) {
+        return false
+    }
+    for (let i = 0; i < first.captchas.length; i++) {
+        const captcha1 = at(first.captchas, i)
+        const captcha2 = at(second.captchas, i)
+        // salts should not be the same as generated on the fly and not stored!
+        if (captcha1.salt === captcha2.salt) {
+            return false
+        }
+        // everything else should be the same
+        const { salt: salt1, ...rest1 } = captcha1
+        const { salt: salt2, ...rest2 } = captcha2
+        if (JSON.stringify(rest1) !== JSON.stringify(rest2)) {
+            return false
+        }
+    }
+    return true
 }
 
 export const substituteRepoDir = () => {

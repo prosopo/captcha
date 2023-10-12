@@ -1,7 +1,7 @@
 import { Flatten } from '../commands/flatten.js'
 import { blake2b } from '@noble/hashes/blake2b'
 import { describe, test, beforeAll, afterAll } from 'vitest'
-import { fsEq, fsWalk, readDataJson, restoreRepoDir, substituteRepoDir } from './utils.js'
+import { captchasEqFs, fsEq, fsWalk, readDataJson, restoreRepoDir, substituteRepoDir } from './utils.js'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 import { DataSchema } from '@prosopo/types'
@@ -54,7 +54,7 @@ describe('dataset commands', () => {
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        fsEq(output, `${__dirname}/data/flat_resized/captchas_v2.json`)
+        captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)
     })
 
     test('generate v1', async () => {
@@ -75,7 +75,7 @@ describe('dataset commands', () => {
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        fsEq(output, `${__dirname}/data/flat_resized/captchas_v1.json`)
+        captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)
     })
 
     test('resizes data', async () => {
