@@ -21,7 +21,12 @@ import {
 } from '../types/manager.js'
 import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import { CaptchaSolution, ProcaptchaClientConfigOutput } from '@prosopo/types'
+import {
+    CaptchaSolution,
+    ProcaptchaClientConfigInput,
+    ProcaptchaClientConfigOutput,
+    ProcaptchaConfigSchema,
+} from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
@@ -131,7 +136,7 @@ export function Manager(
      * @returns the config for procaptcha
      */
     const getConfig = () => {
-        const config: ProcaptchaClientConfigOutput = {
+        const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
             ...configOptional,
         }
@@ -140,7 +145,7 @@ export function Manager(
         if (state.account) {
             config.userAccountAddress = state.account.account.address
         }
-        return config
+        return ProcaptchaConfigSchema.parse(config)
     }
 
     const fallable = async (fn: () => Promise<void>) => {
