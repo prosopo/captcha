@@ -60,7 +60,7 @@ export const fsEq = (pth1: string, pth2: string) => {
 export const readDataJson = (pth: string) => {
     let content = fs.readFileSync(pth).toString()
     // TODO use getPaths() here to find the repo dir
-    content = content.replace('${repo}', __dirname + '/../../../..')
+    content = content.replaceAll('${repo}', __dirname + '/../../../..')
     const dataJson = JSON.parse(content.toString())
     const data = DataSchema.parse(dataJson)
     return data

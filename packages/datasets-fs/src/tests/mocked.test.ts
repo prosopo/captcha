@@ -8,6 +8,7 @@ import { DataSchema } from '@prosopo/types'
 import { Relocate } from '../commands/relocate.js'
 import { Resize } from '../commands/resize.js'
 import sharp from 'sharp'
+import { sleep } from '@prosopo/util'
 
 describe('dataset commands', () => {
     beforeAll(() => {
