@@ -60,3 +60,32 @@ export const readDataJson = (pth: string) => {
     const data = DataSchema.parse(dataJson)
     return data
 }
+
+export const substituteRepoDir = () => {
+    // read all json files in the test data dir
+    for(const pth of fsWalk(__dirname + '/data')) {
+        if(!pth.endsWith('.json')) {
+            continue
+        }
+        // make a backup of each file
+        fs.copyFileSync(pth, pth + '.bak')
+        // replace ${repo} with the path to the repo
+        const data = readDataJson(pth)
+        const json = JSON.stringify(data)
+        // rewrite the file
+        fs.writeFileSync(pth, json)
+    }
+}
+
+export const restoreRepoDir = () => {
+    // read all json files in the test data dir
+    for(const pth of fsWalk(__dirname + '/data')) {
+        if(!pth.endsWith('.json')) {
+            continue
+        }
+        // restore the backup of each file
+        fs.copyFileSync(pth + '.bak', pth)
+        // delete the backup
+        fs.unlinkSync(pth + '.bak')
+    }
+}

@@ -1,11 +1,22 @@
 import { Flatten } from '../commands/flatten.js'
 import { blake2b } from '@noble/hashes/blake2b'
-import { describe, test } from 'vitest'
-import { fsEq, fsWalk, readDataJson } from './utils.js'
+import { describe, test, beforeAll, afterAll } from 'vitest'
+import { fsEq, fsWalk, readDataJson, restoreRepoDir, substituteRepoDir } from './utils.js'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
+import { DataSchema } from '@prosopo/types'
 
 describe('flatten', () => {
+    beforeAll(() => {
+        // substitute the repo path
+        substituteRepoDir()
+    })
+
+    afterAll(() => {
+        // restore repo path
+        restoreRepoDir()
+    })
+
     test('flattens hierarchical data', async () => {
         const input = `${__dirname}/data/hierarchical`
         const output = `${__dirname}/test_results/flat`
@@ -21,7 +32,11 @@ describe('flatten', () => {
         const expected = `${__dirname}/data/flat`
         fsEq(output, expected)
 
-        const data = readDataJson(`${output}/data.json`)
+        // read data json
+        const content = fs.readFileSync(`${output}/data.json`).toString()
+        const dataJson = JSON.parse(content.toString())
+        const data = DataSchema.parse(dataJson)
+
         // check each image from the hierarchical data is in the flat data
         let hierCount = 0
         for (const pth of fsWalk(input)) {

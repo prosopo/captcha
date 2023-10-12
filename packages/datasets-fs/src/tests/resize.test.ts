@@ -1,13 +1,24 @@
 import { Flatten } from '../commands/flatten.js'
 import { blake2b } from '@noble/hashes/blake2b'
-import { describe, test } from 'vitest'
-import { fsEq, fsWalk, readDataJson } from './utils.js'
+import { describe, test, beforeAll, afterAll } from 'vitest'
+import { fsEq, fsWalk, readDataJson, restoreRepoDir, substituteRepoDir } from './utils.js'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 import { Resize } from '../commands/resize.js'
 import sharp from 'sharp'
 
 describe('resize', () => {
+
+    beforeAll(() => {
+        // substitute the repo path
+        substituteRepoDir()
+    })
+
+    afterAll(() => {
+        // restore repo path
+        restoreRepoDir()
+    })
+    
     test('resizes data', async () => {
         const input = `${__dirname}/data/flat/data.json`
         const output = `${__dirname}/test_results/flat_resized`
