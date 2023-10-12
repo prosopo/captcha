@@ -1,4 +1,4 @@
-import { DataSchema } from '@prosopo/types'
+import { DataSchema, CaptchasContainerSchema } from '@prosopo/types'
 import { Flatten } from '../commands/flatten.js'
 import { GenerateV1 } from '../commands/generateV1.js'
 import { Labels } from '../commands/labels.js'
@@ -10,6 +10,7 @@ import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from '.
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 import sharp from 'sharp'
+import { GenerateV2 } from '../commands/generateV2.js'
 
 describe('dataset commands', () => {
     beforeAll(() => {
@@ -49,22 +50,46 @@ describe('dataset commands', () => {
     test('generate v2', async () => {
         const input = `${__dirname}/data/flat_resized/data.json`
         const output = `${__dirname}/test_results/captchas_v2.json`
-        const generate = new GenerateV1()
+        const generate = new GenerateV2()
         generate.logger.setLogLevel('error')
         await generate.exec({
             labelled: input,
             unlabelled: input,
             overwrite: true,
             output,
-            solved: 3,
-            unsolved: 3,
+            count: 100,
             seed: 0,
             minCorrect: 1,
-            maxCorrect: 6,
+            minIncorrect: 1,
+            minLabelled: 2,
+            maxLabelled: 7,
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)
+        if(!
+            captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)) {
+            throw new Error(`captchas not equal`)
+        }
+
+        // test that the solutions array and unlabelled array per captcha never conflict
+        const content = fs.readFileSync(output).toString()
+        const captchasJson = JSON.parse(content.toString())
+        const captchas = CaptchasContainerSchema.parse(captchasJson)
+        for (const captcha of captchas.captchas) {
+            const solutions = captcha.solution
+            const unlabelled = captcha.unlabelled
+            // both should not be undefined
+            if (solutions === undefined || unlabelled === undefined) {
+                console.log(captcha)
+                throw new Error(`solutions or unlabelled array is undefined`)   
+            }
+            for (const solution of solutions) {
+                // solution should not be in unlabelled
+                if (unlabelled.includes(solution)) {
+                    throw new Error(`solution ${solution} is also in unlabelled array`)
+                }
+            }
+        }
     })
 
     test('generate v1', async () => {
@@ -77,15 +102,18 @@ describe('dataset commands', () => {
             unlabelled: input,
             overwrite: true,
             output,
-            solved: 3,
-            unsolved: 3,
+            solved: 50,
+            unsolved: 50,
             seed: 0,
             minCorrect: 1,
             maxCorrect: 6,
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)
+        if(!
+            captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)) {
+            throw new Error(`captchas not equal`)
+        }
     })
 
     test('resizes data', async () => {
