@@ -59,8 +59,8 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         })
     }
 
-    public override async run(args: Args) {
-        await super.run(args)
+    public override async _run(args: Args) {
+        await super._run(args)
 
         const outFile: string = args.out
         const overwrite = args.overwrite || false

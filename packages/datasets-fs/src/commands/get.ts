@@ -20,8 +20,8 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
         })
     }
 
-    public override async run(args: Args) {
-        await super.run(args)
+    public override async _run(args: Args) {
+        await super._run(args)
 
         const traverse = async (data: any) => {
             if (data instanceof Array) {

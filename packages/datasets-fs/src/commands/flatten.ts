@@ -30,9 +30,9 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
         })
     }
 
-    public override async run(args: Args) {
+    public override async _run(args: Args) {
         this.logger.debug('flatten run')
-        await super.run(args)
+        await super._run(args)
 
         const dataDir = args.input
         const outDir = args.output

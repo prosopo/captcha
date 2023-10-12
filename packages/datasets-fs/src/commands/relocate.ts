@@ -36,8 +36,8 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
         })
     }
 
-    public override async run(args: Args) {
-        await super.run(args)
+    public override async _run(args: Args) {
+        await super._run(args)
 
         const replace = (data: unknown, from: string, to: string) => {
             if (Array.isArray(data)) {

@@ -25,8 +25,8 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
         })
     }
 
-    public override async run(args: Args) {
-        await super.run(args)
+    public override async _run(args: Args) {
+        await super._run(args)
 
         const file = args.input
         if (!fs.existsSync(file)) {

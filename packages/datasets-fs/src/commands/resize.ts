@@ -42,8 +42,8 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         })
     }
 
-    public override async run(args: Args) {
-        await super.run(args)
+    public override async _run(args: Args) {
+        await super._run(args)
 
         const size = args.size
         const square = args.square ?? false
