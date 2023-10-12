@@ -123,7 +123,7 @@ describe('dataset commands', () => {
         })
 
         // make sure the results are the same as the expected results
-        const expected = `${__dirname}/data/relocated_data.json`
+        const expected = `${__dirname}/data/flat_resized/relocated_data.json`
         fsEq(output, expected)
     })
 
