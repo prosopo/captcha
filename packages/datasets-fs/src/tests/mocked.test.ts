@@ -40,7 +40,7 @@ describe('dataset commands', () => {
         // check data in resized dir is all 128x128
         for (const pth of fsWalk(output)) {
             // if pth is not img, ignore
-            if (!pth.endsWith('.jpg') && !pth.endsWith('.png')) {
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.jpeg') && !pth.endsWith('.png')) {
                 continue
             }
             const image = sharp(pth)
@@ -93,7 +93,7 @@ describe('dataset commands', () => {
         let hierCount = 0
         for (const pth of fsWalk(input)) {
             // if pth is not img, ignore
-            if (!pth.endsWith('.jpg') && !pth.endsWith('.png')) {
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.jpeg') && !pth.endsWith('.png')) {
                 continue
             }
             hierCount++
@@ -154,7 +154,7 @@ describe('dataset commands', () => {
         // count the number of images in the flat data
         let flatCount = 0
         for (const pth of fsWalk(output)) {
-            if (!pth.endsWith('.jpg') && !pth.endsWith('.png')) {
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.jpeg') && !pth.endsWith('.png')) {
                 continue
             }
             flatCount++
