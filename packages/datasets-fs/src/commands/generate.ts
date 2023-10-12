@@ -2,10 +2,10 @@ import { Item, LabelledItem } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
+import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
 
-export const ArgsSchema = InputOutputArgsSchema.extend({
+export const ArgsSchema = OutputArgsSchema.extend({
     labels: z.string().optional(),
-    out: z.string(),
     labelled: z.string().optional(),
     unlabelled: z.string().optional(),
     seed: z.number().optional(),
@@ -18,12 +18,9 @@ export const ArgsSchema = InputOutputArgsSchema.extend({
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export abstract class Generate<T extends ArgsSchemaType> extends InputOutputCliCommand<T> {
+export abstract class Generate<T extends ArgsSchemaType> extends OutputCliCommand<T> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
-            input: {
-                description: 'JSON file containing a list of objects with (at least) a url',
-            },
             output: {
                 description: 'Where to write the captchas JSON file',
             },

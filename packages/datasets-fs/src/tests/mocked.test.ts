@@ -9,6 +9,8 @@ import { Relocate } from '../commands/relocate.js'
 import { Resize } from '../commands/resize.js'
 import sharp from 'sharp'
 import { sleep } from '@prosopo/util'
+import { GenerateV1 } from '../commands/generateV1.js'
+import { Labels } from '../commands/labels.js'
 
 describe('dataset commands', () => {
     beforeAll(() => {
@@ -19,6 +21,61 @@ describe('dataset commands', () => {
     afterAll(() => {
         // restore repo path back to placeholder
         restoreRepoDir()
+    })
+
+    test('labels', async () => {
+        const input = `${__dirname}/data/flat_resized/data.json`
+        const output = `${__dirname}/test_results/labels.json`
+        const labels = new Labels()
+        labels.logger.setLogLevel('error')
+        await labels.exec({
+            input,
+            output,
+        })
+        // make sure the results are the same as the expected results
+        fsEq(output, `${__dirname}/data/flat_resized/labels.json`)
+    })
+
+    test('generate v2', async () => {
+        const input = `${__dirname}/data/flat_resized/data.json`
+        const output = `${__dirname}/test_results/captchas_v2.json`
+        const generate = new GenerateV1()
+        generate.logger.setLogLevel('error')
+        await generate.exec({
+            labelled: input,
+            unlabelled: input,
+            overwrite: true,
+            output,
+            solved: 3,
+            unsolved: 3,
+            seed: 0,
+            minCorrect: 1,
+            maxCorrect: 6,
+            allowDuplicates: true,
+        })
+        // make sure the results are the same as the expected results
+        fsEq(output, `${__dirname}/data/flat_resized/captchas_v2.json`)
+    })
+
+    test('generate v1', async () => {
+        const input = `${__dirname}/data/flat_resized/data.json`
+        const output = `${__dirname}/test_results/captchas_v1.json`
+        const generate = new GenerateV1()
+        generate.logger.setLogLevel('error')
+        await generate.exec({
+            labelled: input,
+            unlabelled: input,
+            overwrite: true,
+            output,
+            solved: 3,
+            unsolved: 3,
+            seed: 0,
+            minCorrect: 1,
+            maxCorrect: 6,
+            allowDuplicates: true,
+        })
+        // make sure the results are the same as the expected results
+        fsEq(output, `${__dirname}/data/flat_resized/captchas_v1.json`)
     })
 
     test('resizes data', async () => {

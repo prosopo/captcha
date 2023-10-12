@@ -66,11 +66,8 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
     public override async _run(args: Args) {
         await super._run(args)
 
-        const outFile: string = args.out
-        const overwrite = args.overwrite || false
-        if (!overwrite && fs.existsSync(outFile)) {
-            throw new ProsopoEnvError(new Error(`Output file already exists: ${outFile}`), 'FS.FILE_ALREADY_EXISTS')
-        }
+        const outFile: string = args.output
+        
         const labelledMapFile: string | undefined = args.labelled
         if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
             throw new ProsopoEnvError(
