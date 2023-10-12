@@ -9,7 +9,7 @@ export const ArgsSchema = OutputArgsSchema.extend({
     labels: z.string().optional(),
     labelled: z.string().optional(),
     unlabelled: z.string().optional(),
-    seed: z.number().optional(),
+    seed: z.number(),
     size: z.number().optional(),
     overwrite: z.boolean().optional(),
     allowDuplicates: z.boolean().optional(),
@@ -37,6 +37,7 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
             },
             seed: {
                 number: true,
+                demand: true,
                 description: 'Seed for random number generator',
             },
             size: {
