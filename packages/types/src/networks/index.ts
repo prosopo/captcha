@@ -2,7 +2,7 @@ import { NetworkNamesSchema, NetworkPairTypeSchema } from '../config/network.js'
 const pairTypeSr25519 = NetworkPairTypeSchema.parse('sr25519')
 export default {
     [NetworkNamesSchema.Values.development]: {
-        endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
+        endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
         contract: {
             name: 'captcha',
             address: process.env.PROSOPO_CONTRACT_ADDRESS || process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
@@ -11,7 +11,10 @@ export default {
         ss58Format: 42,
     },
     [NetworkNamesSchema.Values.rococo]: {
-        endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
+        endpoint:
+            process.env.REACT_APP_SUBSTRATE_ENDPOINT ||
+            process.env.SUBSTRATE_NODE_URL ||
+            'wss://rococo-contracts-rpc.polkadot.io:443',
         contract: {
             name: 'captcha',
             address:
@@ -23,7 +26,10 @@ export default {
         ss58Format: 42,
     },
     [NetworkNamesSchema.Values.shiden]: {
-        endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://shiden.public.blastapi.io',
+        endpoint:
+            process.env.REACT_APP_SUBSTRATE_ENDPOINT ||
+            process.env.SUBSTRATE_NODE_URL ||
+            'wss://shiden.public.blastapi.io',
         contract: {
             address:
                 process.env.PROSOPO_CONTRACT_ADDRESS ||
