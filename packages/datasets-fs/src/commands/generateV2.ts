@@ -202,6 +202,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         // verify the output
         CaptchasContainerSchema.parse(output)
 
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
     }
 }

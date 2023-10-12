@@ -44,6 +44,7 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
         const labelArray = Array.from(labels)
         labelArray.sort()
 
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(args.output, JSON.stringify({ labels: labelArray }, null, 4))
     }
 

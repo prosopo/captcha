@@ -8,7 +8,7 @@ import { DataSchema } from '@prosopo/types'
 import { Relocate } from '../commands/relocate.js'
 import { Resize } from '../commands/resize.js'
 import sharp from 'sharp'
-import { sleep } from '@prosopo/util'
+import { lodash, sleep } from '@prosopo/util'
 import { GenerateV1 } from '../commands/generateV1.js'
 import { Labels } from '../commands/labels.js'
 
@@ -16,6 +16,8 @@ describe('dataset commands', () => {
     beforeAll(() => {
         // substitute the repo path in the data for tests
         substituteRepoDir()
+        // remove previous test results
+        fs.rmdirSync(`${__dirname}/test_results`, { recursive: true })
     })
 
     afterAll(() => {
@@ -34,6 +36,15 @@ describe('dataset commands', () => {
         })
         // make sure the results are the same as the expected results
         fsEq(output, `${__dirname}/data/flat_resized/labels.json`)
+
+        // make sure there's one class per hierarchical directory
+        const content = fs.readFileSync(output).toString()
+        const labelsJson = JSON.parse(content.toString())
+        const foundLabels = labelsJson.labels as string[]
+        const categories = fs.readdirSync(`${__dirname}/data/hierarchical`)
+        if (JSON.stringify(foundLabels) !== JSON.stringify(categories)) {
+            throw new Error(`expected ${categories} but found ${foundLabels}`)
+        }
     })
 
     test('generate v2', async () => {

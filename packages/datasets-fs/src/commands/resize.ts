@@ -111,6 +111,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         // verify the output
         DataSchema.parse(data)
 
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outputMapFile, JSON.stringify(data, null, 4))
     }
 

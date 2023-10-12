@@ -73,6 +73,7 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
         // replace the urls by recursively traversing the data
         data = replace(data, args.from, args.to)
         // write the file
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(args.output, JSON.stringify(data, null, 4))
     }
 
