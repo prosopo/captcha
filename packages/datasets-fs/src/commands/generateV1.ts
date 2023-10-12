@@ -64,70 +64,16 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
 
         const outFile: string = args.output
         
-        const labelledMapFile: string | undefined = args.labelled
-        if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-            throw new ProsopoEnvError(
-                new Error(`labelled map file does not exist: ${labelledMapFile}`),
-                'FS.FILE_NOT_FOUND'
-            )
-        }
-        const unlabelledMapFile: string | undefined = args.unlabelled
-        if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-            throw new ProsopoEnvError(
-                new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`),
-                'FS.FILE_NOT_FOUND'
-            )
-        }
+        // get lodash (with seeded rng)
+        const _ = lodash()
+
         const labelsFile: string | undefined = args.labels
-        const seed: number = args.seed || 0
         const size: number = args.size || 9
         const minCorrect: number = args.minCorrect || 1
         const maxCorrect: number = args.maxCorrect || size - 1
         const solved: number = args.solved || 0
         const unsolved: number = args.unsolved || 0
-        const saltRounds = 10
-        const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
-        const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
-
-        // set the seed
-        setSeedGlobal(seed)
-        // get lodash (with seeded rng)
-        const _ = lodash()
-
-        // load the map to get the labelled and unlabelled data
-        const labelled: LabelledItem[] = labelledMapFile
-            ? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8'))).items
-            : []
-        const unlabelled: Item[] = unlabelledMapFile
-            ? DataSchema.parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8'))).items
-            : []
-
-        // check for duplicates
-        checkDuplicates(labelled, unlabelled, {
-            allowDuplicatesLabelled,
-            allowDuplicatesUnlabelled,
-        })
-
-        // split the labelled data by label
-        const labelToImages: { [label: string]: Item[] } = {}
-        for (const entry of labelled) {
-            const arr = labelToImages[entry.label] || []
-            arr.push(entry)
-            labelToImages[entry.label] = arr
-        }
-        const targets = Object.keys(labelToImages)
-
-        // load the labels from file
-        // these are the labels that unlabelled data will be assigned to
-        // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
-        const labels: string[] = []
-        if (labelsFile && fs.existsSync(labelsFile)) {
-            labels.push(...[...LabelsContainerSchema.parse(JSON.parse(fs.readFileSync(labelsFile, 'utf8'))).labels])
-        } else {
-            // else default to the labels in the labelled data
-            labels.push(...[...targets])
-        }
-
+        
         // generate n solved captchas
         const solvedCaptchas: CaptchaWithoutId[] = []
         // create a new progress bar instance and use shades_classic theme
@@ -139,24 +85,24 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             // update the current value in your application..
             barSolved.update(i + 1)
 
-            if (targets.length <= 1) {
+            if (this.targets.length <= 1) {
                 throw new ProsopoEnvError(
-                    new Error(`not enough different labels in labelled data: ${labelledMapFile}`),
+                    new Error(`not enough different labels in labelled data`),
                     'DATASET.NOT_ENOUGH_LABELS'
                 )
             }
 
             // uniformly sample targets
-            const target = at(targets, i % targets.length)
-            const notTargets = targets.filter((t) => t !== target)
+            const target = at(this.targets, i % this.targets.length)
+            const notTargets = this.targets.filter((t) => t !== target)
 
             // how many correct items should be in the captcha?
             const nCorrect = _.random(minCorrect, maxCorrect)
             // how many incorrect items should be in the captcha?
             const nIncorrect = size - nCorrect
 
-            const targetItems: Item[] = get(labelToImages, target)
-            const notTargetItems: Item[] = notTargets.map((notTarget) => get(labelToImages, notTarget)).flat()
+            const targetItems: Item[] = get(this.labelToImages, target)
+            const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
 
             if (targetItems.length < nCorrect) {
                 throw new ProsopoEnvError(
@@ -202,7 +148,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
                     return item.post // return the index in the shuffled array
                 })
 
-            const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
+            const salt = blake2AsHex(bcrypt.genSaltSync(this.saltRounds))
             // create the captcha
             const captcha: CaptchaWithoutId = {
                 salt,
@@ -221,7 +167,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         const unsolvedCaptchas: CaptchaWithoutId[] = []
         for (let i = 0; i < unsolved; i++) {
             barUnsolved.update(i + 1)
-            if (unlabelled.length <= size) {
+            if (this.unlabelled.length <= size) {
                 throw new ProsopoEnvError(
                     new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`),
                     'DATASET.NOT_ENOUGH_IMAGES'
@@ -229,16 +175,16 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             }
             // pick a random label to be the target
             // note that these are potentially different to the labelled data labels
-            if (labels.length <= 0) {
+            if (this.labels.length <= 0) {
                 throw new ProsopoEnvError(
                     new Error(`no labels found for unlabelled data: ${labelsFile}`),
                     'DATASET.NOT_ENOUGH_LABELS'
                 )
             }
-            const index = _.random(0, labels.length - 1)
-            const target = at(labels, index)
+            const index = _.random(0, this.labels.length - 1)
+            const target = at(this.labels, index)
             // randomly pick images from the unlabelled data
-            const itemSet: Item[] = _.sampleSize(unlabelled, size)
+            const itemSet: Item[] = _.sampleSize(this.unlabelled, size)
             // shuffle the items
             let items: Item[] = [...itemSet]
             let indices: number[] = [...Array(items.length).keys()]
@@ -251,7 +197,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
                     type: item.type,
                 }
             })
-            const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
+            const salt = blake2AsHex(bcrypt.genSaltSync(this.saltRounds))
             // create the captcha
             const captcha: CaptchaWithoutId = {
                 salt,

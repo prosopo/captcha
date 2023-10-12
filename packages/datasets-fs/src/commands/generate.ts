@@ -1,8 +1,10 @@
-import { Item, LabelledItem } from '@prosopo/types'
+import { DataSchema, Item, LabelledDataSchema, LabelledItem, LabelsContainerSchema } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { lodash } from '@prosopo/util'
+import { lodash, setSeedGlobal } from '@prosopo/util'
 import { z } from 'zod'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
+import { ProsopoEnvError } from '@prosopo/common'
+import fs from 'fs'
 
 export const ArgsSchema = OutputArgsSchema.extend({
     labels: z.string().optional(),
@@ -18,7 +20,7 @@ export const ArgsSchema = OutputArgsSchema.extend({
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export abstract class Generate<T extends ArgsSchemaType> extends OutputCliCommand<T> {
+export abstract class Generate<T extends ArgsSchemaType> extends OutputCliCommand<T> {    
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             output: {
@@ -60,6 +62,81 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
                 description: 'If true, allow duplicates in the unlabelled data',
             },
         })
+    }
+
+    public override async _check(args: Args) {
+        // if specified, check files exist
+        const labelledMapFile: string | undefined = args.labelled
+        if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
+            throw new ProsopoEnvError(
+                new Error(`labelled map file does not exist: ${labelledMapFile}`),
+                'FS.FILE_NOT_FOUND'
+            )
+        }
+        const unlabelledMapFile: string | undefined = args.unlabelled
+        if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
+            throw new ProsopoEnvError(
+                new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`),
+                'FS.FILE_NOT_FOUND'
+            )
+        }
+        this.labelledMapFile = labelledMapFile || ''
+        this.unlabelledMapFile = unlabelledMapFile || ''
+    }
+
+    labelled: LabelledItem[] = []
+    unlabelled: Item[] = []
+    labels: string[] = []
+    labelledMapFile = ''
+    unlabelledMapFile = ''
+    labelToImages: { [label: string]: Item[] } = {}
+    targets: string[] = []
+    saltRounds = 10
+
+    public override async _run(args: Args) {
+        await super._run(args)
+        // set the seed
+        setSeedGlobal(args.seed || 0)
+        // get lodash (with seeded rng)
+        const _ = lodash()
+
+        const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
+        const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
+
+        // load the map to get the labelled and unlabelled data
+        this.labelled = this.labelledMapFile
+            ? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(this.labelledMapFile, 'utf8'))).items
+            : []
+        this.unlabelled = this.unlabelledMapFile
+            ? DataSchema.parse(JSON.parse(fs.readFileSync(this.unlabelledMapFile, 'utf8'))).items
+            : []
+
+        // check for duplicates
+        checkDuplicates(this.labelled, this.unlabelled, {
+            allowDuplicatesLabelled,
+            allowDuplicatesUnlabelled,
+        })
+
+
+        // split the labelled data by label
+        this.labelToImages = {}
+        for (const entry of this.labelled) {
+            const arr = this.labelToImages[entry.label] || []
+            arr.push(entry)
+            this.labelToImages[entry.label] = arr
+        }
+        this.targets = Object.keys(this.labelToImages)
+
+        // load the labels from file
+        // these are the labels that unlabelled data will be assigned to
+        // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
+        this.labels = []
+        if (args.labels && fs.existsSync(args.labels)) {
+            this.labels.push(...[...LabelsContainerSchema.parse(JSON.parse(fs.readFileSync(args.labels, 'utf8'))).labels])
+        } else {
+            // else default to the labels in the labelled data
+            this.labels.push(...[...this.targets])
+        }
     }
 }
 
