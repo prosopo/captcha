@@ -36,7 +36,7 @@ describe('CONTRACT HELPERS', function () {
     beforeEach(async function (context) {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair('//Alice', context.pairType, context.ss58Format)
+        const alicePair = await getPair(undefined, '//Alice', undefined, context.pairType, context.ss58Format)
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()

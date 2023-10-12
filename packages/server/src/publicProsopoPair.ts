@@ -12,5 +12,5 @@ export const getPublicProsopoPair = async (network: PublicAccountNetwork) => {
     const ss58Format = 42
     const prosopoSharedAccountSecret = accountNetworkMap[network]
 
-    return await getPair(prosopoSharedAccountSecret, pairType, ss58Format)
+    return await getPair(undefined, prosopoSharedAccountSecret, undefined, pairType, ss58Format)
 }

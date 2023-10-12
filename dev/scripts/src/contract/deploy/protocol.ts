@@ -32,7 +32,7 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
     const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
-    const pair = await getPair(secret, pairType, ss58Format)
+    const pair = await getPair(undefined, secret, undefined, pairType, ss58Format)
     const config = defaultConfig()
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()

@@ -58,9 +58,7 @@ export async function start(env?: ProviderEnvironment) {
 
         const secret = getSecret()
         const config = getConfig()
-        const pairType = config.networks[config.defaultNetwork].pairType
-        const ss58Format = config.networks[config.defaultNetwork].ss58Format
-        const pair = await getPair(secret, pairType, ss58Format)
+        const pair = await getPair(config.account.address, secret, config.networks[config.defaultNetwork])
         env = new ProviderEnvironment(pair, config)
     }
     await env.isReady()

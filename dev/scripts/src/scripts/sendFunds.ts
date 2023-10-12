@@ -22,7 +22,7 @@ import { sendFunds } from '../setup/index.js'
 config()
 
 async function main(account: string) {
-    const pair = await getPair('//Alice', getPairType(), getSs58Format())
+    const pair = await getPair(undefined, '//Alice', undefined, getPairType(), getSs58Format())
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN('100000000000000000'))

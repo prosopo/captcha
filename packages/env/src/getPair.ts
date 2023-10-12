@@ -14,30 +14,51 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
+import { NetworkConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
 import { hexToU8a, isHex } from '@polkadot/util'
 
-export async function getPair(secret: string, pairType: KeypairType, ss58Format: number): Promise<KeyringPair> {
+export async function getPair(
+    account?: string | Uint8Array,
+    secret?: string,
+    networkConfig?: NetworkConfig,
+    pairType?: KeypairType,
+    ss58Format?: number
+): Promise<KeyringPair> {
     await cryptoWaitReady()
+    if (networkConfig) {
+        if (!pairType) {
+            pairType = networkConfig.pairType
+        }
+        if (!ss58Format) {
+            ss58Format = networkConfig.ss58Format
+        }
+    }
     const keyring = new Keyring({ type: pairType, ss58Format })
-    if (mnemonicValidate(secret)) {
-        return keyring.addFromUri(secret)
-    }
-    if (isHex(secret)) {
-        return keyring.addFromSeed(hexToU8a(secret))
-    }
-    if (secret.startsWith('//')) {
-        return keyring.addFromUri(secret)
-    }
-    try {
-        const json = JSON.parse(secret)
-        const {
-            encoding: { content },
-        } = json
-        const keyring = new Keyring({ type: content[1], ss58Format })
-        return keyring.addFromJson(json as KeyringPair$Json)
-    } catch (e) {
+    if (!secret && account) {
+        return keyring.addFromAddress(account)
+    } else if (secret) {
+        if (mnemonicValidate(secret)) {
+            return keyring.addFromUri(secret)
+        }
+        if (isHex(secret)) {
+            return keyring.addFromSeed(hexToU8a(secret))
+        }
+        if (secret.startsWith('//')) {
+            return keyring.addFromUri(secret)
+        }
+        try {
+            const json = JSON.parse(secret)
+            const {
+                encoding: { content },
+            } = json
+            const keyring = new Keyring({ type: content[1], ss58Format })
+            return keyring.addFromJson(json as KeyringPair$Json)
+        } catch (e) {
+            throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
+        }
+    } else {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }
 }

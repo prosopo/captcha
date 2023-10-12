@@ -197,7 +197,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
         const ss58Format = 42
         const pairType = 'sr25519'
-        const pair = await getPair(mnemonic, pairType, ss58Format)
+        const pair = await getPair(undefined, mnemonic, undefined, pairType, ss58Format)
 
         return this.mockEnv.changeSigner(pair)
     }

@@ -62,9 +62,7 @@ async function main() {
     const config = getServerConfig()
 
     console.log('config', config)
-    const pairType = config.networks[config.defaultNetwork].pairType
-    const ss58Format = config.networks[config.defaultNetwork].ss58Format
-    const pair = await getPair(process.env.REACT_APP_SERVER_MNEMONIC, pairType, ss58Format)
+    const pair = await getPair(undefined, process.env.REACT_APP_SERVER_MNEMONIC, config.networks[config.defaultNetwork])
     const prosopoServer = new ProsopoServer(pair, config)
 
     app.use(routesFactory(mongoose, prosopoServer))

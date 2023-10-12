@@ -48,7 +48,13 @@ export const DAPP: IDappAccount = {
 
 export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
     const ss58Format = 42
-    const pair = await getPair(accountMnemonic(account), 'sr25519' as KeypairType, ss58Format)
+    const pair = await getPair(
+        accountAddress(account),
+        accountMnemonic(account),
+        undefined,
+        'sr25519' as KeypairType,
+        ss58Format
+    )
     await env.changeSigner(pair)
     return new Tasks(env)
 }

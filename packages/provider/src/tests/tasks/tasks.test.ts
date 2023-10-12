@@ -54,7 +54,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     beforeEach(async function (context) {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair('//Alice', context.pairType, context.ss58Format)
+        const alicePair = await getPair(undefined, '//Alice', undefined, context.pairType, context.ss58Format)
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
@@ -96,7 +96,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             providerDetails.datasetId.toString(),
             2
         )
-        const pair = await getPair(accountMnemonic(dappUserAccount), pairType, ss58Format)
+        const pair = await getPair(undefined, accountMnemonic(dappUserAccount), undefined, pairType, ss58Format)
         await env.changeSigner(pair)
 
         const userSalt = randomAsHex()
