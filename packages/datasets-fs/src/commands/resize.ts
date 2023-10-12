@@ -111,7 +111,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         // verify the output
         DataSchema.parse(data)
 
-        fs.writeFileSync(outputMapFile, JSON.stringify(outputItems, null, 4))
+        fs.writeFileSync(outputMapFile, JSON.stringify(data, null, 4))
     }
 
     public override getDescription(): string {
