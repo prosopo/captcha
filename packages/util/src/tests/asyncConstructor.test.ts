@@ -43,8 +43,10 @@ describe('asyncConstructor', () => {
 
     test('constructs async with no args', async () => {
         class Abc {
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             constructor() {}
 
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             async ctor() {}
         }
 
