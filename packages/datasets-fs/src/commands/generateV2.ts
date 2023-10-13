@@ -6,6 +6,7 @@ import { blake2AsHex } from '@polkadot/util-crypto'
 import { z } from 'zod'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
+import cliProgress from 'cli-progress'
 
 export const ArgsSchema = GenerateArgsSchema.extend({
     minCorrect: z.number().optional(),
@@ -75,10 +76,14 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
         // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
 
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+        bar.start(count, 0)
+
         // generate n captchas
         const captchas: CaptchaWithoutId[] = []
         for (let i = 0; i < count; i++) {
-            this.logger.info(`generating captcha ${i + 1} of ${count}`)
+            bar.increment()
+            // this.logger.info(`generating captcha ${i + 1} of ${count}`)
 
             if (this.targets.length <= 1) {
                 throw new ProsopoEnvError(
@@ -180,6 +185,8 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
             }
             captchas.push(captcha)
         }
+        bar.stop()
+
         // write to file
         const output: Captchas = {
             captchas,
@@ -187,8 +194,10 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         }
 
         // verify the output
+        this.logger.info('verifying output')
         CaptchasContainerSchema.parse(output)
 
+        this.logger.info(`writing output`)
         fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
     }
