@@ -1,10 +1,11 @@
 import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { blake2b } from '@noble/hashes/blake2b'
-import { lodash } from '@prosopo/util'
+import { at, lodash } from '@prosopo/util'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import fs from 'fs'
+import cliProgress from 'cli-progress'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
@@ -38,23 +39,31 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
         const outDir = args.output
 
         // find the labels (these should be subdirectories of the data directory)
+        this.logger.info('reading data')
         const labels: string[] = fs
             .readdirSync(dataDir, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name)
+        const imagesByLabel: string[][] = labels.map((label) => fs.readdirSync(`${dataDir}/${label}`))
 
         // create the output directory
         const imageDir = `${outDir}/images`
         fs.mkdirSync(imageDir, { recursive: true })
 
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+
         // for each label
         const items: LabelledItem[] = []
-        for (const label of labels) {
+        bar.start(labels.length, imagesByLabel.reduce((acc, images) => acc + images.length, 0))
+        for (let i = 0; i < labels.length; i++) {
             // find all the images
-            const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
+            const label = at(labels, i)
+            const images: string[] = at(imagesByLabel, i)
+            bar.setTotal(bar.getTotal() + images.length)
             // for each image
             for (const image of images) {
-                this.logger.log(`flattening ${label}/${image}`)
+                bar.increment()
+                // this.logger.log(`flattening ${label}/${image}`)
                 // copy the image to the output directory
                 const extension = image.split('.').pop()
                 // read file to bytes
@@ -78,15 +87,18 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
                 items.push(entry)
             }
         }
+        bar.stop()
 
         const data: Data = {
             items,
         }
 
         // verify data
+        this.logger.info('verifying data')
         DataSchema.parse(data)
 
         // write map file
+        this.logger.info('writing data')
         fs.writeFileSync(`${outDir}/data.json`, JSON.stringify(data, null, 4))
     }
 }
