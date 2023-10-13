@@ -18,6 +18,7 @@ describe('dataset commands', () => {
         substituteRepoDir()
         // remove previous test results
         fs.rmdirSync(`${__dirname}/test_results`, { recursive: true })
+        fs.mkdirSync(`${__dirname}/test_results`, { recursive: true })
     })
 
     afterAll(() => {
