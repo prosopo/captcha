@@ -17,7 +17,9 @@ describe('dataset commands', () => {
         // substitute the repo path in the data for tests
         substituteRepoDir()
         // remove previous test results
-        fs.rmdirSync(`${__dirname}/test_results`, { recursive: true })
+        if (fs.existsSync(`${__dirname}/test_results`)) {
+            fs.rmdirSync(`${__dirname}/test_results`, { recursive: true })
+        }
         fs.mkdirSync(`${__dirname}/test_results`, { recursive: true })
     })
 
