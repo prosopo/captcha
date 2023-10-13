@@ -42,13 +42,10 @@ describe('asyncConstructor', () => {
     })
 
     test('constructs async with no args', async () => {
-
         class Abc {
-            constructor() {
-            }
+            constructor() {}
 
-            async ctor() {
-            }
+            async ctor() {}
         }
 
         const abc = await anew(Abc, true, 1, 'abc', Promise.resolve('def'))
