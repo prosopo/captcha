@@ -84,8 +84,17 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
                 })
                 .removeAlpha() // remove the alpha channel
                 .toColorspace('srgb') // 8-bits per channel
-                .png()
-            const tmpFilePath = `/tmp/tmp.png`
+                .jpeg({
+                    quality: 75,
+                    chromaSubsampling: '4:2:0',
+                    optimiseCoding: true,
+                    trellisQuantisation: true,
+                    overshootDeringing: true,
+                    optimizeScans: true,
+                    quantisationTable: 3,
+                    force: true,
+                })
+            const tmpFilePath = `/tmp/tmp.jpg`
             await resized.toFile(tmpFilePath)
             // read the resized image
             const resizedImg = fs.readFileSync(tmpFilePath)
@@ -93,7 +102,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
             const hash = blake2b(resizedImg)
             const hex = u8aToHex(hash)
             // move the image
-            const finalFilePath = `${imgDir}/${hex}.png`
+            const finalFilePath = `${imgDir}/${hex}.jpg`
             fs.renameSync(tmpFilePath, finalFilePath)
 
             // add the item to the output
