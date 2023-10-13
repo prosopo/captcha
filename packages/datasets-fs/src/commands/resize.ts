@@ -94,7 +94,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
                     quantisationTable: 3,
                     force: true,
                 })
-            const tmpFilePath = `/tmp/tmp.jpg`
+            const tmpFilePath = `${imgDir}/tmp.jpg`
             await resized.toFile(tmpFilePath)
             // read the resized image
             const resizedImg = fs.readFileSync(tmpFilePath)
