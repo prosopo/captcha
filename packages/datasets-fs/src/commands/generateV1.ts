@@ -67,7 +67,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         // create a new progress bar instance and use shades_classic theme
         const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
-        this.logger.info(`Generating ${solved} solved captchas...`)
+        // this.logger.info(`Generating ${solved} solved captchas...`)
         bar.start(solved + unsolved, 0)
         for (let i = 0; i < solved; i++) {
             // update the current value in your application..
@@ -146,7 +146,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             }
             solvedCaptchas.push(captcha)
         }
-        this.logger.info(`Generating ${unsolved} unsolved captchas...`)
+        // this.logger.info(`Generating ${unsolved} unsolved captchas...`)
         // create a new progress bar instance and use shades_classic theme
         // generate n unsolved captchas
         const unsolvedCaptchas: CaptchaWithoutId[] = []
