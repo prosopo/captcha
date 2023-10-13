@@ -7,6 +7,7 @@ import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import fs from 'fs'
 import sharp from 'sharp'
+import cliProgress from 'cli-progress'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     size: z.number(),
@@ -66,9 +67,12 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         const inputItems: Item[] = DataSchema.parse(JSON.parse(fs.readFileSync(mapFile, 'utf8'))).items
 
         // for each item
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+        bar.start(inputItems.length, 0)
         const outputItems: Item[] = []
         for (const inputItem of inputItems) {
-            this.logger.log(`resizing ${inputItem.data}`)
+            bar.increment()
+            // this.logger.log(`resizing ${inputItem.data}`)
             // read the file
             const img = fs.readFileSync(inputItem.data)
             // resize the image
@@ -100,6 +104,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
             }
             outputItems.push(outputItem)
         }
+        bar.stop()
 
         // write the map file
         const outputMapFile = `${outDir}/data.json`
@@ -109,8 +114,10 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         }
 
         // verify the output
+        this.logger.info('verifying data')
         DataSchema.parse(data)
 
+        this.logger.info(`writing data`)
         fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outputMapFile, JSON.stringify(data, null, 4))
     }

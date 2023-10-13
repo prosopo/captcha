@@ -194,10 +194,10 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         }
 
         // verify the output
-        this.logger.info('verifying output')
+        this.logger.info('verifying data')
         CaptchasContainerSchema.parse(output)
 
-        this.logger.info(`writing output`)
+        this.logger.info(`writing data`)
         fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
     }
