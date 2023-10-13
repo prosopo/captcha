@@ -14,7 +14,6 @@
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSelector } from '@polkadot/types/interfaces'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { MockEnvironment, getPair } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
@@ -34,9 +33,8 @@ describe('CONTRACT HELPERS', function () {
     const log = getLogger(LogLevel.enum.info, 'TEST')
 
     beforeEach(async function (context) {
-        context.ss58Format = 42
-        context.pairType = 'sr25519' as KeypairType
-        const network = context.env.config.networks[context.env.config.defaultNetwork]
+        const config = getTestConfig()
+        const network = config.networks[config.defaultNetwork]
         const alicePair = await getPair(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {

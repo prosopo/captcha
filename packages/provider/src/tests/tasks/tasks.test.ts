@@ -51,7 +51,8 @@ declare module 'vitest' {
 
 describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     beforeEach(async function (context) {
-        const network = context.env.config.networks[context.env.config.defaultNetwork]
+        const config = getTestConfig()
+        const network = config.networks[config.defaultNetwork]
         const alicePair = await getPair(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
@@ -237,7 +238,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('Provider approve', async ({ env, pairType, ss58Format }): Promise<void> => {
+    test('Provider approve', async ({ env }): Promise<void> => {
         const { dappUserAccount, captchaSolutions, providerAccount, dappContractAccount, userSignature } =
             await createMockCaptchaSolutionsAndRequestHash(env)
         const tasks = await getSignedTasks(env, dappUserAccount)
@@ -283,7 +284,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('Provider disapprove', async ({ env, pairType, ss58Format }): Promise<void> => {
+    test('Provider disapprove', async ({ env }): Promise<void> => {
         const { dappUserAccount, captchaSolutions, providerAccount, dappContractAccount, userSignature } =
             await createMockCaptchaSolutionsAndRequestHash(env)
 
@@ -322,7 +323,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         })
     })
 
-    test('Timestamps check', async ({ env, pairType, ss58Format }): Promise<void> => {
+    test('Timestamps check', async ({ env }): Promise<void> => {
         const salt = randomAsHex()
 
         const tree = new CaptchaMerkleTree()
@@ -493,11 +494,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(captchas[0]).to.not.have.nested.property('captcha.solution')
     })
 
-    test('Captcha proofs are returned if commitment found and solution is correct', async ({
-        env,
-        pairType,
-        ss58Format,
-    }): Promise<void> => {
+    test('Captcha proofs are returned if commitment found and solution is correct', async ({ env }): Promise<void> => {
         // Construct a pending request hash between dappUserAccount, providerAccount and dappContractAccount
         const { captchaSolutions, requestHash, dappUserAccount, providerAccount, dappContractAccount, userSignature } =
             await createMockCaptchaSolutionsAndRequestHash(env)
@@ -646,7 +643,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     //     expect(result!.length).to.be.eq(0);
     // });
 
-    test('Validates the received captchas length', async ({ env, pairType, ss58Format }): Promise<void> => {
+    test('Validates the received captchas length', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash(env)
@@ -659,7 +656,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }).to.not.throw()
     })
 
-    test('Builds the tree and gets the commitment', async ({ env, pairType, ss58Format }): Promise<void> => {
+    test('Builds the tree and gets the commitment', async ({ env }): Promise<void> => {
         try {
             const { captchaSolutions, dappUserAccount, userSignature } =
                 await createMockCaptchaSolutionsAndRequestHash(env)
@@ -715,11 +712,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('BuildTreeAndGetCommitment throws if commitment does not exist', async ({
-        env,
-        pairType,
-        ss58Format,
-    }): Promise<void> => {
+    test('BuildTreeAndGetCommitment throws if commitment does not exist', async ({ env }): Promise<void> => {
         const { captchaSolutions, dappUserAccount } = await createMockCaptchaSolutionsAndRequestHash(env)
 
         const tasks = await getSignedTasks(env, dappUserAccount)
@@ -736,11 +729,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         )
     })
 
-    test('Validates the Dapp User Solution Request is Pending', async ({
-        env,
-        pairType,
-        ss58Format,
-    }): Promise<void> => {
+    test('Validates the Dapp User Solution Request is Pending', async ({ env }): Promise<void> => {
         const { dappUserAccount, captchaSolutions, blockNumber } = await createMockCaptchaSolutionsAndRequestHash(env)
 
         const tasks = await getSignedTasks(env, dappUserAccount)

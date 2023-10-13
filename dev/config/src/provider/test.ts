@@ -1,4 +1,10 @@
-import { DatabaseTypes, EnvironmentTypesSchema, NetworkNamesSchema, ProsopoConfigSchema } from '@prosopo/types'
+import {
+    DatabaseTypes,
+    EnvironmentTypesSchema,
+    NetworkNamesSchema,
+    NetworkPairTypeSchema,
+    ProsopoConfigSchema,
+} from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
 
 const logLevel = getLogLevel()
@@ -18,6 +24,17 @@ export default function getTestConfig() {
             baseURL: 'http://localhost',
             port: 9229,
             fileServePaths: '[]',
+        },
+        networks: {
+            development: {
+                endpoint: 'ws://localhost:9944',
+                contract: {
+                    address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
+                    name: 'prosopo',
+                },
+                pairType: NetworkPairTypeSchema.parse('sr25519'),
+                ss58Format: 42,
+            },
         },
     })
 }

@@ -18,7 +18,6 @@ import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
 import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { CaptchaStatus } from '@prosopo/captcha-contract'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment, getPair } from '@prosopo/env'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
@@ -66,9 +65,9 @@ declare module 'vitest' {
 
 describe('BATCH TESTS', function () {
     beforeEach(async function (context: ViteTestContext) {
-        context.ss58Format = 42
-        context.pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(context.env.config.networks[context.env.config.defaultNetwork], '//Alice', '')
+        const config = getTestConfig()
+        const network = config.networks[config.defaultNetwork]
+        const alicePair = await getPair(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
@@ -88,7 +87,7 @@ describe('BATCH TESTS', function () {
 
     const commitmentCount = 50
 
-    test(`Batches ~${commitmentCount} commitments on-chain`, async ({ env, pairType, ss58Format }) => {
+    test(`Batches ~${commitmentCount} commitments on-chain`, async ({ env }) => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 

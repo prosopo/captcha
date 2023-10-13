@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment, getPair } from '@prosopo/env'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
@@ -21,8 +20,6 @@ import { getTestConfig } from '@prosopo/config'
 
 describe('UTIL FUNCTIONS', async () => {
     let env: MockEnvironment
-    let pairType: KeypairType
-    let ss58Format: number
 
     test('does not modify an already encoded address', () => {
         expect(encodeStringAddress('5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL')).to.equal(
@@ -48,7 +45,9 @@ describe('UTIL FUNCTIONS', async () => {
         )
     })
     test('correctly determines if a task is still running', async () => {
-        const alicePair = await getPair(env.config.networks[env.config.defaultNetwork], '//Alice', '')
+        const config = getTestConfig()
+        const network = config.networks[config.defaultNetwork]
+        const alicePair = await getPair(network, '//Alice')
         env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await env.isReady()
