@@ -7,7 +7,9 @@ import { z } from 'zod'
 import fs from 'fs'
 import cliProgress from 'cli-progress'
 
-export const ArgsSchema = InputOutputArgsSchema.extend({})
+export const ArgsSchema = InputOutputArgsSchema.extend({
+    allowDuplicates: z.boolean().optional(),
+})
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
@@ -28,6 +30,10 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
             output: {
                 description: 'Where to put the output file containing the labels and single directory of images',
             },
+            allowDuplicates: {
+                boolean: true,
+                description: 'If true, allow duplicates in the data',
+            },
         })
     }
 
@@ -43,7 +49,7 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
         const labels: string[] = fs
             .readdirSync(dataDir, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
-            .map((dirent) => dirent.name)
+            .map((dirent) => dirent.name).sort()
         const imagesByLabel: string[][] = labels.map((label) => fs.readdirSync(`${dataDir}/${label}`))
 
         // create the output directory
@@ -54,12 +60,11 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 
         // for each label
         const items: LabelledItem[] = []
-        bar.start(labels.length, imagesByLabel.reduce((acc, images) => acc + images.length, 0))
+        bar.start(imagesByLabel.reduce((acc, images) => acc + images.length, 0), 0)
         for (let i = 0; i < labels.length; i++) {
             // find all the images
             const label = at(labels, i)
             const images: string[] = at(imagesByLabel, i)
-            bar.setTotal(bar.getTotal() + images.length)
             // for each image
             for (const image of images) {
                 bar.increment()
@@ -73,7 +78,16 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
                 const hex = u8aToHex(hash)
                 const name = `${hex}.${extension}`
                 if (fs.existsSync(`${imageDir}/${name}`)) {
-                    this.logger.log(`duplicate image: ${label}/${image} -> ${name}`)
+                    for (const item of items) {
+                        if (item.hash === hex) {
+                            this.logger.log(`\ndupe: ${label}/${image}`)
+                            this.logger.log('item hash', item.hash)
+                            this.logger.log('item label', item.label)
+                        }
+                    }
+                    if (!args.allowDuplicates) {
+                        throw new Error(`duplicate image detected`)
+                    }
                 }
                 fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
                 const filePath = fs.realpathSync(`${imageDir}/${name}`)
