@@ -22,7 +22,6 @@ import {
     ProsopoConfigInput,
     ProsopoConfigOutput,
     ProsopoConfigSchema,
-    ProsopoNetworksSchema,
     ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
@@ -47,7 +46,7 @@ export default (
     ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENDPOINT)
+            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
             : EnvironmentTypesSchema.enum.development,
         defaultNetwork: process.env.DEFAULT_NETWORK
             ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
@@ -68,8 +67,8 @@ export default (
             baseURL: process.env.API_BASE_URL || 'http://localhost',
             port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
         },
-        networks: ProsopoNetworksSchema.parse(networksConfig),
-        captchaSolutions: ProsopoCaptchaSolutionConfigSchema.parse(captchaSolutionsConfig),
-        batchCommit: BatchCommitConfigSchema.parse(batchCommitConfig),
-        captchas: ProsopoCaptchaCountConfigSchema.parse(captchaServeConfig),
+        networks: networksConfig,
+        captchaSolutions: captchaSolutionsConfig,
+        batchCommit: batchCommitConfig,
+        captchas: captchaServeConfig,
     } as ProsopoConfigInput)

@@ -29,10 +29,10 @@ import path from 'path'
 const log = getLogger(LogLevel.enum.info, 'dev.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
-    const network = defaultConfig().networks[defaultConfig().defaultNetwork]
+    const config = defaultConfig()
+    const network = config.networks[config.defaultNetwork]
     const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
     const pair = await getPair(network, secret)
-    const config = defaultConfig()
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()
     log.debug(reverseHexString(env.getApi().createType('u16', 10).toHex().toString()), 'max_user_history_len')
