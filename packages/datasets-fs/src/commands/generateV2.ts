@@ -5,8 +5,8 @@ import { at, get, lodash } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { z } from 'zod'
 import bcrypt from 'bcrypt'
-import fs from 'fs'
 import cliProgress from 'cli-progress'
+import fs from 'fs'
 
 export const ArgsSchema = GenerateArgsSchema.extend({
     minCorrect: z.number().optional(),

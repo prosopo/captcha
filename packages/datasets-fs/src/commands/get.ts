@@ -2,8 +2,8 @@ import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
 import { get } from '@prosopo/util'
 import { lodash } from '@prosopo/util'
 import { z } from 'zod'
-import fs from 'fs'
 import cliProgress from 'cli-progress'
+import fs from 'fs'
 
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
@@ -24,7 +24,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
     public override async _run(args: Args) {
         await super._run(args)
         const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-        
+
         const list: string[] = []
         const traverse = async (data: any) => {
             if (data instanceof Array) {

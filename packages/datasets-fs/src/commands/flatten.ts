@@ -1,11 +1,11 @@
 import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { blake2b } from '@noble/hashes/blake2b'
 import { at, lodash } from '@prosopo/util'
+import { blake2b } from '@noble/hashes/blake2b'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
-import fs from 'fs'
 import cliProgress from 'cli-progress'
+import fs from 'fs'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     allowDuplicates: z.boolean().optional(),
@@ -49,7 +49,8 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
         const labels: string[] = fs
             .readdirSync(dataDir, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
-            .map((dirent) => dirent.name).sort()
+            .map((dirent) => dirent.name)
+            .sort()
         const imagesByLabel: string[][] = labels.map((label) => fs.readdirSync(`${dataDir}/${label}`))
 
         // create the output directory
@@ -60,7 +61,10 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 
         // for each label
         const items: LabelledItem[] = []
-        bar.start(imagesByLabel.reduce((acc, images) => acc + images.length, 0), 0)
+        bar.start(
+            imagesByLabel.reduce((acc, images) => acc + images.length, 0),
+            0
+        )
         for (let i = 0; i < labels.length; i++) {
             // find all the images
             const label = at(labels, i)

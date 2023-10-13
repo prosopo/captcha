@@ -5,9 +5,9 @@ import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
+import cliProgress from 'cli-progress'
 import fs from 'fs'
 import sharp from 'sharp'
-import cliProgress from 'cli-progress'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     size: z.number(),
