@@ -21,6 +21,7 @@ import { ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
+import { PublicAccountNetwork, getPublicProsopoPair } from './publicProsopoPair.js'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { get } from '@prosopo/util'
@@ -123,11 +124,9 @@ export class ProsopoServer {
         if (providerUrlTrimmed !== providerUrl) {
             return false
         }
-        console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed && commitmentId) {
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(user, commitmentId)
-            console.log(result)
             return result.solutionApproved
         } else {
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
@@ -147,4 +146,10 @@ export class ProsopoServer {
         )
         return this.contract
     }
+}
+
+export const PublicProsopoServer = async (config: ProsopoServerConfig, publicAccountNetwork: PublicAccountNetwork) => {
+    const publicProsopoPair = await getPublicProsopoPair(publicAccountNetwork)
+
+    return new ProsopoServer(publicProsopoPair, config)
 }
