@@ -65,13 +65,13 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         // generate n solved captchas
         const solvedCaptchas: CaptchaWithoutId[] = []
         // create a new progress bar instance and use shades_classic theme
-        const barSolved = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
         this.logger.info(`Generating ${solved} solved captchas...`)
-        barSolved.start(solved, 0)
+        bar.start(solved + unsolved, 0)
         for (let i = 0; i < solved; i++) {
             // update the current value in your application..
-            barSolved.update(i + 1)
+            bar.increment()
 
             if (this.targets.length <= 1) {
                 throw new ProsopoEnvError(
@@ -146,15 +146,12 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             }
             solvedCaptchas.push(captcha)
         }
-        barSolved.stop()
         this.logger.info(`Generating ${unsolved} unsolved captchas...`)
         // create a new progress bar instance and use shades_classic theme
-        const barUnsolved = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-        barUnsolved.start(unsolved, 0)
         // generate n unsolved captchas
         const unsolvedCaptchas: CaptchaWithoutId[] = []
         for (let i = 0; i < unsolved; i++) {
-            barUnsolved.update(i + 1)
+            bar.increment()
             if (this.unlabelled.length <= size) {
                 throw new ProsopoEnvError(
                     new Error(`unlabelled map file does not contain enough data`),
@@ -194,7 +191,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             }
             unsolvedCaptchas.push(captcha)
         }
-        barUnsolved.stop()
+        bar.stop()
         // write to file
         const output: Captchas = {
             captchas: [...solvedCaptchas, ...unsolvedCaptchas],
