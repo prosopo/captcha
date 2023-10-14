@@ -25,6 +25,7 @@ import {
     ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
+import { getSecret } from './process.env.js'
 
 function getMongoURI(): string {
     const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
@@ -37,13 +38,13 @@ function getMongoURI(): string {
     return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
 
-export default (
+export default function getConfig(
     networksConfig?: ProsopoNetworksSchemaInput,
     captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
     batchCommitConfig?: typeof BatchCommitConfigSchema,
     captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
-): ProsopoConfigOutput =>
-    ProsopoConfigSchema.parse({
+): ProsopoConfigOutput {
+    return ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
             ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
@@ -54,6 +55,7 @@ export default (
         account: {
             address: process.env.PROVIDER_ADDRESS || '',
             password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
+            secret: getSecret(),
         },
         database: {
             development: {
@@ -72,3 +74,4 @@ export default (
         batchCommit: batchCommitConfig,
         captchas: captchaServeConfig,
     } as ProsopoConfigInput)
+}

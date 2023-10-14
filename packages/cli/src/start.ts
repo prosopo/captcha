@@ -14,12 +14,13 @@
 import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment, getPair } from '@prosopo/env'
 import { Server } from 'http'
-import { getConfig, getSecret } from './process.env.js'
+import { getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import esMain from 'es-main'
 import express, { NextFunction, Request, Response } from 'express'
+import getConfig from './prosopo.config.js'
 
 let apiAppSrv: Server
 

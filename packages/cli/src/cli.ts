@@ -14,11 +14,12 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment, getPair } from '@prosopo/env'
-import { getConfig, getSecret } from './process.env.js'
+import { getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import { start } from './start.js'
 import esMain from 'es-main'
+import getConfig from './prosopo.config.js'
 import process from 'process'
 const log = getLogger(LogLevel.enum.info, 'cli')
 async function main() {

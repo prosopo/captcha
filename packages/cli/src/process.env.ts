@@ -11,18 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    BatchCommitConfigSchema,
-    ProsopoCaptchaCountConfigSchema,
-    ProsopoCaptchaSolutionConfigSchema,
-    ProsopoConfigOutput,
-    ProsopoConfigSchema,
-    ProsopoNetworksSchemaInput,
-    networks,
-} from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import prosopoConfig from './prosopo.config.js'
 
 export function getSs58Format(): number {
     return parseInt(process.env.SS58_FORMAT || '') || 42
@@ -47,18 +37,4 @@ export function getSecret(who?: string): string {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }
     return secret
-}
-
-export function getConfig(
-    networksConfig?: ProsopoNetworksSchemaInput,
-    captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
-    batchCommitConfig?: typeof BatchCommitConfigSchema,
-    captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
-): ProsopoConfigOutput {
-    if (!networksConfig) {
-        networksConfig = networks
-    }
-    return ProsopoConfigSchema.parse(
-        prosopoConfig(networksConfig, captchaSolutionsConfig, batchCommitConfig, captchaServeConfig)
-    )
 }

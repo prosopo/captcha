@@ -159,21 +159,6 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         server: ProsopoImageServerConfigSchema,
     })
 )
-    .refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
-    .transform((val, ctx) => {
-        if (!val.networks) {
-            val.networks = networks
-        }
-        if (!(val.defaultNetwork in val.networks)) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: 'defaultNetwork must be in networks',
-                path: ['defaultNetwork'],
-            })
-            return z.NEVER
-        }
-        return val
-    })
 
 export type ProsopoConfigInput = z.input<typeof ProsopoConfigSchema>
 export type ProsopoConfigOutput = z.output<typeof ProsopoConfigSchema>

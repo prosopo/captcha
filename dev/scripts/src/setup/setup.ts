@@ -121,12 +121,10 @@ export async function setup(force: boolean) {
             throw new ProsopoEnvError('DEVELOPER.DAPP_SITE_KEY_MISSING')
         }
 
-        const secret = '//Alice'
         const config = defaultConfig()
+        const secret = config.account.secret
         const network = config.networks[config.defaultNetwork]
         const pair = await getPair(network, secret)
-
-        console.log(config)
 
         const env = new ProviderEnvironment(pair, defaultConfig())
         await env.isReady()
