@@ -72,7 +72,7 @@ export class ProsopoEnvError extends ProsopoBaseError {
         }
 
         console.error('\n********************* ERROR *********************\n')
-        console.error(this.cause, this.stack, ...params)
+        console.error(this.cause?.message, this.stack, ...params)
     }
 }
 
@@ -85,6 +85,6 @@ export class ProsopoApiError extends ProsopoEnvError {
         this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
 
         console.error('\n********************* ERROR *********************\n')
-        console.error(this.cause, this.stack, this.code, ...params)
+        console.error(this.cause?.message, this.stack, this.code, ...params)
     }
 }
