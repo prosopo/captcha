@@ -19,6 +19,25 @@ export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
 export class GenerateV2 extends Generate<ArgsSchemaType> {
+
+    #size = 0
+    #minCorrect = 0
+    #saltRounds = 10
+    #allowDuplicatesLabelled = false
+    #allowDuplicatesUnlabelled = false
+    #minIncorrect = 0
+    #minLabelled = 0
+    #maxLabelled = 0
+    #count = 0
+    #nCorrect = 0
+    #nIncorrect = 0
+    #nLabelled = 0
+    #nUnlabelled = 0
+    #target = ''
+    #targets: string[] = []
+    #targetItems: Item[] = []
+    #notTargetItems: Item[] = []
+
     public override getArgSchema() {
         return ArgsSchema
     }
@@ -52,39 +71,8 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         })
     }
 
-    public override async _run(args: Args) {
-        await super._run(args)
-
-        const outFile: string = args.output
-
-        // get lodash (with seeded rng)
+    private setupTarget(i: number) {
         const _ = lodash()
-
-        const labelsFile: string | undefined = args.labels
-        const size: number = args.size || 9
-        const minCorrect: number = args.minCorrect || 1
-        const saltRounds = 10
-        const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
-        const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
-        const minIncorrect: number = Math.max(args.minIncorrect || 1, 1) // at least 1 incorrect image
-        const minLabelled: number = minCorrect + minIncorrect // min incorrect + correct
-        const maxLabelled: number = Math.min(args.maxLabelled || size, size) // at least 1 labelled image
-        const count: number = args.count || 0
-
-        // the captcha contains n images. Each of these images are either labelled, being correct or incorrect against the target, or unlabelled. To construct one of these captchas, we need to decide how many of the images should be labelled vs unlabelled, and then how many of the labelled images should be correct vs incorrect
-        // in the traditional captcha, two rounds are produced, one with labelled images and the other with unlabelled images. This gives 18 images overall, 9 labels produced.
-        // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
-        // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
-
-        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-        bar.start(count, 0)
-
-        // generate n captchas
-        const captchas: CaptchaWithoutId[] = []
-        for (let i = 0; i < count; i++) {
-            bar.increment()
-            // this.logger.info(`generating captcha ${i + 1} of ${count}`)
-
             if (this.targets.length <= 1) {
                 throw new ProsopoEnvError(
                     new Error(`not enough different labels in labelled data`),
@@ -96,12 +84,12 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
             const target = at(this.targets, i % this.targets.length)
             const notTargets = this.targets.filter((t) => t !== target)
             // how many labelled images should be in the captcha?
-            const nLabelled = _.random(minLabelled, maxLabelled)
+            const nLabelled = _.random(this.#minLabelled, this.#maxLabelled)
             // how many correct labelled images should be in the captcha?
-            const maxCorrect = nLabelled - minCorrect
-            const nCorrect = _.random(minCorrect, maxCorrect)
+            const maxCorrect = nLabelled - this.#minCorrect
+            const nCorrect = _.random(this.#minCorrect, maxCorrect)
             const nIncorrect = nLabelled - nCorrect
-            const nUnlabelled = size - nLabelled
+            const nUnlabelled = this.#size - nLabelled
 
             const targetItems = get(this.labelToImages, target)
             const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
@@ -121,16 +109,59 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
                     'DATASET.NOT_ENOUGH_IMAGES'
                 )
             }
+        
+        this.#nCorrect = nCorrect
+        this.#nIncorrect = nIncorrect
+        this.#nLabelled = nLabelled
+        this.#nUnlabelled = nUnlabelled
+        this.#target = target
+        this.#targets = notTargets
+        this.#targetItems = targetItems
+        this.#notTargetItems = notTargetItems
+    }
+
+    public override async _run(args: Args) {
+        await super._run(args)
+
+        const outFile: string = args.output
+
+        // get lodash (with seeded rng)
+        const _ = lodash()
+
+        this.#size = args.size || 9
+        this.#minCorrect = args.minCorrect || 1
+        this.#saltRounds = 10
+        this.#allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
+        this.#allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
+        this.#minIncorrect = Math.max(args.minIncorrect || 1, 1) // at least 1 incorrect image
+        this.#minLabelled = this.#minCorrect + this.#minIncorrect // min incorrect + correct
+        this.#maxLabelled = Math.min(args.maxLabelled || this.#size, this.#size) // at least 1 labelled image
+        this.#count = args.count || 0
+
+        // the captcha contains n images. Each of these images are either labelled, being correct or incorrect against the target, or unlabelled. To construct one of these captchas, we need to decide how many of the images should be labelled vs unlabelled, and then how many of the labelled images should be correct vs incorrect
+        // in the traditional captcha, two rounds are produced, one with labelled images and the other with unlabelled images. This gives 18 images overall, 9 labels produced.
+        // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
+        // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
+
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+        bar.start(this.#count, 0)
+
+        // generate n captchas
+        const captchas: CaptchaWithoutId[] = []
+        for (let i = 0; i < this.#count; i++) {
+            bar.increment()
+            // this.logger.info(`generating captcha ${i + 1} of ${count}`)
+            this.setupTarget(i)
 
             // get the correct items
-            const correctItems: Item[] = _.sampleSize(targetItems, nCorrect)
+            const correctItems: Item[] = _.sampleSize(this.#targetItems, this.#nCorrect)
 
             // get the incorrect items
-            const incorrectItems: Item[] = _.sampleSize(notTargetItems, nIncorrect)
+            const incorrectItems: Item[] = _.sampleSize(this.#notTargetItems, this.#nIncorrect)
 
             // get the unlabelled items
             const unlabelledItems = new Set<Item>()
-            while (unlabelledItems.size < size - nLabelled) {
+            while (unlabelledItems.size < this.#size - this.#nLabelled) {
                 // get a random image from the unlabelled data
                 const image = at(this.unlabelled, _.random(0, this.unlabelled.length - 1))
                 unlabelledItems.add(image)
@@ -174,11 +205,11 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
                     return item.post // return the index in the shuffled array
                 })
 
-            const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
+            const salt = blake2AsHex(bcrypt.genSaltSync(this.#saltRounds))
             // create the captcha
             const captcha: CaptchaWithoutId = {
                 salt,
-                target,
+                target: this.#target,
                 items,
                 solution,
                 unlabelled: unlabelledIndices,
