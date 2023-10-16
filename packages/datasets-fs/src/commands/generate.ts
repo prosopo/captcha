@@ -151,19 +151,19 @@ export const checkDuplicates = (
 ) => {
     // check for duplicates
     const all = new Set<string>()
-    if (!options.allowDuplicatesLabelled) {
-        for (const entry of labelled) {
-            if (all.has(entry.data)) {
-                throw new Error(`Duplicate data entry in labelled data: ${JSON.stringify(entry)}`)
-            }
-            all.add(entry.data)
-        }
+    addAllUnique(all, labelled, 'labelled')
+    addAllUnique(all, unlabelled, 'unlabelled')
+}
+
+const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
+    for (const entry of entries) {
+        addUnique(all, entry, dataType)
     }
-    if (!options.allowDuplicatesUnlabelled) {
-        for (const entry of unlabelled) {
-            if (all.has(entry.data)) {
-                throw new Error(`Duplicate data entry in unlabelled data: ${JSON.stringify(entry)}`)
-            }
-        }
+}
+
+const addUnique = (all: Set<string>, entry: Item, dataType: string) => {
+    if (all.has(entry.data)) {
+        throw new Error(`Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}`)
     }
+    all.add(entry.data)
 }
