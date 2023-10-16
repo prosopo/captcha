@@ -93,12 +93,7 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
     targets: string[] = []
     saltRounds = 10
 
-    public override async _run(args: Args) {
-        await super._run(args)
-        // set the seed
-        setSeedGlobal(args.seed || 0)
-        // get lodash (with seeded rng)
-        const _ = lodash()
+    private loadData(args: Args) {
 
         const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
         const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
@@ -110,7 +105,7 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
         this.unlabelled = this.unlabelledMapFile
             ? DataSchema.parse(JSON.parse(fs.readFileSync(this.unlabelledMapFile, 'utf8'))).items
             : []
-
+        
         // check for duplicates
         checkDuplicates(this.labelled, this.unlabelled, {
             allowDuplicatesLabelled,
@@ -125,7 +120,9 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
             this.labelToImages[entry.label] = arr
         }
         this.targets = Object.keys(this.labelToImages)
+    }
 
+    private loadLabels(args: Args) {
         // load the labels from file
         // these are the labels that unlabelled data will be assigned to
         // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
@@ -138,6 +135,18 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
             // else default to the labels in the labelled data
             this.labels.push(...[...this.targets])
         }
+    }
+
+    public override async _run(args: Args) {
+        await super._run(args)
+        // set the seed
+        setSeedGlobal(args.seed || 0)
+        // get lodash (with seeded rng)
+        const _ = lodash()
+
+        this.loadData(args)
+
+        this.loadLabels(args)
     }
 }
 
