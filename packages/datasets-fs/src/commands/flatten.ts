@@ -65,9 +65,7 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
             imagesByLabel.reduce((acc, images) => acc + images.length, 0),
             0
         )
-        for (let i = 0; i < labels.length; i++) {
-            // find all the images
-            const label = at(labels, i)
+        labels.forEach((label, i) => {
             const images: string[] = at(imagesByLabel, i)
             // for each image
             for (const image of images) {
@@ -104,7 +102,7 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
                 }
                 items.push(entry)
             }
-        }
+        })
         bar.stop()
 
         const data: Data = {
