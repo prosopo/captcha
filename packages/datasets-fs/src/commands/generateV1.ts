@@ -47,28 +47,9 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         })
     }
 
-    public override async _run(args: Args) {
-        await super._run(args)
-
-        const outFile: string = args.output
-
-        // get lodash (with seeded rng)
-        const _ = lodash()
-
-        const labelsFile: string | undefined = args.labels
-        const size: number = args.size || 9
-        const minCorrect: number = args.minCorrect || 1
-        const maxCorrect: number = args.maxCorrect || size - 1
-        const solved: number = args.solved || 0
-        const unsolved: number = args.unsolved || 0
-
+    private generateSolved(solved: number, size: number, minCorrect: number, maxCorrect: number, bar: cliProgress.SingleBar) {
         // generate n solved captchas
         const solvedCaptchas: CaptchaWithoutId[] = []
-        // create a new progress bar instance and use shades_classic theme
-        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-
-        // this.logger.info(`Generating ${solved} solved captchas...`)
-        bar.start(solved + unsolved, 0)
         for (let i = 0; i < solved; i++) {
             // update the current value in your application..
             bar.increment()
@@ -146,6 +127,11 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             }
             solvedCaptchas.push(captcha)
         }
+        return solvedCaptchas
+    }
+
+    private generateUnsolved(unsolved: number, size: number, bar: cliProgress.SingleBar) {
+
         // this.logger.info(`Generating ${unsolved} unsolved captchas...`)
         // create a new progress bar instance and use shades_classic theme
         // generate n unsolved captchas
@@ -162,7 +148,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             // note that these are potentially different to the labelled data labels
             if (this.labels.length <= 0) {
                 throw new ProsopoEnvError(
-                    new Error(`no labels found for unlabelled data: ${labelsFile}`),
+                    new Error(`no labels found for unlabelled data`),
                     'DATASET.NOT_ENOUGH_LABELS'
                 )
             }
@@ -191,6 +177,30 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             }
             unsolvedCaptchas.push(captcha)
         }
+        return unsolvedCaptchas
+    }
+
+    public override async _run(args: Args) {
+        await super._run(args)
+
+        const outFile: string = args.output
+
+        // get lodash (with seeded rng)
+        const _ = lodash()
+
+        const size: number = args.size || 9
+        const minCorrect: number = args.minCorrect || 1
+        const maxCorrect: number = args.maxCorrect || size - 1
+        const solved: number = args.solved || 0
+        const unsolved: number = args.unsolved || 0
+
+        // create a new progress bar instance and use shades_classic theme
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+
+        // this.logger.info(`Generating ${solved} solved captchas...`)
+        bar.start(solved + unsolved, 0)
+        const solvedCaptchas = this.generateSolved(solved, size, minCorrect, maxCorrect, bar)
+        const unsolvedCaptchas = this.generateUnsolved(unsolved, size, bar)
         bar.stop()
         // write to file
         const output: Captchas = {
