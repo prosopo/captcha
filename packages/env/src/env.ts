@@ -112,7 +112,7 @@ export class Environment implements ProsopoEnvironment {
     async getContractApi(): Promise<ProsopoCaptchaContract> {
         const nonce = await this.getApi().rpc.system.accountNextIndex(this.pair.address)
         if (!isAddress(this.contractAddress)) {
-            throw new ProsopoEnvError(new Error('contractAddress not setup! Please call isReady() first'))
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
         }
         this.contractInterface = new ProsopoCaptchaContract(
             this.getApi(),
