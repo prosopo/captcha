@@ -47,7 +47,13 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         })
     }
 
-    private generateSolved(solved: number, size: number, minCorrect: number, maxCorrect: number, bar: cliProgress.SingleBar) {
+    private generateSolved(
+        solved: number,
+        size: number,
+        minCorrect: number,
+        maxCorrect: number,
+        bar: cliProgress.SingleBar
+    ) {
         // generate n solved captchas
         const solvedCaptchas: CaptchaWithoutId[] = []
         for (let i = 0; i < solved; i++) {
@@ -131,7 +137,6 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
     }
 
     private generateUnsolved(unsolved: number, size: number, bar: cliProgress.SingleBar) {
-
         // this.logger.info(`Generating ${unsolved} unsolved captchas...`)
         // create a new progress bar instance and use shades_classic theme
         // generate n unsolved captchas
@@ -147,10 +152,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             // pick a random label to be the target
             // note that these are potentially different to the labelled data labels
             if (this.labels.length <= 0) {
-                throw new ProsopoEnvError(
-                    new Error(`no labels found for unlabelled data`),
-                    'DATASET.NOT_ENOUGH_LABELS'
-                )
+                throw new ProsopoEnvError(new Error(`no labels found for unlabelled data`), 'DATASET.NOT_ENOUGH_LABELS')
             }
             const index = _.random(0, this.labels.length - 1)
             const target = at(this.labels, index)

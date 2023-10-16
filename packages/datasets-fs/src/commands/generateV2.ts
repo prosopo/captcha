@@ -19,7 +19,6 @@ export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
 export class GenerateV2 extends Generate<ArgsSchemaType> {
-
     #size = 0
     #minCorrect = 0
     #saltRounds = 10
@@ -73,43 +72,43 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 
     private setupTarget(i: number) {
         const _ = lodash()
-            if (this.targets.length <= 1) {
-                throw new ProsopoEnvError(
-                    new Error(`not enough different labels in labelled data`),
-                    'DATASET.NOT_ENOUGH_LABELS'
-                )
-            }
+        if (this.targets.length <= 1) {
+            throw new ProsopoEnvError(
+                new Error(`not enough different labels in labelled data`),
+                'DATASET.NOT_ENOUGH_LABELS'
+            )
+        }
 
-            // uniformly sample targets
-            const target = at(this.targets, i % this.targets.length)
-            const notTargets = this.targets.filter((t) => t !== target)
-            // how many labelled images should be in the captcha?
-            const nLabelled = _.random(this.#minLabelled, this.#maxLabelled)
-            // how many correct labelled images should be in the captcha?
-            const maxCorrect = nLabelled - this.#minCorrect
-            const nCorrect = _.random(this.#minCorrect, maxCorrect)
-            const nIncorrect = nLabelled - nCorrect
-            const nUnlabelled = this.#size - nLabelled
+        // uniformly sample targets
+        const target = at(this.targets, i % this.targets.length)
+        const notTargets = this.targets.filter((t) => t !== target)
+        // how many labelled images should be in the captcha?
+        const nLabelled = _.random(this.#minLabelled, this.#maxLabelled)
+        // how many correct labelled images should be in the captcha?
+        const maxCorrect = nLabelled - this.#minCorrect
+        const nCorrect = _.random(this.#minCorrect, maxCorrect)
+        const nIncorrect = nLabelled - nCorrect
+        const nUnlabelled = this.#size - nLabelled
 
-            const targetItems = get(this.labelToImages, target)
-            const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
+        const targetItems = get(this.labelToImages, target)
+        const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
 
-            if (nUnlabelled > this.unlabelled.length) {
-                throw new ProsopoEnvError(new Error(`not enough unlabelled data`), 'DATASET.NOT_ENOUGH_IMAGES')
-            }
-            if (nCorrect > targetItems.length) {
-                throw new ProsopoEnvError(
-                    new Error(`not enough images for target (${target})`),
-                    'DATASET.NOT_ENOUGH_IMAGES'
-                )
-            }
-            if (nIncorrect > notTargetItems.length) {
-                throw new ProsopoEnvError(
-                    new Error(`not enough non-matching images for target (${target})`),
-                    'DATASET.NOT_ENOUGH_IMAGES'
-                )
-            }
-        
+        if (nUnlabelled > this.unlabelled.length) {
+            throw new ProsopoEnvError(new Error(`not enough unlabelled data`), 'DATASET.NOT_ENOUGH_IMAGES')
+        }
+        if (nCorrect > targetItems.length) {
+            throw new ProsopoEnvError(
+                new Error(`not enough images for target (${target})`),
+                'DATASET.NOT_ENOUGH_IMAGES'
+            )
+        }
+        if (nIncorrect > notTargetItems.length) {
+            throw new ProsopoEnvError(
+                new Error(`not enough non-matching images for target (${target})`),
+                'DATASET.NOT_ENOUGH_IMAGES'
+            )
+        }
+
         this.#nCorrect = nCorrect
         this.#nIncorrect = nIncorrect
         this.#nLabelled = nLabelled
@@ -170,13 +169,15 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
             const itemsConcat: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
             let indices: number[] = [...Array(itemsConcat.length).keys()]
             indices = _.shuffle(indices)
-            const items = indices.map((i) => at(itemsConcat, i)).map((item) => {
-                return {
-                    data: item.data,
-                    hash: item.hash,
-                    type: item.type,
-                }
-            })
+            const items = indices
+                .map((i) => at(itemsConcat, i))
+                .map((item) => {
+                    return {
+                        data: item.data,
+                        hash: item.hash,
+                        type: item.type,
+                    }
+                })
 
             // the first n indices are the correct items
             const solution: RawSolution[] = indices

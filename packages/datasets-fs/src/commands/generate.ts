@@ -94,7 +94,6 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
     saltRounds = 10
 
     private loadData(args: Args) {
-
         const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
         const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
 
@@ -105,7 +104,7 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
         this.unlabelled = this.unlabelledMapFile
             ? DataSchema.parse(JSON.parse(fs.readFileSync(this.unlabelledMapFile, 'utf8'))).items
             : []
-        
+
         // check for duplicates
         checkDuplicates(this.labelled, this.unlabelled, {
             allowDuplicatesLabelled,
