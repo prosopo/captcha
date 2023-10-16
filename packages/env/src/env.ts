@@ -25,6 +25,7 @@ import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { get } from '@prosopo/util'
+import { isAddress } from '@polkadot/util-crypto'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
@@ -57,8 +58,8 @@ export class Environment implements ProsopoEnvironment {
             const network = this.config.networks[this.defaultNetwork]
             this.logger.info(`Endpoint: ${network?.endpoint}`)
             this.wsProvider = new WsProvider(network?.endpoint)
-            this.contractAddress = network?.contract.address || ''
-            this.contractName = network?.contract.name || ''
+            this.contractAddress = network?.contract.address
+            this.contractName = network?.contract.name
 
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
@@ -89,7 +90,7 @@ export class Environment implements ProsopoEnvironment {
 
     getContractInterface(): ProsopoCaptchaContract {
         if (this.contractInterface === undefined) {
-            throw new ProsopoEnvError(new Error('contractInterface not setup! Please call isReady() first'))
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
         }
         return this.contractInterface
     }
@@ -110,6 +111,9 @@ export class Environment implements ProsopoEnvironment {
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
         const nonce = await this.getApi().rpc.system.accountNextIndex(this.pair.address)
+        if (!isAddress(this.contractAddress)) {
+            throw new ProsopoEnvError(new Error('contractAddress not setup! Please call isReady() first'))
+        }
         this.contractInterface = new ProsopoCaptchaContract(
             this.getApi(),
             this.abi,
@@ -132,7 +136,10 @@ export class Environment implements ProsopoEnvironment {
                 this.api = await ApiPromise.create({ provider: this.wsProvider })
             }
             await this.getSigner()
-            this.contractInterface = await this.getContractApi()
+            // make sure contract address is valid before trying to load contract interface
+            if (isAddress(this.contractAddress)) {
+                this.contractInterface = await this.getContractApi()
+            }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
