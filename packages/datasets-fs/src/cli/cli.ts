@@ -15,7 +15,7 @@ export class Cli extends Loggable {
         this.logger = logger
     }
 
-    private config = () => {
+    private config() {
         let y = yargs(hideBin(process.argv))
             .option('log-level', {
                 type: 'string',
@@ -53,7 +53,7 @@ export class Cli extends Loggable {
         return y
     }
 
-    public exec = async (args: string[] = process.argv.slice(2)) => {
+    public async exec(args: string[] = process.argv.slice(2)) {
         const config = this.config()
         this.logger.debug('parsing', args)
         await config.parse(args)
