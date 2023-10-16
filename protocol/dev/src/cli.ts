@@ -28,6 +28,8 @@ interface Env {
     [key: string]: string
 }
 
+const cargoCmd = 'CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse cargo'
+
 // add in the git commit to env
 const getGitCommitId = async () => {
     // get the git commit id
@@ -223,9 +225,9 @@ export async function processArgs(args: string[]) {
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             const uid = process.getuid?.() ?? '1000'
             const gid = process.getgid?.() ?? '1000'
-            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/usr/local/cargo/registry ${dockerImage} cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
+            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/usr/local/cargo/registry ${dockerImage} ${cargoCmd} ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
         } else {
-            script = `cargo ${toolchain} ${cmd} ${rest}`
+            script = `${cargoCmd} ${toolchain} ${cmd} ${rest}`
             if (dir) {
                 script = `cd ${dir} && ${script}`
             }
