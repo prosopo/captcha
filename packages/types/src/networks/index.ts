@@ -1,18 +1,16 @@
 import { NetworkNamesSchema, NetworkPairTypeSchema } from '../config/network.js'
-import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoNetworksSchemaInput } from '../config/index.js'
+
 const pairTypeSr25519 = NetworkPairTypeSchema.parse('sr25519')
 
 const getContractAddress = (defaultAddress?: string) => {
-    const address =
+    return (
         process.env.PROTOCOL_CONTRACT_ADDRESS ||
         process.env.PROSOPO_CONTRACT_ADDRESS ||
         process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS ||
-        defaultAddress
-    if (!address) {
-        throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', undefined, undefined, process.env)
-    }
-    return address
+        defaultAddress ||
+        ''
+    )
 }
 
 export default (): ProsopoNetworksSchemaInput => {
@@ -22,7 +20,7 @@ export default (): ProsopoNetworksSchemaInput => {
                 process.env.REACT_APP_SUBSTRATE_ENDPOINT || process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
             contract: {
                 name: 'captcha',
-                address: getContractAddress(),
+                address: getContractAddress('CONTRACT_NOT_DEPLOYED'),
             },
             pairType: pairTypeSr25519,
             ss58Format: 42,
