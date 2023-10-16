@@ -71,7 +71,7 @@ export const readDataJson = (pth: string) => {
 
 export const readCaptchasJson = (pth: string) => {
     const content = fs.readFileSync(pth).toString()
-    const dataJson = JSON.parse(content.toString())
+    const dataJson = JSON.parse(content)
     const captchas = CaptchasContainerSchema.parse(dataJson)
     return captchas
 }
