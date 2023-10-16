@@ -54,6 +54,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         maxCorrect: number,
         bar: cliProgress.SingleBar
     ) {
+        const _ = lodash()
         // generate n solved captchas
         const solvedCaptchas: CaptchaWithoutId[] = []
         for (let i = 0; i < solved; i++) {
@@ -137,6 +138,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
     }
 
     private generateUnsolved(unsolved: number, size: number, bar: cliProgress.SingleBar) {
+        const _ = lodash()
         // this.logger.info(`Generating ${unsolved} unsolved captchas...`)
         // create a new progress bar instance and use shades_classic theme
         // generate n unsolved captchas
