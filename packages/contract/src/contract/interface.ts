@@ -76,9 +76,9 @@ export class ProsopoCaptchaContract extends Contract {
         api: ApiPromise,
         abi: ContractAbi,
         address: string,
-        pair: KeyringPair,
         contractName: string,
         currentNonce: number,
+        pair: KeyringPair,
         logLevel?: LogLevel
     ) {
         // address: string, signer: KeyringPair, nativeAPI: ApiPromise

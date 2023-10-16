@@ -522,9 +522,9 @@ export function Manager(
             api,
             JSON.parse(abiJson),
             network.contract.address,
-            keyring.addFromAddress(getAccount().account.address),
             'prosopo',
-            0
+            0,
+            keyring.addFromAddress(getAccount().account.address)
         )
     }
 

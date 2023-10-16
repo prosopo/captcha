@@ -118,10 +118,9 @@ export class Environment implements ProsopoEnvironment {
             this.getApi(),
             this.abi,
             this.contractAddress,
-            this.pair,
             this.contractName,
-            // TODO can't find .toNumber() on Index type?
             parseInt(nonce.toString()),
+            this.pair,
             this.config.logLevel as unknown as LogLevel
         )
         return this.contractInterface

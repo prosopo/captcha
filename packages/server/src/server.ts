@@ -141,9 +141,9 @@ export class ProsopoServer {
             this.getApi(),
             this.abi,
             this.prosopoContractAddress,
-            this.pair,
             this.contractName,
-            0
+            0,
+            this.pair
         )
         return this.contract
     }
