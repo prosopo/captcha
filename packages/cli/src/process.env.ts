@@ -44,3 +44,7 @@ export function getSecret(who?: string): string {
 export function getConfig(): ProsopoConfig {
     return prosopoConfig() as ProsopoConfig
 }
+
+export function getDB(): string {
+    return process.env.db || ''
+}

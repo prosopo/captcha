@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
+import { ProsopoApiError, ProsopoEnvError, getPair, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'http'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { getConfig, getDB, getPairType, getSecret, getSs58Format } from './process.env.js'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
@@ -55,6 +55,12 @@ function startApi(env: ProviderEnvironment) {
 export async function start(env?: ProviderEnvironment) {
     if (!env) {
         loadEnv()
+
+        // Fail to start api if db is not defined
+        const db = getDB()
+        if (!db) {
+            throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')
+        }
 
         const ss58Format = getSs58Format()
         const pairType = getPairType()
