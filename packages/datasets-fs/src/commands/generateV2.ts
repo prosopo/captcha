@@ -167,11 +167,10 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
                 unlabelledItems.add(image)
             }
 
-            let items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
-            let indices: number[] = [...Array(items.length).keys()]
+            const itemsConcat: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
+            let indices: number[] = [...Array(itemsConcat.length).keys()]
             indices = _.shuffle(indices)
-            items = indices.map((i) => at(items, i))
-            items = items.map((item) => {
+            const items = indices.map((i) => at(itemsConcat, i)).map((item) => {
                 return {
                     data: item.data,
                     hash: item.hash,
