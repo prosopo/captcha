@@ -159,8 +159,8 @@ export const checkDuplicates = (
 ) => {
     // check for duplicates
     const all = new Set<string>()
-    if (options.allowDuplicatesLabelled) addAllUnique(all, labelled, 'labelled')
-    if (options.allowDuplicatesUnlabelled) addAllUnique(all, unlabelled, 'unlabelled')
+    if (!options.allowDuplicatesLabelled) addAllUnique(all, labelled, 'labelled')
+    if (!options.allowDuplicatesUnlabelled) addAllUnique(all, unlabelled, 'unlabelled')
 }
 
 const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
