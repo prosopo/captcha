@@ -72,6 +72,9 @@ export class ProsopoEnvError extends ProsopoBaseError {
         }
 
         console.error('\n********************* ERROR *********************\n')
+        if (this.cause?.message && this.cause.message.length > 1000) {
+            this.cause.message = this.cause.message.substring(0, 1000) + '...'
+        }
         console.error(this.cause?.message, this.stack, ...params)
     }
 }
@@ -85,6 +88,9 @@ export class ProsopoApiError extends ProsopoEnvError {
         this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
 
         console.error('\n********************* ERROR *********************\n')
+        if (this.cause?.message && this.cause.message.length > 1000) {
+            this.cause.message = this.cause.message.substring(0, 1000) + '...'
+        }
         console.error(this.cause?.message, this.stack, this.code, ...params)
     }
 }
