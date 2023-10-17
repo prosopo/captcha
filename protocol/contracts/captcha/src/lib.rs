@@ -249,8 +249,15 @@ pub mod captcha {
         pub payee: Payee,
     }
 
+    /// The seed used for random number generation. This records what the seed value was at what block number.
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Seed {
+        pub value: u128,
+        pub block_number: BlockNumber,
+    }
+
     // Contract storage
-    #[derive(Default)]
     #[ink(storage)]
     pub struct Captcha<KEY: StorageKey = ManualKey<0xABCDEF01>> {
         providers: Mapping<AccountId, Provider>,
@@ -262,7 +269,8 @@ pub mod captcha {
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
-        seed: u128, // the seed for rng
+        seed: Seed,                    // the seed for rng
+        seed_history: Lazy<Vec<Seed>>, // the history of seeds stored in most recent first order
     }
 
     impl Captcha {
@@ -298,25 +306,66 @@ pub mod captcha {
                 dapp_contracts: Default::default(),
                 user_accounts: Default::default(),
                 commits: Default::default(),
-                seed: 0,
+                seed: Seed {
+                    value: 0,
+                    block_number: Self::env().block_number(),
+                },
+                seed_history: Default::default(),
+            }
+        }
+
+        /// Prune the seed history by block. This is called when the seed is updated. It removes any seed records which are older than the max seed history length in blocks.
+        fn prune_seed_history(&mut self) {
+            let block_number = self.env().block_number();
+            if (self.seed.block_number != block_number) {
+                // trim the seed history as we've moved to a new block
+                let max_seed_history_len_blocks = self.get_max_seed_history_len_blocks();
+                let mut seed_history = self.seed_history.get_or_default();
+                // threshold begins at block 0 if the block number is less than the max seed history length in blocks
+                let threshold_block_number = 0 as BlockNumber;
+                let max_seed_history_len_blocks =
+                    self.get_max_seed_history_len_blocks() as BlockNumber;
+                if (block_number >= max_seed_history_len_blocks) {
+                    // otherwise the threshold begins at the current block number minus the max seed history length in blocks
+                    threshold_block_number = block_number - max_seed_history_len_blocks;
+                }
+                let mut oldest_seed = seed_history.last().unwrap_or(&self.seed);
+                while oldest_seed.block_number < threshold_block_number {
+                    // remove the oldest seed, it's over the threshold
+                    seed_history.pop();
+                    // get the next oldest seed
+                    oldest_seed = seed_history.last().unwrap_or(&self.seed);
+                }
             }
         }
 
         fn update_seed(&mut self) {
-            let caller = self.env().caller();
+            self.prune_seed_history();
+
             let block_number = self.env().block_number();
+            let caller = self.env().caller();
             let block_timestamp = self.env().block_timestamp();
             let seed = self.get_seed();
             // compute the next seed
             let next_seed =
                 common::common::next_seed_u128(seed, block_number, block_timestamp, &caller);
             // update the seed
-            self.seed = next_seed;
+            self.seed = Seed {
+                value: next_seed,
+                block_number,
+            };
         }
 
         #[ink(message)]
         pub fn get_seed(&self) -> u128 {
-            return self.seed;
+            return self.seed.value;
+        }
+
+        /// Get the maximum
+        #[ink(message)]
+        pub fn get_max_seed_history_len_blocks(&self) -> u16 {
+            let env_max_seed_history_len_blocks: u16 = 10;
+            env_max_seed_history_len_blocks
         }
 
         /// Get the git commit id from when this contract was built
