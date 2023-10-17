@@ -167,6 +167,34 @@ pub mod common {
         AsRef::<[u8; 32]>::as_ref(account)
     }
 
+    /// get the next u128 seed
+    pub fn next_seed_u128(
+        seed: u128,
+        block_number: BlockNumber,
+        block_timestamp: Timestamp,
+        caller: &AccountId,
+    ) -> u128 {
+        // convert inputs to bytes
+        let block_number_bytes = block_number.to_le_bytes();
+        let block_timestamp_bytes = block_timestamp.to_le_bytes();
+        let caller_bytes = account_id_bytes(caller);
+        let seed_bytes = seed.to_le_bytes();
+        // concat bytes
+        let mut bytes = [0u8; 60];
+        bytes[0..4].copy_from_slice(&block_number_bytes);
+        bytes[4..12].copy_from_slice(&block_timestamp_bytes);
+        bytes[12..44].copy_from_slice(&caller_bytes[..]);
+        bytes[44..60].copy_from_slice(&seed_bytes);
+        // hash bytes
+        let mut hash_output =
+            <ink::env::hash::Blake2x128 as ink::env::hash::HashOutput>::Type::default();
+        <ink::env::hash::Blake2x128 as ink::env::hash::CryptoHash>::hash(&bytes, &mut hash_output);
+        // convert hash to u128
+        let mut result = [0u8; 16];
+        result.copy_from_slice(&hash_output);
+        u128::from_le_bytes(result)
+    }
+
     #[derive(Default)]
     /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
