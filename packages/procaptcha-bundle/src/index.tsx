@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel } from '@prosopo/common'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
-import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import { LogLevel } from '@prosopo/common'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
@@ -22,6 +22,7 @@ interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
     callback?: string
+    'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
     'expired-callback'?: string //todo
     'open-callback'?: string //todo
@@ -149,6 +150,13 @@ const renderLogic = (
         // Getting and setting the theme
         const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
         config.theme = validateTheme(themeAttribute)
+
+        // Getting and setting the challenge valid length
+        const challengeValidLengthAttribute =
+            renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
+        if (challengeValidLengthAttribute) {
+            config.challengeValidLength = parseInt(challengeValidLengthAttribute)
+        }
 
         createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
     })
