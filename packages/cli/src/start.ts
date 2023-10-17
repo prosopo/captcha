@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, ProsopoEnvError, getPair, i18nMiddleware } from '@prosopo/common'
+import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'http'
 import { getConfig, getDB, getPairType, getSecret, getSs58Format } from './process.env.js'
@@ -57,10 +57,7 @@ export async function start(env?: ProviderEnvironment) {
         loadEnv()
 
         // Fail to start api if db is not defined
-        const db = getDB()
-        if (!db) {
-            throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')
-        }
+        getDB()
 
         const ss58Format = getSs58Format()
         const pairType = getPairType()

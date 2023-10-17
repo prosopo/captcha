@@ -46,5 +46,8 @@ export function getConfig(): ProsopoConfig {
 }
 
 export function getDB(): string {
-    return process.env.db || ''
+    if (!process.env.db) {
+        throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')
+    }
+    return process.env.db
 }
