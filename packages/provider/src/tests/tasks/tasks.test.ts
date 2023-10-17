@@ -17,14 +17,21 @@ import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
 import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract'
-import { ContractDeployer, ProsopoContractError, getBlockNumber, getDispatchError, wrapQuery } from '@prosopo/contract'
+import {
+    ContractDeployer,
+    ProsopoContractError,
+    getBlockNumber,
+    getDispatchError,
+    getPairAsync,
+    wrapQuery,
+} from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
 import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { ViteTestContext, getPair } from '@prosopo/env'
+import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
 import { captchaData } from '../data/captchas.js'
@@ -53,7 +60,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     beforeEach(async function (context) {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
-        const alicePair = await getPair(network, '//Alice')
+        const alicePair = await getPairAsync(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
@@ -92,7 +99,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             2
         )
         const network = env.config.networks[env.config.defaultNetwork]
-        const pair = await getPair(network, accountMnemonic(dappUserAccount), '')
+        const pair = await getPairAsync(network, accountMnemonic(dappUserAccount), '')
         await env.changeSigner(pair)
 
         const userSalt = randomAsHex()

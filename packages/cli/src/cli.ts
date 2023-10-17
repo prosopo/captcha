@@ -13,7 +13,8 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProviderEnvironment, getPair } from '@prosopo/env'
+import { ProviderEnvironment } from '@prosopo/env'
+import { getPairAsync } from '@prosopo/contract'
 import { getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
@@ -27,7 +28,7 @@ async function main() {
 
     const secret = getSecret()
     const config: ProsopoConfigOutput = getConfig()
-    const pair = await getPair(config.networks[config.defaultNetwork], secret, '')
+    const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
 
     log.info(`Pair address: ${pair.address}`)
 

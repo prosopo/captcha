@@ -14,17 +14,16 @@
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
-import { ContractDeployer } from '@prosopo/contract'
+import { ContractDeployer, getPairAsync } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig } from '@prosopo/cli'
-import { getPair } from '@prosopo/env'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const network = defaultConfig().networks[defaultConfig().defaultNetwork]
-    const pair = await getPair(network, '//Alice')
+    const pair = await getPairAsync(network, '//Alice')
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold

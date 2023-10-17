@@ -25,7 +25,8 @@
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
         "PAIR_TYPE_UNDEFINED": "Pair type undefined",
-        "NOT_IMPLEMENTED": "Ne sprovodi"
+        "NOT_IMPLEMENTED": "Ne sprovodi",
+        "NO_PAIR_TYPE_OR_SS58_FORMAT": "No pair type or ss58 format provided"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",

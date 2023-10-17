@@ -15,12 +15,11 @@ import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractAbi } from '@prosopo/captcha-contract'
-import { ContractDeployer } from '@prosopo/contract'
+import { ContractDeployer, getPairAsync } from '@prosopo/contract'
 import { ContractFile } from '@prosopo/captcha-contract'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getSecret } from '@prosopo/cli'
-import { getPair } from '@prosopo/env'
 import { hexToU8a } from '@polkadot/util'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
@@ -32,7 +31,7 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
     const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
-    const pair = await getPair(network, secret)
+    const pair = await getPairAsync(network, secret)
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()
     log.debug(reverseHexString(env.getApi().createType('u16', 10).toHex().toString()), 'max_user_history_len')

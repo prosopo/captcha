@@ -14,8 +14,7 @@
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { defaultConfig } from '@prosopo/cli'
-import { generateMnemonic } from '@prosopo/contract'
-import { getPair } from '@prosopo/env'
+import { generateMnemonic, getPairAsync } from '@prosopo/contract'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -23,7 +22,7 @@ dotenv.config()
 async function main() {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
-    const pair = await getPair(network, '//Alice')
+    const pair = await getPairAsync(network, '//Alice')
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)

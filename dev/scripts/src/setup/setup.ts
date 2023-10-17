@@ -15,10 +15,10 @@ import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { Payee } from '@prosopo/captcha-contract'
-import { ProviderEnvironment, getPair } from '@prosopo/env'
+import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'
-import { generateMnemonic, wrapQuery } from '@prosopo/contract'
+import { generateMnemonic, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
 import { registerProvider } from './provider.js'
@@ -124,7 +124,7 @@ export async function setup(force: boolean) {
         const config = defaultConfig()
         const secret = config.account.secret
         const network = config.networks[config.defaultNetwork]
-        const pair = await getPair(network, secret)
+        const pair = await getPairAsync(network, secret)
 
         const env = new ProviderEnvironment(pair, defaultConfig())
         await env.isReady()
@@ -147,13 +147,13 @@ export async function setup(force: boolean) {
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
-        defaultProvider.pair = await getPair(network, secret)
+        defaultProvider.pair = await getPairAsync(network, secret)
 
         await registerProvider(env, defaultProvider, force)
 
         defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
-        defaultDapp.pair = await getPair(network, secret)
+        defaultDapp.pair = await getPairAsync(network, secret)
 
         env.logger.info('Registering dapp...')
         await registerDapp(env, defaultDapp)

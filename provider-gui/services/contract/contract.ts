@@ -1,7 +1,7 @@
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
-import { getPair } from '@prosopo/env'
+import { getPair } from '@prosopo/contract'
 
 export const getContractApi = async (account: string) => {
     // Todo: spread the default env, add in the stuff we require for gui

@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { MockEnvironment, getPair } from '@prosopo/env'
+import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util.js'
 import { describe, expect, test } from 'vitest'
+import { getPairAsync } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 
 describe('UTIL FUNCTIONS', async () => {
@@ -47,7 +48,7 @@ describe('UTIL FUNCTIONS', async () => {
     test('correctly determines if a task is still running', async () => {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
-        const alicePair = await getPair(network, '//Alice')
+        const alicePair = await getPairAsync(network, '//Alice')
         env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await env.isReady()

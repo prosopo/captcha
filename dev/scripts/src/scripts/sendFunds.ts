@@ -16,7 +16,7 @@ import { Environment } from '@prosopo/env'
 import { at } from '@prosopo/util'
 import { config } from 'dotenv'
 import { defaultConfig } from '@prosopo/cli'
-import { getPair } from '@prosopo/env'
+import { getPairAsync } from '@prosopo/contract'
 import { sendFunds } from '../setup/index.js'
 
 config()
@@ -24,7 +24,7 @@ config()
 async function main(account: string) {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
-    const pair = await getPair(network, '//Alice')
+    const pair = await getPairAsync(network, '//Alice')
     const env = new Environment(pair, config)
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN('100000000000000000'))

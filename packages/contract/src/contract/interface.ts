@@ -30,9 +30,9 @@ import {
     getPrimitiveTypes,
     getStorageKeyAndType,
 } from './storage.js'
+import { getReadOnlyPair } from '../accounts/index.js'
 import { useWeightImpl } from './useWeight.js'
 import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
-
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
 export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
@@ -78,9 +78,14 @@ export class ProsopoCaptchaContract extends Contract {
         address: string,
         contractName: string,
         currentNonce: number,
-        pair: KeyringPair,
-        logLevel?: LogLevel
+        pair?: KeyringPair,
+        logLevel?: LogLevel,
+        userAccount?: string
     ) {
+        // Get a read-only contract with a dummy account
+        if (!pair) {
+            pair = getReadOnlyPair(api, userAccount)
+        }
         // address: string, signer: KeyringPair, nativeAPI: ApiPromise
         super(address, pair, api)
         this.api = api

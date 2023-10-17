@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
-import { ProviderEnvironment, getPair } from '@prosopo/env'
+import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'http'
+import { getPairAsync } from '@prosopo/contract'
 import { getSecret } from './process.env.js'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
@@ -59,7 +60,7 @@ export async function start(env?: ProviderEnvironment) {
 
         const secret = getSecret()
         const config = getConfig()
-        const pair = await getPair(config.networks[config.defaultNetwork], secret, '')
+        const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(pair, config)
     }
     await env.isReady()

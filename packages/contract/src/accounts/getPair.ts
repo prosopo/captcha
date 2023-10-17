@@ -11,21 +11,39 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ApiPromise } from '@polkadot/api'
+import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { NetworkConfig } from '@prosopo/types'
+import { NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
 import { hexToU8a, isHex } from '@polkadot/util'
 
-export async function getPair(
-    networkConfig: NetworkConfig,
+export async function getPairAsync(
+    networkConfig?: NetworkConfig,
     secret?: string,
-    account?: string | Uint8Array
+    account?: string | Uint8Array,
+    pairType?: KeypairType,
+    ss58Format?: number
 ): Promise<KeyringPair> {
     await cryptoWaitReady()
-    const pairType = networkConfig.pairType
-    const ss58Format = networkConfig.ss58Format
+    return getPair(networkConfig, secret, account, pairType, ss58Format)
+}
+
+export function getPair(
+    networkConfig?: NetworkConfig,
+    secret?: string,
+    account?: string | Uint8Array,
+    pairType?: KeypairType,
+    ss58Format?: number
+): KeyringPair {
+    if (networkConfig) {
+        pairType = networkConfig.pairType
+        ss58Format = networkConfig.ss58Format
+    } else if (!pairType || !ss58Format) {
+        throw new ProsopoEnvError('GENERAL.NO_PAIR_TYPE_OR_SS58_FORMAT')
+    }
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (!secret && account) {
         return keyring.addFromAddress(account)
@@ -52,4 +70,15 @@ export async function getPair(
     } else {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }
+}
+
+export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringPair {
+    // 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM is the all zero address
+    return getPair(
+        undefined,
+        undefined,
+        userAccount || '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM',
+        NetworkPairTypeSchema.parse('sr25519'),
+        api.registry.chainSS58
+    )
 }

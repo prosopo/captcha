@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoServer, getServerConfig } from '@prosopo/server'
-import { getPair } from '@prosopo/env'
+import { getPair } from '@prosopo/contract'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'

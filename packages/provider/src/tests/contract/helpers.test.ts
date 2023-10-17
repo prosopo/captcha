@@ -15,13 +15,13 @@ import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { MockEnvironment, getPair } from '@prosopo/env'
+import { MockEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at } from '@prosopo/util'
-import { encodeStringArgs, wrapQuery } from '@prosopo/contract'
+import { encodeStringArgs, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 
 declare module 'vitest' {
@@ -35,7 +35,7 @@ describe('CONTRACT HELPERS', function () {
     beforeEach(async function (context) {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
-        const alicePair = await getPair(network, '//Alice')
+        const alicePair = await getPairAsync(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()

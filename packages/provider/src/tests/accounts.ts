@@ -16,7 +16,7 @@ import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
-import { getPair } from '@prosopo/env'
+import { getPairAsync } from '@prosopo/contract'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
@@ -46,7 +46,7 @@ export const DAPP: IDappAccount = {
 }
 
 export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
-    const pair = await getPair(env.config.networks[env.config.defaultNetwork], accountMnemonic(account), '')
+    const pair = await getPairAsync(env.config.networks[env.config.defaultNetwork], accountMnemonic(account), '')
     await env.changeSigner(pair)
     return new Tasks(env)
 }

@@ -15,12 +15,12 @@ import { Abi } from '@polkadot/api-contract'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts.js'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN, stringToU8a } from '@polkadot/util'
-import { ContractDeployer, ProsopoContractError, wrapQuery } from '@prosopo/contract'
+import { ContractDeployer, ProsopoContractError, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/captcha-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
 import { ProsopoEnvError, TranslationKey } from '@prosopo/common'
-import { ProviderEnvironment, getPair } from '@prosopo/env'
+import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
@@ -196,7 +196,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             throw new ProsopoEnvError('DEVELOPER.NO_MOCK_ENV')
         }
         const network = this.mockEnv.config.networks[this.mockEnv.defaultNetwork]
-        const pair = await getPair(network, mnemonic, '')
+        const pair = await getPairAsync(network, mnemonic, '')
 
         return this.mockEnv.changeSigner(pair)
     }

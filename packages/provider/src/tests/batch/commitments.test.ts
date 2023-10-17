@@ -18,7 +18,7 @@ import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
 import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { CaptchaStatus } from '@prosopo/captcha-contract'
-import { MockEnvironment, getPair } from '@prosopo/env'
+import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { UserCommitmentRecord } from '@prosopo/types-database'
@@ -26,11 +26,11 @@ import { ViteTestContext } from '@prosopo/env'
 import { accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at } from '@prosopo/util'
+import { getPairAsync, wrapQuery } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test.js'
-import { wrapQuery } from '@prosopo/contract'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
@@ -67,7 +67,7 @@ describe('BATCH TESTS', function () {
     beforeEach(async function (context: ViteTestContext) {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
-        const alicePair = await getPair(network, '//Alice')
+        const alicePair = await getPairAsync(network, '//Alice')
         context.env = new MockEnvironment(alicePair, getTestConfig())
         try {
             await context.env.isReady()
@@ -92,7 +92,7 @@ describe('BATCH TESTS', function () {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
             await env.changeSigner(
-                await getPair(env.config.networks[env.config.defaultNetwork], accountMnemonic(providerAccount), '')
+                await getPairAsync(env.config.networks[env.config.defaultNetwork], accountMnemonic(providerAccount), '')
             )
             // contract API must be initialized with an account that has funds or the error StorageDepositLimitExhausted
             // will be thrown when trying to batch commitments
