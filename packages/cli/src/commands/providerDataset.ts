@@ -38,6 +38,7 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                 }
                 // get the dataset from the provider database
                 const result = await tasks.getProviderDataset(datasetId)
+                logger.info(`Got dataset, writing to file: ${argv.file}`)
                 // export the result to file
                 await writeJSONFile(z.string().parse(argv.file), result)
             } catch (err) {
