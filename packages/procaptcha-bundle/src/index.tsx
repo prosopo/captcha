@@ -24,9 +24,9 @@ interface ProcaptchaRenderOptions {
     callback?: string
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
-    'expired-callback'?: string //todo
-    'open-callback'?: string //todo
-    'close-callback'?: string //todo
+    'expired-callback'?: string
+    'open-callback'?: string
+    'close-callback'?: string
     'error-callback'?: string
 }
 

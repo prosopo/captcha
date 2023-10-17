@@ -112,11 +112,11 @@ export function Manager(
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
-            onExpired: () => {
-                alert('Challenge has expired, please try again')
-            },
             onFailed: () => {
                 alert('Captcha challenge failed. Please try again')
+            },
+            onExpired: () => {
+                alert('Challenge has expired, please try again')
             },
             onChalExpired: () => {
                 alert('Challenge has expired, please try again')
