@@ -193,22 +193,25 @@ export function matchItemsToSolutions(
     solutions: RawSolution[] | HashedSolution[],
     items: HashedItem[] | undefined
 ): HashedSolution[] {
-    return (
-        solutions?.map((solution: string | number) => {
-            const index = parseInt(solution.toString())
-            const hash = items && items[index] && (items[index]?.hash || solution)
-
-            if (!hash) {
-                throw new ProsopoEnvError('CAPTCHA.MISSING_ITEM_HASH')
-            }
-
-            if (!isHex(hash)) {
+    if (!items) {
+        return []
+    }
+    return solutions.map((solution: string | number) => {
+        if (typeof solution === 'string') {
+            // solution must already be a hash
+            // check that solution is in items array
+            if (!items?.some((item) => item.hash === solution)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_HASH')
             }
-
-            return hash
-        }) || []
-    )
+            return solution
+        }
+        // else solution must be a number
+        // so lookup the item at that index
+        const item = at(items, solution)
+        // get the hash of the item
+        const hash = item.hash
+        return hash
+    })
 }
 
 /**
