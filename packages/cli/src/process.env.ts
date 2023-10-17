@@ -38,3 +38,10 @@ export function getSecret(who?: string): string {
     }
     return secret
 }
+
+export function getDB(): string {
+    if (!process.env.DATABASE_HOST) {
+        throw new ProsopoEnvError('DATABASE.DATABASE_HOST_UNDEFINED')
+    }
+    return process.env.DATABASE_HOST
+}

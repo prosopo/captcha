@@ -65,6 +65,7 @@
         "CONNECT_ERROR": "Failed to connect",
         "DATABASE_IMPORT_FAILED": "Failed to import database engine",
         "DATABASE_UNDEFINED": "Database client is not connected",
+        "DATABASE_HOST_UNDEFINED": "Database host address is not defined",
         "COLLECTION_UNDEFINED": "Database collection is not available",
         "DATASET_LOAD_FAILED": "Data set load failed",
         "DATASET_GET_FAILED": "Failed to get dataset",
@@ -125,6 +126,7 @@
         "DIRECTORY_NOT_FOUND": "Directory not found",
         "FILE_NOT_FOUND": "File not found",
         "FILE_ALREADY_EXISTS": "File already exists",
-        "DIRECTORY_ALREADY_EXISTS": "Directory already exists"
+        "DIRECTORY_ALREADY_EXISTS": "Directory already exists",
+        "SAME_FILE": "Same file"
     }
 }

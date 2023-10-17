@@ -15,7 +15,7 @@ import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'http'
 import { getPairAsync } from '@prosopo/contract'
-import { getSecret } from './process.env.js'
+import { getSecret, getDB } from './process.env.js'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
@@ -57,6 +57,9 @@ function startApi(env: ProviderEnvironment) {
 export async function start(env?: ProviderEnvironment) {
     if (!env) {
         loadEnv()
+
+        // Fail to start api if db is not defined
+        getDB()
 
         const secret = getSecret()
         const config = getConfig()
