@@ -121,7 +121,8 @@ export class Environment implements ProsopoEnvironment {
             this.contractName,
             parseInt(nonce.toString()),
             this.pair,
-            this.config.logLevel as unknown as LogLevel
+            this.config.logLevel as unknown as LogLevel,
+            this.config.account.address // allows calling the contract from a public address only
         )
         return this.contractInterface
     }
