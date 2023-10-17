@@ -44,3 +44,10 @@ export function getSecret(who?: string): string {
 export function getConfig(): ProsopoConfig {
     return prosopoConfig() as ProsopoConfig
 }
+
+export function getDB(): string {
+    if (!process.env.DATABASE_HOST) {
+        throw new ProsopoEnvError('DATABASE.DATABASE_HOST_UNDEFINED')
+    }
+    return process.env.DATABASE_HOST
+}
