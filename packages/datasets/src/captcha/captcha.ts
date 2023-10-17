@@ -18,7 +18,7 @@ import {
     CaptchaSolutionArraySchema,
     CaptchaWithoutId,
     DatasetRaw,
-    DatasetSchema,
+    DatasetWithNumericSolutionSchema,
     HashedItem,
     HashedSolution,
     Item,
@@ -38,14 +38,14 @@ export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
  */
 export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
-        const result = DatasetSchema.parse(datasetJSON)
+        const result = DatasetWithNumericSolutionSchema.parse(datasetJSON)
         const result2: DatasetRaw = {
             format: result.format,
             captchas: result.captchas.map((captcha) => {
                 return {
                     ...captcha,
-                    solution: captcha.solution || [],
-                    unlabelled: captcha.unlabelled || [],
+                    solution: captcha.solution ? matchItemsToSolutions(captcha.solution, captcha.items) : [],
+                    unlabelled: captcha.unlabelled ? matchItemsToSolutions(captcha.unlabelled, captcha.items) : [],
                 }
             }),
         }
