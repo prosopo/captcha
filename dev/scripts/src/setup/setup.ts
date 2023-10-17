@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { Payee } from '@prosopo/captcha-contract'
@@ -122,9 +121,9 @@ export async function setup(force: boolean) {
         }
 
         const config = defaultConfig()
-        const secret = config.account.secret
+        const providerSecret = config.account.secret
         const network = config.networks[config.defaultNetwork]
-        const pair = await getPairAsync(network, secret)
+        const pair = await getPairAsync(network, providerSecret)
 
         const env = new ProviderEnvironment(pair, defaultConfig())
         await env.isReady()
@@ -134,26 +133,18 @@ export async function setup(force: boolean) {
             env.getContractInterface().query
         )()
         const stakeAmount = result.rawNumber
-        let fundAmount: BN = new BN(0)
-        if (typeof defaultDapp.fundAmount === 'number') {
-            fundAmount = new BN(defaultDapp.fundAmount)
-        } else {
-            fundAmount = defaultDapp.fundAmount
-        }
-
-        defaultDapp.fundAmount = BN.max(stakeAmount, fundAmount)
-
+        defaultDapp.fundAmount = stakeAmount.muln(2)
         defaultProvider.secret = mnemonic
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
-        defaultProvider.pair = await getPairAsync(network, secret)
+        defaultProvider.pair = await getPairAsync(network, providerSecret)
 
         await registerProvider(env, defaultProvider, force)
 
         defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
-        defaultDapp.pair = await getPairAsync(network, secret)
+        defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
 
         env.logger.info('Registering dapp...')
         await registerDapp(env, defaultDapp)
