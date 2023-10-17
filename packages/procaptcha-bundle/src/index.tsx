@@ -143,7 +143,7 @@ const renderLogic = (
                 console.log('Challenge expired')
             },
             onExpired: () => {
-                console.log('Challenge expired')
+                alert('Completed challenge has expired, please try again')
             },
             onError: (error: Error) => {
                 console.error(error)
