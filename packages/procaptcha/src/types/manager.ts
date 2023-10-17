@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { GetCaptchaResponse } from '@prosopo/api'
 import { ProcaptchaClientConfig, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
@@ -71,8 +71,11 @@ export interface ProcaptchaEvents {
     onAccountNotFound: (address: string) => void
     onHuman: (output: ProcaptchaOutput) => void
     onExtensionNotFound: () => void
-    onExpired: () => void
+    onChalExpired: () => void //todo - change naming to chalExpired elsewhere
     onFailed: () => void
+    onExpired: () => void //todo - impl successful challenge expiration
+    onOpen: () => void //todo - impl on open event for callbacks
+    onClose: () => void //todo - impl on close event for callbacks
 }
 
 export type TProcaptchaEventNames = keyof ProcaptchaEvents
@@ -82,6 +85,9 @@ export const ProcapchaEventNames: TProcaptchaEventNames[] = [
     'onAccountNotFound',
     'onHuman',
     'onExtensionNotFound',
-    'onExpired',
+    'onChalExpired',
     'onFailed',
+    'onExpired',
+    'onOpen',
+    'onClose',
 ]
