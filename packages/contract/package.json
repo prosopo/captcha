@@ -1,23 +1,30 @@
 {
     "name": "@prosopo/contract",
-    "version": "0.1.18",
+    "version": "0.2.7",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
-    "main": "./dist/index.js",
     "type": "module",
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
+    "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "files": [
         "dist"
     ],
     "exports": {
-        ".": "./dist/index.js",
-        "./types": "./dist/types/index.js",
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        },
         "./captcha": "./dist/captcha/index.js"
     },
     "typesVersions": {
@@ -31,8 +38,6 @@
         }
     },
     "dependencies": {
-        "@727-ventures/typechain-polkadot": "1.1.0",
-        "@727-ventures/typechain-types": "^1.1.0",
         "@polkadot/api": "10.9.1",
         "@polkadot/api-contract": "10.9.1",
         "@polkadot/keyring": "12.3.2",
@@ -42,16 +47,17 @@
         "@polkadot/types-create": "10.9.1",
         "@polkadot/util": "12.3.2",
         "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/common": "^0.1.18",
-        "@prosopo/types": "^0.1.18",
-        "@prosopo/util": "^0.1.18",
+        "@prosopo/common": "0.2.7",
+        "@prosopo/types": "0.2.7",
+        "@prosopo/util": "0.2.7",
+        "@prosopo/captcha-contract": "0.2.7",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {
         "@polkadot/api-augment": "10.9.1",
         "ts-node": "^10.9.1",
-        "tslib": "^2.6.2",
-        "typescript": "^5.1.6"
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
     },
     "repository": {
         "type": "git",

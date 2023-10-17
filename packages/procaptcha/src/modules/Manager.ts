@@ -21,15 +21,10 @@ import {
 } from '../types/manager.js'
 import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import {
-    CaptchaSolution,
-    ContractAbi,
-    ProcaptchaClientConfig,
-    ProsopoClientConfig,
-    RandomProvider,
-} from '@prosopo/types'
+import { CaptchaSolution, ProcaptchaClientConfig, ProsopoClientConfig } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -48,9 +43,9 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
         loading: false,
+        index: 0,
         challenge: undefined,
-        solutions: [],
-        index: -1,
+        solutions: undefined,
         isHuman: false,
         captchaApi: undefined,
         account: undefined,
@@ -252,7 +247,7 @@ export function Manager(
                 contract.query.getRandomActiveProvider,
                 contract.query
             )(account.account.address, config.account.address)
-            const blockNumber = getRandomProviderResponse.blockNumber
+            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
@@ -520,7 +515,7 @@ export function Manager(
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         return new ProsopoCaptchaContract(
             api,
-            abiJson as ContractAbi,
+            JSON.parse(abiJson),
             network.contract.address,
             keyring.addFromAddress(getAccount().account.address),
             'prosopo',

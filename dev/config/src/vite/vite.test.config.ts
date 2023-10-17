@@ -15,10 +15,14 @@ export default function () {
             },
         },
         test: {
-            include: ['../../packages/*/tests/**/*.test.ts'],
+            include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
             exclude: ['../../demos/**/*'], // '../!packages/**/*'],
             singleThread: true,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
+            logHeapUsage: true,
+            coverage: {
+                enabled: true,
+            },
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true })],
     })

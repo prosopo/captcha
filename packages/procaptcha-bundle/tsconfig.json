@@ -5,10 +5,13 @@
         "outDir": "./dist",
         "lib": ["es6", "dom"]
     },
-    "include": ["src/index.tsx", "src/index.html"],
+    "include": ["src", "src/**/*.json", "src/index.html"],
     "references": [
         {
             "path": "../../dev/config"
+        },
+        {
+            "path": "../procaptcha"
         },
         {
             "path": "../procaptcha-react"

@@ -18,7 +18,8 @@
 #[ink::contract]
 pub mod proxy {
 
-    use common::common::config;
+    use common::common::check_is_admin;
+    use common::common::config::*;
     use common::common::Error;
     use common::err;
     #[allow(unused_imports)]
@@ -56,7 +57,7 @@ pub mod proxy {
         #[ink(constructor)]
         pub fn new() -> Result<Self, Error> {
             let result = Self::new_unguarded();
-            let author = Self::get_admin(&result);
+            let author = get_admin();
             let caller = Self::env().caller();
             if caller != author {
                 return Err(Error::NotAuthor);
@@ -77,16 +78,6 @@ pub mod proxy {
             Self {}
         }
 
-        /// Get the git commit id from when this contract was built
-        fn get_git_commit_id(&self) -> [u8; 20] {
-            config::get_git_commit_id()
-        }
-
-        /// the admin which can control this contract. set to author/instantiator by default
-        fn get_admin(&self) -> AccountId {
-            config::get_admin()
-        }
-
         fn get_destination(&self) -> AccountId {
             // the destination contract to forward to, set to 0 by default
             AccountId::from([
@@ -95,16 +86,9 @@ pub mod proxy {
             ])
         }
 
-        fn check_is_admin(&self, account: AccountId) -> Result<(), Error> {
-            if account != self.get_admin() {
-                return err!(self, Error::NotAuthorised);
-            }
-            Ok(())
-        }
-
         fn withdraw(&mut self, amount: Balance) -> Result<ProxyReturnTypes, Error> {
             let caller = self.env().caller();
-            self.check_is_admin(caller)?;
+            check_is_admin(caller)?;
 
             match self.env().transfer(caller, amount) {
                 Ok(()) => Ok(ProxyReturnTypes::Void),
@@ -114,7 +98,7 @@ pub mod proxy {
 
         fn terminate(&mut self) -> Result<ProxyReturnTypes, Error> {
             let caller = self.env().caller();
-            self.check_is_admin(caller)?;
+            check_is_admin(caller)?;
             self.env().terminate_contract(caller);
             // unreachable
         }
@@ -125,9 +109,8 @@ pub mod proxy {
         /// Errors are returned if the caller is not an admin, if the code hash is the callers
         /// account_id, if the code is not found, and for any other unknown ink errors
         fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
-            if self.env().caller() != self.get_admin() {
-                return err!(self, Error::NotAuthorised);
-            }
+            let caller = self.env().caller();
+            check_is_admin(caller)?;
 
             match ink::env::set_code_hash(&code_hash) {
                 Ok(()) => Ok(()),
@@ -179,10 +162,8 @@ pub mod proxy {
         #[ink(message, selector = 0x9BAE9D5E)]
         pub fn handler(&mut self, msg: ProxyMessages) -> Result<ProxyReturnTypes, Error> {
             match msg {
-                ProxyMessages::GetGitCommitId => {
-                    Ok(ProxyReturnTypes::U8x20(self.get_git_commit_id()))
-                }
-                ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::AccountId(self.get_admin())),
+                ProxyMessages::GetGitCommitId => Ok(ProxyReturnTypes::U8x20(get_git_commit_id())),
+                ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::AccountId(get_admin())),
                 ProxyMessages::GetDestination => {
                     Ok(ProxyReturnTypes::AccountId(self.get_destination()))
                 }
