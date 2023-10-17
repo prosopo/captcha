@@ -4,13 +4,16 @@
         "rootDir": "./src",
         "outDir": "./dist"
     },
-    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "include": ["src", "src/**/*.json"],
     "references": [
         {
             "path": "../types"
         },
         {
             "path": "../util"
+        },
+        {
+            "path": "../../contracts/captcha"
         }
     ]
 }

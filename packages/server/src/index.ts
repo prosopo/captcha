@@ -13,14 +13,16 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
 import { BlockHash } from '@polkadot/types/interfaces'
-import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
+import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfig } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProcaptchaOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
+import { PublicAccountNetwork, getPublicProsopoPair } from './publicProsopoPair.js'
+import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { get } from '@prosopo/util'
 
@@ -57,7 +59,7 @@ export class ProsopoServer {
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
-            this.abi = abiJson as ContractAbi
+            this.abi = JSON.parse(abiJson)
         } else {
             throw new ProsopoEnvError(
                 'CONFIG.UNKNOWN_ENVIRONMENT',
@@ -122,11 +124,9 @@ export class ProsopoServer {
         if (providerUrlTrimmed !== providerUrl) {
             return false
         }
-        console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed && commitmentId) {
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(user, commitmentId)
-            console.log(result)
             return result.solutionApproved
         } else {
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
@@ -146,4 +146,10 @@ export class ProsopoServer {
         )
         return this.contract
     }
+}
+
+export const PublicProsopoServer = async (config: ProsopoServerConfig, publicAccountNetwork: PublicAccountNetwork) => {
+    const publicProsopoPair = await getPublicProsopoPair(publicAccountNetwork)
+
+    return new ProsopoServer(publicProsopoPair, config)
 }

@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
 import { ProsopoEnvError } from './error.js'
 import { z } from 'zod'
-import consola, { LogLevels as ConsolaLogLevels } from 'consola/browser'
 
 export interface Logger {
     log(message: unknown, ...args: unknown[]): void
@@ -45,12 +45,12 @@ export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
 
 // Get the default logger (i.e. the global logger)
 export function getLoggerDefault(): Logger {
-    return getLoggerAdapterConsola(LogLevel.enum.info, 'global')
+    return defaultLogger
 }
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = consola.create({}).withTag(scope)
+    const logger = createConsola({}).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
@@ -107,5 +107,23 @@ export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
         return LogLevel.parse(logLevel)
     } catch (e) {
         throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', logLevel)
+    }
+}
+
+const defaultLogger = getLoggerAdapterConsola(LogLevel.enum.info, 'global')
+
+export class Loggable {
+    #logger: Logger
+
+    constructor() {
+        this.#logger = getLoggerDefault()
+    }
+
+    public get logger(): Logger {
+        return this.#logger
+    }
+
+    public set logger(logger: Logger) {
+        this.#logger = logger
     }
 }

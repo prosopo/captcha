@@ -13,13 +13,44 @@
 // limitations under the License.
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
-import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
-import React from 'react'
 
-function getConfig(siteKey?: string): ProcaptchaConfigOptional {
+interface ProcaptchaRenderOptions {
+    siteKey: string
+    theme?: 'light' | 'dark'
+    callback?: string
+    'chalexpired-callback'?: string
+    'error-callback'?: string
+}
+
+type ProcaptchaUrlParams = {
+    onloadUrlCallback: string | undefined
+    renderExplicit: string | undefined
+}
+
+const BUNDLE_NAME = 'procaptcha.bundle.js'
+
+const getCurrentScript = () =>
+    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
+        ? document.currentScript
+        : undefined
+
+const extractParams = (name: string): ProcaptchaUrlParams => {
+    const script = getCurrentScript()
+    if (script && script.src.indexOf(`${name}`) !== -1) {
+        const params = new URLSearchParams(script.src.split('?')[1])
+        return {
+            onloadUrlCallback: params.get('onload') || undefined,
+            renderExplicit: params.get('render') || undefined,
+        }
+    }
+    return { onloadUrlCallback: undefined, renderExplicit: undefined }
+}
+
+const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
     if (!siteKey) {
         siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || ''
     }
@@ -57,71 +88,120 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     }
 }
 
-function getParentForm(element: Element): HTMLFormElement | null {
-    let parent = element.parentElement
-    while (parent) {
-        if (parent.tagName === 'FORM') {
-            return parent as HTMLFormElement
-        }
-        parent = parent.parentElement
+const getParentForm = (element: Element): HTMLFormElement | null => element.closest('form') as HTMLFormElement
+
+const getWindowCallback = (callbackName: string) => {
+    const fn = (window as any)[callbackName.replace('window.', '')]
+    if (typeof fn !== 'function') {
+        throw new Error(`Callback ${callbackName} is not defined on the window object`)
     }
-    return null
+    return fn
 }
 
-export function render(callbacks?: ProcaptchaCallbacks) {
+const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
+    const form = getParentForm(element)
+
+    if (!form) {
+        console.error('Parent form not found for the element:', element)
+        return
+    }
+
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = ApiParams.procaptchaResponse
+    input.value = JSON.stringify(payload)
+    form.appendChild(input)
+}
+
+const customThemeSet = new Set(['light', 'dark'])
+const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
+    customThemeSet.has(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
+
+const renderLogic = (
+    elements: Element[],
+    config: ProcaptchaConfigOptional,
+    renderOptions?: ProcaptchaRenderOptions
+) => {
+    elements.forEach((element) => {
+        const callbackName = renderOptions?.callback || element.getAttribute('data-callback')
+        const chalExpiredCallbackName =
+            renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
+        const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
+
+        // Setting up default callbacks object
+        const callbacks = {
+            onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
+            onChallengeExpired: () => {
+                console.log('Challenge expired')
+            },
+            onError: (error: Error) => {
+                console.error(error)
+            },
+        }
+
+        if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
+        if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
+        if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
+
+        // Getting and setting the theme
+        const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
+        config.theme = validateTheme(themeAttribute)
+
+        createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+    })
+}
+
+// Implicit render for targeting all elements with class 'procaptcha'
+const implicitRender = () => {
+    // Get elements with class 'procaptcha'
     const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
-    const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
-    const config = getConfig(siteKey)
-    if (!callbacks) {
-        callbacks = {}
-    }
 
-    for (const element of elements) {
-        // get the custom callback functions for procaptcha events, if set
-        for (const callbackName of ProcapchaEventNames) {
-            const dataCallbackName = `data-${callbackName.toLowerCase()}` // e.g. data-onhuman
-            const callback = element.getAttribute(dataCallbackName)
-            if (callback) {
-                callbacks[callbackName] = (window as any)[callback.replace('window.', '')]
-            }
-        }
-        // get the custom theme, if set
-        const customTheme = element.getAttribute(`data-custom-theme`)
-        if (customTheme) {
-            config['sx'] = JSON.parse(customTheme)
-        }
+    // Set siteKey from renderOptions or from the first element's data-sitekey attribute
+    if (elements.length) {
+        const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
+        const config = getConfig(siteKey)
 
-        // set a default callback for onHuman, if not set
-        if (!callbacks['onHuman']) {
-            // append the prosopo payload to the containing form
-            callbacks['onHuman'] = function (payload: ProcaptchaOutput) {
-                // get form
-                const form = getParentForm(element)
-                // add a listener to the onSubmit event of the form
-                if (form) {
-                    // add the payload to the form
-                    const input = document.createElement('input')
-                    input.type = 'hidden'
-                    ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
-                    form.appendChild(input)
-                }
-            }
-        }
-        const root = createRoot(element)
-        root.render(<Procaptcha config={config} callbacks={callbacks} />) //wrap in fn and give user access to func
+        renderLogic(elements, config)
     }
 }
 
-//https://stackoverflow.com/questions/41174095/do-i-need-to-use-onload-to-start-my-webpack-bundled-code
+// Explicit render for targeting specific elements
+export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
+    const siteKey = renderOptions.siteKey
+    const config = getConfig(siteKey)
+    const element = document.getElementById(elementId)
+
+    if (!element) {
+        console.error('Element not found:', elementId)
+        return
+    }
+
+    renderLogic([element], config, renderOptions)
+}
+
 export default function ready(fn: () => void) {
-    if (document && document.readyState != 'loading') {
+    if (document && document.readyState !== 'loading') {
         console.log('document.readyState ready!')
         fn()
     } else {
         console.log('DOMContentLoaded listener!')
-        // note sure if this is the correct event listener
         document.addEventListener('DOMContentLoaded', fn)
     }
 }
 
-ready(render)
+// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
+// onRenderExplicit takes values of either explicit or implicit
+const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME)
+
+// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
+if (renderExplicit !== 'explicit') {
+    ready(implicitRender)
+}
+
+if (onloadUrlCallback) {
+    const onloadCallback = getWindowCallback(onloadUrlCallback)
+    // Add event listener to the script tag to call the callback function when the script is loaded
+    getCurrentScript()?.addEventListener('load', () => {
+        ready(onloadCallback)
+    })
+}

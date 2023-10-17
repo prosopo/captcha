@@ -12,15 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
-import {
-    ArgumentTypes,
-    BatchCommitConfig,
-    Commit,
-    ExtrinsicBatch,
-    ScheduledTaskNames,
-    ScheduledTaskStatus,
-} from '@prosopo/types'
 import { BN } from '@polkadot/util'
+import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { Commit, Hash } from '@prosopo/captcha-contract'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
@@ -109,12 +103,12 @@ export class BatchCommitmentsTask {
     async createExtrinsics(commitments: UserCommitmentRecord[]): Promise<ExtrinsicBatch> {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contract.abi.findMessage(CONTRACT_METHOD_NAME)
-        const batchedCommitmentIds: ArgumentTypes.Hash[] = []
+        const batchedCommitmentIds: Hash[] = []
         let totalRefTime = new BN(0)
         let totalProofSize = new BN(0)
         let totalFee = new BN(0)
         const maxBlockWeight = this.contract.api.consts.system.blockWeights.maxBlock
-        const commitmentArray: ArgumentTypes.Commit[] = []
+        const commitmentArray: Commit[] = []
         let extrinsic: SubmittableExtrinsic<'promise'> | undefined
         for (const commitment of commitments) {
             const commit = this.convertCommit(commitment)
@@ -206,7 +200,7 @@ export class BatchCommitmentsTask {
         return await this.db.getUnbatchedDappUserCommitments()
     }
 
-    async flagBatchedCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagBatchedCommitments(commitmentIds: Hash[]): Promise<void> {
         await this.db.flagBatchedDappUserCommitments(commitmentIds)
     }
 
@@ -215,8 +209,7 @@ export class BatchCommitmentsTask {
 
         return {
             ...commit,
-            userSignaturePart1: userSignature.slice(0, userSignature.length / 2),
-            userSignaturePart2: userSignature.slice(userSignature.length / 2),
+            userSignature,
             // to satisfy typescript
             requestedAt: new BN(requestedAt).toNumber(),
             completedAt: new BN(completedAt).toNumber(),

@@ -1,25 +1,36 @@
 {
     "name": "@prosopo/datasets-fs",
-    "version": "0.1.18",
+    "version": "0.2.7",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
+    "engines": {
+        "node": ">=16",
+        "npm": "8.9"
+    },
     "scripts": {
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose",
+        "build": "tsc --build --verbose tsconfig.json",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js",
-        "cli": "node ./dist/js/cli.js",
-        "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
+        "cli": "node ./dist/cli.js",
+        "test": "NODE_ENV=test vitest --run --coverage"
     },
     "main": "./dist/index.js",
     "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        }
+    },
     "types": "./dist/index.d.ts",
     "dependencies": {
         "@polkadot/util": "^12.3.2",
-        "@prosopo/common": "^0.1.18",
-        "@prosopo/types": "^0.1.18",
-        "@prosopo/util": "^0.1.18",
+        "@prosopo/common": "0.2.7",
+        "@prosopo/types": "0.2.7",
+        "@prosopo/util": "0.2.7",
         "bcrypt": "^5.1.0",
         "cli-progress": "^3.12.0",
         "es-main": "^1.2.0",
@@ -30,15 +41,14 @@
         "seedrandom": "^3.0.5",
         "sharp": "^0.32.1",
         "yargs": "^17.7.2",
-        "zod": "^3.21.4"
+        "zod": "^3.22.3"
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.0",
         "@types/cli-progress": "^3.11.2",
-        "@types/mocha": "^10.0.0",
         "@types/node-fetch": "^3.0.2",
-        "tslib": "^2.6.2",
-        "typescript": "^5.1.6"
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
     },
     "repository": {
         "type": "git",
