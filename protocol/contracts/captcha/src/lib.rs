@@ -262,6 +262,7 @@ pub mod captcha {
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
+        seed: u128, // the seed for rng
     }
 
     impl Captcha {
@@ -297,7 +298,25 @@ pub mod captcha {
                 dapp_contracts: Default::default(),
                 user_accounts: Default::default(),
                 commits: Default::default(),
+                seed: 0,
             }
+        }
+
+        fn update_seed(&mut self) {
+            let caller = self.env().caller();
+            let block_number = self.env().block_number();
+            let block_timestamp = self.env().block_timestamp();
+            let seed = self.get_seed();
+            // compute the next seed
+            let next_seed =
+                common::common::next_seed_u128(seed, block_number, block_timestamp, &caller);
+            // update the seed
+            self.seed = next_seed;
+        }
+
+        #[ink(message)]
+        pub fn get_seed(&self) -> u128 {
+            return self.seed;
         }
 
         /// Get the git commit id from when this contract was built
@@ -1470,6 +1489,26 @@ pub mod captcha {
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
             contract
+        }
+
+        #[ink::test]
+        fn test_reproducible_seed() {
+            let expected_seeds: [u128; 6] = [
+                0,
+                34613643512167994956300260136781613276,
+                311977812953078250619664873063333443836,
+                133799977389015868881131773776887023408,
+                179985627565304818814677616163717483981,
+                76610954342323735122244389985258680142,
+            ];
+            let mut contract = Captcha::new_unguarded();
+            for i in 0..expected_seeds.len() {
+                set_caller(AccountId::from([i as u8; 32]));
+                ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+                println!("seed {}", contract.get_seed());
+                assert_eq!(contract.get_seed(), expected_seeds[i]);
+                contract.update_seed();
+            }
         }
 
         #[ink::test]
