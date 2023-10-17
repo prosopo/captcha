@@ -14,7 +14,8 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js",
-        "cli": "node ./dist/js/cli.js"
+        "cli": "node ./dist/cli.js",
+        "test": "NODE_ENV=test vitest --run --coverage"
     },
     "main": "./dist/index.js",
     "type": "module",

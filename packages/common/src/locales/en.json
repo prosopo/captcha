@@ -124,6 +124,7 @@
         "DIRECTORY_NOT_FOUND": "Directory not found",
         "FILE_NOT_FOUND": "File not found",
         "FILE_ALREADY_EXISTS": "File already exists",
-        "DIRECTORY_ALREADY_EXISTS": "Directory already exists"
+        "DIRECTORY_ALREADY_EXISTS": "Directory already exists",
+        "SAME_FILE": "Same file"
     }
 }

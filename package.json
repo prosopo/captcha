@@ -66,7 +66,7 @@
         "@typescript-eslint/parser": "^5.30.7",
         "babel-plugin-import": "^1.13.6",
         "cypress": "^13.2.0",
-        "depcheck": "^1.4.3",
+        "depcheck": "^1.4.7",
         "esbuild": "0.17.19",
         "eslint": "^8.49.0",
         "eslint-config-prettier": "^8.5.0",
