@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import prosopoConfig from './prosopo.config.js'
 
 export function getSs58Format(): number {
