@@ -131,6 +131,10 @@ const renderLogic = (
         const chalExpiredCallbackName =
             renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
         const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
+        const onCloseCallbackName = renderOptions?.['close-callback'] || element.getAttribute('data-close-callback')
+        const onOpenCallbackName = renderOptions?.['open-callback'] || element.getAttribute('data-open-callback')
+        const onExpiredCallbackName =
+            renderOptions?.['expired-callback'] || element.getAttribute('data-expired-callback')
 
         // Setting up default callbacks object
         const callbacks = {
@@ -138,14 +142,26 @@ const renderLogic = (
             onChallengeExpired: () => {
                 console.log('Challenge expired')
             },
+            onExpired: () => {
+                console.log('Challenge expired')
+            },
             onError: (error: Error) => {
                 console.error(error)
+            },
+            onClose: () => {
+                console.log('Challenge closed')
+            },
+            onOpen: () => {
+                console.log('Challenge opened')
             },
         }
 
         if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
         if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
+        if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
         if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
+        if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
+        if (onOpenCallbackName) callbacks.onOpen = getWindowCallback(onOpenCallbackName)
 
         // Getting and setting the theme
         const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'

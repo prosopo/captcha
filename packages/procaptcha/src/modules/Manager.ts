@@ -180,6 +180,7 @@ export function Manager(
      */
     const start = async () => {
         console.log('Starting procaptcha')
+        events.onOpen()
         await fallable(async () => {
             if (state.loading) {
                 console.log('Procaptcha already loading')
@@ -388,6 +389,8 @@ export function Manager(
         clearTimeout()
         // abandon the captcha process
         resetState()
+        // trigger the onClose event
+        events.onClose()
     }
 
     /**
