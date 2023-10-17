@@ -18,7 +18,7 @@ import { getContractNames, getPaths } from '@prosopo/config'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
-import { loadEnv } from '@prosopo/cli'
+import { getEnv, loadEnv } from '@prosopo/cli'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
@@ -100,6 +100,17 @@ export async function processArgs(args: string[]) {
                         log
                     )
                 }
+            },
+            []
+        )
+        .command(
+            'create_env_files',
+            'Copies the env.xyz files to .env.xyz',
+            (yargs) => yargs,
+            async (argv) => {
+                const env = getEnv()
+                const paths = getPaths()
+                await exec(`cp -v ${paths.scripts}/env.${env} ${paths.scripts}/.env.${env}`)
             },
             []
         )
