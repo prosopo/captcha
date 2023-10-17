@@ -61,6 +61,7 @@
         "CONNECT_ERROR": "Neuspelo povezivanje",
         "DATABASE_IMPORT_FAILED": "Import engine-a baze podataka nije uspeo",
         "DATABASE_UNDEFINED": "Klijent baze podataka nije definisan",
+        "DATABASE_HOST_UNDEFINED": "Adresa domaćina baze podataka nije definisana",
         "COLLECTION_UNDEFINED": "Kolekcija baze podataka nije definisana",
         "DATASET_LOAD_FAILED": "Učitavanje skupa podataka nije uspelo",
         "DATASET_GET_FAILED": "Preuzimanje skupa podataka nije uspelo",
