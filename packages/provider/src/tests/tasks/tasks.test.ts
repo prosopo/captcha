@@ -12,29 +12,28 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
-import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
-import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
-import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
-import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract'
-import { ContractDeployer, ProsopoContractError, getBlockNumber, getDispatchError, wrapQuery } from '@prosopo/contract'
-import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
-import { EventRecord } from '@polkadot/types/interfaces'
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
-import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
-import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { ViteTestContext } from '@prosopo/env'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { at, get } from '@prosopo/util'
-import { captchaData } from '../data/captchas.js'
 import { createType } from '@polkadot/types'
+import { EventRecord } from '@polkadot/types/interfaces'
+import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
+import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract'
+import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
+import { testConfig } from '@prosopo/config'
+import { ContractDeployer, ProsopoContractError, getBlockNumber, getDispatchError, wrapQuery } from '@prosopo/contract'
+import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
+import { MockEnvironment, ProviderEnvironment, ViteTestContext } from '@prosopo/env'
+import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
+import { at, get } from '@prosopo/util'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { parseBlockNumber } from '../../index.js'
+import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
+import { captchaData } from '../data/captchas.js'
+import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
+import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
 import { getUser } from '../getUser.js'
-import { parseBlockNumber } from '../../index.js'
-import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { testConfig } from '@prosopo/config'
 
 function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
@@ -799,6 +798,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             const dappUserAccount = await getUser(env, AccountKey.dappUsers)
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             // there must be at least one provider in the contract and db
