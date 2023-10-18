@@ -101,11 +101,20 @@ export function Manager(
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
-            onExpired: () => {
-                alert('Challenge has expired, please try again')
-            },
             onFailed: () => {
                 alert('Captcha challenge failed. Please try again')
+            },
+            onExpired: () => {
+                alert('Completed challenge has expired, please try again')
+            },
+            onChallengeExpired: () => {
+                alert('Uncompleted challenge has expired, please try again')
+            },
+            onOpen: () => {
+                console.log('onOpen event triggered')
+            },
+            onClose: () => {
+                console.log('onClose event triggered')
             },
         },
         callbacks
@@ -160,6 +169,7 @@ export function Manager(
      */
     const start = async () => {
         console.log('Starting procaptcha')
+        events.onOpen()
         await fallable(async () => {
             if (state.loading) {
                 console.log('Procaptcha already loading')
@@ -205,6 +215,7 @@ export function Manager(
                     user: account.account.address,
                     dapp: config.account.address,
                 })
+                setValidChallengeTimeout()
                 return
             }
 
@@ -226,6 +237,7 @@ export function Manager(
                             dapp: config.account.address,
                             commitmentId: verifyDappUserResponse.commitmentId,
                         })
+                        setValidChallengeTimeout()
                         return
                     }
                 } catch (err) {
@@ -269,7 +281,7 @@ export function Manager(
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
                 console.log('challenge expired after ' + timeMillis + 'ms')
-                events.onExpired()
+                events.onChallengeExpired()
                 // expired, disallow user's claim to be human
                 updateState({ isHuman: false, showModal: false, loading: false })
             }, timeMillis)
@@ -358,6 +370,7 @@ export function Manager(
                     commitmentId: submission[1],
                     blockNumber,
                 })
+                setValidChallengeTimeout()
             }
         })
     }
@@ -368,6 +381,8 @@ export function Manager(
         clearTimeout()
         // abandon the captcha process
         resetState()
+        // trigger the onClose event
+        events.onClose()
     }
 
     /**
@@ -442,6 +457,21 @@ export function Manager(
         window.clearTimeout(state.timeout)
         // then clear the timeout from the state
         updateState({ timeout: undefined })
+    }
+
+    const setValidChallengeTimeout = () => {
+        console.log('setting valid challenge timeout')
+        const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
+        const successfullChallengeTimeout = setTimeout(() => {
+            console.log('valid challenge expired after ' + timeMillis + 'ms')
+
+            // Human state expired, disallow user's claim to be human
+            updateState({ isHuman: false })
+
+            events.onExpired()
+        }, timeMillis)
+
+        updateState({ successfullChallengeTimeout })
     }
 
     const resetState = () => {

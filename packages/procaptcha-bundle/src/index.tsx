@@ -22,7 +22,11 @@ interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
     callback?: string
+    'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
+    'expired-callback'?: string
+    'open-callback'?: string
+    'close-callback'?: string
     'error-callback'?: string
 }
 
@@ -127,6 +131,10 @@ const renderLogic = (
         const chalExpiredCallbackName =
             renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
         const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
+        const onCloseCallbackName = renderOptions?.['close-callback'] || element.getAttribute('data-close-callback')
+        const onOpenCallbackName = renderOptions?.['open-callback'] || element.getAttribute('data-open-callback')
+        const onExpiredCallbackName =
+            renderOptions?.['expired-callback'] || element.getAttribute('data-expired-callback')
 
         // Setting up default callbacks object
         const callbacks = {
@@ -134,18 +142,37 @@ const renderLogic = (
             onChallengeExpired: () => {
                 console.log('Challenge expired')
             },
+            onExpired: () => {
+                alert('Completed challenge has expired, please try again')
+            },
             onError: (error: Error) => {
                 console.error(error)
+            },
+            onClose: () => {
+                console.log('Challenge closed')
+            },
+            onOpen: () => {
+                console.log('Challenge opened')
             },
         }
 
         if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
         if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
+        if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
         if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
+        if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
+        if (onOpenCallbackName) callbacks.onOpen = getWindowCallback(onOpenCallbackName)
 
         // Getting and setting the theme
         const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
         config.theme = validateTheme(themeAttribute)
+
+        // Getting and setting the challenge valid length
+        const challengeValidLengthAttribute =
+            renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
+        if (challengeValidLengthAttribute) {
+            config.challengeValidLength = parseInt(challengeValidLengthAttribute)
+        }
 
         createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
     })

@@ -145,6 +145,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
+        challengeValidLength: z.number().positive().optional(),
     })
 )
 
