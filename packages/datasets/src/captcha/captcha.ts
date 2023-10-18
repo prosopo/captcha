@@ -27,7 +27,6 @@ import {
 import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { downloadImage } from './util.js'
-import { isHex } from '@polkadot/util'
 
 export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
 
