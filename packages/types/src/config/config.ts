@@ -133,6 +133,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
+        challengeValidLength: z.number().positive().optional(),
     })
 )
 
