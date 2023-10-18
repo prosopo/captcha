@@ -27,7 +27,8 @@
         "PAIR_TYPE_UNDEFINED": "Pair type undefined",
         "NOT_IMPLEMENTED": "Ne sprovodi",
         "NO_PAIR_TYPE_OR_SS58_FORMAT": "No pair type or ss58 format provided",
-        "SITE_KEY_MISSING": "SITE KEY missing"
+        "SITE_KEY_MISSING": "SITE KEY missing",
+        "ACCOUNT_NOT_FOUND": "Account not found"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
