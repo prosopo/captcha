@@ -15,11 +15,10 @@ import { ProsopoServerConfigSchema } from '@prosopo/types'
 
 export const getServerConfig = () =>
     ProsopoServerConfigSchema.parse({
-        // TODO check this works
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT, // enviromental variables
         defaultNetwork: process.env.DEFAULT_NETWORK,
         serverUrl:
-            // TODO add zod types for vars as a follow up ticket
+            // https://github.com/prosopo/captcha/issues/701
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
                 ? `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`
                 : 'http://localhost:9228',
