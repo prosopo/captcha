@@ -29,6 +29,7 @@ import {
 } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
@@ -37,7 +38,6 @@ import { at } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util'
-import { trimProviderUrl } from '@prosopo/common'
 import ExtensionWeb2 from '../api/ExtensionWeb2.js'
 import ExtensionWeb3 from '../api/ExtensionWeb3.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
@@ -208,7 +208,7 @@ export function Manager(
                 updateState({ isHuman: true, loading: false })
                 events.onHuman({
                     user: account.account.address,
-                    dapp: config.account.address,
+                    dapp: getDappAccount(),
                 })
                 return
             }
@@ -228,7 +228,7 @@ export function Manager(
                         events.onHuman({
                             providerUrl: providerUrlFromStorage,
                             user: account.account.address,
-                            dapp: config.account.address,
+                            dapp: getDappAccount(),
                             commitmentId: verifyDappUserResponse.commitmentId,
                         })
                         return
@@ -251,7 +251,7 @@ export function Manager(
             const getRandomProviderResponse: RandomProvider = await wrapQuery(
                 contract.query.getRandomActiveProvider,
                 contract.query
-            )(account.account.address, config.account.address)
+            )(account.account.address, getDappAccount())
             const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
@@ -428,7 +428,7 @@ export function Manager(
             provider,
             providerApi,
             config.web2,
-            config.account.address
+            getDappAccount()
         )
 
         updateState({ captchaApi })
@@ -439,6 +439,9 @@ export function Manager(
     const loadProviderApi = async (providerUrl: string) => {
         const config = getConfig()
         const network = getNetwork(config)
+        if (!config.account.address) {
+            throw new ProsopoEnvError('GENERAL.SITE_KEY_MISSING')
+        }
         return new ProviderApi(network, providerUrl, config.account.address)
     }
 
@@ -494,8 +497,9 @@ export function Manager(
 
     const getDappAccount = () => {
         if (!state.dappAccount) {
-            throw new Error('Dapp account not loaded')
+            throw new ProsopoEnvError('GENERAL.SITE_KEY_MISSING')
         }
+
         const dappAccount: string = state.dappAccount
         return dappAccount
     }

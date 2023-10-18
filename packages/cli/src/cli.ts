@@ -36,7 +36,7 @@ async function main() {
 
     const processedArgs = await processArgs(process.argv, pair, config)
     if (processedArgs.api) {
-        const env = new ProviderEnvironment(pair, config)
+        const env = new ProviderEnvironment(config, pair)
         await env.isReady()
         log.info('Starting API')
         await start(env)

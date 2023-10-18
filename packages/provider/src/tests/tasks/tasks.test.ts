@@ -61,7 +61,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        context.env = new MockEnvironment(alicePair, getTestConfig())
+        context.env = new MockEnvironment(getTestConfig(), alicePair)
         try {
             await context.env.isReady()
         } catch (e) {
@@ -417,6 +417,9 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         await sendFunds(env, accountAddress(newAccount), 'Dapp', sendAmount)
         const dappParams = ['1000000000000000000', 1000, env.getContractInterface().address, 65, 1000000]
 
+        if (!env.pair) {
+            throw new ProsopoContractError('CONTRACT.SIGNER_UNDEFINED')
+        }
         const deployer = new ContractDeployer(
             env.getApi(),
             await DappAbiJSON(),

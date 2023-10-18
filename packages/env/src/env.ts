@@ -40,10 +40,10 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: KeyringPair
+    pair: KeyringPair | undefined
     api: ApiPromise | undefined
 
-    constructor(pair: KeyringPair, config: ProsopoBasicConfigOutput) {
+    constructor(config: ProsopoBasicConfigOutput, pair?: KeyringPair) {
         this.config = config
         this.defaultEnvironment = this.config.defaultEnvironment
         this.defaultNetwork = this.config.defaultNetwork
@@ -64,7 +64,7 @@ export class Environment implements ProsopoEnvironment {
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
-            this.keyring.addPair(this.pair)
+            if (this.pair) this.keyring.addPair(this.pair)
             this.abi = JSON.parse(abiJson)
             this.importDatabase().catch((err) => {
                 this.logger.error(err)
@@ -80,11 +80,13 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getSigner(): Promise<void> {
-        await this.getApi().isReadyOrError
-        try {
-            this.pair = this.keyring.addPair(this.pair)
-        } catch (err) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+        if (this.pair) {
+            await this.getApi().isReadyOrError
+            try {
+                this.pair = this.keyring.addPair(this.pair)
+            } catch (err) {
+                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+            }
         }
     }
 
@@ -110,7 +112,7 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = await this.getApi().rpc.system.accountNextIndex(this.pair.address)
+        const nonce = this.pair ? await this.getApi().rpc.system.accountNextIndex(this.pair.address) : 0
         if (!isAddress(this.contractAddress)) {
             throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
         }
@@ -129,7 +131,7 @@ export class Environment implements ProsopoEnvironment {
 
     async isReady() {
         try {
-            if (this.config.account.password) {
+            if (this.pair && this.config.account.password) {
                 this.pair.unlock(this.config.account.password)
             }
             if (!this.api) {

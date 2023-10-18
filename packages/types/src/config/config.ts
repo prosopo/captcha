@@ -52,7 +52,7 @@ export const ProsopoBaseConfigSchema = z.object({
     defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.rococo),
     // The account with which to query the contract.merge sign transactions
     account: z.object({
-        address: z.string(),
+        address: z.string().optional(),
         secret: z.string().optional(),
         password: z.string().optional(),
     }),
@@ -149,6 +149,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
             requiredNumberOfSolutions: 3,
             solutionWinningPercentage: 80,
+            //TODO deprecate this
             captchaFilePath: '../../data/captchas_big.json',
             captchaBlockRecency: 10,
         }),

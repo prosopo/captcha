@@ -18,7 +18,7 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProcaptchaOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
@@ -36,11 +36,12 @@ export class ProsopoServer {
     logger: Logger
     wsProvider: WsProvider
     keyring: Keyring
-    pair: KeyringPair
+    pair: KeyringPair | undefined
     api: ApiPromise | undefined
     network: NetworkConfig
 
-    constructor(pair: KeyringPair, config: ProsopoServerConfigOutput) {
+    //TODO make pair optional all environment constructors
+    constructor(config: ProsopoServerConfigOutput, pair?: KeyringPair) {
         this.config = config
         this.pair = pair
         if (
@@ -52,7 +53,7 @@ export class ProsopoServer {
             this.network = get(this.config.networks, networkName)
             this.wsProvider = new WsProvider(this.network.endpoint)
             this.prosopoContractAddress = this.network.contract.address
-            this.dappContractAddress = this.config.account.address
+            this.dappContractAddress = this.config.account.address || getZeroAddress().toString()
             this.contractName = this.network.contract.name
             this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
@@ -70,7 +71,7 @@ export class ProsopoServer {
     }
 
     public async getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.network, providerUrl, this.config.account.address)
+        return new ProviderApi(this.network, providerUrl, this.dappContractAddress)
     }
 
     async isReady() {
@@ -84,14 +85,16 @@ export class ProsopoServer {
     }
 
     async getSigner(): Promise<void> {
-        if (!this.api) {
-            this.api = await ApiPromise.create({ provider: this.wsProvider })
-        }
-        await this.api.isReadyOrError
-        try {
-            this.pair = this.keyring.addPair(this.pair)
-        } catch (err) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+        if (this.pair) {
+            if (!this.api) {
+                this.api = await ApiPromise.create({ provider: this.wsProvider })
+            }
+            await this.api.isReadyOrError
+            try {
+                this.pair = this.keyring.addPair(this.pair)
+            } catch (err) {
+                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+            }
         }
     }
 

@@ -131,7 +131,7 @@ export default async function run(pair: KeyringPair, config: ProsopoConfigOutput
     const dappWasm = await DappWasm()
 
     await populateDatabase(
-        new ProviderEnvironment(pair, config),
+        new ProviderEnvironment(config, pair),
         DEFAULT_USER_COUNT,
         userFundMapDefault,
         true,

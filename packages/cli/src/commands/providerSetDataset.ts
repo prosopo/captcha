@@ -21,7 +21,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
             } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                const env = new ProviderEnvironment(pair, config)
+                const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 const file = z.string().parse(argv.file)

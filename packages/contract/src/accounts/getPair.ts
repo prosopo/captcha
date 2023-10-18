@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { AccountId } from '@polkadot/types/interfaces'
 import { ApiPromise } from '@polkadot/api'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
@@ -77,8 +78,13 @@ export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringP
     return getPair(
         undefined,
         undefined,
-        userAccount || '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM',
+        userAccount || getZeroAddress().toHex(),
         NetworkPairTypeSchema.parse('sr25519'),
         api.registry.chainSS58
     )
+}
+
+export function getZeroAddress(): AccountId {
+    const registry = new ApiPromise().registry
+    return registry.createType('AccountId', new Uint8Array(new Array(32).fill(0)))
 }

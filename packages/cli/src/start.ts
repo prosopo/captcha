@@ -64,7 +64,7 @@ export async function start(env?: ProviderEnvironment) {
         const secret = getSecret()
         const config = getConfig()
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
-        env = new ProviderEnvironment(pair, config)
+        env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
     startApi(env)

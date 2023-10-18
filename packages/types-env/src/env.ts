@@ -35,7 +35,7 @@ export interface ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: KeyringPair
+    pair: KeyringPair | undefined
     api: ApiPromise | undefined
     isReady(): Promise<void>
     importDatabase(): Promise<void>

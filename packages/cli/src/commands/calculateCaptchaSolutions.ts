@@ -20,7 +20,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
             } as const)
         },
         handler: async (argv: ArgumentsCamelCase) => {
-            const env = new ProviderEnvironment(pair, config)
+            const env = new ProviderEnvironment(config, pair)
             await env.isReady()
             if (argv.schedule) {
                 throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')

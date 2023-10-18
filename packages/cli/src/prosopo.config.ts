@@ -53,7 +53,7 @@ export default function getConfig(
             ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
             : NetworkNamesSchema.enum.development,
         account: {
-            address: process.env.PROVIDER_ADDRESS || '',
+            address: process.env.PROVIDER_ADDRESS || undefined,
             password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
             secret: getSecret(),
         },

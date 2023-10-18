@@ -26,7 +26,8 @@
         "INVALID_SIGNATURE": "Invalid signature",
         "PAIR_TYPE_UNDEFINED": "Pair type undefined",
         "NOT_IMPLEMENTED": "Ne sprovodi",
-        "NO_PAIR_TYPE_OR_SS58_FORMAT": "No pair type or ss58 format provided"
+        "NO_PAIR_TYPE_OR_SS58_FORMAT": "No pair type or ss58 format provided",
+        "SITE_KEY_MISSING": "SITE KEY missing"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",

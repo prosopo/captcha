@@ -20,12 +20,21 @@
 import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
 import { ProsopoClientConfigInput } from '@prosopo/types'
 
+const getWeb2 = (): boolean | undefined => {
+    if (process.env.REACT_APP_WEB2 === 'true') {
+        return true
+    } else if (process.env.REACT_APP_WEB2 === 'false') {
+        return false
+    }
+    return
+}
+
 const config: ProsopoClientConfigInput = {
     account: {
         address: process.env.REACT_APP_DAPP_SITE_KEY || '',
     },
     userAccountAddress: '',
-    web2: process.env.REACT_APP_WEB2 ? process.env.REACT_APP_WEB2 === 'true' : true,
+    web2: getWeb2(),
     defaultEnvironment: process.env.REACT_APP_DEFAULT_ENVIRONMENT
         ? EnvironmentTypesSchema.parse(process.env.REACT_APP_DEFAULT_ENVIRONMENT)
         : EnvironmentTypesSchema.enum.development,

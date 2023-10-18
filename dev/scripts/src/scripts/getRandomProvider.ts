@@ -23,7 +23,7 @@ async function main() {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
     const pair = await getPairAsync(network, '//Alice')
-    const env = new ProviderEnvironment(pair, defaultConfig())
+    const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     const tasks = new Tasks(env)
     const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ['', '']

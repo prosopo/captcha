@@ -25,7 +25,7 @@ async function main(account: string) {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
     const pair = await getPairAsync(network, '//Alice')
-    const env = new Environment(pair, config)
+    const env = new Environment(config, pair)
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN('100000000000000000'))
     process.exit()

@@ -24,7 +24,7 @@ async function main() {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
     const pair = await getPairAsync(network, '//Alice')
-    const env = new ProviderEnvironment(pair, config)
+    const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     const tasks = new Tasks(env)
     const contract = tasks.contract

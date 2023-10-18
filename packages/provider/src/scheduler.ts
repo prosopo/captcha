@@ -23,7 +23,7 @@ import { ProviderEnvironment } from '@prosopo/env'
 import { at } from '@prosopo/util'
 
 export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
-    const env = new ProviderEnvironment(pair, config)
+    const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     const tasks = new CalculateSolutionsTask(env)
     const job = new CronJob(at(process.argv, 2), () => {
@@ -37,7 +37,7 @@ export async function calculateSolutionsScheduler(pair: KeyringPair, config: Pro
 }
 
 export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
-    const env = new ProviderEnvironment(pair, config)
+    const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     if (env.db === undefined) {
         throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')

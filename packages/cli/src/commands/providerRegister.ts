@@ -41,7 +41,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
         handler: async (argv: ArgumentsCamelCase) => {
             try {
                 const parsedArgs = providerRegisterArgsParser.parse(argv)
-                const env = new ProviderEnvironment(pair, config)
+                const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [

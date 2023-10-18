@@ -315,9 +315,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             this.mockEnv.logger.debug('Changing signer to `', accountAddress(account), '`')
             await this.changeSigner(accountMnemonic(account))
 
-            this.mockEnv.logger.debug('Pair address`', this.mockEnv.pair.address, '`')
+            this.mockEnv.logger.debug('Pair address`', this.mockEnv.pair?.address, '`')
             const tasks = new Tasks(this.mockEnv)
             const dappParams = ['1000000000000000000', 1000, this.mockEnv.getContractInterface().address, 65, 1000000]
+
+            if (!this.mockEnv.pair) {
+                throw new ProsopoContractError('CONTRACT.SIGNER_UNDEFINED')
+            }
 
             const deployer = new ContractDeployer(
                 this.mockEnv.getApi(),

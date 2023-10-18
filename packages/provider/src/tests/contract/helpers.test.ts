@@ -36,7 +36,7 @@ describe('CONTRACT HELPERS', function () {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        context.env = new MockEnvironment(alicePair, getTestConfig())
+        context.env = new MockEnvironment(getTestConfig(), alicePair)
         try {
             await context.env.isReady()
         } catch (e) {

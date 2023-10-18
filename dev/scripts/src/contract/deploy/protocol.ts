@@ -32,14 +32,14 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const network = config.networks[config.defaultNetwork]
     const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
     const pair = await getPairAsync(network, secret)
-    const env = new ProviderEnvironment(pair, config)
+    const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     log.debug(reverseHexString(env.getApi().createType('u16', 10).toHex().toString()), 'max_user_history_len')
     log.debug(reverseHexString(env.getApi().createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
     log.debug(reverseHexString(env.getApi().createType('u16', 1).toHex().toString()), 'min_num_active_providers')
     const params: any[] = []
 
-    const deployer = new ContractDeployer(env.getApi(), abi, wasm, env.pair, params, 0, 0, randomAsHex())
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
 

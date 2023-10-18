@@ -11,13 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { EnvironmentTypesSchema, ProsopoServerConfigSchema } from '@prosopo/types'
+import { ProsopoServerConfigSchema } from '@prosopo/types'
 
 export const getServerConfig = () =>
     ProsopoServerConfigSchema.parse({
-        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || EnvironmentTypesSchema.enum.development, // enviromental variables
-        defaultNetwork: process.env.DEFAULT_NETWORK || 'rococo',
+        // TODO check this works
+        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT, // enviromental variables
+        defaultNetwork: process.env.DEFAULT_NETWORK,
         serverUrl:
+            // TODO add zod types for vars as a follow up ticket
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
                 ? `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`
                 : 'http://localhost:9228',

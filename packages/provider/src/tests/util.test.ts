@@ -49,7 +49,7 @@ describe('UTIL FUNCTIONS', async () => {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        env = new MockEnvironment(alicePair, getTestConfig())
+        env = new MockEnvironment(getTestConfig(), alicePair)
         try {
             await env.isReady()
         } catch (e) {

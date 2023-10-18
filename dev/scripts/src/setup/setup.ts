@@ -125,7 +125,7 @@ export async function setup(force: boolean) {
         const network = config.networks[config.defaultNetwork]
         const pair = await getPairAsync(network, providerSecret)
 
-        const env = new ProviderEnvironment(pair, defaultConfig())
+        const env = new ProviderEnvironment(defaultConfig(), pair)
         await env.isReady()
 
         const result: ReturnNumber = await wrapQuery(

@@ -1,6 +1,6 @@
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
@@ -26,10 +26,13 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                const env = new ProviderEnvironment(pair, config)
+                const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 let datasetId = z.string().parse(argv.datasetId)
+                if (!env.config.account.address) {
+                    throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND')
+                }
                 if (datasetId === undefined) {
                     const providerAddress = env.config.account.address
                     const provider = (await tasks.contract.query.getProvider(providerAddress)).value.unwrap().unwrap()
