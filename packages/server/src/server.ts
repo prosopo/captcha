@@ -40,7 +40,6 @@ export class ProsopoServer {
     api: ApiPromise | undefined
     network: NetworkConfig
 
-    //TODO make pair optional all environment constructors
     constructor(config: ProsopoServerConfigOutput, pair?: KeyringPair) {
         this.config = config
         this.pair = pair

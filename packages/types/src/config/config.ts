@@ -93,7 +93,6 @@ export const ProsopoImageServerConfigSchema = z.object({
 export const ProsopoCaptchaSolutionConfigSchema = z.object({
     requiredNumberOfSolutions: z.number().positive().min(2),
     solutionWinningPercentage: z.number().positive().max(100),
-    captchaFilePath: z.string(),
     captchaBlockRecency: z.number().positive().min(2),
 })
 
@@ -149,8 +148,6 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
             requiredNumberOfSolutions: 3,
             solutionWinningPercentage: 80,
-            //TODO deprecate this
-            captchaFilePath: '../../data/captchas_big.json',
             captchaBlockRecency: 10,
         }),
         batchCommit: BatchCommitConfigSchema.optional().default({
