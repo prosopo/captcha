@@ -9,7 +9,7 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions.merge
+// See the License for the specific language governing permissions and
 // limitations under the License.
 
 import { LogLevel } from '@prosopo/common'
@@ -23,17 +23,15 @@ export const EnvironmentTypesSchema = z.enum(['development', 'staging', 'product
 
 export type EnvironmentTypes = z.infer<typeof EnvironmentTypesSchema>
 
-export const DatabaseConfigSchema = z
-    .record(
-        EnvironmentTypesSchema,
-        z.object({
-            type: z.string(),
-            endpoint: z.string(),
-            dbname: z.string(),
-            authSource: z.string(),
-        })
-    )
-    .refine((data) => Object.keys(data).length > 0, 'At least one network config required')
+export const DatabaseConfigSchema = z.record(
+    EnvironmentTypesSchema,
+    z.object({
+        type: z.string(),
+        endpoint: z.string(),
+        dbname: z.string(),
+        authSource: z.string(),
+    })
+)
 
 export const BatchCommitConfigSchema = z.object({
     interval: z.number().positive().optional().default(300),
