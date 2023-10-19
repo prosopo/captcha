@@ -13,7 +13,7 @@
 // limitations under the License.
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import {
     commandBatchCommit,
     commandCalculateCaptchaSolutions,
@@ -33,7 +33,7 @@ import {
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
-export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfig) {
+export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfigOutput) {
     const logger = getLogger(LogLevel.enum.info, 'CLI')
     return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')

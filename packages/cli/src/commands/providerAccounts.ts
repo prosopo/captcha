@@ -2,11 +2,11 @@ import { ArgumentsCamelCase, Argv } from 'yargs'
 import { CommandModule } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 
-export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }): CommandModule => {
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }): CommandModule => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_accounts')
 
     return {
@@ -15,7 +15,7 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
         builder: (yargs: Argv) => yargs,
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                const env = new ProviderEnvironment(pair, config)
+                const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 const result = await (tasks.contract.contract as any)['providerAccounts']()
