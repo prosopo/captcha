@@ -102,6 +102,9 @@ export class Tasks {
         if (solutions < this.config.captchas.solved.count) {
             throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
         }
+        if (solutions < this.config.captchas.unsolved.count) {
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
 
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId || !dataset.datasetContentId) {
