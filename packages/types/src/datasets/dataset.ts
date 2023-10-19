@@ -11,7 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Captcha, CaptchaTypes, CaptchaWithoutId, CaptchasSchema, SelectAllCaptchaSchema } from './captcha.js'
+import {
+    Captcha,
+    CaptchaTypes,
+    CaptchaWithoutId,
+    CaptchasSchema,
+    CaptchasWithNumericSolutionSchema,
+    SelectAllCaptchaSchema,
+} from './captcha.js'
 import { Hash } from '@prosopo/captcha-contract'
 import { z } from 'zod'
 
@@ -54,6 +61,10 @@ export const DatasetSchema = z.object({
     solutionTree: z.array(z.array(z.string())).optional(),
     contentTree: z.array(z.array(z.string())).optional(),
     timeLimit: z.number().optional(),
+})
+
+export const DatasetWithNumericSolutionSchema = DatasetSchema.extend({
+    captchas: CaptchasWithNumericSolutionSchema,
 })
 
 export const DatasetWithIdsSchema = z.object({

@@ -119,7 +119,7 @@ secrets.json
 
 # Ingnore build target
 protocol/target
-protocol/cargo-cache
+protocol/cargo-cache/*
 
 /db/
 /data/
@@ -136,3 +136,6 @@ chain-data
 
 # ignore vite config timestamps
 vite.config.ts.timestamp*
+
+# ignore test results dir
+**/tests/**/test_results
