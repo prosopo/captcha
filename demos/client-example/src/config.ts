@@ -21,12 +21,7 @@ import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
 import { ProsopoClientConfigInput } from '@prosopo/types'
 
 const getWeb2 = (): boolean | undefined => {
-    if (process.env.REACT_APP_WEB2 === 'true') {
-        return true
-    } else if (process.env.REACT_APP_WEB2 === 'false') {
-        return false
-    }
-    return
+    return process.env.REACT_APP_WEB2 === 'true' ? true : process.env.REACT_APP_WEB2 === 'false' ? false : undefined
 }
 
 const config: ProsopoClientConfigInput = {
