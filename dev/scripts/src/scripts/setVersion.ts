@@ -1,7 +1,10 @@
+import { getLogLevel, getLogger } from '@prosopo/common'
 import { getPaths } from '@prosopo/config'
 import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
+
+const log = getLogger(getLogLevel(), 'setVersion')
 
 const parseVersion = (version: string) => {
     try {
@@ -30,20 +33,26 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
         if (filter(fullPath)) {
             results.push(fullPath)
         }
-        if (fs.statSync(fullPath).isDirectory()) {
-            results.push(...find(fullPath, filter))
+        try {
+            if (fs.statSync(fullPath).isDirectory()) {
+                results.push(...find(fullPath, filter))
+            }
+        } catch (e) {
+            log.debug(`Not a directory: {fullPath}`)
         }
     }
     return results
 }
 
-export default async function setVersion(version: string) {
-    console.log('setting version to ', version)
+export default async function setVersion(version: string, ignore?: string[]) {
+    log.info('setting version to ', version)
     version = parseVersion(version)
     const root = getPaths().root
+    const ignorePaths = ['node_modules'].concat(ignore ?? [])
     // walk through all files finding .json or .toml
     const files = find(root, (pth) => {
-        if (pth.includes('node_modules')) {
+        // ignore node_modules and any user specified paths
+        if (ignorePaths.some((ignorePath) => pth.includes(ignorePath))) {
             return false
         }
         const basename = path.basename(pth)
