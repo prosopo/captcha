@@ -62,7 +62,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
     files
         .filter((pth) => path.extname(pth) === '.json')
         .forEach((pth) => {
-            console.log('setting version in', pth)
+            log.debug('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all json files
             const jsonContent = JSON.parse(content)
@@ -80,7 +80,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
                 for (const key of Object.keys(obj)) {
                     if (key.startsWith('@prosopo')) {
                         // and replace version
-                        console.log(`setting ${key} to ${version} in ${pth}`)
+                        log.debug(`setting ${key} to ${version} in ${pth}`)
                         obj[key] = version
                     }
                 }
@@ -92,7 +92,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
-            console.log('setting version in', pth)
+            log.debug('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent: any = parse(content)
@@ -111,7 +111,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
-            console.log('setting dependency versions in', pth)
+            log.debug('setting dependency versions in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent = parse(content)
