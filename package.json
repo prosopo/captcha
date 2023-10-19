@@ -9,6 +9,7 @@
         "url": "git+https://github.com/prosopo/captcha.git"
     },
     "scripts": {
+        "hostid": "npm run cmd -- \"dig +short %s.prosopo.io | tail -n1 | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'\"",
         "about:cmd": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
         "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
