@@ -17,7 +17,7 @@ import {
     DatabaseTypes,
     EnvironmentTypesSchema,
     NetworkNamesSchema,
-    ProsopoCaptchaCountConfigSchema,
+    ProsopoCaptchaCountConfigSchemaInput,
     ProsopoCaptchaSolutionConfigSchema,
     ProsopoConfigInput,
     ProsopoConfigOutput,
@@ -42,7 +42,7 @@ export default function getConfig(
     networksConfig?: ProsopoNetworksSchemaInput,
     captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
     batchCommitConfig?: typeof BatchCommitConfigSchema,
-    captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
+    captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput
 ): ProsopoConfigOutput {
     return ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
