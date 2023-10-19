@@ -1,7 +1,10 @@
+import { getLogLevel, getLogger } from '@prosopo/common'
 import { getPaths } from '@prosopo/config'
 import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
+
+const log = getLogger(getLogLevel(), 'setVersion')
 
 const parseVersion = (version: string) => {
     try {
@@ -30,20 +33,26 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
         if (filter(fullPath)) {
             results.push(fullPath)
         }
-        if (fs.statSync(fullPath).isDirectory()) {
-            results.push(...find(fullPath, filter))
+        try {
+            if (fs.statSync(fullPath).isDirectory()) {
+                results.push(...find(fullPath, filter))
+            }
+        } catch (e) {
+            log.debug(`Not a directory: {fullPath}`)
         }
     }
     return results
 }
 
-export default async function setVersion(version: string) {
-    console.log('setting version to ', version)
+export default async function setVersion(version: string, ignore?: string[]) {
+    log.info('setting version to ', version)
     version = parseVersion(version)
     const root = getPaths().root
+    const ignorePaths = ['node_modules'].concat(ignore ?? [])
     // walk through all files finding .json or .toml
     const files = find(root, (pth) => {
-        if (pth.includes('node_modules')) {
+        // ignore node_modules and any user specified paths
+        if (ignorePaths.some((ignorePath) => pth.includes(ignorePath))) {
             return false
         }
         const basename = path.basename(pth)
@@ -53,7 +62,7 @@ export default async function setVersion(version: string) {
     files
         .filter((pth) => path.extname(pth) === '.json')
         .forEach((pth) => {
-            console.log('setting version in', pth)
+            log.debug('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all json files
             const jsonContent = JSON.parse(content)
@@ -71,7 +80,7 @@ export default async function setVersion(version: string) {
                 for (const key of Object.keys(obj)) {
                     if (key.startsWith('@prosopo')) {
                         // and replace version
-                        console.log(`setting ${key} to ${version} in ${pth}`)
+                        log.debug(`setting ${key} to ${version} in ${pth}`)
                         obj[key] = version
                     }
                 }
@@ -83,7 +92,7 @@ export default async function setVersion(version: string) {
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
-            console.log('setting version in', pth)
+            log.debug('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent: any = parse(content)
@@ -102,7 +111,7 @@ export default async function setVersion(version: string) {
     files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
-            console.log('setting dependency versions in', pth)
+            log.debug('setting dependency versions in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
             const tomlContent = parse(content)
