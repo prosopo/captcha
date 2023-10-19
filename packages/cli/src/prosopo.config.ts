@@ -11,10 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import {ProsopoConfig} from './types.js';
 
-import { DatabaseTypes, EnvironmentTypes, EnvironmentTypesSchema, ProsopoConfig } from '@prosopo/types'
+import {
+    BatchCommitConfigSchema,
+    DatabaseTypes,
+    EnvironmentTypesSchema,
+    NetworkNamesSchema,
+    ProsopoCaptchaCountConfigSchema,
+    ProsopoCaptchaSolutionConfigSchema,
+    ProsopoConfigInput,
+    ProsopoConfigOutput,
+    ProsopoConfigSchema,
+    ProsopoNetworksSchemaInput,
+} from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
+import { getSecret } from './process.env.js'
 
 function getMongoURI(): string {
     const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
@@ -27,60 +38,40 @@ function getMongoURI(): string {
     return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
 
-export default (): ProsopoConfig => ({
-    logLevel: getLogLevel(),
-    defaultEnvironment:
-        (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-    account: {
-        address: process.env.PROVIDER_ADDRESS || '',
-        password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
-    },
-    networks: {
-        development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. WsProvider takes array and has failover.
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
+export default function getConfig(
+    networksConfig?: ProsopoNetworksSchemaInput,
+    captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
+    batchCommitConfig?: typeof BatchCommitConfigSchema,
+    captchaServeConfig?: typeof ProsopoCaptchaCountConfigSchema
+): ProsopoConfigOutput {
+    return ProsopoConfigSchema.parse({
+        logLevel: getLogLevel(),
+        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
+            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
+            : EnvironmentTypesSchema.enum.development,
+        defaultNetwork: process.env.DEFAULT_NETWORK
+            ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
+            : NetworkNamesSchema.enum.development,
+        account: {
+            address: process.env.PROVIDER_ADDRESS || undefined,
+            password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
+            secret: getSecret(),
+        },
+        database: {
+            development: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.DATABASE_NAME || '',
+                authSource: 'admin',
             },
-            accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
         },
-        rococo: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
-            },
-            accounts: [],
+        server: {
+            baseURL: process.env.API_BASE_URL || 'http://localhost',
+            port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
         },
-    },
-    captchas: {
-        solved: {
-            count: 1, // TODO add env var
-        },
-        unsolved: {
-            count: 1, // TODO add env var
-        },
-    },
-    captchaSolutions: {
-        captchaBlockRecency: 10, // TODO add env var
-        requiredNumberOfSolutions: 3, // TODO add env var
-        solutionWinningPercentage: 80, // TODO add env var
-        captchaFilePath: '../../data/captchas_big.json', // TODO add env var
-    },
-    database: {
-        development: {
-            type: DatabaseTypes.enum.mongo,
-            endpoint: getMongoURI(),
-            dbname: process.env.DATABASE_NAME || '',
-            authSource: 'admin',
-        },
-    },
-    batchCommit: {
-        interval: 300, // TODO add env var
-        maxBatchExtrinsicPercentage: 59, // TODO add env var
-    },
-    server: {
-        baseURL: process.env.API_BASE_URL || '',
-        port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
-    },
-})
+        networks: networksConfig,
+        captchaSolutions: captchaSolutionsConfig,
+        batchCommit: batchCommitConfig,
+        captchas: captchaServeConfig,
+    } as ProsopoConfigInput)
+}

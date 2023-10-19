@@ -5,6 +5,7 @@
     "license": "Apache-2.0",
     "main": "./dist/index.js",
     "type": "module",
+    "sideEffects": false,
     "engines": {
         "node": ">=16",
         "npm": "8.9"

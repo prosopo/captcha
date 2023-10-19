@@ -24,7 +24,7 @@ import {
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
-    ProsopoConfig,
+    ProsopoConfigOutput,
     ProviderRegistered,
 } from '@prosopo/types'
 import {
@@ -62,7 +62,7 @@ export class Tasks {
 
     logger: Logger
 
-    config: ProsopoConfig
+    config: ProsopoConfigOutput
 
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {

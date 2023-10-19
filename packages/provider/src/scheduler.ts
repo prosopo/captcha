@@ -17,13 +17,13 @@ import { BatchCommitmentsTask } from './batch/commitments.js'
 import { CalculateSolutionsTask } from './tasks/calculateSolutions.js'
 import { CronJob } from 'cron'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { at } from '@prosopo/util'
 
-export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfig) {
-    const env = new ProviderEnvironment(pair, config)
+export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
+    const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     const tasks = new CalculateSolutionsTask(env)
     const job = new CronJob(at(process.argv, 2), () => {
@@ -36,8 +36,8 @@ export async function calculateSolutionsScheduler(pair: KeyringPair, config: Pro
     job.start()
 }
 
-export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfig) {
-    const env = new ProviderEnvironment(pair, config)
+export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
+    const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     if (env.db === undefined) {
         throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')

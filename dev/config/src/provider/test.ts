@@ -1,54 +1,40 @@
-import { DatabaseTypes, EnvironmentTypesSchema } from '@prosopo/types'
+import {
+    DatabaseTypes,
+    EnvironmentTypesSchema,
+    NetworkNamesSchema,
+    NetworkPairTypeSchema,
+    ProsopoConfigSchema,
+} from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
 
 const logLevel = getLogLevel()
-export default {
-    logLevel,
-    contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
-    defaultEnvironment: EnvironmentTypesSchema.Values.development,
-    account: {
-        password: '',
-        address: '',
-    },
-    networks: {
-        development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://localhost:9944',
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
+export default function getTestConfig() {
+    return ProsopoConfigSchema.parse({
+        logLevel,
+        defaultEnvironment: EnvironmentTypesSchema.Values.development,
+        defaultNetwork: NetworkNamesSchema.Values.development,
+        account: {
+            password: '',
+            address: '',
+        },
+        database: {
+            development: { type: DatabaseTypes.enum.mongoMemory, endpoint: '', dbname: 'prosopo_test', authSource: '' },
+        },
+        server: {
+            baseURL: 'http://localhost',
+            port: 9229,
+            fileServePaths: '[]',
+        },
+        networks: {
+            development: {
+                endpoint: 'ws://localhost:9944',
+                contract: {
+                    address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
+                    name: 'prosopo',
+                },
+                pairType: NetworkPairTypeSchema.parse('sr25519'),
+                ss58Format: 42,
             },
-            accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
         },
-    },
-
-    captchas: {
-        solved: {
-            count: 1,
-        },
-        unsolved: {
-            count: 1,
-        },
-    },
-    captchaSolutions: {
-        requiredNumberOfSolutions: 3,
-        solutionWinningPercentage: 80,
-        captchaFilePath: './tests/mocks/data/captchas.json', // not used
-        captchaBlockRecency: 10,
-    },
-    database: {
-        development: { type: DatabaseTypes.enum.mongoMemory, endpoint: '', dbname: 'prosopo_test', authSource: '' },
-    },
-    assets: {
-        absolutePath: '',
-        basePath: '',
-    },
-    server: {
-        baseURL: 'http://localhost',
-        port: 9229,
-        fileServePaths: '[]',
-    },
-    batchCommit: {
-        interval: 1000000,
-        maxBatchExtrinsicPercentage: 59,
-    },
+    })
 }

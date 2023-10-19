@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProviderEnvironment } from './provider.js'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
 export class MockEnvironment extends ProviderEnvironment {
@@ -26,7 +25,5 @@ export class MockEnvironment extends ProviderEnvironment {
 
 export interface ViteTestContext {
     env: MockEnvironment
-    pairType: KeypairType
-    ss58Format: number
     providerStakeThreshold: BN
 }
