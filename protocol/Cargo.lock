@@ -94,7 +94,7 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "captcha"
-version = "0.2.7"
+version = "0.2.9"
 dependencies = [
  "common",
  "disable_macro",
@@ -117,7 +117,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "common"
-version = "0.2.7"
+version = "0.2.9"
 dependencies = [
  "ink",
  "parity-scale-codec",
@@ -224,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "disable_macro"
-version = "0.2.7"
+version = "0.2.9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -700,7 +700,7 @@ dependencies = [
 
 [[package]]
 name = "proxy"
-version = "0.2.7"
+version = "0.2.9"
 dependencies = [
  "common",
  "disable_macro",
@@ -770,9 +770,9 @@ checksum = "fc874b127765f014d792f16763a81245ab80500e2ad921ed4ee9e82481ee08fe"
 
 [[package]]
 name = "rustix"
-version = "0.37.23"
+version = "0.37.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d69718bf81c6127a49dc64e44a742e8bb9213c0ff8869a22c308f84c1d4ab06"
+checksum = "d4eb579851244c2c03e7c24f501c3432bed80b8f720af1d6e5b0e0f01555a035"
 dependencies = [
  "bitflags",
  "errno",

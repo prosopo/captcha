@@ -25,7 +25,10 @@
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
         "PAIR_TYPE_UNDEFINED": "Pair type undefined",
-        "NOT_IMPLEMENTED": "Ne sprovodi"
+        "NOT_IMPLEMENTED": "Ne sprovodi",
+        "NO_PAIR_TYPE_OR_SS58_FORMAT": "No pair type or ss58 format provided",
+        "SITE_KEY_MISSING": "SITE KEY missing",
+        "ACCOUNT_NOT_FOUND": "Account not found"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
@@ -61,6 +64,7 @@
         "CONNECT_ERROR": "Neuspelo povezivanje",
         "DATABASE_IMPORT_FAILED": "Import engine-a baze podataka nije uspeo",
         "DATABASE_UNDEFINED": "Klijent baze podataka nije definisan",
+        "DATABASE_HOST_UNDEFINED": "Adresa domaćina baze podataka nije definisana",
         "COLLECTION_UNDEFINED": "Kolekcija baze podataka nije definisana",
         "DATASET_LOAD_FAILED": "Učitavanje skupa podataka nije uspelo",
         "DATASET_GET_FAILED": "Preuzimanje skupa podataka nije uspelo",

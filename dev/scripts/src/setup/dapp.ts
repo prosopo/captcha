@@ -32,8 +32,15 @@ export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount): P
             logger.info('Dapp', dappResult)
         } catch (e) {
             logger.info('   - dappRegister')
+            await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(
+                dapp.contractAccount,
+                DappPayee.dapp
+            )
             await tasks.contract.tx.dappRegister(dapp.contractAccount, DappPayee.dapp)
             logger.info('   - dappFund')
+            await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(dapp.contractAccount, {
+                value: dapp.fundAmount,
+            })
             await tasks.contract.tx.dappFund(dapp.contractAccount, { value: dapp.fundAmount })
         }
     }

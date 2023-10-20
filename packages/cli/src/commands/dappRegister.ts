@@ -2,7 +2,7 @@ import { ArgumentsCamelCase, Argv } from 'yargs'
 import { DappPayee } from '@prosopo/captcha-contract'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { get } from '@prosopo/util'
@@ -10,7 +10,7 @@ import { validateContract, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 import { z } from 'zod'
 
-export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_register')
 
     return {
@@ -30,7 +30,7 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                const env = new ProviderEnvironment(pair, config)
+                const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappRegister> = [

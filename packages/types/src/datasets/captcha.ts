@@ -94,7 +94,6 @@ export type CaptchaConfig = {
 export type CaptchaSolutionConfig = {
     requiredNumberOfSolutions: number
     solutionWinningPercentage: number
-    captchaFilePath: string
     captchaBlockRecency: number
 }
 
@@ -139,7 +138,13 @@ export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
     unlabelled: z.string().array().optional(),
 })
 
+export const SelectAllCaptchaSchemaWithNumericSolution = SelectAllCaptchaSchema.extend({
+    solution: z.number().array().optional(),
+    unlabelled: z.number().array().optional(),
+})
+
 export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)
+export const CaptchasWithNumericSolutionSchema = z.array(SelectAllCaptchaSchemaWithNumericSolution)
 
 export const CaptchaSolutionSchema = z.object({
     captchaId: z.string(),

@@ -1,8 +1,8 @@
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 
-export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.version')
 
     return {

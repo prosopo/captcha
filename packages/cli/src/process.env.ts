@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import prosopoConfig from './prosopo.config.js'
 
 export function getSs58Format(): number {
     return parseInt(process.env.SS58_FORMAT || '') || 42
@@ -41,6 +39,9 @@ export function getSecret(who?: string): string {
     return secret
 }
 
-export function getConfig(): ProsopoConfig {
-    return prosopoConfig() as ProsopoConfig
+export function getDB(): string {
+    if (!process.env.DATABASE_HOST) {
+        throw new ProsopoEnvError('DATABASE.DATABASE_HOST_UNDEFINED')
+    }
+    return process.env.DATABASE_HOST
 }

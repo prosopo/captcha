@@ -98,7 +98,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
 
 /**
  * Get the log level from the passed value or from environment variables or a default of `info`.
- * @param logTypeOption
+ * @param logLevel
  */
 export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
     logLevel = logLevel || process.env.LOG_LEVEL || 'Info'
