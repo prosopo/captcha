@@ -24,6 +24,9 @@ jobs:
         steps:
             # Checkout the repo
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with: 
+                node-version-file: '.nvmrc'
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
