@@ -15,6 +15,7 @@ env:
 
 jobs:
     check:
+        name: check
         runs-on: ubuntu-latest
         steps:
             # Checkout the repo
