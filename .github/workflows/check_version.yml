@@ -28,8 +28,8 @@ jobs:
             # Checkout the repo
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v3
-              with: 
-                node-version-file: '.nvmrc'
+              with:
+                  node-version-file: '.nvmrc'
 
             # Get the provider image version from the root package.json and the latest package version from npm
             - name: Check provider version bump
