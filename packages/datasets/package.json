@@ -41,7 +41,7 @@
         "@prosopo/common": "0.2.10",
         "@prosopo/contract": "0.2.10",
         "@prosopo/types": "0.2.10",
-        "@prosopo/util": "0.2.10",
+        "@prosopo/util": "0.2.10"
     },
     "devDependencies": {
         "tslib": "2.6.2",
