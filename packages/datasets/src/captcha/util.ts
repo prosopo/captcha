@@ -11,16 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from '@prosopo/common'
-import client from 'axios'
+import { ClientHttp2Session } from 'http2'
 
-export async function downloadImage(url: string): Promise<Uint8Array> {
-    try {
-        return new Uint8Array(
-            (await client.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
-        )
-    } catch (error) {
-        // TODO fix/improve error handling
-        throw new ProsopoEnvError(error as Error)
-    }
+export async function downloadImage(url: URL, client: ClientHttp2Session): Promise<Uint8Array> {
+    return new Promise((resolve, reject) => {
+        client.on('error', (err) => reject(err))
+        const req = client.request({ ':path': url.pathname })
+        req.setEncoding('utf8')
+        let data: Uint8Array = new Uint8Array()
+        req.on('data', (chunk) => {
+            data += chunk
+        })
+        req.on('end', () => {
+            resolve(data)
+        })
+    })
 }
