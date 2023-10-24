@@ -26,7 +26,11 @@
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "dependencies": {
+        "@polkadot/keyring": "^12.5.1",
+        "@polkadot/types": "^10.10.1",
+        "@polkadot/util": "^12.5.1",
         "@polkadot/util-crypto": "12.3.2",
+        "@prosopo/captcha-contract": "^0.2.10",
         "@prosopo/common": "0.2.10",
         "@prosopo/contract": "0.2.10",
         "@prosopo/env": "0.2.10",
@@ -34,10 +38,16 @@
         "@prosopo/types": "0.2.10",
         "@prosopo/util": "0.2.10",
         "cors": "^2.8.5",
+        "cron-parser": "^4.9.0",
         "dotenv": "^16.0.1",
-        "es-main": "^1.2.0"
+        "yargs": "^17.7.2",
+        "zod": "^3.22.4"
     },
     "devDependencies": {
+        "es-main": "^1.2.0",
+        "express": "^4.18.2",
+        "vite": "^4.5.0",
+        "vitest": "^0.34.6",
         "@prosopo/config": "0.2.10",
         "@types/cors": "^2.8.14",
         "tslib": "2.6.2",
