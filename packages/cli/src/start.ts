@@ -11,19 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
+import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Server } from 'http'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { getDB, getSecret } from './process.env.js'
+import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import esMain from 'es-main'
-import express, { NextFunction, Request, Response } from 'express'
+import express, { Request, Response } from 'express'
+import getConfig from './prosopo.config.js'
 
-let apiAppSrv: Server
-
-export const handleErrors = (err: ProsopoApiError, req: Request, res: Response, next: NextFunction) => {
+export const handleErrors = (err: ProsopoApiError, req: Request, res: Response) => {
     let message = err.message
     try {
         message = JSON.parse(err.message)
@@ -47,7 +46,7 @@ function startApi(env: ProviderEnvironment) {
     apiApp.use(prosopoRouter(env))
 
     apiApp.use(handleErrors)
-    apiAppSrv = apiApp.listen(apiPort, () => {
+    apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })
 }
@@ -56,21 +55,18 @@ export async function start(env?: ProviderEnvironment) {
     if (!env) {
         loadEnv()
 
-        const ss58Format = getSs58Format()
-        const pairType = getPairType()
+        // Fail to start api if db is not defined
+        getDB()
+
         const secret = getSecret()
         const config = getConfig()
-        const pair = await getPair(pairType, ss58Format, secret)
-
-        env = new ProviderEnvironment(pair, config)
+        const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
+        env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
     startApi(env)
 }
 
-function stop() {
-    apiAppSrv.close()
-}
 //if main process
 if (esMain(import.meta)) {
     start().catch((error) => {

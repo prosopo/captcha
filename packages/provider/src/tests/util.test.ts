@@ -11,18 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
-import { ProsopoEnvError, getPair, hexHash } from '@prosopo/common'
+import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util.js'
 import { describe, expect, test } from 'vitest'
-import { testConfig } from '@prosopo/config'
+import { getPairAsync } from '@prosopo/contract'
+import { getTestConfig } from '@prosopo/config'
 
 describe('UTIL FUNCTIONS', async () => {
     let env: MockEnvironment
-    let pairType: KeypairType
-    let ss58Format: number
 
     test('does not modify an already encoded address', () => {
         expect(encodeStringAddress('5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL')).to.equal(
@@ -48,10 +46,10 @@ describe('UTIL FUNCTIONS', async () => {
         )
     })
     test('correctly determines if a task is still running', async () => {
-        ss58Format = 42
-        pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(pairType, ss58Format, '//Alice')
-        env = new MockEnvironment(alicePair, testConfig)
+        const config = getTestConfig()
+        const network = config.networks[config.defaultNetwork]
+        const alicePair = await getPairAsync(network, '//Alice')
+        env = new MockEnvironment(getTestConfig(), alicePair)
         try {
             await env.isReady()
         } catch (e) {

@@ -24,7 +24,7 @@ import {
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
-    ProsopoConfig,
+    ProsopoConfigOutput,
     ProviderRegistered,
 } from '@prosopo/types'
 import {
@@ -62,7 +62,7 @@ export class Tasks {
 
     logger: Logger
 
-    config: ProsopoConfig
+    config: ProsopoConfigOutput
 
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
@@ -100,6 +100,9 @@ export class Tasks {
             .map((captcha): number => (captcha.solution ? 1 : 0))
             .reduce((partialSum, b) => partialSum + b, 0)
         if (solutions < this.config.captchas.solved.count) {
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
+        if (solutions < this.config.captchas.unsolved.count) {
             throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
         }
 

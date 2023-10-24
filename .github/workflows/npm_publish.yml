@@ -9,6 +9,10 @@ on:
             - '.github/workflows/npm_publish.yml'
     workflow_dispatch:
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 jobs:
     check_version:
         uses: prosopo/captcha/.github/workflows/check_version.yml@main

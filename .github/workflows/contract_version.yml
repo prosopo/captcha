@@ -7,7 +7,6 @@ on:
             - '**/package.json'
             - '**/Cargo.toml'
             - '.github/workflows/contract_version.yml'
-    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
