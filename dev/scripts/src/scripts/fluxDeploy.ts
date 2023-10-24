@@ -148,7 +148,7 @@ const verifyLogin = async (zelid: string, signature: string, loginPhrase: string
 
 const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL) => {
     const apiUrl = new URL(`${url}apps/redeploy/imageServer/false/true`).toString()
-    const data = qs.stringify({
+    const Zelidauth = qs.stringify({
         zelid,
         signature,
         loginPhrase,
@@ -156,7 +156,7 @@ const softRedeploy = async (zelid: string, signature: string, loginPhrase: strin
     const response = await axios.get(apiUrl, {
         method: 'GET',
         headers: {
-            Zelidauth: data,
+            Zelidauth: Zelidauth,
         },
     })
     errorHandler(response)
@@ -181,12 +181,12 @@ const setupArgs = () => {
     return { appName, secretKey, zelId }
 }
 
-const getNodeAPIURL = (node: string) => {
-    const port = at(node.split(':'), 1)
+const getNodeAPIURL = (nodeUIURL: string) => {
+    const port = at(nodeUIURL.split(':'), 1)
     const portLogin = Number(port) + 1
-    const nodeAPIURL = new URL(`http://${node.replace(port, portLogin.toString())}`)
+    const nodeAPIURL = new URL(`http://${nodeUIURL.replace(port, portLogin.toString())}`)
     log.info('Node API URL:', nodeAPIURL)
-    return new URL(`http://${node.replace(port, portLogin.toString())}`)
+    return new URL(`http://${nodeUIURL.replace(port, portLogin.toString())}`)
 }
 
 const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) => {
@@ -217,10 +217,10 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
         const { appName, secretKey, zelId } = setupArgs()
 
         // Get a Flux node
-        const node = await getNode(appName, zelId, secretKey)
+        const nodeUIURL = await getNode(appName, zelId, secretKey)
 
         // Get the admin API URL as it is different from the UI URL
-        const nodeAPIURL = getNodeAPIURL(node)
+        const nodeAPIURL = getNodeAPIURL(nodeUIURL)
 
         // Get a login token from the node
         const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL)
