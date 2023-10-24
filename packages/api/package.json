@@ -32,6 +32,8 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
+        "@prosopo/captcha-contract": "^0.2.10",
+        "@prosopo/config": "^0.2.10",
         "@prosopo/types": "0.2.10",
         "axios": "^1.5.0"
     },

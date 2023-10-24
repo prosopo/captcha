@@ -31,7 +31,6 @@
         "@polkadot/types": "^10.10.1",
         "@polkadot/util": "12.3.2",
         "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/config": "^0.2.10",
         "@prosopo/util": "0.2.10",
         "consola": "^3.2.3",
         "i18next": "^21.9.2",
@@ -42,6 +41,7 @@
         "zod": "^3.22.3"
     },
     "devDependencies": {
+        "@prosopo/config": "^0.2.10",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vitest": "^0.34.2"
