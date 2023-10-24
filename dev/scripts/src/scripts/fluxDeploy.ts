@@ -239,7 +239,7 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
         log.info(redployResponse.data)
         process.exit(0)
     } catch (error) {
-        console.error('An error occurred:', error)
+        log.error('An error occurred:', error)
         process.exit(1)
     }
 })()
