@@ -96,7 +96,7 @@ const errorHandler = (axiosResponse: AxiosResponse) => {
 
 async function getLoginPhrase(url?: URL) {
     const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
-    console.log('Calling:', apiURL)
+    console.log('Calling:', apiURL.href)
     const response = await axios.get(apiURL.toString())
     errorHandler(response)
     return response.data.data
@@ -160,36 +160,42 @@ async function softRedeploy(zelid: string, signature: string, loginPhrase: strin
     return response
 }
 
+const setupArgs = () => {
+    const appName = process.argv.slice(2)[0]
+    if (!appName) {
+        throw new Error('Please provide an app name')
+    }
+
+    const secretWIFKey = process.env.ZELCORE_PRIVATE_KEY
+    if (!secretWIFKey) {
+        throw new Error('No private key provided')
+    }
+    const zelId = process.env.ZELCORE_PUBLIC_KEY
+    if (!zelId) {
+        throw new Error('No zelId provided')
+    }
+    const secretKey = wifToPrivateKey(secretWIFKey)
+    return { appName, secretKey, zelId }
+}
+
 ;(async () => {
     try {
         loadEnv()
 
-        // Step 1: Get Flux login phrase
+        const { appName, secretKey, zelId } = setupArgs()
+
+        // Get Flux login phrase
         const loginPhrase = await getLoginPhrase()
         console.log('Login Phrase:', loginPhrase)
 
-        // Step 2: Sign data with zelcore private key
-        const privateKey = process.env.ZELCORE_PRIVATE_KEY
-        if (!privateKey) {
-            throw new Error('No private key provided')
-        }
-        const secretKey = wifToPrivateKey(privateKey)
-
-        const message = 'Your Message to Sign'
-        const signature = base64Encode(await sign(message, { secretKey }))
+        const signature = base64Encode(await sign(loginPhrase, { secretKey }))
         console.log('Signature:', signature)
 
-        // Step 3: Get details of Flux apps
-        const zelId = '15gSe8HrNhVrWph6CTPtpb6nXESqPtgCCe' // Replace with your zelId
-        // const fluxAppsDetails = await getFluxAppsDetails(zelId, signature, loginPhrase)
-        // console.log('Flux Apps Details:', fluxAppsDetails)
-
-        // Step 4: Get details of individual Flux app
-        const dappName = 'imageServer' // Replace with the app name you want to fetch
-        const individualNodeIPs = await getFluxOSURLs(dappName, zelId, signature, loginPhrase)
+        // Get details of individual Flux app
+        const individualNodeIPs = await getFluxOSURLs(appName, zelId, signature, loginPhrase)
         console.log('Individual Node IPs:', individualNodeIPs)
 
-        // Step 5: Choose a node at random from individualNodeIPs
+        // Choose a node at random from individualNodeIPs
         const node = individualNodeIPs[Math.floor(Math.random() * individualNodeIPs.length)]
         if (!node) {
             throw new Error('Failed to randomly select node')
@@ -201,19 +207,18 @@ async function softRedeploy(zelid: string, signature: string, loginPhrase: strin
         console.log('Port Login:', portLogin)
         const nodeAPIURL = new URL(`http://${node.replace(port, portLogin.toString())}`)
 
-        // Step 6: Get a login token from the node
+        // Get a login token from the node
         const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL)
         console.log('Node Login Phrase:', nodeLoginPhrase)
 
-        // Step 7: Sign the login token with zelcore private key
+        // Sign the login token with zelcore private key
         const nodeSignature = base64Encode(await sign(nodeLoginPhrase, { secretKey }))
         console.log('Node Signature:', nodeSignature)
 
-        // Step 8: Login to the node
-        const nodeLoginResponse = await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
-        console.log(nodeLoginResponse.headers['set-cookie'])
+        // Login to the node
+        await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
-        // Step9 .Redeploy the app
+        // Redeploy the app
         const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
         console.log(redployResponse.data)
