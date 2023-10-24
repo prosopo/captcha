@@ -1,9 +1,12 @@
 import { at } from '@prosopo/util'
 import { base64Encode } from '@polkadot/util-crypto'
+import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import { sign, wifToPrivateKey } from './sep256k1Sign.js'
 import axios, { AxiosResponse } from 'axios'
 import qs from 'qs'
+
+const log = getLogger(`Info`, `fluxDeploy.js`)
 
 interface Node {
     ip: string
@@ -96,7 +99,7 @@ const errorHandler = (axiosResponse: AxiosResponse) => {
 
 async function getLoginPhrase(url?: URL) {
     const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
-    console.log('Calling:', apiURL.href)
+    log.info('Calling:', apiURL.href)
     const response = await axios.get(apiURL.toString())
     errorHandler(response)
     return response.data.data
@@ -134,7 +137,7 @@ async function verifyLogin(zelid: string, signature: string, loginPhrase: string
         signature,
         loginPhrase,
     })
-    console.log('Data:', data)
+    log.info('Data:', data)
     const response = await axios.post(apiUrl, data, {
         method: 'POST',
         headers: { 'Content-Type': `application/x-www-form-urlencoded` },
@@ -186,34 +189,34 @@ const setupArgs = () => {
 
         // Get Flux login phrase
         const loginPhrase = await getLoginPhrase()
-        console.log('Login Phrase:', loginPhrase)
+        log.info('Login Phrase:', loginPhrase)
 
         const signature = base64Encode(await sign(loginPhrase, { secretKey }))
-        console.log('Signature:', signature)
+        log.info('Signature:', signature)
 
         // Get details of individual Flux app
         const individualNodeIPs = await getFluxOSURLs(appName, zelId, signature, loginPhrase)
-        console.log('Individual Node IPs:', individualNodeIPs)
+        log.info('Individual Node IPs:', individualNodeIPs)
 
         // Choose a node at random from individualNodeIPs
         const node = individualNodeIPs[Math.floor(Math.random() * individualNodeIPs.length)]
         if (!node) {
             throw new Error('Failed to randomly select node')
         }
-        console.log('Node:', node)
+        log.info('Node:', node)
         const port = at(node.split(':'), 1)
         const portLogin = Number(port) + 1
-        console.log('Port:', port)
-        console.log('Port Login:', portLogin)
+        log.info('Port:', port)
+        log.info('Port Login:', portLogin)
         const nodeAPIURL = new URL(`http://${node.replace(port, portLogin.toString())}`)
 
         // Get a login token from the node
         const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL)
-        console.log('Node Login Phrase:', nodeLoginPhrase)
+        log.info('Node Login Phrase:', nodeLoginPhrase)
 
         // Sign the login token with zelcore private key
         const nodeSignature = base64Encode(await sign(nodeLoginPhrase, { secretKey }))
-        console.log('Node Signature:', nodeSignature)
+        log.info('Node Signature:', nodeSignature)
 
         // Login to the node
         await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
@@ -221,7 +224,7 @@ const setupArgs = () => {
         // Redeploy the app
         const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
-        console.log(redployResponse.data)
+        log.info(redployResponse.data)
         process.exit(0)
     } catch (error) {
         console.error('An error occurred:', error)
