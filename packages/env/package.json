@@ -22,14 +22,8 @@
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "dependencies": {
-        "@polkadot/api": "^10.10.1",
-        "@polkadot/keyring": "^12.5.1",
-        "@polkadot/rpc-provider": "^10.10.1",
-        "@polkadot/util": "^12.5.1",
         "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/captcha-contract": "^0.2.10",
         "@prosopo/common": "0.2.10",
-        "@prosopo/config": "^0.2.10",
         "@prosopo/contract": "0.2.10",
         "@prosopo/database": "0.2.10",
         "@prosopo/types": "0.2.10",
