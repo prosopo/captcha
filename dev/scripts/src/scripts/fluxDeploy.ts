@@ -97,7 +97,7 @@ const errorHandler = (axiosResponse: AxiosResponse) => {
     return axiosResponse
 }
 
-const getLoginPhrase = (url?: URL) => {
+const getLoginPhrase = async (url?: URL) => {
     const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
     log.info('Calling:', apiURL.href)
     const response = await axios.get(apiURL.toString())
