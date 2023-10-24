@@ -97,7 +97,7 @@ const errorHandler = (axiosResponse: AxiosResponse) => {
     return axiosResponse
 }
 
-async function getLoginPhrase(url?: URL) {
+const getLoginPhrase = (url?: URL) => {
     const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
     log.info('Calling:', apiURL.href)
     const response = await axios.get(apiURL.toString())
@@ -105,32 +105,32 @@ async function getLoginPhrase(url?: URL) {
     return response.data.data
 }
 
-async function getFluxAppsDetails(zelId: string, signature: string, loginPhrase: string) {
+const getFluxAppsDetails = async (zelId: string, signature: string, loginPhrase: string) => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?filter=&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
     const response = await axios.get(apiUrl)
     errorHandler(response)
     return response.data
 }
 
-async function getIndividualFluxAppDetails(
+const getIndividualFluxAppDetails = async (
     dappName: string,
     zelId: string,
     signature: string,
     loginPhrase: string
-): Promise<DappDataResponse> {
+): Promise<DappDataResponse> => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?dapp=${dappName}&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
     const response = await axios.get(apiUrl)
     errorHandler(response)
     return response.data
 }
 
-async function getFluxOSURLs(dappName: string, zelId: string, signature: string, loginPhrase: string) {
+const getFluxOSURLs = async (dappName: string, zelId: string, signature: string, loginPhrase: string) => {
     const data = await getIndividualFluxAppDetails(dappName, zelId, signature, loginPhrase)
     // return the fluxOS urls
     return Object.values(data.nodes).map((node) => node.fluxos)
 }
 
-async function verifyLogin(zelid: string, signature: string, loginPhrase: string, url?: URL) {
+const verifyLogin = async (zelid: string, signature: string, loginPhrase: string, url?: URL) => {
     const apiUrl = new URL(`${url || 'api.runonfux.io/'}id/verifylogin`).toString()
     const data = qs.stringify({
         zelid,
@@ -146,7 +146,7 @@ async function verifyLogin(zelid: string, signature: string, loginPhrase: string
     return response
 }
 
-async function softRedeploy(zelid: string, signature: string, loginPhrase: string, url: URL) {
+const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL) => {
     const apiUrl = new URL(`${url}apps/redeploy/imageServer/false/true`).toString()
     const data = qs.stringify({
         zelid,
@@ -181,34 +181,46 @@ const setupArgs = () => {
     return { appName, secretKey, zelId }
 }
 
+const getNodeAPIURL = (node: string) => {
+    const port = at(node.split(':'), 1)
+    const portLogin = Number(port) + 1
+    const nodeAPIURL = new URL(`http://${node.replace(port, portLogin.toString())}`)
+    log.info('Node API URL:', nodeAPIURL)
+    return new URL(`http://${node.replace(port, portLogin.toString())}`)
+}
+
+const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) => {
+    // Get Flux login phrase
+    const loginPhrase = await getLoginPhrase()
+    log.info('Login Phrase:', loginPhrase)
+
+    const signature = base64Encode(await sign(loginPhrase, { secretKey }))
+    log.info('Signature:', signature)
+
+    // Get details of individual Flux app
+    const individualNodeIPs = await getFluxOSURLs(appName, zelId, signature, loginPhrase)
+    log.info('Individual Node IPs:', individualNodeIPs)
+
+    // Choose a node at random from individualNodeIPs
+    const node = individualNodeIPs[Math.floor(Math.random() * individualNodeIPs.length)]
+    if (!node) {
+        throw new Error('Failed to randomly select node')
+    }
+    log.info('Node:', node)
+    return node
+}
+
 ;(async () => {
     try {
         loadEnv()
 
         const { appName, secretKey, zelId } = setupArgs()
 
-        // Get Flux login phrase
-        const loginPhrase = await getLoginPhrase()
-        log.info('Login Phrase:', loginPhrase)
+        // Get a Flux node
+        const node = await getNode(appName, zelId, secretKey)
 
-        const signature = base64Encode(await sign(loginPhrase, { secretKey }))
-        log.info('Signature:', signature)
-
-        // Get details of individual Flux app
-        const individualNodeIPs = await getFluxOSURLs(appName, zelId, signature, loginPhrase)
-        log.info('Individual Node IPs:', individualNodeIPs)
-
-        // Choose a node at random from individualNodeIPs
-        const node = individualNodeIPs[Math.floor(Math.random() * individualNodeIPs.length)]
-        if (!node) {
-            throw new Error('Failed to randomly select node')
-        }
-        log.info('Node:', node)
-        const port = at(node.split(':'), 1)
-        const portLogin = Number(port) + 1
-        log.info('Port:', port)
-        log.info('Port Login:', portLogin)
-        const nodeAPIURL = new URL(`http://${node.replace(port, portLogin.toString())}`)
+        // Get the admin API URL as it is different from the UI URL
+        const nodeAPIURL = getNodeAPIURL(node)
 
         // Get a login token from the node
         const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL)
@@ -221,7 +233,7 @@ const setupArgs = () => {
         // Login to the node
         await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
-        // Redeploy the app
+        // Soft redeploy the app
         const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
         log.info(redployResponse.data)
