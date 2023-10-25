@@ -283,16 +283,6 @@ export function Manager(
 
             const getRandomProviderResponse = await lastValueFrom(getRandomProviderObservable)
 
-            // Subscribe to the observable
-            getRandomProviderObservable.subscribe({
-                next: (response) => {
-                    console.log('Received response:', response)
-                },
-                error: (error) => {
-                    console.error('Failed to get random provider after retries:', error)
-                },
-            })
-
             const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
