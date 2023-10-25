@@ -164,8 +164,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 { upsert: true }
             )
 
-            this.logger.info('parsedDataset.captchas', parsedDataset.captchas)
-
             // put the dataset id on each of the captcha docs and remove the solution
             const captchaDocs = parsedDataset.captchas.map(({ solution, ...captcha }, index) => ({
                 ...captcha,
