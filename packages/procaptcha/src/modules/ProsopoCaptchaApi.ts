@@ -71,51 +71,37 @@ export class ProsopoCaptchaApi {
         // TODO make sure root is equal to root on the provider
         const first = at(captchaChallenge.captchas, 0)
         const proofLength = first.proof.length
-        console.log(provider.provider)
-
         const last = at(first.proof, proofLength - 1)
         if (provider.provider.datasetIdContent.toString() !== at(last, 0)) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
-
         for (const captchaWithProof of captchaChallenge.captchas) {
-            //TODO calculate the captchaId from the captcha content
             if (!verifyCaptchaData(captchaWithProof)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
-
             if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
         }
-        console.log('CAPTCHA.CHALLENGE_VERIFIED')
         return
     }
 
     public async submitCaptchaSolution(
         signer: Signer,
         requestHash: string,
-        datasetId: string,
         solutions: CaptchaSolution[],
         salt: string
     ): Promise<TCaptchaSubmitResult> {
         const tree = new CaptchaMerkleTree()
-
         const captchasHashed = solutions.map((captcha) => computeCaptchaSolutionHash(captcha))
-
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
-
-        console.log('solveCaptchaChallenge commitmentId', commitmentId)
         const tx: ContractSubmittableResult | undefined = undefined
-
         let signature: string | undefined = undefined
-
         if (this.web2) {
             if (!signer || !signer.signRaw) {
                 throw new Error('Signer is not defined, cannot sign message to prove account ownership')
             }
-            // sign the request hash to prove account ownership
             const signed = await signer.signRaw({
                 address: this.userAccount,
                 data: stringToHex(requestHash),
@@ -138,7 +124,6 @@ export class ProsopoCaptchaApi {
             // TODO fix/improve error handling
             throw new ProsopoApiError(err as AxiosError<unknown, any>)
         }
-
         return [result, commitmentId, tx]
     }
 }
@@ -152,7 +137,6 @@ export class ProsopoCaptchaApi {
 async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<boolean> {
     const captcha = captchaWithProof.captcha
     const proof = captchaWithProof.proof
-    // Check that all the item hashes are equal to the provided item hashes in the captcha
     if (
         !(await Promise.all(captcha.items.map(async (item) => (await computeItemHash(item)).hash === item.hash))).every(
             (hash) => hash === true
@@ -160,12 +144,10 @@ async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<bo
     ) {
         return false
     }
-    // Check that the computed captcha content id is equal to the provided captcha content id
     const captchaHash = computeCaptchaHash(captcha, false, false, false)
     if (captchaHash !== captcha.captchaContentId) {
         return false
     }
-    // Check that the captcha content id is present in the first layer of the proof
     return at(proof, 0).indexOf(captchaHash) !== -1
 }
 

@@ -17,13 +17,11 @@ export class HttpClientBase {
     protected readonly axios: AxiosInstance
 
     constructor(baseURL: string, prefix = '') {
-        baseURL = baseURL + prefix
-        this.axios = axios.create({ baseURL })
+        this.axios = axios.create({ baseURL: baseURL + prefix })
         this.axios.interceptors.response.use(this.responseHandler, this.errorHandler)
     }
 
     protected responseHandler = (response: AxiosResponse) => {
-        console.log('API REQUEST', response.request)
         return response.data
     }
 

@@ -16,10 +16,8 @@ import { blake2AsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 
 export function sign(message: string): { messageHash: string; signature: string } {
-    const keyring = new Keyring({ type: 'ecdsa' })
-    const pair = keyring.addFromUri('//Alice')
-    const sig = pair.sign(message)
-    const signature = u8aToHex(sig)
-    const messageHash = blake2AsHex(message)
-    return { messageHash, signature }
+    return {
+        messageHash: blake2AsHex(message),
+        signature: u8aToHex(new Keyring({ type: 'ecdsa' }).addFromUri('//Alice').sign(message)),
+    }
 }
