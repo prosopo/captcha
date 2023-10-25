@@ -48,7 +48,10 @@
         "@prosopo/util": "0.2.11",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
+        "es-main": "^1.2.0",
         "glob": "^10.0.0",
+        "qs": "^6.11.2",
+        "varuint-bitcoin": "^1.1.2",
         "yargs": "^17.5.1",
         "yargs-parser": "^21.0.1"
     },
