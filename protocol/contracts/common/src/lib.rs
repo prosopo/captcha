@@ -71,8 +71,8 @@ pub mod common {
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
             let env_git_commit_id: [u8; 20] = [
-                108, 233, 190, 233, 16, 249, 15, 8, 220, 26, 35, 111, 238, 182, 76, 125, 1, 49,
-                199, 168,
+                241, 119, 186, 138, 233, 136, 77, 94, 163, 2, 173, 111, 225, 251, 106, 3, 165, 123,
+                98, 161,
             ];
             env_git_commit_id
         }
