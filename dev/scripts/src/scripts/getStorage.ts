@@ -13,14 +13,14 @@
 // limitations under the License.
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { defaultConfig } from '@prosopo/cli'
+import { at } from '@prosopo/util'
+import { defaultConfig, loadEnv } from '@prosopo/cli'
 import { get } from '@prosopo/util'
 import { getPairAsync } from '@prosopo/contract'
-import dotenv from 'dotenv'
 
-dotenv.config()
+loadEnv()
 
-async function main() {
+async function main(storageKey: string) {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
     const pair = await getPairAsync(network, '//Alice')
@@ -28,13 +28,13 @@ async function main() {
     await env.isReady()
     const tasks = new Tasks(env)
     const contract = tasks.contract
-    const fn: any = get(contract, 'dappAccounts')
+    const fn: any = get(contract, storageKey)
     const dappAccounts = await fn()
     console.log(dappAccounts.toHuman())
     process.exit()
 }
 
-main().catch((error) => {
+main(at(process.argv.slice(2), 0).trim()).catch((error) => {
     console.error(error)
     process.exit()
 })
