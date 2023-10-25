@@ -135,7 +135,7 @@ export async function getDependencies(
     packageName?: string,
     production?: boolean
 ): Promise<{ dependencies: string[]; optionalPeerDependencies: string[] }> {
-    let cmd = production ? 'npm ls -a -prod true' : 'npm ls -a'
+    let cmd = production ? 'npm ls -a --omit=dev' : 'npm ls -a'
 
     if (packageName) {
         const packageDir = await getPackageDir(packageName)
