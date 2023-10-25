@@ -24,7 +24,7 @@
         "@prosopo/cli": "0.2.10",
         "@prosopo/env": "0.2.10",
         "@prosopo/provider": "0.2.10",
-        "next": "13.4.9",
+        "next": "13.5.0",
         "react": "18.2.0"
     },
     "devDependencies": {
