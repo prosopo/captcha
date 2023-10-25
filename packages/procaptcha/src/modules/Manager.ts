@@ -11,6 +11,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
+import { SignerPayloadRaw } from '@polkadot/types/types'
+import { stringToU8a } from '@polkadot/util'
+import { randomAsHex } from '@polkadot/util-crypto'
+import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
+import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
+import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import {
+    CaptchaSolution,
+    ProcaptchaClientConfigInput,
+    ProcaptchaClientConfigOutput,
+    ProcaptchaConfigSchema,
+} from '@prosopo/types'
+import { at } from '@prosopo/util'
+import { Observable, from, lastValueFrom } from 'rxjs'
+import { catchError, retry, take } from 'rxjs/operators'
+import ExtensionWeb2 from '../api/ExtensionWeb2.js'
+import ExtensionWeb3 from '../api/ExtensionWeb3.js'
+import { AccountNotFoundError } from '../api/errors.js'
+import { TCaptchaSubmitResult } from '../types/client.js'
 import {
     Account,
     ProcaptchaCallbacks,
@@ -19,27 +40,7 @@ import {
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '../types/manager.js'
-import { AccountNotFoundError } from '../api/errors.js'
-import { ApiPromise, Keyring } from '@polkadot/api'
-import {
-    CaptchaSolution,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
-    ProcaptchaConfigSchema,
-} from '@prosopo/types'
-import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
-import { SignerPayloadRaw } from '@polkadot/types/types'
-import { TCaptchaSubmitResult } from '../types/client.js'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { at } from '@prosopo/util'
-import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../utils/utils.js'
-import { stringToU8a } from '@polkadot/util'
-import ExtensionWeb2 from '../api/ExtensionWeb2.js'
-import ExtensionWeb3 from '../api/ExtensionWeb3.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -202,6 +203,7 @@ export function Manager(
             // account has been found, check if account is already marked as human
             // first, ask the smart contract
             const contract = await loadContract()
+
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
             let contractIsHuman = false
             try {
@@ -259,11 +261,38 @@ export function Manager(
             const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
             console.log('Signature:', signed)
 
-            // get a random provider
-            const getRandomProviderResponse: RandomProvider = await wrapQuery(
-                contract.query.getRandomActiveProvider,
-                contract.query
-            )(account.account.address, getDappAccount())
+            const getRandomProviderObservable = from<Promise<RandomProvider>>(
+                wrapQuery(contract.query.getRandomActiveProvider, contract.query)(
+                    account.account.address,
+                    getDappAccount()
+                )
+            ).pipe(
+                catchError((error) => {
+                    console.error('Failed to get random provider:', error)
+                    throw error
+                }),
+                retry({
+                    count: 3,
+                    delay: (error, retryCount) => {
+                        console.error(`Attempt ${retryCount} failed. Retrying on next block. Error: ${error}`)
+                        return createBlockObservable().pipe(take(1)) // Wait for the next block
+                    },
+                    resetOnSuccess: true,
+                })
+            )
+
+            const getRandomProviderResponse = await lastValueFrom(getRandomProviderObservable)
+
+            // Subscribe to the observable
+            getRandomProviderObservable.subscribe({
+                next: (response) => {
+                    console.log('Received response:', response)
+                },
+                error: (error) => {
+                    console.error('Failed to get random provider after retries:', error)
+                },
+            })
+
             const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
@@ -541,6 +570,29 @@ export function Manager(
         const blockNumber: number = state.blockNumber
         return blockNumber
     }
+
+    const createBlockObservable = () =>
+        new Observable((subscriber) => {
+            type VoidFn = () => void
+
+            let unsubscribe: Promise<VoidFn> | undefined
+
+            ApiPromise.create({ provider: new WsProvider(getNetwork(getConfig()).endpoint) })
+                .then((api) => {
+                    unsubscribe = api.rpc.chain.subscribeNewHeads((header) => {
+                        subscriber.next(header)
+                    })
+                })
+                .catch((error) => {
+                    subscriber.error(error)
+                })
+
+            return () => {
+                if (unsubscribe) {
+                    unsubscribe.then((unsubFn) => unsubFn())
+                }
+            }
+        })
 
     /**
      * Load the contract instance using addresses from config.

@@ -45,7 +45,8 @@
         "@prosopo/datasets": "0.2.10",
         "@prosopo/types": "0.2.10",
         "@prosopo/util": "0.2.10",
-        "axios": "^1.5.0"
+        "axios": "^1.5.0",
+        "rxjs": "^7.8.1"
     },
     "devDependencies": {
         "tslib": "2.6.2",
