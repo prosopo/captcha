@@ -13,7 +13,13 @@
 // limitations under the License.
 import './App.css'
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import {
+    ApiParams,
+    EnvironmentTypes,
+    EnvironmentTypesSchema,
+    ProcaptchaOutput,
+    ProsopoServerConfigSchema,
+} from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
 
@@ -36,7 +42,7 @@ function App() {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const config = ProsopoSeverConfigSchema.parse({
+    const config = ProsopoServerConfigSchema.parse({
         userAccountAddress: account,
         account: {
             address: process.env.REACT_APP_DAPP_SITE_KEY || '',
