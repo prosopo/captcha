@@ -48,7 +48,7 @@ export default async function (
     mode?: string
 ): Promise<UserConfig> {
     // Get all dependencies of the current package
-    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName)
+    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, true)
 
     // Assuming node_modules are at the root of the workspace
     const baseDir = path.resolve('../..')
