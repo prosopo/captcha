@@ -18,7 +18,7 @@ import {
     EnvironmentTypes,
     EnvironmentTypesSchema,
     ProcaptchaOutput,
-    ProsopoServerConfigSchema,
+    ProsopoClientConfigSchema,
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
@@ -42,7 +42,7 @@ function App() {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const config = ProsopoServerConfigSchema.parse({
+    const config = ProsopoClientConfigSchema.parse({
         userAccountAddress: account,
         account: {
             address: process.env.REACT_APP_DAPP_SITE_KEY || '',
