@@ -204,15 +204,15 @@ export function Manager(
             if (!state.challenge) {
                 throw new Error('cannot submit, no challenge found')
             }
-            if (!at(state.challenge.captchas, 0).captcha.datasetId) {
-                throw new Error('No datasetId set for challenge')
-            }
+
+            const datasetId = getDatasetId()
+            const salt = randomAsHex()
 
             // Build the captcha solution
-            const salt = randomAsHex()
             const submission = await getCaptchaApi().submitCaptchaSolution(
                 getAccount().extension.signer,
                 state.challenge.requestHash,
+                datasetId,
                 getSolutionsFromState(salt),
                 salt
             )
@@ -575,6 +575,19 @@ export function Manager(
 
     function getBlockNumberFromProvider(getRandomProviderResponse: RandomProvider): number | undefined {
         return parseInt(getRandomProviderResponse.blockNumber.toString())
+    }
+
+    function getDatasetId() {
+        if (!state.challenge) {
+            throw new Error('cannot get datasetId, no challenge found')
+        }
+
+        const datasetId = at(state.challenge.captchas, 0).captcha.datasetId
+
+        if (!datasetId) {
+            throw new Error('No datasetId set for challenge')
+        }
+        return datasetId
     }
 
     return {
