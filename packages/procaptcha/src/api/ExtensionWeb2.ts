@@ -13,7 +13,8 @@
 // limitations under the License.
 import { Account } from '../types/index.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { InjectedAccount } from '@polkadot/extension-inject/types'
+import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProcaptchaClientConfigOutput } from '@prosopo/types'
@@ -30,26 +31,16 @@ import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
-type PicassoParams = {
-    area: {
-        width: number
-        height: number
-    }
-    offsetParameter: number
-    multiplier: number
-    fontSizeFactor: number
-    maxShadowBlur: number
-    numberOfRounds: number
-    seed: number
-}
-
 /**
  * Class for interfacing with web3 accounts.
  */
 export default class ExtWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
-        const account = await this.createAccount(new WsProvider(getNetwork(config).endpoint))
-        const extension = await this.createExtension(account)
+        const network = getNetwork(config)
+        const wsProvider = new WsProvider(network.endpoint)
+
+        const account = await this.createAccount(wsProvider)
+        const extension: InjectedExtension = await this.createExtension(account)
 
         return {
             account,
@@ -61,16 +52,24 @@ export default class ExtWeb2 extends Extension {
         const signer = new Signer(async () => {
             return
         })
-        signer.signRaw = async (payload) => ({
-            id: 1,
-            signature: u8aToHex(account.keypair.sign(payload.data)),
-        })
+
+        // signing carried out by the keypair. Signs the data with the private key, creating a signature. Other people can verify this signature given the message and the public key, proving that the message was indeed signed by account and proving ownership of the account.
+        signer.signRaw = async (payload) => {
+            const signature = account.keypair.sign(payload.data)
+            return {
+                id: 1, // the id of the request to sign. This should be incremented each time and adjust the signature, but we're hacking around this. Hence the signature will always be the same given the same payload.
+                signature: u8aToHex(signature),
+            }
+        }
+
         return {
             accounts: {
                 get: async () => {
+                    // there is only ever 1 account
                     return [account]
                 },
                 subscribe: () => {
+                    // do nothing, there will never be account changes
                     return () => {
                         return
                     }
@@ -83,23 +82,7 @@ export default class ExtWeb2 extends Extension {
     }
 
     private async createAccount(wsProvider: WsProvider): Promise<AccountWithKeyPair> {
-        const api = await ApiPromise.create({ provider: wsProvider })
-        const type: KeypairType = 'sr25519'
-        await cryptoWaitReady()
-        const keypair = await this.generateEntropy(this.getPicassoParams()).then((entropy) =>
-            this.getKeyPairFromEntropy(entropy, api, type)
-        )
-        const address = this.getFormattedAddress(keypair, api)
-        return {
-            address,
-            type,
-            name: address,
-            keypair,
-        }
-    }
-
-    private getPicassoParams() {
-        return {
+        const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
             multiplier: 15000,
@@ -108,28 +91,39 @@ export default class ExtWeb2 extends Extension {
             numberOfRounds: 5,
             seed: 42,
         }
+
+        const browserEntropy = await this.getFingerprint()
+        const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
+        const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
+        const u8Entropy = stringToU8a(entropy)
+        const mnemonic = entropyToMnemonic(u8Entropy)
+
+        const api = await ApiPromise.create({ provider: wsProvider })
+        const type: KeypairType = 'sr25519'
+        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+
+        await cryptoWaitReady()
+        const keypair = keyring.addFromMnemonic(mnemonic)
+        const address =
+            keypair.address.length === 42
+                ? keypair.address
+                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
+        return {
+            address,
+            type,
+            name: address,
+            keypair,
+        }
     }
 
-    private async generateEntropy(params: PicassoParams): Promise<string> {
-        const canvasData = picassoCanvas(params.numberOfRounds, params.seed, params)
-        const fingerprint = await this.getFingerprint()
-        return hexHash([canvasData, fingerprint].join(''), 128).slice(2)
-    }
-
-    private getKeyPairFromEntropy(entropy: string, api: ApiPromise, type: KeypairType): KeyringPair {
-        return new Keyring({ type, ss58Format: api.registry.chainSS58 }).addFromMnemonic(
-            entropyToMnemonic(stringToU8a(entropy))
-        )
-    }
-
-    private getFormattedAddress(keypair: KeyringPair, api: ApiPromise): string {
-        const rawAddress = keypair.address
-        return rawAddress.length === 42 ? rawAddress : encodeAddress(decodeAddress(rawAddress), api.registry.chainSS58)
-    }
-
-    private getFingerprint(): Promise<string> {
-        return FingerprintJS.load()
-            .then((fingerprint) => fingerprint.get())
-            .then((result) => hashComponents(result.components))
+    private async getFingerprint(): Promise<string> {
+        // Initialize an agent at application startup.
+        const fpPromise = FingerprintJS.load()
+        // Get the visitor identifier when you need it.
+        const fp = await fpPromise
+        const result = await fp.get()
+        // strip out the components that change in incognito mode
+        const { screenFrame, ...componentsReduced } = result.components
+        return hashComponents(componentsReduced)
     }
 }
