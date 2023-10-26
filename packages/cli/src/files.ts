@@ -15,7 +15,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { Readable } from 'stream'
 import fs, { WriteStream, createWriteStream } from 'fs'
 
-export function loadJSONFile(filePath: string, logger?: any) {
+export function loadJSONFile(filePath: string) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (err) {
@@ -45,7 +45,6 @@ export function writeJSONFile(filePath: string, jsonData: Record<string, any>) {
 }
 
 export async function readFile(filePath: string): Promise<Buffer> {
-    // const parsedFilePath = handleFileProtocol(filePath, undefined)
     return new Promise((resolve, reject) => {
         fs.readFile(filePath, (err, data) => {
             if (err) reject(err)

@@ -13,90 +13,77 @@
 // limitations under the License.
 
 import { LogLevel } from '@prosopo/common'
+import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { z } from 'zod'
+import networks from '../networks/index.js'
 
 export const DatabaseTypes = z.enum(['mongo', 'mongoMemory'])
 
-export const EnvironmentTypesSchema = z.enum(['development', 'rococo', 'kusama', 'polkadot', 'shiden'])
+export const EnvironmentTypesSchema = z.enum(['development', 'staging', 'production'])
 
 export type EnvironmentTypes = z.infer<typeof EnvironmentTypesSchema>
 
-// TODO decide if environment should be development / staging / production instead of rococo / kusama / polkadot
-export const NetworkNamesSchema = EnvironmentTypesSchema
-
-export type NetworkNames = typeof NetworkNamesSchema
-
-export const DatabaseConfigSchema = z
-    .record(
-        EnvironmentTypesSchema,
-        z.object({
-            type: z.string(),
-            endpoint: z.string(),
-            dbname: z.string(),
-            authSource: z.string(),
-        })
-    )
-    .optional()
+export const DatabaseConfigSchema = z.record(
+    EnvironmentTypesSchema,
+    z.object({
+        type: z.string(),
+        endpoint: z.string(),
+        dbname: z.string(),
+        authSource: z.string(),
+    })
+)
 
 export const BatchCommitConfigSchema = z.object({
-    interval: z.number().positive(),
-    maxBatchExtrinsicPercentage: z.number().positive(),
+    interval: z.number().positive().optional().default(300),
+    maxBatchExtrinsicPercentage: z.number().positive().optional().default(59),
 })
 
-export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
+export type BatchCommitConfigInput = z.input<typeof BatchCommitConfigSchema>
+export type BatchCommitConfigOutput = z.output<typeof BatchCommitConfigSchema>
 
-export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
+export type DatabaseConfigInput = z.input<typeof DatabaseConfigSchema>
+export type DatabaseConfigOutput = z.output<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
-    logLevel: LogLevel,
-    defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.development),
-    // The account with which to query the contract and sign transactions
+    logLevel: LogLevel.optional().default(LogLevel.enum.info),
+    defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.production),
+    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.rococo),
+    // The account with which to query the contract.merge sign transactions
     account: z.object({
-        address: z.string(),
+        address: z.string().optional(),
         secret: z.string().optional(),
         password: z.string().optional(),
     }),
 })
 
-export const NetworkConfigSchema = z.object({
-    endpoint: z.string().url(),
-    contract: z.object({
-        address: z.string(),
-        name: z.string(),
-    }),
-    accounts: z.array(z.string()).optional(),
-})
-
-export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
-
-export const ProsopoNetworksSchema = z.record(NetworkNamesSchema, NetworkConfigSchema.required()).default({
-    development: {
-        endpoint: 'ws://127.0.0.1:9944',
-        contract: {
-            address: '',
-            name: '',
-        },
-        accounts: [],
-    },
-})
-
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     z.object({
-        networks: ProsopoNetworksSchema,
+        networks: ProsopoNetworksSchema.default(networks),
         database: DatabaseConfigSchema.optional(),
     })
 )
+export type ProsopoNetworksSchemaInput = z.input<typeof ProsopoNetworksSchema>
+export type ProsopoNetworksSchemaOutput = z.output<typeof ProsopoNetworksSchema>
 
-export type ProsopoBasicConfig = z.infer<typeof ProsopoBasicConfigSchema>
+export type ProsopoBasicConfigInput = z.input<typeof ProsopoBasicConfigSchema>
+export type ProsopoBasicConfigOutput = z.output<typeof ProsopoBasicConfigSchema>
 
 export const ProsopoCaptchaCountConfigSchema = z.object({
-    solved: z.object({
-        count: z.number().positive(),
-    }),
-    unsolved: z.object({
-        count: z.number().nonnegative(),
-    }),
+    solved: z
+        .object({
+            count: z.number().positive(),
+        })
+        .optional()
+        .default({ count: 1 }),
+    unsolved: z
+        .object({
+            count: z.number().nonnegative(),
+        })
+        .optional()
+        .default({ count: 1 }),
 })
+
+export type ProsopoCaptchaCountConfigSchemaInput = z.input<typeof ProsopoCaptchaCountConfigSchema>
 
 export const ProsopoImageServerConfigSchema = z.object({
     baseURL: z.string().url(),
@@ -106,23 +93,23 @@ export const ProsopoImageServerConfigSchema = z.object({
 export const ProsopoCaptchaSolutionConfigSchema = z.object({
     requiredNumberOfSolutions: z.number().positive().min(2),
     solutionWinningPercentage: z.number().positive().max(100),
-    captchaFilePath: z.string(),
     captchaBlockRecency: z.number().positive().min(2),
 })
 
 export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
     z.object({
         userAccountAddress: z.string().optional(),
-        web2: z.boolean(),
-        solutionThreshold: z.number().positive().max(100),
-        dappName: z.string(),
+        web2: z.boolean().optional().default(true),
+        solutionThreshold: z.number().positive().max(100).optional().default(80),
+        dappName: z.string().optional().default('ProsopoClientDapp'),
         serverUrl: z.string().url(),
     })
-)
+).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
 
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema
 
-export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
+export type ProsopoServerConfigInput = z.input<typeof ProsopoClientConfigSchema>
+export type ProsopoServerConfigOutput = z.output<typeof ProsopoClientConfigSchema>
 
 export const AccountCreatorConfigSchema = z.object({
     area: z.object({
@@ -137,11 +124,12 @@ export const AccountCreatorConfigSchema = z.object({
     seed: z.number().positive(),
 })
 
-export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
+export type ProsopoClientConfigInput = z.input<typeof ProsopoClientConfigSchema>
+export type ProsopoClientConfigOutput = z.output<typeof ProsopoClientConfigSchema>
 
 const ThemeType = z.union([z.literal('light'), z.literal('dark')])
 
-export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
+export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
@@ -149,15 +137,27 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
     })
 )
 
-export type ProcaptchaClientConfig = z.infer<typeof ProcaptchaConfigSchema>
+export type ProcaptchaClientConfigInput = z.input<typeof ProcaptchaConfigSchema>
+export type ProcaptchaClientConfigOutput = z.output<typeof ProcaptchaConfigSchema>
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
     z.object({
-        captchas: ProsopoCaptchaCountConfigSchema,
-        captchaSolutions: ProsopoCaptchaSolutionConfigSchema,
-        batchCommit: BatchCommitConfigSchema,
+        captchas: ProsopoCaptchaCountConfigSchema.optional().default({
+            solved: { count: 1 },
+            unsolved: { count: 1 },
+        }),
+        captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
+            requiredNumberOfSolutions: 3,
+            solutionWinningPercentage: 80,
+            captchaBlockRecency: 10,
+        }),
+        batchCommit: BatchCommitConfigSchema.optional().default({
+            interval: 300,
+            maxBatchExtrinsicPercentage: 59,
+        }),
         server: ProsopoImageServerConfigSchema,
     })
 )
 
-export type ProsopoConfig = z.infer<typeof ProsopoConfigSchema>
+export type ProsopoConfigInput = z.input<typeof ProsopoConfigSchema>
+export type ProsopoConfigOutput = z.output<typeof ProsopoConfigSchema>

@@ -9,7 +9,6 @@ on:
             - 'packages/**'
             - 'contracts/**'
             - '.github/workflows/provider_image.yml'
-    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

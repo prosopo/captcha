@@ -50,7 +50,7 @@ export default async function (
     logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`)
 
     // Get all dependencies of the current package
-    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName)
+    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, isProduction)
 
     // Get rid of any dependencies we don't want to bundle
     const { external, internal } = filterDependencies(deps, ['pm2', 'nodejs-polars', 'aws', 'webpack', 'vite'])
