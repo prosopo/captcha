@@ -446,7 +446,7 @@ export function Manager(
      */
     async function checkHumanInContract(contract: ProsopoCaptchaContract, account: Account) {
         try {
-            return contract.query
+            return await contract.query
                 .dappOperatorIsHumanUser(account.account.address, getConfig().solutionThreshold)
                 .then((res) => res.value.unwrap().unwrap())
         } catch (err) {
