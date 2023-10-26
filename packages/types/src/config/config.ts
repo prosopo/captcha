@@ -102,14 +102,17 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         web2: z.boolean().optional().default(true),
         solutionThreshold: z.number().positive().max(100).optional().default(80),
         dappName: z.string().optional().default('ProsopoClientDapp'),
-        serverUrl: z.string().url(),
     })
 ).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
 
-export const ProsopoServerConfigSchema = ProsopoClientConfigSchema
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.innerType().merge(
+    z.object({
+        serverUrl: z.string().url(),
+    })
+)
 
-export type ProsopoServerConfigInput = z.input<typeof ProsopoClientConfigSchema>
-export type ProsopoServerConfigOutput = z.output<typeof ProsopoClientConfigSchema>
+export type ProsopoServerConfigInput = z.input<typeof ProsopoServerConfigSchema>
+export type ProsopoServerConfigOutput = z.output<typeof ProsopoServerConfigSchema>
 
 export const AccountCreatorConfigSchema = z.object({
     area: z.object({

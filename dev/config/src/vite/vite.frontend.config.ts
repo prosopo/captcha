@@ -41,7 +41,9 @@ export default async function (
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
         'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+        'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(''),
         'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
         'process.env.SERVER_URL': JSON.stringify(process.env.SERVER_URL),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
@@ -86,11 +88,12 @@ export default async function (
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
             drop,
+            legalComments: 'none',
         },
         define,
-        // resolve: {
-        //     alias,
-        // },
+        resolve: {
+            alias,
+        },
 
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
@@ -100,7 +103,7 @@ export default async function (
                 entry: path.resolve(dir, entry),
                 name: bundleName,
                 fileName: `${bundleName}.bundle.js`,
-                // sets the bundle to an instantly invoked function expression (IIFE)
+                // sets the bundle to an Instantly Invoked Function Expression (IIFE)
                 formats: ['iife'],
             },
             modulePreload: { polyfill: true },
