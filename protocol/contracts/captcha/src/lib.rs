@@ -257,16 +257,102 @@ pub mod captcha {
         pub block_number: BlockNumber,
     }
 
-    pub mod History {
+    mod history_private {
+        use super::*;
+
         pub trait Ordered {
-            type U;
+            /// The type of item being stored in history
+            type U: Copy;
+            /// The type of the ordering value. E.g. this could be a BlockNumber which can be compared to other block numbers to define ordering, higher block number == more recent.
             type T: PartialOrd;
 
-            /// Get
-            fn get_order<'a>(&'a self, item: &'a Self::U) -> &Self::T;
-            fn prune(&mut self, threshold: &Self::T);
-            fn at(&self, order: &Self::T) -> Option<&Self::U>;
-            fn add(&mut self, item: &Self::U);
+            /// Get the ordering value. This should be a value which can be compared to other ordering values to deduce order. E.g. this could be a block number which can be compared to other block numbers to define ordering, higher block number == more recent.
+            fn get_order<'a>(item: &'a Self::U) -> &Self::T;
+
+            /// Update a past entry with a newer entry in the history. E.g. given entry A and B. If A occurred at block 2 and B occurred at block 3 and we're wanting the value at block 4, then we have to apply the changes from entry A and B in order. This would be done by applying A first, then B. This method defines how to do that. This is especially important for entries which have optional fields, as we don't want to overwrite the optional fields with None if the newer entry doesn't have a value for that field. I.e. the entries use None to indiciate no change to the optional field. If there are no optional fields, then the newer entry can be used as is.
+            /// E.g.
+            ///
+            /// entry A:
+            /// {
+            ///  first_name: None
+            ///  last_name: Some("Smith")
+            /// }
+            ///
+            /// entry B:
+            /// {
+            ///  first_name: Some("John")
+            ///  last_name: None
+            /// }
+            ///
+            /// When applied in order (A then B) we end up with:
+            /// {
+            ///  first_name: Some("John")
+            ///  last_name: Some("Smith")
+            /// }
+            ///
+            /// How the logic is managed between None's meaning no change is up to this function / you to make that decision.
+            fn update(_current: Self::U, newer: Self::U) -> Self::U {
+                // by default just use the most recent
+                newer
+            }
+
+            /// Get the history vec
+            fn get_history_mut(&mut self) -> &mut Vec<Self::U>;
+        }
+    }
+
+    pub mod history {
+        use super::*;
+
+        pub trait Ordered: history_private::Ordered {
+            /// Prune the history by threshold. This removes any items which are older than the threshold. If the type is BlockNumber, then this would be removing any items which are older than the threshold block number.
+            fn prune(&mut self, threshold: &Self::T) {
+                let history = self.get_history_mut();
+                let mut oldest = history.last();
+                while oldest.is_some() && Self::get_order(oldest.unwrap()) < threshold {
+                    // remove the oldest, it's over the threshold
+                    history.remove(0);
+                    // get the next oldest seed
+                    oldest = history.last();
+                }
+            }
+
+            /// Get the item at the given order. This should return the item which is the closest to the given order, but not greater than the given order. E.g. if the order is block 5 and we've got history entries for block 3, 4 and 6, we want the entry for block 4, as this would be the value at block 5 (isn't overwritten until block 6)
+            fn at(&self, order: &Self::T) -> Option<Self::U> {
+                let history = self.get_history();
+                // iter through the history (oldest to newest) until we find the value at the given ordering
+                // e.g. if the order is block 5 and we've got history entries for block 3, 4 and 6, we want the entry for block 4, as this would be the value at block 5 (isn't overwritten until block 6)
+                if history.len() == 0 {
+                    return None;
+                }
+                let result: &mut Self::U = &mut history.last().unwrap().clone();
+                for item in history.iter() {
+                    // iter until we hit an order better than the threshold
+                    if Self::get_order(item) > order {
+                        break;
+                    }
+                    Self::update(result, item);
+                }
+                return Some(*result);
+            }
+
+            /// Add an item to the history. Errors if the item is older than the most recent item in the history, as this method is only for adding newer items to the history.
+            fn add_then_prune(&mut self, item: &Self::U, threshold: &Self::T) -> Result<(), Error> {
+                // check the item's order is equal or greater in terms of recency
+                let history = self.get_history_mut();
+                let order = Self::get_order(item);
+                let current = Self::get_order(history.first().unwrap_or(item));
+                if order < &current {
+                    return Err(Error::HistoryAddStale);
+                }
+                history.push(*item);
+                // then prune, as we've added a new item
+                self.prune(threshold);
+                Ok(())
+            }
+
+            /// Get the history vec
+            fn get_history(&self) -> &Vec<Self::U>;
         }
     }
 
@@ -276,41 +362,30 @@ pub mod captcha {
         history: Vec<Seed>,
     }
 
-    impl History::Ordered for SeedHistory {
+    impl history_private::Ordered for SeedHistory {
         type U = Seed;
         type T = BlockNumber;
 
-        fn get_order<'a>(&'a self, item: &'a Self::U) -> &Self::T {
+        fn get_order<'a>(item: &'a Self::U) -> &Self::T {
             &item.block_number
         }
 
-        fn prune(&mut self, threshold: &Self::T) {
-            let mut oldest = self.history.last();
-            while oldest.is_some() && self.get_order(oldest.unwrap()) < threshold {
-                // remove the oldest, it's over the threshold
-                self.history.pop();
-                // get the next oldest seed
-                oldest = self.history.last();
-            }
+        fn update(past: Self::U, newer: Self::U) {
+            // update the seed value
+            return Self::U {
+                ...past,
+                ...newer,
+            };
         }
 
-        fn at(&self, order: &Self::T) -> Option<&Self::U> {
-            let history = &self.history;
-            // iter through the history (oldest to newest) until we find the value at the given ordering
-            // e.g. if the order is block 5 and we've got history entries for block 3, 4 and 6, we want the entry for block 4, as this would be the value at block 5 (isn't overwritten until block 6)
-            let mut prev: Option<&Self::U> = None;
-            for item in history.iter().rev() {
-                // iter until we hit an order better than the threshold
-                if self.get_order(item) > order {
-                    break;
-                }
-                prev = Some(item);
-            }
-            return prev;
+        fn get_history_mut(&mut self) -> &mut Vec<Self::U> {
+            &mut self.history
         }
+    }
 
-        fn add(&mut self, item: &Self::U) {
-            self.history.insert(0, *item);
+    impl history::Ordered for SeedHistory {
+        fn get_history(&self) -> &Vec<Self::U> {
+            &self.history
         }
     }
 
