@@ -257,6 +257,66 @@ pub mod captcha {
         pub block_number: BlockNumber,
     }
 
+    pub mod History {
+        pub trait Ordered {
+            type U;
+
+            /// Get
+            fn get_order(&self, item: &Self::U) -> &PartialOrd;
+            fn prune(&mut self, threshold: &Self::T);
+            fn at(&self, order: &Self::T) -> Option<&Self::U>;
+            fn add(&mut self, item: &Self::U);
+        }
+    }
+
+    impl History::Ordering for Seed {
+        type T = BlockNumber;
+
+        fn get_order(&self) -> &Self::T {
+            &self.block_number
+        }
+    }
+
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct SeedHistory {
+        history: Vec<Seed>,
+    }
+
+    impl History::Ordered for SeedHistory {
+        type U = Seed;
+        type T = BlockNumber;
+
+        fn prune(&mut self, threshold: &Self::T) {
+            let mut oldest = self.history.last();
+            while oldest.is_some() && oldest.unwrap().get_order() < threshold {
+                // remove the oldest, it's over the threshold
+                self.history.pop();
+                // get the next oldest seed
+                oldest = self.history.last();
+            }
+        }
+
+        fn at(&self, order: &Self::T) -> Option<&Self::U> {
+            let history = &self.history;
+            // iter through the history (oldest to newest) until we find the value at the given ordering
+            // e.g. if the order is block 5 and we've got history entries for block 3, 4 and 6, we want the entry for block 4, as this would be the value at block 5 (isn't overwritten until block 6)
+            let mut prev: Option<&Self::U> = None;
+            for item in history.iter().rev() {
+                // iter until we hit an order better than the threshold
+                if item.get_order() > order {
+                    break;
+                }
+                prev = Some(item);
+            }
+            return prev;
+        }
+
+        fn add(&mut self, item: &Self::U) {
+            self.history.insert(0, *item);
+        }
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Captcha<KEY: StorageKey = ManualKey<0xABCDEF01>> {
@@ -317,15 +377,15 @@ pub mod captcha {
         /// Prune the seed history by block. This is called when the seed is updated. It removes any seed records which are older than the max seed history length in blocks.
         fn prune_seed_history(&mut self) {
             let block_number = self.env().block_number();
-            if (self.seed.block_number != block_number) {
+            if self.seed.block_number != block_number {
                 // trim the seed history as we've moved to a new block
                 let max_seed_history_len_blocks = self.get_max_seed_history_len_blocks();
                 let mut seed_history = self.seed_history.get_or_default();
                 // threshold begins at block 0 if the block number is less than the max seed history length in blocks
-                let threshold_block_number = 0 as BlockNumber;
+                let mut threshold_block_number = 0 as BlockNumber;
                 let max_seed_history_len_blocks =
                     self.get_max_seed_history_len_blocks() as BlockNumber;
-                if (block_number >= max_seed_history_len_blocks) {
+                if block_number >= max_seed_history_len_blocks {
                     // otherwise the threshold begins at the current block number minus the max seed history length in blocks
                     threshold_block_number = block_number - max_seed_history_len_blocks;
                 }
