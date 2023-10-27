@@ -116,7 +116,6 @@ export async function buildCaptchaTree(
 
 export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
-        //const items = await Promise.all(captcha.items.map(async (item) => await computeItemHash(item)))
         return {
             ...captcha,
             items: captcha.items,

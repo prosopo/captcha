@@ -1,6 +1,6 @@
 {
     "name": "provider-gui",
-    "version": "0.2.10",
+    "version": "0.2.11",
     "private": true,
     "engines": {
         "node": ">=16",
@@ -20,11 +20,11 @@
         "@polkadot/extension-inject": "^0.46.5",
         "@polkadot/keyring": "^12.3.2",
         "@polkadot/types": "^10.9.1",
-        "@prosopo/api": "0.2.10",
-        "@prosopo/cli": "0.2.10",
-        "@prosopo/env": "0.2.10",
-        "@prosopo/provider": "0.2.10",
-        "next": "13.4.9",
+        "@prosopo/api": "0.2.11",
+        "@prosopo/cli": "0.2.11",
+        "@prosopo/env": "0.2.11",
+        "@prosopo/provider": "0.2.11",
+        "next": "13.5.0",
         "react": "18.2.0"
     },
     "devDependencies": {
