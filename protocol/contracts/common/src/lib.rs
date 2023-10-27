@@ -160,6 +160,8 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
+        /// Returned if the adding an item to the history fails because the item is too old (i.e. there's most recent items)
+        HistoryAddStale,
     }
 
     /// get the account id in byte array format
