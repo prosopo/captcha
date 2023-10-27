@@ -260,20 +260,13 @@ pub mod captcha {
     pub mod History {
         pub trait Ordered {
             type U;
+            type T: PartialOrd;
 
             /// Get
-            fn get_order(&self, item: &Self::U) -> &PartialOrd;
+            fn get_order<'a>(&'a self, item: &'a Self::U) -> &Self::T;
             fn prune(&mut self, threshold: &Self::T);
             fn at(&self, order: &Self::T) -> Option<&Self::U>;
             fn add(&mut self, item: &Self::U);
-        }
-    }
-
-    impl History::Ordering for Seed {
-        type T = BlockNumber;
-
-        fn get_order(&self) -> &Self::T {
-            &self.block_number
         }
     }
 
@@ -287,9 +280,13 @@ pub mod captcha {
         type U = Seed;
         type T = BlockNumber;
 
+        fn get_order<'a>(&'a self, item: &'a Self::U) -> &Self::T {
+            &item.block_number
+        }
+
         fn prune(&mut self, threshold: &Self::T) {
             let mut oldest = self.history.last();
-            while oldest.is_some() && oldest.unwrap().get_order() < threshold {
+            while oldest.is_some() && self.get_order(oldest.unwrap()) < threshold {
                 // remove the oldest, it's over the threshold
                 self.history.pop();
                 // get the next oldest seed
@@ -304,7 +301,7 @@ pub mod captcha {
             let mut prev: Option<&Self::U> = None;
             for item in history.iter().rev() {
                 // iter until we hit an order better than the threshold
-                if item.get_order() > order {
+                if self.get_order(item) > order {
                     break;
                 }
                 prev = Some(item);
