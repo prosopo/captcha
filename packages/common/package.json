@@ -27,7 +27,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@polkadot/api": "^10.10.1",
-        "@polkadot/keyring": "12.3.2",
+        "@polkadot/keyring": "12.5.1",
         "@polkadot/types": "10.10.1",
         "@polkadot/util": "12.3.2",
         "@polkadot/util-crypto": "12.3.2",
