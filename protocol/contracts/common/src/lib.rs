@@ -65,6 +65,9 @@ macro_rules! lazy {
 #[ink::contract]
 pub mod common {
 
+    use ink::prelude::vec;
+    use ink::prelude::vec::Vec;
+
     pub mod config {
         use super::*;
 
@@ -160,11 +163,32 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
+        /// Returned if the signature is invalid
+        InvalidSignature,
     }
 
     /// get the account id in byte array format
     pub fn account_id_bytes(account: &AccountId) -> &[u8; 32] {
         AsRef::<[u8; 32]>::as_ref(account)
+    }
+
+    /// Convert a byte array to payload. This wraps the '<Bytes>' tag around the byte array to conform with signing convention.
+    pub fn to_payload(message: &Vec<u8>) -> Vec<u8> {
+        [b"<Bytes>", message.as_slice(), b"</Bytes>"].concat()
+    }
+
+    /// Sr25519 verify a message, converting message to payload before verifying
+    pub fn sr25519_verify(
+        signature: &[u8; 64],
+        message: &Vec<u8>,
+        account: &AccountId,
+    ) -> Result<(), Error> {
+        ink::env::sr25519_verify(
+            signature,
+            &to_payload(message).as_slice(),
+            &AsRef::<[u8; 32]>::as_ref(account),
+        )
+        .map_err(|_| Error::InvalidSignature)
     }
 
     #[derive(Default)]
@@ -207,6 +231,18 @@ pub mod common {
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
             config::get_git_commit_id()
+        }
+
+        /// Verify a sr25519 signature
+        #[ink(message)]
+        pub fn sr25519_verify(&self, message: Vec<u8>, signature: [u8; 64]) -> Result<(), Error> {
+            sr25519_verify(&signature, &message, &self.env().caller())
+        }
+
+        /// Convert a byte array to payload. This wraps the '<Bytes>' tag around the byte array to conform with signing convention.
+        #[ink(message)]
+        pub fn to_payload(&self, message: Vec<u8>) -> Vec<u8> {
+            to_payload(&message)
         }
     }
 

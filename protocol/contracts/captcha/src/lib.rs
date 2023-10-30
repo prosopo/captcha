@@ -18,9 +18,9 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
-    use common::common::check_is_admin;
     use common::common::config;
     use common::common::Error;
+    use common::common::*;
     use common::err;
     use common::err_fn;
     use common::lazy;
@@ -54,6 +54,29 @@ pub mod captcha {
         Approved,
         #[default]
         Disapproved,
+    }
+
+    impl TryFrom<u8> for CaptchaStatus {
+        type Error = ();
+
+        fn try_from(value: u8) -> Result<Self, Self::Error> {
+            match value {
+                0 => Ok(CaptchaStatus::Pending),
+                1 => Ok(CaptchaStatus::Approved),
+                2 => Ok(CaptchaStatus::Disapproved),
+                _ => Err(()),
+            }
+        }
+    }
+
+    impl From<CaptchaStatus> for u8 {
+        fn from(value: CaptchaStatus) -> Self {
+            match value {
+                CaptchaStatus::Pending => 0,
+                CaptchaStatus::Approved => 1,
+                CaptchaStatus::Disapproved => 2,
+            }
+        }
     }
 
     /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
@@ -848,6 +871,40 @@ pub mod captcha {
             (history, expired)
         }
 
+        #[ink(message)]
+        pub fn pub_get_commit_payload(&self, commit: Commit) -> Vec<u8> {
+            self.get_commit_payload(&commit)
+        }
+
+        fn get_commit_payload(&self, commit: &Commit) -> Vec<u8> {
+            // construct the payload / message bytes
+            // message must start with "<Bytes>" and end with "</Bytes>" - this is to prevent arbitrary data being signed, e.g. getting a user to sign a tx without knowing it's a tx. These tags are added to prevent the message from being in the same format as a transaction.
+            let mut payload: Vec<u8> = Vec::new();
+            // add the contents of the commit to the payload, except for the signature
+            // note that this has to be in the same order as used to generate the signature, otherwise the payloads will be different
+            payload.extend_from_slice(&commit.id.as_ref());
+            payload.extend_from_slice(&commit.user_account.as_ref());
+            payload.extend_from_slice(&commit.dataset_id.as_ref());
+            payload.extend_from_slice(&u8::from(commit.status).to_le_bytes());
+            payload.extend_from_slice(&commit.dapp_contract.as_ref());
+            payload.extend_from_slice(&commit.provider_account.as_ref());
+            payload.extend_from_slice(&commit.requested_at.to_le_bytes());
+            payload.extend_from_slice(&commit.completed_at.to_le_bytes());
+            payload
+        }
+
+        #[ink(message)]
+        pub fn pub_check_commit_signature(&self, commit: Commit) -> Result<(), Error> {
+            self.check_commit_signature(&commit)
+        }
+
+        /// Check the commit of a signature is valid
+        fn check_commit_signature(&self, commit: &Commit) -> Result<(), Error> {
+            let payload = self.get_commit_payload(commit);
+            // verify the signature
+            sr25519_verify(&commit.user_signature, &payload, &commit.user_account)
+        }
+
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
         fn record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
@@ -855,6 +912,9 @@ pub mod captcha {
             if self.commits.get(commit.id).is_some() {
                 return err!(self, Error::CommitAlreadyExists);
             }
+
+            // check the signature of the commit
+            self.check_commit_signature(commit)?;
 
             let mut user = self.get_user_or_create(commit.user_account);
             // add the new commitment
@@ -1616,6 +1676,37 @@ pub mod captcha {
                     account
                 );
             }
+        }
+
+        /// Test the commit payload is correctly generated
+        #[ink::test]
+        fn test_commit_payload_generation() {
+            let mut contract = get_contract(0);
+
+            let commit_payload = contract.pub_get_commit_payload(Commit {
+                dapp_contract: AccountId::from([0x00; 32]),
+                dataset_id: Hash::from([0x01; 32]),
+                provider_account: AccountId::from([0x02; 32]),
+                user_account: AccountId::from([0x03; 32]),
+                completed_at: 8,
+                status: CaptchaStatus::Approved,
+                requested_at: 4,
+                id: Hash::from([0x04; 32]),
+                user_signature: [0x0; 64],
+            });
+            println!("commit payload {:?}", commit_payload);
+            assert_eq!(
+                commit_payload,
+                [
+                    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                    4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+                    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                    2, 2, 2, 2, 2, 4, 0, 0, 0, 8, 0, 0, 0
+                ]
+            );
         }
 
         // #[ink::test]
