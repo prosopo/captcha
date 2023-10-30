@@ -7,8 +7,6 @@ import type { Signer, SignerResult } from '@polkadot/api/types'
 
 import { objectSpread } from '@polkadot/util'
 
-//import { lockAccount } from '../util.js';
-
 let id = 0
 
 export default class AccountSigner implements Signer {
@@ -26,7 +24,6 @@ export default class AccountSigner implements Signer {
                 .createType('ExtrinsicPayload', payload, { version: payload.version })
                 .sign(this.#keyringPair)
 
-            //lockAccount(this.#keyringPair);
             resolve(objectSpread({ id: ++id }, signed))
         })
     }

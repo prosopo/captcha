@@ -13,19 +13,16 @@
 // limitations under the License.
 import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Server } from 'http'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import esMain from 'es-main'
-import express, { NextFunction, Request, Response } from 'express'
+import express, { Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
 
-let apiAppSrv: Server
-
-export const handleErrors = (err: ProsopoApiError, req: Request, res: Response, next: NextFunction) => {
+export const handleErrors = (err: ProsopoApiError, req: Request, res: Response) => {
     let message = err.message
     try {
         message = JSON.parse(err.message)
@@ -49,7 +46,7 @@ function startApi(env: ProviderEnvironment) {
     apiApp.use(prosopoRouter(env))
 
     apiApp.use(handleErrors)
-    apiAppSrv = apiApp.listen(apiPort, () => {
+    apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })
 }
@@ -70,9 +67,6 @@ export async function start(env?: ProviderEnvironment) {
     startApi(env)
 }
 
-function stop() {
-    apiAppSrv.close()
-}
 //if main process
 if (esMain(import.meta)) {
     start().catch((error) => {
