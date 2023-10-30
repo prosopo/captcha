@@ -21,10 +21,9 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@iarna/toml": "^2.2.5",
-        "@polkadot/api": "10.9.1",
-        "@polkadot/api-contract": "10.9.1",
-        "@polkadot/apps-config": "0.132.1",
-        "@polkadot/types": "10.9.1",
+        "@polkadot/api": "10.10.1",
+        "@polkadot/api-contract": "10.10.1",
+        "@polkadot/types": "10.10.1",
         "@polkadot/util-crypto": "12.3.2",
         "@prosopo/api": "0.2.11",
         "@prosopo/cli": "0.2.11",
