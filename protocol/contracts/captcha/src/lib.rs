@@ -250,26 +250,25 @@ pub mod captcha {
     }
 
     /// The seed used for random number generation. This records what the seed value was at what block number.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Default)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Seed {
         pub value: u128,
         pub block_number: BlockNumber,
     }
 
+    impl history_private::Update for Seed {
+        fn update(&mut self, newer: &Self) {
+            self.value = newer.value;
+            self.block_number = newer.block_number;
+        }
+    }
+
     mod history_private {
         use super::*;
 
-        pub trait Ordered {
-            /// The type of item being stored in history
-            type U: Copy;
-            /// The type of the ordering value. E.g. this could be a BlockNumber which can be compared to other block numbers to define ordering, higher block number == more recent.
-            type T: PartialOrd;
-
-            /// Get the ordering value. This should be a value which can be compared to other ordering values to deduce order. E.g. this could be a block number which can be compared to other block numbers to define ordering, higher block number == more recent.
-            fn get_order<'a>(item: &'a Self::U) -> &Self::T;
-
-            /// Update a past entry with a newer entry in the history. E.g. given entry A and B. If A occurred at block 2 and B occurred at block 3 and we're wanting the value at block 4, then we have to apply the changes from entry A and B in order. This would be done by applying A first, then B. This method defines how to do that. This is especially important for entries which have optional fields, as we don't want to overwrite the optional fields with None if the newer entry doesn't have a value for that field. I.e. the entries use None to indiciate no change to the optional field. If there are no optional fields, then the newer entry can be used as is.
+        pub trait Update: Default {
+            /// Update the current item with the newer item. This is used to update the current item with the newer item. E.g. given entry A and B. If A occurred at block 2 and B occurred at block 3 and we're wanting the value at block 4, then we have to apply the changes from entry A and B in order. This would be done by applying A first, then B. This method defines how to do that. This is especially important for entries which have optional fields, as we don't want to overwrite the optional fields with None if the newer entry doesn't have a value for that field. I.e. the entries use None to indiciate no change to the optional field. If there are no optional fields, then the newer entry can be used as is.
             /// E.g.
             ///
             /// entry A:
@@ -290,11 +289,23 @@ pub mod captcha {
             ///  last_name: Some("Smith")
             /// }
             ///
-            /// How the logic is managed between None's meaning no change is up to this function / you to make that decision.
-            fn update(_current: Self::U, newer: Self::U) -> Self::U {
-                // by default just use the most recent
-                newer
+            /// How the logic is managed between is up to this function / you to make that decision.
+            fn update(&self, newer: &Self) {
+                Self {
+                    ...self,
+                    ...newer,
+                }
             }
+        }
+
+        pub trait Ordered {
+            /// The type of item being stored in history
+            type U: Copy + Default;
+            /// The type of the ordering value. E.g. this could be a BlockNumber which can be compared to other block numbers to define ordering, higher block number == more recent.
+            type T: PartialOrd;
+
+            /// Get the ordering value. This should be a value which can be compared to other ordering values to deduce order. E.g. this could be a block number which can be compared to other block numbers to define ordering, higher block number == more recent.
+            fn get_order<'a>(item: &'a Self::U) -> &Self::T;
 
             /// Get the history vec
             fn get_history_mut(&mut self) -> &mut Vec<Self::U>;
@@ -331,7 +342,7 @@ pub mod captcha {
                     if Self::get_order(item) > order {
                         break;
                     }
-                    Self::update(result, item);
+                    result.update(item);
                 }
                 return Some(*result);
             }
@@ -368,14 +379,6 @@ pub mod captcha {
 
         fn get_order<'a>(item: &'a Self::U) -> &Self::T {
             &item.block_number
-        }
-
-        fn update(past: Self::U, newer: Self::U) {
-            // update the seed value
-            return Self::U {
-                ...past,
-                ...newer,
-            };
         }
 
         fn get_history_mut(&mut self) -> &mut Vec<Self::U> {
