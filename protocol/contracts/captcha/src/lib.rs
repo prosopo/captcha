@@ -850,7 +850,7 @@ pub mod captcha {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commitment(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
+        fn record_commit(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
             let mut user = self.get_user_or_create(user_account);
             // add the new commitment
             self.commits.insert(hash, result);
@@ -882,7 +882,7 @@ pub mod captcha {
                 score: 0,
             };
             for hash in history.iter() {
-                let result = self.commits.get(hash).unwrap();
+                let result = self.get_commit(*hash)?;
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
                 } else if result.status == CaptchaStatus::Disapproved {
@@ -938,7 +938,7 @@ pub mod captcha {
                 return err!(self, Error::CommitAlreadyExists);
             }
 
-            self.record_commitment(commit.user_account, commit.id, commit);
+            self.record_commit(commit.user_account, commit.id, commit);
 
             self.pay_fee(caller, commit.dapp_contract)?;
 
