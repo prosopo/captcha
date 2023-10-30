@@ -34,7 +34,7 @@
     "dependencies": {
         "@polkadot/api": "10.9.1",
         "@polkadot/api-contract": "10.9.1",
-        "@polkadot/types": "10.9.1",
+        "@polkadot/types": "10.10.1",
         "@polkadot/types-codec": "10.9.1",
         "@prosopo/common": "0.2.11",
         "@prosopo/captcha-contract": "0.2.11",

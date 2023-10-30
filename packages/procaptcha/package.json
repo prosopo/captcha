@@ -36,7 +36,7 @@
         "@polkadot/extension-inject": "0.46.5",
         "@polkadot/keyring": "12.3.2",
         "@polkadot/rpc-provider": "10.9.1",
-        "@polkadot/types": "10.9.1",
+        "@polkadot/types": "10.10.1",
         "@polkadot/util": "12.3.2",
         "@polkadot/util-crypto": "12.3.2",
         "@prosopo/api": "0.2.11",
