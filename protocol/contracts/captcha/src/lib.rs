@@ -850,11 +850,16 @@ pub mod captcha {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commit(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
-            let mut user = self.get_user_or_create(user_account);
+        fn record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
+            // check commitment doesn't already exist
+            if self.commits.get(commit.id).is_some() {
+                return err!(self, Error::CommitAlreadyExists);
+            }
+
+            let mut user = self.get_user_or_create(commit.user_account);
             // add the new commitment
-            self.commits.insert(hash, result);
-            user.history.insert(0, hash);
+            self.commits.insert(commit.id, commit);
+            user.history.insert(0, commit.id);
 
             // trim the user history by len and age, removing any expired commitments
             let (history, expired) = self.trim_user_history(user.history);
@@ -865,7 +870,9 @@ pub mod captcha {
                 self.commits.remove(hash);
             }
 
-            self.users.insert(user_account, &user);
+            self.users.insert(commit.user_account, &user);
+
+            Ok(())
         }
 
         #[ink(message)]
@@ -933,12 +940,7 @@ pub mod captcha {
             // ensure the dapp is active
             self.check_dapp_active(&dapp)?;
 
-            // check commitment doesn't already exist
-            if self.commits.get(commit.id).is_some() {
-                return err!(self, Error::CommitAlreadyExists);
-            }
-
-            self.record_commit(commit.user_account, commit.id, commit);
+            self.record_commit(commit)?;
 
             self.pay_fee(caller, commit.dapp_contract)?;
 
