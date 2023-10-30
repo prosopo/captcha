@@ -14,7 +14,7 @@
         "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:contracts": "cd protocol/dev && npm run build && npm run cli -- build --docker && cd ../..",
-        "build:typechain": "npm run build:contracts && npm run build scripts && npm run cli -- import_all_contracts && npm run lint:fix",
+        "build:typechain": "npm run build:contracts && cd dev/scripts && npm run build && npm run cli -- import_all_contracts && cd ../.. && npm run lint:fix",
         "build:all": "npm run --workspaces --if-present build",
         "build:all:cjs": "npm run --workspaces --if-present build:cjs",
         "rebuild": "f() { npm run cmd -- \"npm run clean %s\" $@ ; npm run cmd -- \"npm run build %s\" $@ ;}; f",
