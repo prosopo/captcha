@@ -13,13 +13,17 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
 import { BlockHash } from '@polkadot/types/interfaces'
-import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfigOutput } from '@prosopo/types'
+import {
+    ContractAbi,
+    NetworkConfig,
+    NetworkNamesSchema,
+    ProcaptchaOutput,
+    ProsopoServerConfigOutput,
+} from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProcaptchaOutput } from '@prosopo/types'
+import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -43,30 +47,18 @@ export class ProsopoServer {
     constructor(config: ProsopoServerConfigOutput, pair?: KeyringPair) {
         this.config = config
         this.pair = pair
-        if (
-            this.config.defaultEnvironment &&
-            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
-        ) {
-            this.defaultEnvironment = this.config.defaultEnvironment
-            const networkName = NetworkNamesSchema.parse(this.config.defaultNetwork)
-            this.network = get(this.config.networks, networkName)
-            this.wsProvider = new WsProvider(this.network.endpoint)
-            this.prosopoContractAddress = this.network.contract.address
-            this.dappContractAddress = this.config.account.address || getZeroAddress().toString()
-            this.contractName = this.network.contract.name
-            this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
-            this.keyring = new Keyring({
-                type: 'sr25519', // TODO get this from the chain
-            })
-            this.abi = JSON.parse(abiJson)
-        } else {
-            throw new ProsopoEnvError(
-                'CONFIG.UNKNOWN_ENVIRONMENT',
-                this.constructor.name,
-                {},
-                this.config.defaultEnvironment
-            )
-        }
+        this.defaultEnvironment = this.config.defaultEnvironment
+        const networkName = NetworkNamesSchema.parse(this.config.defaultNetwork)
+        this.network = get(this.config.networks, networkName)
+        this.wsProvider = new WsProvider(this.network.endpoint)
+        this.prosopoContractAddress = this.network.contract.address
+        this.dappContractAddress = this.config.account.address || getZeroAddress().toString()
+        this.contractName = this.network.contract.name
+        this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
+        this.keyring = new Keyring({
+            type: 'sr25519', // TODO get this from the chain
+        })
+        this.abi = JSON.parse(abiJson)
     }
 
     public async getProviderApi(providerUrl: string) {
@@ -126,10 +118,9 @@ export class ProsopoServer {
             return false
         }
         console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
-        if (providerUrlTrimmed && commitmentId) {
+        if (providerUrlTrimmed) {
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(user, commitmentId)
-            console.log(result)
             return result.solutionApproved
         } else {
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
