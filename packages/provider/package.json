@@ -29,7 +29,7 @@
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "dependencies": {
-        "@polkadot/api": "10.9.1",
+        "@polkadot/api": "10.10.1",
         "@polkadot/keyring": "12.5.1",
         "@polkadot/types": "10.10.1",
         "@polkadot/util": "12.3.2",
