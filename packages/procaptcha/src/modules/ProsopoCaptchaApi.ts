@@ -60,6 +60,21 @@ export class ProsopoCaptchaApi {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
+            // convert https/http to match page
+            captchaChallenge.captchas.forEach((captcha) => {
+                captcha.captcha.items.forEach((item) => {
+                    if (item.data) {
+                        // drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
+                        // https://stackoverflow.com/a/18320348/7215926
+                        if (item.data.startsWith('https://')) {
+                            item.data = item.data.slice('https:'.length)
+                        } else if (item.data.startsWith('http://')) {
+                            item.data = item.data.slice('http:'.length)
+                        }
+                    }
+                })
+            })
+
             return captchaChallenge
         } catch (e) {
             // TODO fix/improve error handling
