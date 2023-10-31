@@ -6,7 +6,7 @@
     "type": "module",
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=8.9"
     },
     "exports": {
         ".": {

@@ -8,7 +8,7 @@
     "types": "./dist/index.d.ts",
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=8.9"
     },
     "scripts": {
         "clean": "tsc --build --clean",
@@ -47,6 +47,13 @@
         "@prosopo/util": "0.2.12",
         "axios": "^1.5.0",
         "rxjs": "7.8.1"
+    },
+    "overrides": {
+        "@polkadot/extension-base": {
+            "@polkadot/ui-keyring": {
+                "@polkadot/keyring": "12.3.2"
+            }
+        }
     },
     "devDependencies": {
         "tslib": "2.6.2",

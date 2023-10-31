@@ -54,6 +54,9 @@
         "yargs": "^17.5.1",
         "yargs-parser": "^21.0.1"
     },
+    "overrides": {
+        "@polkadot/keyring": "12.3.2"
+    },
     "devDependencies": {
         "@esm-bundle/chai": "^4.3.4-fix.0",
         "ts-node": "^10.9.1",

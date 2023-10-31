@@ -117,5 +117,8 @@
         "free",
         "captcha-alternative"
     ],
-    "license": "Apache-2.0"
+    "license": "Apache-2.0",
+    "dependencies": {
+        "npm": "^9.9.0"
+    }
 }

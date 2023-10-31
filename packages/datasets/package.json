@@ -6,7 +6,7 @@
     "private": false,
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=8.9"
     },
     "scripts": {
         "clean": "tsc --build --clean",

@@ -6,7 +6,7 @@
     "type": "module",
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=8.9"
     },
     "exports": {
         ".": {
@@ -31,6 +31,9 @@
         "@prosopo/types-env": "0.2.12",
         "@prosopo/util": "0.2.12",
         "dotenv": "^16.0.1"
+    },
+    "overrides": {
+        "@polkadot/keyring": "12.3.2"
     },
     "devDependencies": {
         "tslib": "2.6.2",
