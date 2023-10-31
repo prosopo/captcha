@@ -13,20 +13,36 @@
 // limitations under the License.
 import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle.js'
+import { ClientHttp2Session } from 'http2'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
+import http2 from 'node:http2'
 
 const logger = getLogger(`Info`, `dataset.ts`)
 
+const getHttpClient = (captcha: Captcha | CaptchaWithoutId): ClientHttp2Session | undefined => {
+    if (captcha.items && captcha.items.length > 0) {
+        const item = at(captcha.items, 0)
+        if (item.data.startsWith('http')) {
+            const url = new URL(item.data)
+            return http2.connect(url.hostname)
+        }
+    }
+    return undefined
+}
+
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
-    return datasetRaw.captchas.map(async (captcha) => {
-        const items = await Promise.all(captcha.items.map(async (item) => computeItemHash(item)))
+    const httpClient = getHttpClient(at(datasetRaw.captchas, 0))
+    const hashedDataset = datasetRaw.captchas.map(async (captcha) => {
+        const items = await Promise.all(captcha.items.map(async (item) => computeItemHash(item, httpClient)))
         return {
             ...captcha,
             items,
         } as Captcha
     })
+    httpClient?.close()
+    return hashedDataset
 }
 
 /**

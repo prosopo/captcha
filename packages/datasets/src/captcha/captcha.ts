@@ -24,6 +24,7 @@ import {
     Item,
     RawSolution,
 } from '@prosopo/types'
+import { ClientHttp2Session } from 'http2'
 import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { downloadImage } from './util.js'
@@ -172,11 +173,17 @@ export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution
  * @param  {Item} item
  * @return {Promise<HashedItem>} the hex string hash of the item
  */
-export async function computeItemHash(item: Item): Promise<HashedItem> {
+export async function computeItemHash(item: Item, httpClient?: ClientHttp2Session): Promise<HashedItem> {
     if (item.type === 'text') {
         return { ...item, hash: hexHash(item.data) }
     } else if (item.type === 'image') {
-        return { ...item, hash: hexHash(await downloadImage(item.data)) }
+        try {
+            if (!httpClient) throw new ProsopoEnvError('CAPTCHA.INVALID_HTTP_CLIENT')
+            const urlParsed = new URL(item.data)
+            return { ...item, hash: hexHash(await downloadImage(urlParsed, httpClient)) }
+        } catch (err) {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
+        }
     } else {
         throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
     }
