@@ -26,7 +26,7 @@ jobs:
                   node-version-file: '.nvmrc'
             - name: Install npm
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
-              
+
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
