@@ -11,23 +11,57 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AxiosInstance, AxiosResponse, default as axios } from 'axios'
-
 export class HttpClientBase {
-    protected readonly axios: AxiosInstance
+    protected readonly baseURL: string
 
     constructor(baseURL: string, prefix = '') {
-        baseURL = baseURL + prefix
-        this.axios = axios.create({ baseURL })
-        this.axios.interceptors.response.use(this.responseHandler, this.errorHandler)
+        this.baseURL = baseURL + prefix
     }
 
-    protected responseHandler = (response: AxiosResponse) => {
-        console.log('API REQUEST', response.request)
-        return response.data
+    protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+        try {
+            const response = await fetch(this.baseURL + input, init)
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+            return this.responseHandler<T>(response)
+        } catch (error) {
+            return this.errorHandler(error)
+        }
     }
 
-    protected errorHandler = (error: any) => Promise.reject(error)
+    protected async responseHandler<T>(response: Response): Promise<T> {
+        console.log('API REQUEST', response.url)
+        try {
+            return await response.json()
+        } catch (error) {
+            console.error('Error parsing JSON:', error)
+            throw error
+        }
+    }
+
+    protected errorHandler(error: any): Promise<never> {
+        console.error('API REQUEST ERROR', error)
+        return Promise.reject(error)
+    }
+
+    protected async post<T, U>(input: RequestInfo, body: U, init?: RequestInit): Promise<T> {
+        const headers = { 'Content-Type': 'application/json', ...(init?.headers || {}) }
+        try {
+            const response = await fetch(this.baseURL + input, {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers,
+                ...init,
+            })
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+            return this.responseHandler<T>(response)
+        } catch (error) {
+            return this.errorHandler(error)
+        }
+    }
 }
 
 export default HttpClientBase

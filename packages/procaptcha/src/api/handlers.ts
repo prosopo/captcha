@@ -11,12 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AxiosError } from 'axios'
-
 export class ProsopoApiError extends Error {
-    cause: any
-    constructor(error: AxiosError, context?: string, ...params: any[]) {
-        super(error ? error.message : 'Unknown API Error')
+    cause: Response | Error
+    constructor(error: Response | Error, context?: string, ...params: any[]) {
+        // If error is an instance of Response, it's an HTTP error
+        if (error instanceof Response) {
+            super(`HTTP Error: ${error.status} ${error.statusText}`)
+            this.cause = error
+        } else {
+            // Otherwise, it's a network error, or something else
+            super(error.message || 'Unknown API Error')
+            this.cause = error
+        }
 
         this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
 

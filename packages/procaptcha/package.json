@@ -45,7 +45,6 @@
         "@prosopo/datasets": "0.2.11",
         "@prosopo/types": "0.2.11",
         "@prosopo/util": "0.2.11",
-        "axios": "^1.5.0",
         "rxjs": "7.8.1"
     },
     "devDependencies": {
