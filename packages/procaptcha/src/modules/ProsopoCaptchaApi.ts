@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AxiosError } from 'axios'
 import {
     CaptchaMerkleTree,
     computeCaptchaHash,
@@ -136,7 +135,7 @@ export class ProsopoCaptchaApi {
             )
         } catch (err) {
             // TODO fix/improve error handling
-            throw new ProsopoApiError(err as AxiosError<unknown, any>)
+            throw new ProsopoApiError(err as Response)
         }
 
         return [result, commitmentId, tx]
