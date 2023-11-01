@@ -33,7 +33,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'forward',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -52,7 +52,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'handler',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [msg],

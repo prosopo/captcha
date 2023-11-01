@@ -33,7 +33,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getCaller',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -51,7 +51,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getCallerBytes',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -70,7 +70,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getAccountBytes',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [account],
@@ -88,7 +88,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getGitCommitId',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],

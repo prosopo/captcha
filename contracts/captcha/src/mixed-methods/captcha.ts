@@ -306,7 +306,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerRegister',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [url, fee, payee],
@@ -333,7 +333,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerUpdate',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [url, fee, payee],
@@ -352,7 +352,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerDeactivate',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -371,7 +371,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerDeregister',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -413,7 +413,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerFund',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -438,7 +438,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerSetDataset',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [datasetId, datasetIdContent],
@@ -486,7 +486,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'dappRegister',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [contract, payee],
@@ -513,7 +513,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'dappUpdate',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [contract, payee, owner],
@@ -533,7 +533,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'dappFund',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [contract],
@@ -553,7 +553,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'dappDeregister',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [contract],
@@ -573,7 +573,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'dappDeactivate',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [contract],
@@ -618,7 +618,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerCommit',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [commit],
@@ -638,7 +638,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'providerCommitMany',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [commits],
@@ -897,7 +897,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'terminate',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -917,7 +917,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'withdraw',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [amount],
@@ -937,7 +937,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'setCodeHash',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [codeHash],
