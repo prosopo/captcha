@@ -48,6 +48,7 @@ services:
 networks:
     internal:
         name: internal
+        internal: true
     external:
         name: external
 volumes:
