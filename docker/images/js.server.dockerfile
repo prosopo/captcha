@@ -1,4 +1,3 @@
 FROM nginx:alpine
-COPY /packages/procaptcha-bundle/dist/bundle/* /usr/share/nginx/html/js/
 
-
+COPY ./js_bundles_host_temp/ /usr/share/nginx/html/js/
