@@ -1,10 +1,10 @@
 /* This file is auto-generated */
 
-import { txSignAndSend } from '@prosopo/typechain-types'
+import { txSignAndSend } from '@727-ventures/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/proxy.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
-import type { GasLimit, GasLimitAndRequiredValue } from '@prosopo/typechain-types'
+import type { GasLimit, GasLimitAndRequiredValue } from '@727-ventures/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
