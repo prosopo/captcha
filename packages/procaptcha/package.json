@@ -29,16 +29,16 @@
     },
     "dependencies": {
         "@fingerprintjs/fingerprintjs": "^3.3.6",
-        "@polkadot/api": "10.9.1",
-        "@polkadot/api-contract": "10.9.1",
+        "@polkadot/api": "10.10.1",
+        "@polkadot/api-contract": "10.10.1",
         "@polkadot/extension-base": "0.46.5",
         "@polkadot/extension-dapp": "0.46.5",
         "@polkadot/extension-inject": "0.46.5",
-        "@polkadot/keyring": "12.3.2",
-        "@polkadot/rpc-provider": "10.9.1",
-        "@polkadot/types": "10.9.1",
-        "@polkadot/util": "12.3.2",
-        "@polkadot/util-crypto": "12.3.2",
+        "@polkadot/keyring": "12.5.1",
+        "@polkadot/rpc-provider": "10.10.1",
+        "@polkadot/types": "10.10.1",
+        "@polkadot/util": "12.5.1",
+        "@polkadot/util-crypto": "12.5.1",
         "@prosopo/api": "0.2.12",
         "@prosopo/common": "0.2.12",
         "@prosopo/contract": "0.2.12",
@@ -51,7 +51,8 @@
     "overrides": {
         "@polkadot/extension-base": {
             "@polkadot/ui-keyring": {
-                "@polkadot/keyring": "12.3.2"
+                "@polkadot/keyring": "12.5.1",
+                "@polkadot/util-crypto": "12.5.1"
             }
         }
     },
