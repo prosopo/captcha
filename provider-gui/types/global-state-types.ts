@@ -6,3 +6,5 @@ export interface GlobalState {
     accounts: InjectedAccountWithMeta[]
     currentAccount: string
 }
+
+export const networks = ['rococo', 'development']

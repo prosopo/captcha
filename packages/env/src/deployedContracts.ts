@@ -1,0 +1,1 @@
+const networks = { rococo: [], development: [] }

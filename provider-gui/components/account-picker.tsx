@@ -3,6 +3,7 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
+import { networks } from '@/types/global-state-types'
 import { useEffect, useState } from 'react'
 import { useGlobalState } from '../contexts/GlobalContext'
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
@@ -20,7 +21,7 @@ const injected: Injected = {
 
 const AccountPicker: React.FC = () => {
     const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-    const { currentAccount, setCurrentAccount } = useGlobalState()
+    const { currentAccount, setCurrentAccount, network, setNetwork } = useGlobalState()
 
     useEffect(() => {
         const enableExtension = async () => {
@@ -32,8 +33,12 @@ const AccountPicker: React.FC = () => {
         enableExtension()
     }, [])
 
-    const handleChange = (event: SelectChangeEvent<string>) => {
+    const handleAccountChange = (event: SelectChangeEvent<string>) => {
         setCurrentAccount(event.target.value)
+    }
+
+    const handleNetworkChange = (event: SelectChangeEvent<'rococo' | 'development'>) => {
+        setNetwork(event.target.value as 'rococo' | 'development')
     }
 
     return (
@@ -44,11 +49,24 @@ const AccountPicker: React.FC = () => {
                 id="account-picker"
                 value={currentAccount}
                 label="Account"
-                onChange={handleChange}
+                onChange={handleAccountChange}
             >
                 {accounts.map((account) => (
                     <MenuItem key={account.address} value={account.address}>
                         {account.meta.name} ({account.address})
+                    </MenuItem>
+                ))}
+            </Select>
+            <Select
+                labelId="network-picker-label"
+                id="network-picker"
+                value={network}
+                label="Network"
+                onChange={handleNetworkChange}
+            >
+                {networks.map((network) => (
+                    <MenuItem key={network} value={network}>
+                        {network}
                     </MenuItem>
                 ))}
             </Select>
