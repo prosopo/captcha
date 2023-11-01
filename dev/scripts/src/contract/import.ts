@@ -101,7 +101,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                 // replace EventRecord incorrect imports
                 // eslint-disable-next-line no-useless-escape
                 replaced = replaced.replace(
-                    /import\s+type\s+\{\s*EventRecord\[\]\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
+                    /import\s+type\s+\{\s*EventRecord\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
                     (match) => {
                         const result = `import type { EventRecord } from '@polkadot/types/interfaces'`
                         if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
