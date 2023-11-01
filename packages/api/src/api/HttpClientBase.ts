@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { HttpError } from './HttpError.js'
+
 export class HttpClientBase {
     protected readonly baseURL: string
 
@@ -22,27 +24,12 @@ export class HttpClientBase {
         try {
             const response = await fetch(this.baseURL + input, init)
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
+                throw new HttpError(response.status, response.statusText, response.url)
             }
             return this.responseHandler<T>(response)
         } catch (error) {
-            return this.errorHandler(error)
+            return this.errorHandler(error as Error)
         }
-    }
-
-    protected async responseHandler<T>(response: Response): Promise<T> {
-        console.log('API REQUEST', response.url)
-        try {
-            return await response.json()
-        } catch (error) {
-            console.error('Error parsing JSON:', error)
-            throw error
-        }
-    }
-
-    protected errorHandler(error: any): Promise<never> {
-        console.error('API REQUEST ERROR', error)
-        return Promise.reject(error)
     }
 
     protected async post<T, U>(input: RequestInfo, body: U, init?: RequestInit): Promise<T> {
@@ -55,12 +42,30 @@ export class HttpClientBase {
                 ...init,
             })
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
+                throw new HttpError(response.status, response.statusText, response.url)
             }
             return this.responseHandler<T>(response)
         } catch (error) {
-            return this.errorHandler(error)
+            return this.errorHandler(error as Error)
         }
+    }
+
+    protected async responseHandler<T>(response: Response): Promise<T> {
+        try {
+            return await response.json()
+        } catch (error) {
+            console.error('Error parsing JSON:', error)
+            throw error
+        }
+    }
+
+    protected errorHandler(error: Error): Promise<never> {
+        if (error instanceof HttpError) {
+            console.error('HTTP error:', error)
+        } else {
+            console.error('API request error:', error)
+        }
+        return Promise.reject(error)
     }
 }
 
