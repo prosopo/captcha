@@ -8,7 +8,7 @@
     "types": "./dist/index.d.ts",
     "engines": {
         "node": ">=16",
-        "npm": ">=8.9"
+        "npm": "8.9"
     },
     "scripts": {
         "clean": "tsc --build --clean",
@@ -45,7 +45,6 @@
         "@prosopo/datasets": "0.2.12",
         "@prosopo/types": "0.2.12",
         "@prosopo/util": "0.2.12",
-        "axios": "^1.5.0",
         "rxjs": "7.8.1"
     },
     "overrides": {

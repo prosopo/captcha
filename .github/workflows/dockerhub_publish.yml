@@ -72,6 +72,9 @@ jobs:
               # Build JS bundle and publish to Docker Hub if publish_dockerhub_js_bundle is true
               if: needs.check_version.outputs.bump == 'true'
               run: |
+                  # Create a temporary directory to store existing JS bundles
+                  mkdir -p ./js_bundles_host_temp/
+
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
                   cp ./dev/scripts/env.rococo ./packages/procaptcha-bundle/.env.production
@@ -82,15 +85,43 @@ jobs:
 
                   NODE_ENV=production npm run build:prod
 
+                  # Rename the bundle to include the version number
+                  mv procaptcha.bundle.js procaptcha.bundle.${{ needs.check_version.outputs.next_version }}.js
+                  NEW_BUNDLE_FILENAME="procaptcha.bundle.${{ needs.check_version.outputs.next_version }}.js"
+
                   # Navigate back to the project root
                   echo "Navigating back to project root..."
                   cd ../..
 
-                  # Build and push the JS Docker image
-                  echo "Building Docker image for JS bundle..."
+                  # Pull the latest Docker image
+                  docker pull prosopo/js_server:${{needs.check_version.outputs.current_version}} || echo "No existing image found" && exit 1
+
+                  # Create a temporary container from the latest image
+                  CONTAINER_ID=$(docker create prosopo/js_server:${{needs.check_version.outputs.current_version}})
+
+                  # Copy the entire bundle directory from the container to the host
+                  docker cp $CONTAINER_ID:/usr/share/nginx/html/js/ ./js_bundles_host_temp/
+
+                  # Remove the temporary container
+                  docker rm $CONTAINER_ID
+
+                  # Add the new bundle to the local js directory
+                  cp ./packages/procaptcha-bundle/dist/bundle/$NEW_BUNDLE_FILENAME ./js_bundles_host_temp/
+
+                  # Remove ./js_bundles_host_temp/procaptcha.bundle.js if one already exists
+                  rm -f ./js_bundles_host_temp/procaptcha.bundle.js
+
+                  # Create a symlink named 'procaptcha.bundle.js' pointing to the new versioned bundle
+                  ln -s $NEW_BUNDLE_FILENAME ./js_bundles_host_temp/procaptcha.bundle.js
+
+                  # Build a new Docker image with the updated js directory
                   docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{needs.check_version.outputs.next_version}}
+
                   echo "Pushing Docker image for JS bundle..."
                   docker push prosopo/js_server:${{needs.check_version.outputs.next_version}}
+
+                  # Cleanup: Remove the temporary js directory
+                  rm -rf ./js_bundles_host_temp/
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
