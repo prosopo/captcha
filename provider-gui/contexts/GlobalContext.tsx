@@ -4,10 +4,13 @@ import React, { ReactNode, createContext, useContext, useState } from 'react'
 
 interface GlobalStateContextProps {
     currentAccount: string
-    setCurrentAccount: React.Dispatch<React.SetStateAction<string>>
+    setCurrentAccount: (updateStr: string) => void
 }
 
-const GlobalStateContext = createContext<GlobalStateContextProps | undefined>(undefined)
+const GlobalStateContext = createContext<GlobalStateContextProps>({
+    currentAccount: '',
+    setCurrentAccount: () => void 0,
+})
 
 interface GlobalStateProviderProps {
     children: ReactNode
