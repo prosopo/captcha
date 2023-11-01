@@ -94,7 +94,7 @@ jobs:
                   cd ../..
 
                   # Pull the latest Docker image
-                  docker pull prosopo/js_server:${{needs.check_version.outputs.current_version}} || echo "No existing image found"
+                  docker pull prosopo/js_server:${{needs.check_version.outputs.current_version}} || echo "No existing image found" && exit 1
 
                   # Create a temporary container from the latest image
                   CONTAINER_ID=$(docker create prosopo/js_server:${{needs.check_version.outputs.current_version}})
