@@ -19,7 +19,8 @@
     "dependencies": {
         "@prosopo/common": "0.2.12",
         "@prosopo/types": "0.2.12",
-        "glob": "^10.0.0"
+        "glob": "^10.0.0",
+        "path-scurry": "^1.10.0"
     },
     "devDependencies": {
         "@polkadot/dev": "^0.76.11",
