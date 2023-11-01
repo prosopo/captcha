@@ -10,7 +10,7 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 // @ts-ignore
 import { decodeEvents } from '../shared/utils.js'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json' assert { type: 'json' }
-import type { EventRecord } from '@polkadot/types/interfaces'
+import type { EventRecord } from '@polkadot/api/submittable'
 
 export default class Methods {
     readonly __nativeContract: ContractPromise
@@ -33,7 +33,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getCaller',
-            (events: EventRecord[]) => {
+            (events: EventRecord) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -51,7 +51,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getCallerBytes',
-            (events: EventRecord[]) => {
+            (events: EventRecord) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -70,7 +70,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getAccountBytes',
-            (events: EventRecord[]) => {
+            (events: EventRecord) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [account],
@@ -88,7 +88,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'getGitCommitId',
-            (events: EventRecord[]) => {
+            (events: EventRecord) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],

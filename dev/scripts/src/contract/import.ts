@@ -44,7 +44,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
     await exec(`mkdir -p ${pathToOutput}`)
-    const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
+    const cmd = `npx @727-ventures/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
     const name = path.basename(pathToAbis)
     // copy the metadata
@@ -94,14 +94,6 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     // don't replace if already ignored by eslint
                     if (p1.includes('eslint-disable-next-line')) return match
                     const result = `\n${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
-                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
-                    return result
-                })
-
-                // replace EventRecord with EventRecord[]
-                // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/EventRecord/g, (match) => {
-                    const result = `EventRecord[]`
                     if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
                 })

@@ -17,7 +17,7 @@ import { getTypeDescription } from './../shared/utils.js'
 import { decodeEvents } from '../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json' assert { type: 'json' }
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json' assert { type: 'json' }
-import type { EventRecord } from '@polkadot/types/interfaces'
+import type { EventRecord } from '@polkadot/api/submittable'
 
 export default class Methods {
     readonly __nativeContract: ContractPromise
@@ -63,7 +63,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'handler',
-            (events: EventRecord[]) => {
+            (events: EventRecord) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [msg],
