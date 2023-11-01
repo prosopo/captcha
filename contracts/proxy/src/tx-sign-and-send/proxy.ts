@@ -10,7 +10,7 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 // @ts-ignore
 import { decodeEvents } from '../shared/utils.js'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json' assert { type: 'json' }
-import type { EventRecord } from '@polkadot/api/submittable'
+import type { EventRecord } from '@polkadot/types/interfaces'
 
 export default class Methods {
     readonly __nativeContract: ContractPromise
