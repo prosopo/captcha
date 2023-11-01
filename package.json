@@ -60,7 +60,8 @@
         "contracts/*",
         "dev/*",
         "packages/*",
-        "demos/*"
+        "demos/*",
+        "provider-gui"
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
