@@ -1,35 +1,16 @@
 import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
-import {
-    EnvironmentTypesSchema,
-    NetworkNamesSchema,
-    ProcaptchaClientConfigOutput,
-    ProcaptchaConfigSchema,
-} from '@prosopo/types'
 import { GovernanceStatus } from '@prosopo/captcha-contract'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { hexToString } from '@polkadot/util'
 
-const deployedContracts = { rococo: ['5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u'], development: [] }
-
-const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
-    if (!siteKey) {
-        siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || process.env.REACT_APP_DAPP_SITE_KEY || ''
-    }
-    return ProcaptchaConfigSchema.parse({
-        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
-            : EnvironmentTypesSchema.enum.development,
-        defaultNetwork: process.env.DEFAULT_NETWORK
-            ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
-            : NetworkNamesSchema.enum.development,
-        userAccountAddress: '',
-        account: {
-            address: siteKey,
-        },
-        serverUrl: process.env.SERVER_URL || '',
-    })
+const deployedContracts = {
+    rococo: {
+        wsProviderUrl: 'wss://rococo-contracts-rpc.polkadot.io:443',
+        contracts: ['5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u'],
+    },
+    development: { wsProviderUrl: 'ws://localhost:9944', contracts: [] },
 }
 
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
@@ -40,9 +21,13 @@ export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     return network
 }
 
-const loadContract = async (account: string, contractAddress: string): Promise<ProsopoCaptchaContract> => {
+const loadContract = async (
+    account: string,
+    contractAddress: string,
+    wsProviderUrl: string
+): Promise<ProsopoCaptchaContract> => {
     const network = {
-        endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443',
+        endpoint: wsProviderUrl,
         contract: {
             address: contractAddress,
             name: 'Captcha',
@@ -63,11 +48,15 @@ const loadContract = async (account: string, contractAddress: string): Promise<P
 }
 
 export const contractOverview = async (network: 'rococo' | 'development', accountAddress: string) => {
-    const contracts = deployedContracts[network]
+    const contracts = deployedContracts[network].contracts
 
     const contractData = await Promise.all(
         contracts.map(async (contractAddress) => {
-            const contractApi = await loadContract(accountAddress, contractAddress)
+            const contractApi = await loadContract(
+                accountAddress,
+                contractAddress,
+                deployedContracts[network].wsProviderUrl
+            )
             const providersResult = await contractApi.methods.listProvidersByStatus(
                 [GovernanceStatus.active, GovernanceStatus.inactive],
                 {}

@@ -19,8 +19,9 @@ const TopBar = () => {
                         <Image src="/prosopo-logo-white.png" height={50} width={200} alt="Prosopo Logo" />
                     </Link>
                 </Box>
-                <AccountPicker />
-                <Box mx={2} />
+                <Box m={2}>
+                    <AccountPicker />
+                </Box>
             </Toolbar>
         </AppBar>
     )

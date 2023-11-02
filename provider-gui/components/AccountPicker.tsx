@@ -1,6 +1,6 @@
 'use client'
 
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
+import { FormControl, MenuItem, Select } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { networks } from '@/types/GlobalStateTypes'
@@ -43,27 +43,14 @@ const AccountPicker: React.FC = () => {
 
     return (
         <FormControl fullWidth>
-            <InputLabel id="account-picker-label">Account</InputLabel>
-            <Select
-                labelId="account-picker-label"
-                id="account-picker"
-                value={currentAccount}
-                label="Account"
-                onChange={handleAccountChange}
-            >
+            <Select id="account-picker" value={currentAccount} onChange={handleAccountChange}>
                 {accounts.map((account) => (
                     <MenuItem key={account.address} value={account.address}>
                         {account.meta.name} ({account.address})
                     </MenuItem>
                 ))}
             </Select>
-            <Select
-                labelId="network-picker-label"
-                id="network-picker"
-                value={network}
-                label="Network"
-                onChange={handleNetworkChange}
-            >
+            <Select id="network-picker" value={network} onChange={handleNetworkChange}>
                 {networks.map((network) => (
                     <MenuItem key={network} value={network}>
                         {network}
