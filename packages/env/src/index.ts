@@ -14,3 +14,4 @@
 export { Environment } from './env.js'
 export { ProviderEnvironment } from './provider.js'
 export { MockEnvironment, type ViteTestContext } from './mockenv.js'
+export { deployedContracts } from './deployedContracts.js'
