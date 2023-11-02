@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-async-client-component */
 'use client'
 
-import { ContractOverview } from '@/types/contractOverview'
+import { ContractOverview } from '@/types/ContractOverview'
 import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import Paper from '@mui/material/Paper'
@@ -37,9 +37,8 @@ const ContractOverview = () => {
                 <TableHead>
                     <TableRow>
                         <TableCell>Contract Address</TableCell>
-                        <TableCell align="right">Network</TableCell>
-                        <TableCell align="right">Git Commit ID</TableCell>
-                        <TableCell align="right">Providers</TableCell>
+                        <TableCell>Network</TableCell>
+                        <TableCell>Providers</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -48,16 +47,15 @@ const ContractOverview = () => {
                             <TableCell component="th" scope="row">
                                 {contract.contractAddress}
                             </TableCell>
-                            <TableCell align="right">{contract.network}</TableCell>
-                            <TableCell align="right">{contract.gitCommitId}</TableCell>
-                            <TableCell align="right">
+                            <TableCell>{contract.network}</TableCell>
+                            <TableCell>
                                 {contract.providers.map((provider, providerIndex) => (
                                     <div key={providerIndex}>
+                                        <div>URL: {provider.url}</div>
                                         <div>Status: {provider.status}</div>
                                         <div>Balance: {provider.balance}</div>
                                         <div>Fee: {provider.fee}</div>
                                         <div>Payee: {provider.payee}</div>
-                                        <div>URL: {provider.url}</div>
                                         <div>Dataset ID: {provider.datasetId}</div>
                                         <div>Dataset ID Content: {provider.datasetIdContent}</div>
                                         <div>Server Online and Responsive?: {provider.isOnline ? 'true' : 'false'}</div>

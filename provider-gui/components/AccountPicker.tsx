@@ -3,7 +3,7 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
-import { networks } from '@/types/global-state-types'
+import { networks } from '@/types/GlobalStateTypes'
 import { useEffect, useState } from 'react'
 import { useGlobalState } from '../contexts/GlobalContext'
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'

@@ -1,7 +1,7 @@
 'use client'
 
 import { environmentMock } from '@/mocks/profile-mocks'
-import GenericForm from '@/components/content-edit-form'
+import GenericForm from '@/components/ContentEditForm'
 import React from 'react'
 
 export default function EnvironmentForm() {
