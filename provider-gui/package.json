@@ -1,7 +1,12 @@
 {
     "name": "@prosopo/provider-gui",
+<<<<<<< HEAD
     "version": "0.2.11",
     "type": "module",
+=======
+    "version": "0.2.13",
+    "private": true,
+>>>>>>> main
     "engines": {
         "node": ">=16",
         "npm": "8.9"
@@ -20,11 +25,12 @@
         "@mui/system": "^5.9.1",
         "@polkadot/extension-dapp": "^0.46.5",
         "@polkadot/extension-inject": "^0.46.5",
-        "@prosopo/api": "0.2.11",
-        "@prosopo/cli": "0.2.11",
-        "@prosopo/env": "^0.2.11",
-        "@prosopo/provider": "0.2.11",
-        "@prosopo/captcha-contract": "0.2.11",
+        "@polkadot/keyring": "12.5.1",
+        "@polkadot/types": "10.10.1",
+        "@prosopo/api": "0.2.13",
+        "@prosopo/cli": "0.2.13",
+        "@prosopo/env": "0.2.13",
+        "@prosopo/provider": "0.2.13",
         "next": "14.0.1",
         "react": "18.2.0"
     },

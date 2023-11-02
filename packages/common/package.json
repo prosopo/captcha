@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/common",
-    "version": "0.2.11",
+    "version": "0.2.13",
     "description": "Prosopo common library",
     "main": "./dist/index.js",
     "type": "module",
@@ -26,12 +26,12 @@
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {
-        "@polkadot/api": "^10.10.1",
+        "@polkadot/api": "10.10.1",
         "@polkadot/keyring": "12.5.1",
         "@polkadot/types": "10.10.1",
-        "@polkadot/util": "12.3.2",
-        "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/util": "0.2.11",
+        "@polkadot/util": "12.5.1",
+        "@polkadot/util-crypto": "12.5.1",
+        "@prosopo/util": "0.2.13",
         "consola": "^3.2.3",
         "i18next": "^21.9.2",
         "i18next-browser-languagedetector": "^7.0.1",
@@ -42,7 +42,7 @@
         "zod": "^3.22.3"
     },
     "devDependencies": {
-        "@prosopo/config": "0.2.11",
+        "@prosopo/config": "0.2.13",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vitest": "^0.34.2"
