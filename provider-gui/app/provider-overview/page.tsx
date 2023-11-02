@@ -1,8 +1,8 @@
 'use client'
 
 import { Button, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
-import { getProviderApi } from '../services/provider-api/provider-api'
-import { useGlobalState } from '../contexts/GlobalContext'
+import { getProviderApi } from '@/services/provider-api/provider-api'
+import { useGlobalState } from '@/contexts/GlobalContext'
 import { useRouter } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
 

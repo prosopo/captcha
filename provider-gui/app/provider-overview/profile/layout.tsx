@@ -1,5 +1,5 @@
-import ProfileBreadcrumb from '../../components/profile-breadcrumb'
-import Spacer from '../../components/spacer'
+import ProfileBreadcrumb from '@/components/profile-breadcrumb'
+import Spacer from '@/components/spacer'
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
     return (
