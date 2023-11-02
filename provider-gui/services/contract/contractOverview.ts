@@ -71,6 +71,7 @@ export const contractOverview = async (network: 'rococo' | 'development', accoun
                         const isOnline = await fetch(url)
                             .then((res) => res.status === 200)
                             .catch(() => false)
+
                         return {
                             status: provider.status.toString(),
                             balance: provider.balance.toNumber(),
