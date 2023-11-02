@@ -86,8 +86,8 @@ jobs:
                   NODE_ENV=production npm run build:prod
 
                   # Rename the bundle to include the version number
-                  mv procaptcha.bundle.js procaptcha.bundle.${{ needs.check_version.outputs.next_version }}.js
                   NEW_BUNDLE_FILENAME="procaptcha.bundle.${{ needs.check_version.outputs.next_version }}.js"
+                  mv ./dist/bundle/procaptcha.bundle.js ./dist/bundle/$NEW_BUNDLE_FILENAME
 
                   # Navigate back to the project root
                   echo "Navigating back to project root..."
