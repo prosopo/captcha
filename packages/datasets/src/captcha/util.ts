@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
-import client from 'axios'
 
 export async function downloadImage(url: string): Promise<Uint8Array> {
     try {
-        return new Uint8Array(
-            (await client.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
-        )
+        const response = await fetch(url)
+        if (!response.ok) {
+            throw new Error(`Network response was not ok, status: ${response.status}`)
+        }
+        const buffer = await response.arrayBuffer()
+        return new Uint8Array(buffer)
     } catch (error) {
         // TODO fix/improve error handling
         throw new ProsopoEnvError(error as Error)

@@ -12,7 +12,7 @@ interface HomePageState {
 }
 
 const HomePage: React.FC = () => {
-    const { currentAccount, setCurrentAccount } = useGlobalState()
+    const { currentAccount } = useGlobalState()
     const [state, setState] = useState<HomePageState>({ network: 'rococo', providerUrl: '' })
     const router = useRouter()
 

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/contract",
-    "version": "0.2.10",
+    "version": "0.2.13",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
@@ -38,23 +38,23 @@
         }
     },
     "dependencies": {
-        "@polkadot/api": "10.9.1",
-        "@polkadot/api-contract": "10.9.1",
-        "@polkadot/keyring": "12.3.2",
-        "@polkadot/rpc-provider": "10.9.1",
-        "@polkadot/typegen": "10.9.1",
-        "@polkadot/types": "10.9.1",
-        "@polkadot/types-create": "10.9.1",
-        "@polkadot/util": "12.3.2",
-        "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/common": "0.2.10",
-        "@prosopo/types": "0.2.10",
-        "@prosopo/util": "0.2.10",
-        "@prosopo/captcha-contract": "0.2.10",
+        "@polkadot/api": "10.10.1",
+        "@polkadot/api-contract": "10.10.1",
+        "@polkadot/keyring": "12.5.1",
+        "@polkadot/rpc-provider": "10.10.1",
+        "@polkadot/typegen": "10.10.1",
+        "@polkadot/types": "10.10.1",
+        "@polkadot/types-create": "10.10.1",
+        "@polkadot/util": "12.5.1",
+        "@polkadot/util-crypto": "12.5.1",
+        "@prosopo/common": "0.2.13",
+        "@prosopo/types": "0.2.13",
+        "@prosopo/util": "0.2.13",
+        "@prosopo/captcha-contract": "0.2.13",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {
-        "@polkadot/api-augment": "10.9.1",
+        "@polkadot/api-augment": "10.10.1",
         "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"

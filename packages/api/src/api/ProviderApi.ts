@@ -51,7 +51,7 @@ export default class ProviderApi extends HttpClientBase {
             .toString()
             .replace(/,/g, '')}`
         console.log(url)
-        return this.axios.get(url)
+        return this.fetch(url)
     }
 
     public submitCaptchaSolution(
@@ -69,7 +69,7 @@ export default class ProviderApi extends HttpClientBase {
             salt,
             signature,
         })
-        return this.axios.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
+        return this.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
     }
 
     public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
@@ -80,14 +80,14 @@ export default class ProviderApi extends HttpClientBase {
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
-        return this.axios.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+        return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 
     public getProviderStatus(): Promise<ProviderRegistered> {
-        return this.axios.get(ApiPaths.GetProviderStatus)
+        return this.fetch(ApiPaths.GetProviderStatus)
     }
 
     public getProviderDetails(): Promise<Provider> {
-        return this.axios.get(ApiPaths.GetProviderDetails)
+        return this.fetch(ApiPaths.GetProviderDetails)
     }
 }
