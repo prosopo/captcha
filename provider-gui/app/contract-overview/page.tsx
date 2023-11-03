@@ -1,14 +1,13 @@
 /* eslint-disable @next/next/no-async-client-component */
 'use client'
 
-import { Box, Table } from '@mui/material'
+import { Box } from '@mui/material'
 import { ContractOverview } from '@/types/ContractOverview'
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
 import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import React, { useEffect, useState } from 'react'
-import TableRow from '@mui/material/TableRow'
 
 const calculateFlex = (length: number) => {
     if (length < 4) {
@@ -55,7 +54,6 @@ const ContractOverview = () => {
                                 field: key,
                                 headerName: key,
                                 flex: calculateFlex(get(firstProvider, key).toString().length),
-                                resizable: true,
                             }
                         })
                     )
@@ -64,11 +62,7 @@ const ContractOverview = () => {
                 return (
                     <Box component="div" key={contractIndex}>
                         <h2>{contract.contractAddress}</h2>
-                        <Table>
-                            <TableRow key={contractIndex}>
-                                <DataGrid autoHeight rows={rows} columns={columns} />
-                            </TableRow>
-                        </Table>
+                        <DataGrid autoHeight rows={rows} columns={columns} />
                     </Box>
                 )
             })}

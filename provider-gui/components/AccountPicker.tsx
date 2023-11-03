@@ -1,6 +1,6 @@
 'use client'
 
-import { FormControl, MenuItem, Select } from '@mui/material'
+import { FormControl, FormGroup, MenuItem, Select } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { networks } from '@/types/GlobalStateTypes'
@@ -42,22 +42,26 @@ const AccountPicker: React.FC = () => {
     }
 
     return (
-        <FormControl fullWidth>
-            <Select id="account-picker" value={currentAccount} onChange={handleAccountChange}>
-                {accounts.map((account) => (
-                    <MenuItem key={account.address} value={account.address}>
-                        {account.meta.name} ({account.address})
-                    </MenuItem>
-                ))}
-            </Select>
-            <Select id="network-picker" value={network} onChange={handleNetworkChange}>
-                {networks.map((network) => (
-                    <MenuItem key={network} value={network}>
-                        {network}
-                    </MenuItem>
-                ))}
-            </Select>
-        </FormControl>
+        <FormGroup>
+            <FormControl fullWidth>
+                <Select id="account-picker" value={currentAccount} onChange={handleAccountChange}>
+                    {accounts.map((account) => (
+                        <MenuItem key={account.address} value={account.address}>
+                            {account.meta.name} ({account.address})
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+            <FormControl fullWidth>
+                <Select id="network-picker" value={network} onChange={handleNetworkChange}>
+                    {networks.map((network) => (
+                        <MenuItem key={network} value={network}>
+                            {network}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+        </FormGroup>
     )
 }
 
