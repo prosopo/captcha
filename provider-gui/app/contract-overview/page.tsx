@@ -1,17 +1,23 @@
 /* eslint-disable @next/next/no-async-client-component */
 'use client'
 
+import { Box, Table } from '@mui/material'
 import { ContractOverview } from '@/types/ContractOverview'
+import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
+import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
-import Paper from '@mui/material/Paper'
 import React, { useEffect, useState } from 'react'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
+
+const calculateFlex = (length: number) => {
+    if (length < 4) {
+        return 1
+    }
+    const flex = 1 / (12 / length) + 10 / Math.log(length + 1)
+    console.log('flex', flex)
+    return flex
+}
 
 const ContractOverview = () => {
     const { currentAccount, network } = useGlobalState()
@@ -30,44 +36,43 @@ const ContractOverview = () => {
 
         fetchData()
     }, [currentAccount, network])
-
     return (
-        <TableContainer component={Paper}>
-            <Table aria-label="Contract Overview">
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Contract Address</TableCell>
-                        <TableCell>Network</TableCell>
-                        <TableCell>Providers</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {contractsData.map((contract, contractIndex) => (
-                        <TableRow key={contractIndex}>
-                            <TableCell component="th" scope="row">
-                                {contract.contractAddress}
-                            </TableCell>
-                            <TableCell>{contract.network}</TableCell>
-                            <TableCell>
-                                {contract.providers.map((provider, providerIndex) => (
-                                    <div key={providerIndex}>
-                                        <div>URL: {provider.url}</div>
-                                        <div>Status: {provider.status}</div>
-                                        <div>Balance: {provider.balance}</div>
-                                        <div>Fee: {provider.fee}</div>
-                                        <div>Payee: {provider.payee}</div>
-                                        <div>Dataset ID: {provider.datasetId}</div>
-                                        <div>Dataset ID Content: {provider.datasetIdContent}</div>
-                                        <div>Server Online and Responsive?: {provider.isOnline ? 'true' : 'false'}</div>
-                                        <br />
-                                    </div>
-                                ))}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <Box>
+            <h1>Contract Details</h1>
+            {contractsData.map((contract, contractIndex) => {
+                const rows: GridRowsProp = contract.providers.map((provider, providerIndex) => {
+                    return {
+                        id: providerIndex,
+                        ...provider,
+                    }
+                })
+                let columns: GridColDef[] = []
+                if (contract.providers.length) {
+                    const firstProvider = at(contract.providers, 0)
+                    columns = columns.concat(
+                        Object.keys(firstProvider).map((key: string) => {
+                            return {
+                                field: key,
+                                headerName: key,
+                                flex: calculateFlex(get(firstProvider, key).toString().length),
+                                resizable: true,
+                            }
+                        })
+                    )
+                }
+
+                return (
+                    <Box component="div" key={contractIndex}>
+                        <h2>{contract.contractAddress}</h2>
+                        <Table>
+                            <TableRow key={contractIndex}>
+                                <DataGrid autoHeight rows={rows} columns={columns} />
+                            </TableRow>
+                        </Table>
+                    </Box>
+                )
+            })}
+        </Box>
     )
 }
 
