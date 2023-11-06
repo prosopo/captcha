@@ -356,7 +356,10 @@ export class Tasks {
         datasetId: string,
         userAccount: string
     ): Promise<{ captchas: CaptchaWithProof[]; requestHash: string }> {
-        await this.db.getDatasetDetails(datasetId)
+        const dataset = await this.db.getDatasetDetails(datasetId)
+        if (!dataset) {
+            throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED')
+        }
 
         const unsolvedCount: number = Math.abs(Math.trunc(this.captchaConfig.unsolved.count))
         const solvedCount: number = Math.abs(Math.trunc(this.captchaConfig.solved.count))
