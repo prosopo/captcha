@@ -1,4 +1,4 @@
-import { GlobalState } from '../types/global-state-types'
+import { GlobalState } from '../types/GlobalStateTypes'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { actionsMock, datasetMock, environmentMock, summaryMock } from './profile-mocks'
 
