@@ -379,7 +379,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             }
         }
 
-        // This should never happen
+        // This should never happen, but build fails without as compiler thinks return could be undefined
         throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED', this.getDatasetDetails.name, {}, datasetId)
     }
 
