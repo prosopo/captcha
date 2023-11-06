@@ -356,13 +356,28 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDatasetDetails.name, {}, datasetId)
         }
 
-        const doc: DatasetBase | undefined | null = await this.tables?.dataset.findOne({ datasetId }).lean()
+        const MAX_RETRIES = 3
+        const DELAY_MS = 1000
 
-        if (doc) {
-            return doc
+        // Try to get the dataset details from the database. If it fails, retry MAX_RETRIES times
+        for (let i = 0; i < MAX_RETRIES; i++) {
+            try {
+                const doc: DatasetBase | undefined | null = await this.tables?.dataset.findOne({ datasetId }).lean()
+
+                if (doc) {
+                    return doc
+                }
+            } catch (error) {
+                console.error(`Attempt ${i + 1} failed with error: ${error}. Retrying in 1 second...`)
+
+                // Don't delay after the last attempt
+                if (i < MAX_RETRIES - 1) {
+                    await new Promise((resolve) => setTimeout(resolve, DELAY_MS))
+                } else {
+                    throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED', this.getDatasetDetails.name, {}, datasetId)
+                }
+            }
         }
-
-        throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED', this.getDatasetDetails.name, {}, datasetId)
     }
 
     /**

@@ -356,32 +356,7 @@ export class Tasks {
         datasetId: string,
         userAccount: string
     ): Promise<{ captchas: CaptchaWithProof[]; requestHash: string }> {
-        const MAX_RETRIES = 3
-        const DELAY_MS = 1000
-        let dataset
-
-        // Try to get the dataset details from the database. If it fails, retry MAX_RETRIES times
-        for (let i = 0; i < MAX_RETRIES; i++) {
-            try {
-                dataset = await this.db.getDatasetDetails(datasetId)
-
-                // If the dataset is successfully retrieved, break out of the loop
-                if (dataset) break
-            } catch (error) {
-                console.error(`Attempt ${i + 1} failed with error: ${error}. Retrying in 1 second...`)
-
-                // Don't delay after the last attempt
-                if (i < MAX_RETRIES - 1) {
-                    await new Promise((resolve) => setTimeout(resolve, DELAY_MS))
-                } else {
-                    throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED')
-                }
-            }
-        }
-
-        if (!dataset) {
-            throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED')
-        }
+        await this.db.getDatasetDetails(datasetId)
 
         const unsolvedCount: number = Math.abs(Math.trunc(this.captchaConfig.unsolved.count))
         const solvedCount: number = Math.abs(Math.trunc(this.captchaConfig.solved.count))
