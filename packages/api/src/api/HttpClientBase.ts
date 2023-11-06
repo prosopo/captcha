@@ -11,22 +11,62 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AxiosInstance, AxiosResponse, default as axios } from 'axios'
+import { HttpError } from './HttpError.js'
 
 export class HttpClientBase {
-    protected readonly axios: AxiosInstance
+    protected readonly baseURL: string
 
     constructor(baseURL: string, prefix = '') {
-        baseURL = baseURL + prefix
-        this.axios = axios.create({ baseURL })
-        this.axios.interceptors.response.use(this.responseHandler, this.errorHandler)
+        this.baseURL = baseURL + prefix
     }
 
-    protected responseHandler = (response: AxiosResponse) => {
-        return response.data
+    protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+        try {
+            const response = await fetch(this.baseURL + input, init)
+            if (!response.ok) {
+                throw new HttpError(response.status, response.statusText, response.url)
+            }
+            return this.responseHandler<T>(response)
+        } catch (error) {
+            return this.errorHandler(error as Error)
+        }
     }
 
-    protected errorHandler = (error: any) => Promise.reject(error)
+    protected async post<T, U>(input: RequestInfo, body: U, init?: RequestInit): Promise<T> {
+        const headers = { 'Content-Type': 'application/json', ...(init?.headers || {}) }
+        try {
+            const response = await fetch(this.baseURL + input, {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers,
+                ...init,
+            })
+            if (!response.ok) {
+                throw new HttpError(response.status, response.statusText, response.url)
+            }
+            return this.responseHandler<T>(response)
+        } catch (error) {
+            return this.errorHandler(error as Error)
+        }
+    }
+
+    protected async responseHandler<T>(response: Response): Promise<T> {
+        try {
+            return await response.json()
+        } catch (error) {
+            console.error('Error parsing JSON:', error)
+            throw error
+        }
+    }
+
+    protected errorHandler(error: Error): Promise<never> {
+        if (error instanceof HttpError) {
+            console.error('HTTP error:', error)
+        } else {
+            console.error('API request error:', error)
+        }
+        return Promise.reject(error)
+    }
 }
 
 export default HttpClientBase
