@@ -18,6 +18,7 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 import { NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { hexToU8a } from '@polkadot/util/hex'
 import { isHex } from '@polkadot/util/is'
 import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
@@ -29,6 +30,7 @@ export async function getPairAsync(
     pairType?: KeypairType,
     ss58Format?: number
 ): Promise<KeyringPair> {
+    await cryptoWaitReady()
     return getPair(networkConfig, secret, account, pairType, ss58Format)
 }
 
