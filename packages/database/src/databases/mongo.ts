@@ -100,31 +100,33 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 if (this.connection) {
                     return
                 }
-
-                this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
-                this.connection = mongoose.createConnection(this.url, {
-                    dbName: this.dbname,
-                    serverApi: ServerApiVersion.v1,
-                })
-
-                this.tables = {
-                    captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
-                    dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
-                    solution:
-                        this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
-                    commitment:
-                        this.connection.models.UserCommitment ||
-                        this.connection.model('UserCommitment', UserCommitmentRecordSchema),
-                    usersolution:
-                        this.connection.models.UserSolution ||
-                        this.connection.model('UserSolution', UserSolutionRecordSchema),
-                    pending: this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
-                    scheduler:
-                        this.connection.models.Scheduler ||
-                        this.connection.model('Scheduler', ScheduledTaskRecordSchema),
-                }
-
                 await new Promise((resolve, reject) => {
+                    this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
+                    this.connection = mongoose.createConnection(this.url, {
+                        dbName: this.dbname,
+                        serverApi: ServerApiVersion.v1,
+                    })
+
+                    this.tables = {
+                        captcha:
+                            this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                        dataset:
+                            this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
+                        solution:
+                            this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
+                        commitment:
+                            this.connection.models.UserCommitment ||
+                            this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+                        usersolution:
+                            this.connection.models.UserSolution ||
+                            this.connection.model('UserSolution', UserSolutionRecordSchema),
+                        pending:
+                            this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
+                        scheduler:
+                            this.connection.models.Scheduler ||
+                            this.connection.model('Scheduler', ScheduledTaskRecordSchema),
+                    }
+
                     this.connection.once('open', resolve).on('error', (e) => {
                         this.logger.warn(`mongoose connection error`)
                         this.logger.error(e)
@@ -134,7 +136,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                             reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
                         } else {
                             // Remove the error listener to avoid accumulated listeners on retries
-                            this.connection.removeAllListeners('error')
+                            this.connection?.removeAllListeners('error')
                         }
                     })
                 })
