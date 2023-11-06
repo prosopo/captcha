@@ -21,7 +21,6 @@ export default async function (name: string, tsConfigPath: string, entry?: strin
             // @ts-ignore
             replace({
                 'esMain(import.meta)': 'require.main === module', // Replaces esMain checks with CommonJS equivalent
-                preventAssignment: true,
             }),
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
