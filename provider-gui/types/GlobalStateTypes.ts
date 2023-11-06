@@ -1,4 +1,4 @@
-import { Actions, Dataset, Environment, Summary } from './provider-profile-types'
+import { Actions, Dataset, Environment, Summary } from './ProviderProfileTypes'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
 export interface GlobalState {
@@ -6,3 +6,5 @@ export interface GlobalState {
     accounts: InjectedAccountWithMeta[]
     currentAccount: string
 }
+
+export const networks = ['rococo', 'development']

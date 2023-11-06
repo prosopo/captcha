@@ -1,10 +1,10 @@
 /* This file is auto-generated */
 
-import { buildSubmittableExtrinsic } from '@727-ventures/typechain-types'
+import { buildSubmittableExtrinsic } from '@prosopo/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/proxy.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
-import type { GasLimit, GasLimitAndRequiredValue } from '@727-ventures/typechain-types'
+import type { GasLimit, GasLimitAndRequiredValue } from '@prosopo/typechain-types'
 
 export default class Methods {
     readonly __nativeContract: ContractPromise
