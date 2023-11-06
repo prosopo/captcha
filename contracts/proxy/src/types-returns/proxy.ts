@@ -1,4 +1,4 @@
-import type { ReturnNumber } from '@727-ventures/typechain-types'
+import type { ReturnNumber } from '@prosopo/typechain-types'
 
 export enum Error {
     notAuthorised = 'NotAuthorised',

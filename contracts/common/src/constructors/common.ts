@@ -1,8 +1,8 @@
 import { CodePromise } from '@polkadot/api-contract'
 import { ContractFile } from '../contract-info/common.js'
-import { SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@727-ventures/typechain-types'
+import { SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@prosopo/typechain-types'
 import type { ApiPromise } from '@polkadot/api'
-import type { ConstructorOptions } from '@727-ventures/typechain-types'
+import type { ConstructorOptions } from '@prosopo/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { WeightV2 } from '@polkadot/types/interfaces'
 
