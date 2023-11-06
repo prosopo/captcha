@@ -35,7 +35,7 @@
         "@mui/material": "^5.14.5",
         "@polkadot/extension-dapp": "0.46.5",
         "@polkadot/extension-inject": "0.46.5",
-        "@polkadot/types": "10.9.1",
+        "@polkadot/types": "10.10.1",
         "@prosopo/common": "0.2.13",
         "@prosopo/procaptcha": "0.2.13",
         "i18next": "^21.9.2",

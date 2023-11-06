@@ -25,7 +25,6 @@
         "start": "vite serve --mode development --host",
         "build:dev": "npm run build && vite build --mode development --debug",
         "build:prod": "npm run build && vite build --mode production",
-        "bundle:prod": "npm run build:prod && vite build --config vite.config.bundle.ts --mode production",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
@@ -56,18 +55,10 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
-        "@babel/plugin-syntax-import-attributes": "^7.22.5",
         "@originjs/vite-plugin-commonjs": "^1.0.3",
         "@prosopo/config": "0.2.13",
-        "@rollup/plugin-babel": "^6.0.4",
-        "@rollup/plugin-commonjs": "^25.0.7",
-        "@rollup/plugin-json": "^6.0.1",
-        "@rollup/plugin-node-resolve": "^15.2.3",
-        "@rollup/plugin-terser": "^0.4.4",
         "@rollup/plugin-typescript": "^11.1.2",
         "@vitejs/plugin-react": "^4.0.4",
-        "rollup": "^3.29.4",
-        "rollup-plugin-visualizer": "^5.9.2",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "webpack-merge": "^5.9.0"
