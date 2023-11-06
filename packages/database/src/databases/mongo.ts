@@ -91,40 +91,66 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Connect to the database and set the various tables
      */
     async connect(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.connection) {
-                resolve()
-            }
-            this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
-            this.connection = mongoose.createConnection(this.url, {
-                dbName: this.dbname,
-                serverApi: ServerApiVersion.v1,
-            })
-            this.tables = {
-                captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
-                dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
-                solution: this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
-                commitment:
-                    this.connection.models.UserCommitment ||
-                    this.connection.model('UserCommitment', UserCommitmentRecordSchema),
-                usersolution:
-                    this.connection.models.UserSolution ||
-                    this.connection.model('UserSolution', UserSolutionRecordSchema),
-                pending: this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
-                scheduler:
-                    this.connection.models.Scheduler || this.connection.model('Scheduler', ScheduledTaskRecordSchema),
-            }
-            this.connection.once('open', resolve).on('error', (e) => {
-                this.logger.warn(`mongoose connection error`)
-                if (e.message.code === 'ETIMEDOUT') {
-                    this.logger.error(e)
-                    mongoose.connect(this.url)
+        const MAX_RETRIES = 3
+        const RETRY_INTERVAL_MS = 1000
+
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                // Return if already connected
+                if (this.connection) {
+                    return
                 }
 
-                this.logger.error(e)
-                reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
-            })
-        })
+                this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
+                this.connection = mongoose.createConnection(this.url, {
+                    dbName: this.dbname,
+                    serverApi: ServerApiVersion.v1,
+                })
+
+                this.tables = {
+                    captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                    dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
+                    solution:
+                        this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
+                    commitment:
+                        this.connection.models.UserCommitment ||
+                        this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+                    usersolution:
+                        this.connection.models.UserSolution ||
+                        this.connection.model('UserSolution', UserSolutionRecordSchema),
+                    pending: this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
+                    scheduler:
+                        this.connection.models.Scheduler ||
+                        this.connection.model('Scheduler', ScheduledTaskRecordSchema),
+                }
+
+                await new Promise((resolve, reject) => {
+                    this.connection.once('open', resolve).on('error', (e) => {
+                        this.logger.warn(`mongoose connection error`)
+                        this.logger.error(e)
+
+                        // Only reject on the last attempt, otherwise handle the retry logic
+                        if (attempt === MAX_RETRIES) {
+                            reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
+                        } else {
+                            // Remove the error listener to avoid accumulated listeners on retries
+                            this.connection.removeAllListeners('error')
+                        }
+                    })
+                })
+
+                return
+            } catch (e) {
+                // If this wasn't the last attempt, log the retry and wait for the retry interval
+                if (attempt < MAX_RETRIES) {
+                    this.logger.info(`Attempt ${attempt} failed, retrying in ${RETRY_INTERVAL_MS / 1000} seconds...`)
+                    await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS))
+                } else {
+                    // If this was the last attempt, throw the error
+                    throw e
+                }
+            }
+        }
     }
 
     /** Close connection to the database */
