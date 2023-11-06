@@ -1,6 +1,6 @@
+import * as z from 'zod'
 import { CliCommand } from '../cli/cliCommand.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { z } from 'zod'
 import fs from 'fs'
 
 export const InputArgsSchema = z.object({

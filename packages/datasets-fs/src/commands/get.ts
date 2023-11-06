@@ -1,7 +1,7 @@
+import * as z from 'zod'
 import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
 import { get } from '@prosopo/util'
-import { lodash } from '../utils/lodash.js'
-import { z } from 'zod'
+import { lodash } from '@prosopo/util/lodash'
 import cliProgress from 'cli-progress'
 import fs from 'fs'
 

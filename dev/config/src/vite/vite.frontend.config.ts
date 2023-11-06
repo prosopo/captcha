@@ -1,6 +1,5 @@
 import { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
 import { Drop } from 'esbuild'
-import { InputPluginOption } from 'rollup'
 import { UserConfig } from 'vite'
 import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
@@ -11,7 +10,6 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import { default as viteReact } from '@vitejs/plugin-react'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
-import typescript from '@rollup/plugin-typescript'
 const logger = getLogger(`Info`, `vite.config.js`)
 
 export default async function (
@@ -82,11 +80,11 @@ export default async function (
             host: '127.0.0.1',
         },
         mode: mode || 'development',
-        // optimizeDeps: {
-        //     include: ['linked-dep', 'esm-dep > cjs-dep', 'node_modules'], //'node_modules'
-        //     //exclude: ['react', 'react-dom'],
-        //     force: true,
-        // },
+        optimizeDeps: {
+            include: ['linked-dep', 'esm-dep > cjs-dep', 'node_modules'],
+            //exclude: ['react', 'react-dom'],
+            force: true,
+        },
         esbuild: {
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
@@ -100,7 +98,7 @@ export default async function (
 
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
-            minify: true,
+            minify: isProduction,
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
@@ -138,7 +136,7 @@ export default async function (
 
                 output: {
                     // interop: 'compat',
-                    dir: path.resolve(dir),
+                    dir: path.resolve(dir, 'dist/bundle'),
                     entryFileNames: `${bundleName}.bundle.js`,
                     // preserveModules: true, //--- supposedly need to this tree shake properly, not compatible with IIFE
                     // preserveModulesRoot: 'src',
@@ -168,10 +166,10 @@ export default async function (
                     // https://github.com/rollup/plugins/issues/243
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    typescript({
-                        tsconfig: path.resolve('./tsconfig.json'),
-                        compilerOptions: { rootDir: path.resolve('./src') },
-                    }) as InputPluginOption,
+                    // typescript({
+                    //     tsconfig: path.resolve('./tsconfig.json'),
+                    //     compilerOptions: { rootDir: path.resolve('./src') },
+                    // }) as InputPluginOption,
                 ],
             },
         },

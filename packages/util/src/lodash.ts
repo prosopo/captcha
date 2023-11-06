@@ -1,11 +1,6 @@
 import _lodash from 'lodash'
 import seedrandom from 'seedrandom'
 
-// set the seed for the global rng, i.e. seed `Math.random()`
-export const setSeedGlobal = (seed: number | string) => {
-    seedrandom(seed.toString(), { global: true })
-}
-
 // create a new rng with the given seed
 export const rng = (seed: number | string) => {
     const rng = seedrandom(seed.toString())
@@ -24,6 +19,16 @@ export const rng = (seed: number | string) => {
     }
 }
 
+// set the seed for the global rng, i.e. seed `Math.random()`
+export const setSeedGlobal = (seed: number | string) => {
+    seedrandom(seed.toString(), { global: true })
+}
+
+// create a new lodash instance with the current Math.random() and other global state
+export const lodash = () => {
+    return _lodash.runInContext()
+}
+
 // create a new lodash instance with the given seed
 export const seedLodash = (seed: number | string) => {
     // take a snapshot of the current Math.random() fn
@@ -37,9 +42,4 @@ export const seedLodash = (seed: number | string) => {
     Math.random = orig
     // return the lodash instance with the seeded Math.random()
     return lodash
-}
-
-// create a new lodash instance with the current Math.random() and other global state
-export const lodash = () => {
-    return _lodash.runInContext()
 }

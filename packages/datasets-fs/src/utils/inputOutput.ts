@@ -1,7 +1,7 @@
+import * as z from 'zod'
 import { CliCommandComposite } from '../cli/cliCommandComposite.js'
 import { InputArgsSchema, InputCliCommand } from './input.js'
 import { OutputArgsSchema, OutputCliCommand } from './output.js'
-import { z } from 'zod'
 
 export const InputOutputArgsSchema = InputArgsSchema.merge(OutputArgsSchema)
 

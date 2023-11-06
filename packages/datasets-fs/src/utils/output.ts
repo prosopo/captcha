@@ -1,15 +1,15 @@
 import { CliCommand } from '../cli/cliCommand.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { lodash } from './lodash.js'
-import { z } from 'zod'
+import { boolean, object, string, infer as zInfer } from 'zod'
+import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
 
-export const OutputArgsSchema = z.object({
-    output: z.string(),
-    overwrite: z.boolean().optional(),
+export const OutputArgsSchema = object({
+    output: string(),
+    overwrite: boolean().optional(),
 })
 
-export type OutputArgs = z.infer<typeof OutputArgsSchema>
+export type OutputArgs = zInfer<typeof OutputArgsSchema>
 
 export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliCommand<T> {
     #outputExists = false

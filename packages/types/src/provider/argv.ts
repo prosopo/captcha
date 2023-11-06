@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Payee } from '@prosopo/captcha-contract'
-import { z } from 'zod'
+import { nativeEnum } from 'zod'
 
-export const PayeeSchema = z.nativeEnum(Payee)
+export const PayeeSchema = nativeEnum(Payee)

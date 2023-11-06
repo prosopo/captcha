@@ -1,7 +1,7 @@
+import * as z from 'zod'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { get } from '@prosopo/util'
-import { lodash } from '../utils/lodash.js'
-import { z } from 'zod'
+import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({

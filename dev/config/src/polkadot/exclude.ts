@@ -115,7 +115,7 @@ const API_DERIVE = [
 
 const KNOWN_SUBSTRATE_CHAINS = ['./genesis.js']
 
-//const WASM_BYTES = ['./bytes.js', './cjs/bytes.js']
+const WASM_BYTES = ['./bytes.js', './cjs/bytes.js']
 
 const log = getLogger(`Info`, `config.polkadot.exclude.js`)
 
@@ -146,6 +146,7 @@ export function getAliases(dir: string): Alias[] {
     const mockUpgrade = path.resolve(dir, '../../dev/config/dist/polkadot/mockUpgrade.js')
     const mockInterface = path.resolve(dir, '../../dev/config/dist/polkadot/mockInterface.js')
     const mockSubstrate = path.resolve(dir, '../../dev/config/dist/polkadot/mockSubstrateGenesis.js')
+    const slimmedWASM = path.resolve(dir, '../../dev/config/dist/polkadot/bytes.js')
 
     POLKADOT_UPGRADES.forEach((file) => {
         log.info(`resolving ${file} to mockUpgrade.js`)
@@ -159,10 +160,10 @@ export function getAliases(dir: string): Alias[] {
         log.info(`resolving ${file} to mockSubstrateGenesis.js`)
         alias.push({ find: file, replacement: mockSubstrate })
     })
-    // WASM_BYTES.forEach((file) => {
-    //     log.info(`resolving ${file} to wasmBytes.js`)
-    //     alias.push({ find: file, replacement: mockUpgrade })
-    // })
+    WASM_BYTES.forEach((file) => {
+        log.info(`resolving ${file} to wasmBytes.js`)
+        alias.push({ find: file, replacement: slimmedWASM })
+    })
     // The below code makes no difference to the output size - not sure why.
     // alias.concat(replaceImportsWithBundles(dir))
 

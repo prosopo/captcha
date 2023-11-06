@@ -23,11 +23,15 @@
         ".": {
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
+        },
+        "./lodash": {
+            "import": "./dist/lodash.js",
+            "require": "./dist/lodash.js"
         }
     },
     "types": "./dist/index.d.ts",
     "dependencies": {
-        "lodash-es": "^4.17.21",
+        "lodash": "^4.17.21",
         "seedrandom": "^3.0.5"
     },
     "devDependencies": {
