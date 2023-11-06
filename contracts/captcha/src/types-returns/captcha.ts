@@ -1,4 +1,4 @@
-import type { ReturnNumber } from '@prosopo/typechain-types'
+import type { ReturnNumber } from '@727-ventures/typechain-types'
 
 export type Hash = string | number[]
 

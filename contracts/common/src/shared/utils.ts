@@ -1,4 +1,4 @@
-import { handleEventReturn } from '@prosopo/typechain-types'
+import { handleEventReturn } from '@727-ventures/typechain-types'
 import type { ContractPromise } from '@polkadot/api-contract'
 
 export function getTypeDescription(id: number | string, types: any): any {
