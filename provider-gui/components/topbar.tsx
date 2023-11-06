@@ -1,10 +1,14 @@
 'use client'
 
 import { AppBar, Box, Toolbar, Typography } from '@mui/material'
-import AccountPicker from './account-picker'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import dynamic from 'next/dynamic'
+
+const AccountPicker = dynamic(() => import('./account-picker'), {
+    ssr: false,
+})
 
 const TopBar = () => {
     const connectedEndpoint = 'ws://localhost:9944' // Replace with real data

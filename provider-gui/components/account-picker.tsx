@@ -27,7 +27,7 @@ const AccountPicker: React.FC = () => {
             await injected.enable('my cool dapp')
             const accounts = await injected.accounts()
             setAccounts(accounts)
-            if (accounts.length > 0) setCurrentAccount(accounts[0].address)
+            if (accounts.length > 0) setCurrentAccount(accounts[0]?.address ?? '')
         }
         enableExtension()
     }, [])

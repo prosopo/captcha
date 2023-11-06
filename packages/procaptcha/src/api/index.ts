@@ -13,4 +13,3 @@
 // limitations under the License.
 export * from './ExtensionWeb3.js'
 export * from './ExtensionWeb2.js'
-export * from './HttpClientBase.js'
