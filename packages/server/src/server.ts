@@ -33,7 +33,7 @@ export class ProsopoServer {
     config: ProsopoServerConfigOutput
     contract: ProsopoCaptchaContract | undefined
     prosopoContractAddress: string
-    dappContractAddress: string
+    dappContractAddress: string | undefined
     defaultEnvironment: string
     contractName: string
     abi: ContractAbi
@@ -52,7 +52,7 @@ export class ProsopoServer {
         this.network = get(this.config.networks, networkName)
         this.wsProvider = new WsProvider(this.network.endpoint)
         this.prosopoContractAddress = this.network.contract.address
-        this.dappContractAddress = this.config.account.address || getZeroAddress().toString()
+        this.dappContractAddress = this.config.account.address
         this.contractName = this.network.contract.name
         this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
         this.keyring = new Keyring({
@@ -62,7 +62,14 @@ export class ProsopoServer {
     }
 
     public async getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.network, providerUrl, this.dappContractAddress)
+        return new ProviderApi(this.network, providerUrl, this.getDappContractAddress())
+    }
+
+    public getDappContractAddress(): string {
+        if (!this.dappContractAddress) {
+            return getZeroAddress(this.getApi()).toString()
+        }
+        return this.dappContractAddress
     }
 
     async isReady() {

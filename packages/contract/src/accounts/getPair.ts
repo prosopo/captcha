@@ -29,7 +29,6 @@ export async function getPairAsync(
     pairType?: KeypairType,
     ss58Format?: number
 ): Promise<KeyringPair> {
-    //await cryptoWaitReady()
     return getPair(networkConfig, secret, account, pairType, ss58Format)
 }
 
@@ -79,13 +78,12 @@ export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringP
     return getPair(
         undefined,
         undefined,
-        userAccount || getZeroAddress().toHex(),
+        userAccount || getZeroAddress(api).toHex(),
         NetworkPairTypeSchema.parse('sr25519'),
         api.registry.chainSS58
     )
 }
 
-export function getZeroAddress(): AccountId {
-    const registry = new ApiPromise({ initWasm: false }).registry
-    return registry.createType('AccountId', new Uint8Array(new Array(32).fill(0)))
+export function getZeroAddress(api: ApiPromise): AccountId {
+    return api.registry.createType('AccountId', new Uint8Array(new Array(32).fill(0)))
 }
