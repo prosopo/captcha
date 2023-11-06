@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BlockHash } from '@polkadot/types/interfaces'
 import {
     ContractAbi,
@@ -26,7 +26,7 @@ import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@
 import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
-import { WsProvider } from '@polkadot/rpc-provider'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { get } from '@prosopo/util'
 
 export class ProsopoServer {
@@ -67,7 +67,7 @@ export class ProsopoServer {
 
     async isReady() {
         try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider })
+            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             await this.getSigner()
             await this.getContractApi()
         } catch (err) {
@@ -78,7 +78,7 @@ export class ProsopoServer {
     async getSigner(): Promise<void> {
         if (this.pair) {
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             }
             await this.api.isReadyOrError
             try {

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/util",
-    "version": "0.2.13",
+    "version": "0.2.12",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
@@ -27,7 +27,7 @@
     },
     "types": "./dist/index.d.ts",
     "dependencies": {
-        "lodash": "^4.17.21",
+        "lodash-es": "^4.17.21",
         "seedrandom": "^3.0.5"
     },
     "devDependencies": {

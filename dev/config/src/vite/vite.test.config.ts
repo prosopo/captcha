@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config'
-import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
 
 export default function () {
     return defineConfig({
@@ -24,6 +23,6 @@ export default function () {
                 enabled: true,
             },
         },
-        plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true })],
+        //plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true })],
     })
 }

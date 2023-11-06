@@ -29,7 +29,7 @@ import { RandomProvider } from '@prosopo/captcha-contract'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { at } from '@prosopo/util'
-import { stringToHex } from '@polkadot/util'
+import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi {
     userAccount: string

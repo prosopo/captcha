@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AccountId } from '@polkadot/types/interfaces'
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 import { NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
-import { hexToU8a, isHex } from '@polkadot/util'
+import { hexToU8a } from '@polkadot/util/hex'
+import { isHex } from '@polkadot/util/is'
+import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
 
 export async function getPairAsync(
     networkConfig?: NetworkConfig,
@@ -28,7 +29,7 @@ export async function getPairAsync(
     pairType?: KeypairType,
     ss58Format?: number
 ): Promise<KeyringPair> {
-    await cryptoWaitReady()
+    //await cryptoWaitReady()
     return getPair(networkConfig, secret, account, pairType, ss58Format)
 }
 
@@ -85,6 +86,6 @@ export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringP
 }
 
 export function getZeroAddress(): AccountId {
-    const registry = new ApiPromise().registry
+    const registry = new ApiPromise({ initWasm: false }).registry
     return registry.createType('AccountId', new Uint8Array(new Array(32).fill(0)))
 }

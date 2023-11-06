@@ -1,6 +1,6 @@
 import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
 import { get } from '@prosopo/util'
-import { lodash } from '@prosopo/util'
+import { lodash } from '../utils/lodash.js'
 import { z } from 'zod'
 import cliProgress from 'cli-progress'
 import fs from 'fs'

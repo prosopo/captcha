@@ -1,7 +1,7 @@
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { lodash } from '@prosopo/util'
+import { lodash } from '../utils/lodash.js'
 import { z } from 'zod'
 import fs from 'fs'
 

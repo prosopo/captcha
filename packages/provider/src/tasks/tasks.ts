@@ -37,16 +37,18 @@ import {
     parseCaptchaDataset,
 } from '@prosopo/datasets'
 import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract'
-import { ContractPromise } from '@polkadot/api-contract'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
-import { SubmittableResult } from '@polkadot/api'
+import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
-import { hexToU8a, stringToHex } from '@polkadot/util'
-import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { hexToU8a } from '@polkadot/util/hex'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 import { shuffleArray } from '../util.js'
+import { signatureVerify } from '@polkadot/util-crypto/signature'
+import { stringToHex } from '@polkadot/util/string'
 
 /**
  * @description Tasks that are shared by the API and CLI

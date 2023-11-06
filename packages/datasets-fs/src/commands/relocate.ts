@@ -1,5 +1,6 @@
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { get, lodash } from '@prosopo/util'
+import { get } from '@prosopo/util'
+import { lodash } from '../utils/lodash.js'
 import { z } from 'zod'
 import fs from 'fs'
 

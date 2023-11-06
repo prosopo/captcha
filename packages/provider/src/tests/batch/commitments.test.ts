@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
-import { ApiPromise } from '@polkadot/api'
-import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util/bn'
 import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { CaptchaStatus } from '@prosopo/captcha-contract'
@@ -29,8 +29,9 @@ import { at } from '@prosopo/util'
 import { getPairAsync, wrapQuery } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../tasks/tasks.test.js'
+import { stringToHex } from '@polkadot/util/string'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against

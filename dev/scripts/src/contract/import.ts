@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { exec } from '../util/index.js'
-import { lodash } from '@prosopo/util'
+import { lodash } from '@prosopo/datasets-fs'
 import fs from 'fs'
 import path from 'path'
 

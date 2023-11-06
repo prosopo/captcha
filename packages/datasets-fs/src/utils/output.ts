@@ -1,6 +1,6 @@
 import { CliCommand } from '../cli/cliCommand.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { lodash } from '@prosopo/util'
+import { lodash } from './lodash.js'
 import { z } from 'zod'
 import fs from 'fs'
 

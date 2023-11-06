@@ -7,7 +7,7 @@ import { Payee } from '@prosopo/captcha-contract'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { stringToU8a } from '@polkadot/util'
+import { stringToU8a } from '@polkadot/util/string'
 import { validateFee, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 

@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
-import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
+import { BN } from '@polkadot/util/bn'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
 import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract'
@@ -35,12 +35,15 @@ import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
 import { captchaData } from '../data/captchas.js'
-import { createType } from '@polkadot/types'
+import { createType } from '@polkadot/types/create'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
 import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
 import { parseBlockNumber } from '../../index.js'
-import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { signatureVerify } from '@polkadot/util-crypto/signature'
+import { stringToHex, stringToU8a } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util/u8a'
 
 function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))

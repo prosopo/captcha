@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
-import { BN, hexToU8a } from '@polkadot/util'
+import { BN } from '@polkadot/util/bn'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
-import { TypeDefInfo } from '@polkadot/types-create'
+import { TypeDefInfo } from '@polkadot/types-create/types'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at } from '@prosopo/util'
 import { encodeStringArgs, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
+import { hexToU8a } from '@polkadot/util/hex'
 
 declare module 'vitest' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface

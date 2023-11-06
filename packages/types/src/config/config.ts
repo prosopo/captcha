@@ -102,6 +102,7 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         web2: z.boolean().optional().default(true),
         solutionThreshold: z.number().positive().max(100).optional().default(80),
         dappName: z.string().optional().default('ProsopoClientDapp'),
+        serverUrl: z.string().optional(),
     })
 ).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
 
@@ -137,7 +138,6 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
         challengeValidLength: z.number().positive().optional(),
-        serverUrl: z.string().url().optional(),
     })
 )
 

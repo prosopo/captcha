@@ -1,7 +1,7 @@
 import { DataSchema, Item, LabelledDataSchema, LabelledItem, LabelsContainerSchema } from '@prosopo/types'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { lodash, setSeedGlobal } from '@prosopo/util'
+import { lodash, setSeedGlobal } from '../utils/lodash.js'
 import { z } from 'zod'
 import fs from 'fs'
 

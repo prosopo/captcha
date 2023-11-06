@@ -89,6 +89,34 @@ const POLKADOT_UPGRADES = [
     './westend.js',
 ]
 
+const API_DERIVE = [
+    './accounts/index.js',
+    './alliance/index.js',
+    './bagsList/index.js',
+    './balances/index.js',
+    './bounties/index.js',
+    './chain/index.js',
+    './contracts/index.js',
+    './council/index.js',
+    './crowdloan/index.js',
+    './democracy/index.js',
+    './elections/index.js',
+    './imOnline/index.js',
+    './membership/index.js',
+    './parachains/index.js',
+    './session/index.js',
+    './society/index.js',
+    './staking/index.js',
+    './technicalCommittee/index.js',
+    './treasury/index.js',
+    './tx/index.js',
+    //export const derive = { accounts, alliance, bagsList, balances, bounties, chain, contracts, council, crowdloan, democracy, elections, imOnline, membership, parachains, session, society, staking, technicalCommittee, treasury, tx };
+]
+
+const KNOWN_SUBSTRATE_CHAINS = ['./genesis.js']
+
+//const WASM_BYTES = ['./bytes.js', './cjs/bytes.js']
+
 const log = getLogger(`Info`, `config.polkadot.exclude.js`)
 
 function replaceImportsWithBundles(dir: string): Alias[] {
@@ -117,6 +145,7 @@ export function getAliases(dir: string): Alias[] {
 
     const mockUpgrade = path.resolve(dir, '../../dev/config/dist/polkadot/mockUpgrade.js')
     const mockInterface = path.resolve(dir, '../../dev/config/dist/polkadot/mockInterface.js')
+    const mockSubstrate = path.resolve(dir, '../../dev/config/dist/polkadot/mockSubstrateGenesis.js')
 
     POLKADOT_UPGRADES.forEach((file) => {
         log.info(`resolving ${file} to mockUpgrade.js`)
@@ -126,6 +155,14 @@ export function getAliases(dir: string): Alias[] {
         log.info(`resolving ${file} to mockInterface.js`)
         alias.push({ find: file, replacement: mockInterface })
     })
+    KNOWN_SUBSTRATE_CHAINS.forEach((file) => {
+        log.info(`resolving ${file} to mockSubstrateGenesis.js`)
+        alias.push({ find: file, replacement: mockSubstrate })
+    })
+    // WASM_BYTES.forEach((file) => {
+    //     log.info(`resolving ${file} to wasmBytes.js`)
+    //     alias.push({ find: file, replacement: mockUpgrade })
+    // })
     // The below code makes no difference to the output size - not sure why.
     // alias.concat(replaceImportsWithBundles(dir))
 

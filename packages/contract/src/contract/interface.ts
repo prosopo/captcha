@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api'
-import { BN } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
 import { Contract, Error, LangError, Methods, Query } from '@prosopo/captcha-contract'
-import { ContractPromise } from '@polkadot/api-contract'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers.js'

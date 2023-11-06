@@ -28,7 +28,7 @@ import { Tasks } from '../tasks/tasks.js'
 import { UserCommitmentRecord } from '@prosopo/types-database'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
-import { validateAddress } from '@polkadot/util-crypto'
+import { validateAddress } from '@polkadot/util-crypto/address'
 import express, { Router } from 'express'
 
 /**
