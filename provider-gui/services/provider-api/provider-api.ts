@@ -7,7 +7,8 @@ export const getProviderApi = (providerUrl: string, currentAccount: string) => {
             address: 'asdf',
             name: 'asdf',
         },
-        accounts: [''],
+        pairType: 'sr25519' as const,
+        ss58Format: 42,
     }
     return new ProviderApi(network, providerUrl, currentAccount)
 }

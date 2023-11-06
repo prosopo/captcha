@@ -1,6 +1,6 @@
 {
-    "name": "provider-gui",
-    "version": "0.2.11",
+    "name": "@prosopo/provider-gui",
+    "version": "0.2.13",
     "private": true,
     "engines": {
         "node": ">=16",
@@ -9,31 +9,36 @@
     "scripts": {
         "dev": "next dev -p 9231",
         "build": "next build",
+        "clean": "rm -rf .next",
         "start": "next start",
         "lint": "next lint"
     },
     "dependencies": {
-        "@emotion/react": "^11.11.1",
-        "@emotion/styled": "^11.11.0",
-        "@mui/material": "^5.13.7",
+        "@emotion/react": "^11.9.3",
+        "@emotion/styled": "^11.9.3",
+        "@mui/material": "^5.9.1",
+        "@mui/system": "^5.9.1",
+        "@mui/x-data-grid": "^5.9.1",
         "@polkadot/extension-dapp": "^0.46.5",
         "@polkadot/extension-inject": "^0.46.5",
-        "@polkadot/keyring": "^12.3.2",
-        "@polkadot/types": "^10.9.1",
-        "@prosopo/api": "0.2.11",
-        "@prosopo/cli": "0.2.11",
-        "@prosopo/env": "0.2.11",
-        "@prosopo/provider": "0.2.11",
-        "next": "13.5.0",
+        "@polkadot/keyring": "12.5.1",
+        "@polkadot/types": "10.10.1",
+        "@prosopo/api": "0.2.13",
+        "@prosopo/cli": "0.2.13",
+        "@prosopo/env": "0.2.13",
+        "@prosopo/procaptcha": "^0.2.13",
+        "@prosopo/provider": "0.2.13",
+        "next": "14.0.1",
         "react": "18.2.0"
     },
     "devDependencies": {
-        "react-dom": "18.2.0",
-        "typescript": "^4.9.5",
-        "@types/node": "20.4.1",
-        "@types/react": "18.2.14",
-        "@types/react-dom": "18.2.6",
+        "@types/react": "18.2.33",
+        "bufferutil": "^4.0.1",
         "eslint": "8.44.0",
-        "eslint-config-next": "13.4.9"
+        "eslint-config-next": "13.4.9",
+        "react-dom": "18.2.0",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6",
+        "utf-8-validate": "5.0.2"
     }
 }

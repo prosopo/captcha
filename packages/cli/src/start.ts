@@ -19,17 +19,24 @@ import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import esMain from 'es-main'
-import express, { Request, Response } from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
 
-export const handleErrors = (err: ProsopoApiError, req: Request, res: Response) => {
+// We need the unused params to make express recognise this function as an error handler
+export const handleErrors = (
+    err: ProsopoApiError | SyntaxError,
+    request: Request,
+    response: Response,
+    next: NextFunction
+) => {
+    const code = 'code' in err ? err.code : 400
     let message = err.message
     try {
         message = JSON.parse(err.message)
     } catch {
         console.debug('Invalid JSON error message')
     }
-    return res.status(err.code).json({
+    return response.status(code).json({
         message,
         name: err.name,
     })
