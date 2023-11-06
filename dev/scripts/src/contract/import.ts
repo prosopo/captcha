@@ -44,7 +44,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
     await exec(`mkdir -p ${pathToOutput}`)
-    const cmd = `npx @727-ventures/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
+    const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
     const name = path.basename(pathToAbis)
     // copy the metadata
@@ -100,8 +100,8 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
 
                 // replace EventRecord with EventRecord[]
                 // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/EventRecord/g, (match) => {
-                    const result = `EventRecord[]`
+                replaced = replaced.replace(/: EventRecord\)/g, (match) => {
+                    const result = `: EventRecord[])`
                     if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
                 })
@@ -109,7 +109,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                 // replace EventRecord incorrect imports
                 // eslint-disable-next-line no-useless-escape
                 replaced = replaced.replace(
-                    /import\s+type\s+\{\s*EventRecord\[\]\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
+                    /import\s+type\s+\{\s*EventRecord\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
                     (match) => {
                         const result = `import type { EventRecord } from '@polkadot/types/interfaces'`
                         if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)

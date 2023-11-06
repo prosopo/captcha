@@ -13,5 +13,4 @@
 // limitations under the License.
 export { Environment } from './env.js'
 export { ProviderEnvironment } from './provider.js'
-export { MockEnvironment } from './mockenv.js'
-export type { ViteTestContext } from './mockenv.js'
+export { MockEnvironment, type ViteTestContext } from './mockenv.js'

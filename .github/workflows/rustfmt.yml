@@ -6,7 +6,6 @@ on:
         paths:
             - '**.rs'
             - '.github/workflows/rustfmt.yml'
-    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -23,6 +22,11 @@ jobs:
         steps:
             # Checkout the repo
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -44,7 +48,6 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - run: npm install -g npm@8.9
             - run: npm install
 
             - name: Rust formatting check

@@ -1,5 +1,5 @@
 import { GlobalStateProvider } from '../contexts/GlobalContext'
-import TopBar from '../components/topbar'
+import TopBar from '../components/Topbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -12,8 +12,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <html lang="en">
             <body>
                 <GlobalStateProvider>
-                    <TopBar />
-                    {children}
+                    <>
+                        <TopBar />
+                        {children}
+                    </>
                 </GlobalStateProvider>
             </body>
         </html>

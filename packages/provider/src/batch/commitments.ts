@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
-import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Commit, Hash } from '@prosopo/captcha-contract'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger } from '@prosopo/common'
@@ -29,11 +29,11 @@ const CONTRACT_METHOD_NAME = 'providerCommitMany'
 export class BatchCommitmentsTask {
     contract: ProsopoCaptchaContract
     db: Database
-    batchCommitConfig: BatchCommitConfig
+    batchCommitConfig: BatchCommitConfigOutput
     logger: Logger
     private nonce: bigint
     constructor(
-        batchCommitConfig: BatchCommitConfig,
+        batchCommitConfig: BatchCommitConfigOutput,
         contractApi: ProsopoCaptchaContract,
         db: Database,
         startNonce: bigint,
