@@ -25,7 +25,7 @@ const AccountPicker: React.FC = () => {
 
     useEffect(() => {
         const enableExtension = async () => {
-            await injected.enable('my cool dapp')
+            await injected.enable('Prosopo Provider GUI')
             const accounts = await injected.accounts()
             setAccounts(accounts)
             if (accounts.length > 0) setCurrentAccount(accounts[0]?.address ?? '')
