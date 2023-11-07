@@ -8,8 +8,12 @@ import { getAliases } from '../polkadot/index.js'
 import { getLogger } from '@prosopo/common'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { default as viteReact } from '@vitejs/plugin-react'
+import { wasm } from '@rollup/plugin-wasm'
+import css from 'rollup-plugin-import-css'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
+import typescript from '@rollup/plugin-typescript'
+import viteTsconfigPaths from 'vite-tsconfig-paths'
 const logger = getLogger(`Info`, `vite.config.js`)
 
 export default async function (
@@ -82,7 +86,6 @@ export default async function (
         mode: mode || 'development',
         optimizeDeps: {
             include: ['linked-dep', 'esm-dep > cjs-dep', 'node_modules'],
-            //exclude: ['react', 'react-dom'],
             force: true,
         },
         esbuild: {
@@ -102,12 +105,6 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                // formats: ['es'],
-                // fileName: (format, entryName) => {
-                //     const { base } = path.parse(entryName.replace(/node_modules\//g, 'external/'))
-                //     return `${bundleName}.${base}.js`
-                // },
-
                 // sets the bundle to an Instantly Invoked Function Expression (IIFE)
                 fileName: `${bundleName}.bundle.js`,
                 formats: ['iife'],
@@ -135,17 +132,13 @@ export default async function (
                 watch: false,
 
                 output: {
-                    // interop: 'compat',
                     dir: path.resolve(dir, 'dist/bundle'),
                     entryFileNames: `${bundleName}.bundle.js`,
-                    // preserveModules: true, //--- supposedly need to this tree shake properly, not compatible with IIFE
-                    // preserveModulesRoot: 'src',
-                    // inlineDynamicImports: false,
                 },
 
                 plugins: [
-                    // css(),
-                    // wasm(),
+                    css(),
+                    wasm(),
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
                     nodeResolve({
@@ -166,10 +159,11 @@ export default async function (
                     // https://github.com/rollup/plugins/issues/243
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    // typescript({
-                    //     tsconfig: path.resolve('./tsconfig.json'),
-                    //     compilerOptions: { rootDir: path.resolve('./src') },
-                    // }) as InputPluginOption,
+                    typescript({
+                        tsconfig: path.resolve('./tsconfig.json'),
+                        compilerOptions: { rootDir: path.resolve('./src') },
+                        outDir: path.resolve(dir, 'dist/bundle'),
+                    }),
                 ],
             },
         },
@@ -178,14 +172,11 @@ export default async function (
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             viteReact(),
-            // viteCommonjs(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy(copyOptions) : undefined,
             // Means we can specify index.tsx instead of index.jsx in the index.html file
-            // viteTsconfigPaths({ projects: tsConfigPaths }),
-            // // bundles everything into one file
-            // viteSingleFile(),
+            viteTsconfigPaths({ projects: tsConfigPaths }),
         ],
     }
 }
