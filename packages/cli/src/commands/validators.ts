@@ -4,6 +4,7 @@ import { Compact } from '@polkadot/types-codec/base'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { encodeStringAddress } from '@prosopo/provider'
+import { lodash } from '@prosopo/util/lodash'
 import { u128 } from '@polkadot/types-codec/primitive'
 import parser from 'cron-parser'
 
@@ -19,14 +20,11 @@ export const validateContract = (argv: ArgumentsCamelCase) => {
     return { address }
 }
 
-function capitalizeFirstLetter(string: string) {
-    return string.charAt(0).toUpperCase() + string.slice(1)
-}
-
 export const validatePayee = (argv: ArgumentsCamelCase) => {
     try {
         if (!argv.payee) return
-        const payeeArg: string = capitalizeFirstLetter(z.string().parse(argv.payee))
+        const _ = lodash()
+        const payeeArg: string = _.capitalize(z.string().parse(argv.payee))
         const payee = PayeeSchema.parse(payeeArg)
 
         return { payee }
