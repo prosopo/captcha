@@ -1,6 +1,5 @@
 import { Alias } from 'vite'
 import { getLogger } from '@prosopo/common'
-import fs from 'fs'
 import path from 'path'
 
 // List of interfaces to replace with mock. The interface is required if commented out.
@@ -90,13 +89,13 @@ const POLKADOT_UPGRADES = [
 ]
 
 const API_DERIVE = [
-    './accounts/index.js',
+    //'./accounts/index.js',
     './alliance/index.js',
     './bagsList/index.js',
-    './balances/index.js',
+    //'./balances/index.js',
     './bounties/index.js',
-    './chain/index.js',
-    './contracts/index.js',
+    //'./chain/index.js',
+    //'./contracts/index.js',
     './council/index.js',
     './crowdloan/index.js',
     './democracy/index.js',
@@ -109,8 +108,7 @@ const API_DERIVE = [
     './staking/index.js',
     './technicalCommittee/index.js',
     './treasury/index.js',
-    './tx/index.js',
-    //export const derive = { accounts, alliance, bagsList, balances, bounties, chain, contracts, council, crowdloan, democracy, elections, imOnline, membership, parachains, session, society, staking, technicalCommittee, treasury, tx };
+    //'./tx/index.js',
 ]
 
 const KNOWN_SUBSTRATE_CHAINS = ['./genesis.js']
@@ -119,53 +117,36 @@ const WASM_BYTES = ['./bytes.js', './cjs/bytes.js']
 
 const log = getLogger(`Info`, `config.polkadot.exclude.js`)
 
-function replaceImportsWithBundles(dir: string): Alias[] {
-    const alias: Alias[] = []
-    // read folders in folder ../../node_modules/@polkadot
-    // for each folder, check if there is a bundle and use it in our bundle instead of the original source files
-    fs.readdirSync(path.resolve(dir, '../../node_modules/@polkadot')).forEach((pkg) => {
-        // if is directory
-        const filePath = path.resolve(dir, `../../node_modules/@polkadot/${pkg}`)
-        if (fs.lstatSync(filePath).isDirectory()) {
-            //if bundle file exists in filePath
-            const bundleFile = path.resolve(filePath, `bundle-polkadot-${pkg}.js`)
-            if (fs.existsSync(bundleFile)) {
-                alias.push({
-                    find: new RegExp(`/@polkadot/${pkg}$/`),
-                    replacement: bundleFile,
-                })
-            }
-        }
-    })
-    return alias
-}
-
 export function getAliases(dir: string): Alias[] {
     const alias: Alias[] = []
 
     const mockUpgrade = path.resolve(dir, '../../dev/config/dist/polkadot/mockUpgrade.js')
     const mockInterface = path.resolve(dir, '../../dev/config/dist/polkadot/mockInterface.js')
     const mockSubstrate = path.resolve(dir, '../../dev/config/dist/polkadot/mockSubstrateGenesis.js')
+    const mockAPIDerive = path.resolve(dir, '../../dev/config/dist/polkadot/mockApiDerive.js')
     const slimmedWASM = path.resolve(dir, '../../dev/config/dist/polkadot/bytes.js')
 
     POLKADOT_UPGRADES.forEach((file) => {
-        log.info(`resolving ${file} to mockUpgrade.js`)
+        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockUpgrade })
     })
     POLKADOT_INTERFACES.forEach((file) => {
-        log.info(`resolving ${file} to mockInterface.js`)
+        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockInterface })
     })
     KNOWN_SUBSTRATE_CHAINS.forEach((file) => {
-        log.info(`resolving ${file} to mockSubstrateGenesis.js`)
+        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockSubstrate })
     })
     WASM_BYTES.forEach((file) => {
-        log.info(`resolving ${file} to wasmBytes.js`)
+        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: slimmedWASM })
     })
-    // The below code makes no difference to the output size - not sure why.
-    // alias.concat(replaceImportsWithBundles(dir))
+
+    API_DERIVE.forEach((file) => {
+        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
+        alias.push({ find: file, replacement: mockAPIDerive })
+    })
 
     return alias
 }
