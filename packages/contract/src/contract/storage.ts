@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract'
+import { Abi } from '@polkadot/api-contract/Abi'
 import { AbiMetadata, AbiStorageField } from '@prosopo/types'
 import { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ProsopoContractError } from '../handlers.js'
 import { at, get } from '@prosopo/util'
 import { firstValueFrom } from 'rxjs'
-import { hexToNumber } from '@polkadot/util'
+import { hexToNumber } from '@polkadot/util/hex'
 import { reverseHexString } from '@prosopo/common'
 
 const primitivesSizeInBytes: {

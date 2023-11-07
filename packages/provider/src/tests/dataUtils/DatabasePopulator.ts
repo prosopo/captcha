@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract'
+import { Abi } from '@polkadot/api-contract/Abi'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts.js'
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { BN, stringToU8a } from '@polkadot/util'
+import { BN } from '@polkadot/util/bn'
 import { ContractDeployer, ProsopoContractError, getPairAsync, wrapQuery } from '@prosopo/contract'
-import { DappPayee, Payee } from '@prosopo/captcha-contract'
+import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
 import { ProsopoEnvError, TranslationKey } from '@prosopo/common'
@@ -25,9 +25,11 @@ import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
 import { captchaData } from '../data/captchas.js'
-import { createType } from '@polkadot/types'
+import { createType } from '@polkadot/types/create'
 import { get } from '@prosopo/util'
-import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
+import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { stringToU8a } from '@polkadot/util/string'
 
 const urlBase = 'http://localhost:'
 

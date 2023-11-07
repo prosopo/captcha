@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema } from '../datasets/index.js'
-import { z } from 'zod'
+import { array, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
@@ -46,31 +46,31 @@ export interface CaptchaIdAndProof {
     proof: string[][]
 }
 
-export const CaptchaRequestBody = z.object({
-    [ApiParams.user]: z.string(),
-    [ApiParams.dapp]: z.string(),
-    [ApiParams.datasetId]: z.string(),
-    [ApiParams.blockNumber]: z.string(),
+export const CaptchaRequestBody = object({
+    [ApiParams.user]: string(),
+    [ApiParams.dapp]: string(),
+    [ApiParams.datasetId]: string(),
+    [ApiParams.blockNumber]: string(),
 })
 
-export type CaptchaRequestBodyType = z.infer<typeof CaptchaRequestBody>
+export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>
 
-export const CaptchaSolutionBody = z.object({
-    [ApiParams.user]: z.string(),
-    [ApiParams.dapp]: z.string(),
-    [ApiParams.captchas]: z.array(CaptchaSolutionSchema),
-    [ApiParams.requestHash]: z.string(),
-    [ApiParams.signature]: z.string(), // the signature to prove account ownership
+export const CaptchaSolutionBody = object({
+    [ApiParams.user]: string(),
+    [ApiParams.dapp]: string(),
+    [ApiParams.captchas]: array(CaptchaSolutionSchema),
+    [ApiParams.requestHash]: string(),
+    [ApiParams.signature]: string(), // the signature to prove account ownership
 })
 
-export type CaptchaSolutionBodyType = z.infer<typeof CaptchaSolutionBody>
+export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
-export const VerifySolutionBody = z.object({
-    [ApiParams.user]: z.string(),
-    [ApiParams.commitmentId]: z.string().optional(),
+export const VerifySolutionBody = object({
+    [ApiParams.user]: string(),
+    [ApiParams.commitmentId]: string().optional(),
 })
 
-export type VerifySolutionBodyType = z.infer<typeof VerifySolutionBody>
+export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
 
 export interface PendingCaptchaRequest {
     accountId: string

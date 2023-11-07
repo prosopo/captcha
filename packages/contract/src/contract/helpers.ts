@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract'
+import { Abi } from '@polkadot/api-contract/Abi'
 import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 import {
     AccountId,
@@ -24,14 +24,17 @@ import {
 } from '@polkadot/types/interfaces'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ApiBase } from '@polkadot/api/types'
-import { ApiPromise, SubmittableResult } from '@polkadot/api'
-import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
-import { Bytes } from '@polkadot/types-codec'
-import { Compact } from '@polkadot/types'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
+import { Bytes } from '@polkadot/types-codec/extended'
+import { Compact } from '@polkadot/types-codec/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Logger, capitaliseFirstLetter } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers.js'
 import { Registry } from '@polkadot/types-codec/types/registry'
+import { SubmittableResult } from '@polkadot/api/submittable'
+import { isHex, isU8a } from '@polkadot/util/is'
+import { stringToHex } from '@polkadot/util/string'
 
 /**
  * Get the event name from the contract method name

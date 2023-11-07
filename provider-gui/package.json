@@ -26,7 +26,7 @@
         "@prosopo/api": "0.2.13",
         "@prosopo/cli": "0.2.13",
         "@prosopo/env": "0.2.13",
-        "@prosopo/procaptcha": "^0.2.13",
+        "@prosopo/procaptcha": "0.2.13",
         "@prosopo/provider": "0.2.13",
         "next": "14.0.1",
         "react": "18.2.0"

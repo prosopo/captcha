@@ -16,8 +16,9 @@ import { Database } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
 import { at } from '@prosopo/util'
-import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToU8a, isHex } from '@polkadot/util'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
+import { hexToU8a } from '@polkadot/util/hex'
+import { isHex } from '@polkadot/util/is'
 import pl from 'nodejs-polars'
 
 export function encodeStringAddress(address: string) {

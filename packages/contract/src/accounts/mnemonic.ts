@@ -13,7 +13,7 @@
 // limitations under the License.
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
-import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
+import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 
 /** Generate a mnemonic, returning the mnemonic and associated address
  * @param keyring
@@ -23,7 +23,7 @@ export async function generateMnemonic(keyring?: Keyring, pairType?: KeypairType
     if (!keyring) {
         keyring = new Keyring({ type: pairType || 'sr25519' })
     }
-    await cryptoWaitReady()
+    //await cryptoWaitReady()
     const mnemonic = mnemonicGenerate()
     const account = keyring.addFromMnemonic(mnemonic)
     return [mnemonic, account.address]
