@@ -19,7 +19,7 @@ import {
     CaptchasWithNumericSolutionSchema,
     SelectAllCaptchaSchema,
 } from './captcha.js'
-import { Hash } from '@prosopo/captcha-contract'
+import { Hash } from '@prosopo/captcha-contract/types-arguments'
 import { array, nativeEnum, number, object, string } from 'zod'
 
 export type DatasetBase = {

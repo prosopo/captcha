@@ -44,7 +44,7 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { CaptchaStatus, Hash } from '@prosopo/captcha-contract'
+import { CaptchaStatus, Hash } from '@prosopo/captcha-contract/types-returns'
 import { DeleteResult, ServerApiVersion } from 'mongodb'
 import { isHex } from '@polkadot/util/is'
 import mongoose, { Connection } from 'mongoose'

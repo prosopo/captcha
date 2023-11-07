@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
-import { DappPayee } from '@prosopo/captcha-contract'
+import { DappPayee } from '@prosopo/captcha-contract/types-returns'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'

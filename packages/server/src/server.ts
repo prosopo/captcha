@@ -25,8 +25,9 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
 export class ProsopoServer {

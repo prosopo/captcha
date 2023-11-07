@@ -16,7 +16,7 @@ import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { BN } from '@polkadot/util/bn'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
-import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract'
+import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
 import {
     ContractDeployer,
     ProsopoContractError,

@@ -21,7 +21,7 @@ import {
     DatasetWithIds,
     Item,
 } from '@prosopo/types'
-import { CaptchaStatus, Commit } from '@prosopo/captcha-contract'
+import { CaptchaStatus, Commit } from '@prosopo/captcha-contract/types-returns'
 import { Connection, Model, Schema } from 'mongoose'
 import { DeleteResult } from 'mongodb'
 import { Hash } from '@prosopo/types'
