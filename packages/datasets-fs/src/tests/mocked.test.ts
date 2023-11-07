@@ -8,7 +8,7 @@ import { Resize } from '../commands/resize.js'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 import { blake2b } from '@noble/hashes/blake2b'
 import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from './utils.js'
-import { u8aToHex } from '@polkadot/util'
+import { u8aToHex } from '@polkadot/util/u8a'
 import fs from 'fs'
 import sharp from 'sharp'
 

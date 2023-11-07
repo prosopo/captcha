@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api'
-import { BN } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
-import { Contract, Error, LangError, Methods, Query } from '@prosopo/captcha-contract'
-import { ContractPromise } from '@polkadot/api-contract'
+import { Contract } from '@prosopo/captcha-contract'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { LangError } from '@prosopo/captcha-contract/types-arguments'
 import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
+import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
 import { ProsopoContractError } from '../handlers.js'
+import { default as Query } from '@prosopo/captcha-contract/query'
 import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
@@ -61,7 +64,6 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
         throw new ProsopoContractError('CONTRACT.QUERY_ERROR', fn.name, {}, { result: JSON.stringify(result) })
     }
 }
-
 export class ProsopoCaptchaContract extends Contract {
     api: ApiPromise
     contractName: string

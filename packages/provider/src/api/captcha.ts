@@ -21,14 +21,14 @@ import {
 } from '@prosopo/types'
 import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract'
+import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { UserCommitmentRecord } from '@prosopo/types-database'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
-import { validateAddress } from '@polkadot/util-crypto'
+import { validateAddress } from '@polkadot/util-crypto/address'
 import express, { Router } from 'express'
 
 /**

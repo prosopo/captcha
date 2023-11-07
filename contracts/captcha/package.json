@@ -4,6 +4,26 @@
     "description": "The captcha contract",
     "main": "dist/index.js",
     "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        },
+        "./build-extrinsic": "./dist/build-extrinsic/captcha.js",
+        "./constructors": "./dist/constructors/captcha.js",
+        "./contract-info": "./dist/contract-info/captcha.js",
+        "./contracts": "./dist/contracts/captcha.js",
+        "./data/captcha.json": "./dist/data/captcha.json",
+        "./event-data/captcha.json": "./dist/event-data/captcha.json",
+        "./event-types": "./dist/event-types/captcha.js",
+        "./events": "./dist/events/captcha.js",
+        "./mixed-methods": "./dist/mixed-methods/captcha.js",
+        "./query": "./dist/query/captcha.js",
+        "./shared": "./dist/shared/captcha.js",
+        "./tx-sign-and-send": "./dist/tx-sign-and-send/captcha.js",
+        "./types-arguments": "./dist/types-arguments/captcha.js",
+        "./types-returns": "./dist/types-returns/captcha.js"
+    },
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",

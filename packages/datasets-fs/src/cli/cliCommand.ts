@@ -1,7 +1,7 @@
+import * as z from 'zod'
 import { Loggable } from '@prosopo/common'
 import { Options } from 'yargs'
 import { kebabCase } from '@prosopo/util'
-import { z } from 'zod'
 
 export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
     // get the options for the CLI
