@@ -76,8 +76,9 @@ if (esMain(import.meta)) {
     sign(message, keypair)
         .then((sig) => {
             const hexSig = u8aToHex(sig)
-            console.log(`Hex signature   : ${hexSig}`)
-            console.log(`Base64 signature: ${base64Encode(hexSig)}`)
+            console.log(`Hex Signature   : ${hexSig}`)
+            console.log(`Public Key: ${publicKey}`)
+            console.log(`Base64 Signature: ${base64Encode(hexSig)}`)
             process.exit()
         })
         .catch((error) => {
