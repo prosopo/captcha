@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AccountId } from '@polkadot/types/interfaces'
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 import { NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
-import { hexToU8a, isHex } from '@polkadot/util'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { hexToU8a } from '@polkadot/util/hex'
+import { isHex } from '@polkadot/util/is'
+import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
 
 export async function getPairAsync(
     networkConfig?: NetworkConfig,

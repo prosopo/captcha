@@ -1,6 +1,6 @@
+import * as z from 'zod'
 import { CliCommand, CliCommandAny } from './cliCommand.js'
 import { Options } from 'yargs'
-import { z } from 'zod'
 
 export abstract class CliCommandComposite<T extends z.ZodTypeAny> extends CliCommand<T> {
     #commands: CliCommandAny[] = []

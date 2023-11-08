@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api'
-import { BN } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
 import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { Commit, Hash } from '@prosopo/captcha-contract'
+import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'

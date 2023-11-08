@@ -1,5 +1,6 @@
 import { AliasOptions, UserConfig } from 'vite'
 import { default as ClosePlugin } from './vite-plugin-close-and-copy.js'
+import { Drop } from 'esbuild'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
@@ -47,6 +48,8 @@ export default async function (
     command?: string,
     mode?: string
 ): Promise<UserConfig> {
+    const isProduction = mode === 'production'
+
     // Get all dependencies of the current package
     const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, true)
 
@@ -95,6 +98,9 @@ export default async function (
         ''
     )}$)(?!.*/node_modules/.*$).*$`
 
+    // drop console logs if in production mode
+    const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
+
     return {
         resolve: {
             alias: aliasOptions,
@@ -114,11 +120,13 @@ export default async function (
         esbuild: {
             platform: 'node',
             target: 'node16',
+            drop,
+            legalComments: 'none',
         },
         define,
         build: {
             outDir,
-            minify: false,
+            minify: isProduction,
             ssr: true,
             target: 'node16',
 

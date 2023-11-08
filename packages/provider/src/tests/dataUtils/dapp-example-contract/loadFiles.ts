@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract'
-import { hexToU8a, isWasm } from '@polkadot/util'
+import { Abi } from '@polkadot/api-contract/Abi'
+import { hexToU8a } from '@polkadot/util/hex'
+import { isWasm } from '@polkadot/util/is'
 import fse from 'fs-extra'
 import path from 'path'
 // TODO use the .contract file instead of the .json and .wasm files. Polkadot-JS apps is also erroring out when using

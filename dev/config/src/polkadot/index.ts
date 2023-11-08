@@ -1,1 +1,1 @@
-export { excludePolkadot, getAliases } from './exclude.js'
+export { getAliases } from './exclude.js'
