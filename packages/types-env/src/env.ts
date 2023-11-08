@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { ContractAbi } from '@prosopo/types'
 import { Database } from '@prosopo/types-database' // config
@@ -20,7 +20,7 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { WsProvider } from '@polkadot/rpc-provider'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
 
 export interface ProsopoEnvironment {
     config: ProsopoBasicConfigOutput

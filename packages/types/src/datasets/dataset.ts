@@ -19,8 +19,8 @@ import {
     CaptchasWithNumericSolutionSchema,
     SelectAllCaptchaSchema,
 } from './captcha.js'
-import { Hash } from '@prosopo/captcha-contract'
-import { z } from 'zod'
+import { Hash } from '@prosopo/captcha-contract/types-arguments'
+import { array, nativeEnum, number, object, string } from 'zod'
 
 export type DatasetBase = {
     datasetId?: Hash
@@ -53,30 +53,30 @@ export interface DatasetWithIdsAndTree extends DatasetWithIds {
 
 // Zod schemas
 
-export const DatasetSchema = z.object({
-    datasetId: z.string().optional(),
-    datasetContentId: z.string().optional(),
+export const DatasetSchema = object({
+    datasetId: string().optional(),
+    datasetContentId: string().optional(),
     captchas: CaptchasSchema,
-    format: z.nativeEnum(CaptchaTypes),
-    solutionTree: z.array(z.array(z.string())).optional(),
-    contentTree: z.array(z.array(z.string())).optional(),
-    timeLimit: z.number().optional(),
+    format: nativeEnum(CaptchaTypes),
+    solutionTree: array(array(string())).optional(),
+    contentTree: array(array(string())).optional(),
+    timeLimit: number().optional(),
 })
 
 export const DatasetWithNumericSolutionSchema = DatasetSchema.extend({
     captchas: CaptchasWithNumericSolutionSchema,
 })
 
-export const DatasetWithIdsSchema = z.object({
-    datasetId: z.string(),
-    datasetContentId: z.string().optional(),
-    captchas: z.array(SelectAllCaptchaSchema),
-    format: z.nativeEnum(CaptchaTypes),
-    solutionTree: z.array(z.array(z.string())).optional(),
-    contentTree: z.array(z.array(z.string())).optional(),
+export const DatasetWithIdsSchema = object({
+    datasetId: string(),
+    datasetContentId: string().optional(),
+    captchas: array(SelectAllCaptchaSchema),
+    format: nativeEnum(CaptchaTypes),
+    solutionTree: array(array(string())).optional(),
+    contentTree: array(array(string())).optional(),
 })
 
 export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({
-    solutionTree: z.array(z.array(z.string())),
-    contentTree: z.array(z.array(z.string())),
+    solutionTree: array(array(string())),
+    contentTree: array(array(string())),
 })

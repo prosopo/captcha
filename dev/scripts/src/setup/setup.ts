@@ -13,7 +13,7 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { Payee } from '@prosopo/captcha-contract'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'

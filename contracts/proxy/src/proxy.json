@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0x95e3d961c9904677821ab707f4d27da5355d866a14c7e73e04a96e8b8e4a52ba",
+        "hash": "0x4926778906739ad4432558dd6b9ce75d2f1ec87bdd1d49caee2064a51b27c022",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -16,7 +16,10 @@
     "contract": {
         "name": "proxy",
         "version": "0.2.13",
-        "authors": ["Chris Taylor <chris@prosopo.io>", "George Oastler <george@prosopo.io>"]
+        "authors": [
+            "Chris Taylor <chris@prosopo.io>",
+            "George Oastler <george@prosopo.io>"
+        ]
     },
     "spec": {
         "constructors": [
@@ -27,7 +30,10 @@
                 "label": "new",
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink_primitives", "ConstructorResult"],
+                    "displayName": [
+                        "ink_primitives",
+                        "ConstructorResult"
+                    ],
                     "type": 0
                 },
                 "selector": "0x9bae9d5e"
@@ -39,7 +45,10 @@
                 "label": "new_panic",
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink_primitives", "ConstructorResult"],
+                    "displayName": [
+                        "ink_primitives",
+                        "ConstructorResult"
+                    ],
                     "type": 5
                 },
                 "selector": "0x794560e8"
@@ -48,34 +57,49 @@
         "docs": [],
         "environment": {
             "accountId": {
-                "displayName": ["AccountId"],
+                "displayName": [
+                    "AccountId"
+                ],
                 "type": 16
             },
             "balance": {
-                "displayName": ["Balance"],
+                "displayName": [
+                    "Balance"
+                ],
                 "type": 9
             },
             "blockNumber": {
-                "displayName": ["BlockNumber"],
+                "displayName": [
+                    "BlockNumber"
+                ],
                 "type": 7
             },
             "chainExtension": {
-                "displayName": ["ChainExtension"],
+                "displayName": [
+                    "ChainExtension"
+                ],
                 "type": 19
             },
             "hash": {
-                "displayName": ["Hash"],
+                "displayName": [
+                    "Hash"
+                ],
                 "type": 17
             },
             "maxEventTopics": 4,
             "timestamp": {
-                "displayName": ["Timestamp"],
+                "displayName": [
+                    "Timestamp"
+                ],
                 "type": 18
             }
         },
         "events": [],
         "lang_error": {
-            "displayName": ["ink", "LangError"],
+            "displayName": [
+                "ink",
+                "LangError"
+            ],
             "type": 4
         },
         "messages": [
@@ -97,7 +121,10 @@
                 "mutates": false,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 6
                 },
                 "selector": "0x45753c2b"
@@ -107,7 +134,9 @@
                     {
                         "label": "msg",
                         "type": {
-                            "displayName": ["ProxyMessages"],
+                            "displayName": [
+                                "ProxyMessages"
+                            ],
                             "type": 8
                         }
                     }
@@ -121,7 +150,10 @@
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 12
                 },
                 "selector": "0x9bae9d5e"
@@ -177,7 +209,9 @@
                         "type": 4
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -217,7 +251,9 @@
                         "type": 3
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -361,7 +397,11 @@
                         ]
                     }
                 },
-                "path": ["common", "common", "Error"]
+                "path": [
+                    "common",
+                    "common",
+                    "Error"
+                ]
             }
         },
         {
@@ -377,7 +417,10 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "LangError"]
+                "path": [
+                    "ink_primitives",
+                    "LangError"
+                ]
             }
         },
         {
@@ -417,7 +460,9 @@
                         "type": 4
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -457,7 +502,9 @@
                         "type": 4
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -513,7 +560,11 @@
                         ]
                     }
                 },
-                "path": ["proxy", "proxy", "ProxyMessages"]
+                "path": [
+                    "proxy",
+                    "proxy",
+                    "ProxyMessages"
+                ]
             }
         },
         {
@@ -580,7 +631,9 @@
                         "type": 4
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -620,7 +673,9 @@
                         "type": 3
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -666,7 +721,11 @@
                         ]
                     }
                 },
-                "path": ["proxy", "proxy", "ProxyReturnTypes"]
+                "path": [
+                    "proxy",
+                    "proxy",
+                    "ProxyReturnTypes"
+                ]
             }
         },
         {
@@ -693,7 +752,11 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "types", "AccountId"]
+                "path": [
+                    "ink_primitives",
+                    "types",
+                    "AccountId"
+                ]
             }
         },
         {
@@ -709,7 +772,11 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "types", "Hash"]
+                "path": [
+                    "ink_primitives",
+                    "types",
+                    "Hash"
+                ]
             }
         },
         {
@@ -726,7 +793,11 @@
                 "def": {
                     "variant": {}
                 },
-                "path": ["ink_env", "types", "NoChainExtension"]
+                "path": [
+                    "ink_env",
+                    "types",
+                    "NoChainExtension"
+                ]
             }
         }
     ],

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Keyring } from '@polkadot/keyring'
-import { blake2AsHex } from '@polkadot/util-crypto'
-import { u8aToHex } from '@polkadot/util'
+import { blake2AsHex } from '@polkadot/util-crypto/blake2'
+import { u8aToHex } from '@polkadot/util/u8a'
 
 export function sign(message: string): { messageHash: string; signature: string } {
     const keyring = new Keyring({ type: 'ecdsa' })

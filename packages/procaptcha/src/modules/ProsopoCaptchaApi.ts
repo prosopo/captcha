@@ -25,11 +25,11 @@ import { ProsopoApiError } from '../api/handlers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { at } from '@prosopo/util'
-import { stringToHex } from '@polkadot/util'
+import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi {
     userAccount: string

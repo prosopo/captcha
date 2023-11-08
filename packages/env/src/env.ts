@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
@@ -22,10 +22,10 @@ import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
-import { isAddress } from '@polkadot/util-crypto'
+import { isAddress } from '@polkadot/util-crypto/address'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
@@ -135,7 +135,7 @@ export class Environment implements ProsopoEnvironment {
                 this.pair.unlock(this.config.account.password)
             }
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             }
             await this.getSigner()
             // make sure contract address is valid before trying to load contract interface

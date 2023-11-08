@@ -1,3 +1,4 @@
+import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
@@ -5,7 +6,6 @@ import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { loadJSONFile } from '../files.js'
-import { z } from 'zod'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_set_data_set')

@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Account } from '../types/index.js'
-import { ApiPromise, Keyring } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { getNetwork } from '../modules/Manager.js'
+import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { hexHash } from '@prosopo/common'
 import { picassoCanvas } from '../modules/canvas.js'
-import { stringToU8a, u8aToHex } from '@polkadot/util'
+import { stringToU8a } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util/u8a'
 import Extension from './Extension.js'
-import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
 import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
@@ -97,12 +99,9 @@ export default class ExtWeb2 extends Extension {
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
-
-        const api = await ApiPromise.create({ provider: wsProvider })
-        const type: KeypairType = 'sr25519'
+        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false })
+        const type: KeypairType = 'ed25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
-
-        await cryptoWaitReady()
         const keypair = keyring.addFromMnemonic(mnemonic)
         const address =
             keypair.address.length === 42
@@ -118,7 +117,7 @@ export default class ExtWeb2 extends Extension {
 
     private async getFingerprint(): Promise<string> {
         // Initialize an agent at application startup.
-        const fpPromise = FingerprintJS.load()
+        const fpPromise = load()
         // Get the visitor identifier when you need it.
         const fp = await fpPromise
         const result = await fp.get()

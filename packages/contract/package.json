@@ -25,7 +25,8 @@
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
         },
-        "./captcha": "./dist/captcha/index.js"
+        "./captcha": "./dist/captcha/index.js",
+        "./contract/interface": "./dist/contract/interface.js"
     },
     "typesVersions": {
         "*": {
