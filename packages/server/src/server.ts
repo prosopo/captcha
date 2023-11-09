@@ -119,14 +119,6 @@ export class ProsopoServer {
      */
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
-        // Check if blockNumber is too old
-        if (maxVerifiedTime && blockNumber) {
-            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
-            const blockLength = this.getApi().consts.babe.expectedBlockTime.toNumber()
-            if ((currentBlockNumber - blockNumber) * blockLength > maxVerifiedTime) {
-                return false
-            }
-        }
 
         // Check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
@@ -143,7 +135,7 @@ export class ProsopoServer {
         console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(user, commitmentId)
+            const result = await providerApi.verifyDappUser(user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
         } else {
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
