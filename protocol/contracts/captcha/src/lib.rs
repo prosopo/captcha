@@ -256,7 +256,6 @@ pub mod captcha {
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderCategory, BTreeSet<AccountId>>,
         urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
-        datasets: Mapping<Hash, AccountId>,
         dapps: Mapping<AccountId, Dapp>,
         dapp_contracts: Lazy<BTreeSet<AccountId>>,
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
@@ -291,7 +290,6 @@ pub mod captcha {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 urls: Default::default(),
-                datasets: Default::default(),
                 users: Default::default(),
                 dapps: Default::default(),
                 dapp_contracts: Default::default(),
@@ -500,15 +498,6 @@ pub mod captcha {
                 if new_url_hash != default_dataset_id {
                     self.urls.insert(new_url_hash, &provider_account);
                 }
-            }
-
-            // update the dataset mapping to provider
-            // remove old mapping
-            self.datasets.remove(old_provider.dataset_id);
-            if new_provider.dataset_id != default_dataset_id {
-                // insert new mapping if not the default hash, as this is used as a placeholder value
-                self.datasets
-                    .insert(new_provider.dataset_id, &provider_account);
             }
 
             self.providers.insert(provider_account, &new_provider);
@@ -1049,23 +1038,6 @@ pub mod captcha {
                 return err!(self, Error::ProviderInsufficientFunds);
             }
             Ok(())
-        }
-
-        /// Get a single captcha dataset
-        ///
-        /// Returns an error if the dapp does not exist
-        #[ink(message)]
-        pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            let provider_account = self
-                .datasets
-                .get(dataset_id)
-                .ok_or_else(err_fn!(self, Error::CaptchaDataDoesNotExist))?;
-            let provider = self.get_provider(provider_account)?;
-            Ok(CaptchaData {
-                dataset_id,
-                provider_account,
-                dataset_id_content: provider.dataset_id_content,
-            })
         }
 
         /// Get a dapp user
