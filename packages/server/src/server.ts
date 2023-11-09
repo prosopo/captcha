@@ -111,9 +111,24 @@ export class ProsopoServer {
         return this.contract
     }
 
-    public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
+    /**
+     *
+     * @param payload Info output by procaptcha on completion of the captcha process
+     * @param maxVerifiedTime Maximum time in milliseconds since the blockNumber
+     * @returns
+     */
+    public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
-        // first check if the provider was actually chosen at blockNumber
+        // Check if blockNumber is too old
+        if (maxVerifiedTime && blockNumber) {
+            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
+            const blockLength = this.getApi().consts.babe.expectedBlockTime.toNumber()
+            if ((currentBlockNumber - blockNumber) * blockLength > maxVerifiedTime) {
+                return false
+            }
+        }
+
+        // Check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
         const block = (await this.getApi().rpc.chain.getBlockHash(blockNumber)) as BlockHash
         const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
