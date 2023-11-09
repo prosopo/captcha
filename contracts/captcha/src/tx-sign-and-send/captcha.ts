@@ -634,25 +634,6 @@ export default class Methods {
     }
 
     /**
-     * getCaptchaData
-     *
-     * @param { ArgumentTypes.Hash } datasetId,
-     */
-    getCaptchaData(datasetId: ArgumentTypes.Hash, __options?: GasLimit) {
-        return txSignAndSend(
-            this.__apiPromise,
-            this.__nativeContract,
-            this.__keyringPair,
-            'getCaptchaData',
-            (events: EventRecord[]) => {
-                return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
-            },
-            [datasetId],
-            __options
-        )
-    }
-
-    /**
      * getUser
      *
      * @param { ArgumentTypes.AccountId } userAccount,
