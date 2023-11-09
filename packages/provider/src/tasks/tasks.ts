@@ -541,4 +541,19 @@ export class Tasks {
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
     }
+
+    /**
+     * Get the current block number
+     */
+    async getCurrentBlockNumber(): Promise<number> {
+        return (await getBlockNumber(this.contract.api)).toNumber()
+    }
+
+    /**
+     * Get the current block time in milliseconds
+     */
+    async getBlockTimeMs(): Promise<number> {
+        const blockTime = this.contract.api.consts.babe.expectedBlockTime
+        return blockTime.toNumber()
+    }
 }

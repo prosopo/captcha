@@ -118,6 +118,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      *
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
+     * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
     router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
         let parsed: VerifySolutionBodyType
@@ -128,28 +129,29 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return next(new ProsopoApiError(err as Error, undefined, 400))
         }
         try {
-            let solution: UserCommitmentRecord | undefined
-            let statusMessage = 'API.USER_NOT_VERIFIED'
-            if (!parsed.commitmentId) {
-                solution = await tasks.getDappUserCommitmentByAccount(parsed.user)
-            } else {
-                solution = await tasks.getDappUserCommitmentById(parsed.commitmentId)
+            const solution = await (parsed.commitmentId
+                ? tasks.getDappUserCommitmentById(parsed.commitmentId)
+                : tasks.getDappUserCommitmentByAccount(parsed.user))
+
+            if (!solution) {
+                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
             }
-            if (solution) {
-                let approved = false
-                if (solution.status === CaptchaStatus.approved) {
-                    statusMessage = 'API.USER_VERIFIED'
-                    approved = true
+
+            if (parsed.maxVerifiedTime) {
+                const currentBlockNumber = await tasks.getCurrentBlockNumber()
+                const blockTimeMs = await tasks.getBlockTimeMs()
+                const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
+
+                if (timeSinceCompletion > parsed.maxVerifiedTime) {
+                    return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
                 }
-                return res.json({
-                    status: req.t(statusMessage),
-                    solutionApproved: approved,
-                    commitmentId: solution.id,
-                })
             }
+
+            const isApproved = solution.status === CaptchaStatus.approved
             return res.json({
-                status: req.t(statusMessage),
-                solutionApproved: false,
+                status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
+                solutionApproved: isApproved,
+                commitmentId: solution.id,
             })
         } catch (err) {
             // TODO fix error handling
