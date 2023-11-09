@@ -423,21 +423,6 @@ export default class Methods {
     }
 
     /**
-     * getCaptchaData
-     *
-     * @param { ArgumentTypes.Hash } datasetId,
-     */
-    getCaptchaData(datasetId: ArgumentTypes.Hash, __options: GasLimit) {
-        return buildSubmittableExtrinsic(
-            this.__apiPromise,
-            this.__nativeContract,
-            'getCaptchaData',
-            [datasetId],
-            __options
-        )
-    }
-
-    /**
      * getUser
      *
      * @param { ArgumentTypes.AccountId } userAccount,
