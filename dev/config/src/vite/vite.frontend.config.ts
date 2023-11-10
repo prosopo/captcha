@@ -76,6 +76,7 @@ export default async function (
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
+    console.log('bundle name', bundleName)
     return {
         ssr: {
             target: 'webworker',
@@ -102,6 +103,7 @@ export default async function (
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
             minify: isProduction,
+            ssr: false,
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
@@ -109,7 +111,6 @@ export default async function (
                 fileName: `${bundleName}.bundle.js`,
                 formats: ['iife'],
             },
-
             modulePreload: { polyfill: true },
             commonjsOptions: {
                 exclude: ['mongodb/*'],

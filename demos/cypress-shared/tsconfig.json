@@ -1,0 +1,18 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "lib": ["ES2021", "dom"],
+        "types": ["cypress", "node"],
+        "noEmit": true,
+        "noEmitOnError": true,
+    },
+    "include": ["**/*.ts", "./cypress.d.ts"],
+    "references": [
+        {
+            "@prosopo/types": "../../packages/types"
+        },
+        {
+            "@prosopo/util": "../../packages/util"
+        }
+    ]
+}

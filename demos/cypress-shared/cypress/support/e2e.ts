@@ -13,4 +13,3 @@
 // limitations under the License.
 import './commands'
 import '@cypress/xpath'
-import 'cypress-promise/register'
