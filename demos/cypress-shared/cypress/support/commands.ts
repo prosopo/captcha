@@ -14,8 +14,7 @@
 /// <reference types="cypress" />
 import { CaptchaSolutionBodyType, CaptchaWithProof } from '@prosopo/types'
 import { at } from '@prosopo/util'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
@@ -99,7 +98,7 @@ function clickCorrectCaptchaImages(
 
 function submitCaptchaSolution(): Cypress.Chainable<CaptchaSolutionBodyType> {
     cy.intercept('POST', '**/solution').as('postSolution')
-    // Submit the solution
+    // Submit the solution, returning the submitted solution JSON
     return cy
         .get('[data-cy="button-next"]')
         .click()

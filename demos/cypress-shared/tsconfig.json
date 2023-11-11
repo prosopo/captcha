@@ -5,14 +5,15 @@
         "types": ["cypress", "node"],
         "noEmit": true,
         "noEmitOnError": true,
+        "sourceMap": false
     },
-    "include": ["**/*.ts", "./cypress.d.ts"],
+    "include": ["**/*.ts"],
     "references": [
         {
-            "@prosopo/types": "../../packages/types"
+            "path": "../../packages/types"
         },
         {
-            "@prosopo/util": "../../packages/util"
+            "path": "../../packages/util"
         }
     ]
 }
