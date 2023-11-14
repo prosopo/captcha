@@ -49,6 +49,7 @@ import { randomAsHex } from '@polkadot/util-crypto/random'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
+import { LastCorrectCaptcha } from '@prosopo/captcha-contract'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -543,17 +544,17 @@ export class Tasks {
     }
 
     /**
-     * Get the current block number
+     * Get the time since the last correct captcha for a user
      */
-    async getCurrentBlockNumber(): Promise<number> {
-        return (await getBlockNumber(this.contract.api)).toNumber()
-    }
+    async timeSinceLastCorrectCaptcha(userAccount: string): Promise<number> {
+        const blockTime = this.contract.api.consts.babe.expectedBlockTime.toNumber()
+        const blocksSinceLastCorrectCaptcha = (
+            await this.contract.query.dappOperatorLastCorrectCaptcha(userAccount)
+        ).value
+            .unwrap()
+            .unwrap()
+            .before.valueOf()
 
-    /**
-     * Get the current block time in milliseconds
-     */
-    async getBlockTimeMs(): Promise<number> {
-        const blockTime = this.contract.api.consts.babe.expectedBlockTime
-        return blockTime.toNumber()
+        return blocksSinceLastCorrectCaptcha * blockTime
     }
 }

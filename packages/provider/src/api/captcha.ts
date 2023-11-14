@@ -115,7 +115,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a user's solution as being approved or not
      *
-     * @param {string} userAccount - Dapp User id
+     * @param {string} user - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
@@ -137,9 +137,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             }
 
             if (parsed.maxVerifiedTime) {
-                const currentBlockNumber = await tasks.getCurrentBlockNumber()
-                const blockTimeMs = await tasks.getBlockTimeMs()
-                const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
+                const timeSinceCompletion = await tasks.timeSinceLastCorrectCaptcha(parsed.user)
 
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
                     return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
