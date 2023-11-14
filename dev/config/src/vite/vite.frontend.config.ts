@@ -76,7 +76,7 @@ export default async function (
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
-    console.log('bundle name', bundleName)
+    logger.info('bundle name', bundleName)
     return {
         ssr: {
             target: 'webworker',

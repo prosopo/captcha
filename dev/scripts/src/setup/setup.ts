@@ -146,7 +146,7 @@ export async function setup(force: boolean) {
 
         defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
 
-        env.logger.info('Registering dapp...')
+        env.logger.info(`Registering dapp... ${address}`)
         await registerDapp(env, defaultDapp)
 
         if (!hasProviderAccount) {
