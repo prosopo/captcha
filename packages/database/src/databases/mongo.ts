@@ -242,8 +242,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             }
             this.logger.info(`Dataset stored in database`)
         } catch (err) {
-            // TODO should not cast error here, improve error handling
-            throw new ProsopoEnvError(err as Error, 'DATABASE.DATASET_LOAD_FAILED')
+            throw new ProsopoEnvError(err, { context: 'DATABASE.DATASET_LOAD_FAILED' })
         }
     }
 
@@ -721,7 +720,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 .lean()
         } catch (err) {
             // TODO should not cast error here, improve error handling
-            throw new ProsopoEnvError(err as Error, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+            throw new ProsopoEnvError(err, { context: 'DATABASE.COMMITMENT_FLAG_FAILED', commitmentIds })
         }
     }
 

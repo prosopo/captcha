@@ -78,7 +78,6 @@ async function populateStep(
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
 
-    ///console.log('promiseQueue:', promise)
     promise
         .filter(({ error }) => error)
         .forEach(({ error }) => {
@@ -114,7 +113,7 @@ export async function populateDatabase(
         }
     })
     try {
-        const promiseResult = await Promise.all(userPromises)
+        await Promise.all(userPromises)
     } catch (e) {
         throw new Error(String(e))
     }
