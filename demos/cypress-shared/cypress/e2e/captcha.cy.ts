@@ -157,22 +157,13 @@ describe('Captchas', () => {
                                 const solution: string[] = captcha.solution
                                 expect(solution).to.have.length(at(foundSolutions, captchaIndex).length)
                                 if (solution && solution.length > 0) {
-                                    // Only way to debug is by throwing an error
-                                    // throw new Error(
-                                    //     `solution: ${JSON.stringify(solution)} foundSolutions: ${JSON.stringify(
-                                    //         foundSolutions[index]
-                                    //     )}`
-                                    // )
                                     solution.sort().map((element, solutionIndex) => {
                                         expect(element).to.equal(at(foundSolutions, captchaIndex)[solutionIndex])
                                     })
                                 }
                                 // get inputs of type checkbox
                                 cy.get("input[type='checkbox']").then((checkboxes) => {
-                                    expect(checkboxes).to.have.length(1)
-                                    // make sure the first checkbox is checked
-                                    //TODO identify why this doesn't work in GitHub actions
-                                    // expect(checkboxes[0]).to.be.checked
+                                    expect(Array.from(checkboxes)).to.have.length(1)
                                 })
                             }
                         }
