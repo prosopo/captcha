@@ -1,0 +1,1 @@
+![Visualization of this repo](https://github.com/org-name/repo-name/blob/diagram/diagram.svg?raw=true)
