@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { ProsopoServer, getServerConfig } from '@prosopo/server'
 import { getPair } from '@prosopo/contract'
 import connectionFactory from './utils/connection.js'
@@ -31,6 +32,7 @@ export function getEnvFile(filename = '.env', filepath = './') {
 }
 
 async function main() {
+    const logger = getLoggerDefault()
     loadEnv()
 
     const app = express()
@@ -56,7 +58,11 @@ async function main() {
     console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
     if (!process.env.REACT_APP_SERVER_MNEMONIC) {
-        throw new Error('No mnemonic found')
+        const mnemonicError = new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
+            missingParams: ['REACT_APP_SERVER_MNEMONIC'],
+        })
+
+        logger.error(mnemonicError)
     }
 
     const config = getServerConfig()

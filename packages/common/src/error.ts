@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { TranslationKey, i18n as i18next, translationKeys } from './index.js'
-import { at } from '@prosopo/util'
 
+// Todo: impl err len
 const MAX_ERROR_LENGTH = 1000
 
 export function translateOrFallback(key: string, fallback?: string, i18n = i18next): string {

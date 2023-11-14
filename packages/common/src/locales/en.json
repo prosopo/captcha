@@ -18,7 +18,7 @@
         "ASSERT_ERROR": "AssertionError",
         "GENERATE_CPATCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
-        "MNEMONIC_UNDEFINED": "Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables",
+        "MNEMONIC_UNDEFINED": "Mnemonic Undefined. Please set the mnemonic in environment variables",
         "NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
         "ASYNC_FACTORY_CREATE": "Use `create` factory method",
         "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
@@ -51,7 +51,8 @@
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
         "INVALID_CAPTCHA_NUMBER": "Please configure captchas configurations correctly",
         "CONFIGURATIONS_LOAD_FAILED": "Prosopo configurations load failed",
-        "INVALID_LOG_LEVEL": "Invalid log level"
+        "INVALID_LOG_LEVEL": "Invalid log level",
+        "INVALID_PACKAGE_DIR": "Invalid package directory",
     },
     "DATASET": {
         "PARSE_ERROR": "Error parsing dataset",

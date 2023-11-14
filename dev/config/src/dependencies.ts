@@ -13,6 +13,7 @@ const exec = util.promisify(child_process.exec)
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/
 const depsRegex = /\s+(@*[\w\-/.]+)@/
+
 async function getPackageDir(packageName: string): Promise<string> {
     let pkg = packageName
     if (packageName && !packageName.startsWith('@prosopo/')) {
@@ -23,7 +24,9 @@ async function getPackageDir(packageName: string): Promise<string> {
     // get package directory
     const { stdout: packageDir, stderr } = await exec(pkgCommand)
     if (stderr) {
-        throw new ProsopoEnvError(new Error(stderr))
+        const stdoutError = new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: stderr })
+        logger.error(stdoutError)
+        throw stdoutError
     }
     return packageDir.trim()
 }
@@ -145,7 +148,9 @@ export async function getDependencies(
 
     const { stdout, stderr } = await exec(cmd)
     if (stderr) {
-        throw new ProsopoEnvError(new Error(stderr))
+        const stdoutError = new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: stderr })
+        logger.error(stdoutError)
+        throw stdoutError
     }
     const deps: string[] = []
     const peerDeps: string[] = []
