@@ -30,14 +30,14 @@ declare global {
     }
 }
 
-const buttonXPath = '//*[@id="root"]/div/div/div/div/div/div[3]/div[2]/div/div[1]/div/div[1]/div[1]/span/input'
-
+const checkboxClass = '.PrivateSwitchBase-input'
 function clickIAmHuman(): Cypress.Chainable<CaptchaWithProof[]> {
     cy.intercept('GET', '**/captcha/**').as('getCaptcha')
 
     return (
         cy
-            .xpath(buttonXPath)
+            .get(checkboxClass)
+            .first()
             .click()
             .wait('@getCaptcha')
             .its('request.body')
