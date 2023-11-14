@@ -541,19 +541,4 @@ export class Tasks {
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
     }
-
-    /**
-     * Get the time since the last correct captcha for a user
-     */
-    async timeSinceLastCorrectCaptcha(userAccount: string): Promise<number> {
-        const blockTime = this.contract.api.consts.babe.expectedBlockTime.toNumber()
-        const blocksSinceLastCorrectCaptcha = (
-            await this.contract.query.dappOperatorLastCorrectCaptcha(userAccount)
-        ).value
-            .unwrap()
-            .unwrap()
-            .before.valueOf()
-
-        return blocksSinceLastCorrectCaptcha * blockTime
-    }
 }
