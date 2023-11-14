@@ -13,7 +13,7 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
-import { exec } from '../util/index.js'
+import { exec, updateDemoHTMLFiles } from '../util/index.js'
 import { getContractNames, getPaths } from '@prosopo/config'
 import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
@@ -96,6 +96,11 @@ export async function processArgs(args: string[]) {
                 if (argv.update_env) {
                     await updateEnvFiles(
                         ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
+                        dappContractAddress.toString(),
+                        log
+                    )
+                    await updateDemoHTMLFiles(
+                        [/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
                         dappContractAddress.toString(),
                         log
                     )
