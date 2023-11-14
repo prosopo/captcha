@@ -48,5 +48,6 @@ export default defineConfig(function ({ command, mode }) {
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
+        server: { port: process.env.REACT_APP_PORT },
     }
 })

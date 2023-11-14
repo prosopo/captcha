@@ -32,7 +32,6 @@
     },
     "scripts": {
         "start": "vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
-        "build": "npm run build:prod",
         "build:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
         "build:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
