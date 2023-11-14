@@ -88,7 +88,7 @@ jobs:
             - run: npm run setup
 
             # build a test version of the bundle and run the cypress tests on it and on the react client-example
-            - run: NODE_ENV=test npm run bundle:prod
+            - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:prod
 
             - name: Run the cypress tests on client-example
               run: |
