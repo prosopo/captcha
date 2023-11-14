@@ -17,7 +17,6 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "build:esm": "npx vite --config vite.config.ts build",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "bundle:dev": "vite build --config vite.bundle.config.ts --mode development",
         "bundle:prod": "vite build --config vite.bundle.config.ts --mode production",
