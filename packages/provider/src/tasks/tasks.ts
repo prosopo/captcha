@@ -49,7 +49,6 @@ import { randomAsHex } from '@polkadot/util-crypto/random'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
-import { LastCorrectCaptcha } from '@prosopo/captcha-contract'
 
 /**
  * @description Tasks that are shared by the API and CLI

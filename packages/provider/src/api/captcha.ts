@@ -29,7 +29,6 @@ import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
 import express, { Router } from 'express'
-import { time } from 'console'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -147,7 +146,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json({
                 status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
                 solutionApproved: isApproved,
-                commitmentId: solution.id,
             })
         } catch (err) {
             // TODO fix error handling
