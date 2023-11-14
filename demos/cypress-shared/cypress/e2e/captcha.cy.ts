@@ -163,7 +163,8 @@ describe('Captchas', () => {
                                 }
                                 // get inputs of type checkbox
                                 cy.get("input[type='checkbox']").then((checkboxes) => {
-                                    expect(Array.from(checkboxes)).to.have.length(1)
+                                    const checkboxesArr = Array.from(checkboxes)
+                                    expect(checkboxesArr[0]).to.be.checked()
                                 })
                             }
                         }
