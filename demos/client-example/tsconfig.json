@@ -17,8 +17,5 @@
             "path": "../../dev/config"
         }
     ],
-    "types": [
-        "cypress",
-        "src/cypress/support/e2e.ts"
-    ]
+    "types": ["cypress", "src/cypress/support/e2e.ts"]
 }
