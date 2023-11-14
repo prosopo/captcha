@@ -73,36 +73,51 @@ export class ProsopoEnvError extends ProsopoBaseError {
 }
 
 export class ProsopoContractError extends ProsopoBaseError {
-    constructor(message: string, tKey?: TranslationKey, tParams?: Record<string, string>) {
-        super(message, tKey, tParams)
+    constructor(
+        error: Error | TranslationKey | unknown,
+        options?: { context?: TranslationKey | string; [key: string]: any }
+    ) {
+        super(error, options)
         this.name = 'ProsopoContractError'
     }
 }
 
 export class ProsopoDBError extends ProsopoBaseError {
-    constructor(message: string, tKey?: TranslationKey, tParams?: Record<string, string>) {
-        super(message, tKey, tParams)
+    constructor(
+        error: Error | TranslationKey | unknown,
+        options?: { context?: TranslationKey | string; [key: string]: any }
+    ) {
+        super(error, options)
         this.name = 'ProsopoDBError'
     }
 }
 
 export class ProsopoCliError extends ProsopoBaseError {
-    constructor(message: string, tKey?: TranslationKey, tParams?: Record<string, string>) {
-        super(message, tKey, tParams)
+    constructor(
+        error: Error | TranslationKey | unknown,
+        options?: { context?: TranslationKey | string; [key: string]: any }
+    ) {
+        super(error, options)
         this.name = 'ProsopoCliError'
     }
 }
 
 export class ProsopoDatasetError extends ProsopoBaseError {
-    constructor(message: string, tKey?: TranslationKey, tParams?: Record<string, string>) {
-        super(message, tKey, tParams)
+    constructor(
+        error: Error | TranslationKey | unknown,
+        options?: { context?: TranslationKey | string; [key: string]: any }
+    ) {
+        super(error, options)
         this.name = 'ProsopoDatasetError'
     }
 }
 
 export class ProsopoError extends ProsopoBaseError {
-    constructor(message: string, tKey?: TranslationKey, tParams?: Record<string, string>) {
-        super(message, tKey, tParams)
+    constructor(
+        error: Error | TranslationKey | unknown,
+        options?: { context?: TranslationKey | string; [key: string]: any }
+    ) {
+        super(error, options)
         this.name = 'ProsopoError'
     }
 }
@@ -110,16 +125,12 @@ export class ProsopoError extends ProsopoBaseError {
 export class ProsopoApiError extends ProsopoEnvError {
     code: number
 
-    constructor(error: Error | TranslationKey, context?: string, code?: number, ...params: any[]) {
-        const isError = error instanceof Error
-        super(isError ? (error.message as TranslationKey) : error)
-        this.code = code ? code : 500
-        this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
-
-        console.error('\n********************* ERROR *********************\n')
-        if (this.cause?.message && this.cause.message.length > MAX_ERROR_LENGTH) {
-            this.cause.message = `${at(this.cause.message, -MAX_ERROR_LENGTH)}...`
-        }
-        console.error(this.cause, this.stack, this.code, ...params)
+    constructor(
+        error: Error | TranslationKey | unknown,
+        options?: { context?: TranslationKey | string; code?: number; [key: string]: any }
+    ) {
+        super(error, options)
+        this.name = 'ProsopoApiError'
+        this.code = options?.code ?? 500
     }
 }
