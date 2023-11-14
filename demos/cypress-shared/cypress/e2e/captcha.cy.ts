@@ -115,7 +115,8 @@ export const TESTSOLUTIONS = [
 
 describe('Captchas', () => {
     beforeEach(() => {
-        cy.visit(`http://localhost:9230`)
+        // visit the base URL specified on command line when running cypress
+        cy.visit('/')
     })
 
     it("Captchas load when 'I am human' is pressed", async () => {

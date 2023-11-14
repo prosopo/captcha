@@ -110,9 +110,9 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         dappName: string().optional().default('ProsopoClientDapp'),
         serverUrl: string().optional(),
     })
-).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
+)
 
-export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.innerType().merge(
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
         serverUrl: string().url(),
     })

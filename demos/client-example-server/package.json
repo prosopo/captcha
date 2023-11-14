@@ -9,8 +9,7 @@
         "npm": "8.9"
     },
     "scripts": {
-        "dev": "vite serve --mode=development --config ./vite.config.ts --host",
-        "start": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
+        "start": "vite serve --mode=development --config ./vite.config.ts --host",
         "build": "npm run build:prod",
         "build:prod": "vite build --mode=production --config ./vite.config.ts",
         "build:dev": "vite build --mode=development --config ./vite.config.ts",

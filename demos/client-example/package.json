@@ -31,10 +31,10 @@
         "typescript": "5.1.6"
     },
     "scripts": {
-        "start": "tsc --build --verbose && vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
+        "start": "vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
         "build": "npm run build:prod",
-        "build:prod": "tsc --build --verbose && vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
-        "build:dev": "tsc --build --verbose && vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
+        "build:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
+        "build:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },

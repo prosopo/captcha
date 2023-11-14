@@ -8,6 +8,9 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
+            "path": "../../contracts/captcha"
+        },
+        {
             "path": "../api"
         },
         {
@@ -18,9 +21,6 @@
         },
         {
             "path": "../util"
-        },
-        {
-            "path": "../../contracts/captcha"
         }
     ]
 }
