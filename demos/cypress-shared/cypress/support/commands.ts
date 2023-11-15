@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import { CaptchaSolutionBodyType, CaptchaWithProof } from '@prosopo/types'
+import { Captcha, CaptchaWithProof } from '@prosopo/types'
 import { at } from '@prosopo/util'
+import Chainable = Cypress.Chainable
+import { SolutionRecord } from '@prosopo/types-database'
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -21,42 +23,50 @@ declare global {
         interface Chainable<Subject = any> {
             clickIAmHuman(): Cypress.Chainable<CaptchaWithProof[]>
             captchaImages(): Cypress.Chainable<JQuery<Node>>
-            clickCorrectCaptchaImages(
-                solutions: { captchaContentId: string; solution: string[] }[],
-                captchas: any[]
-            ): Cypress.Chainable<string[][]>
-            submitCaptchaSolution(): Cypress.Chainable<CaptchaSolutionBodyType>
+            clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>
+            getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
+            clickNextButton(): Cypress.Chainable<JQuery<Node>>
         }
     }
 }
 
 const checkboxClass = '.PrivateSwitchBase-input'
 function clickIAmHuman(): Cypress.Chainable<CaptchaWithProof[]> {
-    cy.intercept('GET', '**/captcha/**').as('getCaptcha')
-
-    return (
-        cy
-            .get(checkboxClass)
-            .first()
-            .click()
-            .wait('@getCaptcha')
-            .its('request.body')
-            .should('include', 'captchas')
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            .then((interception) => interception.response?.body.captchas.map(({ captcha }) => captcha))
-    )
+    cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
+    return cy
+        .get(checkboxClass)
+        .first()
+        .click()
+        .then(() => {
+            return cy.wait('@getCaptcha').then(() => {
+                return cy
+                    .get('@getCaptcha')
+                    .its('response')
+                    .then((response) => {
+                        expect(response).to.not.be.undefined
+                        expect(response?.statusCode).to.equal(200)
+                        expect(response?.body).to.have.property('captchas')
+                        const captchas = response?.body.captchas.map(
+                            ({ captcha }: { captcha: CaptchaWithProof }) => captcha
+                        )
+                        expect(captchas).to.have.lengthOf(2)
+                        expect(captchas[0]).to.have.property('items')
+                        expect(captchas[0].items).to.have.lengthOf(9)
+                        return captchas
+                    })
+            })
+        })
+        .as('captchas')
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<Node>> {
-    cy.xpath("//p[contains(text(),'images containing')]")
+    cy.xpath("//p[contains(text(),'images containing')]", { timeout: 4000 })
         .should('be.visible')
-        .wait(2000)
         .parent()
         .parent()
         .children()
         .next()
-        .next()
+        //.next()
         .children()
         .first()
         .children()
@@ -64,50 +74,68 @@ function captchaImages(): Cypress.Chainable<JQuery<Node>> {
     return cy.get('@captchaImages')
 }
 
-function clickCorrectCaptchaImages(
-    solutions: { captchaContentId: string; solution: string[] }[],
-    captchas: any[]
-): Cypress.Chainable<string[][]> {
-    const foundSolutions: string[][] = []
-    // Get the second captcha content Id
-    for (const captcha of captchas) {
-        const captchaIndex = solutions.findIndex(
-            (testSolution) => testSolution.captchaContentId === captcha.captchaContentId
-        )
-        let solution: string[] = []
-        if (captchaIndex !== -1) {
-            solution = at(solutions, captchaIndex).solution
-            for (const item of captcha.items) {
-                if (solution.includes(item.hash)) {
-                    // get the image based on the image src
-                    cy.get(`img[src="${item.data}"]`).click()
+function getSelectors(captcha: Captcha) {
+    cy.wrap({ captcha })
+        .then(({ captcha }) => {
+            cy.get<SolutionRecord[]>('@solutions').then((solutions) => {
+                let selectors: string[] = []
+                // Get the index of the captcha in the solution records array
+                const captchaIndex = solutions.findIndex(
+                    (testSolution) => testSolution.captchaContentId === captcha.captchaContentId
+                )
+                if (captchaIndex !== -1) {
+                    const solution = at(solutions, captchaIndex).solution
+                    selectors = captcha.items
+                        .filter((item) => solution.includes(item.hash))
+                        // create a query selector for each image that is a solution
+                        .map((item) => `img[src="${item.data}"]`)
+                } else {
+                    console.log('Unsolved captcha or captcha with zero solutions')
                 }
-            }
-        }
-        foundSolutions.push(solution)
-        // break if we're on the last captcha
-        if (captcha === captchas[captchas.length - 1]) {
-            break
-        }
-
-        // Go to the next captcha
-        cy.get('[data-cy="button-next"]').click()
-    }
-    return cy.wrap(foundSolutions)
-}
-
-function submitCaptchaSolution(): Cypress.Chainable<CaptchaSolutionBodyType> {
-    cy.intercept('POST', '**/solution').as('postSolution')
-    // Submit the solution, returning the submitted solution JSON
-    return cy
-        .get('[data-cy="button-next"]')
-        .click()
-        .wait('@postSolution')
-        .its('request.body')
-        .should('include', 'captchas')
-        .then((interception) => {
-            return interception.request.body as CaptchaSolutionBodyType
+                return selectors
+            })
         })
+        .as('selectors')
+    return cy.get('@selectors')
 }
 
-Cypress.Commands.addAll({ clickIAmHuman, captchaImages, clickCorrectCaptchaImages, submitCaptchaSolution })
+function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>> {
+    return cy.captchaImages().then(() => {
+        cy.getSelectors(captcha).then((selectors: string[]) => {
+            ///throw new Error(selectors.join(', '))
+            console.log('captchaId', captcha.captchaId, 'selectors', selectors)
+            // Click the correct images
+            return cy
+                .get(selectors.join(', '))
+                .then((elements) => {
+                    if (elements.length > 0) {
+                        return cy
+                            .wrap(elements)
+                            .click({ multiple: true })
+                            .then(() => {
+                                cy.clickNextButton()
+                            })
+                    } else {
+                        console.log('No images to select')
+                        return cy.clickNextButton()
+                    }
+                })
+
+                .then(() => {})
+        })
+    })
+}
+
+function clickNextButton() {
+    cy.intercept('POST', '**/prosopo/provider/solution').as('postSolution')
+    // Go to the next captcha or submit solution
+    return cy.get('[data-cy="button-next"]').click()
+}
+
+Cypress.Commands.addAll({
+    clickIAmHuman,
+    captchaImages,
+    clickCorrectCaptchaImages,
+    getSelectors,
+    clickNextButton,
+})

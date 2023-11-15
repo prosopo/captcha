@@ -208,6 +208,8 @@ export interface Database {
 
     storeDataset(dataset: Dataset): Promise<void>
 
+    getSolutions(datasetId: string): Promise<SolutionRecord[]>
+
     getDataset(datasetId: string): Promise<DatasetWithIds>
 
     getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>

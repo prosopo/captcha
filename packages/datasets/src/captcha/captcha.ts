@@ -27,6 +27,7 @@ import {
 import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { downloadImage } from './util.js'
+import { isHex } from '@polkadot/util'
 
 export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
 
@@ -196,20 +197,22 @@ export function matchItemsToSolutions(
         return []
     }
     return solutions.map((solution: string | number) => {
-        if (typeof solution === 'string') {
+        if (typeof solution === 'string' && isHex(solution)) {
             // solution must already be a hash
             // check that solution is in items array
             if (!items?.some((item) => item.hash === solution)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_HASH')
             }
             return solution
+        } else if (typeof solution === 'number') {
+            // else solution must be a number
+            // so lookup the item at that index
+            const item = at(items, solution)
+            // get the hash of the item
+            return item.hash
+        } else {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_SOLUTION_TYPE')
         }
-        // else solution must be a number
-        // so lookup the item at that index
-        const item = at(items, solution)
-        // get the hash of the item
-        const hash = item.hash
-        return hash
     })
 }
 

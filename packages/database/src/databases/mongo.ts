@@ -247,6 +247,14 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         }
     }
 
+    /** @description Get solutions for a dataset
+     * @param {string} datasetId
+     */
+    async getSolutions(datasetId: string): Promise<SolutionRecord[]> {
+        const docs = await this.tables?.solution.find({ datasetId }).lean<SolutionRecord[]>()
+        return docs ? docs : []
+    }
+
     /** @description Get a dataset from the database
      * @param {string} datasetId
      */

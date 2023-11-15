@@ -98,8 +98,8 @@ export async function buildCaptchaTree(
     }
 }
 
-export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
+export function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Dataset {
+    const captchas = datasetRaw.captchas.map((captcha) => {
         return {
             ...captcha,
             items: captcha.items,
@@ -107,8 +107,6 @@ export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promis
             ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, captcha.items) }),
         }
     })
-
-    const captchas = await Promise.all(captchaPromises)
 
     return {
         ...datasetRaw,

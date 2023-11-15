@@ -51,7 +51,6 @@ export async function updateDemoHTMLFiles(varMatchers: RegExp[], varValue: strin
         let newContents = contents
         for (const varMatcher of varMatchers) {
             const matches = contents.match(varMatcher)
-            logger.info('varMatcher', varMatcher, 'Matches', matches)
             if (matches) {
                 // replace the site key
                 const matchedVar = at(matches, 1)

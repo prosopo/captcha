@@ -17,8 +17,8 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '@prosopo/provider'
+import { captchaData } from '@prosopo/datasets'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds.js'
-import { loadJSONFile } from '@prosopo/cli'
 import { stringToU8a } from '@polkadot/util'
 import { wrapQuery } from '@prosopo/contract'
 
@@ -105,6 +105,5 @@ export async function setupProvider(env: ProviderEnvironment, provider: IProvide
     await tasks.contract.tx.providerUpdate(...providerUpdateArgs)
 
     logger.info('   - providerSetDataset')
-    const datasetJSON = loadJSONFile(provider.datasetFile)
-    await tasks.providerSetDatasetFromFile(datasetJSON)
+    await tasks.providerSetDataset(captchaData)
 }
