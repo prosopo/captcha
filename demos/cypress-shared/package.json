@@ -16,6 +16,7 @@
         "@types/node": "^20.3.1",
         "cypress": "^13.4.0",
         "cypress-vite": "^1.4.2",
+        "rollup-plugin-node-builtins": "^2.1.2",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vite": "^4.5.0"

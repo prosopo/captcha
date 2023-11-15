@@ -70,12 +70,10 @@
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
-        "@prosopo/cypress-shared": "^0.2.13",
         "@types/node": "^20.2.5",
         "@typescript-eslint/eslint-plugin": "^5.30.7",
         "@typescript-eslint/parser": "^5.30.7",
         "babel-plugin-import": "^1.13.6",
-        "cypress": "^13.2.0",
         "depcheck": "^1.4.7",
         "esbuild": "0.17.19",
         "eslint": "^8.49.0",
@@ -98,7 +96,7 @@
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
-    "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes",
+    "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
