@@ -127,24 +127,24 @@ export function getAliases(dir: string): Alias[] {
     const slimmedWASM = path.resolve(dir, '../../dev/config/dist/polkadot/bytes.js')
 
     POLKADOT_UPGRADES.forEach((file) => {
-        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
+        log.debug(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockUpgrade })
     })
     POLKADOT_INTERFACES.forEach((file) => {
-        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
+        log.debug(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockInterface })
     })
     KNOWN_SUBSTRATE_CHAINS.forEach((file) => {
-        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
+        log.debug(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockSubstrate })
     })
     WASM_BYTES.forEach((file) => {
-        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
+        log.debug(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: slimmedWASM })
     })
 
     API_DERIVE.forEach((file) => {
-        log.info(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
+        log.debug(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
         alias.push({ find: file, replacement: mockAPIDerive })
     })
 

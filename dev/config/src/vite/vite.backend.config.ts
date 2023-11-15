@@ -71,8 +71,6 @@ export default async function (
         ...optionalPeerDependencies,
     ]
 
-    console.log('allExternal', allExternal)
-
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
 
     const nodeJsNodeFileToCopy = path.resolve(
