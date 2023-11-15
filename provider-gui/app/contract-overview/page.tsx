@@ -39,7 +39,6 @@ const ContractOverview = () => {
         event.preventDefault()
         const data = new FormData(event.currentTarget)
 
-        console.log(data.get('contractAddress'))
         contractOverview(network, currentAccount, data.get('contractAddress') as string)
             .then((data) => {
                 setContractsData(data)
