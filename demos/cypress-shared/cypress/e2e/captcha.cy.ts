@@ -14,11 +14,11 @@
 /// <reference types="cypress" />
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
-import { captchaData } from '@prosopo/datasets'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 describe('Captchas', () => {
     beforeEach(() => {
-        const solutions = captchaData.captchas.map((captcha) => ({
+        const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
             captchaContentId: captcha.captchaContentId,
             solution: captcha.solution,
         }))

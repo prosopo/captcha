@@ -13,7 +13,7 @@
 // limitations under the License.
 import { DatasetWithIdsAndTree } from '@prosopo/types'
 
-export const captchaData = {
+export const datasetWithSolutionHashes = {
     datasetId: '0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25',
     datasetContentId: '0x3a2dbbf5610f04f54581843db3adf7e0fadc02cdb8e42e30b028c850e0603165',
     format: 'SelectAll',
@@ -1041,3 +1041,13 @@ export const captchaData = {
         },
     ],
 } as DatasetWithIdsAndTree
+
+// Replace the hashes in the solution items above with their index in the items array
+export const datasetWithIndexSolutions = {
+    ...datasetWithSolutionHashes,
+    captchas: datasetWithSolutionHashes.captchas.map((captcha, index) => ({
+        ...captcha,
+        //for solution in captcha.solution, find the index of captcha.item with item.hash == solution
+        solution: captcha.solution?.map((solution) => captcha.items.findIndex((item) => item.hash === solution)),
+    })),
+}

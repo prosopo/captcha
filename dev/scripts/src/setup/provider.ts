@@ -17,7 +17,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '@prosopo/provider'
-import { captchaData } from '@prosopo/datasets'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds.js'
 import { stringToU8a } from '@polkadot/util'
 import { wrapQuery } from '@prosopo/contract'
@@ -105,5 +105,5 @@ export async function setupProvider(env: ProviderEnvironment, provider: IProvide
     await tasks.contract.tx.providerUpdate(...providerUpdateArgs)
 
     logger.info('   - providerSetDataset')
-    await tasks.providerSetDataset(captchaData)
+    await tasks.providerSetDataset(datasetWithSolutionHashes)
 }

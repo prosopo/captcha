@@ -39,6 +39,7 @@ export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
 export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
         const result = DatasetWithNumericSolutionSchema.parse(datasetJSON)
+
         const result2: DatasetRaw = {
             format: result.format,
             captchas: result.captchas.map((captcha) => {
