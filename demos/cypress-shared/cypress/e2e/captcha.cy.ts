@@ -17,7 +17,7 @@ import { Captcha } from '@prosopo/types'
 import { captchaData } from '@prosopo/datasets'
 
 describe('Captchas', () => {
-    before(async () => {
+    beforeEach(() => {
         const solutions = captchaData.captchas.map((captcha) => ({
             captchaContentId: captcha.captchaContentId,
             solution: captcha.solution,
@@ -27,8 +27,6 @@ describe('Captchas', () => {
             throw new Error('No solutions found')
         }
         cy.wrap(solutions).as('solutions')
-    })
-    beforeEach(() => {
         // visit the base URL specified on command line when running cypress
         cy.visit('/')
     })
@@ -49,12 +47,13 @@ describe('Captchas', () => {
     // move to component testing later
     it('Can select an item', () => {
         cy.clickIAmHuman().then(() => {
+            cy.wait(2000)
             cy.captchaImages().first().click()
             cy.captchaImages().first().siblings().first().should('have.css', 'opacity', '1')
         })
     })
 
-    it.only('Selecting the correct images passes the captcha', () => {
+    it('Selecting the correct images passes the captcha', () => {
         cy.clickIAmHuman().then(() => {
             // Make sure the images are loaded
             cy.captchaImages().then(() => {

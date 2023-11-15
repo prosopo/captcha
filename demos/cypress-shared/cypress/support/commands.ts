@@ -105,23 +105,19 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>> {
             ///throw new Error(selectors.join(', '))
             console.log('captchaId', captcha.captchaId, 'selectors', selectors)
             // Click the correct images
-            return cy
-                .get(selectors.join(', '))
-                .then((elements) => {
-                    if (elements.length > 0) {
-                        return cy
-                            .wrap(elements)
-                            .click({ multiple: true })
-                            .then(() => {
-                                cy.clickNextButton()
-                            })
-                    } else {
-                        console.log('No images to select')
-                        return cy.clickNextButton()
-                    }
-                })
-
-                .then(() => {})
+            return cy.get(selectors.join(', ')).then((elements) => {
+                if (elements.length > 0) {
+                    return cy
+                        .wrap(elements)
+                        .click({ multiple: true })
+                        .then(() => {
+                            cy.clickNextButton()
+                        })
+                } else {
+                    console.log('No images to select')
+                    return cy.clickNextButton()
+                }
+            })
         })
     })
 }

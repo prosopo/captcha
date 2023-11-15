@@ -369,6 +369,7 @@ export class Tasks {
         if (!solvedCount) {
             throw new ProsopoEnvError('CONFIG.INVALID_CAPTCHA_NUMBER')
         }
+
         const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount)
         let unsolved: CaptchaWithProof[] = []
         if (unsolvedCount) {
