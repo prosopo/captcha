@@ -28,7 +28,7 @@ describe('Captchas', () => {
             throw new Error('No solutions found')
         }
         // visit the base URL specified on command line when running cypress
-        cy.visit('/', { responseTimeout: 120000 })
+        cy.visit('/')
         // wrap the solutions to make them available to the tests
         cy.wrap(solutions).as('solutions')
     })
