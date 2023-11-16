@@ -23,6 +23,9 @@ export default defineConfig({
             on(
                 'file:preprocessor',
                 vitePreprocessor({
+                    optimizeDeps: {
+                        disabled: 'dev',
+                    },
                     ssr: {
                         target: 'webworker',
                     },

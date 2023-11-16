@@ -38,8 +38,20 @@ export default defineConfig(function ({ command, mode }) {
     }
 
     return {
+        watch: false,
+        mode: 'development',
         define,
-        build: { lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' } },
+        optimizeDeps: {
+            include: ['prop-types'],
+        },
+        esbuild: {
+            target: 'esnext',
+        },
+        build: {
+            target: 'esnext',
+            modulePreload: { polyfill: true },
+            lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' },
+        },
         plugins: [
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore

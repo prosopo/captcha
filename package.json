@@ -33,7 +33,7 @@
         "ls:ws": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
         "cli": "npm -w @prosopo/cli run cli",
         "setup": "npm -w @prosopo/scripts run setup",
-        "setup:all": "npm run deploy_protocol && npm run deploy_dapp && npm run setup",
+        "setup:all": "npm run deploy_protocol && npm run setup",
         "start:provider": "npm -w @prosopo/cli run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
