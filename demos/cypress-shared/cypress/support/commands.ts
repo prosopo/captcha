@@ -21,8 +21,8 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
         interface Chainable<Subject = any> {
-            clickIAmHuman(): Cypress.Chainable<CaptchaWithProof[]>
-            captchaImages(): Cypress.Chainable<JQuery<Node>>
+            clickIAmHuman(): Cypress.Chainable<Captcha[]>
+            captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>
             clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>
             getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
             clickNextButton(): Cypress.Chainable<JQuery<Node>>
@@ -31,47 +31,55 @@ declare global {
 }
 
 const checkboxClass = '.PrivateSwitchBase-input'
-function clickIAmHuman(): Cypress.Chainable<CaptchaWithProof[]> {
+function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
+    cy.get(checkboxClass, { timeout: 12000 }).first().click()
+
     return cy
-        .get(checkboxClass)
-        .first()
-        .click()
+        .wait('@getCaptcha', { timeout: 12000 })
         .then(() => {
-            return cy.wait('@getCaptcha').then(() => {
-                return cy
-                    .get('@getCaptcha')
-                    .its('response')
-                    .then((response) => {
-                        expect(response).to.not.be.undefined
-                        expect(response?.statusCode).to.equal(200)
-                        expect(response?.body).to.have.property('captchas')
-                        const captchas = response?.body.captchas.map(
-                            ({ captcha }: { captcha: CaptchaWithProof }) => captcha
-                        )
-                        expect(captchas).to.have.lengthOf(2)
-                        expect(captchas[0]).to.have.property('items')
-                        expect(captchas[0].items).to.have.lengthOf(9)
-                        return captchas
-                    })
-            })
+            return cy
+                .get('@getCaptcha')
+                .its('response')
+
+                .then((response) => {
+                    expect(response).to.not.be.undefined
+                    expect(response?.statusCode).to.equal(200)
+                    expect(response?.body).to.have.property('captchas')
+                    const captchas = response?.body.captchas.map(
+                        ({ captcha }: { captcha: CaptchaWithProof }) => captcha
+                    )
+                    console.log('-----------------------------captchas', captchas, 'length', captchas.length)
+                    expect(captchas).to.have.lengthOf(2)
+                    expect(captchas[0]).to.have.property('items')
+                    console.log(
+                        '-----------------------------captchas[0].items',
+                        captchas[0].items,
+                        'length',
+                        captchas[0].items.length
+                    )
+                    expect(captchas[0].items).to.have.lengthOf(9)
+                    return captchas
+                })
         })
         .as('captchas')
 }
 
-function captchaImages(): Cypress.Chainable<JQuery<Node>> {
-    cy.xpath("//p[contains(text(),'images containing')]", { timeout: 4000 })
-        .should('be.visible')
-        .parent()
-        .parent()
-        .children()
-        .next()
-        //.next()
-        .children()
-        .first()
-        .children()
-        .as('captchaImages')
-    return cy.get('@captchaImages')
+function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return (
+        cy
+            .xpath("//p[contains(text(),'images containing')]", { timeout: 4000 })
+            .should('be.visible')
+            .parent()
+            .parent()
+            .children()
+            .next()
+            //.next()
+            .children()
+            .first()
+            .children()
+            .as('captchaImages')
+    )
 }
 
 function getSelectors(captcha: Captcha) {
@@ -99,7 +107,7 @@ function getSelectors(captcha: Captcha) {
     return cy.get('@selectors')
 }
 
-function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>> {
+function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLElement>> {
     return cy.captchaImages().then(() => {
         cy.getSelectors(captcha).then((selectors: string[]) => {
             ///throw new Error(selectors.join(', '))

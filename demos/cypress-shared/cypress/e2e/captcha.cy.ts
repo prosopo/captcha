@@ -14,6 +14,7 @@
 /// <reference types="cypress" />
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
+import { at } from '@prosopo/util'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 describe('Captchas', () => {
@@ -31,16 +32,19 @@ describe('Captchas', () => {
         cy.visit('/')
     })
 
-    it("Captchas load when 'I am human' is pressed", async () => {
-        cy.clickIAmHuman().then((result: Record<any, any>) => {
-            expect(result.length.to.be.gt(0))
+    it("Captchas load when 'I am human' is pressed", () => {
+        cy.clickIAmHuman().then((captchas) => {
+            expect(captchas.length).to.be.gt(0)
         })
     })
 
-    it('Number of displayed captchas equals number received in response', async () => {
-        cy.clickIAmHuman().then((captchas) => {
+    it('Number of displayed captchas equals number received in response', () => {
+        cy.clickIAmHuman().then((captchas: Captcha[]) => {
             cy.wait(2000)
-            cy.captchaImages().should('have.length', captchas.length)
+            cy.captchaImages().then(() => {
+                console.log("captchas in 'Number of displayed captchas equals number received in response'", captchas)
+                cy.get('@captchaImages').should('have.length', at(captchas, 0).items.length)
+            })
         })
     })
 
@@ -48,8 +52,10 @@ describe('Captchas', () => {
     it('Can select an item', () => {
         cy.clickIAmHuman().then(() => {
             cy.wait(2000)
-            cy.captchaImages().first().click()
-            cy.captchaImages().first().siblings().first().should('have.css', 'opacity', '1')
+            cy.captchaImages().then(() => {
+                cy.get('@captchaImages').first().click()
+                cy.get('@captchaImages').first().siblings().first().should('have.css', 'opacity', '1')
+            })
         })
     })
 
@@ -74,7 +80,7 @@ describe('Captchas', () => {
         })
     })
     //
-    // it('Solution is rejected when incorrect', async () => {
+    // it('Solution is rejected when incorrect', () => {
     //     const captchas = await cy.clickIAmHuman().promisify()
     //
     //     cy.intercept('POST', '**/solution').as('postSolution')
