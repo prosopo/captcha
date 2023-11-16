@@ -53,7 +53,8 @@
         "eslint:fix:contracts": "npm run eslint:contracts -- --fix",
         "lint:fix:contracts": "npm run eslint:fix:contracts && npm run prettier:fix:contracts",
         "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js 2>/dev/null && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js 2>/dev/null"
     },
     "private": true,
     "engines": {
