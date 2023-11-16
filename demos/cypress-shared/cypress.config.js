@@ -18,14 +18,13 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import vitePreprocessor from 'cypress-vite'
 const external = [...builtinModules, ...builtinModules.map((m) => `node:${m}`)]
 export default defineConfig({
+    headers: { 'Accept-Encoding': 'gzip, deflate' },
     e2e: {
         setupNodeEvents(on, config) {
             on(
                 'file:preprocessor',
                 vitePreprocessor({
-                    optimizeDeps: {
-                        disabled: 'dev',
-                    },
+                    watch: false,
                     ssr: {
                         target: 'webworker',
                     },

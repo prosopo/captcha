@@ -65,18 +65,18 @@ export default async function (
         ...external,
         ...optionalPeerDependencies,
     ]
-    logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
+    logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const alias = getAliases(dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
     proto['toJSON'] = RegExp.prototype.toString
-    logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
+    logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
-    logger.info('bundle name', bundleName)
+    logger.info('Bundle name', bundleName)
     return {
         ssr: {
             target: 'webworker',
