@@ -61,9 +61,7 @@ export function at(
     i: number,
     options: {
         optional: true
-        noBoundsCheck?: boolean
-        noWrap?: boolean
-    }
+    } & AtOptions
 ): string | undefined
 export function at(str: string, i: number, options?: AtOptions): string
 export function at<T>(arr: T[], i: number, options: { optional: true } & AtOptions): T | undefined
