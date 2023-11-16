@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import './App.css'
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import {
     ApiParams,
@@ -154,8 +153,11 @@ function App() {
     }
 
     return (
-        <div>
-            <Box className={'App'} sx={{ display: 'flex' }}>
+        <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box
+                className={'App'}
+                sx={{ width: '100%', maxWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
                     {!config.web2 ? (
