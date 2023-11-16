@@ -66,6 +66,7 @@ export function at(
     }
 ): string | undefined
 export function at(str: string, i: number, options?: AtOptions): string
+export function at<T>(arr: T[], i: number, options: { optional: true } & AtOptions): T | undefined
 export function at<T>(arr: T[], i: number, options?: AtOptions): T
 export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | undefined {
     if (!options?.noWrap) {
@@ -91,6 +92,8 @@ export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | un
     }
     return el as T
 }
+
+const x1: number = at([1, 2, 3], 0, { optional: true })
 
 export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
 export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
