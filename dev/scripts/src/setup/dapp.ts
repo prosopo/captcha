@@ -27,21 +27,18 @@ export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount): P
             const dappResult: Dapp = await wrapQuery(
                 tasks.contract.query.getDapp,
                 tasks.contract.query
-            )(dapp.contractAccount)
+            )(dapp.pair.address)
             logger.info('   - dapp is already registered')
             logger.info('Dapp', dappResult)
         } catch (e) {
             logger.info('   - dappRegister')
-            await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(
-                dapp.contractAccount,
-                DappPayee.dapp
-            )
-            await tasks.contract.tx.dappRegister(dapp.contractAccount, DappPayee.dapp)
+            await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(dapp.pair.address, DappPayee.dapp)
+            await tasks.contract.tx.dappRegister(dapp.pair.address, DappPayee.dapp)
             logger.info('   - dappFund')
-            await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(dapp.contractAccount, {
+            await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(dapp.pair.address, {
                 value: dapp.fundAmount,
             })
-            await tasks.contract.tx.dappFund(dapp.contractAccount, { value: dapp.fundAmount })
+            await tasks.contract.tx.dappFund(dapp.pair.address, { value: dapp.fundAmount })
         }
     }
 }

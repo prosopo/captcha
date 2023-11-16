@@ -20,8 +20,10 @@ import { defaultConfig, getSecret } from '@prosopo/cli'
 import { generateMnemonic, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
+import { isAddress } from '@polkadot/util-crypto'
 import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
+import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
 
@@ -57,7 +59,6 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        contractAccount: process.env.DAPP_SITE_KEY || '',
         fundAmount: Math.pow(10, 12),
     }
 }
@@ -142,11 +143,13 @@ export async function setup(force: boolean) {
 
         await registerProvider(env, defaultProvider, force)
 
-        defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
+        if (process.env.DAPP_SITE_KEY && isAddress(process.env.DAPP_SITE_KEY)) {
+            defaultDapp.pair = await getPairAsync(network, undefined, process.env.DAPP_SITE_KEY)
+        } else {
+            defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+        }
 
-        defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
-
-        env.logger.info(`Registering dapp... ${address}`)
+        env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
         await registerDapp(env, defaultDapp)
 
         if (!hasProviderAccount) {
@@ -155,6 +158,17 @@ export async function setup(force: boolean) {
                 PROVIDER_ADDRESS: address,
             })
         }
+        env.logger.debug('Updating env files with DAPP_SITE_KEY')
+        await updateDemoHTMLFiles(
+            [/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+            defaultDapp.pair.address,
+            env.logger
+        )
+        await updateEnvFiles(
+            ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
+            defaultDapp.pair.address,
+            env.logger
+        )
         process.exit()
     } else {
         console.error('no secret found in .env file')
