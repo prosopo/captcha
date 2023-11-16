@@ -97,8 +97,8 @@ async function updateEnvFile(vars: Record<string, string>) {
     await fse.writeFile(envFile, readEnvFile)
 }
 
-async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount) {
-    await setupDapp(env, dapp)
+async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount, address?: string) {
+    await setupDapp(env, dapp, address)
 }
 
 export async function setup(force: boolean) {
@@ -143,14 +143,23 @@ export async function setup(force: boolean) {
 
         await registerProvider(env, defaultProvider, force)
 
+        // If no DAPP_SITE_KEY is present, we will register a test account like //Eve.
+        // If a DAPP_SITE_KEY is present, we want to register it in the contract.
+        // If a DAPP_SECRET is present, we want the DAPP_SITE_KEY account to register itself.
+        // Otherwise, a test account like //Eve is used to register the DAPP_SITE_KEY account.
+        defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+        let dappAddressToRegister = defaultDapp.pair.address
         if (process.env.DAPP_SITE_KEY && isAddress(process.env.DAPP_SITE_KEY)) {
-            defaultDapp.pair = await getPairAsync(network, undefined, process.env.DAPP_SITE_KEY)
-        } else {
-            defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+            dappAddressToRegister = process.env.DAPP_SITE_KEY
+            if (process.env.DAPP_SECRET) {
+                defaultDapp.secret = process.env.DAPP_SECRET
+                defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+                dappAddressToRegister = defaultDapp.pair.address
+            }
         }
 
         env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
-        await registerDapp(env, defaultDapp)
+        await registerDapp(env, defaultDapp, dappAddressToRegister)
 
         if (!hasProviderAccount) {
             await updateEnvFile({
