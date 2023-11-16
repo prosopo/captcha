@@ -94,13 +94,13 @@ jobs:
             - name: Run the cypress tests on client-example and client-bundle-example
               run: |
                   npm run start:provider &
-                  sleep 10s
+                  sleep 5s
                   npm run start:server &
-                  sleep 10s
+                  sleep 5s
                   npm run start:demo &
-                  sleep 10s
-                  npm run start:bundle &
-                  sleep 10s
+                  sleep 5s
                   npm i cypress
                   npm -w @prosopo/cypress-shared run cypress:run:client-example
+                  sleep 5s
+                  npm run start:bundle &
                   npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example
