@@ -27,9 +27,10 @@ describe('Captchas', () => {
         if (!solutions) {
             throw new Error('No solutions found')
         }
-        cy.wrap(solutions).as('solutions')
         // visit the base URL specified on command line when running cypress
         cy.visit('/')
+        // wrap the solutions to make them available to the tests
+        cy.wrap(solutions).as('solutions')
     })
 
     it("Captchas load when 'I am human' is pressed", () => {
