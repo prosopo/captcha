@@ -91,8 +91,6 @@ export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | un
     return el as T
 }
 
-const x1: number = at([1, 2, 3], 0, { optional: true })
-
 export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
 export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
 export function get<T>(obj: unknown, key: string | number | symbol, required?: true): Exclude<T, undefined>
