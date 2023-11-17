@@ -96,8 +96,8 @@ jobs:
 
             - name: Run the cypress tests on client-example
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "last" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "sleep 10s && DEBUG=cypress:* npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "last" --kill-others
 
             - name: Run the cypress tests on client-bundle-example
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "last" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && DEBUG=cypress:* npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "last" --kill-others
