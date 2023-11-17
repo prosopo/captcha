@@ -40,7 +40,7 @@ export default defineConfig(function ({ command, mode }) {
 
     return {
         watch: false,
-        mode: 'production',
+        mode: 'development',
         bundle: true,
         define,
         optimizeDeps: {

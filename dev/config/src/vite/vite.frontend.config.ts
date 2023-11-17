@@ -42,7 +42,7 @@ export default async function (
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
         'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-        'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(''),
+        'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
         'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
         'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
         'process.env.SERVER_URL': JSON.stringify(process.env.SERVER_URL),
