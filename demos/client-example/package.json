@@ -32,8 +32,9 @@
     },
     "scripts": {
         "start": "vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
-        "build:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
-        "build:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
+        "build": "tsc --build --verbose",
+        "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
+        "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },

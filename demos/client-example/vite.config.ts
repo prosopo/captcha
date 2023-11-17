@@ -39,16 +39,16 @@ export default defineConfig(function ({ command, mode }) {
 
     return {
         watch: false,
-        mode: 'development',
+        mode: 'production',
+        bundle: true,
         define,
         optimizeDeps: {
             include: ['prop-types'],
         },
         esbuild: {
-            target: 'esnext',
+            target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
         },
         build: {
-            target: 'esnext',
             modulePreload: { polyfill: true },
             lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' },
         },
