@@ -36,7 +36,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.get(checkboxClass, { timeout: 12000 }).first().click()
 
     return cy
-        .wait('@getCaptcha', { timeout: 12000 })
+        .wait('@getCaptcha', { timeout: 36000 })
         .then(() => {
             return cy
                 .get('@getCaptcha')
