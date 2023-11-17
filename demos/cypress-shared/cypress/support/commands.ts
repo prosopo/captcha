@@ -30,7 +30,7 @@ declare global {
     }
 }
 
-const checkboxClass = '.PrivateSwitchBase-input'
+export const checkboxClass = '.PrivateSwitchBase-input'
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
     cy.get(checkboxClass, { timeout: 12000 }).first().click()

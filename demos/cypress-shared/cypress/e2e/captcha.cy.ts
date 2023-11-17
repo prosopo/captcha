@@ -15,6 +15,7 @@
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
 import { at } from '@prosopo/util'
+import { checkboxClass } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 describe('Captchas', () => {
@@ -28,9 +29,11 @@ describe('Captchas', () => {
             throw new Error('No solutions found')
         }
         // visit the base URL specified on command line when running cypress
-        cy.visit('/')
-        // wrap the solutions to make them available to the tests
-        cy.wrap(solutions).as('solutions')
+        cy.visit('/').then(() => {
+            cy.get(checkboxClass).should('be.visible')
+            // wrap the solutions to make them available to the tests
+            cy.wrap(solutions).as('solutions')
+        })
     })
 
     it("Captchas load when 'I am human' is pressed", () => {
