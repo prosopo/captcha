@@ -38,6 +38,9 @@ export default defineConfig({
                             child_process: builtIns().resolveId('child_process'),
                         },
                     },
+                    server: {
+                        host: true,
+                    },
                     build: {
                         ssr: false,
                         modulePreload: { polyfill: true },

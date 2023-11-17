@@ -24,9 +24,9 @@
     "scripts": {
         "build": "tsc",
         "clean": "tsc --build --clean",
-        "cypress:open:client-example": "CYPRESS_BASE_URL='http://localhost:9230' cypress open",
-        "cypress:run:client-example": "CYPRESS_BASE_URL='http://localhost:9230' cypress run",
-        "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress open",
-        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run"
+        "cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
+        "cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
+        "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress open",
+        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress run"
     }
 }
