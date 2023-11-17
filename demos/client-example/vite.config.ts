@@ -36,7 +36,7 @@ export default defineConfig(function ({ command, mode }) {
         'process.env.REACT_APP_SERVER_URL': JSON.stringify(process.env.REACT_APP_SERVER_URL),
         'process.env.REACT_APP_PORT': JSON.stringify(process.env.REACT_APP_PORT),
     }
-    console.log('define', JSON.stringify(define))
+    logger.debug('define', JSON.stringify(define))
 
     return {
         watch: false,
