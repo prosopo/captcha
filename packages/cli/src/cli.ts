@@ -23,7 +23,7 @@ import esMain from 'es-main'
 import getConfig from './prosopo.config.js'
 import process from 'process'
 
-const log = getLogger(LogLevel.enum.info, 'cli')
+const log = getLogger(LogLevel.enum.info, 'CLI')
 
 async function main() {
     loadEnv()
