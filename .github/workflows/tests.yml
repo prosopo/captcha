@@ -96,8 +96,8 @@ jobs:
 
             - name: Run the cypress tests on client-example
               run: |
-                   concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "npm -w @prosopo/cypress-shared run cypress:open:client-example"
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "npm -w @prosopo/cypress-shared run cypress:open:client-example"
 
             - name: Run the cypress tests on client-bundle-example
               run: |
-                  concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "npm -w @prosopo/cypress-shared run cypress:open:client-bundle-example"
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "npm -w @prosopo/cypress-shared run cypress:open:client-bundle-example"
