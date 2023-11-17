@@ -97,9 +97,9 @@ jobs:
                   NODE_ENV=test npm run start:server &
                   sleep 5s
                   NODE_ENV=test npm run start:demo &
-                  sleep 5s
+                  sleep 10s
                   npm i cypress
                   NODE_ENV=test npm -w @prosopo/cypress-shared run cypress:run:client-example
-                  sleep 5s
+                  sleep 10s
                   NODE_ENV=test npm run start:bundle &
                   NODE_ENV=test npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example
