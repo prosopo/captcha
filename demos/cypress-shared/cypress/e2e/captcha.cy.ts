@@ -28,6 +28,8 @@ describe('Captchas', () => {
         if (!solutions) {
             throw new Error('No solutions found')
         }
+        cy.intercept('/dummy').as('dummy')
+
         // visit the base URL specified on command line when running cypress
         cy.visit('/').then(() => {
             cy.get(checkboxClass).should('be.visible')
