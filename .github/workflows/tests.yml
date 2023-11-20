@@ -86,8 +86,10 @@ jobs:
             - run: NODE_ENV=test npm run deploy_protocol
             - run: NODE_ENV=test npm run setup
 
-            # build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
-            - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:prod
+            # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
+            # Running bundle:dev instead of bundle:prod means the bundle will be built with selectors that can be used
+            # by the cypress tests to find the elements they need to interact with
+            - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:dev
 
             # Needs concurrently to avoid vite hanging forever https://github.com/vitejs/vite/discussions/8745
             - name: Install concurrently and cypress
