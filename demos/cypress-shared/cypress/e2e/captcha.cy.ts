@@ -31,7 +31,7 @@ describe('Captchas', () => {
         cy.intercept('/dummy').as('dummy')
 
         // visit the base URL specified on command line when running cypress
-        cy.visit('/').then(() => {
+        return cy.visit('/').then(() => {
             cy.get(checkboxClass).should('be.visible')
             // wrap the solutions to make them available to the tests
             cy.wrap(solutions).as('solutions')
