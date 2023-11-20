@@ -14,7 +14,6 @@
 import { builtinModules } from 'module'
 import { defineConfig } from 'cypress'
 import builtIns from 'rollup-plugin-node-builtins'
-import nodeResolve from '@rollup/plugin-node-resolve'
 import vitePreprocessor from 'cypress-vite'
 const external = [...builtinModules, ...builtinModules.map((m) => `node:${m}`)]
 export default defineConfig({
@@ -26,8 +25,8 @@ export default defineConfig({
                 vitePreprocessor({
                     watch: false,
                     esbuild: {
-                        platform: 'browser'
-=                   },
+                        platform: 'browser',
+                    },
                     resolve: {
                         alias: {
                             fs: builtIns().resolveId('fs'),
