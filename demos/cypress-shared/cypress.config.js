@@ -25,13 +25,9 @@ export default defineConfig({
                 'file:preprocessor',
                 vitePreprocessor({
                     watch: false,
-                    ssr: {
-                        target: 'webworker',
-                    },
                     esbuild: {
-                        platform: 'browser',
-                        target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
-                    },
+                        platform: 'browser'
+=                   },
                     resolve: {
                         alias: {
                             fs: builtIns().resolveId('fs'),
@@ -45,16 +41,6 @@ export default defineConfig({
                         ssr: false,
                         modulePreload: { polyfill: true },
                         mode: 'development',
-                        rollupOptions: {
-                            external,
-                            plugins: [
-                                nodeResolve({
-                                    browser: true,
-                                    preferBuiltins: false,
-                                    modulesOnly: true,
-                                }),
-                            ],
-                        },
                     },
                 })
             )
