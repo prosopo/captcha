@@ -47,8 +47,10 @@ const loadContract = async (
     )
 }
 
-export const contractOverview = async (network: 'rococo' | 'development', accountAddress: string) => {
-    const contracts = deployedContracts[network].contracts
+export const contractOverview = async (network: 'rococo' | 'development', accountAddress: string, address?: string) => {
+    const contracts = address
+        ? [...deployedContracts[network].contracts, address]
+        : deployedContracts[network].contracts
 
     const contractData = await Promise.all(
         contracts.map(async (contractAddress) => {

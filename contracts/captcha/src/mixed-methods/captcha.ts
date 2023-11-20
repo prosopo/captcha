@@ -697,29 +697,6 @@ export default class Methods {
     }
 
     /**
-     * getCaptchaData
-     *
-     * @param { ArgumentTypes.Hash } datasetId,
-     * @returns { Result<Result<ReturnTypes.CaptchaData, ReturnTypes.Error>, ReturnTypes.LangError> }
-     */
-    getCaptchaData(
-        datasetId: ArgumentTypes.Hash,
-        __options: GasLimit
-    ): Promise<QueryReturnType<Result<Result<ReturnTypes.CaptchaData, ReturnTypes.Error>, ReturnTypes.LangError>>> {
-        return queryOkJSON(
-            this.__apiPromise,
-            this.__nativeContract,
-            this.__callerAddress,
-            'getCaptchaData',
-            [datasetId],
-            __options,
-            (result) => {
-                return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS))
-            }
-        )
-    }
-
-    /**
      * getUser
      *
      * @param { ArgumentTypes.AccountId } userAccount,
@@ -737,7 +714,7 @@ export default class Methods {
             [userAccount],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -760,7 +737,7 @@ export default class Methods {
             [commitId],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(57, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -783,7 +760,7 @@ export default class Methods {
             [providerAccounts],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -806,7 +783,7 @@ export default class Methods {
             [statuses],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -831,7 +808,7 @@ export default class Methods {
             [userAccount, dappContract],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -854,7 +831,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(65, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
