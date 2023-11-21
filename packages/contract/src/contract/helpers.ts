@@ -184,11 +184,11 @@ export function getOptions(
               proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),
           })
         : isMutating
-        ? (api.registry.createType('WeightV2', {
-              proofSize: new BN(1_000_000),
-              refTime: MAX_CALL_WEIGHT,
-          }) as WeightV2)
-        : undefined
+          ? (api.registry.createType('WeightV2', {
+                proofSize: new BN(1_000_000),
+                refTime: MAX_CALL_WEIGHT,
+            }) as WeightV2)
+          : undefined
 
     return {
         gasLimit: _gasLimit,
@@ -196,8 +196,8 @@ export function getOptions(
             ? storageDeposit.isCharge
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                ? storageDeposit.asRefund
-                : null
+                  ? storageDeposit.asRefund
+                  : null
             : null,
         value: value || BN_ZERO,
     } as ContractOptions

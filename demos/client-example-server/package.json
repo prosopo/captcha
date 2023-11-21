@@ -10,10 +10,11 @@
     },
     "scripts": {
         "dev": "vite serve --mode=development --config ./vite.config.ts --host",
-        "start": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-        "build": "npm run build:prod",
-        "build:prod": "vite build --mode=production --config ./vite.config.ts",
-        "build:dev": "vite build --mode=development --config ./vite.config.ts",
+        "start": "node ./dist/app.js",
+        "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
+        "build": "tsc --build --verbose",
+        "bundle:prod": "vite build --mode=production --config ./vite.config.ts",
+        "bundle:dev": "vite build --mode=development --config ./vite.config.ts",
         "clean": "tsc --build --clean",
         "test": "echo \"Error: no test specified\" && exit 1",
         "lint:fix": "npx eslint . --fix"

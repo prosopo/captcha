@@ -66,7 +66,10 @@ export async function start(env?: ProviderEnvironment) {
         getDB()
 
         const secret = getSecret()
-        const config = getConfig()
+        const config = getConfig(undefined, undefined, undefined, {
+            solved: { count: 2 },
+            unsolved: { count: 0 },
+        })
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }

@@ -71,8 +71,6 @@ export default async function (
         ...optionalPeerDependencies,
     ]
 
-    console.log('allExternal', allExternal)
-
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
 
     const nodeJsNodeFileToCopy = path.resolve(
@@ -85,6 +83,12 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': 'true',
         'process.env.WS_NO_UTF_8_VALIDATE': 'true',
         'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(packageVersion),
+        ...(process.env.DEFAULT_ENVIRONMENT && {
+            'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        }),
+        ...(process.env.DEFAULT_NETWORK && {
+            'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
+        }),
     }
 
     logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`)

@@ -13,7 +13,7 @@ describe('provider bundle', () => {
         const rootDir = dir.split('/').slice(0, -3).join('/')
 
         // build bundle
-        await execPromise(`cd ${rootDir} && npm run build:prod`)
+        await execPromise(`cd ${rootDir} && npm run bundle:prod`)
 
         // run bundle and get version
         const { stdout: runOut, stderr: runErr } = await execPromise(
