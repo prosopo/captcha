@@ -1,10 +1,16 @@
 import { getLogLevel, getLogger } from '@prosopo/common'
 import { getPaths } from '@prosopo/config'
+import { loadEnv } from '@prosopo/cli'
 import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
 
-const log = getLogger(getLogLevel(), 'setVersion')
+// We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
+// logger is created
+loadEnv()
+const logLevel = getLogLevel()
+const log = getLogger(logLevel, 'setVersion')
+log.info('Log level:', logLevel)
 
 const parseVersion = (version: string) => {
     try {
@@ -45,10 +51,11 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
 }
 
 export default async function setVersion(version: string, ignore?: string[]) {
-    log.info('setting version to ', version)
+    log.info('Setting version to ', version)
     version = parseVersion(version)
     const root = getPaths().root
-    const ignorePaths = ['node_modules'].concat(ignore ?? [])
+    const ignorePaths = ['node_modules', 'cargo-cache', ...(ignore ?? [])]
+    log.debug('Ignoring paths: ', ignorePaths)
     // walk through all files finding .json or .toml
     const files = find(root, (pth) => {
         // ignore node_modules and any user specified paths
@@ -78,7 +85,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
             ]) {
                 // detect any prosopo dependencies
                 for (const key of Object.keys(obj)) {
-                    if (key.startsWith('@prosopo')) {
+                    if (key.startsWith('@prosopo') && !key.includes('typechain')) {
                         // and replace version
                         log.debug(`setting ${key} to ${version} in ${pth}`)
                         obj[key] = version
@@ -91,6 +98,10 @@ export default async function setVersion(version: string, ignore?: string[]) {
     // replace version in tomls
     files
         .filter((pth) => path.extname(pth) === '.toml')
+        .filter((pth) => {
+            // ignore node_modules and any user specified paths
+            return !ignorePaths.some((ignorePath) => pth.includes(ignorePath))
+        })
         .forEach((pth) => {
             log.debug('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
