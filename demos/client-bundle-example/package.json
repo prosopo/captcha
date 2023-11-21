@@ -6,7 +6,7 @@
         "npm": "8.9"
     },
     "scripts": {
-        "start": "light-server -s ./src -p 9231 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\"",
+        "start": "light-server -s ./src -p 9232 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\"",
         "clean": "echo 'nothing to clean'"
     },
     "dependencies": {
