@@ -54,7 +54,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
     log.info('Setting version to ', version)
     version = parseVersion(version)
     const root = getPaths().root
-    const ignorePaths = ['node_modules', 'cargo-cache'].concat(ignore ?? [])
+    const ignorePaths = ['node_modules', 'cargo-cache', ...(ignore ?? [])]
     log.debug('Ignoring paths: ', ignorePaths)
     // walk through all files finding .json or .toml
     const files = find(root, (pth) => {
