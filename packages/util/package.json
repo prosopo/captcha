@@ -27,7 +27,7 @@
         "./lodash": {
             "types": "./dist/lodash.d.ts",
             "import": "./dist/lodash.js",
-            "require": "./dist/lodash.cjs",
+            "require": "./dist/cjs/lodash.cjs",
             "default": "./dist/lodash.js"
         }
     },
