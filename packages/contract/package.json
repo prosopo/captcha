@@ -25,8 +25,12 @@
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
         },
-        "./captcha": "./dist/captcha/index.js",
-        "./contract/interface": "./dist/contract/interface.js"
+        "./contract/interface": {
+            "types": "./dist/contract/interface.d.ts",
+            "import": "./dist/contract/interface.js",
+            "require": "./dist/cjs/contract/interface.cjs",
+            "default": "./dist/contract/interface.js"
+        }
     },
     "typesVersions": {
         "*": {
