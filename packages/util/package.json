@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/util",
-    "version": "0.2.13",
+    "version": "0.2.14",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
@@ -23,6 +23,10 @@
         ".": {
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
+        },
+        "./lodash": {
+            "import": "./dist/lodash.js",
+            "require": "./dist/lodash.js"
         }
     },
     "types": "./dist/index.d.ts",

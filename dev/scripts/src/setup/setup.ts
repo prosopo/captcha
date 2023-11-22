@@ -13,15 +13,17 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { Payee } from '@prosopo/captcha-contract'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@727-ventures/typechain-types'
+import { ReturnNumber } from '@prosopo/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'
 import { generateMnemonic, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
+import { isAddress } from '@polkadot/util-crypto'
 import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
+import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
 
@@ -57,7 +59,6 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        contractAccount: process.env.DAPP_SITE_KEY || '',
         fundAmount: Math.pow(10, 12),
     }
 }
@@ -96,8 +97,8 @@ async function updateEnvFile(vars: Record<string, string>) {
     await fse.writeFile(envFile, readEnvFile)
 }
 
-async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount) {
-    await setupDapp(env, dapp)
+async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount, address?: string) {
+    await setupDapp(env, dapp, address)
 }
 
 export async function setup(force: boolean) {
@@ -142,12 +143,23 @@ export async function setup(force: boolean) {
 
         await registerProvider(env, defaultProvider, force)
 
-        defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
-
+        // If no DAPP_SITE_KEY is present, we will register a test account like //Eve.
+        // If a DAPP_SITE_KEY is present, we want to register it in the contract.
+        // If a DAPP_SECRET is present, we want the DAPP_SITE_KEY account to register itself.
+        // Otherwise, a test account like //Eve is used to register the DAPP_SITE_KEY account.
         defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+        let dappAddressToRegister = defaultDapp.pair.address
+        if (process.env.DAPP_SITE_KEY && isAddress(process.env.DAPP_SITE_KEY)) {
+            dappAddressToRegister = process.env.DAPP_SITE_KEY
+            if (process.env.DAPP_SECRET) {
+                defaultDapp.secret = process.env.DAPP_SECRET
+                defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+                dappAddressToRegister = defaultDapp.pair.address
+            }
+        }
 
-        env.logger.info('Registering dapp...')
-        await registerDapp(env, defaultDapp)
+        env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
+        await registerDapp(env, defaultDapp, dappAddressToRegister)
 
         if (!hasProviderAccount) {
             await updateEnvFile({
@@ -155,6 +167,17 @@ export async function setup(force: boolean) {
                 PROVIDER_ADDRESS: address,
             })
         }
+        env.logger.debug('Updating env files with DAPP_SITE_KEY')
+        await updateDemoHTMLFiles(
+            [/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+            defaultDapp.pair.address,
+            env.logger
+        )
+        await updateEnvFiles(
+            ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
+            defaultDapp.pair.address,
+            env.logger
+        )
         process.exit()
     } else {
         console.error('no secret found in .env file')

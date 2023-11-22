@@ -36,6 +36,10 @@ const UserSchema = new Schema<UserInterface>({
     id: {
         type: mongoose.SchemaTypes.Number,
     },
+    salt: {
+        type: mongoose.SchemaTypes.String,
+        required: true,
+    },
 })
 
 export default UserSchema

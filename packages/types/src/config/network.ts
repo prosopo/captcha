@@ -1,26 +1,26 @@
 import { enumMap } from './enumMap.js'
-import { z } from 'zod'
-export const NetworkNamesSchema = z.enum(['development', 'rococo', 'shiden'])
+import { literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
+export const NetworkNamesSchema = zEnum(['development', 'rococo', 'shiden'])
 
-export type NetworkNames = z.infer<typeof NetworkNamesSchema>
+export type NetworkNames = zInfer<typeof NetworkNamesSchema>
 
-export const NetworkPairTypeSchema = z.union([
-    z.literal('sr25519'),
-    z.literal('ed25519'),
-    z.literal('ecdsa'),
-    z.literal('ethereum'),
+export const NetworkPairTypeSchema = union([
+    literal('sr25519'),
+    literal('ed25519'),
+    literal('ecdsa'),
+    literal('ethereum'),
 ])
-export const NetworkConfigSchema = z.object({
-    endpoint: z.string().url(),
-    contract: z.object({
-        address: z.string(),
-        name: z.string(),
+export const NetworkConfigSchema = object({
+    endpoint: string().url(),
+    contract: object({
+        address: string(),
+        name: string(),
     }),
     pairType: NetworkPairTypeSchema,
-    ss58Format: z.number().positive().default(42),
+    ss58Format: number().positive().default(42),
 })
 
-export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
+export type NetworkConfig = zInfer<typeof NetworkConfigSchema>
 
 // Force all enum keys to be present in record: https://github.com/colinhacks/zod/issues/1092.
 // Unfortunately there doesn't seem to be a way to force at least one key, but not all keys, to be present. See attempt

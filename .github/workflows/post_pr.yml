@@ -53,6 +53,7 @@ jobs:
             - run: ls -la node_modules || true
 
             - run: npm install
+            - run: npm run removePolkadotJSWarnings
 
             - name: Rust formatting check
               run: |

@@ -104,12 +104,6 @@ export type LastCorrectCaptcha = {
     dappContract: AccountId
 }
 
-export type CaptchaData = {
-    providerAccount: AccountId
-    datasetId: Hash
-    datasetIdContent: Hash
-}
-
 export type User = {
     history: Array<Hash>
 }

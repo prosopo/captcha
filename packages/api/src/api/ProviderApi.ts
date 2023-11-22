@@ -26,7 +26,7 @@ import {
     VerificationResponse,
 } from '../types/index.js'
 import { NetworkConfig } from '@prosopo/types'
-import { Provider, RandomProvider } from '@prosopo/captcha-contract'
+import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase {

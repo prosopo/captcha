@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import './App.css'
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import {
     ApiParams,
@@ -154,8 +153,11 @@ function App() {
     }
 
     return (
-        <div>
-            <Box className={'App'} sx={{ display: 'flex' }}>
+        <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box
+                className={'App'}
+                sx={{ width: '100%', maxWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
                     {!config.web2 ? (
@@ -165,59 +167,65 @@ function App() {
                     )}
                     <Box>
                         <h1>{label}</h1>
-                        <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
-                            <FormControl>
-                                <TextField
-                                    id="email"
-                                    label="Email"
-                                    type="text"
-                                    autoComplete="Email"
-                                    autoCapitalize="none"
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </FormControl>
-
-                            {!isLogin && (
+                        <form>
+                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
                                 <FormControl>
                                     <TextField
-                                        id="name"
-                                        label="Name"
+                                        id="email"
+                                        label="Email"
                                         type="text"
-                                        autoComplete="Name"
-                                        onChange={(e) => setName(e.target.value)}
+                                        autoComplete="Email"
+                                        autoCapitalize="none"
+                                        onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </FormControl>
-                            )}
 
-                            <FormControl>
-                                <TextField
-                                    id="password"
-                                    label="Password"
-                                    type="password"
-                                    autoComplete="Password"
-                                    onChange={(e) => setPassword(e.target.value)}
+                                {!isLogin && (
+                                    <FormControl>
+                                        <TextField
+                                            id="name"
+                                            label="Name"
+                                            type="text"
+                                            autoComplete="Name"
+                                            onChange={(e) => setName(e.target.value)}
+                                        />
+                                    </FormControl>
+                                )}
+
+                                <FormControl>
+                                    <TextField
+                                        id="password"
+                                        label="Password"
+                                        type="password"
+                                        autoComplete="Password"
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </FormControl>
+
+                                <Procaptcha
+                                    config={config}
+                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
                                 />
-                            </FormControl>
 
-                            <Procaptcha
-                                config={config}
-                                callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                            />
-
-                            <div>
-                                <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                    <Button variant="contained" onClick={onActionHandler} disabled={!procaptchaOutput}>
-                                        {isLogin ? 'Login' : 'Sign up'}
-                                    </Button>
-                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                        <Box>
-                                            <Typography>- or -</Typography>
+                                <Box sx={{ p: 1 }}>
+                                    <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                        <Button
+                                            variant="contained"
+                                            onClick={onActionHandler}
+                                            disabled={!procaptchaOutput}
+                                        >
+                                            {isLogin ? 'Login' : 'Sign up'}
+                                        </Button>
+                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                            <Box>
+                                                <Typography>- or -</Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
-                                    <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
-                                </Stack>
-                            </div>
-                        </FormGroup>
+                                        <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                    </Stack>
+                                </Box>
+                            </FormGroup>
+                        </form>
                     </Box>
                 </Box>
             </Box>

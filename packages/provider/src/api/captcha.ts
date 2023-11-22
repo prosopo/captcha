@@ -14,6 +14,7 @@
 import {
     ApiParams,
     ApiPaths,
+    CaptchaResponseBody,
     CaptchaSolutionBody,
     CaptchaWithProof,
     DappUserSolutionResult,
@@ -21,14 +22,14 @@ import {
 } from '@prosopo/types'
 import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract'
+import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { UserCommitmentRecord } from '@prosopo/types-database'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
-import { validateAddress } from '@polkadot/util-crypto'
+import { validateAddress } from '@polkadot/util-crypto/address'
 import express, { Router } from 'express'
 
 /**
@@ -63,14 +64,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
-                taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => ({
-                    ...cwp,
-                    captcha: {
-                        ...cwp.captcha,
-                        items: cwp.captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
-                    },
-                }))
-                return res.json(taskData)
+                const captchaResponse: CaptchaResponseBody = {
+                    captchas: taskData.captchas.map((cwp: CaptchaWithProof) => ({
+                        ...cwp,
+                        captcha: {
+                            ...cwp.captcha,
+                            items: cwp.captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
+                        },
+                    })),
+                    requestHash: taskData.requestHash,
+                }
+                return res.json(captchaResponse)
             } catch (err) {
                 // TODO fix error handling
                 return next(new ProsopoApiError(err as Error, undefined, 400))

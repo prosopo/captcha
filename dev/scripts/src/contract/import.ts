@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { exec } from '../util/index.js'
-import { lodash } from '@prosopo/util'
+import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
 import path from 'path'
 
@@ -44,7 +44,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
     await exec(`mkdir -p ${pathToOutput}`)
-    const cmd = `npx @727-ventures/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
+    const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
     const name = path.basename(pathToAbis)
     // copy the metadata

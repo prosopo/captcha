@@ -7,13 +7,13 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
+            "path": "../../contracts/captcha"
+        },
+        {
             "path": "../common"
         },
         {
             "path": "../util"
-        },
-        {
-            "path": "../../contracts/captcha"
         }
     ]
 }

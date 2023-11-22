@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/provider-gui",
-    "version": "0.2.13",
+    "version": "0.2.14",
     "private": true,
     "engines": {
         "node": ">=16",
@@ -18,25 +18,27 @@
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
         "@mui/system": "^5.9.1",
+        "@mui/x-data-grid": "^5.9.1",
         "@polkadot/extension-dapp": "^0.46.5",
         "@polkadot/extension-inject": "^0.46.5",
         "@polkadot/keyring": "12.5.1",
         "@polkadot/types": "10.10.1",
-        "@prosopo/api": "0.2.13",
-        "@prosopo/cli": "0.2.13",
-        "@prosopo/env": "0.2.13",
-        "@prosopo/provider": "0.2.13",
+        "@prosopo/api": "0.2.14",
+        "@prosopo/cli": "0.2.14",
+        "@prosopo/env": "0.2.14",
+        "@prosopo/procaptcha": "0.2.14",
+        "@prosopo/provider": "0.2.14",
         "next": "14.0.1",
         "react": "18.2.0"
     },
     "devDependencies": {
+        "@types/react": "18.2.33",
+        "bufferutil": "^4.0.1",
+        "eslint": "8.44.0",
+        "eslint-config-next": "13.4.9",
         "react-dom": "18.2.0",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "@types/react": "18.2.33",
-        "eslint": "8.44.0",
-        "eslint-config-next": "13.4.9",
-        "bufferutil": "^4.0.1",
-        "utf-8-validate": "^5.0.2"
+        "utf-8-validate": "5.0.2"
     }
 }

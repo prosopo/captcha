@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BlockHash } from '@polkadot/types/interfaces'
 import {
     ContractAbi,
@@ -25,15 +25,16 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
-import { WsProvider } from '@polkadot/rpc-provider'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
     contract: ProsopoCaptchaContract | undefined
     prosopoContractAddress: string
-    dappContractAddress: string
+    dappContractAddress: string | undefined
     defaultEnvironment: string
     contractName: string
     abi: ContractAbi
@@ -52,7 +53,7 @@ export class ProsopoServer {
         this.network = get(this.config.networks, networkName)
         this.wsProvider = new WsProvider(this.network.endpoint)
         this.prosopoContractAddress = this.network.contract.address
-        this.dappContractAddress = this.config.account.address || getZeroAddress().toString()
+        this.dappContractAddress = this.config.account.address
         this.contractName = this.network.contract.name
         this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
         this.keyring = new Keyring({
@@ -62,12 +63,19 @@ export class ProsopoServer {
     }
 
     public async getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.network, providerUrl, this.dappContractAddress)
+        return new ProviderApi(this.network, providerUrl, this.getDappContractAddress())
+    }
+
+    public getDappContractAddress(): string {
+        if (!this.dappContractAddress) {
+            return getZeroAddress(this.getApi()).toString()
+        }
+        return this.dappContractAddress
     }
 
     async isReady() {
         try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider })
+            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             await this.getSigner()
             await this.getContractApi()
         } catch (err) {
@@ -78,7 +86,7 @@ export class ProsopoServer {
     async getSigner(): Promise<void> {
         if (this.pair) {
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             }
             await this.api.isReadyOrError
             try {
