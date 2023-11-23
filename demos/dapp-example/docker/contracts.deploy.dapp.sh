@@ -1,8 +1,8 @@
 #!/bin/bash
 # CONTRACT_ADDRESS must be passed in as an environment variable from the docker run command
 echo "Protocol contract address: $CONTRACT_ADDRESS"
-tty=$(readlink /proc/$$/fd/2)
-DEPLOY_RESULT=$(/usr/src/docker/contracts.deploy.contract.sh \
+PROSOPO_tty=$(readlink /proc/$$/fd/2)
+PROSOPO_DEPLOY_RESULT=$(/usr/src/docker/contracts.deploy.contract.sh \
   --contract-source="$DAPP_CONTRACT_SOURCE" \
   --wasm="$DAPP_CONTRACT_WASM" \
   --constructor="$DAPP_CONTRACT_CONSTRUCTOR" \
@@ -15,8 +15,8 @@ DEPLOY_RESULT=$(/usr/src/docker/contracts.deploy.contract.sh \
   --build | tee "$tty")
 echo "$DEPLOY_RESULT"
 PROSOPO_SITE_KEY=$(echo "$DEPLOY_RESULT" | tail -1)
-if [[ $DAPP_SITE_KEY == "Contract failed to deploy" ]]; then
+if [[ $PROSOPO_SITE_KEY == "Contract failed to deploy" ]]; then
   echo "$DEPLOY_RESULT"
   exit 1
 fi
-echo "DAPP_SITE_KEY=$DAPP_SITE_KEY" > /usr/src/.env
+echo "PROSOPO_SITE_KEY=$PROSOPO_SITE_KEY" > /usr/src/.env

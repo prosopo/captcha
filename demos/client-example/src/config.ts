@@ -13,9 +13,7 @@
 // limitations under the License.
 // ../.env | .env.local | .env.development >>
 // PROSOPO_API_BASE_URL=http://localhost:9229
-// PROSOPO_API_PATH_PREFIX=/v1/prosopo
 // PROSOPO_SITE_KEY=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
-// https://create-react-app.dev/docs/adding-custom-environment-variables/
 
 import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
 import { ProsopoClientConfigInput } from '@prosopo/types'

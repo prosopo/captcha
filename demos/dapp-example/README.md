@@ -15,7 +15,7 @@ Follow instructions in Prosopo [Protocol](https://github.com/prosopo-io/protocol
 The docker file is configured to use the [substrate endpoint](https://github.com/prosopo-io/dapp-example/blob/859ed5088bd77273819023823e6a0c5fb241f0b3/docker/contracts.dapp.dockerfile#L9) from the docker compose file. Change this endpoint and the docker compose file if you wish to deploy to a different node. Specify the Prosopo Protocol account as `CONTRACT_ADDRESS`.
 
 ```bash
-CONTRACT_ADDRESS=5CCfRe5TxkUVMDMznbGs4wpxeWnUK8hC6dqQ7bZZtao6RFiH docker compose --file docker-compose.dapp.yml up dapp-build
+PROSOPO_CONTRACT_ADDRESS=5CCfRe5TxkUVMDMznbGs4wpxeWnUK8hC6dqQ7bZZtao6RFiH docker compose --file docker-compose.dapp.yml up dapp-build
 ```
 
 ### Build and deploy the contract locally

@@ -145,10 +145,10 @@ export async function setup(force: boolean) {
 
         await registerProvider(env, defaultProvider, force)
 
-        // If no DAPP_SITE_KEY is present, we will register a test account like //Eve.
-        // If a DAPP_SITE_KEY is present, we want to register it in the contract.
-        // If a DAPP_SECRET is present, we want the DAPP_SITE_KEY account to register itself.
-        // Otherwise, a test account like //Eve is used to register the DAPP_SITE_KEY account.
+        // If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
+        // If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
+        // If a DAPP_SECRET is present, we want the PROSOPO_SITE_KEY account to register itself.
+        // Otherwise, a test account like //Eve is used to register the PROSOPO_SITE_KEY account.
         defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
         let dappAddressToRegister = defaultDapp.pair.address
         if (process.env.PROSOPO_SITE_KEY && isAddress(process.env.PROSOPO_SITE_KEY)) {
@@ -169,17 +169,13 @@ export async function setup(force: boolean) {
                 PROVIDER_ADDRESS: address,
             })
         }
-        env.logger.debug('Updating env files with DAPP_SITE_KEY')
+        env.logger.debug('Updating env files with PROSOPO_SITE_KEY')
         await updateDemoHTMLFiles(
             [/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
             defaultDapp.pair.address,
             env.logger
         )
-        await updateEnvFiles(
-            ['DAPP_SITE_KEY', 'PROSOPO_SITE_KEY', 'NEXT_PUBLIC_SITE_KEY', 'PROSOPO_SITE_KEY'],
-            defaultDapp.pair.address,
-            env.logger
-        )
+        await updateEnvFiles(['NEXT_PUBLIC_PROSOPO_SITE_KEY', 'PROSOPO_SITE_KEY'], defaultDapp.pair.address, env.logger)
         process.exit()
     } else {
         console.error('no secret found in .env file')

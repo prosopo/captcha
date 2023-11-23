@@ -24,16 +24,16 @@ USAGE
 }
 
 # Default args
-CONTRACT_SOURCE=""
-WASM=""
-CONSTRUCTOR="new"
-CONTRACT_ARGS=""
-ENDOWMENT="10000000000000"
-ENDPOINT="0.0.0.0"
-PORT="9944"
-SURI=""
-USE_SALT=false
-BUILD=false
+PROSOPO_CONTRACT_SOURCE=""
+PROSOPO_WASM=""
+PROSOPO_CONSTRUCTOR="new"
+PROSOPO_CONTRACT_ARGS=""
+PROSOPO_ENDOWMENT="10000000000000"
+PROSOPO_ENDPOINT="0.0.0.0"
+PROSOPO_PORT="9944"
+PROSOPO_SURI=""
+PROSOPO_USE_SALT=false
+PROSOPO_BUILD=false
 
 for arg in "$@"; do
   echo "$arg"
@@ -89,15 +89,15 @@ if [[ $BUILD == true ]]; then
 fi
 
 # Generate deploy command
-CMD="cargo contract instantiate $WASM --args $CONTRACT_ARGS --constructor $CONSTRUCTOR --suri $SURI --value $ENDOWMENT --url '$ENDPOINT:$PORT' --gas 500000000000"
-CMDSALT="$CMD"
+PROSOPO_CMD="cargo contract instantiate $WASM --args $CONTRACT_ARGS --constructor $CONSTRUCTOR --suri $SURI --value $ENDOWMENT --url '$ENDPOINT:$PORT' --gas 500000000000"
+PROSOPO_CMDSALT="$CMD"
 if [[ $USE_SALT == true ]]; then
   SALT=$(date | sha256sum | cut -b 1-64)
   CMDSALT="$CMD --salt $SALT"
 fi
 
 # Deploy the contract
-DEPLOY_RESULT=$(eval "$CMDSALT")
+PROSOPO_DEPLOY_RESULT=$(eval "$CMDSALT")
 echo $DEPLOY_RESULT
 if [[ $(echo "$DEPLOY_RESULT" | grep -c 'ExtrinsicSuccess') == 1 ]]; then
   CONTRACT_ADDRESS=$(echo "$DEPLOY_RESULT" | grep -oP 'to: [A-Za-z0-9]*' | tail -1 | cut -d ' ' -f2)
