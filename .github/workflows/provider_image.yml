@@ -69,3 +69,8 @@ jobs:
             - name: Build provider image
               run: |
                   docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:dev
+
+            # Check that the version command works when running the bundle in the provider image
+            - name: Check provider bundle runs
+              run: |
+                  docker run prosopo/provider:dev /bin/sh -c "npx provider version"
