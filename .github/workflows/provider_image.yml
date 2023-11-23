@@ -74,4 +74,5 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
               run: |
-                  docker run --env-file .env.production prosopo/provider:dev /bin/sh -c "npx provider version"
+                  npm i concurrently
+                  npx concurrently "docker run --env-file .env.production prosopo/provider:dev /bin/sh -c \"npx provider version\""
