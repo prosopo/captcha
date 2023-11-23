@@ -14,9 +14,9 @@ to spin up the required containers.
 The following env vars will need to be set in a `.env` file for this example to run.
 
 ```bash
-REACT_APP_API_BASE_URL
-REACT_APP_API_PATH_PREFIX
-REACT_APP_DAPP_SITE_KEY
+PROSOPO_API_BASE_URL
+PROSOPO_API_PATH_PREFIX
+PROSOPO_SITE_KEY
 ```
 
 If using
@@ -24,9 +24,9 @@ the [integration development environment](https://github.com/prosopo/integration
 these variables will be as follows:
 
 ```bash
-REACT_APP_API_BASE_URL=http://localhost:3000
-REACT_APP_API_PATH_PREFIX=/v1/prosopo
-REACT_APP_DAPP_SITE_KEY=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
+PROSOPO_API_BASE_URL=http://localhost:3000
+PROSOPO_API_PATH_PREFIX=/v1/prosopo
+PROSOPO_SITE_KEY=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
 ```
 
 ## Implementation

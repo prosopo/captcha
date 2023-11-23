@@ -21,19 +21,15 @@ export default defineConfig(function ({ command, mode }) {
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(mode),
-        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
-        'process.env.REACT_APP_DAPP_SITE_KEY': JSON.stringify(process.env.REACT_APP_DAPP_SITE_KEY),
-        'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.REACT_APP_SUBSTRATE_ENDPOINT),
-        'process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS': JSON.stringify(
-            process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS
-        ),
-        'process.env.REACT_APP_WEB2': JSON.stringify(process.env.REACT_APP_WEB2),
-        'process.env.REACT_APP_SERVER_URL': JSON.stringify(process.env.REACT_APP_SERVER_URL),
-        'process.env.REACT_APP_PORT': JSON.stringify(process.env.REACT_APP_PORT),
+        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
+        'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
+        'process.env.PROSOPO_WEB2': JSON.stringify(process.env.PROSOPO_WEB2),
+        'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
+        'process.env.PROSOPO_PORT': JSON.stringify(process.env.PROSOPO_PORT),
     }
     logger.debug('define', JSON.stringify(define))
 
@@ -60,6 +56,6 @@ export default defineConfig(function ({ command, mode }) {
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
-        server: { port: process.env.REACT_APP_PORT ? Number(process.env.REACT_APP_PORT) : 9230 },
+        server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230 },
     }
 })

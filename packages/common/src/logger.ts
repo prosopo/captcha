@@ -101,7 +101,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
  * @param logLevel
  */
 export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
-    logLevel = logLevel || process.env.LOG_LEVEL || 'Info'
+    logLevel = logLevel || process.env.PROSOPO_LOG_LEVEL || 'Info'
     logLevel = logLevel.toString().toLowerCase()
     try {
         return LogLevel.parse(logLevel)

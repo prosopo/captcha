@@ -40,12 +40,10 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-        'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-        'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
-        'process.env.SERVER_URL': JSON.stringify(process.env.SERVER_URL),
+        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
+        'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }

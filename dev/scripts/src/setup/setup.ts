@@ -32,25 +32,27 @@ const __dirname = path.resolve()
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
-    const rootDir = process.env.ROOT_DIR || path.resolve(__dirname, '../..')
+    const rootDir = process.env.PROSOPO_ROOT_DIR || path.resolve(__dirname, '../..')
     logger.info('Root dir:', rootDir)
     return rootDir
 }
 
 function getDatasetFilePath() {
-    const datasetFile = process.env.PROVIDER_DATASET_FILE || path.resolve('../data/captchas.json')
+    const datasetFile = process.env.PROSOPO_PROVIDER_DATASET_FILE || path.resolve('../data/captchas.json')
     logger.info('Dataset file:', datasetFile)
     return datasetFile
 }
 
 function getDefaultProvider(): IProviderAccount {
     return {
-        url: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
+        url: process.env.PROSOPO_API_PORT
+            ? `http://localhost:${process.env.PROSOPO_API_PORT}`
+            : 'http://localhost:3000',
         fee: 10,
         payee: Payee.dapp,
         stake: Math.pow(10, 13),
         datasetFile: getDatasetFilePath(),
-        address: process.env.PROVIDER_ADDRESS || '',
+        address: process.env.PROSOPO_PROVIDER_ADDRESS || '',
         secret: getSecret(),
         captchaDatasetId: '',
     }
@@ -117,8 +119,8 @@ export async function setup(force: boolean) {
         logger.debug('Writing .env file...')
         await copyEnvFile()
 
-        if (!process.env.DAPP_SITE_KEY) {
-            throw new ProsopoEnvError('DEVELOPER.DAPP_SITE_KEY_MISSING')
+        if (!process.env.PROSOPO_SITE_KEY) {
+            throw new ProsopoEnvError('DEVELOPER.PROSOPO_SITE_KEY_MISSING')
         }
 
         const config = defaultConfig()
@@ -149,10 +151,10 @@ export async function setup(force: boolean) {
         // Otherwise, a test account like //Eve is used to register the DAPP_SITE_KEY account.
         defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
         let dappAddressToRegister = defaultDapp.pair.address
-        if (process.env.DAPP_SITE_KEY && isAddress(process.env.DAPP_SITE_KEY)) {
-            dappAddressToRegister = process.env.DAPP_SITE_KEY
-            if (process.env.DAPP_SECRET) {
-                defaultDapp.secret = process.env.DAPP_SECRET
+        if (process.env.PROSOPO_SITE_KEY && isAddress(process.env.PROSOPO_SITE_KEY)) {
+            dappAddressToRegister = process.env.PROSOPO_SITE_KEY
+            if (process.env.PROSOPO_SITE_PRIVATE_KEY) {
+                defaultDapp.secret = process.env.PROSOPO_SITE_PRIVATE_KEY
                 defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
                 dappAddressToRegister = defaultDapp.pair.address
             }
@@ -174,7 +176,7 @@ export async function setup(force: boolean) {
             env.logger
         )
         await updateEnvFiles(
-            ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
+            ['DAPP_SITE_KEY', 'PROSOPO_SITE_KEY', 'NEXT_PUBLIC_SITE_KEY', 'PROSOPO_SITE_KEY'],
             defaultDapp.pair.address,
             env.logger
         )

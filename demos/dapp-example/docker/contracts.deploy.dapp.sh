@@ -14,7 +14,7 @@ DEPLOY_RESULT=$(/usr/src/docker/contracts.deploy.contract.sh \
   --use-salt \
   --build | tee "$tty")
 echo "$DEPLOY_RESULT"
-DAPP_SITE_KEY=$(echo "$DEPLOY_RESULT" | tail -1)
+PROSOPO_SITE_KEY=$(echo "$DEPLOY_RESULT" | tail -1)
 if [[ $DAPP_SITE_KEY == "Contract failed to deploy" ]]; then
   echo "$DEPLOY_RESULT"
   exit 1
