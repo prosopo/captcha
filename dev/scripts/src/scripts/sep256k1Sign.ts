@@ -65,8 +65,8 @@ export function wifToPrivateKey(wif: string): Uint8Array {
 
 // if main process
 if (esMain(import.meta)) {
-    const secretKey = wifToPrivateKey(process.env.ZELCORE_PRIVATE_KEY || '')
-    const publicKey: Uint8Array = base58Decode(process.env.ZELCORE_PUBLIC_KEY || '')
+    const secretKey = wifToPrivateKey(process.env.PROSOPO_ZELCORE_PRIVATE_KEY || '')
+    const publicKey: Uint8Array = base58Decode(process.env.PROSOPO_ZELCORE_PUBLIC_KEY || '')
     const keypair: Keypair = { secretKey, publicKey }
     const message = at(process.argv.slice(2), 0).trim()
     if (message.length === 0) {

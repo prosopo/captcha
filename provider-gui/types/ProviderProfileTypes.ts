@@ -4,7 +4,7 @@ export interface Environment {
     DAPP_WASM_PATH: string
     DAPP_ABI_PATH: string
     DAPP_CONTRACT_ADDRESS: string
-    PROTOCOL_CONTRACT_ADDRESS: string
+    PROSOPO_CONTRACT_ADDRESS: string
     DATABASE_PASSWORD: string
     DATABASE_USERNAME: string
     DATABASE_NAME: string
