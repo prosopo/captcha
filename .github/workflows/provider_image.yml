@@ -63,6 +63,7 @@ jobs:
             - name: Build cli production bundle
               run: |
                   cp ./dev/scripts/env.rococo ./packages/cli/.env.production
+                  cp ./dev/scripts/env.rococo ./.env.rococo
                   NODE_ENV=production npm run -w @prosopo/cli bundle:prod
 
             # create the provider image
@@ -73,4 +74,4 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
               run: |
-                  docker run prosopo/provider:dev /bin/sh -c "npx provider version"
+                  docker run -e .env.production prosopo/provider:dev /bin/sh -c "npx provider version"
