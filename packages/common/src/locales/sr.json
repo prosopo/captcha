@@ -83,6 +83,7 @@
         "INVALID_CAPTCHA_ID": "Nevažeći ID captcha-e",
         "SOLUTION_HASH_ERROR": "Greška pri heširanju rešenja",
         "INVALID_ITEM_FORMAT": "Dozvoljeni su samo slikovni i tekstualni tipovi stavki",
+        "INVALID_SOLUTION_TYPE": "Nevažeći tip rešenja",
         "DIFFERENT_DATASET_IDS": "ID-ovi skupova podataka se ne podudaraju",
         "INVALID_BLOCK_NO": "Broj bloka nije validan",
         "ID_MISMATCH": "ID-ovi captcha-i se ne podudaraju",

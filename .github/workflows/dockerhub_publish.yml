@@ -83,7 +83,7 @@ jobs:
                   echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                   cd packages/procaptcha-bundle
 
-                  NODE_ENV=production npm run build:prod
+                  NODE_ENV=production npm run bundle:prod
 
                   # Rename the bundle to include the version number
                   NEW_BUNDLE_FILENAME="procaptcha.bundle.${{ needs.check_version.outputs.next_version }}.js"
@@ -132,9 +132,9 @@ jobs:
                   cp ./dev/scripts/env.rococo ./packages/cli/.env.production
 
                   # Navigate to the provider CLI directory and build
-                  echo "Navigating to 'packages/cli' and building..."
+                  echo "Navigating to 'packages/cli' and bundling..."
                   cd packages/cli
-                  NODE_ENV=production npm run build:prod
+                  NODE_ENV=production npm run bundle:prod
 
                   # Navigate back to the project root
                   echo "Navigating back to project root..."

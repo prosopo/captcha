@@ -53,10 +53,10 @@ function calcInterval(api: ApiPromise): BN {
                 ? // Default minimum period config
                   api.consts.timestamp.minimumPeriod.mul(BN_TWO)
                 : api.query.parachainSystem
-                ? // default guess for a parachain
-                  DEFAULT_TIME.mul(BN_TWO)
-                : // default guess for others
-                  DEFAULT_TIME)
+                  ? // default guess for a parachain
+                    DEFAULT_TIME.mul(BN_TWO)
+                  : // default guess for others
+                    DEFAULT_TIME)
     )
 }
 declare module 'vitest' {
@@ -124,15 +124,15 @@ describe('BATCH TESTS', function () {
                 .unwrap()
                 .unwrap()
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
-            const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
+            const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(true, providerDetails.datasetId)
 
             if (randomCaptchasResult) {
+                const solutions = await providerTasks.db.getSolutions(providerDetails.datasetId.toString())
+                const solutionIndex = solutions.findIndex(
+                    (s) => s.captchaContentId === at(randomCaptchasResult, 0).captchaContentId
+                )
+                const solution = at(solutions, solutionIndex).solution
                 const unsolvedCaptcha = at(randomCaptchasResult, 0)
-                const solution = [
-                    at(unsolvedCaptcha.items, 0).hash || '',
-                    at(unsolvedCaptcha.items, 2).hash || '',
-                    at(unsolvedCaptcha.items, 3).hash || '',
-                ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
 

@@ -13,7 +13,6 @@ export default defineConfig(function ({ command, mode }) {
     // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
     // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
     // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
-    process.env.NODE_ENV = `${mode}`
     logger.info(`NODE_ENV: ${process.env.NODE_ENV}`)
 
     // Set the env vars that we want to be available in the browser
@@ -21,7 +20,7 @@ export default defineConfig(function ({ command, mode }) {
         // used to stop websockets package from breaking
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        'process.env.NODE_ENV': JSON.stringify(mode),
         'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
         'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
         'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
@@ -36,10 +35,23 @@ export default defineConfig(function ({ command, mode }) {
         'process.env.REACT_APP_SERVER_URL': JSON.stringify(process.env.REACT_APP_SERVER_URL),
         'process.env.REACT_APP_PORT': JSON.stringify(process.env.REACT_APP_PORT),
     }
+    logger.debug('define', JSON.stringify(define))
 
     return {
+        watch: false,
+        mode: 'development',
+        bundle: true,
         define,
-        build: { lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' } },
+        optimizeDeps: {
+            include: ['prop-types'],
+        },
+        esbuild: {
+            target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
+        },
+        build: {
+            modulePreload: { polyfill: true },
+            lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' },
+        },
         plugins: [
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
@@ -48,5 +60,6 @@ export default defineConfig(function ({ command, mode }) {
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
+        server: { port: process.env.REACT_APP_PORT ? Number(process.env.REACT_APP_PORT) : 9230 },
     }
 })

@@ -32,7 +32,6 @@ export interface IProviderAccount extends IUserAccount {
 
 export interface IDappAccount {
     secret: string
-    contractAccount: string
     fundAmount: number | BN
     pair?: KeyringPair
 }

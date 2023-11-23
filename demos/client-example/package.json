@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-example",
-    "version": "0.2.13",
+    "version": "0.2.14",
     "private": true,
     "type": "module",
     "engines": {
@@ -11,10 +11,10 @@
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
-        "@prosopo/common": "0.2.13",
-        "@prosopo/procaptcha-react": "0.2.13",
-        "@prosopo/procaptcha": "0.2.13",
-        "@prosopo/types": "0.2.13",
+        "@prosopo/common": "0.2.14",
+        "@prosopo/procaptcha": "0.2.14",
+        "@prosopo/procaptcha-react": "0.2.14",
+        "@prosopo/types": "0.2.14",
         "@types/react-dom": "^18.2.4",
         "electron": "25.8.4",
         "react": "^18.2.0",
@@ -22,25 +22,20 @@
         "web-vitals": "^2.1.4"
     },
     "devDependencies": {
-        "@cypress/xpath": "^2.0.3",
-        "@prosopo/cli": "0.2.13",
-        "@prosopo/config": "0.2.13",
+        "@prosopo/cli": "0.2.14",
+        "@prosopo/config": "0.2.14",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
-        "cypress": "^12.14.0",
-        "cypress-promise": "^1.1.0",
         "eslint-config-react-app": "^7.0.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
     "scripts": {
-        "start": "tsc --build --verbose && vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
-        "build": "npm run build:prod",
-        "build:prod": "tsc --build --verbose && vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
-        "build:dev": "tsc --build --verbose && vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
+        "start": "vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
+        "build": "tsc --build --verbose",
+        "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
+        "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
-        "cypress:open": "cypress open",
-        "cypress:run": "cypress run",
         "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "eslintConfig": {
