@@ -10,11 +10,11 @@ app.
 Run these commands from the root of the captcha repo:
 
 ```bash
-cp demos/client-example-server/env.development demos/client-example-server/.env.test && \
-cp demos/client-example/env.development demos/client-example/.env.test && \
-cp dev/scripts/env.test dev/scripts/.env.test && \
-cp dev/scripts/env.test packages/cli/.env.test && \
-cp dev/scripts/env.test packages/procaptcha-bundle/.env.test && \
+cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
+cp demos/client-example/env.development demos/client-example/.env.development && \
+cp dev/scripts/env.test dev/scripts/.env.development && \
+cp dev/scripts/env.test packages/cli/.env.development && \
+cp dev/scripts/env.test packages/procaptcha-bundle/.env.development && \
 docker compose --file ./docker/docker-compose.development.yml up -d && \
 npm i && \
 npm run build:all && \
