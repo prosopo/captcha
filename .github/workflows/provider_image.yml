@@ -63,7 +63,7 @@ jobs:
             - name: Build cli production bundle
               run: |
                   cp ./dev/scripts/env.rococo ./packages/cli/.env.production
-                  cp ./dev/scripts/env.rococo ./.env.rococo
+                  cp ./dev/scripts/env.rococo ./.env.production
                   NODE_ENV=production npm run -w @prosopo/cli bundle:prod
 
             # create the provider image
