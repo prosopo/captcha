@@ -7,7 +7,7 @@ app.
 
 ### 1. Build & Deploy
 
-Run these commands from the root of the captcha repo:
+Run these commands from the root of the [captcha](https://github.com/prosopo/captcha) repo:
 
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
