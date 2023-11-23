@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: ./docker/images/provider.dockerfile
     env_file:
-      - ../dev/.env.development
+      - ../dev/scripts/.env.development
     ports:
       - "9229:9229"
     tty: true
