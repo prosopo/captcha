@@ -29,7 +29,7 @@ export default function getTestConfig() {
             development: {
                 endpoint: 'ws://localhost:9944',
                 contract: {
-                    address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
+                    address: process.env.PROSOPO_CONTRACT_ADDRESS || '',
                     name: 'prosopo',
                 },
                 pairType: NetworkPairTypeSchema.parse('sr25519'),

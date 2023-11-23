@@ -109,7 +109,7 @@
         "PARAMETER_ERROR": "Nevažeći parametar"
     },
     "DEVELOPER": {
-        "DAPP_SITE_KEY_MISSING": "DAPP_SITE_KEY nije podešen u .env datoteci.",
+        "PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY nije podešen u .env datoteci.",
         "BALANCE_TOO_LOW": "{{mnemonic}} balans je prenizak: {{balance}}",
         "CAPTCHA_ID_MISSING": "Nije moguće pronaći ID podataka captcha-e",
         "COMMITMENT_ID_MISSING": "Nedostaje ID predaje",

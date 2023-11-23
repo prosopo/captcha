@@ -44,13 +44,13 @@ function App() {
     const config = ProsopoClientConfigSchema.parse({
         userAccountAddress: account,
         account: {
-            address: process.env.REACT_APP_DAPP_SITE_KEY || '',
+            address: process.env.PROSOPO_SITE_KEY || '',
         },
-        web2: process.env.REACT_APP_WEB2 === 'true',
+        web2: process.env.PROSOPO_WEB2 === 'true',
         dappName: 'client-example',
         defaultEnvironment:
-            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.REACT_APP_SERVER_URL || '',
+            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+        serverUrl: process.env.PROSOPO_SERVER_URL || '',
     })
 
     const label = isLogin ? 'Login' : 'Sign up'

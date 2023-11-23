@@ -83,11 +83,11 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': 'true',
         'process.env.WS_NO_UTF_8_VALIDATE': 'true',
         'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(packageVersion),
-        ...(process.env.DEFAULT_ENVIRONMENT && {
-            'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        ...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
+            'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
         }),
-        ...(process.env.DEFAULT_NETWORK && {
-            'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
+        ...(process.env.PROSOPO_DEFAULT_NETWORK && {
+            'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
         }),
     }
 

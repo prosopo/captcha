@@ -15,16 +15,16 @@ import { ProsopoServerConfigSchema } from '@prosopo/types'
 
 export const getServerConfig = () =>
     ProsopoServerConfigSchema.parse({
-        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT, // enviromental variables
-        defaultNetwork: process.env.DEFAULT_NETWORK,
+        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT, // enviromental variables
+        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
         serverUrl:
             // https://github.com/prosopo/captcha/issues/701
-            process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
-                ? `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`
+            process.env.PROSOPO_SERVER_URL && process.env.PROSOPO_SERVER_PORT
+                ? `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT}`
                 : 'http://localhost:9228',
-        dappName: process.env.REACT_APP_DAPP_NAME || 'client-example-server',
+        dappName: process.env.PROSOPO_DAPP_NAME || 'client-example-server',
         account: {
             password: '',
-            address: process.env.REACT_APP_SERVER_ACCOUNT_ADDRESS || '',
+            address: process.env.PROSOPO_SITE_KEY || '',
         },
     })
