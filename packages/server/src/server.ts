@@ -111,9 +111,16 @@ export class ProsopoServer {
         return this.contract
     }
 
-    public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
+    /**
+     *
+     * @param payload Info output by procaptcha on completion of the captcha process
+     * @param maxVerifiedTime Maximum time in milliseconds since the blockNumber
+     * @returns
+     */
+    public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
-        // first check if the provider was actually chosen at blockNumber
+
+        // Check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
         const block = (await this.getApi().rpc.chain.getBlockHash(blockNumber)) as BlockHash
         const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
@@ -128,9 +135,19 @@ export class ProsopoServer {
         console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(user, commitmentId)
+            const result = await providerApi.verifyDappUser(user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
         } else {
+            // Check the time since the last correct captcha is less than the maxVerifiedTime
+            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
+            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+                .unwrap()
+                .unwrap()
+                .before.valueOf()
+            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
+                return false
+            }
+
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
                 .unwrap()
                 .unwrap()
