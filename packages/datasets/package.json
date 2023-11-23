@@ -24,7 +24,12 @@
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
         },
-        "./captcha": "./dist/captcha/index.js"
+        "./captcha": {
+            "types": "./dist/captcha/index.d.ts",
+            "import": "./dist/captcha/index.js",
+            "require": "./dist/cjs/captcha/index.cjs",
+            "default": "./dist/captcha/index.js"
+        }
     },
     "typesVersions": {
         "*": {
