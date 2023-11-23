@@ -124,8 +124,5 @@
         "free",
         "captcha-alternative"
     ],
-    "license": "Apache-2.0",
-    "dependencies": {
-        "cypress": "^13.5.1"
-    }
+    "license": "Apache-2.0"
 }

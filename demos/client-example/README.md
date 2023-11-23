@@ -12,9 +12,9 @@ Run these commands from the root of the [captcha](https://github.com/prosopo/cap
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
 cp demos/client-example/env.development demos/client-example/.env.development && \
-cp dev/scripts/env.test dev/scripts/.env.development && \
-cp dev/scripts/env.test packages/cli/.env.development && \
-cp dev/scripts/env.test packages/procaptcha-bundle/.env.development && \
+cp dev/scripts/env.development dev/scripts/.env.development && \
+cp dev/scripts/env.development packages/cli/.env.development && \
+cp dev/scripts/env.development packages/procaptcha-bundle/.env.development && \
 docker compose --file ./docker/docker-compose.development.yml up -d && \
 npm i && \
 npm run build:all && \
