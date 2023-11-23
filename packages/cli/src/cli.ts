@@ -40,7 +40,7 @@ async function main() {
 
     log.info(`Pair address: ${pair.address}`)
 
-    log.info(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
+    log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`)
 
     const processedArgs = await processArgs(process.argv, pair, config)
     if (processedArgs.api) {

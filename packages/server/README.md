@@ -22,7 +22,7 @@ async function getProsopoServer() {
     const config = getProsopoConfig()
     const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
     const ss58Format = parseInt(process.env.SS58_FORMAT || '') || 42
-    const pair = await getPair(pairType, ss58Format, process.env.REACT_APP_SERVER_MNEMONIC)
+    const pair = await getPair(pairType, ss58Format, process.env.PROSOPO_SITE_PRIVATE_KEY)
     const prosopoServer = new ProsopoServer(pair, config)
 }
 
