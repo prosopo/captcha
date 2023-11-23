@@ -4,7 +4,7 @@ import { ProsopoNetworksSchemaInput } from '../config/index.js'
 const pairTypeSr25519 = NetworkPairTypeSchema.parse('sr25519')
 
 const getContractAddress = (defaultAddress?: string) => {
-    return process.env.PROSOPO_CONTRACT_ADDRESS || defaultAddress || ''
+    return process.env.PROSOPO_CONTRACT_ADDRESS ? process.env.PROSOPO_CONTRACT_ADDRESS : defaultAddress || ''
 }
 
 export default (): ProsopoNetworksSchemaInput => {
