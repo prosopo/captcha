@@ -41,7 +41,6 @@ export const PROVIDER: IProviderAccount = {
 
 export const DAPP: IDappAccount = {
     secret: '//Ferdie',
-    contractAccount: process.env.DAPP_SITE_KEY || '', // Must be deployed
     fundAmount: new BN(1000000000000000),
 }
 

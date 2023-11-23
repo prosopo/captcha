@@ -65,6 +65,7 @@ export async function processArgs(args: string[]) {
                     process.env.CAPTCHA_ABI_PATH,
                     argv.deployer
                 )
+
                 log.info('contract address', protocolContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(

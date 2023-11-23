@@ -8,25 +8,25 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
+            "path": "../../contracts/captcha"
+        },
+        {
             "path": "../api"
-        },
-        {
-            "path": "../contract"
-        },
-        {
-            "path": "../util"
-        },
-        {
-            "path": "../types"
         },
         {
             "path": "../common"
         },
         {
+            "path": "../contract"
+        },
+        {
             "path": "../datasets"
         },
         {
-            "path": "../../contracts/captcha"
+            "path": "../types"
+        },
+        {
+            "path": "../util"
         }
     ]
 }

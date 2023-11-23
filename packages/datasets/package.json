@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/datasets",
-    "version": "0.2.13",
+    "version": "0.2.14",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
@@ -24,7 +24,12 @@
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
         },
-        "./captcha": "./dist/captcha/index.js"
+        "./captcha": {
+            "types": "./dist/captcha/index.d.ts",
+            "import": "./dist/captcha/index.js",
+            "require": "./dist/cjs/captcha/index.cjs",
+            "default": "./dist/captcha/index.js"
+        }
     },
     "typesVersions": {
         "*": {
@@ -38,12 +43,12 @@
     },
     "dependencies": {
         "@polkadot/util": "^12.3.2",
-        "@prosopo/common": "0.2.13",
-        "@prosopo/types": "0.2.13",
+        "@prosopo/common": "0.2.14",
+        "@prosopo/types": "0.2.14",
         "vitest": "^0.34.6"
     },
     "devDependencies": {
-        "@prosopo/config": "0.2.13",
+        "@prosopo/config": "0.2.14",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

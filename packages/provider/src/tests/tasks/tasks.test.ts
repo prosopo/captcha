@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU General Public License
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { BN } from '@polkadot/util/bn'
-import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
+import {
+    CaptchaMerkleTree,
+    computeCaptchaSolutionHash,
+    computePendingRequestHash,
+    datasetWithSolutionHashes,
+} from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
 import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
 import {
@@ -34,8 +39,8 @@ import { ReturnNumber } from '@prosopo/typechain-types'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
-import { captchaData } from '../data/captchas.js'
 import { createType } from '@polkadot/types/create'
+import { datasetWithIndexSolutions } from '@prosopo/datasets'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
 import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
@@ -200,7 +205,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, providerAccount)
 
-        await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
+        await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(datasetWithIndexSolutions)))
     }, 8000)
 
     test('Provider add dataset with too few captchas will fail', async ({ env }): Promise<void> => {
@@ -209,7 +214,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(env, providerAccount)
 
         // copy captchaData and remove all but one captcha
-        const dataset = { ...captchaData }
+        const dataset = { ...datasetWithIndexSolutions }
         dataset.captchas = dataset.captchas.slice(0, 1)
         try {
             await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
@@ -223,7 +228,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, providerAccount)
 
-        const dataset = { ...captchaData }
+        const dataset = { ...datasetWithIndexSolutions }
         // remove solution field from each captcha
         dataset.captchas = dataset.captchas.map((captcha) => {
             const { solution, ...rest } = captcha
@@ -242,7 +247,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(env, providerAccount)
 
         try {
-            await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
+            await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(datasetWithIndexSolutions)))
         } catch (e) {
             expect(e).to.match(/ProviderInactive/)
         }
@@ -785,23 +790,15 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             const dappUserAccount = await getUser(env, AccountKey.dappUsers)
-            const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             // there must be at least one provider in the contract and db
             await getUser(env, AccountKey.providersWithStakeAndDataset)
 
             const dappUserTasks = await getSignedTasks(env, dappUserAccount)
             const solvedCaptchaCount = env.config.captchas.solved.count
             const unsolvedCaptchaCount = env.config.captchas.unsolved.count
-            const { provider } = (
-                await dappUserTasks.contract.query.getRandomActiveProvider(
-                    accountAddress(dappUserAccount),
-                    accountContract(dappAccount)
-                )
-            ).value
-                .unwrap()
-                .unwrap()
+
             const { captchas, requestHash } = await dappUserTasks.getRandomCaptchasAndRequestHash(
-                provider.datasetId.toString(),
+                datasetWithSolutionHashes.datasetId.toString(), // This is the dataset that all test providers have loaded
                 hexHash(accountAddress(dappUserAccount))
             )
 
@@ -869,7 +866,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         ).result
         expect(resultproviderUpdate2?.isError).to.be.false
 
-        await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
+        await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(datasetWithIndexSolutions)))
 
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
         const dappUser = await getUser(env, AccountKey.dappUsers)
