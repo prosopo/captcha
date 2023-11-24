@@ -25,7 +25,9 @@
 // TODO add function parsing
 // TODO brand?
 // TODO can we combine nullable and optional into some kind of except or union?
+// TODO validate needs options for strict, extra keys, etc
 
+import { union } from 'lodash'
 import z from 'zod'
 
 
@@ -410,26 +412,33 @@ class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
     }
 }
 
-class UnionParser<T> extends BaseParser<T> {
-    constructor(private parsers: Readonly<Parser<T>[]>) {
+class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>> extends BaseParser<U> {
+    constructor(private parsers: T) {
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T {
-        // one of the parsers should work
+    override parseShape(value: unknown, options?: ParseOptions | undefined): U {
         for(const parser of this.parsers) {
             try {
-                return parser.parse(value)
+                return parser.parse(value, options) as U // cast to U because we know it will be one of the parsers
             } catch {}
         }
         throw new Error(`Expected value to match one of the union parsers but none matched`)
     }
 
-    override validate(value: T): void {
+    override validate(value: U): void {
         super.validate(value)
-        // validate against each parser
+        // delegate to full blown parsing, as we cannot be certain which parser is correct for the type.
+
+        // loop through each parser
         for(const parser of this.parsers) {
-            parser.validate(value)
+            try {
+                // e.g. given number | string, we cannot be certain whether the value is a number or a string, so we must try both
+                // it may be that the validator for the string passes when the value is a number and the number parser's validator fails, so we cannot rely on the validators due to false positivies.
+                // therefore we must parse the value and see if it works. This will check the shape and validate the value.
+                parser.parse(value)
+                return // if the parser validates, then we're done
+            } catch {}
         }
     }
 }
@@ -452,6 +461,7 @@ class UnionParser2<T, U> extends BaseParser<T | U> {
     override validate(value: T | U): void {
         super.validate(value)
         // validate against each parser
+        // TODO fix false positiives, see other union parser
         for(const parser of [this.first, this.second]) {
             try {
                 parser.validate(value as U & T)
@@ -462,13 +472,13 @@ class UnionParser2<T, U> extends BaseParser<T | U> {
 }
 
 const p = {
-    string(): Parser<string> {
+    string() {
         return new StringParser()
     },
-    number(): Parser<number> {
+    number() {
         return new NumberParser()
     },
-    boolean(): Parser<boolean> {
+    boolean() {
         return new BooleanParser()
     },
     object<T extends {}>(schema: Parseable<T>) {
@@ -480,56 +490,18 @@ const p = {
     enum<U extends EnumVariant, T extends Readonly<U[]>>(values: T) {
         return new EnumParser<U, T>(values)
     },
-    enum2<const U, const T extends readonly U[]>(values: T) {
+    enum2<const U extends number | string | symbol, const T extends readonly U[]>(values: T) {
         return new EnumParser2<U, T>(values)
     },
-    union<T, U>(parsers: [Parser<T>, Parser<U>, ...Parser<T|U>[]]) {
-        return new UnionParser<T|U>(parsers)
-    },
-}
-
-const tuple1 = <U, T extends U[]>(...args: T) => args;
-function tuple2<U, T extends Array<U>>(...cons: T): {
-    [K in keyof T]: T[K] extends U ? T[K] : never
-};
-function tuple2<U, T extends Array<U>>(...cons: T): any {
-    return cons as any
-}
-const tuple3 = <U, T extends readonly U[]>(...args: T): readonly [...U[]] => {
-    return args
-}
-const tuple4 = <const U, const T extends readonly U[]>(...args: T) => {
-    return args
-}
-const arrayToObject = <U, T extends U[]>(arr: T) => {
-    return arr.reduce((acc, el, index) => {
-        acc[index] = el
-        return acc
-    }, {} as {
-        [key: number]: U
-    })
-}
-const tuple5 = <const U, const T extends U[]>(args: [...T]) => {
-    return args
-}
-
-const union3 = <T, U extends Parser<T>, V extends U[]>(parsers: [U, ...V]): Parser<T> => {
-    let result: Parser<T> = parsers[0]
-    for(const parser of parsers.slice(1)) {
-        // result = result.union(parser)
+    union<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>>(arr: T) {
+        return new UnionParser<T, U>(arr)
     }
-    return result
 }
 
-type ArrayElementType<T> = T extends (infer U)[] ? U : never
-type ArrayType<T> = T extends (infer U)[] ? U[] : never
-const union4 = <T>(arr: T): ArrayElementType<T> => {
-    return null as ArrayElementType<T>
-}
-const union5 = <T, U extends ArrayType<Parser<T>[]>>(arr: U): U => {
-    return null as unknown as U
-}
+type UnionOutput<T> = T extends Parser<infer U> ? U : never
 type ParserUnion<T> = T extends Parser<infer U>[] ? Parser<U> : never
+type ParserUnionArray<T> = T extends Parser<infer U>[] ? ReadonlyArray<Parser<U>> : never
+type ParserUnionShape<T> = T extends Parser<infer U>[] ? U : never
 // type q16 = ParserArrayOutput<[Parser<string>, Parser<number>, Parser<boolean>]>
 const union6 = <T, U extends Parser<T>[]>(arr: U): ParserUnion<U> => {
     return null as unknown as ParserUnion<U>
@@ -540,22 +512,6 @@ const enum6 = <const T, U extends T[]>(arr: U): EnumType<U> => {
     return null as EnumType<U>
 }
 
-// const q1 = new UnionParser<string|number>([new StringParser(), new NumberParser()])
-// const q3: Parser<number|string>[] = [p.number(), p.string()]
-// const q2 = p.union(q3)
-const q3: Parser<number|string>[] = [p.number(), p.string()]
-// const q4 = p.union([p.number(), p.string(), p.boolean()])
-const q5 = tuple1('a', 1, true)
-const q6 = ['a', 'b', 'c']
-const q7 = arrayToObject<string, string[]>(q6)
-const q8 = q7[0]
-const q9 = tuple3<string, string[]>('a', 'b', 'c')
-const q10 = tuple4('a', 'b', 'c')
-const q11 = p.enum2(['a', 'b', 'c'])
-const q12 = tuple5(['a', 'b', 'c'])
-const q13 = union5([p.string(), p.number(), p.boolean()])
-const q14 = union4(['a', 'b', 'c', 1])
-const q15 = union4([p.string(), p.number(), p.boolean()])
 const q17 = union6([p.string(), p.number(), p.boolean()])
 const q18 = enum6(['a', 'b', 'c', 1, true])
 const q19: ReturnType<StringParser["parse"]> = null as unknown as string
@@ -566,6 +522,18 @@ type q23 = typeof q22.shape
 const q24 = q22.options
 const q25 = q22.enum.a
 type q26 = typeof q22.options
+const q27 = union6([p.string(), p.number(), p.boolean()])
+const q28: Parser<string | number> = p.string()
+const q30 = new UnionParser([p.string(), p.number(), p.boolean()])
+type q31 = typeof q30.shape
+
+
+type ParserArrayToShape<T> = T extends ReadonlyArray<Parser<infer U>> ? U : never
+const union7 = <T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>>(arr: T): Parser<U> => {
+    return null as unknown as Parser<U>
+}
+const q32 = union7([p.string(), p.number(), p.boolean()])
+
 
 enum Abcdef {
     a = 'a',
