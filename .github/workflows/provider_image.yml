@@ -74,5 +74,5 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
               run: |
-                  CONTAINER_ID=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'sleep infinity'")
+                  CONTAINER_ID=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'sleep infinity')
                   docker exec -it $CONTAINER_ID /bin/sh -c "npx provider version"
