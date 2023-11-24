@@ -1,3 +1,31 @@
+// TODO should parsing options be specific to the parser? probably. E.g. coerce makes no sense for object/array parsing
+// TODO export functions independently to allow tree shaking
+// TODO add parser for native enum
+// TODO choose between classic enum parsing and new (ts v5+) enum parsing using const in generic arg
+// TODO add extends
+// TODO build validation fns (can use external lib for that)
+// TODO add .merge()
+// TODO add .pick()
+// TODO add .omit()
+// TODO add .partial()
+// TODO add .deepPartial() - can be arg to parser?
+// TODO add passthrough
+// TODO add .default()
+// TODO add .strip()
+// TODO add .catchall()
+// TODO add .element()
+// TODO add .nonempty()
+// TODO add tuple
+// TODO add discriminate unions
+// TODO add maps
+// TODO add sets
+// TODO add intersection
+// TODO add recursive type support
+// TODO add JSON parsing
+// TODO add function parsing
+// TODO brand?
+
+
 import z from 'zod'
 
 
@@ -32,9 +60,11 @@ interface Parser<T> {
     validators: Validator<T>[] // like gladiators, but less violent
     // do the union of two parsers, this parser and another.
     // union<U>(parser: Parser<U>): Parser<T|U>
+    // access the shape of the parsed type. This is helpful for pulling the parsed type out of any given parser, e.g. const p = parser.string(); type T = typeof p.shape
     readonly shape: T
 }
 
+// Type that maps an object's properties to parsers for those properties
 type Parseable<T> = {
     [Property in keyof T]: Parser<T[Property]>
 }
