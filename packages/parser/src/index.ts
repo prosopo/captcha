@@ -29,6 +29,7 @@
 // TODO check native enum works
 // TODO check enum/options for each type of enum works
 // TODO add chaining to all types, e.g. able to do .optional(), etc
+// TODO split up into classes, enable tree shaking via exports in pkg json
 
 import { union } from 'lodash'
 import z from 'zod'
