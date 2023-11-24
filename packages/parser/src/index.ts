@@ -26,6 +26,9 @@
 // TODO brand?
 // TODO can we combine nullable and optional into some kind of except or union?
 // TODO validate needs options for strict, extra keys, etc
+// TODO check native enum works
+// TODO check enum/options for each type of enum works
+// TODO add chaining to all types, e.g. able to do .optional(), etc
 
 import { union } from 'lodash'
 import z from 'zod'
