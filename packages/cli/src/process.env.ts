@@ -19,7 +19,7 @@ export function getSs58Format(): number {
 }
 
 export function getPairType(): KeypairType {
-    return (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
+    return (process.env.PROSOPO_PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
 }
 
 export function getSecret(who?: string): string {
@@ -29,10 +29,10 @@ export function getSecret(who?: string): string {
         who = who.toUpperCase()
     }
     const secret =
-        process.env[`${who}_MNEMONIC`] ||
-        process.env[`${who}_SEED`] ||
-        process.env[`${who}_URI`] ||
-        process.env[`${who}_JSON`]
+        process.env[`PROSOPO_${who}_MNEMONIC`] ||
+        process.env[`PROSOPO_${who}_SEED`] ||
+        process.env[`PROSOPO_${who}_URI`] ||
+        process.env[`PROSOPO_${who}_JSON`]
     if (!secret) {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }
@@ -40,8 +40,8 @@ export function getSecret(who?: string): string {
 }
 
 export function getDB(): string {
-    if (!process.env.DATABASE_HOST) {
+    if (!process.env.PROSOPO_DATABASE_HOST) {
         throw new ProsopoEnvError('DATABASE.DATABASE_HOST_UNDEFINED')
     }
-    return process.env.DATABASE_HOST
+    return process.env.PROSOPO_DATABASE_HOST
 }

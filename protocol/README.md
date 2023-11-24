@@ -67,14 +67,14 @@ cargo contract instantiate $WASM --args "$ARGS_OWNER $ARGS_PROVIDER_STAKE_DEFAUL
 Example values for the variables are given below
 
 ```bash
-ENDPOINT=ws://0.0.0.0
-PORT=9944
-SURI=//Alice
-WASM=./target/ink/prosopo.wasm
-CONSTRUCTOR=default
-ARGS_OWNER=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # Alice's account
-ARGS_PROVIDER_STAKE_DEFAULT=2000000000000
-ENDOWMENT=1000000000000
+PROSOPO_ENDPOINT=ws://0.0.0.0
+PROSOPO_PORT=9944
+PROSOPO_SURI=//Alice
+PROSOPO_WASM=./target/ink/prosopo.wasm
+PROSOPO_CONSTRUCTOR=default
+PROSOPO_ARGS_OWNER=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # Alice's account
+PROSOPO_ARGS_PROVIDER_STAKE_DEFAULT=2000000000000
+PROSOPO_ENDOWMENT=1000000000000
 ```
 
 ## Deploy to rococo with proxy

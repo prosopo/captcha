@@ -23,8 +23,10 @@
             "require": "./dist/cjs/index.cjs"
         },
         "./modules/Manager": {
+            "types": "./dist/modules/Manager.d.ts",
             "import": "./dist/modules/Manager.js",
-            "require": "./dist/cjs/modules/Manager.js"
+            "require": "./dist/cjs/modules/Manager.cjs",
+            "default": "./dist/modules/Manager.js"
         }
     },
     "dependencies": {

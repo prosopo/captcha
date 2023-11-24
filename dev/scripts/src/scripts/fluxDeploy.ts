@@ -172,11 +172,11 @@ const setupArgs = () => {
         throw new Error('Please provide an app name')
     }
 
-    const secretWIFKey = process.env.ZELCORE_PRIVATE_KEY
+    const secretWIFKey = process.env.PROSOPO_ZELCORE_PRIVATE_KEY
     if (!secretWIFKey) {
         throw new Error('No private key provided')
     }
-    const zelId = process.env.ZELCORE_PUBLIC_KEY
+    const zelId = process.env.PROSOPO_ZELCORE_PUBLIC_KEY
     if (!zelId) {
         throw new Error('No zelId provided')
     }

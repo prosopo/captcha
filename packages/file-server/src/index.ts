@@ -32,11 +32,11 @@ const getEnv = () => {
     const path = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
     dotenv.config({ path })
     return {
-        port: process.env.PORT || 3000,
-        paths: parseArray(process.env.PATHS || '[]'),
-        resize: toInt(process.env.RESIZE) || undefined, // the size to resize images to, undefined means no resize
-        remotes: parseArray(process.env.REMOTES || '[]'), // the remote servers to proxy to
-        logLevel: process.env.LOG_LEVEL || 'info',
+        port: process.env.PROSOPO_FILE_SERVER_PORT || 3000,
+        paths: parseArray(process.env.PROSOPO_FILE_SERVER_PATHS || '[]'),
+        resize: toInt(process.env.PROSOPO_FILE_SERVER_RESIZE) || undefined, // the size to resize images to, undefined means no resize
+        remotes: parseArray(process.env.PROSOPO_FILE_SERVER_REMOTES || '[]'), // the remote servers to proxy to
+        logLevel: process.env.PROSOPO_LOG_LEVEL || 'info',
     }
 }
 
