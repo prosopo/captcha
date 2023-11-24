@@ -55,19 +55,19 @@ async function main() {
     const uri = await memoryServerSetup()
     console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
-    if (!process.env.REACT_APP_SERVER_MNEMONIC) {
-        throw new Error('No mnemonic found')
+    if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
+        throw new Error('No private key found')
     }
 
     const config = getServerConfig()
 
     console.log('config', config)
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.REACT_APP_SERVER_MNEMONIC)
+    const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.PROSOPO_SITE_PRIVATE_KEY)
     const prosopoServer = new ProsopoServer(config, pair)
 
     app.use(routesFactory(mongoose, prosopoServer))
 
-    app.listen(process.env.REACT_APP_SERVER_PORT)
+    app.listen(process.env.PROSOPO_SERVER_PORT)
 }
 
 main()

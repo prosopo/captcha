@@ -27,13 +27,13 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
-    const params = ['1000000000000000', 1000, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]
+    const params = ['1000000000000000', 1000, process.env.PROSOPO_CONTRACT_ADDRESS, 50, 1000000]
     const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
 export async function run(): Promise<AccountId> {
-    const wasm = await Wasm(path.resolve(process.env.DAPP_WASM_PATH || '.'))
-    const abi = await AbiJSON(path.resolve(process.env.DAPP_ABI_PATH || '.'))
+    const wasm = await Wasm(path.resolve(process.env.PROSOPO_DAPP_WASM_PATH || '.'))
+    const abi = await AbiJSON(path.resolve(process.env.PROSOPO_DAPP_ABI_PATH || '.'))
     const deployResult = await deploy(wasm, abi)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(

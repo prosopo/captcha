@@ -14,13 +14,15 @@
 
 import { LogLevel, getLogger } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
+import { loadEnv } from '@prosopo/cli'
 
-const logger = getLogger(LogLevel.enum.info, 'generateMnemonic')
+loadEnv()
+const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info, 'generateMnemonic')
 
 async function mnemonic() {
     const [mnemonic, address] = await generateMnemonic()
-    logger.debug(`Address: ${address}`)
-    logger.debug(`Mnemonic: ${mnemonic}`)
+    logger.info(`Address: ${address}`)
+    logger.info(`Mnemonic: ${mnemonic}`)
 }
 
 mnemonic()

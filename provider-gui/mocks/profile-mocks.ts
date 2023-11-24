@@ -4,7 +4,7 @@ export const environmentMock = {
     DAPP_WASM_PATH: './path/to/dapp.wasm',
     DAPP_ABI_PATH: './path/to/dapp.json',
     DAPP_CONTRACT_ADDRESS: '',
-    PROTOCOL_CONTRACT_ADDRESS: 'PROTOCOL_CONTRACT_ADDRESS',
+    PROSOPO_CONTRACT_ADDRESS: 'PROSOPO_CONTRACT_ADDRESS',
     DATABASE_PASSWORD: 'root',
     DATABASE_USERNAME: 'root',
     DATABASE_NAME: 'prosopo',

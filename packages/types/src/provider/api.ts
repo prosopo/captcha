@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
-import { array, object, string, infer as zInfer } from 'zod'
+import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
@@ -34,6 +34,7 @@ export enum ApiParams {
     proof = 'proof',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
+    maxVerifiedTime = 'maxVerifiedTime',
 }
 
 export interface DappUserSolutionResult {
@@ -74,6 +75,7 @@ export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 export const VerifySolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.commitmentId]: string().optional(),
+    [ApiParams.maxVerifiedTime]: number().optional(),
 })
 
 export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
