@@ -412,6 +412,8 @@ class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
     }
 }
 
+type ParserArrayToShape<T> = T extends ReadonlyArray<Parser<infer U>> ? U : never
+
 class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>> extends BaseParser<U> {
     constructor(private parsers: T) {
         super()
@@ -497,43 +499,6 @@ const p = {
         return new UnionParser<T, U>(arr)
     }
 }
-
-type UnionOutput<T> = T extends Parser<infer U> ? U : never
-type ParserUnion<T> = T extends Parser<infer U>[] ? Parser<U> : never
-type ParserUnionArray<T> = T extends Parser<infer U>[] ? ReadonlyArray<Parser<U>> : never
-type ParserUnionShape<T> = T extends Parser<infer U>[] ? U : never
-// type q16 = ParserArrayOutput<[Parser<string>, Parser<number>, Parser<boolean>]>
-const union6 = <T, U extends Parser<T>[]>(arr: U): ParserUnion<U> => {
-    return null as unknown as ParserUnion<U>
-}
-
-type EnumType<T> = T extends (infer U)[] ? U : never
-const enum6 = <const T, U extends T[]>(arr: U): EnumType<U> => {
-    return null as EnumType<U>
-}
-
-const q17 = union6([p.string(), p.number(), p.boolean()])
-const q18 = enum6(['a', 'b', 'c', 1, true])
-const q19: ReturnType<StringParser["parse"]> = null as unknown as string
-const q20 = p.string();
-type q21 = typeof q20.shape
-const q22 = p.enum(['a', 'b', 'c'])
-type q23 = typeof q22.shape
-const q24 = q22.options
-const q25 = q22.enum.a
-type q26 = typeof q22.options
-const q27 = union6([p.string(), p.number(), p.boolean()])
-const q28: Parser<string | number> = p.string()
-const q30 = new UnionParser([p.string(), p.number(), p.boolean()])
-type q31 = typeof q30.shape
-
-
-type ParserArrayToShape<T> = T extends ReadonlyArray<Parser<infer U>> ? U : never
-const union7 = <T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>>(arr: T): Parser<U> => {
-    return null as unknown as Parser<U>
-}
-const q32 = union7([p.string(), p.number(), p.boolean()])
-
 
 enum Abcdef {
     a = 'a',
