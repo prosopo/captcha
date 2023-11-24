@@ -24,7 +24,7 @@
 // TODO add JSON parsing
 // TODO add function parsing
 // TODO brand?
-
+// TODO can we combine nullable and optional into some kind of except or union?
 
 import z from 'zod'
 
@@ -227,8 +227,6 @@ class NullableParser<T> extends BaseParser<T | null> {
     }
 }
 
-// TODO can we combine nullable and optional into some kind of except or union?
-
 type Entries<T> = {
     [K in keyof T]: [K, T[K]];
 }[keyof T][];
@@ -297,65 +295,6 @@ class ArrayParser<T> extends BaseParser<T[]> {
     }
 }
 
-// export type Lit = string | number | boolean | undefined | null | void | {};
-// export const tuple = <T extends Lit[]>(...args: T) => args;
-// const list = tuple('a','b','c',{
-//     a:1
-// });  // type is ['a','b','c']
-// type NeededUnionType = typeof list[number]; // 'a'|'b'|'c'
-
-// type ValueOf<T> = T[keyof T];
-
-// type ArrayToObject<T extends []> = {
-//     [K in keyof T]: T[K];
-// };
-
-// const r1 = [1,2,3, true]
-// type r2 = typeof r1[number]
-
-// type EnumVariant = boolean | number | string
-
-// type Literal<T> = string | boolean | number | null | undefined | Readonly<Array<Literal<T>>>
-// // type Variants<U extends Literal, T extends Readonly<[U, ...U[]]>> = T[number]
-
-// const xyz = <U extends string, T extends Readonly<[U, ...U[]]>>(values: T): T[number] => {
-//     return ...values as unknown as T[number]
-// }
-// const q1 = xyz(['a', 'b', 'c'])
-// console.log('q1', q1)
-
-// const tuple = <T extends string[]>(...args: T) => args;
-
-// // const fn1 = <U, T extends Readonly<Array<U>>>(value: T): T[number] => {
-// //     return value[2] as unknown as T[number]
-// // }
-// const fn1 = <T extends string[]>(...values: T): T[number] => {
-//     return values[2] as unknown as T[number]
-// }
-// // | readonly object
-// // const fn2 = <V, U extends Literal<V>, T extends Readonly<[U, ...U[]]>>(values: T): T[number] => {
-// //     return null as unknown as T[number]
-// // }
-// const fn2 = <V, U extends string | boolean | number | null | undefined | readonly object, T extends Readonly<[U, ...U[]]>>(values: T): T[number] => {
-//     return null as unknown as T[number]
-// }
-
-// const fn3 = <T extends string[]>(values: T): {
-//     [k in T[number]]: k;
-// } => {
-//     return null as unknown as {
-//         [k in T[number]]: k;
-//     }
-// }
-
-// const v2 = fn1('a', 'b', 'c')
-// const v3 = tuple('a', 'b', 'c')
-// // , { a: 1 }
-// const v4 = fn2(['a', 'b', 'c', false, 3])
-// const v5: [string, ...string[]] = ['a', 'b', 'c']
-// const v6 = ['a', 'b', 'c'] as const
-// const v7 = fn3(['a', 'b', 'c'])
-
 type EnumVariant = string | number
 type EnumMap<U extends EnumVariant, T extends Readonly<U[]>> = {
     [K in T[number]]: K
@@ -393,7 +332,7 @@ class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> extends Base
 
 }
 
-class EnumParser2<const U, const T extends readonly U[]> extends BaseParser<T[number]> {
+class EnumParser2<const U extends string | number | symbol, const T extends readonly U[]> extends BaseParser<T[number]> {
 
     constructor(private values: T) {
         super()
@@ -405,6 +344,20 @@ class EnumParser2<const U, const T extends readonly U[]> extends BaseParser<T[nu
             throw new Error(`Expected enum value to be one of ${this.values.join(', ')} but got ${value}`)
         }
         return value as U
+    }
+
+    get options(): Readonly<T[number][]> {
+        return this.values
+    }
+
+    get enum() {
+        const result = {} as {
+            [K in T[number]]: K
+        }
+        for(const value of this.values) {
+            result[value] = value
+        }
+        return result
     }
 }
 
