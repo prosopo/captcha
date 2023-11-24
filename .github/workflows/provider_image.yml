@@ -75,4 +75,4 @@ jobs:
             - name: Check provider bundle runs
               run: |
                   CONTAINER_ID=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'sleep infinity')
-                  docker exec -it $CONTAINER_ID /bin/sh -c "npx provider version"
+                  docker exec $CONTAINER_ID /bin/sh -c "npx provider version"
