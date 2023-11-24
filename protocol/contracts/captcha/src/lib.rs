@@ -2326,19 +2326,19 @@ pub mod captcha {
             // Now make sure that the provider cannot later set the solution to disapproved and make
             // sure that the dapp balance is unchanged
 
-            contract
-                .provider_commit(Commit {
-                    dapp_contract,
-                    dataset_id: user_root,
-                    status: CaptchaStatus::Disapproved,
-                    provider_account,
-                    user_account,
-                    completed_at: 0,
-                    requested_at: 0,
-                    id: solution_account,
-                    user_signature: [0x0; 64],
-                })
-                .unwrap();
+            let commit_result = contract.provider_commit(Commit {
+                dapp_contract,
+                dataset_id: user_root,
+                status: CaptchaStatus::Disapproved,
+                provider_account,
+                user_account,
+                completed_at: 0,
+                requested_at: 0,
+                id: solution_account,
+                user_signature: [0x0; 64],
+            });
+            // expect to error due to duplicate solution id
+            assert_eq!(commit_result, Err(Error::CommitAlreadyExists));
             let commitment = contract.commits.get(solution_account).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             assert_eq!(
@@ -2489,19 +2489,18 @@ pub mod captcha {
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
             // Now make sure that the provider cannot later set the solution to approved
-            contract
-                .provider_commit(Commit {
-                    dapp_contract,
-                    dataset_id: user_root,
-                    status: CaptchaStatus::Approved,
-                    provider_account,
-                    user_account,
-                    completed_at: 0,
-                    requested_at: 0,
-                    id: solution_account,
-                    user_signature: [0x0; 64],
-                })
-                .unwrap();
+            let commit_result = contract.provider_commit(Commit {
+                dapp_contract,
+                dataset_id: user_root,
+                status: CaptchaStatus::Approved,
+                provider_account,
+                user_account,
+                completed_at: 0,
+                requested_at: 0,
+                id: solution_account,
+                user_signature: [0x0; 64],
+            }); // expect to error due to duplicate solution id
+            assert_eq!(commit_result, Err(Error::CommitAlreadyExists));
             let commitment = contract.commits.get(solution_account).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             assert_eq!(
