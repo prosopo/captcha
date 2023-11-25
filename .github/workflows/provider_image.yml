@@ -76,4 +76,5 @@ jobs:
               run: |
                   CONTAINER=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'npx provider version')
                   docker logs $CONTAINER >& provider.log
+                  cat provider.log
                   grep -oE "Version: \".*\"" provider.log || exit 1
