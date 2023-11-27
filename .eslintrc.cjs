@@ -11,7 +11,6 @@ module.exports = {
         'eslint:recommended',
         'plugin:regexp/recommended',
         'plugin:@typescript-eslint/recommended',
-        'plugin:prettier/recommended', // must be last!
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -24,7 +23,6 @@ module.exports = {
         'unused-imports',
         '@typescript-eslint',
         'sort-imports-es6-autofix',
-        'prettier',
     ],
     rules: {
         'no-unused-vars': 'off',
