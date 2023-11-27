@@ -9,7 +9,6 @@ module.exports = {
         'plugin:json/recommended',
         'plugin:toml/standard',
         'eslint:recommended',
-        'plugin:@html-eslint/recommended',
         'plugin:regexp/recommended',
         'plugin:@typescript-eslint/recommended',
         'plugin:prettier/recommended', // must be last!
