@@ -20,7 +20,7 @@ export default async function (name: string, tsConfigPath: string, entry?: strin
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             replace({
-                'esMain(import.meta)': 'require.main === module', // Replaces esMain checks with CommonJS equivalent
+                'import.meta.url': 'module', // Replaces ESM checks with CommonJS equivalent
             }),
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore

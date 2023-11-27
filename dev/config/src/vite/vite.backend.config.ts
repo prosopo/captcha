@@ -203,7 +203,7 @@ export default async function (
                 {
                     filter: new RegExp(filterEntry),
                     replace: {
-                        from: 'esMain(import.meta)',
+                        from: 'isMain(import.meta)',
                         to: 'false',
                     },
                 },
