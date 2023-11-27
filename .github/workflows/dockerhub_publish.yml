@@ -72,6 +72,8 @@ jobs:
               # Build JS bundle and publish to Docker Hub if publish_dockerhub_js_bundle is true
               if: needs.check_version.outputs.bump == 'true'
               run: |
+                  set -x # Print commands and their arguments as they are executed.
+                  
                   # Create a temporary directory to store existing JS bundles
                   mkdir -p ./js_bundles_host_temp/
 
