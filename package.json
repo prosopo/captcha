@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.2.14",
+    "version": "0.2.15",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -38,6 +38,7 @@
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:bundle": "npm -w @prosopo/client-bundle-example run start",
+        "start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
@@ -123,8 +124,5 @@
         "free",
         "captcha-alternative"
     ],
-    "license": "Apache-2.0",
-    "dependencies": {
-        "cypress": "^13.5.1"
-    }
+    "license": "Apache-2.0"
 }

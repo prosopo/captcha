@@ -92,13 +92,13 @@ The Procaptcha component is called as follows:
 ```
 
 A config object is required and must contain your SITE_KEY. The callbacks are optional and can be used to handle the
-various Procaptcha events. The following config demonstrates the `REACT_APP_DAPP_SITE_KEY` variable being pulled from
+various Procaptcha events. The following config demonstrates the `PROSOPO_SITE_KEY` variable being pulled from
 environment variables.
 
 ```tsx
 const config: ProcaptchaConfigOptional = {
     account: {
-        address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
+        address: process.env.PROSOPO_SITE_KEY || undefined,
     },
     web2: 'true',
     dappName: 'client-example',

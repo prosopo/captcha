@@ -72,13 +72,21 @@ export default class ProviderApi extends HttpClientBase {
         return this.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
     }
 
-    public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
+    public verifyDappUser(
+        userAccount: string,
+        commitmentId?: string,
+        maxVerifiedTime?: number
+    ): Promise<VerificationResponse> {
         const payload: {
             user: string
             commitmentId?: string
+            maxVerifiedTime?: number
         } = { user: userAccount }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
+        }
+        if (maxVerifiedTime) {
+            payload['maxVerifiedTime'] = maxVerifiedTime
         }
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }

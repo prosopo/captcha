@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/cypress-shared",
-    "version": "0.2.14",
+    "version": "0.2.15",
     "private": true,
     "type": "module",
     "engines": {
@@ -8,8 +8,8 @@
         "npm": "8.9"
     },
     "dependencies": {
-        "@prosopo/types": "0.2.14",
-        "@prosopo/util": "0.2.14"
+        "@prosopo/types": "0.2.15",
+        "@prosopo/util": "0.2.15"
     },
     "devDependencies": {
         "@cypress/xpath": "^2.0.3",
@@ -19,7 +19,8 @@
         "rollup-plugin-node-builtins": "^2.1.2",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "vite": "^4.5.0"
+        "vite": "^4.5.0",
+        "vite-plugin-node-polyfills": "^0.16.0"
     },
     "scripts": {
         "build": "tsc",

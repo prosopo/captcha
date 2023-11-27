@@ -235,7 +235,11 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
+                    const verifyDappUserResponse = await providerApi.verifyDappUser(
+                        account.account.address,
+                        undefined,
+                        configOptional.challengeValidLength
+                    )
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
