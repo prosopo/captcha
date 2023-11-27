@@ -74,7 +74,7 @@ jobs:
             # Generate a mnemonic for the provider image
             - name: Generate mnemonic and add to env file
               run: |
-                  PROSOPO_ROOT_DIR=$(PWD)/dev/scripts NODE_ENV=production node dev/scripts/dist/scripts/generateMnemonic.js --env
+                  PROSOPO_ROOT_DIR=$(pwd)/dev/scripts NODE_ENV=production node dev/scripts/dist/scripts/generateMnemonic.js --env
 
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
