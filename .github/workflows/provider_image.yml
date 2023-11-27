@@ -72,15 +72,9 @@ jobs:
                   docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:dev
 
             # Generate a mnemonic for the provider image
-            - name: Generate mnemonic
+            - name: Generate mnemonic and add to env file
               run: |
-                  MNEMONICOUTPUT=$(node dev/scripts/dist/scripts/generateMnemonic.js)
-                  MNEMONIC=$(echo $MNEMONICOUTPUT | grep Mnemonic: | cut -d ":" -f2 | xargs)
-                  echo $MNEMONIC
-                  echo "PROSOPO_PROVIDER_MNEMONIC=$MNEMONIC" >> ./.env.production
-                  ADDRESS=$(echo $MNEMONICOUTPUT | grep Address: | cut -d ":" -f2 | xargs)
-                  echo $ADDRESS
-                  echo "PROSOPO_PROVIDER_ADDRESS=$ADDRESS" >> ./.env.production
+                  NODE_ENV=production node dev/scripts/dist/scripts/generateMnemonic.js --env
 
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
