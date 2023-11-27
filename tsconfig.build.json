@@ -24,7 +24,8 @@
         "importHelpers": true,
         "useUnknownInCatchVariables": true,
         "jsx": "react-jsx",
-        "listFiles": true,
+        // "listFiles": true, // turn on to debug
+        // "explainFiles": true, // turn on to debug
         "preserveWatchOutput": true,
         "removeComments": true
     }
