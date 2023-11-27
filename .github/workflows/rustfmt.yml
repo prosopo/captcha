@@ -6,6 +6,7 @@ on:
         paths:
             - '**.rs'
             - '.github/workflows/rustfmt.yml'
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
