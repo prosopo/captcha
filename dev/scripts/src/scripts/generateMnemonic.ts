@@ -26,8 +26,8 @@ async function mnemonic(addToEnv: boolean) {
     logger.info(`Mnemonic: ${mnemonic}`)
     if (addToEnv) {
         await updateEnvFile({
-            PROVIDER_MNEMONIC: `"${mnemonic}"`,
-            PROVIDER_ADDRESS: address,
+            PROSOPO_PROVIDER_MNEMONIC: `"${mnemonic}"`,
+            PROSOPO_PROVIDER_ADDRESS: address,
         })
     }
 }
