@@ -48,5 +48,6 @@ module.exports = {
                 memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
             },
         ],
+        'json/*': ['error', { allowComments: true }],
     },
 }
