@@ -84,7 +84,7 @@ jobs:
             - name: Check provider bundle runs
               run: |
                   
-                  CONTAINER=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'npx provider version')
+                  CONTAINER=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
                   sleep 10s
                   docker logs $CONTAINER >& provider.log
                   echo $(cat provider.log)
