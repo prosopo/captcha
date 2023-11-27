@@ -77,14 +77,14 @@ jobs:
                   MNEMONICOUTPUT=$(node dev/scripts/dist/scripts/generateMnemonic.js)
                   MNEMONIC=$(echo $MNEMONICOUTPUT | grep Mnemonic: | cut -d ":" -f2 | xargs)
                   ADDRESS=$(echo $MNEMONICOUTPUT | grep Address: | cut -d ":" -f2 | xargs)
-                  echo "MNEMONIC=$MNEMONIC" >> ./.env.production
-                  echo "ADDRESS=$ADDRESS" >> ./.env.production
+                  echo "PROSOPO_PROVIDER_MNEMONIC=$MNEMONIC" >> ./.env.production
+                  echo "PROSOPO_PROVIDER_ADDRESS=$ADDRESS" >> ./.env.production
 
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
               run: |
                   
-                  CONTAINER=$(docker run -d --env-file .env prosopo/provider:dev /bin/sh -c 'npx provider version')
+                  CONTAINER=$(docker run -d --env-file .env.production prosopo/provider:dev /bin/sh -c 'npx provider version')
                   sleep 10s
                   docker logs $CONTAINER >& provider.log
                   echo $(cat provider.log)
