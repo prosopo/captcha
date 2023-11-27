@@ -26,7 +26,6 @@
         "jsx": "react-jsx",
         "listFiles": true,
         "preserveWatchOutput": true,
-        "removeComments": true,
-        "explainFiles": true
+        "removeComments": true
     }
 }
