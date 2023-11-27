@@ -7,7 +7,7 @@ import { Get } from './commands/get.js'
 import { Labels } from './commands/labels.js'
 import { Relocate } from './commands/relocate.js'
 import { Resize } from './commands/resize.js'
-import esMain from 'es-main'
+import { isMain } from '@prosopo/util'
 
 const main = async () => {
     const commands: CliCommandAny[] = [
@@ -25,7 +25,7 @@ const main = async () => {
 }
 
 //if main process
-if (esMain(import.meta)) {
+if (isMain(import.meta.url)) {
     main()
         .then(() => {
             process.exit(0)
