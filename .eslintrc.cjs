@@ -17,13 +17,7 @@ module.exports = {
         ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: [
-        'workspaces',
-        '@html-eslint',
-        'unused-imports',
-        '@typescript-eslint',
-        'sort-imports-es6-autofix',
-    ],
+    plugins: ['workspaces', '@html-eslint', 'unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix'],
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
