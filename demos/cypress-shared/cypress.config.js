@@ -11,11 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { builtinModules } from 'module'
 import { defineConfig } from 'cypress'
-import builtIns from 'rollup-plugin-node-builtins'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import vitePreprocessor from 'cypress-vite'
-const external = [...builtinModules, ...builtinModules.map((m) => `node:${m}`)]
 export default defineConfig({
     headers: { 'Accept-Encoding': 'gzip, deflate' },
     e2e: {
@@ -27,12 +25,6 @@ export default defineConfig({
                     esbuild: {
                         platform: 'browser',
                     },
-                    resolve: {
-                        alias: {
-                            fs: builtIns().resolveId('fs'),
-                            child_process: builtIns().resolveId('child_process'),
-                        },
-                    },
                     server: {
                         host: true,
                     },
@@ -41,6 +33,7 @@ export default defineConfig({
                         modulePreload: { polyfill: true },
                         mode: 'development',
                     },
+                    plugins: [nodePolyfills()],
                 })
             )
         },
