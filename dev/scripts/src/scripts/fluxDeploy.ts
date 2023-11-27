@@ -165,8 +165,8 @@ const verifyLogin = async (zelid: string, signature: string, loginPhrase: string
     return await errorHandler(response)
 }
 
-const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL) => {
-    const apiUrl = new URL(`${url}apps/redeploy/imageServer/false/true`).toString()
+const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL, appName: string) => {
+    const apiUrl = new URL(`${url}apps/redeploy/${appName}/false/true`).toString()
     const Zelidauth = qs.stringify({
         zelid,
         signature,
@@ -252,7 +252,7 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
         await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
         // Soft redeploy the app
-        const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
+        const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL, appName)
 
         log.info(redployResponse)
         process.exit(0)
