@@ -14,6 +14,8 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 pub use self::common::{Common, CommonRef};
+pub mod math;
+pub use math::Math;
 
 /// Print and return an error in ink
 #[macro_export]
@@ -160,6 +162,8 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
+        /// Returned if there is an math error, e.g. overflow, div 0, etc
+        Math,
     }
 
     /// get the account id in byte array format
