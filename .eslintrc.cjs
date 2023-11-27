@@ -18,7 +18,14 @@ module.exports = {
         ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: ['workspaces', '@html-eslint', 'unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix', 'prettier'],
+    plugins: [
+        'workspaces',
+        '@html-eslint',
+        'unused-imports',
+        '@typescript-eslint',
+        'sort-imports-es6-autofix',
+        'prettier',
+    ],
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
@@ -52,9 +59,9 @@ module.exports = {
     },
     overrides: [
         {
-        files: ["*.html"],
-        parser: "@html-eslint/parser",
-        extends: ["plugin:@html-eslint/recommended"],
+            files: ['*.html'],
+            parser: '@html-eslint/parser',
+            extends: ['plugin:@html-eslint/recommended'],
         },
-    ]
+    ],
 }
