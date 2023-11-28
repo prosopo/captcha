@@ -8,6 +8,11 @@ on:
             - 'package.json'
             - '.github/workflows/contract_release_process.yml'
     workflow_dispatch:
+        inputs:
+            ignore_version_check:
+                description: 'Ignore version check and publish anyway'
+                required: false
+                default: 'false'
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -49,7 +54,7 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - name: Build the contract sources
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               run: |
                   set -e  # Exit immediately if a command exits with a non-zero status.
 
@@ -63,7 +68,7 @@ jobs:
                   cd ../..
 
             - name: Create Release
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: create_release
               uses: actions/create-release@v1
               with:
@@ -76,7 +81,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract ABI
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: upload-release-asset-abi
               uses: actions/upload-release-asset@v1
               with:
@@ -88,7 +93,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract WASM
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: upload-release-asset-wasm
               uses: actions/upload-release-asset@v1
               with:
@@ -100,7 +105,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Contract
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: upload-release-asset-contract
               uses: actions/upload-release-asset@v1
               with:
@@ -112,7 +117,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Proxy ABI
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: upload-release-asset-abi-proxy
               uses: actions/upload-release-asset@v1
               with:
@@ -124,7 +129,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Proxy WASM
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: upload-release-asset-wasm-proxy
               uses: actions/upload-release-asset@v1
               with:
@@ -136,7 +141,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Proxy
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               id: upload-release-asset-contract-proxy
               uses: actions/upload-release-asset@v1
               with:
