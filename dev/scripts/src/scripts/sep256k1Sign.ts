@@ -3,9 +3,9 @@ import { Keypair } from '@polkadot/util-crypto/types'
 import { at } from '@prosopo/util'
 import { base58Decode, base64Encode, cryptoWaitReady, sha256AsU8a } from '@polkadot/util-crypto'
 import { bnToU8a, hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
+import { isMain } from '@prosopo/util'
 import { loadEnv } from '@prosopo/cli'
 import { secp256k1 } from '@noble/curves/secp256k1'
-import esMain from 'es-main'
 import varuint from 'varuint-bitcoin'
 
 loadEnv()
@@ -64,7 +64,7 @@ export function wifToPrivateKey(wif: string): Uint8Array {
 }
 
 // if main process
-if (esMain(import.meta)) {
+if (isMain(import.meta.url)) {
     const secretKey = wifToPrivateKey(process.env.PROSOPO_ZELCORE_PRIVATE_KEY || '')
     const publicKey: Uint8Array = base58Decode(process.env.PROSOPO_ZELCORE_PUBLIC_KEY || '')
     const keypair: Keypair = { secretKey, publicKey }
@@ -76,8 +76,9 @@ if (esMain(import.meta)) {
     sign(message, keypair)
         .then((sig) => {
             const hexSig = u8aToHex(sig)
-            console.log(`Hex signature   : ${hexSig}`)
-            console.log(`Base64 signature: ${base64Encode(hexSig)}`)
+            console.log(`Hex Signature   : ${hexSig}`)
+            console.log(`Public Key: ${publicKey}`)
+            console.log(`Base64 Signature: ${base64Encode(hexSig)}`)
             process.exit()
         })
         .catch((error) => {

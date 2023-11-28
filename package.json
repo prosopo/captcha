@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.2.14",
+    "version": "0.2.16",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -59,8 +59,8 @@
     },
     "private": true,
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "workspaces": [
         "protocol/dev",

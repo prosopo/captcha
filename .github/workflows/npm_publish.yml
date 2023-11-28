@@ -8,6 +8,11 @@ on:
             - 'package.json'
             - '.github/workflows/npm_publish.yml'
     workflow_dispatch:
+        inputs:
+            ignore_version_check:
+                description: 'Ignore version check and publish anyway'
+                required: false
+                default: 'false'
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -55,7 +60,7 @@ jobs:
             - run: npm run build:all:cjs
 
             - name: Npm publish
-              if: needs.check_version.outputs.bump == 'true'
+              if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                     echo "Running on GitHub Actions"

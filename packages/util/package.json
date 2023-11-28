@@ -1,12 +1,12 @@
 {
     "name": "@prosopo/util",
-    "version": "0.2.14",
+    "version": "0.2.16",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "scripts": {
         "clean": "tsc --build --clean",
