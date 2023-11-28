@@ -8,7 +8,7 @@
     "sideEffects": false,
     "engines": {
         "node": ">=18",
-        "npm": "8.9"
+        "npm": ">=9"
     },
     "exports": {
         ".": {
