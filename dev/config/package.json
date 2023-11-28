@@ -11,7 +11,7 @@
         "lint:fix": "npx eslint . --fix"
     },
     "engines": {
-        "node": ">=16",
+        "node": ">=18",
         "npm": "8.9"
     },
     "author": "Prosopo Limited",
