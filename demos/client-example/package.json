@@ -5,7 +5,7 @@
     "type": "module",
     "engines": {
         "node": ">=18",
-        "npm": "8.9"
+        "npm": ">=9"
     },
     "dependencies": {
         "@emotion/react": "^11.9.3",
