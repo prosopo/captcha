@@ -252,9 +252,9 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
         await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
         // Soft redeploy the app
-        const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL, appName)
+        const redeployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL, appName)
 
-        log.info(redployResponse)
+        log.info(redeployResponse)
         process.exit(0)
     } catch (error) {
         log.error('An error occurred:', error)
