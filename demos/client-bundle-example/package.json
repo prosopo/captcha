@@ -2,8 +2,8 @@
     "name": "@prosopo/client-bundle-example",
     "main": "index.js",
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "scripts": {
         "start": "light-server -s ./src -p 9232 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\"",
@@ -13,7 +13,7 @@
         "dotenv": "^16.0.1",
         "light-server": "^2.9.1"
     },
-    "version": "0.2.15",
+    "version": "0.2.16",
     "devDependencies": {
         "tslib": "2.6.2",
         "typescript": "5.1.6"
