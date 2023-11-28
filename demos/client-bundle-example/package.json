@@ -3,7 +3,7 @@
     "main": "index.js",
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=9"
     },
     "scripts": {
         "start": "light-server -s ./src -p 9232 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\"",

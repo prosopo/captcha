@@ -12,7 +12,7 @@
     },
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=9"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",

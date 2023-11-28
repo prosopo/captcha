@@ -60,7 +60,7 @@
     "private": true,
     "engines": {
         "node": ">=16",
-        "npm": "8.9"
+        "npm": ">=9"
     },
     "workspaces": [
         "protocol/dev",
