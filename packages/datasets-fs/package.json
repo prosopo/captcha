@@ -5,7 +5,7 @@
     "license": "Apache-2.0",
     "private": false,
     "engines": {
-        "node": ">=16",
+        "node": ">=18",
         "npm": "8.9"
     },
     "scripts": {
