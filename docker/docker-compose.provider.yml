@@ -24,12 +24,6 @@ services:
       - "27017:27017"
     env_file:
       - ../.env.rococo
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
     networks:
       - internal
   caddy:
