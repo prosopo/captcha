@@ -1445,6 +1445,28 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_accs_tmp() {
+            let key_pair = TestHelper::get_account2(1);
+            let seed = TestHelper::get_seed(1);
+            println!("seed: {}", seed);
+            println!("key_pair: {}", key_pair.public());
+
+            TestHelper::set_caller(AccountId::from([0x00; 32]));
+
+            // let seed = [DEV_PHRASE, "//Alice"].join("");
+
+            // let key_pair = sr25519::Pair::from_string(&seed, None).expect("Generates key pair");
+            // println!("key_pair: {}", key_pair.public());
+            // let sig = key_pair.sign(&[1, 2, 3, 4]);
+            // println!("sig: {:?}", sig);
+            // let entropy = key_pair.to_raw_vec();
+            // println!("entropy: {:?}", entropy);
+            // println!("len entropy: {:?}", entropy.len());
+
+            assert!(false);
+        }
+
+        #[ink::test]
         fn test_ctor_guard_pass() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());

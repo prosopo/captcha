@@ -33,8 +33,12 @@ path = "src/lib.rs"
 overflow-checks = false
 
 [features]
-default = [ "std" ]
-std = [ "ink/std", "scale/std", "scale-info/std" ]
-ink-as-dependency = [ "scale-info/derive" ]
-test-dependency = [ ]
+default = ["std"]
+std = ["ink/std", "scale/std", "scale-info/std"]
+ink-as-dependency = ["scale-info/derive"]
+test-dependency = []
+
+[dev-dependencies]
+rust-bip39 = "1.0.0"
+sp-core = "26.0.0"
 

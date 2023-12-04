@@ -15,6 +15,11 @@
 
 pub use self::common::{Common, CommonRef};
 
+#[cfg(any(test, feature = "test-dependency"))]
+mod test_helper;
+#[cfg(any(test, feature = "test-dependency"))]
+pub use test_helper::TestHelper;
+
 /// Print and return an error in ink
 #[macro_export]
 macro_rules! err {
