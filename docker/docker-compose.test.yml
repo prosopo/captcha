@@ -6,12 +6,6 @@ services:
       - "9615:9615"
       - "9944:9944"
       - "9933:9933"
-    deploy:
-      # replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
   database:
     image: mongo:5.0.4
     # volumes:
@@ -22,9 +16,3 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
       - MONGO_INITDB_DATABASE=prosopo
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
