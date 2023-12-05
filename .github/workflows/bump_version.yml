@@ -52,27 +52,27 @@ jobs:
 
             - name: Install dependencies
               run: npm ci
-            
+
             - name: Build
               run: npm run build -w @prosopo/scripts
 
             - name: Bump version
               run: |
-                    # make a new branch for the version changes
-                    git switch -c bump-version-${{ github.event.inputs.version }}
+                  # make a new branch for the version changes
+                  git switch -c bump-version-${{ github.event.inputs.version }}
 
-                    # make the version changes
-                    npm run version ${{ github.event.inputs.version }}
+                  # make the version changes
+                  npm run version ${{ github.event.inputs.version }}
 
-                    # commit the version changes
-                    git add .
-                    git commit -m "Bump version to ${{ github.event.inputs.version }}"
+                  # commit the version changes
+                  git add .
+                  git commit -m "Bump version to ${{ github.event.inputs.version }}"
 
-                    # push version changes
-                    git push --set-upstream origin bump-version-${{ github.event.inputs.version }}
+                  # push version changes
+                  git push --set-upstream origin bump-version-${{ github.event.inputs.version }}
 
-                    # create a PR for the release
-                    ID=$(gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill 2>&1 | grep http | xargs -n1 basename)
+                  # create a PR for the release
+                  ID=$(gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill 2>&1 | grep http | xargs -n1 basename)
 
-                    # enable auto-merge via squash merge
-                    gh pr merge $ID --auto --squash
+                  # enable auto-merge via squash merge
+                  gh pr merge $ID --auto --squash
