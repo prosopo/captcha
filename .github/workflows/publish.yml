@@ -111,42 +111,25 @@ jobs:
                   npm run cli -- clean --docker
                   npm run cli -- build --docker --release
 
-            - name: Create release
+            - name: Build JS bundle
               if: steps.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
-              id: create_release
-              uses: actions/create-release@v1
-              with:
-                  tag_name: ${{ steps.check_version.outputs.next_version }}
-                  release_name: Release ${{ steps.check_version.outputs.next_version }}
-                  body: Automated release version ${{ steps.check_version.outputs.next_version }}
-                  draft: false
-                  prerelease: false
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  # Copy the rococo env file to production env file
+                  echo "Copying the rococo env to production env file in procaptcha-bundle"
+                  cp ./dev/scripts/env.rococo ./packages/procaptcha-bundle/.env.production
 
-            - name: Upload captcha contract
-              if: steps.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
-              id: upload-release-asset-contract-captcha
-              uses: actions/upload-release-asset@v1
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./protocol/target/ink/captcha/captcha.contract
-                  asset_name: captcha.contract
-                  asset_content_type: application/octet-stream
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  # Navigate to the JS bundle directory and build
+                  echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                  cd packages/procaptcha-bundle
 
-            - name: Upload proxy contract
-              if: steps.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
-              id: upload-release-asset-contract-proxy
-              uses: actions/upload-release-asset@v1
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./protocol/target/ink/proxy/proxy.contract
-                  asset_name: proxy.contract
-                  asset_content_type: application/octet-stream
+                  NODE_ENV=production npm run bundle:prod
+
+            - name: Publish to github
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  # do a gh release with the contract sources + bundle
+                  gh release create --generate-notes "v${{ steps.check_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm publish
               if: needs.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
@@ -162,31 +145,6 @@ jobs:
                   else
                     echo "Running locally via act, skipping npm publish."
                   fi
-
-            - name: Build JS bundle
-              if: steps.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
-              run: |
-                  # Copy the rococo env file to production env file
-                  echo "Copying the rococo env to production env file in procaptcha-bundle"
-                  cp ./dev/scripts/env.rococo ./packages/procaptcha-bundle/.env.production
-
-                  # Navigate to the JS bundle directory and build
-                  echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
-                  cd packages/procaptcha-bundle
-
-                  NODE_ENV=production npm run bundle:prod
-
-            - name: Upload procaptcha bundle
-              if: steps.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
-              id: upload-release-asset-bundle-procaptcha
-              uses: actions/upload-release-asset@v1
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js
-                  asset_name: procaptcha.bundle.js
-                  asset_content_type: application/octet-stream
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Publish bundle in js_server to dockerhub
               if: steps.check_version.outputs.bump == 'true' || ${{ github.event.inputs.ignore_version_check }} == 'true'
