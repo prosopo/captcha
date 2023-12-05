@@ -57,6 +57,8 @@ jobs:
               run: npm run build -w @prosopo/scripts
 
             - name: Bump version
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # make a new branch for the version changes
                   git switch -c bump-version-${{ github.event.inputs.version }}
