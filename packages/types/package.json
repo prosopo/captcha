@@ -1,12 +1,12 @@
 {
     "name": "@prosopo/types",
-    "version": "0.2.15",
+    "version": "0.2.17",
     "description": "Types for prosopo TypeScript packages",
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "exports": {
         ".": {
@@ -32,12 +32,12 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@polkadot/api": "10.10.1",
-        "@polkadot/api-contract": "10.10.1",
-        "@polkadot/types": "10.10.1",
-        "@polkadot/types-codec": "10.10.1",
-        "@prosopo/common": "0.2.15",
-        "@prosopo/captcha-contract": "0.2.15",
+        "@polkadot/api": "10.11.1",
+        "@polkadot/api-contract": "10.11.1",
+        "@polkadot/types": "10.11.1",
+        "@polkadot/types-codec": "10.11.1",
+        "@prosopo/common": "0.2.17",
+        "@prosopo/captcha-contract": "0.2.17",
         "consola": "^3.2.3",
         "zod": "^3.22.3"
     },

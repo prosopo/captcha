@@ -19,7 +19,7 @@ be placed anywhere on the page. Inside the <head> tag or immediately after the `
 
 ```html
 
-<script src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
+<script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
 ```
 
 Now, you can either render the Procaptcha widget implicitly or explicitly.
@@ -55,7 +55,7 @@ solved.
 <html>
 <head>
     <title>Procaptcha Demo</title>
-    <script src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    <script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
 </head>
 <body>
 <form action="" method="POST">
@@ -83,7 +83,7 @@ id `procaptcha-container` where the widget will be rendered.
 
 <html>
 <head>
-    <script id="procaptcha-script" src="https://prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    <script id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
 </head>
 <body>
 <div id="procaptcha-container"></div>
