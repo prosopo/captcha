@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-example-server",
-    "version": "0.2.17",
+    "version": "0.2.20",
     "description": "Backend for client-example",
     "main": "dist/app.js",
     "type": "module",
@@ -33,11 +33,11 @@
         "@noble/hashes": "^1.3.1",
         "@polkadot/util": "12.6.1",
         "@polkadot/util-crypto": "12.6.1",
-        "@prosopo/api": "0.2.17",
-        "@prosopo/contract": "0.2.17",
-        "@prosopo/procaptcha": "0.2.17",
-        "@prosopo/server": "0.2.17",
-        "@prosopo/types": "0.2.17",
+        "@prosopo/api": "0.2.20",
+        "@prosopo/contract": "0.2.20",
+        "@prosopo/procaptcha": "0.2.20",
+        "@prosopo/server": "0.2.20",
+        "@prosopo/types": "0.2.20",
         "@typegoose/auto-increment": "3.3.0",
         "cors": "^2.8.5",
         "jsonwebtoken": "^9.0.0",
@@ -52,6 +52,6 @@
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vite": "^4.5.0",
-        "@prosopo/config": "0.2.17"
+        "@prosopo/config": "0.2.20"
     }
 }
