@@ -109,7 +109,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
             const tomlContent: any = parse(content)
             if (tomlContent.workspace) {
                 if ((tomlContent.workspace as any).version) {
-                    ;(tomlContent.workspace as any).version = version
+                    (tomlContent.workspace as any).version = version
                 }
             } else {
                 // replace dependency versions in all toml files
@@ -128,7 +128,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
             const tomlContent = parse(content)
             if (tomlContent.workspace) {
                 if ((tomlContent.workspace as any).version) {
-                    ;(tomlContent.workspace as any).version = version
+                    (tomlContent.workspace as any).version = version
                 }
             } else {
                 for (const obj of [tomlContent.dependencies ?? {}, tomlContent['dev-dependencies'] ?? {}]) {
