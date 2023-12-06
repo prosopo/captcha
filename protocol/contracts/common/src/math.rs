@@ -6,43 +6,53 @@ where
 {
     fn mul(self, rhs: Self) -> Result<Self, crate::common::Error>;
     fn mul_panic(self, rhs: Self) -> Self {
-        self.mul(rhs).expect(&format!(
-            "Math error: {:?} * {:?}",
-            stringify!(self),
-            stringify!(rhs)
-        ))
+        self.mul(rhs).unwrap_or_else(|_| {
+            panic!(&format!(
+                "Math error: {:?} * {:?}",
+                stringify!(self),
+                stringify!(rhs)
+            ))
+        })
     }
     fn sub(self, rhs: Self) -> Result<Self, crate::common::Error>;
     fn sub_panic(self, rhs: Self) -> Self {
-        self.sub(rhs).expect(&format!(
-            "Math error: {:?} - {:?}",
-            stringify!(self),
-            stringify!(rhs)
-        ))
+        self.sub(rhs).unwrap_or_else(|_| {
+            panic!(&format!(
+                "Math error: {:?} - {:?}",
+                stringify!(self),
+                stringify!(rhs)
+            ))
+        })
     }
     fn add(self, rhs: Self) -> Result<Self, crate::common::Error>;
     fn add_panic(self, rhs: Self) -> Self {
-        self.add(rhs).expect(&format!(
-            "Math error: {:?} + {:?}",
-            stringify!(self),
-            stringify!(rhs)
-        ))
+        self.add(rhs).unwrap_or_else(|_| {
+            panic!(&format!(
+                "Math error: {:?} + {:?}",
+                stringify!(self),
+                stringify!(rhs)
+            ))
+        })
     }
     fn div(self, rhs: Self) -> Result<Self, crate::common::Error>;
     fn div_panic(self, rhs: Self) -> Self {
-        self.div(rhs).expect(&format!(
-            "Math error: {:?} / {:?}",
-            stringify!(self),
-            stringify!(rhs)
-        ))
+        self.div(rhs).unwrap_or_else(|_| {
+            panic!(&format!(
+                "Math error: {:?} / {:?}",
+                stringify!(self),
+                stringify!(rhs)
+            ))
+        })
     }
     fn rem(self, rhs: Self) -> Result<Self, crate::common::Error>;
     fn rem_panic(self, rhs: Self) -> Self {
-        self.rem(rhs).expect(&format!(
-            "Math error: {:?} % {:?}",
-            stringify!(self),
-            stringify!(rhs)
-        ))
+        self.rem(rhs).unwrap_or_else(|_| {
+            panic!(&format!(
+                "Math error: {:?} % {:?}",
+                stringify!(self),
+                stringify!(rhs)
+            ))
+        })
     }
 }
 
