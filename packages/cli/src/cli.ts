@@ -16,10 +16,10 @@ import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getPairAsync } from '@prosopo/contract'
 import { getSecret } from './process.env.js'
+import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import { start } from './start.js'
-import esMain from 'es-main'
 import getConfig from './prosopo.config.js'
 import process from 'process'
 
@@ -54,7 +54,7 @@ async function main() {
 }
 
 //if main process
-if (esMain(import.meta)) {
+if (isMain(import.meta.url, 'provider')) {
     main()
         .then(() => {
             log.info('Running main process...')

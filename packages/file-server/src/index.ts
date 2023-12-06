@@ -1,7 +1,7 @@
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { isMain } from '@prosopo/util'
 import dotenv from 'dotenv'
-import esMain from 'es-main'
 import express, { Request, Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
@@ -97,7 +97,7 @@ const main = async () => {
 }
 
 //if main process
-if (esMain(import.meta)) {
+if (isMain(import.meta.url)) {
     main().catch((error) => {
         console.error(error)
     })

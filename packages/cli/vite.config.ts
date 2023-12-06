@@ -1,7 +1,7 @@
 import * as path from 'path'
 import { ViteBackendConfig } from '@prosopo/config'
 import { defineConfig } from 'vite'
-import { loadEnv } from '.'
+import { loadEnv } from '@prosopo/cli'
 import { version } from './package.json'
 
 // load env using our util because vite loadEnv is not working for .env.development
