@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0x04865a9a5b2a072738e7345f23f396b9d29215294fe02d6d588fee820e2d3314",
+        "hash": "0x2b0120d6d186fe0160863deae60af5fcc06944c4a549a9b871a4f5d700c6bfa9",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -15,7 +15,7 @@
     },
     "contract": {
         "name": "common",
-        "version": "0.2.14",
+        "version": "0.2.17",
         "authors": [
             "Chris Taylor <chris@prosopo.io>",
             "George Oastler <george@prosopo.io>",

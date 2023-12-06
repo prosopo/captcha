@@ -86,7 +86,7 @@ function updateEnvFileVar(source: string, name: string, value: string) {
     return source + `\n${name}=${value}`
 }
 
-async function updateEnvFile(vars: Record<string, string>) {
+export async function updateEnvFile(vars: Record<string, string>) {
     const rootDir = getRootDir()
     const envFile = getEnvFile(rootDir, '.env')
 
@@ -95,7 +95,7 @@ async function updateEnvFile(vars: Record<string, string>) {
     for (const key in vars) {
         readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key))
     }
-
+    logger.info(`Updating ${envFile}`)
     await fse.writeFile(envFile, readEnvFile)
 }
 
