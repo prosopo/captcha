@@ -1,14 +1,14 @@
 {
     "name": "@prosopo/procaptcha-react",
-    "version": "0.2.15",
+    "version": "0.2.17",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
     "type": "module",
     "sideEffects": false,
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "exports": {
         ".": {
@@ -33,11 +33,11 @@
         "@emotion/styled": "^11.11.0",
         "@mui/icons-material": "^5.14.3",
         "@mui/material": "^5.14.5",
-        "@polkadot/extension-dapp": "0.46.5",
-        "@polkadot/extension-inject": "0.46.5",
-        "@polkadot/types": "10.10.1",
-        "@prosopo/common": "0.2.15",
-        "@prosopo/procaptcha": "0.2.15",
+        "@polkadot/extension-dapp": "0.46.6",
+        "@polkadot/extension-inject": "0.46.6",
+        "@polkadot/types": "10.11.1",
+        "@prosopo/common": "0.2.17",
+        "@prosopo/procaptcha": "0.2.17",
         "i18next": "^21.9.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",

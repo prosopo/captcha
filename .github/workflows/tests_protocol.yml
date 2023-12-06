@@ -7,6 +7,7 @@ on:
         paths:
             - 'protocol/**'
             - '.github/workflows/tests_protocol.yml'
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

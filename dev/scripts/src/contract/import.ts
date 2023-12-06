@@ -44,7 +44,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
     await exec(`mkdir -p ${pathToOutput}`)
-    const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
+    const cmd = `npx typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
     const name = path.basename(pathToAbis)
     // copy the metadata

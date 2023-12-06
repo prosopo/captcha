@@ -7,12 +7,6 @@ services:
       - "9615:9615"
       - "9944:9944"
       - "9933:9933"
-    deploy:
-      # replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
     command: substrate-contracts-node --dev -d ./chain-data --unsafe-rpc-external --rpc-external --prometheus-external -lerror,runtime::contracts=debug
   database:
     image: mongo:5.0.4
@@ -22,12 +16,6 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
       - MONGO_INITDB_DATABASE=prosopo
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
   provider:
     # TODO update provider image
     image: prosopo/provider:v1.0.5
@@ -40,12 +28,6 @@ services:
     depends_on:
       - substrate
       - database
-    deploy:
-      # replicas: 1
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
 
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data-secrets.html
 # secrets:
