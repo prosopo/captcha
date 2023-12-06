@@ -66,6 +66,10 @@ jobs:
                   # make the version changes
                   npm run version ${{ github.event.inputs.version }}
 
+                  # set the author in git
+                  git config user.name "github-actions[bot]"
+                  git config user.email "dev@prosopo.io"
+
                   # commit the version changes
                   git add .
                   git commit -m "Bump version to ${{ github.event.inputs.version }}"
