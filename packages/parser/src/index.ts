@@ -31,10 +31,6 @@
 // TODO add chaining to all types, e.g. able to do .optional(), etc
 // TODO split up into classes, enable tree shaking via exports in pkg json
 
-import { union } from 'lodash'
-import z from 'zod'
-
-
 interface Validator<T> {
     // Validate a value and throw an error if it is invalid
     validate(value: T): void
@@ -94,7 +90,7 @@ abstract class BaseParser<T> implements Parser<T> {
     abstract parseShape(value: unknown, options?: ParseOptions): T
 
     validate(value: T): void {
-        for(const validator of this.validators) {
+        for (const validator of this.validators) {
             validator.validate(value)
         }
     }
@@ -103,7 +99,7 @@ abstract class BaseParser<T> implements Parser<T> {
         this.validators.push(validator)
         return this
     }
-    
+
     get validators(): Validator<T>[] {
         return this.#validators
     }
@@ -119,15 +115,14 @@ abstract class BaseParser<T> implements Parser<T> {
     get shape(): T {
         throw new Error('Do not call this method')
     }
-
 }
 
 class StringParser extends BaseParser<string> {
     override parseShape(value: unknown, options?: ParseOptions): string {
-        if(options?.coerce) {
+        if (options?.coerce) {
             value = String(value)
         }
-        if(typeof value !== 'string') {
+        if (typeof value !== 'string') {
             throw new Error(`Expected string but got ${typeof value}`)
         }
         return value
@@ -136,22 +131,22 @@ class StringParser extends BaseParser<string> {
 
 class NumberParser extends BaseParser<number> {
     override parseShape(value: unknown, options?: ParseOptions): number {
-        if(options?.coerce) {
+        if (options?.coerce) {
             value = Number(value)
         }
-        if(typeof value !== 'number') {
+        if (typeof value !== 'number') {
             throw new Error(`Expected number but got ${typeof value}`)
         }
         return value
     }
 }
 
-class BooleanParser extends BaseParser<boolean> { 
+class BooleanParser extends BaseParser<boolean> {
     override parseShape(value: unknown, options?: ParseOptions): boolean {
-        if(options?.coerce) {
+        if (options?.coerce) {
             value = Boolean(value)
         }
-        if(typeof value !== 'boolean') {
+        if (typeof value !== 'boolean') {
             throw new Error(`Expected boolean but got ${typeof value}`)
         }
         return value
@@ -160,12 +155,10 @@ class BooleanParser extends BaseParser<boolean> {
 
 class DateParser extends BaseParser<Date> {
     override parseShape(value: unknown, options?: ParseOptions): Date {
-        if(options?.coerce && 
-            (typeof value === 'string' || typeof value === 'number' || value instanceof Date)
-        ) {
+        if (options?.coerce && (typeof value === 'string' || typeof value === 'number' || value instanceof Date)) {
             value = new Date(value)
         }
-        if(!(value instanceof Date)) {
+        if (!(value instanceof Date)) {
             throw new Error(`Expected date but got ${typeof value}`)
         }
         return value
@@ -178,7 +171,7 @@ class LiteralParser<T> extends BaseParser<T> {
     }
 
     parseShape(value: unknown, options?: ParseOptions): T {
-        if(value !== this.literal) {
+        if (value !== this.literal) {
             throw new Error(`Expected literal ${this.literal} but got ${value}`)
         }
         return value as T
@@ -191,7 +184,7 @@ class OptionalParser<T> extends BaseParser<T | undefined> {
     }
 
     override parseShape(value: unknown, options?: ParseOptions | undefined): T | undefined {
-        if(value === undefined) {
+        if (value === undefined) {
             return undefined
         }
         return this.parser.parse(value, options)
@@ -200,7 +193,7 @@ class OptionalParser<T> extends BaseParser<T | undefined> {
     override validate(value: T | undefined): void {
         // run validators in this object as usual
         super.validate(value)
-        if(value === undefined) {
+        if (value === undefined) {
             // value missing, so no need to validate it further
             return
         }
@@ -215,7 +208,7 @@ class NullableParser<T> extends BaseParser<T | null> {
     }
 
     override parseShape(value: unknown, options?: ParseOptions | undefined): T | null {
-        if(value === null) {
+        if (value === null) {
             return null
         }
         return this.parser.parse(value, options)
@@ -224,7 +217,7 @@ class NullableParser<T> extends BaseParser<T | null> {
     override validate(value: T | null): void {
         // run validators in this object as usual
         super.validate(value)
-        if(value === null) {
+        if (value === null) {
             // value missing, so no need to validate it further
             return
         }
@@ -234,36 +227,39 @@ class NullableParser<T> extends BaseParser<T | null> {
 }
 
 type Entries<T> = {
-    [K in keyof T]: [K, T[K]];
-}[keyof T][];
+    [K in keyof T]: [K, T[K]]
+}[keyof T][]
 
 class ObjectParser<T extends {}> extends BaseParser<T> {
-
     constructor(private schema: Parseable<T>) {
         super()
     }
 
     parseShape(value: unknown, options?: ParseOptions): T {
         // check runtime type
-        if(typeof value !== 'object') {
+        if (typeof value !== 'object') {
             throw new Error(`Expected object but got ${typeof value}`)
         }
-        if(value === null) {
+        if (value === null) {
             throw new Error(`Expected object but got null`)
         }
         // check for additional keys if strict mode is enabled
-        if(!options?.noStrict) {
-            if(Object.keys(value).length > Object.keys(this.schema).length) {
+        if (!options?.noStrict) {
+            if (Object.keys(value).length > Object.keys(this.schema).length) {
                 // either throw an error or remove the extra keys
-                if(!options?.noStripExtraKeys) {
-                    throw new Error(`Unexpected additional keys found in object: ${Object.keys(value).filter(key => !(key in this.schema)).join(', ')}`)
+                if (!options?.noStripExtraKeys) {
+                    throw new Error(
+                        `Unexpected additional keys found in object: ${Object.keys(value)
+                            .filter((key) => !(key in this.schema))
+                            .join(', ')}`
+                    )
                 } else {
                     // find the extra keys by comparing against the schema
                     const actualKeys = Object.keys(value)
                     const expectedKeys = new Set(Object.keys(this.schema))
-                    const extraKeys = actualKeys.filter(key => !expectedKeys.has(key))
+                    const extraKeys = actualKeys.filter((key) => !expectedKeys.has(key))
                     // remove the extra keys
-                    for(const key of extraKeys) {
+                    for (const key of extraKeys) {
                         delete (value as any)[key]
                     }
                 }
@@ -271,8 +267,8 @@ class ObjectParser<T extends {}> extends BaseParser<T> {
         }
         // check the expected keys are present
         const entries = Object.entries(this.schema) as Entries<Parseable<T>>
-        for(const [key, subSchema] of entries) {
-            if(!(key in value)) {
+        for (const [key, subSchema] of entries) {
+            if (!(key in value)) {
                 throw new Error(`Expected object to have key ${String(key)}`)
             }
             // parse the value for the key
@@ -283,18 +279,17 @@ class ObjectParser<T extends {}> extends BaseParser<T> {
 }
 
 class ArrayParser<T> extends BaseParser<T[]> {
-    
     constructor(private schema: Parser<T>) {
         super()
     }
 
     parseShape(value: unknown, options?: ParseOptions): T[] {
         // check runtime type
-        if(!Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             throw new Error(`Expected array but got ${typeof value}`)
         }
         // parse each element
-        for(const [index, el] of value.entries()) {
+        for (const [index, el] of value.entries()) {
             this.schema.parse(el)
         }
         return value as T[]
@@ -306,7 +301,6 @@ type EnumMap<U extends EnumVariant, T extends Readonly<U[]>> = {
     [K in T[number]]: K
 }
 class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> extends BaseParser<T[number]> {
-
     readonly #options: T
 
     constructor(options: T) {
@@ -316,7 +310,7 @@ class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> extends Base
 
     parseShape(value: unknown, options?: ParseOptions): T[number] {
         // check runtime type
-        if(!this.options.includes(value as U)) {
+        if (!this.options.includes(value as U)) {
             throw new Error(`Expected enum option to be one of ${this.options.join(', ')} but got ${value}`)
         }
         return value as U
@@ -330,23 +324,23 @@ class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> extends Base
         const result = {} as {
             [K in T[number]]: K
         }
-        for(const value of this.options) {
+        for (const value of this.options) {
             result[value] = value
         }
         return result
     }
-
 }
 
-class EnumParser2<const U extends string | number | symbol, const T extends readonly U[]> extends BaseParser<T[number]> {
-
+class EnumParser2<const U extends string | number | symbol, const T extends readonly U[]> extends BaseParser<
+    T[number]
+> {
     constructor(private values: T) {
         super()
     }
 
     parseShape(value: unknown, options?: ParseOptions): T[number] {
         // check runtime type
-        if(!this.values.includes(value as U)) {
+        if (!this.values.includes(value as U)) {
             throw new Error(`Expected enum value to be one of ${this.values.join(', ')} but got ${value}`)
         }
         return value as U
@@ -360,7 +354,7 @@ class EnumParser2<const U extends string | number | symbol, const T extends read
         const result = {} as {
             [K in T[number]]: K
         }
-        for(const value of this.values) {
+        for (const value of this.values) {
             result[value] = value
         }
         return result
@@ -377,7 +371,7 @@ class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
 
     parseShape(value: unknown, options?: ParseOptions): T {
         // check runtime type
-        if(!this.options.includes(value as T)) {
+        if (!this.options.includes(value as T)) {
             throw new Error(`Expected enum value to be one of ${this.options.join(', ')} but got ${value}`)
         }
         return value as T
@@ -386,8 +380,8 @@ class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
     get options(): Readonly<T[]> {
         const result = [] as T[]
         // enums are laid out like this:
-        // { 
-        //   '0': 'Red', 
+        // {
+        //   '0': 'Red',
         //   '1': 'Green',
         //   '2': 'Blue',
         //   Red: 0,
@@ -395,8 +389,8 @@ class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
         //   Blue: 2
         // }
         // to allow for reverse lookup. All of the keys map to numeric values
-        for(const key in this.nativeEnum) {
-            if(typeof this.nativeEnum[key] === 'number') {
+        for (const key in this.nativeEnum) {
+            if (typeof this.nativeEnum[key] === 'number') {
                 result.push(key as unknown as T)
             }
         }
@@ -407,8 +401,8 @@ class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
         const result = {} as {
             [K in keyof T]: K
         }
-        for(const key in this.nativeEnum) {
-            if(typeof key === 'string') {
+        for (const key in this.nativeEnum) {
+            if (typeof key === 'string') {
                 result[key] = key
             }
         }
@@ -424,7 +418,7 @@ class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArra
     }
 
     override parseShape(value: unknown, options?: ParseOptions | undefined): U {
-        for(const parser of this.parsers) {
+        for (const parser of this.parsers) {
             try {
                 return parser.parse(value, options) as U // cast to U because we know it will be one of the parsers
             } catch {}
@@ -437,7 +431,7 @@ class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArra
         // delegate to full blown parsing, as we cannot be certain which parser is correct for the type.
 
         // loop through each parser
-        for(const parser of this.parsers) {
+        for (const parser of this.parsers) {
             try {
                 // e.g. given number | string, we cannot be certain whether the value is a number or a string, so we must try both
                 // it may be that the validator for the string passes when the value is a number and the number parser's validator fails, so we cannot rely on the validators due to false positivies.
@@ -450,13 +444,16 @@ class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArra
 }
 
 class UnionParser2<T, U> extends BaseParser<T | U> {
-    constructor(private first: Parser<T>, private second: Parser<U>) {
+    constructor(
+        private first: Parser<T>,
+        private second: Parser<U>
+    ) {
         super()
     }
 
     parseShape(value: unknown, options?: ParseOptions): T | U {
         // one of the parsers should work
-        for(const parser of [this.first, this.second]) {
+        for (const parser of [this.first, this.second]) {
             try {
                 return parser.parse(value)
             } catch {}
@@ -468,7 +465,7 @@ class UnionParser2<T, U> extends BaseParser<T | U> {
         super.validate(value)
         // validate against each parser
         // TODO fix false positiives, see other union parser
-        for(const parser of [this.first, this.second]) {
+        for (const parser of [this.first, this.second]) {
             try {
                 parser.validate(value as U & T)
             } catch {}
@@ -501,7 +498,7 @@ const p = {
     },
     union<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>>(arr: T) {
         return new UnionParser<T, U>(arr)
-    }
+    },
 }
 
 enum Abcdef {
@@ -516,9 +513,8 @@ type q27 = typeof Abcdef
 type q28 = typeof Abcdef.a
 const q29 = new NativeEnumParser(Abcdef)
 
-
 const z1 = p.enum(['a', 'b', 'c'])
-const z3 = new EnumParser<'a'|'b'|'c',[('a'|'b'|'c'), ...('a'|'b'|'c')[]]>(['a', 'b', 'c'])
+const z3 = new EnumParser<'a' | 'b' | 'c', ['a' | 'b' | 'c', ...('a' | 'b' | 'c')[]]>(['a', 'b', 'c'])
 // const z3 = new EnumParser<'a'|'b'|'c',[('a'|'b'|'c'), ...('a'|'b'|'c')[]]>(['a', 'b', 'c'])
 const z2 = z1.parse('a')
 const z4 = z3.parse('a')
@@ -535,11 +531,13 @@ const x2Schema = p.object({
     h: p.array(p.string()),
     i: p.array(p.number()),
     j: p.array(p.boolean()),
-    k: p.array(p.object({
-        l: p.string(),
-        m: p.number(),
-        n: p.boolean(),
-    })),
+    k: p.array(
+        p.object({
+            l: p.string(),
+            m: p.number(),
+            n: p.boolean(),
+        })
+    ),
     o: p.enum(['a', 'b', 'c']),
 })
 
@@ -555,4 +553,3 @@ const x2 = x2Schema.parse({
 })
 
 console.log('x2', x2)
-
