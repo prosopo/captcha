@@ -1,5 +1,3 @@
-use ink::prelude::format;
-
 pub trait Math
 where
     Self: Sized + core::fmt::Debug,
