@@ -11,9 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { createTheme } from '@mui/material'
 
-export const lightTheme = createTheme({
+const grey = {
+    0: '#fff',
+    100: '#f5f5f5',
+    200: '#eeeeee',
+    300: '#e0e0e0',
+    400: '#bdbdbd',
+    500: '#9e9e9e',
+    600: '#757575',
+    700: '#616161',
+    800: '#424242',
+    900: '#212121',
+}
+
+export const lightTheme = {
     palette: {
         mode: 'light',
         primary: {
@@ -23,10 +35,11 @@ export const lightTheme = createTheme({
         background: {
             default: '#fff',
         },
+        grey,
     },
-})
+}
 
-export const darkTheme = createTheme({
+export const darkTheme = {
     palette: {
         mode: 'dark',
         primary: {
@@ -36,5 +49,6 @@ export const darkTheme = createTheme({
         background: {
             default: '#303030',
         },
+        grey,
     },
-})
+}
