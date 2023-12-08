@@ -4,6 +4,7 @@ module.exports = {
         es2022: true,
         node: true,
     },
+    files: ['*.js', '*.ts', '*.json', '*.yaml', '*.yml', '*.toml', '*.mjs', '*.cjs', '*.jsx', '*.tsx', '*.mts', '*.cts', '*.d.ts', '*.d.mts', '*.d.cts', '*.html', '*.css'],
     extends: [
         'plugin:yaml/recommended',
         'plugin:json/recommended',
