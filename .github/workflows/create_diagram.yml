@@ -8,7 +8,6 @@ jobs:
     get_data:
         runs-on: ubuntu-latest
         steps:
-            - uses: prosopo/captcha/.github/actions/print_vars@main
 
             - uses: actions/checkout@v3
             - uses: githubocto/repo-visualizer@main
