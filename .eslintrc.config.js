@@ -1,4 +1,4 @@
-module.exports = {
+export default [{
     env: {
         browser: true,
         es2022: true,
@@ -52,4 +52,4 @@ module.exports = {
         ],
         'json/*': ['error', { allowComments: true }],
     },
-}
+}]
