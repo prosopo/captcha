@@ -66,7 +66,10 @@ const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             style={buttonStyle}
-            onClick={onClick}
+            onClick={(e) => {
+                e.preventDefault()
+                onClick()
+            }}
         >
             {text}
         </button>
