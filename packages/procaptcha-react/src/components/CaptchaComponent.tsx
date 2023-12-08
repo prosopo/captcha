@@ -125,8 +125,11 @@ const CaptchaComponent = ({
                         lineHeight: 1.75,
                     }}
                 >
-                    <button onClick={onCancel}>{t('WIDGET.CANCEL')}</button>
+                    <button onClick={onCancel} className="buttonCancel">
+                        {t('WIDGET.CANCEL')}
+                    </button>
                     <button
+                        className="buttonSubmit"
                         color="primary"
                         onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
                         {...addDataAttr({ dev: { cy: 'button-next' } })}
