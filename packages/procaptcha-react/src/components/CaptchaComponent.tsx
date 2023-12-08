@@ -76,7 +76,7 @@ const CaptchaComponent = ({
                         padding: '24px 16px',
                     }}
                 >
-                    <span
+                    <p
                         style={{
                             color: '#ffffff',
                             fontWeight: 700,
@@ -85,8 +85,8 @@ const CaptchaComponent = ({
                     >
                         {t('WIDGET.SELECT_ALL')}
                         {': '}
-                    </span>
-                    <span
+                    </p>
+                    <p
                         style={{
                             color: '#ffffff',
                             fontWeight: 700,
@@ -95,7 +95,7 @@ const CaptchaComponent = ({
                         }}
                     >
                         {`${at(challenge.captchas, index).captcha.target}`}
-                    </span>
+                    </p>
                 </div>
                 <div {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
                     {captcha && (
