@@ -132,17 +132,19 @@ const CaptchaComponent = ({
                         lineHeight: 1.75,
                     }}
                 >
-                    <Button themeColor={themeColor} buttonType="cancel" onClick={onCancel}>
-                        {t('WIDGET.CANCEL')}
-                    </Button>
+                    <Button
+                        themeColor={themeColor}
+                        buttonType="cancel"
+                        onClick={onCancel}
+                        text={t('WIDGET.CANCEL')}
+                    ></Button>
                     <Button
                         themeColor={themeColor}
                         buttonType="next"
+                        text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
                         onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
                         {...addDataAttr({ dev: { cy: 'button-next' } })}
-                    >
-                        {index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                    </Button>
+                    ></Button>
                 </div>
             </div>
         </div>

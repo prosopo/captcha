@@ -1,10 +1,11 @@
 import { darkTheme, lightTheme } from './theme.js'
-import React, { ButtonHTMLAttributes, CSSProperties, useMemo } from 'react'
+import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'
     buttonType: 'cancel' | 'next'
     onClick: () => void
+    text: string
 }
 
 const buttonStyleBase: CSSProperties = {
@@ -37,23 +38,29 @@ const buttonStyleBase: CSSProperties = {
         'rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px',
 }
 
-const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, onClick }: ButtonProps) => {
+const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }: ButtonProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
-
+    const [hover, setHover] = useState(false)
     const buttonStyleCancel: CSSProperties = {
         ...buttonStyleBase,
-        backgroundColor: 'transparent',
-        color: theme.palette.primary.contrastText,
+        backgroundColor: hover ? theme.palette.grey[600] : 'transparent',
+        color: hover ? theme.palette.primary.contrastText : theme.palette.background.contrastText,
     }
 
     const buttonStyleNext: CSSProperties = {
         ...buttonStyleBase,
-        backgroundColor: theme.palette.background.default,
-        color: theme.palette.primary.contrastText,
+        backgroundColor: hover ? theme.palette.primary.main : theme.palette.background.default,
+        color: hover ? theme.palette.primary.contrastText : theme.palette.background.contrastText,
     }
     if (buttonType === 'cancel') {
         return (
             <button
+                onMouseEnter={() => {
+                    setHover(true)
+                }}
+                onMouseLeave={() => {
+                    setHover(false)
+                }}
                 style={buttonStyleCancel}
                 onClick={(e) => {
                     e.preventDefault()
@@ -66,13 +73,19 @@ const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, onClick }: Butt
     } else {
         return (
             <button
+                onMouseEnter={() => {
+                    setHover(true)
+                }}
+                onMouseLeave={() => {
+                    setHover(false)
+                }}
                 style={buttonStyleNext}
                 onClick={(e) => {
                     e.preventDefault()
                     return onClick()
                 }}
             >
-                Next
+                {text}
             </button>
         )
     }

@@ -30,10 +30,11 @@ export const lightTheme = {
         mode: 'light',
         primary: {
             main: '#542437',
-            contrastText: '#000',
+            contrastText: '#fff',
         },
         background: {
             default: '#fff',
+            contrastText: '#000',
         },
         grey,
     },
@@ -48,6 +49,7 @@ export const darkTheme = {
         },
         background: {
             default: '#303030',
+            contrastText: '#fff',
         },
         grey,
     },
