@@ -41,54 +41,33 @@ const buttonStyleBase: CSSProperties = {
 const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }: ButtonProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const [hover, setHover] = useState(false)
-    const buttonStyleCancel: CSSProperties = {
-        ...buttonStyleBase,
-        backgroundColor: hover ? theme.palette.grey[600] : 'transparent',
-        color: hover ? theme.palette.primary.contrastText : theme.palette.background.contrastText,
-    }
+    const buttonStyle = useMemo(() => {
+        const baseStyle = {
+            ...buttonStyleBase,
+            color: hover ? theme.palette.primary.contrastText : theme.palette.background.contrastText,
+        }
+        if (buttonType === 'cancel') {
+            return {
+                ...baseStyle,
+                backgroundColor: hover ? theme.palette.grey[600] : 'transparent',
+            }
+        } else {
+            return {
+                ...baseStyle,
+                backgroundColor: hover ? theme.palette.primary.main : theme.palette.background.default,
+            }
+        }
+    }, [buttonType, hover, theme])
 
-    const buttonStyleNext: CSSProperties = {
-        ...buttonStyleBase,
-        backgroundColor: hover ? theme.palette.primary.main : theme.palette.background.default,
-        color: hover ? theme.palette.primary.contrastText : theme.palette.background.contrastText,
-    }
-    if (buttonType === 'cancel') {
-        return (
-            <button
-                onMouseEnter={() => {
-                    setHover(true)
-                }}
-                onMouseLeave={() => {
-                    setHover(false)
-                }}
-                style={buttonStyleCancel}
-                onClick={(e) => {
-                    e.preventDefault()
-                    return onClick()
-                }}
-            >
-                Cancel
-            </button>
-        )
-    } else {
-        return (
-            <button
-                onMouseEnter={() => {
-                    setHover(true)
-                }}
-                onMouseLeave={() => {
-                    setHover(false)
-                }}
-                style={buttonStyleNext}
-                onClick={(e) => {
-                    e.preventDefault()
-                    return onClick()
-                }}
-            >
-                {text}
-            </button>
-        )
-    }
+    return (
+        <button
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={buttonStyle}
+            onClick={onClick}
+        >
+            {text}
+        </button>
+    )
 }
-
 export default Button
