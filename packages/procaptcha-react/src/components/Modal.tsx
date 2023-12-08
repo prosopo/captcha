@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import styled from '@emotion/styled'
 
 type ModalProps = {
@@ -8,8 +8,7 @@ type ModalProps = {
 
 const ModalComponent = React.memo(
     (props: ModalProps, nextProps: ModalProps) => {
-        const show = useMemo(() => props.show, [show])
-        const children = useMemo(() => props.children, [children])
+        const { show, children } = props
         console.log('rendering modal with show: ', show)
         const showHideClassName = show ? 'modal display-block' : 'modal display-none'
         const ModalDiv = styled.div`
