@@ -143,7 +143,6 @@ const CaptchaComponent = ({
                         buttonType="next"
                         text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
                         onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
-                        {...addDataAttr({ dev: { cy: 'button-next' } })}
                     ></Button>
                 </div>
             </div>

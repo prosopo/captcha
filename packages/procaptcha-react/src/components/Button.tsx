@@ -1,5 +1,6 @@
 import { darkTheme, lightTheme } from './theme.js'
 import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
+import addDataAttr from '../util/index.js'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'
@@ -61,6 +62,7 @@ const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }
 
     return (
         <button
+            {...addDataAttr({ dev: { cy: `button-${buttonType}` } })}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             style={buttonStyle}
