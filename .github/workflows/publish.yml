@@ -102,8 +102,8 @@ jobs:
 
             - name: Install
               run: |
-                npm install
-                npm run removePolkadotJSWarnings
+                  npm install
+                  npm run removePolkadotJSWarnings
 
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
