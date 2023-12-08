@@ -54,9 +54,9 @@ jobs:
               run: npm ci
 
             - name: Build
-              run: | 
-                npm run build -w @prosopo/scripts
-                npm run build -w @prosopo/protocol-dev
+              run: |
+                  npm run build -w @prosopo/scripts
+                  npm run build -w @prosopo/protocol-dev
 
             - name: Bump version
               env:
