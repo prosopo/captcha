@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Box, Button, Typography } from '@mui/material'
 import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { at } from '@prosopo/util'
@@ -47,62 +46,68 @@ const CaptchaComponent = ({
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
     return (
-        <Box
-            sx={{
+        <div
+            style={{
                 // introduce scroll bars when screen < minWidth of children
                 overflowX: 'auto',
                 overflowY: 'auto',
                 width: '100%',
                 maxWidth: '500px',
                 maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
             }}
         >
-            <Box
-                bgcolor={theme.palette.background.default}
-                sx={{
+            <div
+                style={{
+                    backgroundColor: theme.palette.background.default,
                     display: 'flex',
                     flexDirection: 'column',
                     minWidth: '300px',
                 }}
             >
-                <Box
-                    px={2}
-                    py={3}
-                    sx={{
+                <div
+                    style={{
                         display: 'flex',
                         alignItems: 'center',
                         width: '100%',
+                        backgroundColor: theme.palette.primary.main,
+                        padding: '24px 16px',
                     }}
-                    bgcolor={theme.palette.primary.main}
                 >
-                    <Typography
-                        sx={{
+                    <span
+                        style={{
                             color: '#ffffff',
                             fontWeight: 700,
+                            lineHeight: 1.5,
                         }}
                     >
                         {t('WIDGET.SELECT_ALL')}
                         {': '}
-                    </Typography>
-                    <Typography
-                        px={1}
-                        sx={{
+                    </span>
+                    <span
+                        style={{
                             color: '#ffffff',
                             fontWeight: 700,
                             textTransform: 'capitalize',
-                            fontSize: theme.typography.h6.fontSize,
+                            lineHeight: 1.5,
                         }}
                     >
                         {`${at(challenge.captchas, index).captcha.target}`}
-                    </Typography>
-                </Box>
-                <Box {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
-                    {captcha && <CaptchaWidget challenge={captcha} solution={solution} onClick={onClick} />}
-                </Box>
-                <Box
-                    px={2}
-                    py={1}
-                    sx={{
+                    </span>
+                </div>
+                <div {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
+                    {captcha && (
+                        <CaptchaWidget
+                            challenge={captcha}
+                            solution={solution}
+                            onClick={onClick}
+                            themeColor={themeColor}
+                        />
+                    )}
+                </div>
+                <div
+                    style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -110,30 +115,27 @@ const CaptchaComponent = ({
                     }}
                     {...addDataAttr({ dev: { cy: 'dots-captcha' } })}
                 />
-                <Box
-                    px={2}
-                    pt={0}
-                    pb={2}
-                    sx={{
+                <div
+                    style={{
+                        paddingTop: 0,
+                        paddingBottom: '0 16px 16px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        lineHeight: 1.75,
                     }}
                 >
-                    <Button onClick={onCancel} variant="text">
-                        {t('WIDGET.CANCEL')}
-                    </Button>
-                    <Button
+                    <button onClick={onCancel}>{t('WIDGET.CANCEL')}</button>
+                    <button
                         color="primary"
                         onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
-                        variant="contained"
                         {...addDataAttr({ dev: { cy: 'button-next' } })}
                     >
                         {index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                    </Button>
-                </Box>
-            </Box>
-        </Box>
+                    </button>
+                </div>
+            </div>
+        </div>
     )
 }
 
