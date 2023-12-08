@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CSSProperties, useMemo } from 'react'
 import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { at } from '@prosopo/util'
 import { darkTheme, lightTheme } from './theme.js'
+import { useMemo } from 'react'
 import { useTranslation } from '@prosopo/common'
+import Button from './Button.js'
 import addDataAttr from '../util/index.js'
 
 export interface CaptchaComponentProps {
@@ -28,36 +29,6 @@ export interface CaptchaComponentProps {
     onClick: (hash: string) => void
     onNext: () => void
     themeColor: 'light' | 'dark'
-}
-
-const buttonStyleBase: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    boxSizing: 'border-box',
-    outline: '0px',
-    border: '0px',
-    margin: '0px',
-    cursor: 'pointer',
-    userSelect: 'none',
-    verticalAlign: 'middle',
-    appearance: undefined,
-    textDecoration: 'none',
-    fontWeight: '500',
-    fontSize: '0.875rem',
-    lineHeight: '1.75',
-    letterSpacing: '0.02857em',
-    textTransform: 'uppercase',
-    minWidth: '64px',
-    padding: '6px 16px',
-    borderRadius: '4px',
-    transition:
-        'background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-    color: 'rgb(0, 0, 0)',
-    backgroundColor: '#ffffff',
-    boxShadow:
-        'rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px',
 }
 
 const CaptchaComponent = ({
@@ -74,17 +45,6 @@ const CaptchaComponent = ({
     const captcha = challenge.captchas ? at(challenge.captchas, index) : null
     const solution = solutions ? at(solutions, index) : []
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
-    const buttonStyleCancel: CSSProperties = {
-        ...buttonStyleBase,
-        backgroundColor: 'transparent',
-        color: theme.palette.primary.contrastText,
-    }
-
-    const buttonStyleNext: CSSProperties = {
-        ...buttonStyleBase,
-        backgroundColor: theme.palette.background.default,
-        color: theme.palette.primary.contrastText,
-    }
 
     return (
         <div
@@ -165,25 +125,24 @@ const CaptchaComponent = ({
                 ></div>
                 <div
                     style={{
-                        paddingTop: 0,
-                        paddingBottom: '0 16px 16px',
+                        padding: '0 16px 16px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         lineHeight: 1.75,
                     }}
                 >
-                    <button onClick={onCancel} style={buttonStyleCancel}>
+                    <Button themeColor={themeColor} buttonType="cancel" onClick={onCancel}>
                         {t('WIDGET.CANCEL')}
-                    </button>
-                    <button
-                        style={buttonStyleNext}
-                        color="primary"
+                    </Button>
+                    <Button
+                        themeColor={themeColor}
+                        buttonType="next"
                         onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
                         {...addDataAttr({ dev: { cy: 'button-next' } })}
                     >
                         {index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
