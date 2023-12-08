@@ -1,5 +1,4 @@
-import React from 'react'
-import styled from '@emotion/styled'
+import React, { CSSProperties } from 'react'
 
 type ModalProps = {
     show: boolean
@@ -10,45 +9,37 @@ const ModalComponent = React.memo(
     (props: ModalProps, nextProps: ModalProps) => {
         const { show, children } = props
         console.log('rendering modal with show: ', show)
-        const showHideClassName = show ? 'modal display-block' : 'modal display-none'
-        const ModalDiv = styled.div`
-            .modal {
-                overflow: auto;
-                width: 100%;
-                max-width: 500px;
-                max-height: 100%;
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.6);
-                z-index: 2147483646;
-                transition: all 0.5s;
-            }
+        const display = show ? 'flex' : 'none'
+        const ModalOuterDivCss: CSSProperties = {
+            overflow: 'auto',
+            width: '100%',
+            maxHeight: '100%',
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.6)',
+            zIndex: '2147483646',
+            transition: 'all 0.5s',
+            display: display,
+        }
+        const ModalInnerDivCSS: CSSProperties = {
+            maxWidth: '500px',
+            margin: 'auto',
+            position: 'fixed',
+            background: 'white',
+            height: 'auto',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: '2147483647',
+            transition: 'all 0.5s',
+        }
 
-            .modal-main {
-                position: fixed;
-                background: white;
-                height: auto;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 2147483647;
-                transition: all 0.5s;
-            }
-
-            .display-block {
-                display: block;
-            }
-
-            .display-none {
-                display: none;
-            }
-        `
         return (
-            <ModalDiv className={showHideClassName}>
-                <section className="modal-main">{children}</section>
-            </ModalDiv>
+            <div style={ModalOuterDivCss}>
+                <div style={ModalInnerDivCSS}>{children}</div>
+            </div>
         )
     }
     // (prevProps, nextProps): boolean => {
