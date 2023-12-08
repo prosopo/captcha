@@ -11,14 +11,15 @@ module.exports = {
         'eslint:recommended',
         'plugin:regexp/recommended',
         'plugin:@typescript-eslint/recommended',
-        'plugin:prettier/recommended', // must be last!
+        'prettier', // must be last!
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: ['workspaces', 'unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix', 'prettier'],
+    plugins: ['workspaces', 'unused-imports', '@typescript-eslint/recommended', 'sort-imports-es6-autofix', 'prettier'],
+    root: true,
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
