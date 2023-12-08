@@ -22,7 +22,7 @@ jobs:
     publish:
         runs-on: ubuntu-latest
         steps:
-            - uses: prosopo/captcha/.github/actions/print_vars.yml@main
+            - uses: prosopo/captcha/.github/actions/print_vars@main
 
             # checkout the repo
             - uses: actions/checkout@v3

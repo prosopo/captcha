@@ -24,7 +24,7 @@ jobs:
             pull-requests: write
         runs-on: ubuntu-latest
         steps:
-            - uses: prosopo/captcha/.github/actions/print_vars.yml@main
+            - uses: prosopo/captcha/.github/actions/print_vars@main
 
             # (Optional) GitHub Enterprise requires GHE_HOST variable set
             #- name: Set GHE_HOST
