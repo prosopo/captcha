@@ -25,6 +25,8 @@ jobs:
         runs-on: ubuntu-latest
         if: ${{ github.event.issue.pull_request }}
         steps:
+            - uses: prosopo/captcha/.github/actions/print_vars.yml@main
+
             - uses: z0al/dependent-issues@v1
               env:
                   # (Required) The token to use to make API calls to GitHub.

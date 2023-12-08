@@ -19,6 +19,8 @@ jobs:
         name: check
         runs-on: ubuntu-latest
         steps:
+            - uses: prosopo/captcha/.github/actions/print_vars.yml@main
+
             # Checkout the repo
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v3
