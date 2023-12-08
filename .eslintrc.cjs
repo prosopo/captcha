@@ -4,30 +4,14 @@ module.exports = {
         es2022: true,
         node: true,
     },
-    files: [
-        '*.js',
-        '*.ts',
-        // '*.json',
-        // '*.yaml',
-        // '*.yml',
-        // '*.toml',
-        // '*.mjs',
-        // '*.cjs',
-        // '*.jsx',
-        // '*.tsx',
-        // '*.mts',
-        // '*.cts',
-        // '*.d.ts',
-        // '*.d.mts',
-        // '*.d.cts'
-    ],
     extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
         // 'plugin:yaml/recommended',
         // 'plugin:json/recommended',
         // 'plugin:toml/standard',
         // 'eslint:recommended',
         // 'plugin:regexp/recommended',
-        'plugin:@typescript-eslint/recommended',
         // 'prettier', // must be last!
     ],
     parser: '@typescript-eslint/parser',
@@ -39,7 +23,7 @@ module.exports = {
         // 'unused-imports',
         '@typescript-eslint/recommended',
         // 'sort-imports-es6-autofix',
-        // 'prettier'
+        'prettier'
     ],
     root: true,
     rules: {
