@@ -1,4 +1,10 @@
 export default {
+
+    trailingComma: 'es5',
+    tabWidth: 4,
+    semi: false,
+    singleQuote: true,
+    printWidth: 120,
     overrides: [
         {
             files: [
@@ -23,15 +29,7 @@ export default {
                 '.*.yaml',
                 '.*.yml',
                 '.*.toml',
-            ],
-            rules: {
-
-    trailingComma: 'es5',
-    tabWidth: 4,
-    semi: false,
-    singleQuote: true,
-    printWidth: 120,
-            }
+            ]
         },
     ],
 }
