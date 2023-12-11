@@ -6,7 +6,7 @@ module.exports = {
     },
     extends: [
         'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
+        'plugin:@typescript-eslint/recommended-type-checked',
         'plugin:yaml/recommended',
         'plugin:json/recommended',
         'plugin:toml/standard',
@@ -16,6 +16,8 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     parserOptions: {
         sourceType: 'module',
+        project: true,
+        tsconfigRootDir: __dirname,
     },
     plugins: [
         '@typescript-eslint',
@@ -56,4 +58,4 @@ module.exports = {
         ],
         'json/*': ['error', { allowComments: true }],
     },
-}
+};
