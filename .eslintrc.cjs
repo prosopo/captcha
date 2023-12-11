@@ -5,20 +5,26 @@ module.exports = {
         node: true,
     },
     extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
         'plugin:yaml/recommended',
         'plugin:json/recommended',
         'plugin:toml/standard',
-        'eslint:recommended',
         'plugin:regexp/recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:prettier/recommended', // must be last!
+        'prettier', // must be last! disables rules which conflict with prettier
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
-        ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: ['workspaces', 'unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix', 'prettier'],
+    plugins: [
+        '@typescript-eslint',
+        'workspaces',
+        'unused-imports',
+        'sort-imports-es6-autofix',
+        // do not add prettier to plugins otherwise rule conflicts will occur between prettier and eslint! run prettier as a separate command
+    ],
+    root: true,
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
