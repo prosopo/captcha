@@ -1,5 +1,4 @@
 export default {
-
     trailingComma: 'es5',
     tabWidth: 4,
     semi: false,
@@ -30,7 +29,7 @@ export default {
                 '.*.yaml',
                 '.*.yml',
                 '.*.toml',
-            ]
+            ],
         },
     ],
 }

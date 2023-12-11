@@ -59,9 +59,9 @@ module.exports = {
     },
     overrides: [
         {
-        files: ["*.html"],
-        parser: "@html-eslint/parser",
-        extends: ["plugin:@html-eslint/recommended"],
+            files: ['*.html'],
+            parser: '@html-eslint/parser',
+            extends: ['plugin:@html-eslint/recommended'],
         },
         {
             files: [
