@@ -10,16 +10,15 @@ export interface LoadingSpinnerComponentProps {
 
 export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
-    const Span = styled.span`
-        width: 1.4em;
-        height: 1.4em;
-        border: 2px solid ${theme.palette.primary.contrastText};
+    const StyledDiv = styled.div`
+        width: 2em;
+        height: 2em;
+        border: 4px solid ${theme.palette.primary.contrastText};
         border-bottom-color: transparent;
         border-radius: 50%;
-        display: inline-block;
+        display: inherit;
         box-sizing: border-box;
         animation: rotation 1s linear infinite;
-
         @keyframes rotation {
             0% {
                 transform: rotate(0deg);
@@ -29,7 +28,7 @@ export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => 
             }
         }
     `
-    return <Span></Span>
+    return <StyledDiv></StyledDiv>
 }
 
 export default LoadingSpinner

@@ -29,7 +29,7 @@ export const lightTheme = {
     palette: {
         mode: 'light',
         primary: {
-            main: '#542437',
+            main: '#487DFA',
             contrastText: '#fff',
         },
         background: {
@@ -44,7 +44,7 @@ export const darkTheme = {
     palette: {
         mode: 'dark',
         primary: {
-            main: '#542437',
+            main: '#487DFA',
             contrastText: '#fff',
         },
         background: {
