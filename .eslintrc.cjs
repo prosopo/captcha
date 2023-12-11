@@ -62,6 +62,10 @@ module.exports = {
             files: ['*.html'],
             parser: '@html-eslint/parser',
             extends: ['plugin:@html-eslint/recommended'],
+            rules: {
+                '@html-eslint/no-extra-spacing-attrs': 'off',
+                '@html-eslint/require-closing-tags': 'off',
+            },
         },
         {
             files: [
