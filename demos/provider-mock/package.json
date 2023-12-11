@@ -12,9 +12,9 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
-        "eslint": "npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}'  --no-error-on-unmatched-pattern",
+        "eslint": "npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}'  --no-error-on-unmatched-pattern",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' --no-error-on-unmatched-pattern",
+        "prettier": "npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}' --no-error-on-unmatched-pattern",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
