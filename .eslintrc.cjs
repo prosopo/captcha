@@ -33,8 +33,8 @@ module.exports = {
         '@typescript-eslint/prefer-for-of': 'warn', // allow indexed loops
         '@typescript-eslint/consistent-type-assertions': 'off', // needs tsconfig to be set up
         '@typescript-eslint/consistent-indexed-object-style': 'off', // allow indexed objects instead of Record<A, B>
-        "@typescript-eslint/array-type": "off", // allow Array<A> or A[]
-        "@typescript-eslint/consistent-type-definitions": "off", // allow type Foo = { a: string } or interface Foo { a: string }
+        '@typescript-eslint/array-type': 'off', // allow Array<A> or A[]
+        '@typescript-eslint/consistent-type-definitions': 'off', // allow type Foo = { a: string } or interface Foo { a: string }
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
         'unused-imports/no-unused-vars': 'off',
