@@ -1,6 +1,6 @@
 # Getting Started with the Client Example
 
-This project is a *minimal* example demonstrating how to include Prosopo Procaptcha in a client React app.
+This project is a _minimal_ example demonstrating how to include Prosopo Procaptcha in a client React app.
 
 ## How to run locally
 
