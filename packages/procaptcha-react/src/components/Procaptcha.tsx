@@ -159,7 +159,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
-    //const configSx = { maxWidth: '400px', minWidth: '200px' }
+    const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
     console.log('theme', theme)
@@ -183,7 +183,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         <div>No challenge set.</div>
                     )}
                 </Modal>
-                <div data-cy={'button-human'}>
+                <div style={styleWidth} data-cy={'button-human'}>
                     {' '}
                     <div
                         style={{
