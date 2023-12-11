@@ -25,6 +25,7 @@ import {
     Hash,
     PendingCaptchaRequest,
     ProsopoConfigOutput,
+    ProviderDetails,
     ProviderRegistered,
 } from '@prosopo/types'
 import {
@@ -532,12 +533,20 @@ export class Tasks {
     }
 
     /* Returns public details of provider */
-    async getProviderDetails(): Promise<Provider> {
-        return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    async getProviderDetails(): Promise<ProviderDetails> {
+        const provider: Provider = await wrapQuery(
+            this.contract.query.getProvider,
+            this.contract.query
+        )(this.contract.pair.address)
+
+        const dbConnectionOk = await this.getProviderDataset(provider.datasetId.toString())
+            .then(() => true)
+            .catch(() => false)
+
+        return { provider, dbConnectionOk }
     }
 
     /** Get the dataset from the databse */
-
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
     }
