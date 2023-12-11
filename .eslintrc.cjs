@@ -64,7 +64,6 @@ module.exports = {
         },
         {
             files: [
-                '*.html',
                 '*.ts',
                 '*.tsx',
                 '*.js',
