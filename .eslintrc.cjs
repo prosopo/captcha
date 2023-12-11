@@ -11,7 +11,6 @@ module.exports = {
         'plugin:json/recommended',
         'plugin:toml/standard',
         'plugin:regexp/recommended',
-        '@html-eslint',
         'prettier', // must be last! disables rules which conflict with prettier
     ],
     parser: '@typescript-eslint/parser',
@@ -22,6 +21,7 @@ module.exports = {
         '@typescript-eslint',
         'workspaces',
         'unused-imports',
+        '@html-eslint',
         'sort-imports-es6-autofix',
         // do not add prettier to plugins otherwise rule conflicts will occur between prettier and eslint! run prettier as a separate command
     ],
