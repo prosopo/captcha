@@ -56,4 +56,4 @@ module.exports = {
         ],
         'json/*': ['error', { allowComments: true }],
     },
-};
+}
