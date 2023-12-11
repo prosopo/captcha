@@ -11,6 +11,7 @@ module.exports = {
         'plugin:json/recommended',
         'plugin:toml/standard',
         'plugin:regexp/recommended',
+        '@html-eslint',
         'prettier', // must be last! disables rules which conflict with prettier
     ],
     parser: '@typescript-eslint/parser',
@@ -56,4 +57,11 @@ module.exports = {
         ],
         'json/*': ['error', { allowComments: true }],
     },
+    overrides: [
+        {
+            files: ['*.html'],
+            parser: '@html-eslint/parser',
+            extends: ['plugin:@html-eslint/recommended'],
+        },
+    ],
 }
