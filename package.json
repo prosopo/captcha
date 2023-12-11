@@ -77,6 +77,8 @@
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
+        "@html-eslint/eslint-plugin": "^0.22.0",
+        "@html-eslint/parser": "^0.22.0",
         "@types/node": "^20.2.5",
         "@typescript-eslint/eslint-plugin": "^5.62.0",
         "@typescript-eslint/parser": "^5.62.0",
