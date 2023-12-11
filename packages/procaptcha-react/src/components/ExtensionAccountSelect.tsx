@@ -54,7 +54,7 @@ export const ExtensionAccountSelect = ({
                     onChange('')
                 }
             }}
-            value={accounts.length > 0 && account ? account.toString() : undefined}
+            value={accounts.length > 0 && account ? account.address : undefined}
             style={{ width: '550px' }}
         >
             {accounts.map(({ address, meta: { name } }) => (

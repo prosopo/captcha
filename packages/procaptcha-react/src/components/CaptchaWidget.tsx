@@ -94,10 +94,8 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                     height: '100%',
                                     // shift it up 100% to overlay the item element
                                     top: '-100%',
-                                    // transition on opacity upon (de)selection
-                                    //transitionDuration: '300ms',
-                                    //transitionProperty: 'opacity',
                                     visibility: solution.includes(hash) ? 'visible' : 'hidden',
+                                    // transition on opacity upon (de)selection
                                     transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
                                     opacity: 1,
                                 }}

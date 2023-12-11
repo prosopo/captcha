@@ -28,6 +28,7 @@ import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
+import Checkbox from './Checkbox.js'
 import Modal from './Modal.js'
 
 const logoStyle = css`
@@ -142,15 +143,6 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     ]
 }
 
-const checkboxBefore = css`{
-  &:before {
-    content: '""';
-    position: absolute;
-    height: 100%;
-    width: 100%;
-  }
-}`
-
 export const Procaptcha = (props: ProcaptchaProps) => {
     console.log('config', props.config)
     const config = props.config
@@ -215,45 +207,39 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         flexDirection: 'column',
+                                        verticalAlign: 'middle',
                                     }}
                                 >
                                     <div
                                         style={{
-                                            display: !state.loading ? 'block' : 'none',
+                                            display: !state.loading ? 'flex' : 'none',
                                         }}
                                     >
-                                        <input
-                                            css={checkboxBefore}
-                                            type={'checkbox'}
+                                        <Checkbox
+                                            themeColor={themeColor}
                                             onChange={manager.start}
                                             checked={state.isHuman}
-                                            //inputProps={{ 'aria-label': 'controlled' }}
-                                            style={{
-                                                width: '1.4em',
-                                                height: '1.4em',
-                                                top: 'auto',
-                                                left: 'auto',
-                                                opacity: '1',
-                                            }}
                                         />
                                     </div>
                                     <div
                                         style={{
-                                            display: state.loading ? 'block' : 'none',
+                                            display: state.loading ? 'flex' : 'none',
                                         }}
                                     >
-                                        <div style={{ paddingTop: '5px' }}>
+                                        <div style={{ flex: 1 }}>
                                             <LoadingSpinner themeColor={themeColor} />
                                         </div>
                                     </div>
                                 </div>
                                 <div style={{ padding: 1 }}>
-                                    <span style={{ color: theme.palette.primary.contrastText }}>I am a human</span>
+                                    <span style={{ color: theme.palette.primary.contrastText, paddingLeft: '4px' }}>
+                                        I am a human
+                                    </span>
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <a href="https://prosopo.io" target="_blank">
+                            <a href="https://www.prosopo.io/#features" target="_blank">
                                 <div>
                                     <div>
                                         <div
