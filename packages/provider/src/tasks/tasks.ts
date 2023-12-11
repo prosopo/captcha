@@ -539,7 +539,7 @@ export class Tasks {
             this.contract.query
         )(this.contract.pair.address)
 
-        const dbConnectionOk = await this.getProviderDataset(provider.datasetId.toString())
+        const dbConnectionOk = await this.getCaptchaWithProof(provider.datasetId, true, 1)
             .then(() => true)
             .catch(() => false)
 
