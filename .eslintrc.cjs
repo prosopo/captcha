@@ -28,10 +28,11 @@ module.exports = {
     ],
     root: true,
     rules: {
-        '@typescript-eslint/no-unused-vars': 'warn',
-        '@typescript-eslint/no-explicit-any': 'warn',
-        '@typescript-eslint/prefer-for-of': 'warn',
+        '@typescript-eslint/no-unused-vars': 'warn', // allow unused vars
+        '@typescript-eslint/no-explicit-any': 'warn', // allow any type
+        '@typescript-eslint/prefer-for-of': 'warn', // allow indexed loops
         '@typescript-eslint/consistent-type-assertions': 'off', // needs tsconfig to be set up
+        "@typescript-eslint/consistent-indexed-object-style": "off", // allow indexed objects instead of Record<A, B>
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
         'unused-imports/no-unused-vars': 'off',
