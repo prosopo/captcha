@@ -7,6 +7,7 @@ module.exports = {
     extends: [
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/stylistic',
         'plugin:yaml/recommended',
         'plugin:json/recommended',
         'plugin:toml/standard',
@@ -27,17 +28,13 @@ module.exports = {
     ],
     root: true,
     rules: {
+        '@typescript-eslint/no-unused-vars': 'warn',
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/prefer-for-of': 'warn',
+        '@typescript-eslint/consistent-type-assertions': 'off', // needs tsconfig to be set up
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
-        'unused-imports/no-unused-vars': [
-            'warn',
-            {
-                vars: 'all',
-                varsIgnorePattern: '^_',
-                args: 'after-used',
-                argsIgnorePattern: '^_',
-            },
-        ],
+        'unused-imports/no-unused-vars': 'off',
         //"indent": ["error", 4],
         //"indent": "off",
         'sort-imports': [
