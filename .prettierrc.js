@@ -8,6 +8,7 @@ export default {
     overrides: [
         {
             files: [
+                '*.md',
                 '*.html',
                 '*.ts',
                 '*.tsx',
