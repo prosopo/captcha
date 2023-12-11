@@ -11,7 +11,13 @@
     "scripts": {
         "build": "tsc",
         "cli": "f() { ts-node --esm src/cli.ts -- -- $@ ;}; f",
-        "clean": "tsc --build --clean"
+        "clean": "tsc --build --clean",
+        "eslint": "npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}'  --no-error-on-unmatched-pattern",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}'",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",

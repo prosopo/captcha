@@ -7,8 +7,12 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
+        "eslint": "npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}'  --no-error-on-unmatched-pattern",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}'",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "type": "module",
     "engines": {
