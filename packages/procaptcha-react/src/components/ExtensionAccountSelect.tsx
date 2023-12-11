@@ -28,7 +28,6 @@ export const ExtensionAccountSelect = ({
 }) => {
     const { t } = useTranslation()
     const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-
     useEffect(() => {
         const prom = web3Enable(dappName).then(() => {
             return web3AccountsSubscribe(setAccounts)
@@ -44,19 +43,24 @@ export const ExtensionAccountSelect = ({
         // react select box
         <select
             id="select-account"
-            // onChange={(event: ChangeEventHandler<HTMLSelectElement>, value: InjectedAccountWithMeta | null) => {
-            //     if (value) {
-            //         console.log('Selected account:', value)
-            //         onChange(value.address)
-            //     } else {
-            //         console.log('Deselected account')
-            //         onChange('')
-            //     }
-            // }}
-            // value={accounts.length > 0 && account ? account : null}
-
-            style={{ width: 550 }}
-        />
+            onChange={(e) => {
+                const value = e.target.value
+                const account = accounts.find((a) => a.address === value) || null
+                if (account) {
+                    console.log('Selected account:', value)
+                    onChange(account.address)
+                } else {
+                    console.log('Deselected account')
+                    onChange('')
+                }
+            }}
+            value={accounts.length > 0 && account ? account.toString() : undefined}
+            style={{ width: '550px' }}
+        >
+            {accounts.map(({ address, meta: { name } }) => (
+                <option value={address}>{name}</option>
+            ))}
+        </select>
     )
 }
 
