@@ -36,9 +36,9 @@
         "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
         "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
-        "eslint": "npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}'  --no-error-on-unmatched-pattern",
+        "eslint": "npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}'  --no-error-on-unmatched-pattern",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,yaml}' --no-error-on-unmatched-pattern",
+        "prettier": "npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json,toml,yml,html,css}' --no-error-on-unmatched-pattern",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
