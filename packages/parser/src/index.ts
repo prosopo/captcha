@@ -33,6 +33,7 @@
 // TODO should coerce be defined on the parser? perhaps the default should be defined on the parser, but can override it with params while parsing
 // TODO validation message?
 // TODO work out whether mandatory (i.e. reverse of optional / nullable) is useful + whether it should use required
+// TODO deepPartial
 
 interface Validator<T> {
     // Validate a value and throw an error if it is invalid
@@ -298,6 +299,7 @@ class RequiredParser<T> extends BaseParser<Required<T>> {
     }
 
     override parseShape(value: unknown, options?: ParseOptions | undefined): Required<T> {
+        // TODO enforce fields being present, i.e. opposite of extra keys
         const parsed = this.parser.parse(value, options) as Required<T>
         this.validate(parsed)
         return parsed
@@ -306,6 +308,30 @@ class RequiredParser<T> extends BaseParser<Required<T>> {
     override validate(value: Required<T>): void {
         super.validate(value)
         this.parser.validate(value)
+    }
+}
+
+class RecordParser<T extends string | number | symbol, U> extends BaseParser<{
+    [key in T]: U
+}> {
+    constructor(private parser: Parser<U>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions | undefined): { [key in T]: U } {
+        // TODO could be undefined?
+        const result = {} as { [key in T]: U }
+        for (const key in value as any) {
+            result[key as T] = this.parser.parse((value as any)[key], options)
+        }
+        return result
+    }
+
+    override validate(value: { [key in T]: U }): void {
+        super.validate(value)
+        for (const key in value) {
+            this.parser.validate(value[key])
+        }
     }
 }
 
@@ -402,6 +428,26 @@ class OmitParser<T extends {}, U extends keyof T> extends BaseParser<Omit<T, U>>
         throw new Error("Method not implemented.")
     }
 }
+
+class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
+    constructor(private schema: Parseable<T>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions | undefined): Partial<T> {
+        // TODO allow optional keys to do partial parsing
+        throw new Error("Method not implemented.")
+    }
+
+    override validate(value: Partial<T>): void {
+        super.validate(value)
+        // TODO allow optional keys to do partial validation
+        throw new Error("Method not implemented.")
+    }
+}
+
+
+
 
 class ArrayParser<T> extends BaseParser<T[]> {
     constructor(private schema: Parser<T>) {
