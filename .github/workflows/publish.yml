@@ -95,6 +95,7 @@ jobs:
             - run: ls -la node_modules || true
 
             - name: Install
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   npm install
                   npm run removePolkadotJSWarnings
@@ -102,6 +103,7 @@ jobs:
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
             - name: Install dependencies and build packages
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   echo "Installing dependencies..."
                   npm ci
@@ -110,6 +112,7 @@ jobs:
                   npm run build:all:cjs
 
             - name: Build the contract sources
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   cd protocol/dev
                   npm run build
@@ -117,6 +120,7 @@ jobs:
                   npm run cli -- build --docker --release
 
             - name: Build JS bundle
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
@@ -131,6 +135,7 @@ jobs:
             # by here we should have all the artifacts we need to publish. If any have experienced an error during build, we should skip publishing
             # this step will be skipped if the build above has failed at any point
             - name: Set publish var
+              if: steps.check_version.outputs.bump == 'true'
               id: publish
               run: |
                   echo "Setting publish var..."
