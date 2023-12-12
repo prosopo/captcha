@@ -5,7 +5,7 @@
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
     "files.autoSave": "onFocusChange",
-    "vs-code-prettier-eslint.prettierLast": "false",
+    "vs-code-prettier-eslint.prettierLast": "true",
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
         "editor.formatOnSave": true

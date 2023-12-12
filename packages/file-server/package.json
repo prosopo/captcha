@@ -19,8 +19,12 @@
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "node ./dist/index.js",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
         "dotenv": "^16.0.1",
