@@ -22,7 +22,6 @@ jobs:
     publish:
         runs-on: ubuntu-latest
         steps:
-
             # checkout the repo
             - uses: actions/checkout@v3
 

@@ -24,7 +24,6 @@ jobs:
             pull-requests: write
         runs-on: ubuntu-latest
         steps:
-
             # (Optional) GitHub Enterprise requires GHE_HOST variable set
             #- name: Set GHE_HOST
             #  run: |
