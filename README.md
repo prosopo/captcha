@@ -18,7 +18,6 @@ via HTTPS and can
 be placed anywhere on the page. Inside the <head> tag or immediately after the `.procaptcha` container are both fine.
 
 ```html
-
 <script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
 ```
 
@@ -31,10 +30,9 @@ typically a `<div>` (but can be any element) and must have class `procaptcha` an
 public
 site key.
 
-```html 
-
+```html
 <body>
-<div class="procaptcha" data-sitekey="your_site_key"></div>
+    <div class="procaptcha" data-sitekey="your_site_key"></div>
 </body>
 ```
 
@@ -44,28 +42,27 @@ verification.
 You can retrieve it server side with POST parameter `procaptcha-response`.
 
 Here's a full example where Procaptcha is being used to protect a signup form from automated abuse. When the form is
-submitted, the `procaptcha-response`  JSON data will be included with the email and password POST data after the captcha
+submitted, the `procaptcha-response` JSON data will be included with the email and password POST data after the captcha
 is
 solved.
 
 #### Example of implicit rendering
 
 ```html
-
 <html>
-<head>
-    <title>Procaptcha Demo</title>
-    <script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
-</head>
-<body>
-<form action="" method="POST">
-    <input type="text" name="email" placeholder="Email"/>
-    <input type="password" name="password" placeholder="Password"/>
-    <div class="procaptcha" data-sitekey="your_site_key"></div>
-    <br/>
-    <input type="submit" value="Submit"/>
-</form>
-</body>
+    <head>
+        <title>Procaptcha Demo</title>
+        <script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    </head>
+    <body>
+        <form action="" method="POST">
+            <input type="text" name="email" placeholder="Email" />
+            <input type="password" name="password" placeholder="Password" />
+            <div class="procaptcha" data-sitekey="your_site_key"></div>
+            <br />
+            <input type="submit" value="Submit" />
+        </form>
+    </body>
 </html>
 ```
 
@@ -80,14 +77,13 @@ The script is loaded in the head of the document and given the id `procaptcha-sc
 id `procaptcha-container` where the widget will be rendered.
 
 ```html
-
 <html>
-<head>
-    <script id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
-</head>
-<body>
-<div id="procaptcha-container"></div>
-</body>
+    <head>
+        <script id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    </head>
+    <body>
+        <div id="procaptcha-container"></div>
+    </body>
 </html>
 ```
 
@@ -96,7 +92,6 @@ An `onload` event is added to the script tag to call the render function when th
 ```javascript
 // A function that will call the render Procaptcha function when the procaptcha script has loaded
 document.getElementById('procaptcha-script').addEventListener('load', function () {
-
     // Define a callback function to be called when the CAPTCHA is verified
     window.onCaptchaVerified = function (output) {
         console.log('Captcha verified, output: ' + JSON.stringify(output))
@@ -117,7 +112,7 @@ The output from the `onCaptchaVerified` function is the `procaptcha-response` JS
 data contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
-|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | commitmentId | string | The commitment ID of the captcha challenge. This is used to verify the user's response on-chain.                              |
 | providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
 | dapp         | string | The SITE_KEY of your application / website                                                                                    |
@@ -142,4 +137,3 @@ if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
 
 There is an example server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
-
