@@ -54,7 +54,9 @@ jobs:
               run: npm ci
 
             - name: Build
-              run: npm run build -w @prosopo/scripts
+              run: |
+                  npm run build -w @prosopo/scripts
+                  npm run build -w @prosopo/protocol-dev
 
             - name: Bump version
               env:
@@ -65,6 +67,9 @@ jobs:
 
                   # make the version changes
                   npm run version ${{ github.event.inputs.version }}
+
+                  # rebuild typechain
+                  npm run build:typechain
 
                   # set the author in git
                   git config user.name "prosoponator[bot]"
