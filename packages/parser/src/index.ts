@@ -218,6 +218,20 @@ class OptionalParser<T> extends BaseParser<T | undefined> {
     }
 }
 
+class LazyParser<T> extends BaseParser<T> {
+    constructor(private parser: () => Parser<T>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions | undefined): T {
+        return this.parser().parse(value, options)
+    }
+
+    override validate(value: T): void {
+        this.parser().validate(value)
+    }
+}
+
 class MergeParser<T, U> extends BaseParser<T & U> {
     constructor(private first: Parser<T>, private second: Parser<U>) {
         super()
