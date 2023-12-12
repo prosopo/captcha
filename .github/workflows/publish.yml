@@ -21,10 +21,6 @@ on:
                 required: false
                 default: false
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
-
 jobs:
     publish:
         runs-on: ubuntu-latest
@@ -35,30 +31,56 @@ jobs:
             # check if the root package.json has been changed, specifically if the version has been bumped
             - name: Check version
               id: check_version
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # get the next version number from the package.json
-                  NEXT=$(cat package.json | jq -r '.version')
+                  NEXT=$(npm pkg get version)
 
                   # get the current version number from the current state of main branch
-                  CURRENT=$(git show origin/main:package.json | jq -r '.version')
+                  CURRENT=$(gh release list --limit 1 | awk '{print $2}')
+
+                  if [[ -z "$NEXT" ]]; then
+                    echo "Failed to get next version"
+                    exit 1
+                  fi
+
+                  if [[ -z "$CURRENT" ]]; then
+                    echo "Failed to get current version"
+                    exit 1
+                  fi
 
                   # compare the two versions
                   echo "next version: $NEXT"
                   echo "next_version=$NEXT" >> $GITHUB_OUTPUT
                   echo "current version: $CURRENT"
                   echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
-                  if [[ $NEXT == $CURRENT ]]; then
+
+                  NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
+                  NEXT_MINOR=$(echo $NEXT | cut -d. -f2)
+                  NEXT_PATCH=$(echo $NEXT | cut -d. -f3)
+                  CURRENT_MAJOR=$(echo $CURRENT | cut -d. -f1)
+                  CURRENT_MINOR=$(echo $CURRENT | cut -d. -f2)
+                  CURRENT_PATCH=$(echo $CURRENT | cut -d. -f3)
+
+                  if [[ "$NEXT_MAJOR" > "$CURRENT_MAJOR" ]]; then
+                    echo "major version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "$NEXT_MINOR" > "$CURRENT_MINOR" ]]; then
+                    echo "minor version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "$NEXT_PATCH" > "$CURRENT_PATCH" ]]; then
+                    echo "patch version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  else
                     echo "no version bump detected"
                     echo "bump=false" >> $GITHUB_OUTPUT
-                  else
-                    echo "version bump detected"
-                    echo "bump=true" >> $GITHUB_OUTPUT
                   fi
+                  
                   if [[ "${{ github.event.inputs.ignore_version_check }}" == true ]]; then
                     echo "ignoring version check"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   fi
-                  echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
 
             # setup node
             - uses: actions/setup-node@v3
