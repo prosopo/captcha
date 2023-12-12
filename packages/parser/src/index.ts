@@ -30,6 +30,8 @@
 // TODO check enum/options for each type of enum works
 // TODO add chaining to all types, e.g. able to do .optional(), etc
 // TODO split up into classes, enable tree shaking via exports in pkg json
+// TODO should coerce be defined on the parser? perhaps the default should be defined on the parser, but can override it with params while parsing
+// TODO validation message?
 
 interface Validator<T> {
     // Validate a value and throw an error if it is invalid
@@ -267,6 +269,23 @@ class BigIntParser extends BaseParser<bigint> {
             throw new Error(`Expected bigint but got ${typeof value}`)
         }
         return value
+    }
+}
+
+class RequiredParser<T> extends BaseParser<Required<T>> {
+    constructor(private parser: Parser<T>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions | undefined): Required<T> {
+        const parsed = this.parser.parse(value, options) as Required<T>
+        this.validate(parsed)
+        return parsed
+    }
+
+    override validate(value: Required<T>): void {
+        super.validate(value)
+        this.parser.validate(value)
     }
 }
 
