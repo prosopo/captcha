@@ -102,7 +102,6 @@ jobs:
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
             - name: Install dependencies and build packages
-              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   echo "Installing dependencies..."
                   npm ci
@@ -111,7 +110,6 @@ jobs:
                   npm run build:all:cjs
 
             - name: Build the contract sources
-              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   cd protocol/dev
                   npm run build
@@ -119,7 +117,6 @@ jobs:
                   npm run cli -- build --docker --release
 
             - name: Build JS bundle
-              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
@@ -131,7 +128,16 @@ jobs:
 
                   NODE_ENV=production npm run bundle:prod
 
+            # by here we should have all the artifacts we need to publish. If any have experienced an error during build, we should skip publishing
+            # this step will be skipped if the build above has failed at any point
+            - name: Set publish var
+              id: publish
+              run: |
+                  echo "Setting publish var..."
+                  echo "publish=true" >> $GITHUB_OUTPUT
+
             - name: Publish to github
+              if: always() && steps.publish.outputs.publish == 'true'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -139,7 +145,7 @@ jobs:
                   gh release create --generate-notes "v${{ steps.check_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm publish
-              if: always() && steps.check_version.outputs.bump == 'true'
+              if: always() && steps.publish.outputs.publish == 'true'
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                     echo "Running on GitHub Actions"
@@ -154,7 +160,7 @@ jobs:
                   fi
 
             - name: Publish bundle in js_server to dockerhub
-              if: always() && steps.check_version.outputs.bump == 'true'
+              if: always() && steps.publish.outputs.publish == 'true'
               run: |
                   echo "Logging into Docker Hub."
                   echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
@@ -181,7 +187,7 @@ jobs:
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
-              if: always() && steps.check_version.outputs.bump == 'true'
+              if: always() && steps.publish.outputs.publish == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in cli package"
