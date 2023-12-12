@@ -238,6 +238,26 @@ class NullableParser<T> extends BaseParser<T | null> {
     }
 }
 
+class NeverParser extends BaseParser<never> {
+    override parseShape(value: unknown, options?: ParseOptions | undefined): never {
+        throw new Error(`Expected never but got ${typeof value}`)
+    }
+}
+
+class UnknownParser extends BaseParser<unknown> {
+    override parseShape(value: unknown, options?: ParseOptions | undefined): unknown {
+        return value
+    }
+}
+
+class AnyParser extends BaseParser<any> {
+    override parseShape(value: unknown, options?: ParseOptions | undefined): any {
+        return value
+    }
+}
+
+
+
 type Entries<T> = {
     [K in keyof T]: [K, T[K]]
 }[keyof T][]
