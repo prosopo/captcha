@@ -32,6 +32,7 @@
 // TODO split up into classes, enable tree shaking via exports in pkg json
 // TODO should coerce be defined on the parser? perhaps the default should be defined on the parser, but can override it with params while parsing
 // TODO validation message?
+// TODO work out whether mandatory (i.e. reverse of optional / nullable) is useful + whether it should use required
 
 interface Validator<T> {
     // Validate a value and throw an error if it is invalid
@@ -216,6 +217,25 @@ class OptionalParser<T> extends BaseParser<T | undefined> {
     }
 }
 
+class MergeParser<T, U> extends BaseParser<T & U> {
+    constructor(private first: Parser<T>, private second: Parser<U>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions | undefined): T & U {
+        // TODO allow fields from second to exist when parsing first and vice versa
+        const first = this.first.parse(value, options)
+        const second = this.second.parse(value, options)
+        return { ...first, ...second }
+    }
+
+    override validate(value: T & U): void {
+        super.validate(value)
+        this.first.validate(value)
+        this.second.validate(value)
+    }
+}
+
 class NullableParser<T> extends BaseParser<T | null> {
     constructor(private parser: Parser<T>) {
         super()
@@ -338,6 +358,14 @@ class ObjectParser<T extends {}> extends BaseParser<T> {
             subSchema.parse((value as any)[key] as unknown)
         }
         return value as T
+    }
+
+    merge<U>(parser: Parser<U>): Parser<T & U> {
+        return new MergeParser(this, parser)
+    }
+
+    extend<U extends {}>(schema: Parseable<U>): Parser<T & U> {
+        return this.merge(new ObjectParser(schema))
     }
 }
 
