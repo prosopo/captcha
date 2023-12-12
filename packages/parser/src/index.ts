@@ -336,6 +336,7 @@ class RecordParser<T extends string | number | symbol, U> extends BaseParser<{
 }
 
 type TupleElementParser<T> = T extends readonly [infer U, ...infer V] ? [Parser<U>, ...TupleElementParser<V>] : []
+type TupleUnpacker<T> = T extends readonly [Parser<infer U>, ...infer V] ? [U, ...TupleUnpacker<V>] : []
 
 class TupleParser<const T> extends BaseParser<T> {
     constructor(private parsers: TupleElementParser<T>) {
@@ -347,8 +348,14 @@ class TupleParser<const T> extends BaseParser<T> {
     }
 }
 
+const createTupleParser = <const T>(parsers: T): Parser<TupleUnpacker<T>> => {
+    throw new Error("Method not implemented.")
+}
+
 const t = new TupleParser<[string, number, boolean]>([new StringParser(), new NumberParser(), new BooleanParser()])
 const t2 = t.parse(['hello', 1, true])
+const t3 = createTupleParser([new StringParser(), new NumberParser(), new BooleanParser()])
+const t4 = t3.parse(['hello', 1, true])
 
 type Entries<T> = {
     [K in keyof T]: [K, T[K]]
