@@ -1,6 +1,6 @@
 # Getting Started with the Client Bundle Example
 
-This project is a *minimal* example demonstrating how to include the Prosopo Procaptcha bundle in a client app.
+This project is a _minimal_ example demonstrating how to include the Prosopo Procaptcha bundle in a client app.
 
 ## How to run locally
 
