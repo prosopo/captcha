@@ -239,7 +239,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                             </div>
                         </div>
                         <div>
-                            <a href="https://www.prosopo.io/#features" target="_blank">
+                            <a href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox" target="_blank" aria-label="Visit prosopo.io to learn more about the service and its accessibility options.">
                                 <div>
                                     <div>
                                         <div
