@@ -28,6 +28,12 @@
         "cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
         "cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
         "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress open",
-        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress run"
+        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress run",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     }
 }
