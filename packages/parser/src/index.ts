@@ -252,7 +252,26 @@ class PromiseParser<T> extends BaseParser<Promise<T>> {
     }
 }
 
+// TODO does the ctor type work here? test it out
+class InstanceOfParser<T> extends BaseParser<T> {
+    constructor(private type: new (...args: any[]) => T) {
+        super()
+    }
 
+    override parseShape(value: unknown, options?: ParseOptions | undefined): T {
+        if (!(value instanceof this.type)) {
+            throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
+        }
+        return value
+    }
+
+    override validate(value: T): void {
+        super.validate(value)
+        if (!(value instanceof this.type)) {
+            throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
+        }
+    }
+}
 
 class MergeParser<T, U> extends BaseParser<T & U> {
     constructor(private first: Parser<T>, private second: Parser<U>) {
