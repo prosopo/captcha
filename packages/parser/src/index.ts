@@ -256,7 +256,19 @@ class AnyParser extends BaseParser<any> {
     }
 }
 
-
+class BigIntParser extends BaseParser<bigint> {
+    override parseShape(value: unknown, options?: ParseOptions | undefined): bigint {
+        if (options?.coerce) {
+            const t = typeof value
+            const v = t === 'string' ? value as string : t === 'number' ? value as number : t === 'boolean' ? value as boolean : t === 'bigint' ? value as bigint : String(value)
+            value = BigInt(v)
+        }
+        if (typeof value !== 'bigint') {
+            throw new Error(`Expected bigint but got ${typeof value}`)
+        }
+        return value
+    }
+}
 
 type Entries<T> = {
     [K in keyof T]: [K, T[K]]
