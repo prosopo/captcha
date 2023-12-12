@@ -1,19 +1,19 @@
 name: publish
 
 on:
-  push:
-    # only on the main branch
-    branches:
-        - main
-  # or run manually
-  workflow_dispatch:
-    inputs:
-        # ignore the version check and publish anyway
-      ignore_version_check:
-        type: boolean
-        description: 'Ignore the version check and publish anyway'
-        required: false
-        default: false
+    push:
+        # only on the main branch
+        branches:
+            - main
+    # or run manually
+    workflow_dispatch:
+        inputs:
+            # ignore the version check and publish anyway
+            ignore_version_check:
+                type: boolean
+                description: 'Ignore the version check and publish anyway'
+                required: false
+                default: false
 
 jobs:
     publish:
@@ -70,7 +70,7 @@ jobs:
                     echo "no version bump detected"
                     echo "bump=false" >> $GITHUB_OUTPUT
                   fi
-                  
+
                   if [[ "${{ github.event.inputs.ignore_version_check }}" == true ]]; then
                     echo "ignoring version check"
                     echo "bump=true" >> $GITHUB_OUTPUT
