@@ -95,7 +95,7 @@ jobs:
             - run: ls -la node_modules || true
 
             - name: Log in to Docker Hub
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   echo "Logging into Docker Hub."
                   echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
@@ -108,7 +108,7 @@ jobs:
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
             - name: Install dependencies and build packages
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   echo "Installing dependencies..."
                   npm ci
@@ -117,7 +117,7 @@ jobs:
                   npm run build:all:cjs
 
             - name: Build the contract sources
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   cd protocol/dev
                   npm run build
@@ -125,7 +125,7 @@ jobs:
                   npm run cli -- build --docker --release
 
             - name: Build JS bundle
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
@@ -145,7 +145,7 @@ jobs:
                   gh release create --generate-notes "v${{ steps.check_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm publish
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                     echo "Running on GitHub Actions"
@@ -160,7 +160,7 @@ jobs:
                   fi
 
             - name: Publish bundle in js_server to dockerhub
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   # Pull the latest Docker image
                   docker pull prosopo/js_server:${{steps.check_version.outputs.current_version}}
@@ -184,7 +184,7 @@ jobs:
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
-              if: steps.check_version.outputs.bump == 'true'
+              if: always() && steps.check_version.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in cli package"
