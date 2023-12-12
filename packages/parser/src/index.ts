@@ -232,6 +232,28 @@ class LazyParser<T> extends BaseParser<T> {
     }
 }
 
+class PromiseParser<T> extends BaseParser<Promise<T>> {
+    constructor(private parser: Parser<T>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions | undefined): Promise<T> {
+        // check that the value is a promise
+        if (!(value instanceof Promise)) {
+            throw new Error(`Expected promise but got ${typeof value}`)
+        }
+        // do the parsing when the promise resolves
+        return value.then((v) => this.parser.parse(v, options))
+    }
+
+    override validate(value: Promise<T>): void {
+        // TODO does this make sense? think the promise thing falls apart here, need to return value?
+        value.then((v) => this.parser.validate(v))
+    }
+}
+
+
+
 class MergeParser<T, U> extends BaseParser<T & U> {
     constructor(private first: Parser<T>, private second: Parser<U>) {
         super()
