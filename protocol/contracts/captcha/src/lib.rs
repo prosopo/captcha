@@ -1327,6 +1327,9 @@ pub mod captcha {
         )
     )]
     mod tests {
+        use common::Account;
+        use common::Pair;
+        use common::TestHelper;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
@@ -1446,8 +1449,9 @@ pub mod captcha {
 
         #[ink::test]
         fn test_accs_tmp() {
-            let key_pair = TestHelper::get_account2(1);
-            let seed = TestHelper::get_seed(1);
+            let account = Account::nth(1);
+            let seed = account.seed();
+            let key_pair = account.pair();
             println!("seed: {}", seed);
             println!("key_pair: {}", key_pair.public());
 
