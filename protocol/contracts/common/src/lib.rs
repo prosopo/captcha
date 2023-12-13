@@ -86,12 +86,13 @@ pub enum CustomError<Env: ink::env::Environment> {
 
 pub trait Common2 {
     type Env: ink::env::Environment;
-    type Error;
 
     fn check_is_admin(
         account: <Self::Env as ink::env::Environment>::AccountId,
-    ) -> Result<(), Self::Error> {
-        Ok(())
+    ) -> Result<(), CustomError<Self::Env>> {
+        // want to be able to throw the error here, so need to have the enum variant in scope
+        // Ok(())
+        Err(CustomError::NotAuthorised(account))
     }
 }
 
@@ -99,12 +100,11 @@ pub enum Common2Default {}
 
 impl Common2 for Common2Default {
     type Env = ink::env::DefaultEnvironment;
-    type Error = CustomError<Self::Env>;
 
     fn check_is_admin(
         account: <Self::Env as ink::env::Environment>::AccountId,
-    ) -> Result<(), Self::Error> {
-        Err(Self::Error::NotAuthorised(account))
+    ) -> Result<(), CustomError<Self::Env>> {
+        Err(CustomError::NotAuthorised(account))
     }
 }
 
