@@ -1,0 +1,48 @@
+name: consistent_versions
+
+on:
+    pull_request:
+        branches: [main]
+        paths:
+            - '**/package.json'
+            - 'package.json'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+env:
+    CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
+    GH_TOKEN: ${{ github.token }}
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            # Checkout the repo
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+
+            - name: Check versions are consistent amongst packages
+              run: |
+                  # for each package, get the version then filter to unique versions
+                  versions=$(npx --workspaces npm pkg get version | grep "@" | awk '{print $2}' | uniq)
+                  # if more than one version is detected, fail
+                  if [ $(echo "$versions" | wc -l) -gt 1 ]; then
+                      echo "Versions are not consistent amongst packages:"
+                      echo "$versions"
+                      exit 1
+                  fi
+                  # if version doesn't match the root workspace version, fail
+                  root_version=$(npm pkg get version)
+                  if [ "$versions" != "$root_version" ]; then
+                      echo "Version is not consistent with root workspace version:"
+                      echo "$versions"
+                      echo "$root_version"
+                      exit 1
+                  fi
+                  # else versions are consistent, pass
