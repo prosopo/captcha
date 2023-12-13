@@ -97,6 +97,14 @@ pub mod tests {
     }
 
     #[ink::test]
+    fn test_reproducible_account() {
+        let account1 = Account::nth(0);
+        let account2 = Account::nth(0);
+        assert_eq!(account1.seed(), account2.seed());
+        assert_eq!(account1.account_id(), account2.account_id());
+    }
+
+    #[ink::test]
     fn test_account_balance_zero_on_creation() {
         let account = Account::nth(0);
         assert_eq!(account.balance(), 0);
