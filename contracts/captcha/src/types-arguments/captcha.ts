@@ -36,6 +36,7 @@ export enum Error {
     providerFeeTooHigh = 'ProviderFeeTooHigh',
     commitAlreadyExists = 'CommitAlreadyExists',
     notAuthor = 'NotAuthor',
+    math = 'Math',
 }
 
 export enum LangError {
