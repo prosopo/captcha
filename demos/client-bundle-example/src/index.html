@@ -1,47 +1,47 @@
-<html>
-<head>
-    <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha demo: Simple page</title>
-    <script id="procaptchaScript" src="procaptcha.bundle.js" async defer></script>
-</head>
-<body>
-<div class="mui-container">
-    <form action="?" class="mui-form">
-        <legend>Login</legend>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label>Email Address</label>
-            <input type="email" required/>
+<!doctype html>
+<html lang="en">
+    <head>
+        <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
+        <title>Procaptcha demo: Simple page</title>
+        <script id="procaptchaScript" src="procaptcha.bundle.js" async defer></script>
+    </head>
+    <body>
+        <div class="mui-container">
+            <form action="?" class="mui-form">
+                <legend>Login</legend>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <label>Email Address</label>
+                    <input type="email" required />
+                </div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <label>Password</label>
+                    <input type="password" required />
+                </div>
+                <div id="procaptcha-container"></div>
+                <!-- Dev sitekey -->
+                <div
+                    class="procaptcha"
+                    data-theme="light"
+                    data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                ></div>
+                <input type="submit" class="mui-btn mui-btn--raised" />
+            </form>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label>Password</label>
-            <input type="password" required/>
-        </div>
-        <div id="procaptcha-container"></div>
-        <!-- Dev sitekey -->
-        <div
-                class="procaptcha"
-                data-theme="light"
-                data-sitekey="5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg"
-        ></div>
-        <input type="submit" class="mui-btn mui-btn--raised"/>
-    </form>
-</div>
-<script>
-    // A function that will call the render Procaptcha function when the procaptcha script has loaded
-    document.getElementById('procaptchaScript').addEventListener('load', function () {
+        <script>
+            // A function that will call the render Procaptcha function when the procaptcha script has loaded
+            document.getElementById('procaptchaScript').addEventListener('load', function () {
+                // Define a callback function to be called when the CAPTCHA is verified
+                window.onCaptchaVerified = function (output) {
+                    console.log('Captcha verified, output: ' + JSON.stringify(output))
+                }
 
-        // Define a callback function to be called when the CAPTCHA is verified
-        window.onCaptchaVerified = function (output) {
-            console.log('Captcha verified, output: ' + JSON.stringify(output))
-        }
-
-        // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
-        window.procaptcha.render('procaptcha-container', {
-            siteKey: '5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg',
-            theme: 'dark',
-            callback: 'onCaptchaVerified',
-        })
-    })
-</script>
-</body>
+                // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
+                window.procaptcha.render('procaptcha-container', {
+                    siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
+                    theme: 'dark',
+                    callback: 'onCaptchaVerified',
+                })
+            })
+        </script>
+    </body>
 </html>

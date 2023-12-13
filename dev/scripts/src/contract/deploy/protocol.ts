@@ -14,9 +14,9 @@
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
-import { ContractAbi } from '@prosopo/captcha-contract'
+import { ContractAbi } from '@prosopo/captcha-contract/contract-info'
 import { ContractDeployer, getPairAsync } from '@prosopo/contract'
-import { ContractFile } from '@prosopo/captcha-contract'
+import { ContractFile } from '@prosopo/captcha-contract/contract-info'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getSecret } from '@prosopo/cli'
@@ -80,7 +80,7 @@ export async function run(
 if (typeof require !== 'undefined' && require.main === module) {
     log.info('Loading env from', path.resolve('.'))
     loadEnv(path.resolve('.'))
-    run(process.env.CAPTCHA_WASM_PATH, process.env.CAPTCHA_ABI_PATH)
+    run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH)
         .then((deployResult) => {
             log.info('Deployed with address', deployResult)
             process.exit(0)

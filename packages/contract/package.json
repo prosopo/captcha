@@ -1,19 +1,23 @@
 {
     "name": "@prosopo/contract",
-    "version": "0.2.11",
+    "version": "0.2.17",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "type": "module",
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -25,7 +29,12 @@
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
         },
-        "./captcha": "./dist/captcha/index.js"
+        "./contract/interface": {
+            "types": "./dist/contract/interface.d.ts",
+            "import": "./dist/contract/interface.js",
+            "require": "./dist/cjs/contract/interface.cjs",
+            "default": "./dist/contract/interface.js"
+        }
     },
     "typesVersions": {
         "*": {
@@ -38,23 +47,23 @@
         }
     },
     "dependencies": {
-        "@polkadot/api": "10.10.1",
-        "@polkadot/api-contract": "10.10.1",
-        "@polkadot/keyring": "12.5.1",
-        "@polkadot/rpc-provider": "10.10.1",
-        "@polkadot/typegen": "10.10.1",
-        "@polkadot/types": "10.10.1",
-        "@polkadot/types-create": "10.10.1",
-        "@polkadot/util": "12.3.2",
-        "@polkadot/util-crypto": "12.3.2",
-        "@prosopo/common": "0.2.11",
-        "@prosopo/types": "0.2.11",
-        "@prosopo/util": "0.2.11",
-        "@prosopo/captcha-contract": "0.2.11",
+        "@polkadot/api": "10.11.1",
+        "@polkadot/api-contract": "10.11.1",
+        "@polkadot/keyring": "12.6.1",
+        "@polkadot/rpc-provider": "10.11.1",
+        "@polkadot/typegen": "10.11.1",
+        "@polkadot/types": "10.11.1",
+        "@polkadot/types-create": "10.11.1",
+        "@polkadot/util": "12.6.1",
+        "@polkadot/util-crypto": "12.6.1",
+        "@prosopo/common": "0.2.17",
+        "@prosopo/types": "0.2.17",
+        "@prosopo/util": "0.2.17",
+        "@prosopo/captcha-contract": "0.2.17",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {
-        "@polkadot/api-augment": "10.10.1",
+        "@polkadot/api-augment": "10.11.1",
         "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"

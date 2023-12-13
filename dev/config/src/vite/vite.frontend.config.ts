@@ -6,12 +6,13 @@ import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getAliases } from '../polkadot/index.js'
 import { getLogger } from '@prosopo/common'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
-import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { default as viteReact } from '@vitejs/plugin-react'
 import { wasm } from '@rollup/plugin-wasm'
 import css from 'rollup-plugin-import-css'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
+import typescript from '@rollup/plugin-typescript'
 import viteTsconfigPaths from 'vite-tsconfig-paths'
 const logger = getLogger(`Info`, `vite.config.js`)
 
@@ -39,10 +40,11 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-        'process.env.SERVER_URL': JSON.stringify(process.env.SERVER_URL),
+        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
+        'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
+        'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }
@@ -62,35 +64,40 @@ export default async function (
         ...external,
         ...optionalPeerDependencies,
     ]
-    logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-    const alias = isProduction ? getAliases(dir) : []
+    logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
+    const alias = getAliases(dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
     proto['toJSON'] = RegExp.prototype.toString
-    logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
+    logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
+    logger.info('Bundle name', bundleName)
     return {
+        ssr: {
+            target: 'webworker',
+        },
         server: {
             host: '127.0.0.1',
         },
         mode: mode || 'development',
         optimizeDeps: {
-            include: ['linked-dep', 'esm-dep > cjs-dep', 'node_modules'], //'node_modules'
-            //exclude: ['react', 'react-dom'],
+            include: ['linked-dep', 'esm-dep > cjs-dep', 'node_modules'],
+            force: true,
         },
         esbuild: {
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
             drop,
+            legalComments: 'none',
         },
         define,
-        // resolve: {
-        //     alias,
-        // },
+        resolve: {
+            alias,
+        },
 
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
@@ -99,20 +106,31 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
+                // sets the bundle to an Instantly Invoked Function Expression (IIFE)
                 fileName: `${bundleName}.bundle.js`,
-                // sets the bundle to an instantly invoked function expression (IIFE)
                 formats: ['iife'],
             },
             modulePreload: { polyfill: true },
             commonjsOptions: {
                 exclude: ['mongodb/*'],
                 transformMixedEsModules: true,
+                strictRequires: 'debug',
             },
 
             rollupOptions: {
-                treeshake: 'smallest',
+                treeshake: {
+                    annotations: false,
+                    propertyReadSideEffects: false,
+                    tryCatchDeoptimization: false,
+                    moduleSideEffects: 'no-external', //true,
+                    preset: 'smallest',
+                    manualPureFunctions: ['createWasmFn', 'unzlibSync', 'withWasm', 'isReady', 'initBridge', 'twox'],
+                    unknownGlobalSideEffects: false,
+                },
+                experimentalLogSideEffects: false,
                 external: allExternal,
                 watch: false,
+
                 output: {
                     dir: path.resolve(dir, 'dist/bundle'),
                     entryFileNames: `${bundleName}.bundle.js`,
@@ -121,19 +139,31 @@ export default async function (
                 plugins: [
                     css(),
                     wasm(),
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     nodeResolve({
                         browser: true,
                         preferBuiltins: false,
                         rootDir: path.resolve(dir, '../../'),
                         dedupe: ['react', 'react-dom'],
+                        modulesOnly: true,
+                    }),
+                    visualizer({
+                        open: true,
+                        template: 'treemap', //'list',
+                        gzipSize: true,
+                        brotliSize: true,
                     }),
                     // I think we can use this plugin to build all packages instead of relying on the tsc step that's
                     // currently a precursor in package.json. However, it fails for the following reason:
                     // https://github.com/rollup/plugins/issues/243
-                    // typescript({
-                    //     tsconfig: path.resolve('./tsconfig.json'),
-                    //     compilerOptions: { rootDir: path.resolve('./src') },
-                    // }),
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    typescript({
+                        tsconfig: path.resolve('./tsconfig.json'),
+                        compilerOptions: { rootDir: path.resolve('./src') },
+                        outDir: path.resolve(dir, 'dist/bundle'),
+                    }),
                 ],
             },
         },
@@ -142,7 +172,6 @@ export default async function (
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             viteReact(),
-            viteCommonjs(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy(copyOptions) : undefined,

@@ -1,12 +1,12 @@
 {
     "name": "@prosopo/types",
-    "version": "0.2.11",
+    "version": "0.2.17",
     "description": "Types for prosopo TypeScript packages",
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "exports": {
         ".": {
@@ -18,8 +18,12 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "repository": {
         "type": "git",
@@ -32,12 +36,12 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@polkadot/api": "10.10.1",
-        "@polkadot/api-contract": "10.10.1",
-        "@polkadot/types": "10.10.1",
-        "@polkadot/types-codec": "10.10.1",
-        "@prosopo/common": "0.2.11",
-        "@prosopo/captcha-contract": "0.2.11",
+        "@polkadot/api": "10.11.1",
+        "@polkadot/api-contract": "10.11.1",
+        "@polkadot/types": "10.11.1",
+        "@polkadot/types-codec": "10.11.1",
+        "@prosopo/common": "0.2.17",
+        "@prosopo/captcha-contract": "0.2.17",
         "consola": "^3.2.3",
         "zod": "^3.22.3"
     },

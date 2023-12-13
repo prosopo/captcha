@@ -1,7 +1,7 @@
 name: create_diagram
 on:
     workflow_dispatch: {}
-    push:
+    pull_request:
         branches:
             - main
 jobs:
@@ -10,3 +10,5 @@ jobs:
         steps:
             - uses: actions/checkout@v3
             - uses: githubocto/repo-visualizer@main
+              with:
+                  branch: repo-diagram

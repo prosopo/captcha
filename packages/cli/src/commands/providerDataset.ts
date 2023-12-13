@@ -1,3 +1,4 @@
+import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
@@ -5,7 +6,6 @@ import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { writeJSONFile } from '../files.js'
-import { z } from 'zod'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_dataset')
@@ -29,7 +29,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                let datasetId = z.string().parse(argv.datasetId)
+                let datasetId = z.string().optional().parse(argv.datasetId)
                 if (!env.config.account.address) {
                     throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND')
                 }

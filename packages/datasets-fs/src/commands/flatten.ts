@@ -1,9 +1,10 @@
+import * as z from 'zod'
 import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { at, lodash } from '@prosopo/util'
+import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
-import { u8aToHex } from '@polkadot/util'
-import { z } from 'zod'
+import { lodash } from '@prosopo/util/lodash'
+import { u8aToHex } from '@polkadot/util/u8a'
 import cliProgress from 'cli-progress'
 import fs from 'fs'
 

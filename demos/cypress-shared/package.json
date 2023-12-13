@@ -1,0 +1,39 @@
+{
+    "name": "@prosopo/cypress-shared",
+    "version": "0.2.17",
+    "private": true,
+    "type": "module",
+    "engines": {
+        "node": ">=18",
+        "npm": ">=9"
+    },
+    "dependencies": {
+        "@prosopo/types": "0.2.17",
+        "@prosopo/util": "0.2.17"
+    },
+    "devDependencies": {
+        "@cypress/xpath": "^2.0.3",
+        "@types/node": "^20.3.1",
+        "cypress": "^13.4.0",
+        "cypress-vite": "^1.4.2",
+        "rollup-plugin-node-builtins": "^2.1.2",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6",
+        "vite": "^4.5.0",
+        "vite-plugin-node-polyfills": "^0.16.0"
+    },
+    "scripts": {
+        "build": "tsc",
+        "clean": "tsc --build --clean",
+        "cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
+        "cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
+        "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress open",
+        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress run",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+    }
+}

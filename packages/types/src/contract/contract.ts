@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { DecodedEvent } from '@polkadot/api-contract/types'
-import { SubmittableResult } from '@polkadot/api'
+import { SubmittableResult } from '@polkadot/api/submittable'
 
 export interface TransactionResponse {
     from: string

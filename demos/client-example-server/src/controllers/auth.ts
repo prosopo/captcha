@@ -59,7 +59,6 @@ const signup = async (
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
             const passwordHash = hashPassword(`${req.body.password}${salt}`)
-
             if (passwordHash) {
                 return User.create({
                     email: req.body.email,
@@ -96,7 +95,6 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
                 res.status(404).json({ message: 'user not found' })
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
-
                 if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
                     // password hash
                     // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.

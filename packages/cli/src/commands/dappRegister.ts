@@ -1,5 +1,6 @@
+import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
-import { DappPayee } from '@prosopo/captcha-contract'
+import { DappPayee } from '@prosopo/captcha-contract/types-returns'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
@@ -8,7 +9,6 @@ import { Tasks } from '@prosopo/provider'
 import { get } from '@prosopo/util'
 import { validateContract, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
-import { z } from 'zod'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_register')

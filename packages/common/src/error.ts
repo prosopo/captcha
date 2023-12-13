@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { TranslationKey, i18n as i18next, translationKeys } from './index.js'
+import { ZodError } from 'zod'
 import { at } from '@prosopo/util'
 
 export type TOptions = Record<string, string>
@@ -75,7 +76,9 @@ export class ProsopoEnvError extends ProsopoBaseError {
         }
 
         console.error('\n********************* ERROR *********************\n')
-        if (this.cause?.message && this.cause.message.length > MAX_ERROR_LENGTH) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        if (typeof this.cause != ZodError && this.cause?.message && this.cause.message.length > MAX_ERROR_LENGTH) {
             this.cause.message = `${at(this.cause.message, -MAX_ERROR_LENGTH)}...`
         }
         console.error(this.cause, this.stack, ...params)

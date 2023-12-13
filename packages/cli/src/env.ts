@@ -18,7 +18,7 @@ import path from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const logger = getLogger(process.env.LOG_LEVEL || LogLevel.enum.info, 'env')
+const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info, 'env')
 
 export function getEnv() {
     if (process.env.NODE_ENV) {

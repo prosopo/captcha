@@ -1,16 +1,16 @@
 /* This file is auto-generated */
 
-import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
+import { handleReturnType, queryOkJSON } from '@prosopo/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/captcha.js'
 import type * as ReturnTypes from '../types-returns/captcha.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
-import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'
-import type { QueryReturnType } from '@727-ventures/typechain-types'
+import type { GasLimit, GasLimitAndRequiredValue, Result } from '@prosopo/typechain-types'
+import type { QueryReturnType } from '@prosopo/typechain-types'
 import type BN from 'bn.js'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { ReturnNumber } from '@727-ventures/typechain-types'
+import { ReturnNumber } from '@prosopo/typechain-types'
 import { getTypeDescription } from './../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json' assert { type: 'json' }
 
@@ -709,29 +709,6 @@ export default class Methods {
     }
 
     /**
-     * getCaptchaData
-     *
-     * @param { ArgumentTypes.Hash } datasetId,
-     * @returns { Result<Result<ReturnTypes.CaptchaData, ReturnTypes.Error>, ReturnTypes.LangError> }
-     */
-    getCaptchaData(
-        datasetId: ArgumentTypes.Hash,
-        __options?: GasLimit
-    ): Promise<QueryReturnType<Result<Result<ReturnTypes.CaptchaData, ReturnTypes.Error>, ReturnTypes.LangError>>> {
-        return queryOkJSON(
-            this.__apiPromise,
-            this.__nativeContract,
-            this.__callerAddress,
-            'getCaptchaData',
-            [datasetId],
-            __options,
-            (result) => {
-                return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS))
-            }
-        )
-    }
-
-    /**
      * getUser
      *
      * @param { ArgumentTypes.AccountId } userAccount,
@@ -749,7 +726,7 @@ export default class Methods {
             [userAccount],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -772,7 +749,7 @@ export default class Methods {
             [commitId],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(57, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -795,7 +772,7 @@ export default class Methods {
             [providerAccounts],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -818,7 +795,7 @@ export default class Methods {
             [statuses],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -843,7 +820,7 @@ export default class Methods {
             [userAccount, dappContract],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -866,7 +843,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(65, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }

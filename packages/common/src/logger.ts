@@ -13,7 +13,7 @@
 // limitations under the License.
 import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
 import { ProsopoEnvError } from './error.js'
-import { z } from 'zod'
+import { enum as zEnum, infer as zInfer } from 'zod'
 
 export interface Logger {
     log(message: unknown, ...args: unknown[]): void
@@ -35,8 +35,8 @@ export interface Logger {
     getLogLevel(): LogLevel
 }
 
-export const LogLevel = z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
-export type LogLevel = z.infer<typeof LogLevel>
+export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+export type LogLevel = zInfer<typeof LogLevel>
 
 // Create a new logger with the given level and scope
 export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
@@ -101,7 +101,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
  * @param logLevel
  */
 export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
-    logLevel = logLevel || process.env.LOG_LEVEL || 'Info'
+    logLevel = logLevel || process.env.PROSOPO_LOG_LEVEL || 'Info'
     logLevel = logLevel.toString().toLowerCase()
     try {
         return LogLevel.parse(logLevel)

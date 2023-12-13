@@ -13,15 +13,17 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { Payee } from '@prosopo/captcha-contract'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@727-ventures/typechain-types'
+import { ReturnNumber } from '@prosopo/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'
 import { generateMnemonic, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
+import { isAddress } from '@polkadot/util-crypto'
 import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
+import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
 
@@ -30,25 +32,27 @@ const __dirname = path.resolve()
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
-    const rootDir = process.env.ROOT_DIR || path.resolve(__dirname, '../..')
+    const rootDir = process.env.PROSOPO_ROOT_DIR || path.resolve(__dirname, '../..')
     logger.info('Root dir:', rootDir)
     return rootDir
 }
 
 function getDatasetFilePath() {
-    const datasetFile = process.env.PROVIDER_DATASET_FILE || path.resolve('../data/captchas.json')
+    const datasetFile = process.env.PROSOPO_PROVIDER_DATASET_FILE || path.resolve('../data/captchas.json')
     logger.info('Dataset file:', datasetFile)
     return datasetFile
 }
 
 function getDefaultProvider(): IProviderAccount {
     return {
-        url: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
+        url: process.env.PROSOPO_API_PORT
+            ? `http://localhost:${process.env.PROSOPO_API_PORT}`
+            : 'http://localhost:3000',
         fee: 10,
         payee: Payee.dapp,
         stake: Math.pow(10, 13),
         datasetFile: getDatasetFilePath(),
-        address: process.env.PROVIDER_ADDRESS || '',
+        address: process.env.PROSOPO_PROVIDER_ADDRESS || '',
         secret: getSecret(),
         captchaDatasetId: '',
     }
@@ -57,7 +61,6 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        contractAccount: process.env.DAPP_SITE_KEY || '',
         fundAmount: Math.pow(10, 12),
     }
 }
@@ -83,7 +86,7 @@ function updateEnvFileVar(source: string, name: string, value: string) {
     return source + `\n${name}=${value}`
 }
 
-async function updateEnvFile(vars: Record<string, string>) {
+export async function updateEnvFile(vars: Record<string, string>) {
     const rootDir = getRootDir()
     const envFile = getEnvFile(rootDir, '.env')
 
@@ -92,12 +95,12 @@ async function updateEnvFile(vars: Record<string, string>) {
     for (const key in vars) {
         readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key))
     }
-
+    logger.info(`Updating ${envFile}`)
     await fse.writeFile(envFile, readEnvFile)
 }
 
-async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount) {
-    await setupDapp(env, dapp)
+async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount, address?: string) {
+    await setupDapp(env, dapp, address)
 }
 
 export async function setup(force: boolean) {
@@ -116,8 +119,8 @@ export async function setup(force: boolean) {
         logger.debug('Writing .env file...')
         await copyEnvFile()
 
-        if (!process.env.DAPP_SITE_KEY) {
-            throw new ProsopoEnvError('DEVELOPER.DAPP_SITE_KEY_MISSING')
+        if (!process.env.PROSOPO_SITE_KEY) {
+            throw new ProsopoEnvError('DEVELOPER.PROSOPO_SITE_KEY_MISSING')
         }
 
         const config = defaultConfig()
@@ -142,12 +145,23 @@ export async function setup(force: boolean) {
 
         await registerProvider(env, defaultProvider, force)
 
-        defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
-
+        // If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
+        // If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
+        // If a DAPP_SECRET is present, we want the PROSOPO_SITE_KEY account to register itself.
+        // Otherwise, a test account like //Eve is used to register the PROSOPO_SITE_KEY account.
         defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+        let dappAddressToRegister = defaultDapp.pair.address
+        if (process.env.PROSOPO_SITE_KEY && isAddress(process.env.PROSOPO_SITE_KEY)) {
+            dappAddressToRegister = process.env.PROSOPO_SITE_KEY
+            if (process.env.PROSOPO_SITE_PRIVATE_KEY) {
+                defaultDapp.secret = process.env.PROSOPO_SITE_PRIVATE_KEY
+                defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
+                dappAddressToRegister = defaultDapp.pair.address
+            }
+        }
 
-        env.logger.info('Registering dapp...')
-        await registerDapp(env, defaultDapp)
+        env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
+        await registerDapp(env, defaultDapp, dappAddressToRegister)
 
         if (!hasProviderAccount) {
             await updateEnvFile({
@@ -155,6 +169,13 @@ export async function setup(force: boolean) {
                 PROVIDER_ADDRESS: address,
             })
         }
+        env.logger.debug('Updating env files with PROSOPO_SITE_KEY')
+        await updateDemoHTMLFiles(
+            [/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+            defaultDapp.pair.address,
+            env.logger
+        )
+        await updateEnvFiles(['NEXT_PUBLIC_PROSOPO_SITE_KEY', 'PROSOPO_SITE_KEY'], defaultDapp.pair.address, env.logger)
         process.exit()
     } else {
         console.error('no secret found in .env file')

@@ -11,23 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract'
+import { Abi } from '@polkadot/api-contract/Abi'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts.js'
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { BN, stringToU8a } from '@polkadot/util'
+import { BN } from '@polkadot/util/bn'
 import { ContractDeployer, ProsopoContractError, getPairAsync, wrapQuery } from '@prosopo/contract'
-import { DappPayee, Payee } from '@prosopo/captcha-contract'
+import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
+import { DatasetWithIdsAndTree } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
 import { ProsopoEnvError, TranslationKey } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@727-ventures/typechain-types'
+import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
-import { captchaData } from '../data/captchas.js'
-import { createType } from '@polkadot/types'
+import { createType } from '@polkadot/types/create'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
 import { get } from '@prosopo/util'
-import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
+import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { stringToU8a } from '@polkadot/util/string'
 
 const urlBase = 'http://localhost:'
 
@@ -275,13 +278,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async addDataset(account: Account, datasetJSON: JSON) {
+    private async addDataset(account: Account, dataset: DatasetWithIdsAndTree) {
         try {
             await this.changeSigner(account)
 
             const tasks = new Tasks(this.mockEnv)
 
-            await tasks.providerSetDatasetFromFile(datasetJSON)
+            await tasks.providerSetDataset(dataset)
         } catch (e) {
             throw this.createError(e as Error, this.addDataset.name)
         }
@@ -293,8 +296,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const account = await this.registerProvider(fund, url, true)
             await this.updateProvider(account, url)
-            const datasetJSON = JSON.parse(JSON.stringify(captchaData))
-            await this.addDataset(account, datasetJSON)
+            await this.addDataset(account, datasetWithSolutionHashes)
 
             this._registeredProvidersWithStakeAndDataset.push(account)
 

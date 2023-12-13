@@ -3,7 +3,6 @@ import { base64Encode } from '@polkadot/util-crypto'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import { sign, wifToPrivateKey } from './sep256k1Sign.js'
-import axios, { AxiosResponse } from 'axios'
 import qs from 'qs'
 
 const log = getLogger(`Info`, `fluxDeploy.js`)
@@ -90,26 +89,46 @@ interface DappDataResponse {
     domains: string[]
 }
 
-const errorHandler = (axiosResponse: AxiosResponse) => {
-    if (axiosResponse.data && axiosResponse.data.status === 'error') {
-        throw new Error(axiosResponse.data.data.message)
-    }
-    return axiosResponse
+interface ResponseLoginPhrase {
+    status: string
+    data: string
 }
 
-const getLoginPhrase = async (url?: URL) => {
+interface ResponseSoftRedeploy {
+    status: string
+    data: { message: string }
+}
+
+export async function streamToJson(stream: ReadableStream<Uint8Array>): Promise<Record<any, any>> {
+    return await new Response(stream).json()
+}
+
+const errorHandler = async <T>(response: Response) => {
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    if (response.body && !response.bodyUsed) {
+        const data = await streamToJson(response.body)
+
+        if (data.status === 'error') {
+            throw new Error(data.data.message)
+        }
+        return data as T
+    }
+    return {} as T
+}
+
+const getLoginPhrase = async (url?: URL): Promise<string> => {
     const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
     log.info('Calling:', apiURL.href)
-    const response = await axios.get(apiURL.toString())
-    errorHandler(response)
-    return response.data.data
+    const response = await fetch(apiURL.toString())
+    return (await errorHandler<ResponseLoginPhrase>(response)).data
 }
 
 const getFluxAppsDetails = async (zelId: string, signature: string, loginPhrase: string) => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?filter=&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
-    const response = await axios.get(apiUrl)
-    errorHandler(response)
-    return response.data
+    const response = await fetch(apiUrl)
+    return await errorHandler(response)
 }
 
 const getIndividualFluxAppDetails = async (
@@ -119,9 +138,8 @@ const getIndividualFluxAppDetails = async (
     loginPhrase: string
 ): Promise<DappDataResponse> => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?dapp=${dappName}&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
-    const response = await axios.get(apiUrl)
-    errorHandler(response)
-    return response.data
+    const response = await fetch(apiUrl)
+    return await errorHandler(response)
 }
 
 const getFluxOSURLs = async (dappName: string, zelId: string, signature: string, loginPhrase: string) => {
@@ -131,36 +149,36 @@ const getFluxOSURLs = async (dappName: string, zelId: string, signature: string,
 }
 
 const verifyLogin = async (zelid: string, signature: string, loginPhrase: string, url?: URL) => {
-    const apiUrl = new URL(`${url || 'api.runonfux.io/'}id/verifylogin`).toString()
+    const apiUrl = new URL(`${url || 'api.runonflux.io/'}id/verifylogin`).toString()
     const data = qs.stringify({
         zelid,
         signature,
         loginPhrase,
     })
     log.info('Data:', data)
-    const response = await axios.post(apiUrl, data, {
+    log.info('apiUrl:', apiUrl)
+    const response = await fetch(apiUrl, {
         method: 'POST',
+        body: data,
         headers: { 'Content-Type': `application/x-www-form-urlencoded` },
     })
-    errorHandler(response)
-    return response
+    return await errorHandler(response)
 }
 
-const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL) => {
-    const apiUrl = new URL(`${url}apps/redeploy/imageServer/false/true`).toString()
+const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL, appName: string) => {
+    const apiUrl = new URL(`${url}apps/redeploy/${appName}/false/true`).toString()
     const Zelidauth = qs.stringify({
         zelid,
         signature,
         loginPhrase,
     })
-    const response = await axios.get(apiUrl, {
+    const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
             Zelidauth: Zelidauth,
         },
     })
-    errorHandler(response)
-    return response
+    return await errorHandler<ResponseSoftRedeploy>(response)
 }
 
 const setupArgs = () => {
@@ -169,11 +187,11 @@ const setupArgs = () => {
         throw new Error('Please provide an app name')
     }
 
-    const secretWIFKey = process.env.ZELCORE_PRIVATE_KEY
+    const secretWIFKey = process.env.PROSOPO_ZELCORE_PRIVATE_KEY
     if (!secretWIFKey) {
         throw new Error('No private key provided')
     }
-    const zelId = process.env.ZELCORE_PUBLIC_KEY
+    const zelId = process.env.PROSOPO_ZELCORE_PUBLIC_KEY
     if (!zelId) {
         throw new Error('No zelId provided')
     }
@@ -234,9 +252,9 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
         await verifyLogin(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
         // Soft redeploy the app
-        const redployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL)
+        const redeployResponse = await softRedeploy(zelId, nodeSignature, nodeLoginPhrase, nodeAPIURL, appName)
 
-        log.info(redployResponse.data)
+        log.info(redeployResponse)
         process.exit(0)
     } catch (error) {
         log.error('An error occurred:', error)

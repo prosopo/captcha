@@ -13,14 +13,14 @@
 // limitations under the License.
 
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
-import { ApiPromise } from '@polkadot/api'
-import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util/bn'
 import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract'
+import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ReturnNumber } from '@727-ventures/typechain-types'
+import { ReturnNumber } from '@prosopo/typechain-types'
 import { UserCommitmentRecord } from '@prosopo/types-database'
 import { ViteTestContext } from '@prosopo/env'
 import { accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
@@ -29,8 +29,9 @@ import { at } from '@prosopo/util'
 import { getPairAsync, wrapQuery } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../tasks/tasks.test.js'
+import { stringToHex } from '@polkadot/util/string'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
@@ -52,10 +53,10 @@ function calcInterval(api: ApiPromise): BN {
                 ? // Default minimum period config
                   api.consts.timestamp.minimumPeriod.mul(BN_TWO)
                 : api.query.parachainSystem
-                ? // default guess for a parachain
-                  DEFAULT_TIME.mul(BN_TWO)
-                : // default guess for others
-                  DEFAULT_TIME)
+                  ? // default guess for a parachain
+                    DEFAULT_TIME.mul(BN_TWO)
+                  : // default guess for others
+                    DEFAULT_TIME)
     )
 }
 declare module 'vitest' {
@@ -123,15 +124,15 @@ describe('BATCH TESTS', function () {
                 .unwrap()
                 .unwrap()
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
-            const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
+            const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(true, providerDetails.datasetId)
 
             if (randomCaptchasResult) {
+                const solutions = await providerTasks.db.getSolutions(providerDetails.datasetId.toString())
+                const solutionIndex = solutions.findIndex(
+                    (s) => s.captchaContentId === at(randomCaptchasResult, 0).captchaContentId
+                )
+                const solution = at(solutions, solutionIndex).solution
                 const unsolvedCaptcha = at(randomCaptchasResult, 0)
-                const solution = [
-                    at(unsolvedCaptcha.items, 0).hash || '',
-                    at(unsolvedCaptcha.items, 2).hash || '',
-                    at(unsolvedCaptcha.items, 3).hash || '',
-                ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
 

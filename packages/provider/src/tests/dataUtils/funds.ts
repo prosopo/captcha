@@ -13,7 +13,7 @@
 // limitations under the License.
 // TODO merge this with duplicate file in dev package
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { BN } from '@polkadot/util'
+import { BN } from '@polkadot/util/bn'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
@@ -69,7 +69,7 @@ export async function sendFunds(
         '`UNIT'
     )
     // eslint-disable-next-line no-async-promise-executor
-    const result: Promise<ISubmittableResult> = new Promise(async (resolve, reject) => {
+    const result = new Promise<ISubmittableResult>(async (resolve, reject) => {
         const unsub = await api.tx.balances
             .transfer(address, amount)
             .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
