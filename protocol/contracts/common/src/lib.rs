@@ -21,6 +21,7 @@ mod account;
 mod test_helper;
 #[cfg(feature = "test-dependency")]
 pub use account::Account;
+use bip39::serde::de::value::Error;
 #[cfg(feature = "test-dependency")]
 pub use sp_core::crypto::Pair;
 #[cfg(feature = "test-dependency")]
@@ -72,11 +73,25 @@ macro_rules! lazy {
     };
 }
 
+/// The errors that can be returned by the Proxy contract.
+#[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+#[cfg_attr(
+    any(feature = "std", feature = "ink-as-dependency"),
+    derive(scale_info::TypeInfo)
+)]
+// #[cfg_attr(any(feature = "std", feature = "ink-as-dependency"), derive(ink::storage::traits::StorageLayout))]
+pub enum CustomError<Env: ink::env::Environment> {
+    NotAuthorised(Env::AccountId),
+}
+
 pub trait Common2 {
     type Env: ink::env::Environment;
+    type Error;
 
-    fn check_is_admin(account: <Self::Env as ink::env::Environment>::AccountId) -> bool {
-        return true;
+    fn check_is_admin(
+        account: <Self::Env as ink::env::Environment>::AccountId,
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
 }
 
@@ -84,6 +99,13 @@ pub enum Common2Default {}
 
 impl Common2 for Common2Default {
     type Env = ink::env::DefaultEnvironment;
+    type Error = CustomError<Self::Env>;
+
+    fn check_is_admin(
+        account: <Self::Env as ink::env::Environment>::AccountId,
+    ) -> Result<(), Self::Error> {
+        Err(Self::Error::NotAuthorised(account))
+    }
 }
 
 // pub mod common2 {
