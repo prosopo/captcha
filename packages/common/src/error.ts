@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { TranslationKey, i18n as i18next, translationKeys } from './index.js'
+import { ZodError } from 'zod'
+import { at } from '@prosopo/util'
 
 export type TOptions = Record<string, string>
+const MAX_ERROR_LENGTH = 1000
 
 export function translateOrFallback(
     key: string | undefined,
@@ -43,6 +46,7 @@ export abstract class ProsopoBaseError extends Error {
 
 export class ProsopoEnvError extends ProsopoBaseError {
     cause: Error | undefined
+
     constructor(error: ProsopoBaseError)
     constructor(error: Error, context?: TranslationKey, options?: TOptions, ...params: any[])
     constructor(error: TranslationKey, context?: string, options?: TOptions, ...params: any[])
@@ -72,12 +76,18 @@ export class ProsopoEnvError extends ProsopoBaseError {
         }
 
         console.error('\n********************* ERROR *********************\n')
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        if (typeof this.cause != ZodError && this.cause?.message && this.cause.message.length > MAX_ERROR_LENGTH) {
+            this.cause.message = `${at(this.cause.message, -MAX_ERROR_LENGTH)}...`
+        }
         console.error(this.cause, this.stack, ...params)
     }
 }
 
 export class ProsopoApiError extends ProsopoEnvError {
     code: number
+
     constructor(error: Error | TranslationKey, context?: string, code?: number, ...params: any[]) {
         const isError = error instanceof Error
         super(isError ? (error.message as TranslationKey) : error)
@@ -85,6 +95,9 @@ export class ProsopoApiError extends ProsopoEnvError {
         this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
 
         console.error('\n********************* ERROR *********************\n')
+        if (this.cause?.message && this.cause.message.length > MAX_ERROR_LENGTH) {
+            this.cause.message = `${at(this.cause.message, -MAX_ERROR_LENGTH)}...`
+        }
         console.error(this.cause, this.stack, this.code, ...params)
     }
 }

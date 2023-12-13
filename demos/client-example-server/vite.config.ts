@@ -21,6 +21,6 @@ export default defineConfig(async ({ command, mode }) => {
     const backendConfig = await ViteBackendConfig(packageName, packageVersion, bundleName, dir, entry, command, mode)
     return defineConfig({
         ...backendConfig,
-        server: { port: process.env.REACT_APP_SERVER_PORT },
+        server: { port: process.env.PROSOPO_SERVER_PORT },
     })
 })

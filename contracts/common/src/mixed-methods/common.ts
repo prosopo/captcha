@@ -1,13 +1,13 @@
 /* This file is auto-generated */
 
-import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
+import { handleReturnType, queryOkJSON } from '@prosopo/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/common.js'
 import type * as ReturnTypes from '../types-returns/common.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
-import type { GasLimit, Result } from '@727-ventures/typechain-types'
+import type { GasLimit, Result } from '@prosopo/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { QueryReturnType } from '@727-ventures/typechain-types'
+import type { QueryReturnType } from '@prosopo/typechain-types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { getTypeDescription } from './../shared/utils.js'

@@ -1,10 +1,10 @@
 /* This file is auto-generated */
 
-import { txSignAndSend } from '@727-ventures/typechain-types'
+import { txSignAndSend } from '@prosopo/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/captcha.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
-import type { GasLimit, GasLimitAndRequiredValue } from '@727-ventures/typechain-types'
+import type { GasLimit, GasLimitAndRequiredValue } from '@prosopo/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type BN from 'bn.js'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -629,25 +629,6 @@ export default class Methods {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [userAccount],
-            __options
-        )
-    }
-
-    /**
-     * getCaptchaData
-     *
-     * @param { ArgumentTypes.Hash } datasetId,
-     */
-    getCaptchaData(datasetId: ArgumentTypes.Hash, __options?: GasLimit) {
-        return txSignAndSend(
-            this.__apiPromise,
-            this.__nativeContract,
-            this.__keyringPair,
-            'getCaptchaData',
-            (events: EventRecord[]) => {
-                return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
-            },
-            [datasetId],
             __options
         )
     }

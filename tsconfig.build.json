@@ -23,6 +23,10 @@
         "noErrorTruncation": true,
         "importHelpers": true,
         "useUnknownInCatchVariables": true,
-        "jsx": "react-jsx"
+        "jsx": "react-jsx",
+        // "listFiles": true,
+        // "explainFiles": true,
+        "preserveWatchOutput": true,
+        "removeComments": true
     }
 }

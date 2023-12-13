@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract'
+import { Abi } from '@polkadot/api-contract/Abi'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { get } from '@prosopo/util'
 import { promiseQueue } from '../../util.js'
@@ -126,12 +126,12 @@ export async function populateDatabase(
     return databasePopulator
 }
 
-export default async function run(pair: KeyringPair, config: ProsopoConfig) {
+export default async function run(pair: KeyringPair, config: ProsopoConfigOutput) {
     const dappAbiMetadata = await DappAbiJSON()
     const dappWasm = await DappWasm()
 
     await populateDatabase(
-        new ProviderEnvironment(pair, config),
+        new ProviderEnvironment(config, pair),
         DEFAULT_USER_COUNT,
         userFundMapDefault,
         true,

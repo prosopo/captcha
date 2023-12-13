@@ -1,10 +1,10 @@
 /* This file is auto-generated */
 
-import { buildSubmittableExtrinsic } from '@727-ventures/typechain-types'
+import { buildSubmittableExtrinsic } from '@prosopo/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/captcha.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
-import type { GasLimit, GasLimitAndRequiredValue } from '@727-ventures/typechain-types'
+import type { GasLimit, GasLimitAndRequiredValue } from '@prosopo/typechain-types'
 import type BN from 'bn.js'
 
 export default class Methods {
@@ -418,21 +418,6 @@ export default class Methods {
             this.__nativeContract,
             'dappOperatorLastCorrectCaptcha',
             [userAccount],
-            __options
-        )
-    }
-
-    /**
-     * getCaptchaData
-     *
-     * @param { ArgumentTypes.Hash } datasetId,
-     */
-    getCaptchaData(datasetId: ArgumentTypes.Hash, __options: GasLimit) {
-        return buildSubmittableExtrinsic(
-            this.__apiPromise,
-            this.__nativeContract,
-            'getCaptchaData',
-            [datasetId],
             __options
         )
     }

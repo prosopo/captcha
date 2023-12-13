@@ -9,7 +9,7 @@ import util from 'util'
 
 const logger = getLogger(`Info`, `config.dependencies.js`)
 const exec = util.promisify(child_process.exec)
-// find a tScOnFiG.jSoN file
+// find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/
 const depsRegex = /\s+(@*[\w\-/.]+)@/
@@ -129,11 +129,13 @@ export async function getExternalsFromReferences(
 /**
  * Get the dependencies for a package
  * @param packageName
+ * @param production
  */
 export async function getDependencies(
-    packageName?: string
+    packageName?: string,
+    production?: boolean
 ): Promise<{ dependencies: string[]; optionalPeerDependencies: string[] }> {
-    let cmd = 'npm ls -a'
+    let cmd = production ? 'npm ls -a --omit=dev' : 'npm ls -a'
 
     if (packageName) {
         const packageDir = await getPackageDir(packageName)

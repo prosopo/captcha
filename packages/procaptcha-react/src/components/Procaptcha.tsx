@@ -98,6 +98,9 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
     const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
     const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
+    const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
+        undefined
+    )
 
     return [
         // the state
@@ -114,6 +117,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             submission,
             timeout,
             blockNumber,
+            successfullChallengeTimeout,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
@@ -131,6 +135,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             if (nextState.dappAccount !== undefined) setDappAccount(nextState.dappAccount)
             if (nextState.submission !== undefined) setSubmission(nextState.submission)
             if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
+            if (nextState.successfullChallengeTimeout !== undefined) setSuccessfullChallengeTimeout(nextState.timeout)
             if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
         },
     ]

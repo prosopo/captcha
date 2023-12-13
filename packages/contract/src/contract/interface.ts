@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api'
-import { BN } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
-import { Contract, Error, LangError, Methods, Query } from '@prosopo/captcha-contract'
-import { ContractPromise } from '@polkadot/api-contract'
+import { Contract } from '@prosopo/captcha-contract'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { LangError } from '@prosopo/captcha-contract/types-arguments'
 import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
+import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
 import { ProsopoContractError } from '../handlers.js'
-import { QueryReturnType, Result } from '@727-ventures/typechain-types'
+import { default as Query } from '@prosopo/captcha-contract/query'
+import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
@@ -30,9 +33,9 @@ import {
     getPrimitiveTypes,
     getStorageKeyAndType,
 } from './storage.js'
+import { getReadOnlyPair } from '../accounts/index.js'
 import { useWeightImpl } from './useWeight.js'
 import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
-
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
 export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
@@ -61,7 +64,6 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
         throw new ProsopoContractError('CONTRACT.QUERY_ERROR', fn.name, {}, { result: JSON.stringify(result) })
     }
 }
-
 export class ProsopoCaptchaContract extends Contract {
     api: ApiPromise
     contractName: string
@@ -76,11 +78,16 @@ export class ProsopoCaptchaContract extends Contract {
         api: ApiPromise,
         abi: ContractAbi,
         address: string,
-        pair: KeyringPair,
         contractName: string,
         currentNonce: number,
-        logLevel?: LogLevel
+        pair?: KeyringPair,
+        logLevel?: LogLevel,
+        userAccount?: string
     ) {
+        // Get a read-only contract with a dummy account
+        if (!pair) {
+            pair = getReadOnlyPair(api, userAccount)
+        }
         // address: string, signer: KeyringPair, nativeAPI: ApiPromise
         super(address, pair, api)
         this.api = api

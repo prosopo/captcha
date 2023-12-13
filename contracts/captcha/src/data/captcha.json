@@ -100,7 +100,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -160,7 +161,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -205,7 +207,8 @@
             "NotEnoughActiveProviders": null,
             "ProviderFeeTooHigh": null,
             "CommitAlreadyExists": null,
-            "NotAuthor": null
+            "NotAuthor": null,
+            "Math": null
         },
         "isResult": false,
         "isPrimitive": false,
@@ -586,7 +589,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -697,7 +701,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -827,7 +832,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -921,7 +927,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -1027,7 +1034,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -1097,7 +1105,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -1301,7 +1310,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -1361,7 +1371,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -1433,7 +1444,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -1508,7 +1520,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -1536,202 +1549,6 @@
         "isConvertable": false
     },
     "51": {
-        "name": "Result<Result<CaptchaData, Error, LangError",
-        "body": {
-            "ok": {
-                "name": "Result<CaptchaData, Error",
-                "body": {
-                    "ok": {
-                        "name": "CaptchaData",
-                        "body": {
-                            "providerAccount": {
-                                "name": "AccountId",
-                                "body": "string | number[]",
-                                "isResult": false,
-                                "isPrimitive": true,
-                                "isConvertable": false
-                            },
-                            "datasetId": {
-                                "name": "Hash",
-                                "body": "string | number[]",
-                                "isResult": false,
-                                "isPrimitive": true,
-                                "isConvertable": false
-                            },
-                            "datasetIdContent": {
-                                "name": "Hash",
-                                "body": "string | number[]",
-                                "isResult": false,
-                                "isPrimitive": true,
-                                "isConvertable": false
-                            }
-                        },
-                        "isResult": false,
-                        "isPrimitive": false,
-                        "isConvertable": false
-                    },
-                    "err": {
-                        "name": "Error",
-                        "body": {
-                            "NotAuthorised": null,
-                            "TransferFailed": null,
-                            "SetCodeHashFailed": null,
-                            "InvalidDestination": null,
-                            "UnknownMessage": null,
-                            "ProviderAccountExists": null,
-                            "ProviderExists": null,
-                            "ProviderAccountDoesNotExist": null,
-                            "ProviderDoesNotExist": null,
-                            "ProviderInsufficientFunds": null,
-                            "ProviderInactive": null,
-                            "ProviderUrlUsed": null,
-                            "DappExists": null,
-                            "DappDoesNotExist": null,
-                            "DappInactive": null,
-                            "DappInsufficientFunds": null,
-                            "CaptchaDataDoesNotExist": null,
-                            "CommitDoesNotExist": null,
-                            "DappUserDoesNotExist": null,
-                            "NoActiveProviders": null,
-                            "DatasetIdSolutionsSame": null,
-                            "CodeNotFound": null,
-                            "Unknown": null,
-                            "InvalidContract": null,
-                            "InvalidPayee": null,
-                            "InvalidCaptchaStatus": null,
-                            "NoCorrectCaptcha": null,
-                            "NotEnoughActiveProviders": null,
-                            "ProviderFeeTooHigh": null,
-                            "CommitAlreadyExists": null,
-                            "NotAuthor": null
-                        },
-                        "isResult": false,
-                        "isPrimitive": false,
-                        "isConvertable": false
-                    }
-                },
-                "isResult": true,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "err": {
-                "name": "LangError",
-                "body": { "CouldNotReadInput": null },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            }
-        },
-        "isResult": true,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "52": {
-        "name": "Result<CaptchaData, Error",
-        "body": {
-            "ok": {
-                "name": "CaptchaData",
-                "body": {
-                    "providerAccount": {
-                        "name": "AccountId",
-                        "body": "string | number[]",
-                        "isResult": false,
-                        "isPrimitive": true,
-                        "isConvertable": false
-                    },
-                    "datasetId": {
-                        "name": "Hash",
-                        "body": "string | number[]",
-                        "isResult": false,
-                        "isPrimitive": true,
-                        "isConvertable": false
-                    },
-                    "datasetIdContent": {
-                        "name": "Hash",
-                        "body": "string | number[]",
-                        "isResult": false,
-                        "isPrimitive": true,
-                        "isConvertable": false
-                    }
-                },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "err": {
-                "name": "Error",
-                "body": {
-                    "NotAuthorised": null,
-                    "TransferFailed": null,
-                    "SetCodeHashFailed": null,
-                    "InvalidDestination": null,
-                    "UnknownMessage": null,
-                    "ProviderAccountExists": null,
-                    "ProviderExists": null,
-                    "ProviderAccountDoesNotExist": null,
-                    "ProviderDoesNotExist": null,
-                    "ProviderInsufficientFunds": null,
-                    "ProviderInactive": null,
-                    "ProviderUrlUsed": null,
-                    "DappExists": null,
-                    "DappDoesNotExist": null,
-                    "DappInactive": null,
-                    "DappInsufficientFunds": null,
-                    "CaptchaDataDoesNotExist": null,
-                    "CommitDoesNotExist": null,
-                    "DappUserDoesNotExist": null,
-                    "NoActiveProviders": null,
-                    "DatasetIdSolutionsSame": null,
-                    "CodeNotFound": null,
-                    "Unknown": null,
-                    "InvalidContract": null,
-                    "InvalidPayee": null,
-                    "InvalidCaptchaStatus": null,
-                    "NoCorrectCaptcha": null,
-                    "NotEnoughActiveProviders": null,
-                    "ProviderFeeTooHigh": null,
-                    "CommitAlreadyExists": null,
-                    "NotAuthor": null
-                },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            }
-        },
-        "isResult": true,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "53": {
-        "name": "CaptchaData",
-        "body": {
-            "providerAccount": {
-                "name": "AccountId",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "datasetId": {
-                "name": "Hash",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "datasetIdContent": {
-                "name": "Hash",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            }
-        },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "54": {
         "name": "Result<Result<User, Error, LangError",
         "body": {
             "ok": {
@@ -1793,7 +1610,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -1816,7 +1634,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "55": {
+    "52": {
         "name": "Result<User, Error",
         "body": {
             "ok": {
@@ -1875,7 +1693,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -1886,7 +1705,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "56": {
+    "53": {
         "name": "User",
         "body": {
             "history": {
@@ -1909,7 +1728,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "57": {
+    "54": {
         "name": "Result<Result<Commit, Error, LangError",
         "body": {
             "ok": {
@@ -2024,7 +1843,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -2047,7 +1867,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "58": {
+    "55": {
         "name": "Result<Commit, Error",
         "body": {
             "ok": {
@@ -2144,7 +1964,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -2155,7 +1976,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "59": {
+    "56": {
         "name": "Result<Result<Array, Error, LangError",
         "body": {
             "ok": {
@@ -2264,7 +2085,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -2287,7 +2109,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "60": {
+    "57": {
         "name": "Result<Array, Error",
         "body": {
             "ok": {
@@ -2388,7 +2210,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -2399,7 +2222,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "61": {
+    "58": {
         "name": "Array",
         "body": {
             "0": {
@@ -2459,7 +2282,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "62": {
+    "59": {
         "name": "Result<Result<RandomProvider, Error, LangError",
         "body": {
             "ok": {
@@ -2581,7 +2404,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -2604,7 +2428,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "63": {
+    "60": {
         "name": "Result<RandomProvider, Error",
         "body": {
             "ok": {
@@ -2713,7 +2537,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -2724,7 +2549,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "64": {
+    "61": {
         "name": "RandomProvider",
         "body": {
             "providerAccount": {
@@ -2792,7 +2617,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "65": {
+    "62": {
         "name": "Result<Result<Array, Error, LangError",
         "body": {
             "ok": {
@@ -2846,7 +2671,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -2869,7 +2695,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "66": {
+    "63": {
         "name": "Result<Array, Error",
         "body": {
             "ok": {
@@ -2920,7 +2746,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,

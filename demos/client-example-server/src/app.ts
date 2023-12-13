@@ -11,16 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoServer } from '@prosopo/server'
-import { getPair } from '@prosopo/common'
+import { ProsopoServer, getServerConfig } from '@prosopo/server'
+import { getPairAsync } from '@prosopo/contract'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import memoryServerSetup from './utils/database.js'
 import path from 'path'
-import prosopoConfig from './prosopo.config.js'
 import routesFactory from './routes/routes.js'
 
 export function loadEnv() {
@@ -57,21 +55,19 @@ async function main() {
     const uri = await memoryServerSetup()
     console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
-    if (!process.env.REACT_APP_SERVER_MNEMONIC) {
-        throw new Error('No mnemonic found')
+    if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
+        throw new Error('No private key found')
     }
 
-    const config = prosopoConfig()
+    const config = getServerConfig()
 
     console.log('config', config)
-    const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
-    const ss58Format = parseInt(process.env.SS58_FORMAT || '') || 42
-    const pair = await getPair(pairType, ss58Format, process.env.REACT_APP_SERVER_MNEMONIC)
-    const prosopoServer = new ProsopoServer(pair, config)
+    const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.PROSOPO_SITE_PRIVATE_KEY)
+    const prosopoServer = new ProsopoServer(config, pair)
 
     app.use(routesFactory(mongoose, prosopoServer))
 
-    app.listen(process.env.REACT_APP_SERVER_PORT)
+    app.listen(process.env.PROSOPO_SERVER_PORT)
 }
 
 main()
