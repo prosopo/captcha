@@ -72,6 +72,26 @@ macro_rules! lazy {
     };
 }
 
+pub trait Common2 {
+    type Env: ink::env::Environment;
+
+    fn check_is_admin(account: <Self::Env as ink::env::Environment>::AccountId) -> bool {
+        return true;
+    }
+}
+
+pub enum Common2Default {}
+
+impl Common2 for Common2Default {
+    type Env = ink::env::DefaultEnvironment;
+}
+
+// pub mod common2 {
+//     pub fn check_is_admin<T: ink::env::Environment>(account: T::AccountId) -> bool {
+//         return true;
+//     }
+// }
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common {
