@@ -98,8 +98,8 @@ pub mod tests {
 
     #[ink::test]
     fn test_reproducible_account() {
-        let account1 = Account::nth(0);
-        let account2 = Account::nth(0);
+        let account1 = Account::nth(0); // will have dev seed + "//" + "" + "0" as the seed
+        let account2 = Account::nth(0); // will have dev seed + "//" + "" + "0" as the seed
         assert_eq!(account1.seed(), account2.seed());
         assert_eq!(account1.account_id(), account2.account_id());
     }
