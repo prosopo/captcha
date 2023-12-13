@@ -16,7 +16,13 @@
 pub use self::common::{Common, CommonRef};
 
 #[cfg(any(test, feature = "test-dependency"))]
+mod account;
+#[cfg(any(test, feature = "test-dependency"))]
 mod test_helper;
+#[cfg(any(test, feature = "test-dependency"))]
+pub use account::Account;
+#[cfg(any(test, feature = "test-dependency"))]
+pub use sp_core::crypto::Pair;
 #[cfg(any(test, feature = "test-dependency"))]
 pub use test_helper::TestHelper;
 
