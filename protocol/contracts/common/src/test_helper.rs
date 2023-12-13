@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ink::prelude::string::ToString;
 use ink::primitives::*;
-use scale::alloc::string::String;
-use sp_core::crypto::Pair;
-use sp_core::crypto::DEV_PHRASE;
-use sp_core::sr25519;
 
 pub struct TestHelper();
 

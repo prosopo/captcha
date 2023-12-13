@@ -36,9 +36,13 @@ overflow-checks = false
 default = ["std"]
 std = ["ink/std", "scale/std", "scale-info/std"]
 ink-as-dependency = ["scale-info/derive"]
-test-dependency = []
+test-dependency = ["rust-bip39", "sp-core"]
 
-[dependencies]
-rust-bip39 = "1.0.0"
-sp-core = "26.0.0"
+[dependencies.rust-bip39]
+version = "1.0.0"
+optional = true
+
+[dependencies.sp-core]
+version = "26.0.0"
+optional = true
 
