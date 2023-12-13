@@ -14,28 +14,26 @@
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
-import { ContractDeployer } from '@prosopo/contract'
+import { ContractDeployer, getPairAsync } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
-import { getPair } from '@prosopo/common'
+import { defaultConfig } from '@prosopo/cli'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
-    const pairType = getPairType()
-    const ss58Format = getSs58Format()
-    const pair = await getPair(pairType, ss58Format, '//Alice')
-    const env = new ProviderEnvironment(pair, defaultConfig())
+    const network = defaultConfig().networks[defaultConfig().defaultNetwork]
+    const pair = await getPairAsync(network, '//Alice')
+    const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
-    const params = ['1000000000000000', 1000, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]
-    const deployer = new ContractDeployer(env.getApi(), abi, wasm, env.pair, params, 0, 0, randomAsHex())
+    const params = ['1000000000000000', 1000, process.env.PROSOPO_CONTRACT_ADDRESS, 50, 1000000]
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
 export async function run(): Promise<AccountId> {
-    const wasm = await Wasm(path.resolve(process.env.DAPP_WASM_PATH || '.'))
-    const abi = await AbiJSON(path.resolve(process.env.DAPP_ABI_PATH || '.'))
+    const wasm = await Wasm(path.resolve(process.env.PROSOPO_DAPP_WASM_PATH || '.'))
+    const abi = await AbiJSON(path.resolve(process.env.PROSOPO_DAPP_ABI_PATH || '.'))
     const deployResult = await deploy(wasm, abi)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(

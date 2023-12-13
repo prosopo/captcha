@@ -19,7 +19,7 @@ See the [client example](https://github.com/prosopo/client-example) for a minima
 in a frontend app.
 
 ```jsx
-<Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}/>
+<Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }} />
 ```
 
 ### Callbacks
@@ -48,7 +48,7 @@ The `onHuman` callback is called when the user has successfully completed the ca
 object contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
-|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | commitmentId | string | The commitment ID of the captcha challenge. This is used to verify the user's response on-chain.                              |
 | providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
 | dapp         | string | The SITE_KEY of your application / website                                                                                    |
@@ -83,22 +83,17 @@ our [React Demo](https://github.com/prosopo/captcha/blob/main/demos/client-examp
 The Procaptcha component is called as follows:
 
 ```tsx
-
-
-<Procaptcha
-    config={config}
-    callbacks={{onAccountNotFound, onError, onHuman, onExpired}}
-/>
+<Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }} />
 ```
 
 A config object is required and must contain your SITE_KEY. The callbacks are optional and can be used to handle the
-various Procaptcha events. The following config demonstrates the `REACT_APP_DAPP_SITE_KEY` variable being pulled from
+various Procaptcha events. The following config demonstrates the `PROSOPO_SITE_KEY` variable being pulled from
 environment variables.
 
 ```tsx
 const config: ProcaptchaConfigOptional = {
     account: {
-        address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
+        address: process.env.PROSOPO_SITE_KEY || undefined,
     },
     web2: 'true',
     dappName: 'client-example',
@@ -119,7 +114,7 @@ const config: ProcaptchaConfigOptional = {
 ### Config Options
 
 | Key                | Type   | Description                                                                             |
-|--------------------|--------|-----------------------------------------------------------------------------------------|
+| ------------------ | ------ | --------------------------------------------------------------------------------------- |
 | account            | string | The SITE_KEY you received when you signed up                                            |
 | web2               | string | Set to `true` to enable web2 support                                                    |
 | dappName           | string | The name of your application / website                                                  |

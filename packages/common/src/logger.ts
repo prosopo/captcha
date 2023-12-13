@@ -13,7 +13,7 @@
 // limitations under the License.
 import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
 import { ProsopoEnvError } from './error.js'
-import { z } from 'zod'
+import { enum as zEnum, infer as zInfer } from 'zod'
 
 export interface Logger {
     log(message: unknown, ...args: unknown[]): void
@@ -35,8 +35,8 @@ export interface Logger {
     getLogLevel(): LogLevel
 }
 
-export const LogLevel = z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
-export type LogLevel = z.infer<typeof LogLevel>
+export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+export type LogLevel = zInfer<typeof LogLevel>
 
 // Create a new logger with the given level and scope
 export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
@@ -45,7 +45,7 @@ export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
 
 // Get the default logger (i.e. the global logger)
 export function getLoggerDefault(): Logger {
-    return getLoggerAdapterConsola(LogLevel.enum.info, 'global')
+    return defaultLogger
 }
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
@@ -98,14 +98,32 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
 
 /**
  * Get the log level from the passed value or from environment variables or a default of `info`.
- * @param logTypeOption
+ * @param logLevel
  */
 export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
-    logLevel = logLevel || process.env.LOG_LEVEL || 'Info'
+    logLevel = logLevel || process.env.PROSOPO_LOG_LEVEL || 'Info'
     logLevel = logLevel.toString().toLowerCase()
     try {
         return LogLevel.parse(logLevel)
     } catch (e) {
         throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', logLevel)
+    }
+}
+
+const defaultLogger = getLoggerAdapterConsola(LogLevel.enum.info, 'global')
+
+export class Loggable {
+    #logger: Logger
+
+    constructor() {
+        this.#logger = getLoggerDefault()
+    }
+
+    public get logger(): Logger {
+        return this.#logger
+    }
+
+    public set logger(logger: Logger) {
+        this.#logger = logger
     }
 }

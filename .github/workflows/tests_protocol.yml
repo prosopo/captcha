@@ -23,6 +23,11 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -45,6 +50,7 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install
+            - run: npm run removePolkadotJSWarnings
 
             - name: Build contracts
               id: build

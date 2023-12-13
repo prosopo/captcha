@@ -12,44 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ../.env | .env.local | .env.development >>
-// REACT_APP_API_BASE_URL=http://localhost:9229
-// REACT_APP_API_PATH_PREFIX=/v1/prosopo
-// REACT_APP_DAPP_SITE_KEY=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
-// https://create-react-app.dev/docs/adding-custom-environment-variables/
+// PROSOPO_API_BASE_URL=http://localhost
+// PROSOPO_SITE_KEY=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
 
-import { EnvironmentTypesSchema } from '@prosopo/types'
-import { LogLevel } from '@prosopo/common'
-import { ProsopoClientConfig } from '@prosopo/types'
-import { z } from 'zod'
+import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
+import { ProsopoClientConfigInput } from '@prosopo/types'
 
-const { REACT_APP_PROSOPO_CONTRACT_ADDRESS, REACT_APP_SUBSTRATE_ENDPOINT } = z
-    .object({
-        REACT_APP_PROSOPO_CONTRACT_ADDRESS: z.string(),
-        REACT_APP_SUBSTRATE_ENDPOINT: z.string(),
-    })
-    .parse(process.env)
+const getWeb2 = (): boolean | undefined => {
+    return process.env.PROSOPO_WEB2 === 'true' ? true : process.env.PROSOPO_WEB2 === 'false' ? false : undefined
+}
 
-const config: ProsopoClientConfig = {
+const config: ProsopoClientConfigInput = {
     account: {
-        address: process.env.REACT_APP_DAPP_SITE_KEY || '',
+        address: process.env.PROSOPO_SITE_KEY || '',
     },
     userAccountAddress: '',
-    solutionThreshold: 80,
-    web2: process.env.REACT_APP_WEB2 === 'true',
-    defaultEnvironment: EnvironmentTypesSchema.enum.development,
-    logLevel: LogLevel.enum.info,
-    networks: {
-        development: {
-            endpoint: REACT_APP_SUBSTRATE_ENDPOINT,
-            contract: {
-                address: REACT_APP_PROSOPO_CONTRACT_ADDRESS,
-                name: 'prosopo',
-            },
-            accounts: [],
-        },
-    },
+    web2: getWeb2(),
+    defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
+        ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
+        : EnvironmentTypesSchema.enum.development,
+    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
+        ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
+        : NetworkNamesSchema.enum.development,
     dappName: 'client-example',
-    serverUrl: process.env.REACT_APP_SERVER_URL || '',
+    serverUrl: process.env.PROSOPO_SERVER_URL || '',
 }
 
 export default config

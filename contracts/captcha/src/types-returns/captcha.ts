@@ -1,4 +1,4 @@
-import type { ReturnNumber } from '@727-ventures/typechain-types'
+import type { ReturnNumber } from '@prosopo/typechain-types'
 
 export type Hash = string | number[]
 
@@ -36,6 +36,7 @@ export enum Error {
     providerFeeTooHigh = 'ProviderFeeTooHigh',
     commitAlreadyExists = 'CommitAlreadyExists',
     notAuthor = 'NotAuthor',
+    math = 'Math',
 }
 
 export enum LangError {
@@ -102,12 +103,6 @@ export enum CaptchaStatus {
 export type LastCorrectCaptcha = {
     before: number
     dappContract: AccountId
-}
-
-export type CaptchaData = {
-    providerAccount: AccountId
-    datasetId: Hash
-    datasetIdContent: Hash
 }
 
 export type User = {

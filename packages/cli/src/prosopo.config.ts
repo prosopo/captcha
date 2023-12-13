@@ -11,76 +11,67 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import {ProsopoConfig} from './types.js';
 
-import { DatabaseTypes, EnvironmentTypes, EnvironmentTypesSchema, ProsopoConfig } from '@prosopo/types'
+import {
+    BatchCommitConfigSchema,
+    DatabaseTypes,
+    EnvironmentTypesSchema,
+    NetworkNamesSchema,
+    ProsopoCaptchaCountConfigSchemaInput,
+    ProsopoCaptchaSolutionConfigSchema,
+    ProsopoConfigInput,
+    ProsopoConfigOutput,
+    ProsopoConfigSchema,
+    ProsopoNetworksSchemaInput,
+} from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
+import { getSecret } from './process.env.js'
 
 function getMongoURI(): string {
-    const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
+    const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || 'mongodb'
     const mongoSrv = protocol === 'mongodb+srv'
-    const password = process.env.DATABASE_PASSWORD || ''
-    const username = process.env.DATABASE_USERNAME || ''
-    const host = process.env.DATABASE_HOST || 'localhost'
-    const port = mongoSrv ? '' : `:${process.env.DATABASE_PORT ? process.env.DATABASE_PORT : 27017}`
+    const password = process.env.PROSOPO_DATABASE_PASSWORD || ''
+    const username = process.env.PROSOPO_DATABASE_USERNAME || ''
+    const host = process.env.PROSOPO_DATABASE_HOST || 'localhost'
+    const port = mongoSrv ? '' : `:${process.env.PROSOPO_DATABASE_PORT ? process.env.PROSOPO_DATABASE_PORT : 27017}`
     const retries = mongoSrv ? '?retryWrites=true&w=majority' : ''
     return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
 
-export default (): ProsopoConfig => ({
-    logLevel: getLogLevel(),
-    defaultEnvironment:
-        (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-    account: {
-        address: process.env.PROVIDER_ADDRESS || '',
-        password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
-    },
-    networks: {
-        development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. WsProvider takes array and has failover.
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
+export default function getConfig(
+    networksConfig?: ProsopoNetworksSchemaInput,
+    captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
+    batchCommitConfig?: typeof BatchCommitConfigSchema,
+    captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput
+): ProsopoConfigOutput {
+    return ProsopoConfigSchema.parse({
+        logLevel: getLogLevel(),
+        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
+            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
+            : EnvironmentTypesSchema.enum.development,
+        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
+            ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
+            : NetworkNamesSchema.enum.development,
+        account: {
+            address: process.env.PROSOPO_PROVIDER_ADDRESS || undefined,
+            password: process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD || undefined,
+            secret: getSecret(),
+        },
+        database: {
+            development: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                authSource: 'admin',
             },
-            accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
         },
-        rococo: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
-            },
-            accounts: [],
+        server: {
+            baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
+            port: process.env.PROSOPO_API_PORT ? parseInt(process.env.PROSOPO_API_PORT) : 9229,
         },
-    },
-    captchas: {
-        solved: {
-            count: 1, // TODO add env var
-        },
-        unsolved: {
-            count: 1, // TODO add env var
-        },
-    },
-    captchaSolutions: {
-        captchaBlockRecency: 10, // TODO add env var
-        requiredNumberOfSolutions: 3, // TODO add env var
-        solutionWinningPercentage: 80, // TODO add env var
-        captchaFilePath: '../../data/captchas_big.json', // TODO add env var
-    },
-    database: {
-        development: {
-            type: DatabaseTypes.enum.mongo,
-            endpoint: getMongoURI(),
-            dbname: process.env.DATABASE_NAME || '',
-            authSource: 'admin',
-        },
-    },
-    batchCommit: {
-        interval: 300, // TODO add env var
-        maxBatchExtrinsicPercentage: 59, // TODO add env var
-    },
-    server: {
-        baseURL: process.env.API_BASE_URL || '',
-        port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
-    },
-})
+        networks: networksConfig,
+        captchaSolutions: captchaSolutionsConfig,
+        batchCommit: batchCommitConfig,
+        captchas: captchaServeConfig,
+    } as ProsopoConfigInput)
+}

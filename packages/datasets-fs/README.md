@@ -82,3 +82,23 @@ Commands:
    e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js relocate --from example.com --to web.site --data ~/bench/test/flat/data2.json`
 1. 'scale' rescales images in a flat directory structure to a given size.
    e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js scale --data ~/bench/test/flat/data.json --out ~/bench/test/flat/images2 --overwrite --size 128`
+
+# Generating test data
+
+The test data was generated using:
+
+```
+cli generate-v1 --min-correct 1 --max-correct 6 --labelled $PWD/src/tests/data/flat_resized/data.json --unlabelled $PWD/src/tests/data/flat_resized/data.json --out $PWD/src/tests/data/flat_resized/captchas_v1.json --solved 50 --unsolved 50 --seed 0 --allowDuplicates --seed 0
+
+cli generate-v2 --count 100 --min-correct 1 --min-incorrect 1 --min-labelled 2 --max-labelled 7 --labelled $PWD/src/tests/data/flat_resized/data.json --unlabelled $PWD/src/tests/data/flat_resized/data.json --out $PWD/src/tests/data/flat_resized/captchas_v2.json --seed 0 --allowDuplicates --seed 0
+
+cli relocate --from '${repo}' --to newwebsite.com --input $PWD/src/tests/data/flat_resized/data.json --output $PWD/src/tests/data/flat_resized/relocated_data.json --overwrite
+
+cli labels --input $PWD/src/tests/data/flat_resized/data.json --output $PWD/src/tests/data/flat_resized/labels.json --overwrite
+
+cli flatten --in $PWD/src/tests/data/hierarchical --out $PWD/src/tests/data/flat --overwrite
+
+cli resize --square --size 128 --in $PWD/src/tests/data/flat/data.json --out $PWD/src/tests/data/flat_resized --overwrite
+```
+
+`cli` is an alias to `npm run build && npm run cli --`

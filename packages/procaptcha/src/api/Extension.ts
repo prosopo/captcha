@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Account } from '../types/index.js'
-import { ProcaptchaClientConfig } from '@prosopo/types'
+import { ProcaptchaClientConfigOutput } from '@prosopo/types'
 
 /**
  * Class to interface with accounts.
@@ -25,5 +25,5 @@ export default abstract class Extension {
      * @returns the account
      * @throws if the account is not found
      */
-    public abstract getAccount(config: ProcaptchaClientConfig): Promise<Account>
+    public abstract getAccount(config: ProcaptchaClientConfigOutput): Promise<Account>
 }

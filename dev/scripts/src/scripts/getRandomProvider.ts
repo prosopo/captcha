@@ -13,20 +13,21 @@
 // limitations under the License.
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
-import { generateMnemonic } from '@prosopo/contract'
-import { getPair } from '@prosopo/common'
+import { defaultConfig } from '@prosopo/cli'
+import { generateMnemonic, getPairAsync } from '@prosopo/contract'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 async function main() {
-    const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
-    const env = new ProviderEnvironment(pair, defaultConfig())
+    const config = defaultConfig()
+    const network = config.networks[config.defaultNetwork]
+    const pair = await getPairAsync(network, '//Alice')
+    const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     const tasks = new Tasks(env)
     const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ['', '']
-    const dappContractAccount = process.env.DAPP_SITE_KEY || ''
+    const dappContractAccount = process.env.PROSOPO_SITE_KEY || ''
     const provider = (await tasks.contract.query.getRandomActiveProvider(address, dappContractAccount)).value
         .unwrap()
         .unwrap()

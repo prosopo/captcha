@@ -16,10 +16,16 @@ env:
 
 jobs:
     check:
+        name: check
         runs-on: ubuntu-latest
         steps:
             # Checkout the repo
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -43,4 +49,5 @@ jobs:
 
             - run: npm install -g npm@8.9
             - run: npm install
+            - run: npm run removePolkadotJSWarnings
             - run: npm run lint
