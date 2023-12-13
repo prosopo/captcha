@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
@@ -91,4 +92,9 @@ export interface PendingCaptchaRequest {
 
 export interface ProviderRegistered {
     status: 'Registered' | 'Unregistered'
+}
+
+export interface ProviderDetails {
+    provider: Provider
+    dbConnectionOk: boolean
 }
