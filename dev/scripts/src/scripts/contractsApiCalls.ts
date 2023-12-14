@@ -67,7 +67,7 @@ const results = [
 ]
 
 // Contract address and caller address that were used to make the above calls
-const contractAddress = 'c652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b'
+const contractAddress = 'c652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b' //origin
 const caller = '76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487e' // caller
 
 // Taken from talismn, presumably the base shape for everything else in substrate
@@ -280,7 +280,9 @@ if (contractResultType) {
         const pjsResult = api.registry.createType('ContractExecResult', results[0].result)
         console.log('POLKADOTJS: Inspect', pjsResult.inspect())
         console.log('POLKADOTJS: toHuman', pjsResult.toHuman())
-        //TODO check if the output in PolkadotJS is the same as the output in subshape
+        //TODO check if the output in PolkadotJS is the same as the output in subshape. One is in hex and the other is
+        // a u8a (npx tsx ./dev/scripts/src/scripts/encodeDecode.ts "[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]") will print out the
+        // hex and vice versa.
     }
 }
 
