@@ -1,9 +1,7 @@
 import * as $ from '@talismn/subshape-fork'
 import { AbiMessageType, AbiMetaDataSpec, AbiType, AbiTypesSpec } from './artifacts.js'
-import { ApiPromise } from '@polkadot/api'
 import { at } from '@prosopo/util'
-import { compactAddLength } from '@polkadot/util/compact/addLength'
-import { hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
+import { hexToU8a } from '@polkadot/util'
 import metadata from '@polkadot/types-support/metadata/v15/substrate-types.json'
 //        let call_request = CallRequest {
 //             origin: account_id(&self.signer),
@@ -261,11 +259,18 @@ const getShapeFromType = (typeId: number, types: AbiType[]): $.AnyShape => {
     if (inner.def.primitive && inner.def.primitive.toLowerCase() === 'u128') {
         return $.u128
     }
+    if (inner.def.primitive && inner.def.primitive.toLowerCase() === 'bool') {
+        return $.bool
+    }
     if (inner.def.composite) {
         if (inner.def.composite.fields) {
             const fields: $.AnyShape[] = inner.def.composite.fields.map((field, index) => {
                 const fieldShape = getShapeFromType(Number(field.type), types)
-                return $.field(field.name ? field.name : `Field${index}`, fieldShape)
+                if (field.name) {
+                    return $.field(field.name ? field.name : `Field${index}`, fieldShape)
+                } else {
+                    return fieldShape
+                }
             })
             return $.object(...fields)
         }
@@ -275,25 +280,34 @@ const getShapeFromType = (typeId: number, types: AbiType[]): $.AnyShape => {
             const variants = inner.def.variant.variants?.map((variant, index) => {
                 if (variant.fields && variant.fields?.length) {
                     const variantShape = getShapeFromType(Number(at(variant.fields, 0).type), types)
-                    return $.field(variant.name ? variant.name : `Variant${index}`, variantShape)
+                    if (variant.name) {
+                        return $.field<string, $.AnyShape, $.AnyShape>(variant.name, variantShape as unknown as never)
+                    } else {
+                        return variantShape
+                    }
                 } else {
-                    const keyVal = variant.name ? variant.name : `Variant${index}`
-                    return $.field(keyVal, keyVal)
+                    // This is like a value in an enum
+                    //{
+                    //     "index": 0,
+                    //     "name": "Other",
+                    //     "fields": []
+                    // }
+                    return $.u8
                 }
             })
-            return $.variant('Variant', ...variants)
+            return $.variant('Variant', ...variants).shape
         }
     }
     if (inner.def.sequence) {
         return $.array(getShapeFromType(Number(inner.def.sequence.type), types))
     }
-    // if (inner.def.array) return $sizedArray
-    // if (inner.def.tuple) return $tuple
+    if (inner.def.array) return $sizedArray.shape
+    if (inner.def.tuple) return $tuple.shape
     if (inner.def.compact) {
         return $.variant('Compact', getShapeFromType(inner.def.compact.type, types)).shape
     }
-    // if (inner.def.compact) return $compact
-    // if (inner.def.bitSequence) return $bitSequence
+    if (inner.def.compact) return $compact.shape
+    //if (inner.def.bitSequence) return $bitSequence.shape
     // Result<T,E>
     if (abiType.type.path && abiType.type.path.indexOf('Result') > -1) {
         if (abiType.type.params && abiType.type.params.length > 1 && abiType.type.params[0]) {
@@ -305,82 +319,85 @@ const getShapeFromType = (typeId: number, types: AbiType[]): $.AnyShape => {
 }
 
 if (contractResultType) {
-    console.log(substrateMetadata)
+    //console.log(substrateMetadata)
     const contractResultShape = getShapeFromType(contractResultType.id, substrateMetadata)
     console.log(contractResultShape)
+    if (results && results[0] && results[0].result) {
+        console.log(contractResultShape.decode(hexToU8a(results[0].result)))
+    }
 }
 process.exit()
-const dappStakeThresholdReturnType = getShapeFromType(getDappStakeThresholdABI.returnType.type, contractAbiParsed.types)
-
-const encodedResult = $.result($.u128, $strError).encode(1000000000n)
-console.log('encodedResult', encodedResult)
-const api = new ApiPromise()
-
-console.log('dappStakeThresholdReturnType', dappStakeThresholdReturnType)
-if (results && results[0] && results[0].result) {
-    const pjsResult = api.registry.createType('Result<u128, Err>', encodedResult)
-    console.log(pjsResult.inspect())
-    console.log(dappStakeThresholdReturnType.decode(hexToU8a(results[0].result)))
-}
-
-type ContractCallResult = {
-    jsonrpc: '2.0'
-    result: string
-    id: number
-}
-
-const gasLimit = { refTime: 1280000000000n, proofSize: 4999999999999n }
-type WeightV2 = {
-    refTime: bigint
-    proofSize: bigint
-}
-type ContractArg = {
-    value: never
-    encoder: $.AnyVariant
-}
-const $weightV2 = $.variant(
-    'Struct',
-    $.object($.field('refTime', $.compact($.u64)), $.field('proofSize', $.compact($.u64)))
-)
-
-// Contract funcitons
-
-console.log(u8aToHex(compactAddLength(u8aConcat(getDappStakeThresholdABI.selector, ...[]))))
-function getCallRequest(
-    selector: Uint8Array,
-    origin: Uint8Array,
-    dest: Uint8Array,
-    value: number,
-    gasLimit: WeightV2,
-    args: ContractArg[]
-) {
-    // construct the message for the contract call
-    // origin//destination//value//storageDepositLimit//weight//inputData
-    // inputData = compactAddLength(u8aConcat(fnSelector, ...args.toU8a))
-    const valueU8a = $.u64.encode(BigInt(value)) // 0 as 32 bytes hex string "0x
-    const storageDepositLimit = compactAddLength($.u64.encode(0n))
-    const inputData = compactAddLength(
-        u8aConcat(selector, ...args.map(({ value, encoder }) => encoder.shape.encode(value)))
-    )
-    const callRequest = u8aConcat(
-        origin,
-        dest,
-        valueU8a,
-        storageDepositLimit,
-        compactAddLength($weightV2.shape.encode(gasLimit)),
-        inputData
-    )
-    console.log(u8aToHex(callRequest))
-    return callRequest
-}
-
-const callRequest = getCallRequest(
-    hexToU8a(getDappStakeThresholdABI.selector),
-    hexToU8a(caller),
-    hexToU8a(contractAddress),
-    0,
-    gasLimit,
-    []
-)
-
-console.log('callRequest', callRequest)
+// const dappStakeThresholdReturnType = getShapeFromType(getDappStakeThresholdABI.returnType.type, contractAbiParsed.types)
+//
+// const encodedResult = $.result($.u128, $strError).encode(1000000000n)
+// console.log('encodedResult', encodedResult)
+// const api = new ApiPromise()
+//
+// console.log('dappStakeThresholdReturnType', dappStakeThresholdReturnType)
+// if (results && results[0] && results[0].result) {
+//     const pjsResult = api.registry.createType('Result<u128, Err>', encodedResult)
+//     console.log(pjsResult.inspect())
+//     console.log(dappStakeThresholdReturnType.decode(hexToU8a(results[0].result)))
+// }
+//
+// type ContractCallResult = {
+//     jsonrpc: '2.0'
+//     result: string
+//     id: number
+// }
+//
+// const gasLimit = { refTime: 1280000000000n, proofSize: 4999999999999n }
+// type WeightV2 = {
+//     refTime: bigint
+//     proofSize: bigint
+// }
+// type ContractArg = {
+//     value: never
+//     encoder: $.AnyVariant
+// }
+// const $weightV2 = $.variant(
+//     'Struct',
+//     $.object($.field('refTime', $.compact($.u64)), $.field('proofSize', $.compact($.u64)))
+// )
+//
+// // Contract funcitons
+//
+// console.log(u8aToHex(compactAddLength(u8aConcat(getDappStakeThresholdABI.selector, ...[]))))
+// function getCallRequest(
+//     selector: Uint8Array,
+//     origin: Uint8Array,
+//     dest: Uint8Array,
+//     value: number,
+//     gasLimit: WeightV2,
+//     args: ContractArg[]
+// ) {
+//     // construct the message for the contract call
+//     // origin//destination//value//storageDepositLimit//weight//inputData
+//     // inputData = compactAddLength(u8aConcat(fnSelector, ...args.toU8a))
+//     const valueU8a = $.u64.encode(BigInt(value)) // 0 as 32 bytes hex string "0x
+//     const storageDepositLimit = compactAddLength($.u64.encode(0n))
+//     const inputData = compactAddLength(
+//         u8aConcat(selector, ...args.map(({ value, encoder }) => encoder.shape.encode(value)))
+//     )
+//     const callRequest = u8aConcat(
+//         origin,
+//         dest,
+//         valueU8a,
+//         storageDepositLimit,
+//         compactAddLength($weightV2.shape.encode(gasLimit)),
+//         inputData
+//     )
+//     console.log(u8aToHex(callRequest))
+//     return callRequest
+// }
+//
+// const callRequest = getCallRequest(
+//     hexToU8a(getDappStakeThresholdABI.selector),
+//     hexToU8a(caller),
+//     hexToU8a(contractAddress),
+//     0,
+//     gasLimit,
+//     []
+// )
+//
+// console.log('callRequest', callRequest)
