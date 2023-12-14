@@ -73,15 +73,16 @@ macro_rules! lazy {
     };
 }
 
-/// The errors that can be returned by the Proxy contract.
-#[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-#[cfg_attr(
-    any(feature = "std", feature = "ink-as-dependency"),
-    derive(scale_info::TypeInfo)
-)]
-// #[cfg_attr(any(feature = "std", feature = "ink-as-dependency"), derive(ink::storage::traits::StorageLayout))]
-pub enum CustomError<Env: ink::env::Environment> {
-    NotAuthorised(Env::AccountId),
+pub trait CustomError: Sized {
+    type Env: ink::env::Environment + Sized;
+}
+
+pub struct NotAuthorisedError<T: ink::env::Environment + Sized> {
+    account: <T as ink::env::Environment>::AccountId,
+}
+
+impl<T: ink::env::Environment + Sized> CustomError for NotAuthorisedError<T> {
+    type Env = T;
 }
 
 pub trait Common2 {
@@ -89,7 +90,7 @@ pub trait Common2 {
 
     fn check_is_admin(
         account: <Self::Env as ink::env::Environment>::AccountId,
-    ) -> Result<(), CustomError<Self::Env>> {
+    ) -> Result<(), dyn CustomError<Env = Self::Env>> {
         // want to be able to throw the error here, so need to have the enum variant in scope
         // Ok(())
         Err(CustomError::NotAuthorised(account))
@@ -100,12 +101,6 @@ pub enum Common2Default {}
 
 impl Common2 for Common2Default {
     type Env = ink::env::DefaultEnvironment;
-
-    fn check_is_admin(
-        account: <Self::Env as ink::env::Environment>::AccountId,
-    ) -> Result<(), CustomError<Self::Env>> {
-        Err(CustomError::NotAuthorised(account))
-    }
 }
 
 // pub mod common2 {
