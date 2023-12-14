@@ -148,6 +148,7 @@ export class ProsopoCaptchaContract extends Contract {
         const expectedBlockTime = getExpectedBlockTime(this.api)
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
+        console.log('gasLimit', gasLimit.toString())
         this.logger.debug('Sending address: ', this.pair.address)
         const initialOptions: ContractOptions = {
             gasLimit,

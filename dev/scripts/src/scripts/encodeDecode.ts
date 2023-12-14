@@ -11,20 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BN } from '@polkadot/util/bn'
 import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex } from '@polkadot/util'
-
 const ss58Format = 42
 
 const arg = at(process.argv.slice(2), 0).trim()
 const argIsHex = isHex(arg)
 const argIsAddress = isAddress(arg, false, ss58Format)
+const argIsNumber = !isNaN(Number(arg))
 console.log(`arg          : ${arg}`)
 console.log(`arg length   : ${arg.length}`)
 console.log(`argIsAddress : ${argIsAddress}`)
 console.log(`argIsHex     : ${argIsHex}`)
+console.log(`argIsNumber  : ${argIsNumber}`)
 
 if (argIsAddress) {
     try {
@@ -52,6 +54,13 @@ if (argIsHex) {
 } else {
     console.log(`Hashing string ${arg} using blake2AsHex`)
     console.log(blake2AsHex(arg))
+    console.log(`Hashing string ${arg} using stringToHex`)
+    console.log(stringToHex(arg))
+}
+
+if (argIsNumber) {
+    const bnNumber = new BN(arg)
+    console.log(`BN number ${bnNumber.toString()}`)
 }
 
 try {

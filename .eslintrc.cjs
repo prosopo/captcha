@@ -24,6 +24,7 @@ module.exports = {
         'unused-imports',
         '@html-eslint',
         'sort-imports-es6-autofix',
+        'prettier'
         // do not add prettier to plugins otherwise rule conflicts will occur between prettier and eslint! run prettier as a separate command
     ],
     root: true,
