@@ -323,6 +323,7 @@ function getCallRequest(
         origin,
         dest,
         valueU8a,
+        //TODO what is the correct order for storage deposit and weight?
         storageDepositLimit,
         compactAddLength($weightV2.shape.encode(gasLimit)),
         inputData
