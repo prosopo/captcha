@@ -15,7 +15,7 @@ import { BN } from '@polkadot/util/bn'
 import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex } from '@polkadot/util'
+import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
 const ss58Format = 42
 
 const arg = at(process.argv.slice(2), 0).trim()
@@ -68,6 +68,7 @@ try {
     console.log(`Found uint8array ${u8a}`)
     const hex = u8aToHex(u8a)
     console.log(`Hex version ${hex}`)
+    console.log(`U8aToString ${u8aToString(u8a)}`)
     console.log(`Encoded address ${encodeAddress(hex, ss58Format)}`)
 } catch (e) {
     console.log(`Not a uint8array ${e}`)
