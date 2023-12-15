@@ -40,52 +40,6 @@ mod utils;
 #[cfg(feature = "test-dependency")]
 pub use utils::*;
 
-/// Print and return an error in ink
-#[macro_export]
-macro_rules! err {
-    ($self_:ident, $err:expr) => {{
-        ink::env::debug_println!(
-            "ERROR:
-    type: {:?}
-    block: {:?}
-    caller: {:?}
-",
-            $err,
-            $self_.env().block_number(),
-            $self_.env().caller(),
-        );
-        Err($err)
-    }};
-}
-
-#[macro_export]
-macro_rules! err_fn {
-    ($self_:ident, $err:expr) => {
-        || {
-            ink::env::debug_println!(
-                "ERROR:
-        type: {:?}
-        block: {:?}
-        caller: {:?}
-    ",
-                $err,
-                $self_.env().block_number(),
-                $self_.env().caller(),
-            );
-            $err
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! lazy {
-    ($lazy:expr, $func:ident, $value:expr) => {
-        let mut contents = $lazy.get_or_default();
-        contents.$func($value);
-        $lazy.set(&contents);
-    };
-}
-
 #[ink::contract]
 pub mod common {
 
