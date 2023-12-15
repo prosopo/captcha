@@ -186,6 +186,11 @@ impl Common2 for CommonDefaultEnvironment {
     type Env = ink::env::DefaultEnvironment;
 }
 
+/// get the account id in byte array format
+pub fn account_id_bytes(account: &ink::primitives::AccountId) -> &[u8; 32] {
+    AsRef::<[u8; 32]>::as_ref(account)
+}
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common {
