@@ -1,6 +1,7 @@
-pub use self::contract::{Common, CommonRef};
+// pub use self::contract::{Common, CommonRef};
 use super::config::{Config, ConfigDefaultEnvironment};
 use super::utils::account_id_bytes;
+// use crate::common::account_id_bytes;
 
 #[ink::contract]
 pub mod contract {
@@ -9,10 +10,10 @@ pub mod contract {
     #[derive(Default)]
     /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
-    pub struct Common {}
+    pub struct CommonA {}
 
     /// Implementation of the contract
-    impl Common {
+    impl CommonA {
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {}
@@ -45,7 +46,7 @@ pub mod contract {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            <ConfigDefaultEnvironment as Config>::get_git_commit_id()
+            ConfigDefaultEnvironment::get_git_commit_id()
         }
     }
 }
