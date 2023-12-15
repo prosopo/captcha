@@ -23,7 +23,8 @@ mod account;
 mod test_helper;
 #[cfg(feature = "test-dependency")]
 pub use account::Account;
-use bip39::serde::de::value::Error;
+#[cfg(feature = "test-dependency")]
+use scale::Decode;
 #[cfg(feature = "test-dependency")]
 pub use sp_core::crypto::Pair;
 #[cfg(feature = "test-dependency")]
@@ -83,6 +84,7 @@ macro_rules! lazy {
 )]
 pub enum ContractError<Env: ink::env::Environment> {
     _PhantomVariant(PhantomData<Env>), // this is a placeholder to allow the enum to be generic, do not use! This can be removed when at least 1 of the error variants use the env type
+    AccountIdDecodeFailed, // returned if the account id decode fails, e.g. due to array of wrong length
     NotAuthorised,
     TransferFailed,
     SetCodeHashFailed,
@@ -149,9 +151,30 @@ pub trait Common2 {
     fn check_is_admin(
         account: <Self::Env as ink::env::Environment>::AccountId,
     ) -> Result<(), ContractError<Self::Env>> {
-        // want to be able to throw the error here, so need to have the enum variant in scope
-        // Ok(())
-        Err(ContractError::NotAuthorised)
+        if account != Self::get_admin()? {
+            return Err(ContractError::NotAuthorised);
+        }
+        Ok(())
+    }
+
+    /// Get the git commit id from when this contract was built
+    fn get_git_commit_id() -> [u8; 20] {
+        let env_git_commit_id: [u8; 20] = [
+            140, 181, 84, 101, 1, 92, 209, 139, 64, 142, 94, 248, 85, 148, 53, 25, 237, 19, 80, 147,
+        ];
+        env_git_commit_id
+    }
+
+    /// the admin which can control this contract. set to author/instantiator by default
+    fn get_admin(
+    ) -> Result<<Self::Env as ink::env::Environment>::AccountId, ContractError<Self::Env>> {
+        let env_admin_bytes: [u8; 32] = [
+            212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
+            88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+        ];
+        let encoded = scale::Encode::encode(&env_admin_bytes);
+        <Self::Env as ink::env::Environment>::AccountId::decode(&mut &encoded[..])
+            .map_err(|_| ContractError::AccountIdDecodeFailed)
     }
 }
 
@@ -161,12 +184,6 @@ pub enum CommonDefaultEnvironment {}
 // Implementation of the trait for the default environment
 impl Common2 for CommonDefaultEnvironment {
     type Env = ink::env::DefaultEnvironment;
-
-    fn check_is_admin(
-        account: <Self::Env as ink::env::Environment>::AccountId,
-    ) -> Result<(), ContractError<Self::Env>> {
-        Err(ContractError::NotAuthorised)
-    }
 }
 
 /// An ink contract must be defined in order to import functions into another contract
