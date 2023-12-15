@@ -1336,8 +1336,8 @@ pub mod captcha {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
 
-        use common::Common2;
-        use common::CommonDefaultEnvironment as Common3;
+        use common::Config as ConfigTrait;
+        use common::ConfigDefaultEnvironment as Config;
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
@@ -1460,7 +1460,7 @@ pub mod captcha {
 
             TestHelper::set_caller(AccountId::from([0x00; 32]));
 
-            let res = Common3::check_is_admin(AccountId::from([0x00; 32]));
+            let res = Config::check_is_admin(AccountId::from([0x00; 32]));
 
             // let seed = [DEV_PHRASE, "//Alice"].join("");
 
