@@ -23,19 +23,13 @@ mod test_helper;
 #[cfg(feature = "test-dependency")]
 pub use test_helper::TestHelper;
 
-#[cfg(feature = "test-dependency")]
 mod errors;
-#[cfg(feature = "test-dependency")]
 pub use errors::ContractError;
 
-#[cfg(feature = "test-dependency")]
 mod config;
-#[cfg(feature = "test-dependency")]
 pub use config::{Config, ConfigDefaultEnvironment};
 
-#[cfg(feature = "test-dependency")]
 mod utils;
-#[cfg(feature = "test-dependency")]
 pub use utils::*;
 
 mod contract;
@@ -77,7 +71,7 @@ pub mod common {
         #[ink(message)]
         pub fn get_account_bytes(&self, account: AccountId) -> [u8; 32] {
             ink::env::debug_println!("account: {:?}", account);
-            *crate::account_id_bytes(&account)
+            *account_id_bytes(&account)
         }
 
         /// Get the git commit id from when this contract was built

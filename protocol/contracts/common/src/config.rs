@@ -2,12 +2,10 @@ use super::errors::ContractError;
 use scale::Decode;
 
 // Trait implementing common functions for contracts
-pub trait Config {
-    type Env: ink::env::Environment;
-
+pub trait Config<Env: ink::env::Environment> {
     fn check_is_admin(
-        account: <Self::Env as ink::env::Environment>::AccountId,
-    ) -> Result<(), ContractError<Self::Env>> {
+        account: <Env as ink::env::Environment>::AccountId,
+    ) -> Result<(), ContractError<Env>> {
         if account != Self::get_admin()? {
             return Err(ContractError::NotAuthorised);
         }
@@ -23,14 +21,13 @@ pub trait Config {
     }
 
     /// the admin which can control this contract. set to author/instantiator by default
-    fn get_admin(
-    ) -> Result<<Self::Env as ink::env::Environment>::AccountId, ContractError<Self::Env>> {
+    fn get_admin() -> Result<<Env as ink::env::Environment>::AccountId, ContractError<Env>> {
         let env_admin_bytes: [u8; 32] = [
             212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
             88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
         ];
         let encoded = scale::Encode::encode(&env_admin_bytes);
-        <Self::Env as ink::env::Environment>::AccountId::decode(&mut &encoded[..])
+        <Env as ink::env::Environment>::AccountId::decode(&mut &encoded[..])
             .map_err(|_| ContractError::AccountIdDecodeFailed)
     }
 }
@@ -39,6 +36,4 @@ pub trait Config {
 pub enum ConfigDefaultEnvironment {}
 
 // Implementation of the trait for the default environment
-impl Config for ConfigDefaultEnvironment {
-    type Env = ink::env::DefaultEnvironment;
-}
+impl Config<ink::env::DefaultEnvironment> for ConfigDefaultEnvironment {}
