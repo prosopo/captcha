@@ -13,8 +13,6 @@
 // limitations under the License.
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-pub use self::common::{Common, CommonRef};
-
 #[cfg(feature = "test-dependency")]
 mod account;
 #[cfg(feature = "test-dependency")]
@@ -40,8 +38,54 @@ mod utils;
 #[cfg(feature = "test-dependency")]
 pub use utils::*;
 
+mod contract;
+pub use contract::*;
+
 #[ink::contract]
 pub mod common {
+
+    #[derive(Default)]
+    /// No fields are stored in the util contract as it's just filler
+    #[ink(storage)]
+    pub struct Common {}
+
+    /// Implementation of the contract
+    impl Common {
+        #[ink(constructor)]
+        pub fn new() -> Self {
+            Self {}
+        }
+
+        /// Print and get the caller of this function
+        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
+        #[ink(message)]
+        pub fn get_caller(&self) -> AccountId {
+            ink::env::debug_println!("caller: {:?}", self.env().caller());
+            self.env().caller()
+        }
+
+        /// Print and get the caller bytes of this function
+        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
+        #[ink(message)]
+        pub fn get_caller_bytes(&self) -> [u8; 32] {
+            let caller = self.env().caller();
+            self.get_account_bytes(caller)
+        }
+
+        /// Print and get the caller bytes of this function
+        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
+        #[ink(message)]
+        pub fn get_account_bytes(&self, account: AccountId) -> [u8; 32] {
+            ink::env::debug_println!("account: {:?}", account);
+            *crate::account_id_bytes(&account)
+        }
+
+        /// Get the git commit id from when this contract was built
+        #[ink(message)]
+        pub fn get_git_commit_id(&self) -> [u8; 20] {
+            config::get_git_commit_id()
+        }
+    }
 
     pub mod config {
         use super::*;
@@ -143,49 +187,6 @@ pub mod common {
     /// get the account id in byte array format
     pub fn account_id_bytes(account: &AccountId) -> &[u8; 32] {
         AsRef::<[u8; 32]>::as_ref(account)
-    }
-
-    #[derive(Default)]
-    /// No fields are stored in the util contract as it's just filler
-    #[ink(storage)]
-    pub struct Common {}
-
-    /// Implementation of the contract
-    impl Common {
-        #[ink(constructor)]
-        pub fn new() -> Self {
-            Self {}
-        }
-
-        /// Print and get the caller of this function
-        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
-        #[ink(message)]
-        pub fn get_caller(&self) -> AccountId {
-            ink::env::debug_println!("caller: {:?}", self.env().caller());
-            self.env().caller()
-        }
-
-        /// Print and get the caller bytes of this function
-        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
-        #[ink(message)]
-        pub fn get_caller_bytes(&self) -> [u8; 32] {
-            let caller = self.env().caller();
-            self.get_account_bytes(caller)
-        }
-
-        /// Print and get the caller bytes of this function
-        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
-        #[ink(message)]
-        pub fn get_account_bytes(&self, account: AccountId) -> [u8; 32] {
-            ink::env::debug_println!("account: {:?}", account);
-            *account_id_bytes(&account)
-        }
-
-        /// Get the git commit id from when this contract was built
-        #[ink(message)]
-        pub fn get_git_commit_id(&self) -> [u8; 20] {
-            config::get_git_commit_id()
-        }
     }
 
     #[cfg(any(test, feature = "test-dependency"))]
