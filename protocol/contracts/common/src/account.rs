@@ -2,7 +2,7 @@ use super::test_helper::TestHelper;
 use ink::prelude::string::ToString;
 use ink::primitives::*;
 use scale::alloc::string::String;
-use sp_core::crypto::Pair;
+pub use sp_core::crypto::Pair;
 use sp_core::crypto::DEV_PHRASE;
 use sp_core::sr25519;
 
