@@ -142,6 +142,7 @@ pub enum ContractError<Env: ink::env::Environment> {
     NotAuthor,
 }
 
+// Trait implementing common functions for contracts
 pub trait Common2 {
     type Env: ink::env::Environment;
 
@@ -154,9 +155,11 @@ pub trait Common2 {
     }
 }
 
-pub enum Common2Default {}
+// The default environment implementation of common
+pub enum CommonDefaultEnvironment {}
 
-impl Common2 for Common2Default {
+// Implementation of the trait for the default environment
+impl Common2 for CommonDefaultEnvironment {
     type Env = ink::env::DefaultEnvironment;
 
     fn check_is_admin(
@@ -165,12 +168,6 @@ impl Common2 for Common2Default {
         Err(ContractError::NotAuthorised)
     }
 }
-
-// pub mod common2 {
-//     pub fn check_is_admin<T: ink::env::Environment>(account: T::AccountId) -> bool {
-//         return true;
-//     }
-// }
 
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
