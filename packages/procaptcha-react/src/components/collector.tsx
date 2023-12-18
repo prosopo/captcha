@@ -1,12 +1,8 @@
 import { CoordEvent, startCollector } from '@prosopo/procaptcha'
-import { useEffect, useRef } from 'react'
-
-useEffect(() => {
-    console.log('Component rendered')
-}, [])
+import { MutableRefObject, useRef } from 'react'
 
 export default () => {
-    const events = useRef<CoordEvent[]>([])
+    const events: MutableRefObject<CoordEvent[]> = useRef<CoordEvent[]>([])
     console.log('Starting collector')
     startCollector(events)
     return <div></div>
