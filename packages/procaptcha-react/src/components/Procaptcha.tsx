@@ -28,6 +28,7 @@ import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
+import Collector from './collector.js'
 
 const logoStyle = css`
     align-items: center;
@@ -277,6 +278,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     </Box>
                 </Box>
             </Box>
+            <Collector></Collector>
         </ThemeProvider>
     )
 }
