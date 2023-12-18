@@ -92,7 +92,7 @@ export class ContractDeployer {
                 const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
                     if (result.status.isFinalized || result.status.isInBlock) {
                         result.events
-                            .filter(({ event: { section } }: any): boolean => section === 'system')
+                            .filter(({ event: { section } }): boolean => section === 'system')
                             .forEach((event): void => {
                                 const {
                                     event: { method },

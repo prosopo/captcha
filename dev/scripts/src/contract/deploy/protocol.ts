@@ -21,6 +21,7 @@ import { EventRecord } from '@polkadot/types/interfaces'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getSecret } from '@prosopo/cli'
+import { get } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
@@ -75,7 +76,10 @@ export async function run(
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
     log.info('instantiateEvent', instantiateEvent?.toHuman())
-    return instantiateEvent?.event.data[1]?.toString() || ''
+
+    const contractAddress = String(get(instantiateEvent?.event.data, 'contract'))
+
+    return contractAddress
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {

@@ -18,6 +18,7 @@ import { ContractDeployer, getPairAsync } from '@prosopo/contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig } from '@prosopo/cli'
+import { get } from '@prosopo/util'
 import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
@@ -41,8 +42,7 @@ export async function run(): Promise<AccountId> {
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
 
-    const contractIndex = instantiateEvent?.event.data.names?.indexOf('contract') || 1
-    const contractAddress = instantiateEvent?.event.data[contractIndex]?.toString() || ''
+    const contractAddress = String(get(instantiateEvent?.event.data, 'contract'))
 
     return contractAddress
 }
