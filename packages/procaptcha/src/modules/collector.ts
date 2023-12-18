@@ -1,9 +1,10 @@
 export type CoordEvent = [number, number, number]
 
 export const storeLog = (event: CoordEvent[], events: CoordEvent[]) => {
-    events = events ? events.concat(event) : event
-    window.sessionStorage.setItem('procaptchaLog', JSON.stringify(events))
     //store in react state
+    events = events ? events.concat(event) : event
+    // store in session storage for debugging only
+    window.sessionStorage.setItem('procaptchaLog', JSON.stringify(events))
 }
 
 export const logEvent = (event: MouseEvent | TouchEvent, events: CoordEvent[]) => {
