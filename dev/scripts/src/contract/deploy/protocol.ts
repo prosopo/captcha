@@ -13,10 +13,11 @@
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
-import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { AccountId } from '@prosopo/types'
 import { ContractAbi } from '@prosopo/captcha-contract/contract-info'
 import { ContractDeployer, getPairAsync } from '@prosopo/contract'
 import { ContractFile } from '@prosopo/captcha-contract/contract-info'
+import { EventRecord } from '@polkadot/types/interfaces'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getSecret } from '@prosopo/cli'
@@ -74,7 +75,7 @@ export async function run(
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
     log.info('instantiateEvent', instantiateEvent?.toHuman())
-    return (instantiateEvent?.event.data as any)['contract'].toString()
+    return instantiateEvent?.event.data[1]?.toString() || ''
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {

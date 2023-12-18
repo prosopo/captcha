@@ -13,8 +13,9 @@
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
-import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { AccountId } from '@prosopo/types'
 import { ContractDeployer, getPairAsync } from '@prosopo/contract'
+import { EventRecord } from '@polkadot/types/interfaces'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig } from '@prosopo/cli'
 import { loadEnv } from '@prosopo/cli'
@@ -39,8 +40,11 @@ export async function run(): Promise<AccountId> {
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
-    console.log('instantiateEvent', instantiateEvent?.toHuman())
-    return (instantiateEvent?.event.data as any)['contract'].toString()
+
+    const contractIndex = instantiateEvent?.event.data.names?.indexOf('contract') || 1
+    const contractAddress = instantiateEvent?.event.data[contractIndex]?.toString() || ''
+
+    return contractAddress
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {
