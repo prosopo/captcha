@@ -6,7 +6,7 @@ export class LazyParser<T> extends BaseParser<T> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): T {
+    override _parse(value: unknown, options?: ParseOptions): T {
         return this.parser().parse(value, options)
     }
 

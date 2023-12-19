@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class BigIntParser extends BaseParser<bigint> {
-    override parseShape(value: unknown, options?: ParseOptions): bigint {
+    override _parse(value: unknown, options?: ParseOptions): bigint {
         if (options?.coerce) {
             const t = typeof value
             const v = t === 'string' ? value as string : t === 'number' ? value as number : t === 'boolean' ? value as boolean : t === 'bigint' ? value as bigint : String(value)

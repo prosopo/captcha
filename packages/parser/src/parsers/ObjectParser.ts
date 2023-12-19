@@ -11,7 +11,7 @@ export class ObjectParser<T extends {}> extends BaseParser<T> {
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T {
+    _parse(value: unknown, options?: ParseOptions): T {
         // check runtime type
         if (typeof value !== 'object') {
             throw new Error(`Expected object but got ${typeof value}`)

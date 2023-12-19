@@ -39,6 +39,7 @@
 // TODO parser for bigint lib that pjs uses?
 // TODO number disallow null coercion
 // TODO number disallow undefined coercion
+// TODO put union + nullabel + optional on parser?
 
 import { Validator } from "./validators/Validator.js"
 import { ParseOptions, Parser } from "./parsers/Parser.js"

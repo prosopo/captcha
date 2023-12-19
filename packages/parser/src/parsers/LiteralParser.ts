@@ -6,7 +6,7 @@ export class LiteralParser<T> extends BaseParser<T> {
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T {
+    _parse(value: unknown, options?: ParseOptions): T {
         if (value !== this.literal) {
             throw new Error(`Expected literal ${this.literal} but got ${value}`)
         }

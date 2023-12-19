@@ -9,7 +9,7 @@ export class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T {
+    _parse(value: unknown, options?: ParseOptions): T {
         // check runtime type
         if (!this.options.includes(value as T)) {
             throw new Error(`Expected enum value to be one of ${this.options.join(', ')} but got ${value}`)

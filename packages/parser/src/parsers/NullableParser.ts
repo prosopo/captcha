@@ -6,7 +6,7 @@ export class NullableParser<T> extends BaseParser<T | null> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): T | null {
+    override _parse(value: unknown, options?: ParseOptions): T | null {
         if (value === null) {
             return null
         }

@@ -7,7 +7,7 @@ export class RecordParser<T extends string | number | symbol, U> extends BasePar
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): { [key in T]: U } {
+    override _parse(value: unknown, options?: ParseOptions): { [key in T]: U } {
         // TODO could be undefined?
         const result = {} as { [key in T]: U }
         for (const key in value as any) {

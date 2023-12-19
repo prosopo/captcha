@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class DateParser extends BaseParser<Date> {
-    override parseShape(value: unknown, options?: ParseOptions): Date {
+    override _parse(value: unknown, options?: ParseOptions): Date {
         if (options?.coerce && (typeof value === 'string' || typeof value === 'number' || value instanceof Date)) {
             value = new Date(value)
         }

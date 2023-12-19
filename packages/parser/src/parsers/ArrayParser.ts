@@ -6,7 +6,7 @@ export class ArrayParser<T> extends BaseParser<T[]> {
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T[] {
+    _parse(value: unknown, options?: ParseOptions): T[] {
         // check runtime type
         if (!Array.isArray(value)) {
             throw new Error(`Expected array but got ${typeof value}`)

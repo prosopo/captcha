@@ -6,7 +6,7 @@ export class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): Partial<T> {
+    override _parse(value: unknown, options?: ParseOptions): Partial<T> {
         // TODO allow optional keys to do partial parsing
         throw new Error("Method not implemented.")
     }

@@ -5,7 +5,7 @@ export class OptionalParser<T> extends BaseParser<T | undefined> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): T | undefined {
+    override _parse(value: unknown, options?: ParseOptions): T | undefined {
         if (value === undefined) {
             return undefined
         }

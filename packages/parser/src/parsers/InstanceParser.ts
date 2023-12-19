@@ -6,7 +6,7 @@ export class InstanceParser<T> extends BaseParser<T> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): T {
+    override _parse(value: unknown, options?: ParseOptions): T {
         if (!(value instanceof this.type)) {
             throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
         }
