@@ -1,0 +1,19 @@
+import { Parseable } from "./Parseable.js"
+import { BaseParser, ParseOptions } from "./Parser.js"
+
+export class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
+    constructor(private schema: Parseable<T>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions): Partial<T> {
+        // TODO allow optional keys to do partial parsing
+        throw new Error("Method not implemented.")
+    }
+
+    override validate(value: Partial<T>): void {
+        super.validate(value)
+        // TODO allow optional keys to do partial validation
+        throw new Error("Method not implemented.")
+    }
+}
