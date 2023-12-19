@@ -102,6 +102,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
         undefined
     )
+    //const [events, setEvents] = useState<CoordEvent[]>([] as CoordEvent[])
 
     return [
         // the state
@@ -152,7 +153,6 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const manager = Manager(config, state, updateState, callbacks)
     const configSx = { maxWidth: '400px', minWidth: '200px' }
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
-
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
