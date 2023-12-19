@@ -19,10 +19,10 @@ export interface Parser<T> {
     validate(value: T): void
     // get the validators
     validators: Validator<T>[] // like gladiators, but less violent
-    // make the parser optional, i.e. allow undefined as a value
-    optional(): Parser<T | undefined>
-    // make the parser nullable, i.e. allow null as a value
-    nullable(): Parser<T | null>
+    // // make the parser optional, i.e. allow undefined as a value
+    // optional(): Parser<T | undefined>
+    // // make the parser nullable, i.e. allow null as a value
+    // nullable(): Parser<T | null>
     // do the union of two parsers, this parser and another.
     // union<U>(parser: Parser<U>): Parser<T|U>
     // access the shape of the parsed type. This is helpful for pulling the parsed type out of any given parser, e.g. const p = parser.string(); type T = typeof p.shape
@@ -32,6 +32,7 @@ export interface Parser<T> {
 // The base parser class. This is the class that all other parsers inherit from.
 export abstract class BaseParser<T> implements Parser<T> {
     #validators: Validator<T>[] = []
+    readonly shape!: T
 
     parse(value: unknown, options?: ParseOptions): T {
         const parsed = this.parseShape(value, options)
@@ -65,15 +66,11 @@ export abstract class BaseParser<T> implements Parser<T> {
     //     return new UnionParser2(this, parser)
     // }
 
-    get shape(): T {
-        throw new Error('Do not call this method')
-    }
+    // optional(): Parser<T | undefined> {
+    //     return new OptionalParser(this)
+    // }
 
-    optional(): Parser<T | undefined> {
-        return new OptionalParser(this)
-    }
-
-    nullable(): Parser<T | null> {
-        return new NullableParser(this)
-    }
+    // nullable(): Parser<T | null> {
+    //     return new NullableParser(this)
+    // }
 }

@@ -35,6 +35,10 @@
 // TODO work out whether mandatory (i.e. reverse of optional / nullable) is useful + whether it should use required
 // TODO deepPartial
 // TODO do we have parsers for all ts helper types ,e.g. Partial, Required, Readonly, etc?
+// TODO json parser?
+// TODO parser for bigint lib that pjs uses?
+// TODO number disallow null coercion
+// TODO number disallow undefined coercion
 
 import { Validator } from "./validators/Validator.js"
 import { ParseOptions, Parser } from "./parsers/Parser.js"
