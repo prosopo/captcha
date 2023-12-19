@@ -6,7 +6,7 @@ export type EnumMap<U extends EnumVariant, T extends Readonly<U[]>> = {
     [K in T[number]]: K
 }
 
-export class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> extends BaseParser<T[number]> {
+class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> extends BaseParser<T[number]> {
     readonly #options: T
 
     constructor(options: T) {

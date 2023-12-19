@@ -1,7 +1,7 @@
 import { Parseable } from "./Parseable.js"
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class OmitParser<T extends {}, U extends keyof T> extends BaseParser<Omit<T, U>> {
+class OmitParser<T extends {}, U extends keyof T> extends BaseParser<Omit<T, U>> {
     constructor(private schema: Parseable<T>) {
         super()
     }

@@ -1,7 +1,7 @@
 import { Parseable } from "./Parseable.js"
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
+class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
     constructor(private schema: Parseable<T>) {
         super()
     }

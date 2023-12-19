@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 // Parses the shape of two parsers merged together via intersection
-export class MergeParser<T, U> extends BaseParser<T & U> {
+class MergeParser<T, U> extends BaseParser<T & U> {
     constructor(private first: Parser<T>, private second: Parser<U>) {
         super()
     }

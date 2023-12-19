@@ -4,7 +4,7 @@ export type NativeEnum = {
     [key: string]: number | string
 }
 
-export class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
+class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
     constructor(private nativeEnum: T) {
         super()
     }

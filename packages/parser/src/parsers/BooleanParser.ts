@@ -1,6 +1,6 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class BooleanParser extends BaseParser<boolean> {
+class BooleanParser extends BaseParser<boolean> {
     override _parse(value: unknown, options?: ParseOptions): boolean {
         if (options?.coerce) {
             value = Boolean(value)
