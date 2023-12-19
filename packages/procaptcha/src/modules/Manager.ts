@@ -104,12 +104,14 @@ export function Manager(
             onError: alertError,
             onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
                 console.log('onHuman event triggered', output)
+                updateState({ sendData: !state.sendData })
             },
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
             onFailed: () => {
                 alert('Captcha challenge failed. Please try again')
+                updateState({ sendData: !state.sendData })
             },
             onExpired: () => {
                 alert('Completed challenge has expired, please try again')
@@ -119,6 +121,7 @@ export function Manager(
             },
             onOpen: () => {
                 console.log('onOpen event triggered')
+                updateState({ sendData: !state.sendData })
             },
             onClose: () => {
                 console.log('onClose event triggered')

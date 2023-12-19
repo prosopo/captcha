@@ -1,24 +1,39 @@
-import { CoordEvent, startCollector } from '@prosopo/procaptcha'
+import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, startCollector } from '@prosopo/procaptcha'
 import { MutableRefObject, useEffect, useRef, useState } from 'react'
 
 type CollectorProps = {
-    onProcessData: (data: CoordEvent[]) => void
-    showModal: boolean // New prop
+    onProcessData: (data: StoredEvents) => void
+    sendData: boolean
 }
 
-const Collector = ({ onProcessData, showModal }: CollectorProps) => {
-    const [storedEvents, setStoredEvents] = useState<CoordEvent[]>([])
+export type StoredEvents = {
+    mouseEvents?: ProsopoMouseEvent[]
+    touchEvents?: ProsopoTouchEvent[]
+    keyboardEvents?: ProsopoKeyboardEvent[]
+}
+
+const Collector = ({ onProcessData, sendData }: CollectorProps) => {
+    const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([])
+    const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([])
+    const [keyboardEvents, setStoredKeyboardEvents] = useState<ProsopoKeyboardEvent[]>([])
 
     const ref: MutableRefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
 
-    // Start the component once to initialise the collector events like mousemove
     useEffect(() => {
         if (ref && ref.current) {
-            console.log('ref', ref)
-            startCollector(ref.current, setStoredEvents)
+            startCollector(setStoredMouseEvents, setStoredTouchEvents, setStoredKeyboardEvents, ref.current)
         }
-        console.log('storedEvents', storedEvents)
     }, [])
+
+    useEffect(() => {
+        const userEvents = {
+            mouseEvents,
+            touchEvents,
+            keyboardEvents,
+        }
+
+        onProcessData(userEvents)
+    }, [sendData])
 
     return <div ref={ref}></div>
 }

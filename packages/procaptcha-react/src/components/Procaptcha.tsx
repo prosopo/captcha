@@ -14,7 +14,6 @@
 /** @jsxImportSource @emotion/react */
 import {
     Account,
-    CoordEvent,
     GetCaptchaResponse,
     Manager,
     ProcaptchaCallbacks,
@@ -29,7 +28,7 @@ import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-import Collector from './collector.js'
+import Collector, { StoredEvents } from './collector.js'
 
 const logoStyle = css`
     align-items: center;
@@ -103,6 +102,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
         undefined
     )
+    const [sendData, setSendData] = useState(false)
     return [
         // the state
         {
@@ -119,6 +119,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             timeout,
             blockNumber,
             successfullChallengeTimeout,
+            sendData,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
@@ -138,6 +139,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
             if (nextState.successfullChallengeTimeout !== undefined) setSuccessfullChallengeTimeout(nextState.timeout)
             if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
+            if (nextState.sendData !== undefined) setSendData(nextState.sendData)
         },
     ]
 }
@@ -150,9 +152,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
 
-    const processCoordData = (data: CoordEvent[]) => {
+    const processCoordData = (data: StoredEvents) => {
         console.log('Processing data:', data)
-        // Additional logic to process data
     }
 
     const manager = Manager(config, state, updateState, callbacks)
@@ -283,7 +284,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     </Box>
                 </Box>
             </Box>
-            <Collector onProcessData={processCoordData} showModal={state.showModal}></Collector>
+            <Collector onProcessData={processCoordData} sendData={state.showModal}></Collector>
         </ThemeProvider>
     )
 }
