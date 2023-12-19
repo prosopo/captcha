@@ -1,6 +1,6 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class UnionParser2<T, U> extends BaseParser<T | U> {
+class UnionParser2<T, U> extends BaseParser<T | U> {
     constructor(
         private first: Parser<T>,
         private second: Parser<U>

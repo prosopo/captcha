@@ -1,6 +1,6 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class BigIntParser extends BaseParser<bigint> {
+class BigIntParser extends BaseParser<bigint> {
     override _parse(value: unknown, options?: ParseOptions): bigint {
         if (options?.coerce) {
             const t = typeof value

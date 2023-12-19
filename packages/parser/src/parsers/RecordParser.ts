@@ -1,6 +1,6 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class RecordParser<T extends string | number | symbol, U> extends BaseParser<{
+class RecordParser<T extends string | number | symbol, U> extends BaseParser<{
     [key in T]: U
 }> {
     constructor(private parser: Parser<U>) {

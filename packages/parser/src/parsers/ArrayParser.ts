@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 
-export class ArrayParser<T> extends BaseParser<T[]> {
+class ArrayParser<T> extends BaseParser<T[]> {
     constructor(private schema: Parser<T>) {
         super()
     }

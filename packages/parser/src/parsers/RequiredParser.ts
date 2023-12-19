@@ -1,6 +1,6 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class RequiredParser<T> extends BaseParser<Required<T>> {
+class RequiredParser<T> extends BaseParser<Required<T>> {
     constructor(private parser: Parser<T>) {
         super()
     }

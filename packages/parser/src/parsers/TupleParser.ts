@@ -5,7 +5,7 @@ import { StringParser } from "./StringParser.js"
 
 export type TupleElement<T> = T extends readonly [Parser<infer U>, ...infer V] ? [U, ...TupleElement<V>] : []
 
-export class TupleParser<const T> extends BaseParser<TupleElement<T>> {
+class TupleParser<const T> extends BaseParser<TupleElement<T>> {
     constructor(private parsers: T) {
         super()
     }

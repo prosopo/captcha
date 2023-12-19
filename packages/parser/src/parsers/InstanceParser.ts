@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 // TODO does the ctor type work here? test it out
-export class InstanceParser<T> extends BaseParser<T> {
+class InstanceParser<T> extends BaseParser<T> {
     constructor(private type: new (...args: any[]) => T) {
         super()
     }

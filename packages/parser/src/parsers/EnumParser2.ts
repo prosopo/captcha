@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 
-export class EnumParser2<const U extends string | number | symbol, const T extends readonly U[]> extends BaseParser<
+class EnumParser2<const U extends string | number | symbol, const T extends readonly U[]> extends BaseParser<
     T[number]
 > {
     constructor(private values: T) {

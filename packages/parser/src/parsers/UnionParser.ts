@@ -3,7 +3,7 @@ import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 export type ParserArrayToShape<T> = T extends ReadonlyArray<Parser<infer U>> ? U : never
 
 
-export class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>> extends BaseParser<U> {
+class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends ParserArrayToShape<T>> extends BaseParser<U> {
     constructor(private parsers: T) {
         super()
     }

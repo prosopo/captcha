@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 
-export class NullableParser<T> extends BaseParser<T | null> {
+class NullableParser<T> extends BaseParser<T | null> {
     constructor(private parser: Parser<T>) {
         super()
     }

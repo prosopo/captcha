@@ -1,6 +1,6 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class PromiseParser<T> extends BaseParser<Promise<T>> {
+class PromiseParser<T> extends BaseParser<Promise<T>> {
     constructor(private parser: Parser<T>) {
         super()
     }

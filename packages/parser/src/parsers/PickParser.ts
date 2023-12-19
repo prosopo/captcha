@@ -1,7 +1,7 @@
 import { Parseable } from "./Parseable.js"
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-export class PickParser<T extends {}, U extends keyof T> extends BaseParser<Pick<T, U>> {
+class PickParser<T extends {}, U extends keyof T> extends BaseParser<Pick<T, U>> {
     constructor(private schema: Parseable<T>) {
         super()
     }
