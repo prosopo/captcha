@@ -5,7 +5,7 @@ export class PromiseParser<T> extends BaseParser<Promise<T>> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): Promise<T> {
+    override _parse(value: unknown, options?: ParseOptions): Promise<T> {
         // check that the value is a promise
         if (!(value instanceof Promise)) {
             throw new Error(`Expected promise but got ${typeof value}`)

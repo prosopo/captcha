@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js";
 
 export class UnknownParser extends BaseParser<unknown> {
-    override parseShape(value: unknown, options?: ParseOptions): unknown {
+    override _parse(value: unknown, options?: ParseOptions): unknown {
         return value
     }
 }

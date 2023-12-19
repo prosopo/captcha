@@ -5,7 +5,7 @@ export class RequiredParser<T> extends BaseParser<Required<T>> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): Required<T> {
+    override _parse(value: unknown, options?: ParseOptions): Required<T> {
         // TODO enforce fields being present, i.e. opposite of extra keys
         const parsed = this.parser.parse(value, options) as Required<T>
         this.validate(parsed)

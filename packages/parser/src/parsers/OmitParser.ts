@@ -6,7 +6,7 @@ export class OmitParser<T extends {}, U extends keyof T> extends BaseParser<Omit
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): Omit<T, U> {
+    override _parse(value: unknown, options?: ParseOptions): Omit<T, U> {
         // TODO allow optional keys to do omitted parsing
         throw new Error("Method not implemented.")
     }

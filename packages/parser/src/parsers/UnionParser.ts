@@ -8,7 +8,7 @@ export class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends Par
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): U {
+    override _parse(value: unknown, options?: ParseOptions): U {
         for (const parser of this.parsers) {
             try {
                 return parser.parse(value, options) as U // cast to U because we know it will be one of the parsers

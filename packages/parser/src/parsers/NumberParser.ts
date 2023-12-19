@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class NumberParser extends BaseParser<number> {
-    override parseShape(value: unknown, options?: ParseOptions): number {
+    override _parse(value: unknown, options?: ParseOptions): number {
         if (options?.coerce) {
             value = Number(value)
         }

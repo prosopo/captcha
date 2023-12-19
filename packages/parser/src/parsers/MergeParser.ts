@@ -6,7 +6,7 @@ export class MergeParser<T, U> extends BaseParser<T & U> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): T & U {
+    override _parse(value: unknown, options?: ParseOptions): T & U {
         // TODO allow fields from second to exist when parsing first and vice versa
         const first = this.first.parse(value, options)
         const second = this.second.parse(value, options)

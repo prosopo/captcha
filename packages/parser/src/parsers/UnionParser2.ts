@@ -8,7 +8,7 @@ export class UnionParser2<T, U> extends BaseParser<T | U> {
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T | U {
+    _parse(value: unknown, options?: ParseOptions): T | U {
         // one of the parsers should work
         for (const parser of [this.first, this.second]) {
             try {

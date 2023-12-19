@@ -1,7 +1,7 @@
 import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class StringParser extends BaseParser<string> {
-    override parseShape(value: unknown, options?: ParseOptions): string {
+    override _parse(value: unknown, options?: ParseOptions): string {
         if (options?.coerce) {
             value = String(value)
         }

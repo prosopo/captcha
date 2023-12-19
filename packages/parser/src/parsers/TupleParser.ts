@@ -10,7 +10,7 @@ export class TupleParser<const T> extends BaseParser<TupleElement<T>> {
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): TupleElement<T> {
+    override _parse(value: unknown, options?: ParseOptions): TupleElement<T> {
         throw new Error("Method not implemented.")
     }
 }

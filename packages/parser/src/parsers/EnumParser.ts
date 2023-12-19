@@ -14,7 +14,7 @@ export class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> exten
         this.#options = options
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T[number] {
+    _parse(value: unknown, options?: ParseOptions): T[number] {
         // check runtime type
         if (!this.options.includes(value as U)) {
             throw new Error(`Expected enum option to be one of ${this.options.join(', ')} but got ${value}`)

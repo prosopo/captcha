@@ -8,7 +8,7 @@ export class EnumParser2<const U extends string | number | symbol, const T exten
         super()
     }
 
-    parseShape(value: unknown, options?: ParseOptions): T[number] {
+    _parse(value: unknown, options?: ParseOptions): T[number] {
         // check runtime type
         if (!this.values.includes(value as U)) {
             throw new Error(`Expected enum value to be one of ${this.values.join(', ')} but got ${value}`)

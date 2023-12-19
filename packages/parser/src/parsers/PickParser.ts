@@ -6,7 +6,7 @@ export class PickParser<T extends {}, U extends keyof T> extends BaseParser<Pick
         super()
     }
 
-    override parseShape(value: unknown, options?: ParseOptions): Pick<T, U> {
+    override _parse(value: unknown, options?: ParseOptions): Pick<T, U> {
         // TODO allow optional keys to do picked parsing
         throw new Error("Method not implemented.")
     }
