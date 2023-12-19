@@ -1,7 +1,12 @@
 import { CoordEvent, startCollector } from '@prosopo/procaptcha'
-import React, { MutableRefObject, useEffect, useRef, useState } from 'react'
+import { MutableRefObject, useEffect, useRef, useState } from 'react'
 
-const Collector = () => {
+type CollectorProps = {
+    onProcessData: (data: CoordEvent[]) => void
+    showModal: boolean // New prop
+}
+
+const Collector = ({ onProcessData, showModal }: CollectorProps) => {
     const [storedEvents, setStoredEvents] = useState<CoordEvent[]>([])
 
     const ref: MutableRefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
@@ -10,14 +15,10 @@ const Collector = () => {
     useEffect(() => {
         if (ref && ref.current) {
             console.log('ref', ref)
-            startCollector(storedEvents, setStoredEvents, ref.current)
+            startCollector(ref.current, setStoredEvents)
         }
+        console.log('storedEvents', storedEvents)
     }, [])
-
-    // Only render the component once but store the events in state whenever they are detected
-    useEffect(() => {
-        setStoredEvents(storedEvents)
-    }, [storedEvents])
 
     return <div ref={ref}></div>
 }

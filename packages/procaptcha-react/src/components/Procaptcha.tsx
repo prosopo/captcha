@@ -14,6 +14,7 @@
 /** @jsxImportSource @emotion/react */
 import {
     Account,
+    CoordEvent,
     GetCaptchaResponse,
     Manager,
     ProcaptchaCallbacks,
@@ -102,8 +103,6 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
         undefined
     )
-    //const [events, setEvents] = useState<CoordEvent[]>([] as CoordEvent[])
-
     return [
         // the state
         {
@@ -150,6 +149,12 @@ export const Procaptcha = (props: ProcaptchaProps) => {
 
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
+
+    const processCoordData = (data: CoordEvent[]) => {
+        console.log('Processing data:', data)
+        // Additional logic to process data
+    }
+
     const manager = Manager(config, state, updateState, callbacks)
     const configSx = { maxWidth: '400px', minWidth: '200px' }
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
@@ -278,7 +283,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     </Box>
                 </Box>
             </Box>
-            <Collector></Collector>
+            <Collector onProcessData={processCoordData} showModal={state.showModal}></Collector>
         </ThemeProvider>
     )
 }

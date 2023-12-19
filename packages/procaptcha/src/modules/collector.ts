@@ -1,67 +1,44 @@
 export type CoordEvent = [number, number, number]
+type SetCoordEvents = (events: (currentEvents: CoordEvent[]) => CoordEvent[]) => void
 
-const COLLECTOR_LIMIT = 1000
+const COLLECTOR_LIMIT = 10000
 
-export const storeLog = (event: CoordEvent[], events: CoordEvent[], setEvents: (events: CoordEvent[]) => void) => {
-    //store in react state
-    events = events ? events.concat(event) : event
-    if (events.length > COLLECTOR_LIMIT) {
-        events = events.slice(events.length - COLLECTOR_LIMIT)
-    }
-    // store in session storage for debugging only
-    window.sessionStorage.setItem('procaptchaLog', JSON.stringify(events))
-    console.log('Sending events back to React', JSON.stringify(events))
-    setEvents(events)
+export const storeLog = (event: CoordEvent[], setEvents: SetCoordEvents) => {
+    setEvents((currentEvents: CoordEvent[]) => {
+        console.log('currentEvents', currentEvents)
+        const newEvents = currentEvents.length >= COLLECTOR_LIMIT ? currentEvents.slice(1) : currentEvents
+        return [...newEvents, ...event]
+    })
 }
 
-export const logEvent = (
-    event: MouseEvent | TouchEvent,
-    events: CoordEvent[],
-    setEvents: (events: CoordEvent[]) => void
-) => {
-    console.log('Existing events', events)
-    const coords =
-        event instanceof MouseEvent
-            ? [[event.screenX, event.screenY, event.timeStamp] as CoordEvent]
-            : Array.from(event.touches).map((touch): CoordEvent => [touch.screenX, touch.screenY, event.timeStamp])
-    console.log('Logging event', coords)
-    storeLog(coords, events, setEvents)
+const logMouseEvent = (event: MouseEvent, setEvents: SetCoordEvents) => {
+    const coordEvent: CoordEvent = [event.screenX, event.screenY, event.timeStamp]
+    storeLog([coordEvent], setEvents)
 }
 
-export const startCollector = (
-    events: CoordEvent[],
-    setEvents: (events: CoordEvent[]) => void,
-    rootElement: HTMLDivElement
-) => {
-    // root element is HTML element
-    console.log('Starting collector')
-    const form = findContainingForm(rootElement)
-    if (form) {
-        console.log('Found form', form)
-        form.addEventListener('mousemove', (e) => {
-            logEvent(e, events, setEvents)
-        })
-        form.addEventListener('touchstart', (e) => {
-            logEvent(e, events, setEvents)
-        })
-        form.addEventListener('touchend', (e) => {
-            logEvent(e, events, setEvents)
-        })
-        form.addEventListener('touchcancel', (e) => {
-            logEvent(e, events, setEvents)
-        })
-        form.addEventListener('touchmove', (e) => {
-            logEvent(e, events, setEvents)
-        })
-    }
+const logTouchEvent = (event: TouchEvent, setEvents: SetCoordEvents) => {
+    const coords: CoordEvent[] = Array.from(event.touches).map(
+        (touch): CoordEvent => [touch.screenX, touch.screenY, event.timeStamp]
+    )
+    storeLog(coords, setEvents)
 }
 
-const findContainingForm = (element: Element): HTMLFormElement | null => {
-    if (element.tagName === 'FORM') {
-        return element as HTMLFormElement
+export const startCollector = (formElement: HTMLDivElement, setEvents: SetCoordEvents) => {
+    const mouseMoveHandler = (e: MouseEvent) => logMouseEvent(e, setEvents)
+    const touchHandler = (e: TouchEvent) => logTouchEvent(e, setEvents)
+
+    formElement.addEventListener('mousemove', mouseMoveHandler)
+    formElement.addEventListener('touchstart', touchHandler)
+    formElement.addEventListener('touchend', touchHandler)
+    formElement.addEventListener('touchcancel', touchHandler)
+    formElement.addEventListener('touchmove', touchHandler)
+
+    // Cleanup
+    return () => {
+        formElement.removeEventListener('mousemove', mouseMoveHandler)
+        formElement.removeEventListener('touchstart', touchHandler)
+        formElement.removeEventListener('touchend', touchHandler)
+        formElement.removeEventListener('touchcancel', touchHandler)
+        formElement.removeEventListener('touchmove', touchHandler)
     }
-    if (element.parentElement) {
-        return findContainingForm(element.parentElement)
-    }
-    return null
 }
