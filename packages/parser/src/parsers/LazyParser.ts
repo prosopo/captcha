@@ -14,3 +14,5 @@ export class LazyParser<T> extends BaseParser<T> {
         this.parser().validate(value)
     }
 }
+
+export const pLazy = <T>(parser: () => Parser<T>): Parser<T> => new LazyParser(parser)

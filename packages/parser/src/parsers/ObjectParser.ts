@@ -61,3 +61,5 @@ export class ObjectParser<T extends {}> extends BaseParser<T> {
         return this.merge(new ObjectParser(schema))
     }
 }
+
+export const pObject = <T extends {}>(schema: Parseable<T>): Parser<T> => new ObjectParser(schema)

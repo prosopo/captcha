@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class NumberParser extends BaseParser<number> {
     override parseShape(value: unknown, options?: ParseOptions): number {
@@ -11,3 +11,5 @@ export class NumberParser extends BaseParser<number> {
         return value
     }
 }
+
+export const pNumber = (): Parser<number> => new NumberParser()

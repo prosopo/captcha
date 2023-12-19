@@ -23,3 +23,5 @@ export class OptionalParser<T> extends BaseParser<T | undefined> {
         this.parser.validate(value)
     }
 }
+
+export const pOptional = <T>(parser: Parser<T>): Parser<T | undefined> => new OptionalParser(parser)

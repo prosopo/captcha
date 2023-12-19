@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export type EnumVariant = string | number
 
@@ -36,3 +36,5 @@ export class EnumParser<U extends EnumVariant, T extends ReadonlyArray<U>> exten
         return result
     }
 }
+
+export const pEnum = <U extends EnumVariant, T extends ReadonlyArray<U>>(options: T): Parser<U> => new EnumParser(options)

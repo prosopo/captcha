@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class StringParser extends BaseParser<string> {
     override parseShape(value: unknown, options?: ParseOptions): string {
@@ -11,3 +11,5 @@ export class StringParser extends BaseParser<string> {
         return value
     }
 }
+
+export const pString = (): Parser<string> => new StringParser()

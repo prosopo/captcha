@@ -17,3 +17,5 @@ export class RequiredParser<T> extends BaseParser<Required<T>> {
         this.parser.validate(value)
     }
 }
+
+export const pRequired = <T>(parser: Parser<T>): Parser<Required<T>> => new RequiredParser(parser)

@@ -18,3 +18,5 @@ export class TupleParser<const T> extends BaseParser<TupleElement<T>> {
 // TODO finish this
 const t = new TupleParser([new StringParser(), new NumberParser(), new BooleanParser()])
 const t2 = t.parse(['hello', 1, true])
+
+export const pTuple = <const T, U extends T[]>(...parsers: U): Parser<TupleElement<U>> => new TupleParser(parsers) // TODO check generics work here
