@@ -19,3 +19,5 @@ export class PromiseParser<T> extends BaseParser<Promise<T>> {
         value.then((v) => this.parser.validate(v))
     }
 }
+
+export const pPromise = <T>(parser: Parser<T>): Parser<Promise<T>> => new PromiseParser(parser)

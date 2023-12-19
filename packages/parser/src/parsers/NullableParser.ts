@@ -24,3 +24,5 @@ export class NullableParser<T> extends BaseParser<T | null> {
         this.parser.validate(value)
     }
 }
+
+export const pNullable = <T>(parser: Parser<T>): Parser<T | null> => new NullableParser(parser)

@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 // TODO does the ctor type work here? test it out
 export class InstanceParser<T> extends BaseParser<T> {
@@ -20,3 +20,5 @@ export class InstanceParser<T> extends BaseParser<T> {
         }
     }
 }
+
+export const pInstance = <T>(type: new (...args: any[]) => T): Parser<T> => new InstanceParser(type)

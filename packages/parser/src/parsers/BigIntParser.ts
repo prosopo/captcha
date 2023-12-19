@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class BigIntParser extends BaseParser<bigint> {
     override parseShape(value: unknown, options?: ParseOptions): bigint {
@@ -13,3 +13,5 @@ export class BigIntParser extends BaseParser<bigint> {
         return value
     }
 }
+
+export const pBigInt = (): Parser<bigint> => new BigIntParser()

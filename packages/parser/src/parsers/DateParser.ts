@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class DateParser extends BaseParser<Date> {
     override parseShape(value: unknown, options?: ParseOptions): Date {
@@ -11,3 +11,5 @@ export class DateParser extends BaseParser<Date> {
         return value
     }
 }
+
+export const pDate = (): Parser<Date> => new DateParser()

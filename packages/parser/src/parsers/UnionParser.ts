@@ -33,3 +33,7 @@ export class UnionParser<T extends ReadonlyArray<Parser<unknown>>, U extends Par
         }
     }
 }
+
+export const pUnion = <T extends ReadonlyArray<Parser<unknown>>>(...parsers: T): Parser<ParserArrayToShape<T>> => new UnionParser(parsers) as Parser<ParserArrayToShape<T>>
+
+// TODO fix generics

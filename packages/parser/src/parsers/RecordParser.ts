@@ -23,3 +23,5 @@ export class RecordParser<T extends string | number | symbol, U> extends BasePar
         }
     }
 }
+
+export const pRecord = <T extends string | number | symbol, U>(parser: Parser<U>): Parser<{ [key in T]: U }> => new RecordParser(parser)

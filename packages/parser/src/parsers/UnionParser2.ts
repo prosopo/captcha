@@ -30,3 +30,5 @@ export class UnionParser2<T, U> extends BaseParser<T | U> {
         throw new Error(`Expected value to match one of the union parsers but none matched`)
     }
 }
+
+export const pUnion2 = <T, U>(first: Parser<T>, second: Parser<U>): Parser<T | U> => new UnionParser2(first, second)

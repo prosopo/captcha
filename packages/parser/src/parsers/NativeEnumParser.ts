@@ -49,3 +49,5 @@ export class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
         return result
     }
 }
+
+export const pNativeEnum = <T extends NativeEnum>(nativeEnum: T): NativeEnumParser<T> => new NativeEnumParser(nativeEnum)

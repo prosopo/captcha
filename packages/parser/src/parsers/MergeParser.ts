@@ -22,3 +22,5 @@ export class MergeParser<T, U> extends BaseParser<T & U> {
 
 // TODO fix this, doesn't work properly!
 // should this be called intersection??
+
+export const pMerge = <T, U>(first: Parser<T>, second: Parser<U>): Parser<T & U> => new MergeParser(first, second)

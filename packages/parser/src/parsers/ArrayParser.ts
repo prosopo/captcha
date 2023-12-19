@@ -18,3 +18,5 @@ export class ArrayParser<T> extends BaseParser<T[]> {
         return value as T[]
     }
 }
+
+export const pArray = <T>(schema: Parser<T>): Parser<T[]> => new ArrayParser(schema)

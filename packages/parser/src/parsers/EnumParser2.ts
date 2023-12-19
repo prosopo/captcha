@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 
 export class EnumParser2<const U extends string | number | symbol, const T extends readonly U[]> extends BaseParser<
@@ -30,3 +30,5 @@ export class EnumParser2<const U extends string | number | symbol, const T exten
         return result
     }
 }
+
+export const pEnum2 = <const U extends string | number | symbol, const T extends readonly U[]>(values: T): Parser<U> => new EnumParser2(values)

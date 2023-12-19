@@ -1,5 +1,5 @@
 import { Parseable } from "./Parseable.js"
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class OmitParser<T extends {}, U extends keyof T> extends BaseParser<Omit<T, U>> {
     constructor(private schema: Parseable<T>) {
@@ -17,3 +17,5 @@ export class OmitParser<T extends {}, U extends keyof T> extends BaseParser<Omit
         throw new Error("Method not implemented.")
     }
 }
+
+export const pOmit = <T extends {}, U extends keyof T>(schema: Parseable<T>): Parser<Omit<T, U>> => new OmitParser(schema)

@@ -1,4 +1,4 @@
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class BooleanParser extends BaseParser<boolean> {
     override parseShape(value: unknown, options?: ParseOptions): boolean {
@@ -11,3 +11,5 @@ export class BooleanParser extends BaseParser<boolean> {
         return value
     }
 }
+
+export const pBoolean = (): Parser<boolean> => new BooleanParser()

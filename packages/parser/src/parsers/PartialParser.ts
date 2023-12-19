@@ -1,5 +1,5 @@
 import { Parseable } from "./Parseable.js"
-import { BaseParser, ParseOptions } from "./Parser.js"
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
 export class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
     constructor(private schema: Parseable<T>) {
@@ -17,3 +17,5 @@ export class PartialParser<T extends {}> extends BaseParser<Partial<T>> {
         throw new Error("Method not implemented.")
     }
 }
+
+export const pPartial = <T extends {}>(schema: Parseable<T>): Parser<Partial<T>> => new PartialParser(schema)
