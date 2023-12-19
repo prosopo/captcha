@@ -10,6 +10,49 @@ import { Parser } from "./parsers/Parser.js"
 import { StringParser } from "./parsers/StringParser.js"
 import { ParserArrayToShape, UnionParser } from "./parsers/UnionParser.js"
 
+import { describe, expect, test, it } from 'vitest'
+import { pString } from './parsers/StringParser.js';
+
+
+describe("parsing", () => {
+    it("should parse a string", () => {
+        expect(pString().parse("hello")).toEqual("hello");
+    });
+
+    // it("should not parse number as string", () => {
+    //     expect(() => pString().parse(123)).toThrow();
+    // });
+
+    // it("should coerce number to string", () => {
+    //     expect(pString().parse(123, {
+    //         coerce: true
+    //     })).toEqual("123");
+    // });
+
+    // it("should coerce boolean to string", () => {
+    //     expect(pString().parse(true, {
+    //         coerce: true
+    //     })).toEqual("true");
+    // });
+
+    // it("should coerce bigint to string", () => {
+    //     expect(pString().parse(BigInt(123), {
+    //         coerce: true
+    //     })).toEqual("123");
+    // });
+
+    // it("should coerce null to string", () => {
+    //     expect(pString().parse(null, {
+    //         coerce: true
+    //     })).toEqual("null");
+    // });
+
+    // it("should coerce undefined to string", () => {
+    //     expect(pString().parse(undefined, {
+    //         coerce: true
+    //     })).toEqual("undefined");
+    // });
+});
 
 const p = {
     string() {
