@@ -1,0 +1,19 @@
+import { BaseParser, ParseOptions, Parser } from "./Parser.js"
+
+export class RequiredParser<T> extends BaseParser<Required<T>> {
+    constructor(private parser: Parser<T>) {
+        super()
+    }
+
+    override parseShape(value: unknown, options?: ParseOptions): Required<T> {
+        // TODO enforce fields being present, i.e. opposite of extra keys
+        const parsed = this.parser.parse(value, options) as Required<T>
+        this.validate(parsed)
+        return parsed
+    }
+
+    override validate(value: Required<T>): void {
+        super.validate(value)
+        this.parser.validate(value)
+    }
+}
