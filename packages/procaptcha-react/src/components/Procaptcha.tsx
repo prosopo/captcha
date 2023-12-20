@@ -29,6 +29,7 @@ import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
 import Checkbox from './Checkbox.js'
+import Collector from './collector.js'
 import Modal from './Modal.js'
 
 const logoStyle = css`
@@ -103,7 +104,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
         undefined
     )
-
+    const [sendData, setSendData] = useState(false)
     return [
         // the state
         {
@@ -120,6 +121,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             timeout,
             blockNumber,
             successfullChallengeTimeout,
+            sendData,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
@@ -139,6 +141,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
             if (nextState.successfullChallengeTimeout !== undefined) setSuccessfullChallengeTimeout(nextState.timeout)
             if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
+            if (nextState.sendData !== undefined) setSendData(nextState.sendData)
         },
     ]
 }
@@ -150,6 +153,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
 
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
+
     const manager = Manager(config, state, updateState, callbacks)
     const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
@@ -271,6 +275,9 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     </div>
                 </div>
             </div>
+            {config.devOnlyWatchEvents && (
+                <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
+            )}
         </div>
     )
 }

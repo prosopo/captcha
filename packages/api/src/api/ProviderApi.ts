@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId } from '@prosopo/types'
+import { AccountId, StoredEvents } from '@prosopo/types'
 import {
     ApiPaths,
     CaptchaSolution,
@@ -89,6 +89,10 @@ export default class ProviderApi extends HttpClientBase {
             payload['maxVerifiedTime'] = maxVerifiedTime
         }
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+    }
+
+    public submitUserEvents(events: StoredEvents, accountId: string) {
+        return this.post(ApiPaths.SubmitUserEvents, { events, accountId })
     }
 
     public getProviderStatus(): Promise<ProviderRegistered> {
