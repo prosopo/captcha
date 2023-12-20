@@ -27,6 +27,7 @@ import {
     ProsopoConfigOutput,
     ProviderDetails,
     ProviderRegistered,
+    StoredEvents,
 } from '@prosopo/types'
 import {
     CaptchaMerkleTree,
@@ -47,6 +48,7 @@ import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { saveCaptchaEvent } from '../eventsDatabase/eventsDatabase.js'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
@@ -549,5 +551,12 @@ export class Tasks {
     /** Get the dataset from the databse */
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
+    }
+
+    async saveCaptchaEvent(events: StoredEvents, accountId: string) {
+        if (!this.config.mongoAtlasUri) {
+            return
+        }
+        await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
     }
 }

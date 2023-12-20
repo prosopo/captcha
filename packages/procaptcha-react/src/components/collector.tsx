@@ -1,12 +1,6 @@
 import { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
+import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
 import { startCollector } from '@prosopo/procaptcha'
-
-export type StoredEvents = {
-    mouseEvents?: ProsopoMouseEvent[]
-    touchEvents?: ProsopoTouchEvent[]
-    keyboardEvents?: ProsopoKeyboardEvent[]
-}
 
 type CollectorProps = {
     onProcessData: (data: StoredEvents) => void
