@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-// import { pString } from '../parsers/StringParser.js';
+import { pString } from '../parsers/StringParser.js';
 import { pNumber } from '../parsers/NumberParser.js';
 // import { pBigInt } from '../parsers/BigIntParser.js';
 import { pBoolean } from '../parsers/BooleanParser.js';
@@ -57,32 +57,32 @@ describe("boolean", () => {
     })
 })
 
-// describe("string", () => {
-//     test("parses", () => {
-//         expect(() => pString().parse(undefined)).to.throw();
-//         expect(() => pString().parse(null)).to.throw();
-//         expect(pString().parse("")).to.equal("");
-//         expect(() => pString().parse(true)).to.throw();
-//         expect(() => pString().parse(123)).to.throw();
-//         expect(() => pString().parse(BigInt(456))).to.throw();
-//         expect(pString().parse("hello")).to.equal("hello");
-//         expect(pString().parse("789")).to.equal("789");
-//         expect(pString().parse("hello123")).to.equal("hello123");
-//     });
+describe("string", () => {
+    test("parses", () => {
+        expect(() => pString().parse(undefined)).to.throw();
+        expect(() => pString().parse(null)).to.throw();
+        expect(pString().parse("")).to.equal("");
+        expect(() => pString().parse(true)).to.throw();
+        expect(() => pString().parse(123)).to.throw();
+        expect(() => pString().parse(BigInt(456))).to.throw();
+        expect(pString().parse("hello")).to.equal("hello");
+        expect(pString().parse("789")).to.equal("789");
+        expect(pString().parse("hello123")).to.equal("hello123");
+    });
 
-//     test("coerces", () => {
-//         expect(pString().parse(undefined, { coerce: true })).to.equal("undefined");
-//         expect(pString().parse(null, { coerce: true })).to.equal("null");
-//         expect(pString().parse("", { coerce: true })).to.equal("");
-//         expect(pString().parse(true, { coerce: true })).to.equal("true");
-//         expect(pString().parse(false, { coerce: true })).to.equal("false");
-//         expect(pString().parse(BigInt(456), { coerce: true })).to.equal("456");
-//         expect(pString().parse(BigInt("1234567890123456789012345678901234567890"), { coerce: true })).to.equal("1234567890123456789012345678901234567890"); // too big
-//         expect(pString().parse("hello", { coerce: true })).to.equal("hello");
-//         expect(pString().parse("789", { coerce: true })).to.equal("789");
-//         expect(pString().parse("hello123", { coerce: true })).to.equal("hello123");
-//     })
-// })
+    test("coerces", () => {
+        expect(pString().parse(undefined, { coerce: true })).to.equal("undefined");
+        expect(pString().parse(null, { coerce: true })).to.equal("null");
+        expect(pString().parse("", { coerce: true })).to.equal("");
+        expect(pString().parse(true, { coerce: true })).to.equal("true");
+        expect(pString().parse(false, { coerce: true })).to.equal("false");
+        expect(pString().parse(BigInt(456), { coerce: true })).to.equal("456");
+        expect(pString().parse(BigInt("1234567890123456789012345678901234567890"), { coerce: true })).to.equal("1234567890123456789012345678901234567890"); // too big
+        expect(pString().parse("hello", { coerce: true })).to.equal("hello");
+        expect(pString().parse("789", { coerce: true })).to.equal("789");
+        expect(pString().parse("hello123", { coerce: true })).to.equal("hello123");
+    })
+})
 
 describe("number", () => {
     test("parses", () => {
