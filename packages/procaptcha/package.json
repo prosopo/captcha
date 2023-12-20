@@ -13,7 +13,7 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "prebuild": "node prebuild-write-version.js",
-        "build": "npm run prebuild && tsc --build --verbose tsconfig.json",
+        "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",

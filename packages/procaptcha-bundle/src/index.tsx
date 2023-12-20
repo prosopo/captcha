@@ -82,7 +82,7 @@ const getParentForm = (element: Element): HTMLFormElement | null => element.clos
 const getWindowCallback = (callbackName: string) => {
     const fn = (window as any)[callbackName.replace('window.', '')]
     if (typeof fn !== 'function') {
-        throw new Error(`Callback ${callbackName} is not defined on the window object`)
+        throw new Error(`Callback ${callbackName} is not defined`)
     }
     return fn
 }
