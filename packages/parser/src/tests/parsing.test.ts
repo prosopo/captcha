@@ -1,34 +1,34 @@
 import { describe, expect, test } from 'vitest'
 import { pString } from '../parsers/StringParser.js';
 import { pNumber } from '../parsers/NumberParser.js';
-// import { pBigInt } from '../parsers/BigIntParser.js';
+import { pBigInt } from '../parsers/BigIntParser.js';
 import { pBoolean } from '../parsers/BooleanParser.js';
 
-// describe("bigint", () => {
-//     test("parses", () => {
-//         expect(() => pBigInt().parse(undefined)).to.throw();
-//         expect(() => pBigInt().parse(null)).to.throw();
-//         expect(() => pBigInt().parse("")).to.throw();
-//         expect(() => pBigInt().parse(true)).to.throw();
-//         expect(() => pBigInt().parse(123)).to.throw();
-//         expect(pBigInt().parse(BigInt(456))).to.equal(BigInt(456));
-//         expect(() => pBigInt().parse("hello")).to.throw();
-//         expect(() => pBigInt().parse("789")).to.throw();
-//         expect(() => pBigInt().parse("hello123")).to.throw();
-//     });
+describe("bigint", () => {
+    test("parses", () => {
+        expect(() => pBigInt().parse(undefined)).to.throw();
+        expect(() => pBigInt().parse(null)).to.throw();
+        expect(() => pBigInt().parse("")).to.throw();
+        expect(() => pBigInt().parse(true)).to.throw();
+        expect(() => pBigInt().parse(123)).to.throw();
+        expect(pBigInt().parse(BigInt(456))).to.equal(BigInt(456));
+        expect(() => pBigInt().parse("hello")).to.throw();
+        expect(() => pBigInt().parse("789")).to.throw();
+        expect(() => pBigInt().parse("hello123")).to.throw();
+    });
 
-//     test("coerces", () => {
-//         expect(() => pBigInt().parse(undefined, { coerce: true })).to.throw();
-//         expect(() => pBigInt().parse(null, { coerce: true })).to.throw();
-//         expect(pBigInt().parse("", { coerce: true })).to.equal(0n);
-//         expect(pBigInt().parse(true, { coerce: true })).to.equal(0n);
-//         expect(pBigInt().parse(false, { coerce: true })).to.equal(0n);
-//         expect(pBigInt().parse(BigInt(456), { coerce: true })).to.equal(BigInt(456));
-//         expect(() => pBigInt().parse("hello", { coerce: true })).to.throw(); // not numeric
-//         expect(pBigInt().parse("789", { coerce: true })).to.equal(BigInt(789));
-//         expect(() => pBigInt().parse("hello123", { coerce: true })).to.throw(); // not numeric
-//     })
-// })
+    test("coerces", () => {
+        expect(() => pBigInt().parse(undefined, { coerce: true })).to.throw();
+        expect(() => pBigInt().parse(null, { coerce: true })).to.throw();
+        expect(pBigInt().parse("", { coerce: true })).to.equal(0n);
+        expect(pBigInt().parse(true, { coerce: true })).to.equal(1n);
+        expect(pBigInt().parse(false, { coerce: true })).to.equal(0n);
+        expect(pBigInt().parse(BigInt(456), { coerce: true })).to.equal(BigInt(456));
+        expect(() => pBigInt().parse("hello", { coerce: true })).to.throw(); // not numeric
+        expect(pBigInt().parse("789", { coerce: true })).to.equal(BigInt(789));
+        expect(() => pBigInt().parse("hello123", { coerce: true })).to.throw(); // not numeric
+    })
+})
 
 describe("boolean", () => {
     test("parses", () => {
