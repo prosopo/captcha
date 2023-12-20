@@ -23,11 +23,13 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { Alert, Backdrop, Box, Checkbox, CircularProgress, Link, ThemeProvider, Typography } from '@mui/material'
+import { LoadingSpinner } from './LoadingSpinner.js'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
+import Checkbox from './Checkbox.js'
+import Modal from './Modal.js'
 
 const logoStyle = css`
     align-items: center;
@@ -149,13 +151,15 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
-    const configSx = { maxWidth: '400px', minWidth: '200px' }
+    const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
+    const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
-
+    console.log('theme', theme)
+    console.log('showModal', state.showModal)
     return (
-        <ThemeProvider theme={theme}>
-            <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-                <Backdrop open={state.showModal} sx={{ zIndex: 2147483647 }}>
+        <div>
+            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+                <Modal show={state.showModal}>
                     {state.challenge ? (
                         <CaptchaComponent
                             challenge={state.challenge}
@@ -168,89 +172,79 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                             themeColor={config.theme ?? 'light'}
                         />
                     ) : (
-                        <Alert>No challenge set.</Alert>
+                        <div>No challenge set.</div>
                     )}
-                </Backdrop>
-                <Box p={0} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
+                </Modal>
+                <div style={styleWidth} data-cy={'button-human'}>
                     {' '}
-                    <Box
-                        p={1}
-                        border={1}
-                        bgcolor={theme.palette.background.default}
-                        borderColor={theme.palette.grey[300]}
-                        borderRadius={2}
-                        sx={{
+                    <div
+                        style={{
+                            padding: '8px',
+                            border: '1px solid',
+                            backgroundColor: theme.palette.background.default,
+                            borderColor: theme.palette.grey[300],
+                            borderRadius: '8px',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             flexWrap: 'wrap',
                         }}
                     >
-                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                            <Box
-                                sx={{
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div
+                                style={{
                                     display: 'flex',
                                     justifyContent: 'flex-start',
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                 }}
                             >
-                                <Box
-                                    sx={{
+                                <div
+                                    style={{
                                         height: '50px',
                                         width: '50px',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         flexDirection: 'column',
+                                        verticalAlign: 'middle',
                                     }}
                                 >
-                                    <Box
-                                        sx={{
-                                            display: !state.loading ? 'block' : 'none',
+                                    <div
+                                        style={{
+                                            display: !state.loading ? 'flex' : 'none',
                                         }}
                                     >
                                         <Checkbox
+                                            themeColor={themeColor}
                                             onChange={manager.start}
                                             checked={state.isHuman}
-                                            inputProps={{ 'aria-label': 'controlled' }}
-                                            sx={{
-                                                '& .MuiSvgIcon-root': { fontSize: 32, position: 'relative' },
-                                                '& .PrivateSwitchBase-input': {
-                                                    width: '1.4em',
-                                                    height: '1.4em',
-                                                    top: 'auto',
-                                                    left: 'auto',
-                                                    opacity: '1',
-
-                                                    '&::before': {
-                                                        content: '""',
-                                                        position: 'absolute',
-                                                        height: '100%',
-                                                        width: '100%',
-                                                    },
-                                                },
-                                            }}
                                         />
-                                    </Box>
-                                    <Box
-                                        sx={{
-                                            display: state.loading ? 'block' : 'none',
+                                    </div>
+                                    <div
+                                        style={{
+                                            display: state.loading ? 'flex' : 'none',
                                         }}
                                     >
-                                        <Box pt={'5px'}>
-                                            <CircularProgress size={'24px'} disableShrink />
-                                        </Box>
-                                    </Box>
-                                </Box>
-                                <Box p={1}>
-                                    <Typography color={theme.palette.primary.contrastText}>I am a human</Typography>
-                                </Box>
-                            </Box>
-                        </Box>
-                        <Box>
-                            <Link href="https://prosopo.io" target="_blank">
-                                <Box>
+                                        <div style={{ flex: 1 }}>
+                                            <LoadingSpinner themeColor={themeColor} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ padding: 1 }}>
+                                    <span style={{ color: theme.palette.primary.contrastText, paddingLeft: '4px' }}>
+                                        I am a human
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <a
+                                href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"
+                                target="_blank"
+                                aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
+                            >
+                                <div>
                                     <div>
                                         <div
                                             css={logoStyle}
@@ -271,13 +265,13 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                             }}
                                         />
                                     </div>
-                                </Box>
-                            </Link>
-                        </Box>
-                    </Box>
-                </Box>
-            </Box>
-        </ThemeProvider>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     )
 }
 
