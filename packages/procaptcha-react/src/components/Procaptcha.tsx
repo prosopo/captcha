@@ -29,7 +29,7 @@ import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
 import Checkbox from './Checkbox.js'
-import Collector, { StoredEvents } from './collector.js'
+import Collector from './collector.js'
 import Modal from './Modal.js'
 
 const logoStyle = css`
@@ -154,10 +154,6 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
 
-    const processCoordData = (data: StoredEvents) => {
-        console.log('Processing data:', data)
-    }
-
     const manager = Manager(config, state, updateState, callbacks)
     const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
@@ -279,7 +275,9 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     </div>
                 </div>
             </div>
-            <Collector onProcessData={processCoordData} sendData={state.showModal}></Collector>
+            {config.mongoAtlasUri && (
+                <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
+            )}
         </div>
     )
 }

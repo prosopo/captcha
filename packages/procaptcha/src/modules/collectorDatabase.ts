@@ -1,3 +1,4 @@
+import { StoredEvents } from '@prosopo/types'
 import mongoose from 'mongoose'
 
 const captchaEventSchema = new mongoose.Schema({
@@ -23,21 +24,38 @@ const captchaEventSchema = new mongoose.Schema({
             isCtrlKey: Boolean,
         },
     ],
-    captchaId: String,
+    accountId: String,
 })
-
-interface DBConfig {
-    uri: string
-    dbName: string
-}
 
 const CaptchaEvent = mongoose.model('CaptchaEvent', captchaEventSchema)
 
-const connectToDatabase = ({ uri, dbName }: DBConfig) => {
-    mongoose
-        .connect(uri)
-        .then(() => console.log('Connected to MongoDB'))
-        .catch((err) => console.error('Error connecting to MongoDB:', err))
+const addCaptchaEventRecord = async (record: {
+    touchEvents?: { x: number; y: number; timestamp: number }[]
+    mouseEvents?: { x: number; y: number; timestamp: number }[]
+    keyboardEvents?: { key: string; timestamp: number; isShiftKey?: boolean; isCtrlKey?: boolean }[]
+    accountId: string
+}): Promise<void> => {
+    try {
+        const newRecord = new CaptchaEvent(record)
+        await newRecord.save()
+        console.log('Record added successfully')
+    } catch (error) {
+        console.error('Error adding record to the database:', error)
+    }
 }
 
-module.exports = { CaptchaEvent, connectToDatabase }
+export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, atlasUri: string) => {
+    await mongoose
+        .connect(atlasUri)
+        .then(() => console.log('Connected to MongoDB Atlas'))
+        .catch((err) => console.error('Error connecting to MongoDB:', err))
+
+    const captchaEventData = {
+        ...events,
+        accountId,
+    }
+
+    addCaptchaEventRecord(captchaEventData)
+        .then(() => console.log('Captcha event data saved'))
+        .catch((error) => console.error('Error saving captcha event data:', error))
+}

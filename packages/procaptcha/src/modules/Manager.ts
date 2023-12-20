@@ -26,6 +26,7 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
+    StoredEvents,
 } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
@@ -38,6 +39,7 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { saveCaptchaEvent } from './collectorDatabase.js'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util/string'
 import ExtensionWeb2 from '../api/ExtensionWeb2.js'
@@ -571,11 +573,24 @@ export function Manager(
         )
     }
 
+    const exportData = (events: StoredEvents) => {
+        const accountId = state.account?.account.address
+        const atlasUri = configOptional.mongoAtlasUri
+
+        if (!accountId || !atlasUri) {
+            return
+        }
+
+        saveCaptchaEvent(events, accountId, atlasUri)
+        console.log('saved events to database', events)
+    }
+
     return {
         start,
         cancel,
         submit,
         select,
         nextRound,
+        exportData,
     }
 }

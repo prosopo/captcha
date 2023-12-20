@@ -50,6 +50,7 @@ function App() {
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        atlasUri: process.env._DEV_ONLY_ATLAS_URI || '',
     })
 
     const label = isLogin ? 'Login' : 'Sign up'

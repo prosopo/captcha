@@ -1,27 +1,15 @@
-export type ProsopoMouseEvent = {
-    x: number
-    y: number
-    timestamp: number
-}
-
-export type ProsopoTouchEvent = {
-    x: number | undefined
-    y: number | undefined
-    timestamp: number
-}
-
-export type ProsopoKeyboardEvent = {
-    key: string
-    timestamp: number
-    isShiftKey: boolean
-    isCtrlKey: boolean
-}
+import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
 
 const COLLECTOR_LIMIT = 1000
 
-const storeLog = <T>(event: T, setEvents: React.Dispatch<React.SetStateAction<T[]>>) => {
+type SetStateAction<T> = T | ((prevState: T) => T)
+type SetStateEvent<T> = (setValueFunc: SetStateAction<T[]>) => void
+type SetMouseEvent = (setValueFunc: SetStateAction<ProsopoMouseEvent[]>) => void
+type SetKeyboardEvent = (setValueFunc: SetStateAction<ProsopoKeyboardEvent[]>) => void
+type SetTouchEvent = (setValueFunc: SetStateAction<ProsopoTouchEvent[]>) => void
+
+const storeLog = <T>(event: T, setEvents: SetStateEvent<T>) => {
     setEvents((currentEvents) => {
-        console.log(currentEvents, 'currentEvents\n\n\\n_______________________\n\n')
         let newEvents = [...currentEvents, event]
         if (newEvents.length > COLLECTOR_LIMIT) {
             newEvents = newEvents.slice(1)
@@ -30,10 +18,7 @@ const storeLog = <T>(event: T, setEvents: React.Dispatch<React.SetStateAction<T[
     })
 }
 
-const logMouseEvent = (
-    event: globalThis.MouseEvent,
-    setMouseEvent: React.Dispatch<React.SetStateAction<ProsopoMouseEvent[]>>
-) => {
+const logMouseEvent = (event: globalThis.MouseEvent, setMouseEvent: SetMouseEvent) => {
     const storedEvent: ProsopoMouseEvent = {
         x: event.x,
         y: event.y,
@@ -42,10 +27,7 @@ const logMouseEvent = (
     storeLog(storedEvent, setMouseEvent)
 }
 
-const logKeyboardEvent = (
-    event: globalThis.KeyboardEvent,
-    setKeyboardEvent: React.Dispatch<React.SetStateAction<ProsopoKeyboardEvent[]>>
-) => {
+const logKeyboardEvent = (event: globalThis.KeyboardEvent, setKeyboardEvent: SetKeyboardEvent) => {
     const storedEvent: ProsopoKeyboardEvent = {
         key: event.key,
         timestamp: event.timeStamp,
@@ -55,30 +37,33 @@ const logKeyboardEvent = (
     storeLog(storedEvent, setKeyboardEvent)
 }
 
-const logTouchEvent = (
-    event: globalThis.TouchEvent,
-    setTouchEvent: React.Dispatch<React.SetStateAction<ProsopoTouchEvent[]>>
-) => {
+const logTouchEvent = (event: globalThis.TouchEvent, setTouchEvent: SetTouchEvent) => {
     // Iterate over the TouchList (map doesn't work on TouchList)
     for (let i = 0; i < event.touches.length; i++) {
         const touch = event.touches[i]
-        storeLog({ x: touch?.clientX, y: touch?.clientY, timestamp: event.timeStamp }, setTouchEvent)
+        if (!touch) {
+            continue
+        }
+        storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent)
     }
 }
 
 export const startCollector = (
-    setStoredMouseEvents: React.Dispatch<React.SetStateAction<ProsopoMouseEvent[]>>,
-    setStoredTouchEvents: React.Dispatch<React.SetStateAction<ProsopoTouchEvent[]>>,
-    setStoredKeyboardEvents: React.Dispatch<React.SetStateAction<ProsopoKeyboardEvent[]>>,
+    setStoredMouseEvents: SetMouseEvent,
+    setStoredTouchEvents: SetTouchEvent,
+    setStoredKeyboardEvents: SetKeyboardEvent,
     rootElement: HTMLDivElement
 ) => {
     const form = findContainingForm(rootElement)
     if (form) {
+        // Add listeners to mouse
         form.addEventListener('mousemove', (e) => logMouseEvent(e, setStoredMouseEvents))
 
+        // Add listeners to keyboard
         form.addEventListener('keydown', (e) => logKeyboardEvent(e, setStoredKeyboardEvents))
         form.addEventListener('keyup', (e) => logKeyboardEvent(e, setStoredKeyboardEvents))
 
+        // Add listeners to touch
         form.addEventListener('touchstart', (e) => logTouchEvent(e, setStoredTouchEvents))
         form.addEventListener('touchend', (e) => logTouchEvent(e, setStoredTouchEvents))
         form.addEventListener('touchcancel', (e) => logTouchEvent(e, setStoredTouchEvents))
