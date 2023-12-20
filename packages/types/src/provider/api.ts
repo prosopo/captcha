@@ -31,6 +31,7 @@ export enum ApiParams {
     requestHash = 'requestHash',
     captchas = 'captchas',
     commitmentId = 'commitmentId',
+    proof = 'proof',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
@@ -55,6 +56,11 @@ export const CaptchaRequestBody = object({
 })
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>
+
+export type CaptchaResponseBody = {
+    [ApiParams.captchas]: CaptchaWithProof[]
+    [ApiParams.requestHash]: string
+}
 
 export const CaptchaSolutionBody = object({
     [ApiParams.user]: string(),
@@ -85,4 +91,9 @@ export interface PendingCaptchaRequest {
 
 export interface ProviderRegistered {
     status: 'Registered' | 'Unregistered'
+}
+
+export interface ProviderDetails {
+    provider: Provider
+    dbConnectionOk: boolean
 }

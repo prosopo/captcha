@@ -1,7 +1,6 @@
-/* eslint-disable @next/next/no-async-client-component */
 'use client'
 
-import { Box } from '@mui/material'
+import { Box, Button, TextField } from '@mui/material'
 import { ContractOverview } from '@/types/ContractOverview'
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
 import { at, get } from '@prosopo/util'
@@ -14,7 +13,6 @@ const calculateFlex = (length: number) => {
         return 1
     }
     const flex = 1 / (12 / length) + 10 / Math.log(length + 1)
-    console.log('flex', flex)
     return flex
 }
 
@@ -35,8 +33,29 @@ const ContractOverview = () => {
 
         fetchData()
     }, [currentAccount, network])
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const data = new FormData(event.currentTarget)
+
+        contractOverview(network, currentAccount, data.get('contractAddress') as string)
+            .then((data) => {
+                setContractsData(data)
+            })
+            .catch((error) => {
+                console.error('An error occurred while fetching contract overview data', error)
+            })
+    }
     return (
         <Box>
+            <h1>Add contract</h1>
+            <form onSubmit={handleSubmit}>
+                <TextField name="contractAddress" label="New Contract Address" variant="outlined" />
+                <Button type="submit" variant="contained">
+                    Add Contract
+                </Button>
+            </form>
+            <hr />
             <h1>Contract Details</h1>
             {contractsData.map((contract, contractIndex) => {
                 const rows: GridRowsProp = contract.providers.map((provider, providerIndex) => {

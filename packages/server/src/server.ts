@@ -138,6 +138,16 @@ export class ProsopoServer {
             const result = await providerApi.verifyDappUser(user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
         } else {
+            // Check the time since the last correct captcha is less than the maxVerifiedTime
+            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
+            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+                .unwrap()
+                .unwrap()
+                .before.valueOf()
+            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
+                return false
+            }
+
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
                 .unwrap()
                 .unwrap()

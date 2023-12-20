@@ -71,7 +71,7 @@ export async function sendFunds(
         'UNIT'
     )
     // eslint-disable-next-line no-async-promise-executor
-    const result: Promise<ISubmittableResult> = new Promise(async (resolve, reject) => {
+    const result = new Promise<ISubmittableResult>(async (resolve, reject) => {
         const unsub = await api.tx.balances
             .transfer(address, amount)
             .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {

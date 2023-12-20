@@ -80,7 +80,7 @@ export async function run(
 if (typeof require !== 'undefined' && require.main === module) {
     log.info('Loading env from', path.resolve('.'))
     loadEnv(path.resolve('.'))
-    run(process.env.CAPTCHA_WASM_PATH, process.env.CAPTCHA_ABI_PATH)
+    run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH)
         .then((deployResult) => {
             log.info('Deployed with address', deployResult)
             process.exit(0)

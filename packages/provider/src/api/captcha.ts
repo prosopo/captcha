@@ -14,6 +14,7 @@
 import {
     ApiParams,
     ApiPaths,
+    CaptchaResponseBody,
     CaptchaSolutionBody,
     CaptchaWithProof,
     DappUserSolutionResult,
@@ -62,14 +63,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
-                taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => ({
-                    ...cwp,
-                    captcha: {
-                        ...cwp.captcha,
-                        items: cwp.captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
-                    },
-                }))
-                return res.json(taskData)
+                const captchaResponse: CaptchaResponseBody = {
+                    captchas: taskData.captchas.map((cwp: CaptchaWithProof) => ({
+                        ...cwp,
+                        captcha: {
+                            ...cwp.captcha,
+                            items: cwp.captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
+                        },
+                    })),
+                    requestHash: taskData.requestHash,
+                }
+                return res.json(captchaResponse)
             } catch (err) {
                 // TODO fix error handling
                 return next(new ProsopoApiError(err as Error, undefined, 400))
@@ -115,7 +119,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a user's solution as being approved or not
      *
-     * @param {string} userAccount - Dapp User id
+     * @param {string} user - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */

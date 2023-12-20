@@ -16,14 +16,14 @@ import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getPairAsync } from '@prosopo/contract'
 import { getSecret } from './process.env.js'
+import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import { start } from './start.js'
-import esMain from 'es-main'
 import getConfig from './prosopo.config.js'
 import process from 'process'
 
-const log = getLogger(LogLevel.enum.info, 'cli')
+const log = getLogger(LogLevel.enum.info, 'CLI')
 
 async function main() {
     loadEnv()
@@ -40,7 +40,7 @@ async function main() {
 
     log.info(`Pair address: ${pair.address}`)
 
-    log.info(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
+    log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`)
 
     const processedArgs = await processArgs(process.argv, pair, config)
     if (processedArgs.api) {
@@ -54,7 +54,7 @@ async function main() {
 }
 
 //if main process
-if (esMain(import.meta)) {
+if (isMain(import.meta.url, 'provider')) {
     main()
         .then(() => {
             log.info('Running main process...')

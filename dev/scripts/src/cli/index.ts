@@ -61,18 +61,15 @@ export async function processArgs(args: string[]) {
                     }),
             async (argv) => {
                 const protocolContractAddress = await deployProtocol(
-                    process.env.CAPTCHA_WASM_PATH,
-                    process.env.CAPTCHA_ABI_PATH,
+                    process.env.PROSOPO_CAPTCHA_WASM_PATH,
+                    process.env.PROSOPO_CAPTCHA_ABI_PATH,
                     argv.deployer
                 )
+
                 log.info('contract address', protocolContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
-                        [
-                            'PROTOCOL_CONTRACT_ADDRESS',
-                            'REACT_APP_PROSOPO_CONTRACT_ADDRESS',
-                            'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS',
-                        ],
+                        ['PROSOPO_CONTRACT_ADDRESS', 'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS'],
                         protocolContractAddress.toString(),
                         log
                     )
@@ -95,7 +92,7 @@ export async function processArgs(args: string[]) {
                 log.info('contract address', dappContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
-                        ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
+                        ['PROSOPO_SITE_KEY', 'NEXT_PUBLIC_PROSOPO_SITE_KEY'],
                         dappContractAddress.toString(),
                         log
                     )

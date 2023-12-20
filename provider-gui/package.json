@@ -1,17 +1,22 @@
 {
     "name": "@prosopo/provider-gui",
-    "version": "0.2.13",
+    "version": "0.2.17",
     "private": true,
     "engines": {
-        "node": ">=16",
-        "npm": "8.9"
+        "node": ">=18",
+        "npm": ">=9"
     },
     "scripts": {
         "dev": "next dev -p 9231",
         "build": "next build",
         "clean": "rm -rf .next",
         "start": "next start",
-        "lint": "next lint"
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
         "@emotion/react": "^11.9.3",
@@ -21,13 +26,13 @@
         "@mui/x-data-grid": "^5.9.1",
         "@polkadot/extension-dapp": "^0.46.5",
         "@polkadot/extension-inject": "^0.46.5",
-        "@polkadot/keyring": "12.5.1",
-        "@polkadot/types": "10.10.1",
-        "@prosopo/api": "0.2.13",
-        "@prosopo/cli": "0.2.13",
-        "@prosopo/env": "0.2.13",
-        "@prosopo/procaptcha": "0.2.13",
-        "@prosopo/provider": "0.2.13",
+        "@polkadot/keyring": "12.6.1",
+        "@polkadot/types": "10.11.1",
+        "@prosopo/api": "0.2.17",
+        "@prosopo/cli": "0.2.17",
+        "@prosopo/env": "0.2.17",
+        "@prosopo/procaptcha": "0.2.17",
+        "@prosopo/provider": "0.2.17",
         "next": "14.0.1",
         "react": "18.2.0"
     },

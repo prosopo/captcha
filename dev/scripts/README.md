@@ -4,9 +4,9 @@ This package contains the scripts and configuration for setting up a development
 
 ## Prerequisites
 
-- A unix-style environment (Linux, MacOS, WSL2)
-- [Docker](https://docs.docker.com/get-docker/)
-- [Node.js](https://nodejs.org/en/download/)
+-   A unix-style environment (Linux, MacOS, WSL2)
+-   [Docker](https://docs.docker.com/get-docker/)
+-   [Node.js](https://nodejs.org/en/download/)
 
 ## Dev Setup
 
@@ -25,16 +25,19 @@ npm run setup:all
 In different terminals run
 
 #### Terminal 1
+
 ```bash
 npm run start:server
 ```
 
 #### Terminal 2
+
 ```bash
 npm run start:provider
 ```
 
 #### Terminal 3
+
 ```bash
 npm run start:demo
 ```
@@ -60,7 +63,7 @@ This does the following:
 ##### Substrate Container Details
 
 | Container Name                                                      | Description                                                                                   |
-|---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000 | Substrate node with pre-deployed protocol at commit aadbbed50ede27817158c7517f13f6f61c9cf000. |
 | prosopo/substrate-contracts-node:v0.25                              | Substrate contracts node version 0.25 with no contracts.                                      |
 | prosopo/substrate-contracts-node:v0.24                              | Substrate contracts node version 0.24 with no contracts.                                      |

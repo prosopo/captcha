@@ -110,9 +110,9 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         dappName: string().optional().default('ProsopoClientDapp'),
         serverUrl: string().optional(),
     })
-).refine((schema) => schema.defaultNetwork in schema.networks, 'defaultNetwork must be in networks')
+)
 
-export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.innerType().merge(
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
         serverUrl: string().url(),
     })
@@ -154,7 +154,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
     object({
         captchas: ProsopoCaptchaCountConfigSchema.optional().default({
             solved: { count: 1 },
-            unsolved: { count: 1 },
+            unsolved: { count: 0 },
         }),
         captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
             requiredNumberOfSolutions: 3,
