@@ -6,7 +6,7 @@ export interface ParseOptions {
 }
 
 export interface Transformer<T, U> {
-    transform(value: T, options?: Readonly<U>): T
+    transform(value: T, options?: U): T
 }
 
 // A parser is a class that can parse a value into a given shape. It can also validate the value, throwing an error if it is invalid.
@@ -23,7 +23,7 @@ export interface Parser<T, U> {
     // the shape of the output after parsing. The value of this variable will always be null, intended usage is `declare const parser: Parser<T>; type shape = typeof parser.shape;`
     readonly shape: T
     // default options for parsing. These are merged with the options passed to the parse() method to provide defaults.
-    defaultOptions: U
+    options: U
 }
 
 // The base parser class. This is the class that all other parsers inherit from.
@@ -31,16 +31,16 @@ export abstract class BaseParser<T, U extends {}> implements Parser<T, U> {
     beforeSteps: Transformer<unknown, U>[] = []
     afterSteps: Transformer<T, U>[] = []
     // the default options for parsing. These are merged with the options passed to the parse() method to provide defaults.
-    defaultOptions: U
+    options: U
 
     constructor(defaultOptions?: U) {
-        this.defaultOptions = defaultOptions ?? {} as U
+        this.options = defaultOptions ?? {} as U
     }
 
     // parse the value, applying transformers before and after parsing. This should be overriden by subclasses.
-    parse(value: unknown, options?: Readonly<U>): T {
+    parse(value: unknown, options?: U): T {
         // merge the default options with the options passed to this method
-        options = { ...this.defaultOptions, ...options }
+        options = { ...this.options, ...options }
         // apply the pre-parse transformers
         value = this.beforeSteps.reduce((value, transformer) => transformer.transform(value), value)
         // parse the value

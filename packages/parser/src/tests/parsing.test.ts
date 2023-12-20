@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 // import { pString } from '../parsers/StringParser.js';
-// import { pNumber } from '../parsers/NumberParser.js';
+import { pNumber } from '../parsers/NumberParser.js';
 // import { pBigInt } from '../parsers/BigIntParser.js';
 import { pBoolean } from '../parsers/BooleanParser.js';
 
@@ -84,28 +84,28 @@ describe("boolean", () => {
 //     })
 // })
 
-// describe("number", () => {
-//     test("parses", () => {
-//         expect(() => pNumber().parse(undefined)).to.throw();
-//         expect(() => pNumber().parse(null)).to.throw();
-//         expect(() => pNumber().parse("")).to.throw();
-//         expect(() => pNumber().parse(true)).to.throw();
-//         expect(pNumber().parse(123)).to.equal(123);
-//         expect(() => pNumber().parse(BigInt(456))).to.throw();
-//         expect(() => pNumber().parse("hello")).to.throw();
-//         expect(() => pNumber().parse("789")).to.throw();
-//         expect(() => pNumber().parse("hello123")).to.throw();
-//     });
+describe("number", () => {
+    test("parses", () => {
+        expect(() => pNumber().parse(undefined)).to.throw();
+        expect(() => pNumber().parse(null)).to.throw();
+        expect(() => pNumber().parse("")).to.throw();
+        expect(() => pNumber().parse(true)).to.throw();
+        expect(pNumber().parse(123)).to.equal(123);
+        expect(() => pNumber().parse(BigInt(456))).to.throw();
+        expect(() => pNumber().parse("hello")).to.throw();
+        expect(() => pNumber().parse("789")).to.throw();
+        expect(() => pNumber().parse("hello123")).to.throw();
+    });
 
-//     test("coerces", () => {
-//         expect(pNumber().parse(undefined, { coerce: true })).to.equal(NaN);
-//         expect(pNumber().parse(null, { coerce: true })).to.equal(0);
-//         expect(pNumber().parse("", { coerce: true })).to.equal(0);
-//         expect(pNumber().parse(true, { coerce: true })).to.equal(1);
-//         expect(pNumber().parse(false, { coerce: true })).to.equal(0);
-//         expect(pNumber().parse(BigInt(456), { coerce: true })).to.equal(456);
-//         expect(pNumber().parse("hello", { coerce: true })).to.equal(NaN); // not numeric
-//         expect(pNumber().parse("789", { coerce: true })).to.equal(789);
-//         expect(pNumber().parse("hello123", { coerce: true })).to.equal(NaN); // not numeric
-//     })
-// })
+    test("coerces", () => {
+        expect(pNumber().parse(undefined, { coerce: true })).toBeNaN();
+        expect(pNumber().parse(null, { coerce: true })).to.equal(0);
+        expect(pNumber().parse("", { coerce: true })).to.equal(0);
+        expect(pNumber().parse(true, { coerce: true })).to.equal(1);
+        expect(pNumber().parse(false, { coerce: true })).to.equal(0);
+        expect(pNumber().parse(BigInt(456), { coerce: true })).to.equal(456);
+        expect(pNumber().parse("hello", { coerce: true })).toBeNaN(); // not numeric
+        expect(pNumber().parse("789", { coerce: true })).to.equal(789);
+        expect(pNumber().parse("hello123", { coerce: true })).toBeNaN(); // not numeric
+    })
+})
