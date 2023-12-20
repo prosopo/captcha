@@ -1,0 +1,87 @@
+name: image_provider
+
+on:
+    pull_request:
+        branches: [main]
+        paths:
+            - 'docker/**'
+            - 'dev/**'
+            - 'packages/**'
+            - 'contracts/**'
+            - '.github/workflows/provider_image.yml'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+env:
+    CARGO_TERM_COLOR: always
+    GH_TOKEN: ${{ github.token }}
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            # Checkout the repo
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: mkdir -p protocol/cargo-cache
+            - run: mkdir -p protocol/target
+            - run: mkdir -p node_modules
+            - run: mkdir -p ~/.cache/Cypress
+
+            - name: Restore cache
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      protocol/cargo-cache
+                      protocol/target
+                      node_modules
+                      ~/.cache/Cypress
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+                  key: some-unused-cache-key
+                  restore-keys: |
+                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+
+            - run: npm install
+            - run: npm run removePolkadotJSWarnings
+
+            # build the packages
+            - name: Build packages
+              run: |
+                  cd dev/scripts
+                  npm run build
+
+            # build the cli production bundle
+            - name: Build cli production bundle
+              run: |
+                  cp ./dev/scripts/env.rococo ./packages/cli/.env.production
+                  cp ./dev/scripts/env.rococo ./.env.production
+                  NODE_ENV=production npm run -w @prosopo/cli bundle:prod
+
+            # create the provider image
+            - name: Build provider image
+              run: |
+                  docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:dev
+
+            # Generate a mnemonic for the provider image
+            - name: Generate mnemonic and add to env file
+              run: |
+                  PROSOPO_ROOT_DIR=$(pwd) NODE_ENV=production node dev/scripts/dist/scripts/generateMnemonic.js --env
+
+            # Check that the version command works when running the bundle in the provider image
+            - name: Check provider bundle runs
+              run: |
+                  CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
+                  sleep 10s
+                  docker logs $CONTAINER >& provider.log
+                  echo $(cat provider.log)
+                  grep -oE "Version: \".*\"" provider.log || exit 1

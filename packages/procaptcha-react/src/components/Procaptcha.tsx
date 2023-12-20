@@ -23,16 +23,11 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { Alert, Backdrop, CircularProgress, ThemeProvider } from '@mui/material'
-import { Box, Checkbox, Link, Typography } from '@mui/material'
+import { Alert, Backdrop, Box, Checkbox, CircularProgress, Link, ThemeProvider, Typography } from '@mui/material'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-// import Box from '@mui/material/Box/Box.js'
-// import Checkbox from '@mui/material/Checkbox/Checkbox.js'
-// import Link from '@mui/material/Link/Link.js'
-// import Typography from '@mui/material/Typography/Typography.js'
 
 const logoStyle = css`
     align-items: center;
@@ -92,7 +87,7 @@ const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
 
 const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [isHuman, setIsHuman] = useState(false)
-    const [index, setIndex] = useState(-1)
+    const [index, setIndex] = useState(0)
     const [solutions, setSolutions] = useState([] as string[][])
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
     const [showModal, setShowModal] = useState(false)
@@ -103,6 +98,9 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
     const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
     const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
+    const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
+        undefined
+    )
 
     return [
         // the state
@@ -119,6 +117,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             submission,
             timeout,
             blockNumber,
+            successfullChallengeTimeout,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
@@ -136,6 +135,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             if (nextState.dappAccount !== undefined) setDappAccount(nextState.dappAccount)
             if (nextState.submission !== undefined) setSubmission(nextState.submission)
             if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
+            if (nextState.successfullChallengeTimeout !== undefined) setSuccessfullChallengeTimeout(nextState.timeout)
             if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
         },
     ]
@@ -155,7 +155,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-                <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Backdrop open={state.showModal} sx={{ zIndex: 2147483647 }}>
                     {state.challenge ? (
                         <CaptchaComponent
                             challenge={state.challenge}
@@ -177,7 +177,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         p={1}
                         border={1}
                         bgcolor={theme.palette.background.default}
-                        borderColor="grey.300"
+                        borderColor={theme.palette.grey[300]}
                         borderRadius={2}
                         sx={{
                             display: 'flex',

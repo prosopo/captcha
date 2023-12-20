@@ -8,6 +8,10 @@ on:
             - 'main'
     workflow_dispatch:
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
@@ -17,56 +21,52 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
-            - run: mkdir -p .cache/Cypress
-
-            - name: Restore cache
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      .cache/Cypress
-                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
-                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
-                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
-                  key: some-unused-cache-key
-                  restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
-
-            - name: ls
-              run: |
-                  set -x
-                  ls -la
-                  ls -la protocol/cargo-cache
-                  ls -la protocol/target/* || true
-                  ls -la node_modules
-                  ls -la .cache
-                  ls -la .cache/Cypress
+            - run: mkdir -p ~/.cache/Cypress
 
             - run: npm install
+            - run: npm run removePolkadotJSWarnings
+
+            - name: Rust formatting check
+              run: |
+                  cd protocol/dev
+                  npm run build
+                  npm run cli -- fmt --all --verbose --docker
+
+            - name: Clippy
+              run: |
+                  cd protocol/dev
+                  npm run build
+                  npm run cli -- clippy --docker -- -- -D warnings
 
             - name: Build contracts
               run: |
                   cd protocol/dev
-                  npm run cli -- build --docker
+                  npm run cli -- build --docker --skip-env
+
+            - name: Test contracts
+              run: |
+                  cd protocol/dev
+                  RUST_BACKTRACE=1 npm run cli -- test --docker
 
             # install cypress so we don't have to do that every time
-            - run: npx cypress install
-
-            - name: ls
+            - name: Cypress install
               run: |
-                  set -x
-                  ls -la
-                  ls -la protocol/cargo-cache
-                  ls -la protocol/target/* || true
-                  ls -la node_modules
-                  ls -la .cache
-                  ls -la .cache/Cypress
+                  npm i --save-dev cypress
+                  npx cypress install
+
+            - run: ls -la ~/.cache/Cypress || true
+            - run: ls -la protocol/cargo-cache || true
+            - run: ls -la protocol/target/ink || true
+            - run: ls -la node_modules || true
 
             # remove all but the latest cache (this ensures there's at least one cache available for the next run, just in case this takes place while we're clearing up caches)
             # this means there will be the previous cache (the latest) and the current cache (the one we're building now) after this workflow finishes
@@ -95,5 +95,5 @@ jobs:
                       protocol/cargo-cache
                       protocol/target
                       node_modules
-                      .cache/Cypress
+                      ~/.cache/Cypress
                   key: project-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}

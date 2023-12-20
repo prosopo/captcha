@@ -18,7 +18,7 @@ import {
     CaptchaSolutionArraySchema,
     CaptchaWithoutId,
     DatasetRaw,
-    DatasetSchema,
+    DatasetWithNumericSolutionSchema,
     HashedItem,
     HashedSolution,
     Item,
@@ -38,14 +38,15 @@ export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
  */
 export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
-        const result = DatasetSchema.parse(datasetJSON)
+        const result = DatasetWithNumericSolutionSchema.parse(datasetJSON)
+
         const result2: DatasetRaw = {
             format: result.format,
             captchas: result.captchas.map((captcha) => {
                 return {
                     ...captcha,
-                    solution: captcha.solution || [],
-                    unlabelled: captcha.unlabelled || [],
+                    solution: captcha.solution ? matchItemsToSolutions(captcha.solution, captcha.items) : [],
+                    unlabelled: captcha.unlabelled ? matchItemsToSolutions(captcha.unlabelled, captcha.items) : [],
                 }
             }),
         }
@@ -193,22 +194,27 @@ export function matchItemsToSolutions(
     solutions: RawSolution[] | HashedSolution[],
     items: HashedItem[] | undefined
 ): HashedSolution[] {
-    return (
-        solutions?.map((solution: string | number) => {
-            const index = parseInt(solution.toString())
-            const hash = items && items[index] && (items[index]?.hash || solution)
-
-            if (!hash) {
-                throw new ProsopoEnvError('CAPTCHA.MISSING_ITEM_HASH')
-            }
-
-            if (!isHex(hash)) {
+    if (!items) {
+        return []
+    }
+    return solutions.map((solution: string | number) => {
+        if (typeof solution === 'string' && isHex(solution)) {
+            // solution must already be a hash
+            // check that solution is in items array
+            if (!items?.some((item) => item.hash === solution)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_HASH')
             }
-
-            return hash
-        }) || []
-    )
+            return solution
+        } else if (typeof solution === 'number') {
+            // else solution must be a number
+            // so lookup the item at that index
+            const item = at(items, solution)
+            // get the hash of the item
+            return item.hash
+        } else {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_SOLUTION_TYPE')
+        }
+    })
 }
 
 /**
@@ -217,7 +223,6 @@ export function matchItemsToSolutions(
  * @return {string} the hex string hash
  */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    // TODO: should the captchaContentId be validated?
     return hexHashArray([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt])
 }
 

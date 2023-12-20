@@ -1,13 +1,7 @@
 name: Dependent Issues
 
 on:
-    issues:
-        types:
-            - opened
-            - edited
-            - closed
-            - reopened
-    pull_request_target:
+    pull_request:
         types:
             - opened
             - edited
@@ -17,15 +11,19 @@ on:
             # this action is required to pass before merging. Otherwise, it
             # can be removed.
             - synchronize
+    issue_comment:
+        types: [created, deleted, edited]
 
     # Schedule a daily check. Useful if you reference cross-repository
     # issues or pull requests. Otherwise, it can be removed.
     schedule:
         - cron: '0 0 * * *'
+    workflow_dispatch:
 
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: ${{ github.event.issue.pull_request }}
         steps:
             - uses: z0al/dependent-issues@v1
               env:

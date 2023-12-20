@@ -13,7 +13,8 @@
 // limitations under the License.
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
-import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 
 /** Generate a mnemonic, returning the mnemonic and associated address
  * @param keyring

@@ -9,20 +9,30 @@ on:
             - '.github/workflows/tests_protocol.yml'
     workflow_dispatch:
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
+    NODE_ENV: test
 
 jobs:
     check:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
-            - run: mkdir -p .cache/Cypress
+            - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore cache
               uses: actions/cache/restore@v3
@@ -31,7 +41,7 @@ jobs:
                       protocol/cargo-cache
                       protocol/target
                       node_modules
-                      .cache/Cypress
+                      ~/.cache/Cypress
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
@@ -40,14 +50,39 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install
+            - run: npm run removePolkadotJSWarnings
 
-            - name: Build contract
+            - name: Build contracts
               id: build
               run: |
                   cd protocol/dev
-                  npm run cli -- build --docker
+                  npm run cli -- build --docker --skip-env
 
-            - name: Test contract
+            - name: Check typechain is up-to-date
+              run: |
+                  # check the output of typechain has a contract hash matching the current contract version
+                  # this looks at the hash in the metadata for the contracts and matches typechain's metadata hash against protocol's metadata hash to detect differences
+                  set -euo pipefail
+                    typechain_contracts=$(find ./contracts -maxdepth 1 -mindepth 1 -type d)
+                    protocol_contracts=$(find ./protocol/target/ink -maxdepth 1 -mindepth 1 -type d)
+                    contracts=( "${typechain_contracts[@]}" "${protocol_contracts[@]}" )
+                    for contract_path in ${contracts[@]}; do
+                        contract_name=$(basename $contract_path)
+                        typechain_metadata="./contracts/$contract_name/src/$contract_name.json"
+                        protocol_metadata="./protocol/target/ink/$contract_name/$contract_name.json"
+                        typechain_hash=$(cat $typechain_metadata | jq -r '.source.hash')
+                        protocol_hash=$(cat $protocol_metadata | jq -r '.source.hash')
+                        if [ "$typechain_hash" != "$protocol_hash" ]; then
+                            echo "Hash mismatch for $contract_name"
+                            echo "Typechain: $typechain_hash"
+                            echo "Protocol: $protocol_hash"
+                            exit 1
+                        else
+                            echo "Hash match for $contract_path"
+                        fi
+                    done
+
+            - name: Test contracts
               run: |
                   cd protocol/dev
                   RUST_BACKTRACE=1 npm run cli -- test --docker

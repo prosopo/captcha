@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
-    ArgumentTypes,
     Captcha,
     CaptchaSolution,
     CaptchaStates,
-    CaptchaStatus,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
@@ -27,7 +26,6 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
-import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
     Database,
@@ -46,8 +44,9 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
+import { CaptchaStatus, Hash } from '@prosopo/captcha-contract/types-returns'
 import { DeleteResult, ServerApiVersion } from 'mongodb'
-import { isHex } from '@polkadot/util'
+import { isHex } from '@polkadot/util/is'
 import mongoose, { Connection } from 'mongoose'
 
 mongoose.set('strictQuery', false)
@@ -92,51 +91,79 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Connect to the database and set the various tables
      */
     async connect(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.connection) {
-                resolve()
-            }
-            this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
-            this.connection = mongoose.createConnection(this.url, {
-                dbName: this.dbname,
-                serverApi: ServerApiVersion.v1,
-            })
-            this.tables = {
-                captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
-                dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
-                solution: this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
-                commitment:
-                    this.connection.models.UserCommitment ||
-                    this.connection.model('UserCommitment', UserCommitmentRecordSchema),
-                usersolution:
-                    this.connection.models.UserSolution ||
-                    this.connection.model('UserSolution', UserSolutionRecordSchema),
-                pending: this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
-                scheduler:
-                    this.connection.models.Scheduler || this.connection.model('Scheduler', ScheduledTaskRecordSchema),
-            }
-            this.connection.once('open', resolve).on('error', (e) => {
-                this.logger.warn(`mongoose connection error`)
-                if (e.message.code === 'ETIMEDOUT') {
-                    this.logger.error(e)
-                    mongoose.connect(this.url)
-                }
+        const MAX_RETRIES = 3
+        const RETRY_INTERVAL_MS = 1000
 
-                this.logger.error(e)
-                reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
-            })
-        })
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                // Return if already connected
+                if (this.connection) {
+                    return
+                }
+                await new Promise((resolve, reject) => {
+                    this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
+                    this.connection = mongoose.createConnection(this.url, {
+                        dbName: this.dbname,
+                        serverApi: ServerApiVersion.v1,
+                    })
+
+                    this.tables = {
+                        captcha:
+                            this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                        dataset:
+                            this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
+                        solution:
+                            this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
+                        commitment:
+                            this.connection.models.UserCommitment ||
+                            this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+                        usersolution:
+                            this.connection.models.UserSolution ||
+                            this.connection.model('UserSolution', UserSolutionRecordSchema),
+                        pending:
+                            this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
+                        scheduler:
+                            this.connection.models.Scheduler ||
+                            this.connection.model('Scheduler', ScheduledTaskRecordSchema),
+                    }
+
+                    this.connection.once('open', resolve).on('error', (e) => {
+                        this.logger.warn(`mongoose connection error`)
+                        this.logger.error(e)
+
+                        // Only reject on the last attempt, otherwise handle the retry logic
+                        if (attempt === MAX_RETRIES) {
+                            reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
+                        } else {
+                            // Remove the error listener to avoid accumulated listeners on retries
+                            this.connection?.removeAllListeners('error')
+                        }
+                    })
+                })
+
+                return
+            } catch (e) {
+                // If this wasn't the last attempt, log the retry and wait for the retry interval
+                if (attempt < MAX_RETRIES) {
+                    this.logger.info(`Attempt ${attempt} failed, retrying in ${RETRY_INTERVAL_MS / 1000} seconds...`)
+                    await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS))
+                } else {
+                    // If this was the last attempt, throw the error
+                    throw e
+                }
+            }
+        }
     }
 
     /** Close connection to the database */
     async close(): Promise<void> {
-        this.logger.info(`Closing connection to ${this.url}`)
+        this.logger.debug(`Closing connection to ${this.url}`)
         // eslint-disable-next-line no-async-promise-executor
         await new Promise<void>(async (resolve, reject): Promise<void> => {
             mongoose.connection
                 .close()
                 .then(() => {
-                    this.logger.info(`Connection to ${this.url} closed`)
+                    this.logger.debug(`Connection to ${this.url} closed`)
                     resolve()
                 })
                 .catch(reject)
@@ -149,7 +176,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
         try {
-            this.logger.info(`Storing dataset in database`)
+            this.logger.debug(`Storing dataset in database`)
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
@@ -165,8 +192,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 { upsert: true }
             )
 
-            this.logger.info('parsedDataset.captchas', parsedDataset.captchas)
-
             // put the dataset id on each of the captcha docs and remove the solution
             const captchaDocs = parsedDataset.captchas.map(({ solution, ...captcha }, index) => ({
                 ...captcha,
@@ -176,7 +201,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solved: !!solution?.length,
             }))
 
-            this.logger.info(`Inserting captcha records`)
+            this.logger.debug(`Inserting captcha records`)
             // create a bulk upsert operation and execute
             if (captchaDocs.length) {
                 await this.tables?.captcha.bulkWrite(
@@ -202,7 +227,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     datasetContentId: parsedDataset.datasetContentId,
                 }))
 
-            this.logger.info(`Inserting solution records`)
+            this.logger.debug(`Inserting solution records`)
             // create a bulk upsert operation and execute
             if (captchaSolutionDocs.length) {
                 await this.tables?.solution.bulkWrite(
@@ -215,11 +240,19 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
-            this.logger.info(`Dataset stored in database`)
+            this.logger.debug(`Dataset stored in database`)
         } catch (err) {
             // TODO should not cast error here, improve error handling
             throw new ProsopoEnvError(err as Error, 'DATABASE.DATASET_LOAD_FAILED')
         }
+    }
+
+    /** @description Get solutions for a dataset
+     * @param {string} datasetId
+     */
+    async getSolutions(datasetId: string): Promise<SolutionRecord[]> {
+        const docs = await this.tables?.solution.find({ datasetId }).lean<SolutionRecord[]>()
+        return docs ? docs : []
     }
 
     /** @description Get a dataset from the database
@@ -273,11 +306,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getRandomCaptcha(
-        solved: boolean,
-        datasetId: ArgumentTypes.Hash,
-        size?: number
-    ): Promise<Captcha[] | undefined> {
+    async getRandomCaptcha(solved: boolean, datasetId: Hash, size?: number): Promise<Captcha[] | undefined> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getRandomCaptcha.name, {}, datasetId)
         }
@@ -336,7 +365,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {Captcha}  captcha
      * @param {string}   datasetId  the id of the data set
      */
-    async updateCaptcha(captcha: Captcha, datasetId: ArgumentTypes.Hash): Promise<void> {
+    async updateCaptcha(captcha: Captcha, datasetId: Hash): Promise<void> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.updateCaptcha.name, {}, datasetId)
         }
@@ -358,7 +387,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Get a dataset by Id
      */
-    async getDatasetDetails(datasetId: ArgumentTypes.Hash): Promise<DatasetBase> {
+    async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDatasetDetails.name, {}, datasetId)
         }
@@ -677,7 +706,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag a dapp user's solutions as used by calculated solution
      * @param {string[]} captchaIds
      */
-    async flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void> {
         try {
             await this.tables?.usersolution
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
@@ -692,7 +721,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag dapp users' commitments as used by calculated solution
      * @param {string[]} commitmentIds
      */
-    async flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment
@@ -708,7 +737,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag dapp users' commitments as used by calculated solution
      * @param {string[]} commitmentIds
      */
-    async flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment

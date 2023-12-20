@@ -11,14 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { AccountId } from '@prosopo/types'
 import {
-    AccountId,
     ApiPaths,
     CaptchaSolution,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
-    Provider,
-    RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
 import {
@@ -28,6 +26,7 @@ import {
     VerificationResponse,
 } from '../types/index.js'
 import { NetworkConfig } from '@prosopo/types'
+import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase {
@@ -52,7 +51,7 @@ export default class ProviderApi extends HttpClientBase {
             .toString()
             .replace(/,/g, '')}`
         console.log(url)
-        return this.axios.get(url)
+        return this.fetch(url)
     }
 
     public submitCaptchaSolution(
@@ -70,25 +69,33 @@ export default class ProviderApi extends HttpClientBase {
             salt,
             signature,
         })
-        return this.axios.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
+        return this.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
     }
 
-    public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
+    public verifyDappUser(
+        userAccount: string,
+        commitmentId?: string,
+        maxVerifiedTime?: number
+    ): Promise<VerificationResponse> {
         const payload: {
             user: string
             commitmentId?: string
+            maxVerifiedTime?: number
         } = { user: userAccount }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
-        return this.axios.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+        if (maxVerifiedTime) {
+            payload['maxVerifiedTime'] = maxVerifiedTime
+        }
+        return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 
     public getProviderStatus(): Promise<ProviderRegistered> {
-        return this.axios.get(ApiPaths.GetProviderStatus)
+        return this.fetch(ApiPaths.GetProviderStatus)
     }
 
     public getProviderDetails(): Promise<Provider> {
-        return this.axios.get(ApiPaths.GetProviderDetails)
+        return this.fetch(ApiPaths.GetProviderDetails)
     }
 }

@@ -16,8 +16,9 @@ import { Database } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
 import { at } from '@prosopo/util'
-import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToU8a, isHex } from '@polkadot/util'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
+import { hexToU8a } from '@polkadot/util/hex'
+import { isHex } from '@polkadot/util/is'
 import pl from 'nodejs-polars'
 
 export function encodeStringAddress(address: string) {
@@ -32,8 +33,8 @@ export function encodeStringAddress(address: string) {
 export function shuffleArray<T>(array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
         const randIndex = Math.floor(Math.random() * (arrayIndex + 1))
-        const tmp = at(array, randIndex, { required: false })
-        array[randIndex] = at(array, arrayIndex, { required: false })
+        const tmp = at(array, randIndex, { optional: true })
+        array[randIndex] = at(array, arrayIndex, { optional: true })
         array[arrayIndex] = tmp
     }
     return array

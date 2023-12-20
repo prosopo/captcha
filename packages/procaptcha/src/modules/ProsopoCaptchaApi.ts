@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AxiosError } from 'axios'
 import {
     CaptchaMerkleTree,
     computeCaptchaHash,
@@ -26,11 +25,11 @@ import { ProsopoApiError } from '../api/handlers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/types'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { at } from '@prosopo/util'
-import { stringToHex } from '@polkadot/util'
+import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -136,7 +135,7 @@ export class ProsopoCaptchaApi {
             )
         } catch (err) {
             // TODO fix/improve error handling
-            throw new ProsopoApiError(err as AxiosError<unknown, any>)
+            throw new ProsopoApiError(err as Response)
         }
 
         return [result, commitmentId, tx]

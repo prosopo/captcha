@@ -11,9 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import '@polkadot/api-augment'
+import '@polkadot/api-augment/substrate'
 export * from './accounts/index.js'
 export * from './balances/index.js'
 export * from './contract/index.js'
 export * from './handlers.js'
-export * from './typechain/captcha/index.js'

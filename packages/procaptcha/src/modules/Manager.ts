@@ -20,24 +20,26 @@ import {
     ProcaptchaStateUpdateFn,
 } from '../types/manager.js'
 import { AccountNotFoundError } from '../api/errors.js'
-import { ApiPromise, Keyring } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import {
     CaptchaSolution,
-    ContractAbi,
-    ProcaptchaClientConfig,
-    ProsopoClientConfig,
-    RandomProvider,
+    ProcaptchaClientConfigInput,
+    ProcaptchaClientConfigOutput,
+    ProcaptchaConfigSchema,
 } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
+import { Keyring } from '@polkadot/keyring'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
-import { WsProvider } from '@polkadot/rpc-provider'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at } from '@prosopo/util'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
-import { stringToU8a } from '@polkadot/util'
-import { trimProviderUrl } from '@prosopo/common'
+import { stringToU8a } from '@polkadot/util/string'
 import ExtensionWeb2 from '../api/ExtensionWeb2.js'
 import ExtensionWeb3 from '../api/ExtensionWeb3.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
@@ -48,9 +50,9 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
         loading: false,
+        index: 0,
         challenge: undefined,
-        solutions: [],
-        index: -1,
+        solutions: undefined,
         isHuman: false,
         captchaApi: undefined,
         account: undefined,
@@ -72,8 +74,8 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
     return updateCurrentState
 }
 
-export const getNetwork = (config: ProsopoClientConfig) => {
-    const network = config.networks[config.defaultEnvironment]
+export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
+    const network = config.networks[config.defaultNetwork]
     if (!network) {
         throw new Error(`No network found for environment ${config.defaultEnvironment}`)
     }
@@ -106,11 +108,20 @@ export function Manager(
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
-            onExpired: () => {
-                alert('Challenge has expired, please try again')
-            },
             onFailed: () => {
                 alert('Captcha challenge failed. Please try again')
+            },
+            onExpired: () => {
+                alert('Completed challenge has expired, please try again')
+            },
+            onChallengeExpired: () => {
+                alert('Uncompleted challenge has expired, please try again')
+            },
+            onOpen: () => {
+                console.log('onOpen event triggered')
+            },
+            onClose: () => {
+                console.log('onClose event triggered')
             },
         },
         callbacks
@@ -136,7 +147,7 @@ export function Manager(
      * @returns the config for procaptcha
      */
     const getConfig = () => {
-        const config: ProcaptchaClientConfig = {
+        const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
             ...configOptional,
         }
@@ -145,7 +156,7 @@ export function Manager(
         if (state.account) {
             config.userAccountAddress = state.account.account.address
         }
-        return config
+        return ProcaptchaConfigSchema.parse(config)
     }
 
     const fallable = async (fn: () => Promise<void>) => {
@@ -165,6 +176,7 @@ export function Manager(
      */
     const start = async () => {
         console.log('Starting procaptcha')
+        events.onOpen()
         await fallable(async () => {
             if (state.loading) {
                 console.log('Procaptcha already loading')
@@ -208,8 +220,9 @@ export function Manager(
                 updateState({ isHuman: true, loading: false })
                 events.onHuman({
                     user: account.account.address,
-                    dapp: config.account.address,
+                    dapp: getDappAccount(),
                 })
+                setValidChallengeTimeout()
                 return
             }
 
@@ -222,15 +235,20 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
+                    const verifyDappUserResponse = await providerApi.verifyDappUser(
+                        account.account.address,
+                        undefined,
+                        configOptional.challengeValidLength
+                    )
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
                             providerUrl: providerUrlFromStorage,
                             user: account.account.address,
-                            dapp: config.account.address,
+                            dapp: getDappAccount(),
                             commitmentId: verifyDappUserResponse.commitmentId,
                         })
+                        setValidChallengeTimeout()
                         return
                     }
                 } catch (err) {
@@ -251,8 +269,8 @@ export function Manager(
             const getRandomProviderResponse: RandomProvider = await wrapQuery(
                 contract.query.getRandomActiveProvider,
                 contract.query
-            )(account.account.address, config.account.address)
-            const blockNumber = getRandomProviderResponse.blockNumber
+            )(account.account.address, getDappAccount())
+            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
@@ -274,7 +292,7 @@ export function Manager(
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
                 console.log('challenge expired after ' + timeMillis + 'ms')
-                events.onExpired()
+                events.onChallengeExpired()
                 // expired, disallow user's claim to be human
                 updateState({ isHuman: false, showModal: false, loading: false })
             }, timeMillis)
@@ -363,6 +381,7 @@ export function Manager(
                     commitmentId: submission[1],
                     blockNumber,
                 })
+                setValidChallengeTimeout()
             }
         })
     }
@@ -373,6 +392,8 @@ export function Manager(
         clearTimeout()
         // abandon the captcha process
         resetState()
+        // trigger the onClose event
+        events.onClose()
     }
 
     /**
@@ -428,7 +449,7 @@ export function Manager(
             provider,
             providerApi,
             config.web2,
-            config.account.address
+            getDappAccount()
         )
 
         updateState({ captchaApi })
@@ -439,6 +460,9 @@ export function Manager(
     const loadProviderApi = async (providerUrl: string) => {
         const config = getConfig()
         const network = getNetwork(config)
+        if (!config.account.address) {
+            throw new ProsopoEnvError('GENERAL.SITE_KEY_MISSING')
+        }
         return new ProviderApi(network, providerUrl, config.account.address)
     }
 
@@ -447,6 +471,21 @@ export function Manager(
         window.clearTimeout(state.timeout)
         // then clear the timeout from the state
         updateState({ timeout: undefined })
+    }
+
+    const setValidChallengeTimeout = () => {
+        console.log('setting valid challenge timeout')
+        const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
+        const successfullChallengeTimeout = setTimeout(() => {
+            console.log('valid challenge expired after ' + timeMillis + 'ms')
+
+            // Human state expired, disallow user's claim to be human
+            updateState({ isHuman: false })
+
+            events.onExpired()
+        }, timeMillis)
+
+        updateState({ successfullChallengeTimeout })
     }
 
     const resetState = () => {
@@ -494,8 +533,9 @@ export function Manager(
 
     const getDappAccount = () => {
         if (!state.dappAccount) {
-            throw new Error('Dapp account not loaded')
+            throw new ProsopoEnvError('GENERAL.SITE_KEY_MISSING')
         }
+
         const dappAccount: string = state.dappAccount
         return dappAccount
     }
@@ -514,17 +554,17 @@ export function Manager(
     const loadContract = async (): Promise<ProsopoCaptchaContract> => {
         const config = getConfig()
         const network = getNetwork(config)
-        const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint) })
+        const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint), initWasm: false })
         // TODO create a shared keyring that's stored somewhere
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         return new ProsopoCaptchaContract(
             api,
-            abiJson as ContractAbi,
+            JSON.parse(abiJson),
             network.contract.address,
-            keyring.addFromAddress(getAccount().account.address),
             'prosopo',
-            0
+            0,
+            keyring.addFromAddress(getAccount().account.address)
         )
     }
 

@@ -1,5 +1,6 @@
 import { AliasOptions, UserConfig } from 'vite'
 import { default as ClosePlugin } from './vite-plugin-close-and-copy.js'
+import { Drop } from 'esbuild'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
@@ -47,8 +48,10 @@ export default async function (
     command?: string,
     mode?: string
 ): Promise<UserConfig> {
+    const isProduction = mode === 'production'
+
     // Get all dependencies of the current package
-    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName)
+    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, true)
 
     // Assuming node_modules are at the root of the workspace
     const baseDir = path.resolve('../..')
@@ -68,8 +71,6 @@ export default async function (
         ...optionalPeerDependencies,
     ]
 
-    console.log('allExternal', allExternal)
-
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
 
     const nodeJsNodeFileToCopy = path.resolve(
@@ -82,6 +83,12 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': 'true',
         'process.env.WS_NO_UTF_8_VALIDATE': 'true',
         'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(packageVersion),
+        ...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
+            'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        }),
+        ...(process.env.PROSOPO_DEFAULT_NETWORK && {
+            'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
+        }),
     }
 
     logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`)
@@ -94,6 +101,9 @@ export default async function (
         './src/',
         ''
     )}$)(?!.*/node_modules/.*$).*$`
+
+    // drop console logs if in production mode
+    const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
     return {
         resolve: {
@@ -114,11 +124,13 @@ export default async function (
         esbuild: {
             platform: 'node',
             target: 'node16',
+            drop,
+            legalComments: 'none',
         },
         define,
         build: {
             outDir,
-            minify: false,
+            minify: isProduction,
             ssr: true,
             target: 'node16',
 
@@ -191,7 +203,7 @@ export default async function (
                 {
                     filter: new RegExp(filterEntry),
                     replace: {
-                        from: 'esMain(import.meta)',
+                        from: 'isMain(import.meta)',
                         to: 'false',
                     },
                 },

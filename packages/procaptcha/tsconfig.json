@@ -5,13 +5,25 @@
         "outDir": "./dist",
         "lib": ["es6", "dom"]
     },
-    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "include": ["src", "src/**/*.json"],
     "references": [
+        {
+            "path": "../../contracts/captcha"
+        },
         {
             "path": "../api"
         },
         {
+            "path": "../common"
+        },
+        {
             "path": "../contract"
+        },
+        {
+            "path": "../datasets"
+        },
+        {
+            "path": "../types"
         },
         {
             "path": "../util"

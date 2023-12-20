@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "lib": ["dom", "dom.iterable", "esnext"]
     },
-    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "include": ["src", "src/**/*.json"],
     "references": [
         {
             "path": "../../packages/api"
@@ -21,6 +21,9 @@
         },
         {
             "path": "../../packages/contract"
+        },
+        {
+            "path": "../../contracts/captcha"
         },
         {
             "path": "../../packages/database"

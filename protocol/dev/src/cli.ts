@@ -15,7 +15,7 @@ import { hexToU8a } from '@polkadot/util'
 import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
-import { stdin } from 'process'
+import chalk from 'chalk'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
@@ -27,6 +27,8 @@ const dir = path.resolve()
 interface Env {
     [key: string]: string
 }
+
+const cargoCmd = 'CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse cargo'
 
 // add in the git commit to env
 const getGitCommitId = async () => {
@@ -41,7 +43,7 @@ const getGitCommitId = async () => {
     return gitCommitIdBytesString
 }
 
-const setEnvVariable = (filePath: string, name: string, value: string) => {
+const setEnvVariable = async (filePath: string, name: string, value: string) => {
     // console.log("setting env variable", name, "in", filePath)
     const content = fs.readFileSync(filePath, 'utf8')
     let result = content
@@ -59,7 +61,7 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     name = 'env_' + name // add the env prefix to the name
     // names could be lower, upper or specific case
     for (const declaration of ['let', 'const']) {
-        const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gmsi')
+        const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gims')
         const regexMatch = regex.test(result)
         if (!regexMatch) {
             // console.log('no match for', regex, 'in', filePath);
@@ -70,7 +72,6 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     }
     if (result === content) {
         // no change has been made
-        return
     }
     console.log('set env variable', name, 'in', filePath)
     // else change has been made
@@ -78,14 +79,14 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     fs.writeFileSync(filePath, result)
 }
 
-const setEnvVariables = (filePaths: string[], env: Env) => {
+const setEnvVariables = async (filePaths: string[], env: Env, argv: ArgumentsCamelCase, recursiveCall?: boolean) => {
     for (const filePath of filePaths) {
         const stats = fs.lstatSync(filePath)
         if (stats.isDirectory()) {
             // recurse into directory
             const files = fs.readdirSync(filePath)
-            files.forEach((file) => {
-                setEnvVariables([path.join(filePath, file)], env)
+            files.forEach(async (file) => {
+                await setEnvVariables([path.join(filePath, file)], env, argv, true)
             })
         } else if (stats.isFile()) {
             // process file
@@ -93,12 +94,17 @@ const setEnvVariables = (filePaths: string[], env: Env) => {
                 // loop through all env variables and set them
                 for (const [name, value] of Object.entries(env)) {
                     // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
-                    setEnvVariable(filePath, name, value)
+                    await setEnvVariable(filePath, name, value)
                 }
             }
         } else {
             throw new Error(`Unknown file type: ${filePath}`)
         }
+    }
+    if (!recursiveCall) {
+        // finished setting env variables
+        // format the code
+        await exec(`npm run cli -- fmt --verbose --all`)
     }
 }
 
@@ -110,17 +116,16 @@ const exec = (
     stderr: string
     code: number | null
 }> => {
-    console.log(`> ${command}`)
+    console.log(chalk.bgBlack.cyan.bold(`> ${command}`))
 
     const prc = spawn(command, {
         shell: true,
     })
 
-    if (pipe || pipe === undefined) {
+    if (pipe ?? true) {
         prc.stdout.pipe(process.stdout)
         prc.stderr.pipe(process.stderr)
     }
-    stdin.pipe(prc.stdin)
 
     const stdoutData: string[] = []
     const stderrData: string[] = []
@@ -133,6 +138,7 @@ const exec = (
 
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
+            prc.stdout.push('\n')
             const output = {
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
@@ -197,12 +203,13 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const execCargo = async (argv: ArgumentsCamelCase, cmd: string, dir?: string) => {
+    const buildCargoCmd = (argv: ArgumentsCamelCase, cmd: string, dir?: string) => {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
         const dockerImage = argv.docker === '' ? 'prosopo/contracts-ci-linux:3.0.1' : argv.docker ?? ''
-        console.log('dockerImage', dockerImage)
+        console.log(`dockerImage=${dockerImage}`)
+        console.log(`cmd=${cmd}`)
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
@@ -216,42 +223,17 @@ export async function processArgs(args: string[]) {
         let script = ''
         if (dockerImage) {
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
-            // check if the docker image is already pulled
-            try {
-                await exec(`docker images -q ${dockerImage}`)
-            } catch (e: any) {
-                // if not, pull it
-                await exec(`docker pull ${dockerImage}`)
-            }
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh ${dockerImage} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            const uid = process.getuid?.() ?? '1000'
+            const gid = process.getgid?.() ?? '1000'
+            script = `docker run --rm -u ${uid}:${gid} -v ${repoDir}:/repo -v ${cargoCacheDir}:/usr/local/cargo/registry ${dockerImage} ${cargoCmd} ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}`
         } else {
-            script = `cargo ${toolchain} ${cmd} ${rest}`
+            script = `${cargoCmd} ${toolchain} ${cmd} ${rest}`
             if (dir) {
                 script = `cd ${dir} && ${script}`
             }
         }
 
-        let error = false
-        try {
-            await exec(script)
-        } catch (e: any) {
-            // error should be printed to console in the exec function
-            // error out after cleanup
-            error = true
-        }
-
-        if (dockerImage) {
-            // docker ci image runs as root, so chown the target dir
-            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ${targetDir} || true`)
-        }
-
-        await new Promise((resolve, reject) => {
-            if (error) {
-                reject()
-            } else {
-                resolve({})
-            }
-        })
+        return script
     }
 
     await yargs(hideBin(args))
@@ -279,11 +261,10 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                console.log(contracts)
+                await exec(`cd ${repoDir} && mkdir -p expanded`)
                 for (const contract of contracts) {
-                    await exec(
-                        `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
-                    )
+                    const dir = `${contractsDir}/${contract}`
+                    await exec(`${buildCargoCmd(argv, 'expand', dir)} > ${repoDir}/expanded/${contract}.rs`)
                 }
             },
             []
@@ -302,9 +283,8 @@ Cargo pass-through commands:
                 const contracts = argv.contract as string[]
                 delete argv.contract
                 for (const contract of contracts) {
-                    await exec(
-                        `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
-                    )
+                    const dir = `${contractsDir}/${contract}`
+                    await exec(`${buildCargoCmd(argv, 'contract metadata', dir)}`)
                 }
             },
             []
@@ -322,8 +302,9 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                for (const contract in contracts) {
-                    await exec(`cd ${contractsDir}/${contract} && cargo contract instantiate ${argv._}`)
+                for (const contract of contracts) {
+                    const dir = `${contractsDir}/${contract}`
+                    await exec(`${buildCargoCmd(argv, 'contract instantiate', dir)}`)
                 }
             },
             []
@@ -336,21 +317,31 @@ Cargo pass-through commands:
                 yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
+                yargs = yargs.option('skip-env', {
+                    type: 'boolean',
+                    demand: false,
+                    desc: 'Skip setting env variables',
+                    default: false,
+                })
                 return yargs
             },
             async (argv) => {
-                // set the env variables using find and replace
-                const env: Env = {
-                    git_commit_id: await getGitCommitId(),
+                if (!argv.skipEnv) {
+                    // set the env variables using find and replace
+                    const env: Env = {
+                        git_commit_id: await getGitCommitId(),
+                    }
+                    await setEnvVariables(packagePaths, env, argv)
+                } else {
+                    console.log('Skipping setting env variables')
                 }
-                setEnvVariables(packagePaths, env)
 
                 const contracts = argv.contract as string[]
                 delete argv.contract
 
                 for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
-                    await execCargo(argv, 'contract build', contractPath)
+                    await exec(buildCargoCmd(argv, 'contract build', contractPath))
                 }
             },
             []
@@ -367,14 +358,12 @@ Cargo pass-through commands:
                 if (argv._ && argv._.length == 0) {
                     throw new Error('No command specified')
                 }
-                const cmd = argv._[0] // the first arg (the command)
+                const cmd = String(argv._[0] || '') // the first arg (the command)
                 if (!cmd) {
                     throw new Error('No command specified')
                 }
-                if (!cmd.toString().match(/^[a-z0-9]+/gims)) {
-                    throw new Error(`unknown command: ${cmd}`)
-                }
-                await execCargo(argv, cmd.toString())
+
+                await exec(buildCargoCmd(argv, cmd.toString()))
             },
             []
         )

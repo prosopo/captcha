@@ -14,16 +14,18 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
+import { getContractNames, getPaths } from '@prosopo/config'
+import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
-import { loadEnv } from '@prosopo/cli'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
-import fs from 'fs'
 import path from 'path'
+import setVersion from '../scripts/setVersion.js'
 import yargs from 'yargs'
 
+const paths = getPaths()
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -58,22 +60,16 @@ export async function processArgs(args: string[]) {
                         default: undefined,
                     }),
             async (argv) => {
-                if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
-                    throw new Error('Missing protocol wasm or json path')
-                }
                 const protocolContractAddress = await deployProtocol(
-                    process.env.CAPTCHA_WASM_PATH,
-                    process.env.CAPTCHA_ABI_PATH,
+                    process.env.PROSOPO_CAPTCHA_WASM_PATH,
+                    process.env.PROSOPO_CAPTCHA_ABI_PATH,
                     argv.deployer
                 )
+
                 log.info('contract address', protocolContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
-                        [
-                            'PROTOCOL_CONTRACT_ADDRESS',
-                            'REACT_APP_PROSOPO_CONTRACT_ADDRESS',
-                            'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS',
-                        ],
+                        ['PROSOPO_CONTRACT_ADDRESS', 'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS'],
                         protocolContractAddress.toString(),
                         log
                     )
@@ -96,11 +92,22 @@ export async function processArgs(args: string[]) {
                 log.info('contract address', dappContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
-                        ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
+                        ['PROSOPO_SITE_KEY', 'NEXT_PUBLIC_PROSOPO_SITE_KEY'],
                         dappContractAddress.toString(),
                         log
                     )
                 }
+            },
+            []
+        )
+        .command(
+            'create_env_files',
+            'Copies the env.xyz files to .env.xyz',
+            (yargs) => yargs,
+            async (argv) => {
+                const env = getEnv()
+                const paths = getPaths()
+                await exec(`cp -v ${paths.scripts}/env.${env} ${paths.scripts}/.env.${env}`)
             },
             []
         )
@@ -118,7 +125,7 @@ export async function processArgs(args: string[]) {
 
             handler: async (argv) => {
                 log.info('Running setup scripts')
-                await setup(argv.force)
+                await setup(!!argv.force)
             },
         })
         .command({
@@ -137,13 +144,6 @@ export async function processArgs(args: string[]) {
                         desc: 'The path to the output directory',
                     }),
             handler: async (argv) => {
-                const abiPath = path.resolve(argv.in)
-                const cwd = path.resolve('.')
-                if (!fs.existsSync(abiPath)) {
-                    throw new Error(`abiPath ${abiPath} does not exist. The command is running relative to ${cwd}`)
-                }
-                const outPath = path.resolve(argv.out)
-                // pass in relative path as typechain will resolve it relative to the cwd
                 await importContract(argv.in, argv.out)
             },
         })
@@ -152,25 +152,21 @@ export async function processArgs(args: string[]) {
             describe: 'Update all contracts into the contract package.',
             builder: (yargs) => yargs,
             handler: async (argv) => {
-                const contracts = ['captcha', 'proxy']
+                const contracts = getContractNames()
                 for (const contract of contracts) {
-                    const inDir = `../protocol/target/ink/${contract}`
-                    const outDir = `../packages/contract/src/typechain/${contract}`
-                    await exec(`mkdir -p ${outDir}`)
-                    await exec(`mkdir -p ${inDir}`)
-                    // console.log(`${outDir}`)
-                    // console.log(`${inDir}`)
-                    await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
-                    // console.log(`${path.resolve('../packages/contract/src/typechain/captcha/types-arguments')}`)
-                    // console.log(`${path.resolve('../packages/types/src/contract/typechain/captcha/types-arguments')}`)
-                    await exec(`mkdir -p ../packages/types/src/contract/typechain/captcha`)
+                    const inDir = `${paths.protocolDist}/${contract}`
                     await exec(
-                        `cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`
-                    )
-                    await exec(
-                        `cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractPackagesDir}/${contract}/src`
                     )
                 }
+            },
+        })
+        .command({
+            command: 'version',
+            describe: 'Set the version of packages',
+            builder: (yargs) => yargs.option('v', { type: 'string', demand: true }),
+            handler: async (argv) => {
+                await setVersion(String(argv.v))
             },
         }).argv
 }

@@ -12,55 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api'
-import { AssetsResolver, ContractAbi, EnvironmentTypes } from '@prosopo/types'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoBasicConfig } from '@prosopo/types'
-import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoBasicConfigOutput } from '@prosopo/types'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { WsProvider } from '@polkadot/rpc-provider'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
+import { isAddress } from '@polkadot/util-crypto/address'
 
 export class Environment implements ProsopoEnvironment {
-    config: ProsopoBasicConfig
+    config: ProsopoBasicConfigOutput
     db: Database | undefined
     contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
+    defaultNetwork: NetworkNames
     contractName: string
     abi: ContractAbi
     logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: KeyringPair
+    pair: KeyringPair | undefined
     api: ApiPromise | undefined
 
-    constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
+    constructor(config: ProsopoBasicConfigOutput, pair?: KeyringPair) {
         this.config = config
         this.defaultEnvironment = this.config.defaultEnvironment
+        this.defaultNetwork = this.config.defaultNetwork
         this.pair = pair
         this.logger = getLogger(this.config.logLevel, `ProsopoEnvironment`)
         if (
-            this.config.defaultEnvironment &&
-            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment) &&
+            this.config.defaultNetwork &&
+            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultNetwork) &&
             this.config.networks &&
-            this.config.networks[this.defaultEnvironment]
+            this.config.networks[this.defaultNetwork]
         ) {
-            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment]?.endpoint}`)
-            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment]?.endpoint)
-            this.contractAddress = this.config.networks[this.defaultEnvironment]?.contract.address || ''
-            this.contractName = this.config.networks[this.defaultEnvironment]?.contract.name || ''
+            const network = this.config.networks[this.defaultNetwork]
+            this.logger.info(`Endpoint: ${network?.endpoint}`)
+            this.wsProvider = new WsProvider(network?.endpoint)
+            this.contractAddress = network?.contract.address
+            this.contractName = network?.contract.name
 
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
-            this.keyring.addPair(this.pair)
-            this.abi = abiJson as ContractAbi
+            if (this.pair) this.keyring.addPair(this.pair)
+            this.abi = JSON.parse(abiJson)
             this.importDatabase().catch((err) => {
                 this.logger.error(err)
             })
@@ -75,17 +80,19 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getSigner(): Promise<void> {
-        await this.getApi().isReadyOrError
-        try {
-            this.pair = this.keyring.addPair(this.pair)
-        } catch (err) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+        if (this.pair) {
+            await this.getApi().isReadyOrError
+            try {
+                this.pair = this.keyring.addPair(this.pair)
+            } catch (err) {
+                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+            }
         }
     }
 
     getContractInterface(): ProsopoCaptchaContract {
         if (this.contractInterface === undefined) {
-            throw new ProsopoEnvError(new Error('contractInterface not setup! Please call isReady() first'))
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
         }
         return this.contractInterface
     }
@@ -105,30 +112,36 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = await this.getApi().rpc.system.accountNextIndex(this.pair.address)
+        const nonce = this.pair ? await this.getApi().rpc.system.accountNextIndex(this.pair.address) : 0
+        if (!isAddress(this.contractAddress)) {
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
+        }
         this.contractInterface = new ProsopoCaptchaContract(
             this.getApi(),
             this.abi,
             this.contractAddress,
-            this.pair,
             this.contractName,
-            // TODO can't find .toNumber() on Index type?
             parseInt(nonce.toString()),
-            this.config.logLevel as unknown as LogLevel
+            this.pair,
+            this.config.logLevel as unknown as LogLevel,
+            this.config.account.address // allows calling the contract from a public address only
         )
         return this.contractInterface
     }
 
     async isReady() {
         try {
-            if (this.config.account.password) {
+            if (this.pair && this.config.account.password) {
                 this.pair.unlock(this.config.account.password)
             }
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             }
             await this.getSigner()
-            this.contractInterface = await this.getContractApi()
+            // make sure contract address is valid before trying to load contract interface
+            if (isAddress(this.contractAddress)) {
+                this.contractInterface = await this.getContractApi()
+            }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)

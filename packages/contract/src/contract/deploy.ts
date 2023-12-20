@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi, CodePromise } from '@polkadot/api-contract'
-import { ApiPromise } from '@polkadot/api'
-import { BN, BN_ZERO } from '@polkadot/util'
+import { Abi } from '@polkadot/api-contract/Abi'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN, BN_ZERO } from '@polkadot/util/bn'
 import { BlueprintOptions } from '@polkadot/api-contract/types'
+import { CodePromise } from '@polkadot/api-contract/promise'
 import { CodeSubmittableResult } from '@polkadot/api-contract/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ISubmittableResult } from '@polkadot/types/types'

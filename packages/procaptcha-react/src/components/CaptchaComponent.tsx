@@ -42,126 +42,95 @@ const CaptchaComponent = ({
     themeColor,
 }: CaptchaComponentProps) => {
     const { t } = useTranslation()
-    const captcha = at(challenge.captchas, index)
-    const solution = at(solutions, index)
+    const captcha = challenge.captchas ? at(challenge.captchas, index) : null
+    const solution = solutions ? at(solutions, index) : []
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
     return (
         <Box
             sx={{
-                // center the popup horizontally and vertically
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                // fill entire screen
+                // introduce scroll bars when screen < minWidth of children
+                overflowX: 'auto',
+                overflowY: 'auto',
                 width: '100%',
-                height: '100%',
+                maxWidth: '500px',
+                maxHeight: '100%',
             }}
         >
             <Box
+                bgcolor={theme.palette.background.default}
                 sx={{
-                    // introduce scroll bars when screen < minWidth of children
-                    overflowX: 'auto',
-                    overflowY: 'auto',
-                    width: '100%',
-                    // limit the popup width
-                    maxWidth: '450px',
-                    // maxHeight introduces vertical scroll bars if children content longer than window
-                    maxHeight: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: '300px',
                 }}
             >
                 <Box
-                    bgcolor={theme.palette.background.default}
+                    px={2}
+                    py={3}
                     sx={{
                         display: 'flex',
-                        flexDirection: 'column',
-                        // the min width of the popup before scroll bars appear
-                        minWidth: '300px',
+                        alignItems: 'center',
+                        width: '100%',
+                    }}
+                    bgcolor={theme.palette.primary.main}
+                >
+                    <Typography
+                        sx={{
+                            color: '#ffffff',
+                            fontWeight: 700,
+                        }}
+                    >
+                        {t('WIDGET.SELECT_ALL')}
+                        {': '}
+                    </Typography>
+                    <Typography
+                        px={1}
+                        sx={{
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            textTransform: 'capitalize',
+                            fontSize: theme.typography.h6.fontSize,
+                        }}
+                    >
+                        {`${at(challenge.captchas, index).captcha.target}`}
+                    </Typography>
+                </Box>
+                <Box {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
+                    {captcha && <CaptchaWidget challenge={captcha} solution={solution} onClick={onClick} />}
+                </Box>
+                <Box
+                    px={2}
+                    py={1}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                    }}
+                    {...addDataAttr({ dev: { cy: 'dots-captcha' } })}
+                />
+                <Box
+                    px={2}
+                    pt={0}
+                    pb={2}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
                     }}
                 >
-                    <Box
-                        px={2}
-                        py={3}
-                        sx={{
-                            // center the header
-                            display: 'flex',
-                            alignItems: 'center',
-                            width: '100%',
-                        }}
-                        bgcolor={theme.palette.primary.main}
+                    <Button onClick={onCancel} variant="text">
+                        {t('WIDGET.CANCEL')}
+                    </Button>
+                    <Button
+                        color="primary"
+                        onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
+                        variant="contained"
+                        {...addDataAttr({ dev: { cy: 'button-next' } })}
                     >
-                        <Typography
-                            sx={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {t('WIDGET.SELECT_ALL')}
-                            {': '}
-                        </Typography>
-                        <Typography
-                            px={1}
-                            sx={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                fontSize: theme.typography.h6.fontSize,
-                            }}
-                        >
-                            {`${at(challenge.captchas, index).captcha.target}`}
-                        </Typography>
-                    </Box>
-
-                    <Box {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
-                        <CaptchaWidget challenge={captcha} solution={solution} onClick={onClick} />
-                    </Box>
-                    <Box
-                        px={2}
-                        py={1}
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '100%',
-                        }}
-                        {...addDataAttr({ dev: { cy: 'dots-captcha' } })}
-                    >
-                        {challenge.captchas.map((_, i) => (
-                            <Box
-                                key={i}
-                                sx={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: '50%',
-                                    border: '1px solid #CFCFCF',
-                                }}
-                                mx={0.5}
-                                bgcolor={index === i ? theme.palette.background.default : '#CFCFCF'}
-                            />
-                        ))}
-                    </Box>
-                    <Box
-                        px={2}
-                        pt={0}
-                        pb={2}
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        <Button onClick={onCancel} variant="text">
-                            {t('WIDGET.CANCEL')}
-                        </Button>
-                        <Button
-                            color="primary"
-                            onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
-                            variant="contained"
-                            {...addDataAttr({ dev: { cy: 'button-next' } })}
-                        >
-                            {index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                        </Button>
-                    </Box>
+                        {index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                    </Button>
                 </Box>
             </Box>
         </Box>

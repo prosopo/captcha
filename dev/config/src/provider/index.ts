@@ -1,1 +1,1 @@
-export { default as testConfig } from './test.js'
+export { default as getTestConfig } from './test.js'

@@ -11,23 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api'
-import {
-    ArgumentTypes,
-    BatchCommitConfig,
-    Commit,
-    ExtrinsicBatch,
-    ScheduledTaskNames,
-    ScheduledTaskStatus,
-} from '@prosopo/types'
-import { BN } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
+import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'
@@ -35,11 +29,11 @@ const CONTRACT_METHOD_NAME = 'providerCommitMany'
 export class BatchCommitmentsTask {
     contract: ProsopoCaptchaContract
     db: Database
-    batchCommitConfig: BatchCommitConfig
+    batchCommitConfig: BatchCommitConfigOutput
     logger: Logger
     private nonce: bigint
     constructor(
-        batchCommitConfig: BatchCommitConfig,
+        batchCommitConfig: BatchCommitConfigOutput,
         contractApi: ProsopoCaptchaContract,
         db: Database,
         startNonce: bigint,
@@ -109,12 +103,12 @@ export class BatchCommitmentsTask {
     async createExtrinsics(commitments: UserCommitmentRecord[]): Promise<ExtrinsicBatch> {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contract.abi.findMessage(CONTRACT_METHOD_NAME)
-        const batchedCommitmentIds: ArgumentTypes.Hash[] = []
+        const batchedCommitmentIds: Hash[] = []
         let totalRefTime = new BN(0)
         let totalProofSize = new BN(0)
         let totalFee = new BN(0)
         const maxBlockWeight = this.contract.api.consts.system.blockWeights.maxBlock
-        const commitmentArray: ArgumentTypes.Commit[] = []
+        const commitmentArray: Commit[] = []
         let extrinsic: SubmittableExtrinsic<'promise'> | undefined
         for (const commitment of commitments) {
             const commit = this.convertCommit(commitment)
@@ -206,7 +200,7 @@ export class BatchCommitmentsTask {
         return await this.db.getUnbatchedDappUserCommitments()
     }
 
-    async flagBatchedCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagBatchedCommitments(commitmentIds: Hash[]): Promise<void> {
         await this.db.flagBatchedDappUserCommitments(commitmentIds)
     }
 
@@ -215,8 +209,7 @@ export class BatchCommitmentsTask {
 
         return {
             ...commit,
-            userSignaturePart1: userSignature.slice(0, userSignature.length / 2),
-            userSignaturePart2: userSignature.slice(userSignature.length / 2),
+            userSignature,
             // to satisfy typescript
             requestedAt: new BN(requestedAt).toNumber(),
             completedAt: new BN(completedAt).toNumber(),

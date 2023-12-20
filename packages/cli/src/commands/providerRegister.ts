@@ -3,10 +3,11 @@ import { ArgumentsCamelCase, Argv } from 'yargs'
 import { CommandModule } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { Payee, ProsopoConfig } from '@prosopo/types'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { stringToU8a } from '@polkadot/util'
+import { stringToU8a } from '@polkadot/util/string'
 import { validateFee, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 
@@ -15,7 +16,7 @@ const providerRegisterArgsParser = z.object({
     fee: z.number(),
     payee: z.nativeEnum(Payee),
 })
-export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_register')
     return {
         command: 'provider_register',
@@ -40,7 +41,7 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
         handler: async (argv: ArgumentsCamelCase) => {
             try {
                 const parsedArgs = providerRegisterArgsParser.parse(argv)
-                const env = new ProviderEnvironment(pair, config)
+                const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [

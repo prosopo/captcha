@@ -11,16 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { LogLevel, getLogger } from '@prosopo/common'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import path from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info, 'env')
 
 export function getEnv() {
     if (process.env.NODE_ENV) {
-        return process.env.NODE_ENV.replace(/[^0-9a-z_]/gi, '')
+        return process.env.NODE_ENV.replace(/\W/g, '')
     }
     return 'development'
 }
@@ -28,6 +30,7 @@ export function getEnv() {
 export function loadEnv(rootDir?: string, filename?: string, filePath?: string) {
     const envPath = getEnvFile(path.resolve(rootDir || '.'), filename, filePath)
     const args = { path: envPath }
+    logger.info(`Loading env from ${envPath}`)
     dotenv.config(args)
 }
 

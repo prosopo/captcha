@@ -1,0 +1,38 @@
+name: 'Print Vars'
+description: 'Prints github varibles'
+runs:
+    using: 'composite'
+    steps:
+        - name: github context
+          shell: bash
+          run: echo "${{ toJson(github) }}"
+        - name: env context
+          shell: bash
+          run: echo "${{ toJson(env) }}"
+        - name: vars context
+          shell: bash
+          run: echo "${{ toJson(vars) }}"
+        - name: job context
+          shell: bash
+          run: echo "${{ toJson(job) }}"
+        - name: steps context
+          shell: bash
+          run: echo "${{ toJson(steps) }}"
+        - name: runner context
+          shell: bash
+          run: echo "${{ toJson(runner) }}"
+        - name: secrets context
+          shell: bash
+          run: echo "${{ toJson(secrets) }}"
+        - name: strategy context
+          shell: bash
+          run: echo "${{ toJson(strategy) }}"
+        - name: matrix context
+          shell: bash
+          run: echo "${{ toJson(matrix) }}"
+        - name: needs context
+          shell: bash
+          run: echo "${{ toJson(needs) }}"
+        - name: inputs context
+          shell: bash
+          run: echo "${{ toJson(inputs) }}"

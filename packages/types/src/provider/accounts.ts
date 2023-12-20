@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
+import { BN } from '@polkadot/util/bn'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Payee } from '../contract/typechain/captcha/types-arguments/captcha.js'
+import { Payee } from '@prosopo/captcha-contract/types-arguments'
 
 export interface IUserAccount {
     secret?: string
@@ -32,7 +32,6 @@ export interface IProviderAccount extends IUserAccount {
 
 export interface IDappAccount {
     secret: string
-    contractAccount: string
     fundAmount: number | BN
     pair?: KeyringPair
 }

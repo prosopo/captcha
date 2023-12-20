@@ -11,27 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
 import {
-    ArgumentTypes,
     Captcha,
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
-    CaptchaStatus,
     CaptchaWithProof,
-    Dapp,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
-    ProsopoConfig,
-    Provider,
+    ProsopoConfigOutput,
+    ProviderDetails,
     ProviderRegistered,
-    RandomProvider,
 } from '@prosopo/types'
-import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
 import {
     CaptchaMerkleTree,
     buildDataset,
@@ -41,16 +37,19 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { ContractPromise } from '@polkadot/api-contract'
+import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
-import { SubmittableResult } from '@polkadot/api'
+import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
-import { hexToU8a, stringToHex } from '@polkadot/util'
-import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { hexToU8a } from '@polkadot/util/hex'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 import { shuffleArray } from '../util.js'
+import { signatureVerify } from '@polkadot/util-crypto/signature'
+import { stringToHex } from '@polkadot/util/string'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -66,7 +65,7 @@ export class Tasks {
 
     logger: Logger
 
-    config: ProsopoConfig
+    config: ProsopoConfigOutput
 
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
@@ -106,6 +105,9 @@ export class Tasks {
         if (solutions < this.config.captchas.solved.count) {
             throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
         }
+        if (solutions < this.config.captchas.unsolved.count) {
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
 
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId || !dataset.datasetContentId) {
@@ -132,11 +134,7 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof(
-        datasetId: ArgumentTypes.Hash,
-        solved: boolean,
-        size: number
-    ): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof(datasetId: Hash, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
@@ -526,7 +524,7 @@ export class Tasks {
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {
-                if (dappUserSolution.status === ArgumentTypes.CaptchaStatus.approved) {
+                if (dappUserSolution.status === CaptchaStatus.approved) {
                     return dappUserSolution
                 }
             }
@@ -535,12 +533,20 @@ export class Tasks {
     }
 
     /* Returns public details of provider */
-    async getProviderDetails(): Promise<Provider> {
-        return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    async getProviderDetails(): Promise<ProviderDetails> {
+        const provider: Provider = await wrapQuery(
+            this.contract.query.getProvider,
+            this.contract.query
+        )(this.contract.pair.address)
+
+        const dbConnectionOk = await this.getCaptchaWithProof(provider.datasetId, true, 1)
+            .then(() => true)
+            .catch(() => false)
+
+        return { provider, dbConnectionOk }
     }
 
     /** Get the dataset from the databse */
-
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
     }

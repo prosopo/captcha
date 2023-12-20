@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes } from '@prosopo/types'
 import {
     Captcha,
     CaptchaSolution,
@@ -22,32 +21,34 @@ import {
     DatasetWithIds,
     Item,
 } from '@prosopo/types'
+import { CaptchaStatus, Commit } from '@prosopo/captcha-contract/types-returns'
 import { Connection, Model, Schema } from 'mongoose'
 import { DeleteResult } from 'mongodb'
+import { Hash } from '@prosopo/types'
 import { Logger } from '@prosopo/common'
 import { PendingCaptchaRequest } from '@prosopo/types'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
-import { z } from 'zod'
+import { ZodType, any, array, boolean, date, nativeEnum, number, object, string, infer as zInfer } from 'zod'
 
-export interface UserCommitmentRecord extends Omit<ArgumentTypes.Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
+export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
     userSignature: number[]
     processed: boolean
     batched: boolean
 }
 
-export const UserCommitmentSchema = z.object({
-    userAccount: z.string(),
-    dappContract: z.string(),
-    datasetId: z.string(),
-    providerAccount: z.string(),
-    id: z.string(),
-    status: z.nativeEnum(ArgumentTypes.CaptchaStatus),
-    userSignature: z.array(z.number()),
-    completedAt: z.number(),
-    requestedAt: z.number(),
-    processed: z.boolean(),
-    batched: z.boolean(),
-}) satisfies z.ZodType<UserCommitmentRecord>
+export const UserCommitmentSchema = object({
+    userAccount: string(),
+    dappContract: string(),
+    datasetId: string(),
+    providerAccount: string(),
+    id: string(),
+    status: nativeEnum(CaptchaStatus),
+    userSignature: array(number()),
+    completedAt: number(),
+    requestedAt: number(),
+    processed: boolean(),
+    batched: boolean(),
+}) satisfies ZodType<UserCommitmentRecord>
 
 export interface SolutionRecord extends CaptchaSolution {
     datasetId: string
@@ -128,10 +129,10 @@ export const SolutionRecordSchema = new Schema<SolutionRecord>({
 SolutionRecordSchema.index({ captchaId: 1 })
 
 export const UserSolutionSchema = CaptchaSolutionSchema.extend({
-    processed: z.boolean(),
-    commitmentId: z.string(),
+    processed: boolean(),
+    commitmentId: string(),
 })
-export type UserSolutionRecord = z.infer<typeof UserSolutionSchema>
+export type UserSolutionRecord = zInfer<typeof UserSolutionSchema>
 export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
     {
         captchaId: { type: String, required: true },
@@ -147,10 +148,10 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 UserSolutionRecordSchema.index({ captchaId: 1 })
 
 export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
-    captchas: z.array(UserSolutionSchema),
+    captchas: array(UserSolutionSchema),
 })
 
-export type UserCommitmentWithSolutions = z.infer<typeof UserCommitmentWithSolutionsSchema>
+export type UserCommitmentWithSolutions = zInfer<typeof UserCommitmentWithSolutionsSchema>
 
 export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     accountId: { type: String, required: true },
@@ -163,20 +164,18 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 })
 
-export const ScheduledTaskSchema = z.object({
-    taskId: z.string(),
-    processName: z.nativeEnum(ScheduledTaskNames),
-    datetime: z.date(),
-    status: z.nativeEnum(ScheduledTaskStatus),
-    result: z
-        .object({
-            data: z.any().optional(),
-            error: z.any().optional(),
-        })
-        .optional(),
+export const ScheduledTaskSchema = object({
+    taskId: string(),
+    processName: nativeEnum(ScheduledTaskNames),
+    datetime: date(),
+    status: nativeEnum(ScheduledTaskStatus),
+    result: object({
+        data: any().optional(),
+        error: any().optional(),
+    }).optional(),
 })
 
-export type ScheduledTaskRecord = z.infer<typeof ScheduledTaskSchema>
+export type ScheduledTaskRecord = zInfer<typeof ScheduledTaskSchema>
 
 export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
     taskId: { type: String, required: true },
@@ -209,13 +208,11 @@ export interface Database {
 
     storeDataset(dataset: Dataset): Promise<void>
 
+    getSolutions(datasetId: string): Promise<SolutionRecord[]>
+
     getDataset(datasetId: string): Promise<DatasetWithIds>
 
-    getRandomCaptcha(
-        solved: boolean,
-        datasetId: ArgumentTypes.Hash | string,
-        size?: number
-    ): Promise<Captcha[] | undefined>
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>
 
@@ -223,7 +220,7 @@ export interface Database {
 
     removeCaptchas(captchaIds: string[]): Promise<void>
 
-    getDatasetDetails(datasetId: ArgumentTypes.Hash | string | Uint8Array): Promise<DatasetBase>
+    getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>
 
     storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void>
 
@@ -255,9 +252,9 @@ export interface Database {
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeProcessedDappUserSolutions(commitmentIds: ArgumentTypes.Hash[]): Promise<DeleteResult | undefined>
+    removeProcessedDappUserSolutions(commitmentIds: Hash[]): Promise<DeleteResult | undefined>
 
-    removeProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<DeleteResult | undefined>
+    removeProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<DeleteResult | undefined>
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
@@ -267,11 +264,11 @@ export interface Database {
 
     getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>
 
-    flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void>
+    flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>
 
-    flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void>
+    flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>
 
-    flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void>
+    flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void>
 
     getLastBatchCommitTime(): Promise<Date>
 
