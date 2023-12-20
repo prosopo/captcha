@@ -162,7 +162,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      *
      * @param {StoredEvents}
      * @param {string} accountId - Dapp User id
-     * @return {void}
      */
     router.post(ApiPaths.SubmitUserEvents, async (req, res, next) => {
         try {

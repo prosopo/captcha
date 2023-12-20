@@ -275,7 +275,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     </div>
                 </div>
             </div>
-            {config.mongoAtlasUri && (
+            {config.devOnlyWatchEvents && (
                 <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
             )}
         </div>

@@ -39,7 +39,6 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto/random'
-import { saveCaptchaEvent } from './collectorDatabase.js'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util/string'
 import ExtensionWeb2 from '../api/ExtensionWeb2.js'
@@ -573,16 +572,13 @@ export function Manager(
         )
     }
 
-    const exportData = (events: StoredEvents) => {
-        const accountId = state.account?.account.address
-        const atlasUri = configOptional.mongoAtlasUri
-
-        if (!accountId || !atlasUri) {
+    const exportData = async (events: StoredEvents) => {
+        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
+        if (!providerUrl) {
             return
         }
-
-        saveCaptchaEvent(events, accountId, atlasUri)
-        console.log('saved events to database', events)
+        const providerApi = await loadProviderApi(providerUrl)
+        await providerApi.submitUserEvents(events, getAccount().account.address)
     }
 
     return {

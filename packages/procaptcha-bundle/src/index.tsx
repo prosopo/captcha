@@ -74,7 +74,7 @@ const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
             address: siteKey,
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        mongoAtlasUri: process.env._DEV_ONLY_ATLAS_URI,
+        mongoAtlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true',
     })
 }
 
