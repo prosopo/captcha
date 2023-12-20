@@ -1,5 +1,5 @@
-import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, startCollector } from '@prosopo/procaptcha'
 import { MutableRefObject, useEffect, useRef, useState } from 'react'
+import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, startCollector } from '@prosopo/procaptcha'
 
 type CollectorProps = {
     onProcessData: (data: StoredEvents) => void
