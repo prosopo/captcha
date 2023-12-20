@@ -1,13 +1,7 @@
 name: publish
 
 on:
-    workflow_run:
-        # trigger when the post_pr workflow
-        workflows:
-            - post_pr
-        # has completed, no longer running
-        types:
-            - completed
+    push:
         # only on the main branch
         branches:
             - main
@@ -21,10 +15,6 @@ on:
                 required: false
                 default: false
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
-
 jobs:
     publish:
         runs-on: ubuntu-latest
@@ -35,35 +25,61 @@ jobs:
             # check if the root package.json has been changed, specifically if the version has been bumped
             - name: Check version
               id: check_version
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # get the next version number from the package.json
-                  NEXT=$(cat package.json | jq -r '.version')
+                  NEXT=$(npm pkg get version)
 
                   # get the current version number from the current state of main branch
-                  CURRENT=$(git show origin/main:package.json | jq -r '.version')
+                  CURRENT=$(gh release list --limit 1 | awk '{print $2}')
+
+                  if [[ -z "$NEXT" ]]; then
+                    echo "Failed to get next version"
+                    exit 1
+                  fi
+
+                  if [[ -z "$CURRENT" ]]; then
+                    echo "Failed to get current version"
+                    exit 1
+                  fi
 
                   # compare the two versions
                   echo "next version: $NEXT"
                   echo "next_version=$NEXT" >> $GITHUB_OUTPUT
                   echo "current version: $CURRENT"
                   echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
-                  if [[ $NEXT == $CURRENT ]]; then
+
+                  NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
+                  NEXT_MINOR=$(echo $NEXT | cut -d. -f2)
+                  NEXT_PATCH=$(echo $NEXT | cut -d. -f3)
+                  CURRENT_MAJOR=$(echo $CURRENT | cut -d. -f1)
+                  CURRENT_MINOR=$(echo $CURRENT | cut -d. -f2)
+                  CURRENT_PATCH=$(echo $CURRENT | cut -d. -f3)
+
+                  if [[ "$NEXT_MAJOR" > "$CURRENT_MAJOR" ]]; then
+                    echo "major version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "$NEXT_MINOR" > "$CURRENT_MINOR" ]]; then
+                    echo "minor version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "$NEXT_PATCH" > "$CURRENT_PATCH" ]]; then
+                    echo "patch version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  else
                     echo "no version bump detected"
                     echo "bump=false" >> $GITHUB_OUTPUT
-                  else
-                    echo "version bump detected"
-                    echo "bump=true" >> $GITHUB_OUTPUT
                   fi
+
                   if [[ "${{ github.event.inputs.ignore_version_check }}" == true ]]; then
                     echo "ignoring version check"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   fi
-                  echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
 
             # setup node
             - uses: actions/setup-node@v3
               with:
-                  node-version: 18
+                  node-version-file: '.nvmrc'
             - name: Install npm
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
@@ -95,6 +111,7 @@ jobs:
             - run: ls -la node_modules || true
 
             - name: Install
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   npm install
                   npm run removePolkadotJSWarnings
@@ -102,6 +119,7 @@ jobs:
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
             - name: Install dependencies and build packages
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   echo "Installing dependencies..."
                   npm ci
@@ -110,6 +128,7 @@ jobs:
                   npm run build:all:cjs
 
             - name: Build the contract sources
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   cd protocol/dev
                   npm run build
@@ -117,6 +136,7 @@ jobs:
                   npm run cli -- build --docker --release
 
             - name: Build JS bundle
+              if: steps.check_version.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
@@ -131,6 +151,7 @@ jobs:
             # by here we should have all the artifacts we need to publish. If any have experienced an error during build, we should skip publishing
             # this step will be skipped if the build above has failed at any point
             - name: Set publish var
+              if: steps.check_version.outputs.bump == 'true'
               id: publish
               run: |
                   echo "Setting publish var..."

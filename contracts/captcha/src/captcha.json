@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0xc3e9367adefe6f9a6eade416c5cdf92aec41e19b7f0a0e341a8a07a1ae51e2af",
+        "hash": "0xe03534936ee54124df281ee3f1adcc74754843d99345f805e6424b4c23b1720d",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -1610,6 +1610,10 @@
                             {
                                 "index": 30,
                                 "name": "NotAuthor"
+                            },
+                            {
+                                "index": 31,
+                                "name": "Math"
                             }
                         ]
                     }
