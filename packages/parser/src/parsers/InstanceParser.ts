@@ -1,24 +1,24 @@
-import { BaseParser, ParseOptions, Parser } from "./Parser.js"
+// import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-// TODO does the ctor type work here? test it out
-class InstanceParser<T> extends BaseParser<T> {
-    constructor(private type: new (...args: any[]) => T) {
-        super()
-    }
+// // TODO does the ctor type work here? test it out
+// class InstanceParser<T> extends BaseParser<T> {
+//     constructor(private type: new (...args: any[]) => T) {
+//         super()
+//     }
 
-    override _parse(value: unknown, options?: ParseOptions): T {
-        if (!(value instanceof this.type)) {
-            throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
-        }
-        return value
-    }
+//     override _parse(value: unknown, options?: ParseOptions): T {
+//         if (!(value instanceof this.type)) {
+//             throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
+//         }
+//         return value
+//     }
 
-    override validate(value: T): void {
-        super.validate(value)
-        if (!(value instanceof this.type)) {
-            throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
-        }
-    }
-}
+//     override validate(value: T): void {
+//         super.validate(value)
+//         if (!(value instanceof this.type)) {
+//             throw new Error(`Expected instance of ${this.type.name} but got ${typeof value}`)
+//         }
+//     }
+// }
 
-export const pInstance = <T>(type: new (...args: any[]) => T): Parser<T> => new InstanceParser(type)
+// export const pInstance = <T>(type: new (...args: any[]) => T): Parser<T> => new InstanceParser(type)

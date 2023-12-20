@@ -1,15 +1,15 @@
-import { BaseParser, ParseOptions, Parser } from "./Parser.js"
+// import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
-class DateParser extends BaseParser<Date> {
-    override _parse(value: unknown, options?: ParseOptions): Date {
-        if (options?.coerce && (typeof value === 'string' || typeof value === 'number' || value instanceof Date)) {
-            value = new Date(value)
-        }
-        if (!(value instanceof Date)) {
-            throw new Error(`Expected date but got ${typeof value}`)
-        }
-        return value
-    }
-}
+// class DateParser extends BaseParser<Date> {
+//     override _parse(value: unknown, options?: ParseOptions): Date {
+//         if (options?.coerce && (typeof value === 'string' || typeof value === 'number' || value instanceof Date)) {
+//             value = new Date(value)
+//         }
+//         if (!(value instanceof Date)) {
+//             throw new Error(`Expected date but got ${typeof value}`)
+//         }
+//         return value
+//     }
+// }
 
-export const pDate = (): Parser<Date> => new DateParser()
+// export const pDate = (): Parser<Date> => new DateParser()
