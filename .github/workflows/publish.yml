@@ -57,13 +57,13 @@ jobs:
                   CURRENT_MINOR=$(echo $CURRENT | cut -d. -f2)
                   CURRENT_PATCH=$(echo $CURRENT | cut -d. -f3)
 
-                  if [[ "$NEXT_MAJOR" > "$CURRENT_MAJOR" ]]; then
+                  if [[ "$NEXT_MAJOR" -gt "$CURRENT_MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "$NEXT_MINOR" > "$CURRENT_MINOR" ]]; then
+                  elif [[ "$NEXT_MINOR" -gt "$CURRENT_MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "$NEXT_PATCH" > "$CURRENT_PATCH" ]]; then
+                  elif [[ "$NEXT_PATCH" -gt "$CURRENT_PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
