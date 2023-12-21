@@ -5,61 +5,57 @@ type Entries<T> = {
     [K in keyof T]: [K, T[K]]
 }[keyof T][]
 
+export interface ObjectParserOptions {
+    // what to do with extra keys on an object? e.g. if the schema is { a: number } and we're given { a: 1, b: 2 }, what should we do about the 'b' field?
+    extraProperties?: 'delete' | 'error' | 'passthrough' // undefined == passthrough
+}
+
 class ObjectParser<T extends {}> extends BaseParser<T> {
-    constructor(private schema: Parseable<T>) {
+    constructor(private schema: Parseable<T>, private options: ObjectParserOptions = {}) {
         super()
     }
 
     _parse(value: unknown): T {
         // check runtime type
-        if (typeof value !== 'object') {
+        // null is considered an object type, but isn't an object so throw
+        if (typeof value !== 'object' || value === null) {
             throw new Error(`Expected object but got ${typeof value}`)
         }
-        // null is considered an object type, but isn't an object so throw
-        if (value === null) {
-            throw new Error(`Expected object but got null`)
+
+        // iterate over schema properties and parse each field
+        const entries = Object.entries(this.schema) as Entries<Parseable<T>>
+        const keys = Object.keys(value);
+        const keySet = new Set<string | number | symbol>(keys)
+        const output = value as any
+        for (const [key, subSchema] of entries) {
+            // parse the value for the key
+            output[key] = subSchema.parse(output[key])
+            // remove the key from the set of keys, it has been parsed so forget about it
+            keySet.delete(key)
         }
-        // check for additional keys if strict mode is enabled
-        // if (!options?.noStrict) {
-        //     if (Object.keys(value).length > Object.keys(this.schema).length) {
-        //         // either throw an error or remove the extra keys
-        //         if (!options?.noStripExtraKeys) {
-        //             throw new Error(
-        //                 `Unexpected additional keys found in object: ${Object.keys(value)
-        //                     .filter((key) => !(key in this.schema))
-        //                     .join(', ')}`
-        //             )
-        //         } else {
-        //             // find the extra keys by comparing against the schema
-        //             const actualKeys = Object.keys(value)
-        //             const expectedKeys = new Set(Object.keys(this.schema))
-        //             const extraKeys = actualKeys.filter((key) => !expectedKeys.has(key))
-        //             // remove the extra keys
-        //             for (const key of extraKeys) {
-        //                 delete (value as any)[key]
-        //             }
-        //         }
-        //     }
-        // }
-        // // check the expected keys are present
-        // const entries = Object.entries(this.schema) as Entries<Parseable<T>>
-        // for (const [key, subSchema] of entries) {
-        //     if (!(key in value)) {
-        //         throw new Error(`Expected object to have key ${String(key)}`)
-        //     }
-        //     // parse the value for the key
-        //     subSchema.parse((value as any)[key] as unknown)
-        // }
-        return value as T
+        // any keys remaining in the key set are not known according to the schema. Handle these unknown properties
+        for (const key of keySet) {
+            if (this.options.extraProperties === 'delete') {
+                delete (output as any)[key]
+            } else if (this.options.extraProperties === 'error') {
+                throw new Error(`unexpected property ${String(key)} found on ${value}`)
+            } else if (this.options.extraProperties === 'passthrough' || this.options.extraProperties === undefined) {
+                // do nothing, let the value passthrough
+            } else {
+                throw new Error(`unknown extraProperty handler: ${this.options.extraProperties}`)
+            }
+        }
+
+        return output as T
     }
 
-    merge<U>(parser: Parser<U>): Parser<T & U> {
-        return new MergeParser(this, parser)
-    }
+    // merge<U>(parser: Parser<U>): Parser<T & U> {
+    //     return new MergeParser(this, parser)
+    // }
 
-    extend<U extends {}>(schema: Parseable<U>): Parser<T & U> {
-        return this.merge(new ObjectParser(schema))
-    }
+    // extend<U extends {}>(schema: Parseable<U>): Parser<T & U> {
+    //     return this.merge(new ObjectParser(schema))
+    // }
 }
 
-export const pObject = <T extends {}>(schema: Parseable<T>): Parser<T> => new ObjectParser(schema)
+export const pObject = <T extends {}>(schema: Parseable<T>) => new ObjectParser(schema)
