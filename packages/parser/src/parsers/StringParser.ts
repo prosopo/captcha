@@ -9,4 +9,4 @@ class StringParser extends BaseParser<string> {
     }
 }
 
-export const pString = () => new StringParser()
+export const pString = (): StringParser => new StringParser()

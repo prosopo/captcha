@@ -9,4 +9,4 @@ class NumberParser extends BaseParser<number> {
     }
 }
 
-export const pNumber = (): Parser<number> => new NumberParser()
+export const pNumber = (): NumberParser => new NumberParser()

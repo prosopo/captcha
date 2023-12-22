@@ -9,4 +9,4 @@ class BooleanParser extends BaseParser<boolean> {
     }
 }
 
-export const pBoolean = () => new BooleanParser()
+export const pBoolean = (): BooleanParser => new BooleanParser()
