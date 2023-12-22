@@ -54,9 +54,9 @@ const a1: A = {
 type Mask<T> = {
     [K in keyof T]?: boolean | Mask<T[K]>
 }
-type Masked<T, U extends Mask<T>> = OmitNevers<{
-    [K in keyof T]: U[K] extends true ? T[K] : U[K] extends Mask<T[K]> ? Masked<T[K], U[K]> : never
-}>
+type Masked<T, U extends Mask<T>> = {
+    [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends true ? T[K] : U[K] extends Mask<T[K]> ? Masked<T[K], U[K]> : never
+}
 type NeverMask<T> = {
     [K in keyof T]: T[K] extends never ? true : false
 }
@@ -98,6 +98,20 @@ const a4: T1 = {
         f: 1,
     }
 }
+
+type T7 = {
+    d: string,
+    e: number,
+}
+type T5 = {
+    a: string,
+    b: number,
+    c: T7,
+}
+type T6 = T5 & {
+    c: Omit<T7, 'd'>,
+}
+
 
 {
     type Mask<T> = {
