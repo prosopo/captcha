@@ -9,4 +9,4 @@ class BigIntParser extends BaseParser<bigint> {
     }
 }
 
-export const pBigInt = () => new BigIntParser()
+export const pBigInt = (): BigIntParser => new BigIntParser()

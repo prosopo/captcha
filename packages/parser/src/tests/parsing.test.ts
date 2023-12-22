@@ -4,6 +4,8 @@ import { pNumber } from '../parsers/NumberParser.js';
 import { pBigInt } from '../parsers/BigIntParser.js';
 import { pBoolean } from '../parsers/BooleanParser.js';
 import { pObject } from '../parsers/ObjectParser.js';
+import { pIntersection, pIntersection2 } from '../parsers/IntersectionParser.js';
+import { Parser } from '../parsers/Parser.js';
 
 describe("bigint", () => {
     test("parses", () => {
@@ -154,5 +156,16 @@ describe("object", () => {
                 d: pBoolean(),
             }),
         }).parse(input)).toThrowError('3');
+    })
+})
+
+describe("intersection", () => {
+    test("parses", () => {
+        const b: Parser<string | number>[] = [pString(), pNumber()]
+        // const b: Parser<string | number>[] = [pString(), pNumber()]
+        // const a = pIntersection(b).parse("hello")
+        const a = pIntersection([pString(), pNumber()]).parse("hello")
+        const a2 = pIntersection2([pString(), pNumber()]).parse("hello")
+        type t2 = typeof pIntersection2([pString(), pNumber()])
     })
 })

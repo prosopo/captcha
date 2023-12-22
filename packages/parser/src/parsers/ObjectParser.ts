@@ -58,4 +58,4 @@ class ObjectParser<T extends {}> extends BaseParser<T> {
     // }
 }
 
-export const pObject = <T extends {}>(schema: Parseable<T>) => new ObjectParser(schema)
+export const pObject = <T extends {}>(schema: Parseable<T>): ObjectParser<T> => new ObjectParser(schema)
