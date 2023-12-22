@@ -52,10 +52,11 @@ const a1: A = {
     }
 }
 type Mask<T> = {
-    [K in keyof T]?: boolean | Mask<T[K]>
+    [K in keyof T]?: any
 }
+
 type Masked<T, U extends Mask<T>> = {
-    [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends true ? T[K] : U[K] extends Mask<T[K]> ? Masked<T[K], U[K]> : never
+    [K in keyof T as U[K] extends true ? K : never]: U[K] extends object ? Masked<T[K], U[K]> : T[K]
 }
 type NeverMask<T> = {
     [K in keyof T]: T[K] extends never ? true : false
@@ -110,6 +111,70 @@ type T5 = {
 }
 type T6 = T5 & {
     c: Omit<T7, 'd'>,
+}
+
+type FilterKeys<T, U extends {
+    [K in keyof T]?: any
+}> = {
+    [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends object ? FilterKeys<T[K], U[K]> : T[K]
+    }
+// type FilterKeys<T, U extends {
+//     [K in keyof T]?: any
+// }> = {
+//     [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends object ? FilterKeys<T[K], U[K]> : T[K]
+//     }
+
+type T10 = {
+    a: string,
+    b: number,
+    c: boolean,
+    d: {
+        e: string,
+        f: number,
+        g: boolean,
+    },
+}
+type T11 = FilterKeys<T10, {
+    a: true,
+    b: true,
+    d: {
+        e: true,
+        f: true,
+    },
+}>
+
+{
+    type FilterKeys<T, U extends {
+        [K in keyof T]?: any;
+    }> = {
+        [K in keyof U]: U[K] extends object ? FilterKeys<T[K], U[K]> : T[K];
+    };
+    
+    type OriginalType = {
+        a: number;
+        b: {
+            c: string;
+            d: boolean;
+        };
+        e: string[];
+    };
+
+    type FilteredType = FilterKeys<OriginalType, { b?: { c?: any } }>;
+
+    const originalObject: OriginalType = {
+        a: 42,
+        b: {
+            c: 'hello',
+            d: true,
+        },
+        e: ['a', 'b', 'c'],
+    };
+
+    const filteredObject: FilteredType = {
+        b: {
+            c: 'hello',
+        },
+    };
 }
 
 
