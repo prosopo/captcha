@@ -34,7 +34,12 @@ type A = {
 type B = {
     a: true,
     b: true,
+    c: {
+        d: true,
+        e: true,
+    }
 }
+type C = Omit<B, 'c.d'>
 
 const a1: A = {
     a: 'hello',
@@ -49,9 +54,28 @@ const a1: A = {
 type Mask<T> = {
     [K in keyof T]?: boolean | Mask<T[K]>
 }
-type Masked<T, U extends Mask<T>> = {
+type Masked<T, U extends Mask<T>> = OmitNevers<{
     [K in keyof T]: U[K] extends true ? T[K] : U[K] extends Mask<T[K]> ? Masked<T[K], U[K]> : never
+}>
+type NeverMask<T> = {
+    [K in keyof T]: T[K] extends never ? true : false
 }
+
+type OmitNevers<T> = {
+    [K in keyof T as T[K] extends never ? never : K]: T[K]
+}
+
+const a3: {
+    a: boolean,
+    b: boolean,
+    c: never,
+} = {
+    a: true,
+    b: true,
+    c: null!,
+}
+type T4 = OmitNevers<typeof a3>
+
 const f1 = <T, U extends Mask<T>>(input: T, mask: U): Masked<T, U> => {
     return null!
 }
@@ -61,7 +85,39 @@ const a2 = f1(a1, {
     d: {
         e: true,
         f: true,
-    }
+    },
+    x: true,
 })
 type T1 = typeof a2
 type T2 = typeof a2.d
+const a4: T1 = {
+    a: 'hello',
+    b: 1,
+    d: {
+        e: 'hello',
+        f: 1,
+    }
+}
+
+{
+    type Mask<T> = {
+        [K in keyof T]?: boolean | Mask<T[K]>
+    }
+    type Masked<T, U extends Mask<T>> = {
+        [K in keyof T]: U[K] extends true ? T[K] : U[K] extends Mask<T[K]> ? Masked<T[K], U[K]> : never
+    }
+    const f1 = <T, U extends Mask<T>>(input: T, mask: U): void => {
+        return null!
+    }
+    const a2 = f1(a1, {
+        a: true,
+        b: true,
+        d: {
+            e: true,
+            f: true,
+        },
+        x: true,
+    })
+    type T1 = typeof a2
+    // type T2 = typeof a2.d
+}
