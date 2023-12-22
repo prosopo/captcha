@@ -1,5 +1,16 @@
 // import { MergeParser } from "./MergeParser.js"
+import { pBoolean } from "./BooleanParser.js"
+import { pNumber } from "./NumberParser.js"
 import { BaseParser, Parser, Parseable } from "./Parser.js"
+import { pString } from "./StringParser.js"
+
+
+type Mask<T> = {
+    [K in keyof T]?: true | Mask<T[K]>
+}
+type Masked<T, U extends Mask<T>> = {
+    [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends true ? T[K] : U[K] extends Mask<T[K]> ? Masked<T[K], U[K]> : never
+}
 
 type Entries<T> = {
     [K in keyof T]: [K, T[K]]
@@ -13,6 +24,10 @@ export interface ObjectParserOptions {
 class ObjectParser<T extends {}> extends BaseParser<T> {
     constructor(private schema: Parseable<T>, private options: ObjectParserOptions = {}) {
         super()
+    }
+
+    pick(mask: Mask<T>): ObjectParser<Masked<T, Mask<T>>> {
+        return this
     }
 
     _parse(value: unknown): T {
@@ -59,3 +74,15 @@ class ObjectParser<T extends {}> extends BaseParser<T> {
 }
 
 export const pObject = <T extends {}>(schema: Parseable<T>): ObjectParser<T> => new ObjectParser(schema)
+
+const a1 = pObject({
+    a: pString(),
+    b: pNumber(),
+    c: pBoolean(),
+})
+const a2 = a1.parse({})
+const a3 = a1.pick({
+    a: true,
+    b: true,
+})
+const a4 = a3.parse({})
