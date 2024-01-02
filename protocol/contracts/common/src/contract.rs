@@ -1,11 +1,16 @@
 // pub use self::contract::{Common, CommonRef};
-use super::config::{Config, ConfigDefaultEnvironment};
+use super::errors::Error as ErrorTrait;
 use super::utils::account_id_bytes;
-// use crate::common::account_id_bytes;
+use super::Config as ConfigTrait;
 
 #[ink::contract]
 pub mod contract {
     use super::*;
+
+    #[allow(dead_code)]
+    type Error = ErrorTrait<Environment>;
+    enum Config {}
+    impl ConfigTrait<Environment> for Config {}
 
     #[derive(Default)]
     /// No fields are stored in the util contract as it's just filler
@@ -46,7 +51,7 @@ pub mod contract {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            ConfigDefaultEnvironment::get_git_commit_id()
+            Config::get_git_commit_id()
         }
     }
 

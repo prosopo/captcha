@@ -31,9 +31,3 @@ pub trait Config<Env: ink::env::Environment> {
             .map_err(|_| Error::AccountIdDecodeFailed)
     }
 }
-
-// The default environment implementation of config. This is an empty enum to serve as a namespace for accessing the config under the default environment.
-pub enum ConfigDefaultEnvironment {}
-
-// Implementation of the trait for the default environment
-impl Config<ink::env::DefaultEnvironment> for ConfigDefaultEnvironment {}

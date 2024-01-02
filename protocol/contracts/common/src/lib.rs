@@ -27,7 +27,7 @@ mod errors;
 pub use errors::Error;
 
 mod config;
-pub use config::{Config, ConfigDefaultEnvironment};
+pub use config::Config;
 
 mod utils;
 pub use utils::*;
