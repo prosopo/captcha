@@ -27,7 +27,10 @@ pub trait Config<Env: ink::env::Environment> {
             88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
         ];
         let encoded = scale::Encode::encode(&env_admin_bytes);
-        <Env as ink::env::Environment>::AccountId::decode(&mut &encoded[..])
-            .map_err(|_| Error::AccountIdDecodeFailed)
+        <Env as ink::env::Environment>::AccountId::decode(&mut &encoded[..]).map_err(|_| {
+            Error::AccountIdDecodeFailed {
+                account_id_bytes: encoded,
+            }
+        })
     }
 }

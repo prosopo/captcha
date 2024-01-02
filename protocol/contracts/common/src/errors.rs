@@ -1,14 +1,18 @@
 use core::marker::PhantomData;
+use scale_info::prelude::vec::Vec;
 
 /// The errors that can be returned by contracts. This is generic so it can be adjusted to any environment which the contract is being run on.
-#[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+#[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
 #[cfg_attr(
     any(feature = "std", feature = "ink-as-dependency"),
     derive(scale_info::TypeInfo)
 )]
 pub enum Error<Env: ink::env::Environment> {
     _PhantomVariant(PhantomData<Env>), // this is a placeholder to allow the enum to be generic, do not use! This can be removed when at least 1 of the error variants use the env type
-    AccountIdDecodeFailed, // returned if the account id decode fails, e.g. due to array of wrong length
+    AccountIdDecodeFailed {
+        /// The account id bytes which failed to decode
+        account_id_bytes: Vec<u8>,
+    }, // returned if the account id decode fails, e.g. due to array of wrong length
     NotAuthorised,
     TransferFailed,
     SetCodeHashFailed,
