@@ -1,4 +1,4 @@
-use super::test_helper::TestHelper;
+use super::test_utils::*;
 use ink::prelude::string::ToString;
 use ink::primitives::*;
 use scale::alloc::string::String;
@@ -62,11 +62,11 @@ impl Account {
     }
 
     pub fn balance(&self) -> u128 {
-        TestHelper::get_account_balance(self.account_id()).unwrap()
+        get_account_balance(self.account_id()).unwrap()
     }
 
     pub fn fund(&self, value: u128) {
-        TestHelper::set_account_balance(self.account_id(), value);
+        set_account_balance(self.account_id(), value);
     }
 
     pub fn role(&self) -> &String {
