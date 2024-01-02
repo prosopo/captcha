@@ -21,8 +21,6 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use common::Config as ConfigTrait;
-    use common::Error as ErrorTrait;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -32,6 +30,9 @@ pub mod captcha {
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
+    // define the error and config type based on the contract's environment
+    use common::Config as ConfigTrait;
+    use common::Error as ErrorTrait;
     type Error = ErrorTrait<Environment>;
     enum Config {}
     impl ConfigTrait<Environment> for Config {}
