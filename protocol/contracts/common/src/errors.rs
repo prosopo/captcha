@@ -6,7 +6,7 @@ use core::marker::PhantomData;
     any(feature = "std", feature = "ink-as-dependency"),
     derive(scale_info::TypeInfo)
 )]
-pub enum ContractError<Env: ink::env::Environment> {
+pub enum Error<Env: ink::env::Environment> {
     _PhantomVariant(PhantomData<Env>), // this is a placeholder to allow the enum to be generic, do not use! This can be removed when at least 1 of the error variants use the env type
     AccountIdDecodeFailed, // returned if the account id decode fails, e.g. due to array of wrong length
     NotAuthorised,
