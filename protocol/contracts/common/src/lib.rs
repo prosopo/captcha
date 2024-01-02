@@ -24,7 +24,7 @@ mod test_helper;
 pub use test_helper::TestHelper;
 
 mod errors;
-pub use errors::ContractError;
+pub use errors::Error;
 
 mod config;
 pub use config::{Config, ConfigDefaultEnvironment};
