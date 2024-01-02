@@ -19,9 +19,9 @@ mod account;
 pub use account::{Account, Pair};
 
 #[cfg(feature = "test-dependency")]
-mod test_helper;
+pub mod test_utils;
 #[cfg(feature = "test-dependency")]
-pub use test_helper::TestHelper;
+pub use test_utils::*;
 
 mod errors;
 pub use errors::Error;

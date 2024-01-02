@@ -71,6 +71,7 @@ pub mod contract {
     pub mod tests {
 
         use super::*;
+        use crate::test_utils::*;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;

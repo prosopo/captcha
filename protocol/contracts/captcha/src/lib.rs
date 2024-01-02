@@ -1331,9 +1331,9 @@ pub mod captcha {
         )
     )]
     mod tests {
+        use common::test_utils::*;
         use common::Account;
         use common::Pair;
-        use common::TestHelper;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
@@ -1459,7 +1459,7 @@ pub mod captcha {
             println!("seed: {}", seed);
             println!("key_pair: {}", key_pair.public());
 
-            TestHelper::set_caller(AccountId::from([0x00; 32]));
+            set_caller(AccountId::from([0x00; 32]));
 
             let res = Config::check_is_admin(AccountId::from([0x00; 32]));
 
