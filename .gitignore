@@ -139,3 +139,7 @@ vite.config.ts.timestamp*
 
 # ignore test results dir
 **/tests/**/test_results
+
+# ignore expanded rust files
+**/*.expanded.rs
+**/expanded.rs
