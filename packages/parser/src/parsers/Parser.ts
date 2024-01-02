@@ -1,5 +1,5 @@
 // Type that maps an object's properties to parsers for those properties
-export type Parseable<T> = {
+export type Parseable<T extends {}> = {
     [Property in keyof T]: Parser<T[Property]>
 }
 

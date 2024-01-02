@@ -1,6 +1,10 @@
 // import { Parseable } from "./Parseable.js"
 // import { BaseParser, ParseOptions, Parser } from "./Parser.js"
 
+import { pBoolean } from "./BooleanParser.js"
+import { pNumber } from "./NumberParser.js"
+import { ObjectParser } from "./ObjectParser.js"
+
 // class PickParser<T extends {}, U extends keyof T> extends BaseParser<Pick<T, U>> {
 //     constructor(private schema: Parseable<T>) {
 //         super()
@@ -113,16 +117,31 @@ type T6 = T5 & {
     c: Omit<T7, 'd'>,
 }
 
-type FilterKeys<T, U extends {
-    [K in keyof T]?: any
-}> = {
+// type Mask<T> = {
+//     [K in keyof T]?: any
+// }
+type FilterKeys<T, U extends Mask<T>> = {
     [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends object ? FilterKeys<T[K], U[K]> : T[K]
     }
-// type FilterKeys<T, U extends {
-//     [K in keyof T]?: any
-// }> = {
-//     [K in keyof T as U[K] extends true ? K : U[K] extends object ? K : never]: U[K] extends object ? FilterKeys<T[K], U[K]> : T[K]
-//     }
+
+const f2 = <T extends ObjectParser<any>, U extends Mask<T>>(parser: V, mask: U): ObjectParser<FilterKeys<T, U>> => {
+    return null!
+}
+
+const c1 = new ObjectParser({
+    a: pBoolean(),
+    b: pNumber(),
+    c: new ObjectParser({
+        d: pBoolean(),
+        e: pNumber(),
+    }),
+})
+const c2 = f2(c1, {
+    a: true,
+    c: {
+        d: true,
+    },
+})
 
 type T10 = {
     a: string,
