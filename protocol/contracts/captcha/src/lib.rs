@@ -21,7 +21,7 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use common::Config;
+    use common::Config as ConfigTrait;
     use common::ContractError;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
@@ -32,9 +32,9 @@ pub mod captcha {
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
-    type Error = ContractError<ink::env::DefaultEnvironment>;
-    enum ConfigDefaultEnvironment {}
-    impl Config<ink::env::DefaultEnvironment> for ConfigDefaultEnvironment {}
+    type Error = ContractError<Environment>;
+    enum Config {}
+    impl ConfigTrait<Environment> for Config {}
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
@@ -304,13 +304,13 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            ConfigDefaultEnvironment::get_git_commit_id()
+            Config::get_git_commit_id()
         }
 
         /// the admin which can control this contract. set to author/instantiator by default
         #[ink(message)]
         pub fn get_admin(&self) -> AccountId {
-            ConfigDefaultEnvironment::get_admin().unwrap() // TODO sort out
+            Config::get_admin().unwrap() // TODO sort out
         }
 
         /// Get all payee options
@@ -1275,7 +1275,7 @@ pub mod captcha {
         #[ink(message)]
         pub fn withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             let caller = self.env().caller();
-            ConfigDefaultEnvironment::check_is_admin(caller)?;
+            Config::check_is_admin(caller)?;
 
             let transfer_result =
                 ink::env::transfer::<ink::env::DefaultEnvironment>(caller, amount);
@@ -1305,7 +1305,7 @@ pub mod captcha {
 
         /// Is the caller the admin for this contract?
         fn check_caller_admin(&self) -> Result<(), Error> {
-            ConfigDefaultEnvironment::check_is_admin(self.env().caller())
+            Config::check_is_admin(self.env().caller())
         }
     }
 
@@ -1340,7 +1340,7 @@ pub mod captcha {
         use ink::env::hash::HashOutput;
 
         use common::Config as ConfigTrait;
-        use common::ConfigDefaultEnvironment as Config;
+        use common::Config;
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
