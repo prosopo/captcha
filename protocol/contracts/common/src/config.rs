@@ -1,7 +1,7 @@
 use super::errors::ContractError;
 use scale::Decode;
 
-// Trait implementing common functions for contracts
+// Trait implementing config functions for contracts
 pub trait Config<Env: ink::env::Environment> {
     fn check_is_admin(
         account: <Env as ink::env::Environment>::AccountId,
@@ -32,7 +32,7 @@ pub trait Config<Env: ink::env::Environment> {
     }
 }
 
-// The default environment implementation of common
+// The default environment implementation of config. This is an empty enum to serve as a namespace for accessing the config under the default environment.
 pub enum ConfigDefaultEnvironment {}
 
 // Implementation of the trait for the default environment
