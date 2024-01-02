@@ -1340,9 +1340,6 @@ pub mod captcha {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
 
-        use common::Config as ConfigTrait;
-        use common::Config;
-
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
