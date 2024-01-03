@@ -1371,7 +1371,7 @@ pub mod captcha {
             // ctor params should be set
             assert_eq!(contract.get_provider_stake_threshold(), STAKE_THRESHOLD);
             assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
-            assert_eq!(contract.get_admin(), nth_admin_account(0).account_id());
+            assert_eq!(contract.get_admin(), alice().account_id());
             assert_eq!(contract.get_max_user_history_len(), 10);
             assert_eq!(
                 contract.get_max_user_history_age_seconds(),
@@ -1458,7 +1458,7 @@ pub mod captcha {
             set_caller(admin); // an account which does have permission to call terminate
 
             let contract_account = contract.env().account_id();
-            let bal = get_account_balance(contract_account).unwrap();
+            let bal = get_account_balance(contract_account);
             let should_terminate = move || contract.terminate().unwrap();
             ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                 should_terminate,
@@ -1483,16 +1483,16 @@ pub mod captcha {
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
             set_caller(contract.get_admin()); // use the admin acc
-            let admin_bal: u128 = get_account_balance(contract.get_admin()).unwrap();
-            let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
+            let admin_bal: u128 = get_account_balance(contract.get_admin());
+            let contract_bal: u128 = get_account_balance(contract.env().account_id());
             let withdraw_amount: u128 = 1;
             contract.withdraw(withdraw_amount).unwrap();
             assert_eq!(
-                get_account_balance(contract.get_admin()).unwrap(),
+                get_account_balance(contract.get_admin()),
                 admin_bal + withdraw_amount
             );
             assert_eq!(
-                get_account_balance(contract.env().account_id()).unwrap(),
+                get_account_balance(contract.env().account_id()),
                 contract_bal - withdraw_amount
             );
         }
@@ -1503,8 +1503,8 @@ pub mod captcha {
             let mut contract = nth_contract(0);
 
             set_caller(contract.get_admin()); // use the admin acc
-            let admin_bal = get_account_balance(contract.get_admin()).unwrap();
-            let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
+            let admin_bal = get_account_balance(contract.get_admin());
+            let contract_bal = get_account_balance(contract.env().account_id());
             contract.withdraw(contract_bal + 1).unwrap(); // panics as bal would go below existential deposit
         }
 
@@ -1522,7 +1522,7 @@ pub mod captcha {
             let mut contract = nth_contract(0);
 
             // check the caller is admin
-            assert_eq!(contract.get_admin(), nth_admin_account(0).account_id());
+            assert_eq!(contract.get_admin(), alice().account_id());
         }
 
         /// Assert contract provider minimum stake default set from constructor.
