@@ -1,6 +1,8 @@
 use crate::test_utils::*;
 use crate::Account;
+use ink::prelude::string::ToString;
 use ink::primitives::*;
+use sp_core::crypto::DEV_PHRASE;
 use sp_core::Pair;
 
 pub fn get_unused_account() -> AccountId {
@@ -33,4 +35,49 @@ pub fn nth_contract_account(index: u128) -> Account {
 
 pub fn nth_code_hash(index: u128) -> [u8; 32] {
     Account::nth_role(index, "code_hash").pair().public().0
+}
+
+pub fn alice() -> Account {
+    Account::new(
+        &[
+            DEV_PHRASE.to_string(),
+            "//".to_string(),
+            "Alice".to_string(),
+        ]
+        .join(""),
+    )
+}
+
+pub fn bob() -> Account {
+    Account::new(&[DEV_PHRASE.to_string(), "//".to_string(), "Bob".to_string()].join(""))
+}
+
+pub fn charlie() -> Account {
+    Account::new(
+        &[
+            DEV_PHRASE.to_string(),
+            "//".to_string(),
+            "Charlie".to_string(),
+        ]
+        .join(""),
+    )
+}
+
+pub fn dave() -> Account {
+    Account::new(&[DEV_PHRASE.to_string(), "//".to_string(), "Dave".to_string()].join(""))
+}
+
+pub fn eve() -> Account {
+    Account::new(&[DEV_PHRASE.to_string(), "//".to_string(), "Eve".to_string()].join(""))
+}
+
+pub fn ferdie() -> Account {
+    Account::new(
+        &[
+            DEV_PHRASE.to_string(),
+            "//".to_string(),
+            "Ferdie".to_string(),
+        ]
+        .join(""),
+    )
 }
