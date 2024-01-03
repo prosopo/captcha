@@ -13,6 +13,8 @@ pub struct Account {
 }
 
 impl Account {
+    const EXISTENTIAL_DEPOSIT: u128 = 1;
+
     /// Create the nth account with the given role
     /// The role is embedded in the seed to ensure the same nth account is unique for each role. E.g. the 1st account with role1 is different to the 1st account with role2, etc.
     pub fn nth_role(n: u128, role: &str) -> Self {
@@ -38,8 +40,8 @@ impl Account {
             role: "".to_string(),
         };
         // if the account has no balance, give it 1 unit of balance (the existential deposit)
-        if result.balance() == 0 {
-            result.fund(1);
+        if result.balance() < Self::EXISTENTIAL_DEPOSIT {
+            result.fund(Self::EXISTENTIAL_DEPOSIT);
         }
         result
     }
@@ -64,11 +66,25 @@ impl Account {
     }
 
     pub fn balance(&self) -> u128 {
-        get_account_balance(self.account_id()).unwrap()
+        get_account_balance(self.account_id()).unwrap_or(0)
     }
 
     pub fn fund(&self, value: u128) {
-        set_account_balance(self.account_id(), value);
+        let balance = self.balance();
+        set_account_balance(self.account_id(), balance + value);
+    }
+
+    pub fn deduct(&self, value: u128) {
+        let balance = self.balance();
+        assert!(
+            balance >= value,
+            "Account balance is less than value to deduct"
+        );
+        assert!(
+            balance - value >= 1,
+            "Account balance is less than the existential deposit"
+        );
+        set_account_balance(self.account_id(), balance - value);
     }
 
     pub fn role(&self) -> &String {
