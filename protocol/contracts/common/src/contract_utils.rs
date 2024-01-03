@@ -41,7 +41,7 @@ pub fn nth_contract<Contract: ContractReference + ContractEnv<Env = DefaultEnvir
     index: u128,
     ctor: fn() -> Contract,
 ) -> Contract {
-    let contract_account = get_contract_account(index);
-    let author = get_admin_account(index);
+    let contract_account = nth_contract_account(index);
+    let author = nth_admin_account(index);
     create_contract(author.account_id(), contract_account.account_id(), ctor)
 }
