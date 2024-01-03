@@ -1331,6 +1331,8 @@ pub mod captcha {
         )
     )]
     mod tests {
+        use super::*;
+        use common::account_utils::*;
         use common::test_utils::*;
         use common::Account;
         use common::Pair;
@@ -1340,103 +1342,10 @@ pub mod captcha {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
 
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
         const STAKE_THRESHOLD: u128 = 1000000000;
 
-        const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
-        const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
-        const PROVIDER_ACCOUNT_PREFIX: u8 = 0x03;
-        const USER_ACCOUNT_PREFIX: u8 = 0x04;
-        const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
-        const CODE_HASH_PREFIX: u8 = 0x06;
-
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
-        fn get_unused_account() -> AccountId {
-            AccountId::from([0x00; 32])
-        }
-
-        // build an account. Accounts have the first byte set to the type of account and the next 16 bytes are the index of the account
-        fn get_account_bytes(account_type: u8, index: u128) -> [u8; 32] {
-            let mut bytes = [0x00; 32];
-            bytes[0] = account_type;
-            bytes[1..17].copy_from_slice(&index.to_le_bytes());
-            bytes
-        }
-
-        fn get_account(account_type: u8, index: u128) -> AccountId {
-            let account = AccountId::from(get_account_bytes(account_type, index));
-            // fund the account so it exists if not already
-            let balance = get_account_balance(account);
-            if balance.is_err() {
-                // account doesn't have the existential deposit so doesn't exist
-                // give it funds to create it
-                set_account_balance(account, 1);
-            }
-            account
-        }
-
-        /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_admin_account(index: u128) -> AccountId {
-            let account = AccountId::from([
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]);
-            // fund the account so it exists if not already
-            let balance = get_account_balance(account);
-            if balance.is_err() {
-                // account doesn't have the existential deposit so doesn't exist
-                // give it funds to create it
-                set_account_balance(account, 1);
-            }
-            account
-        }
-
-        /// get the nth provider account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_provider_account(index: u128) -> AccountId {
-            get_account(PROVIDER_ACCOUNT_PREFIX, index)
-        }
-
-        /// get the nth dapp account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_dapp_contract(index: u128) -> AccountId {
-            get_account(DAPP_ACCOUNT_PREFIX, index)
-        }
-
-        /// get the nth user account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_user_account(index: u128) -> AccountId {
-            get_account(USER_ACCOUNT_PREFIX, index)
-        }
-
-        /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_contract_account(index: u128) -> AccountId {
-            get_account(CONTRACT_ACCOUNT_PREFIX, index)
-        }
-
-        /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_code_hash(index: u128) -> [u8; 32] {
-            get_account_bytes(CODE_HASH_PREFIX, index)
-        }
-
-        /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_contract(index: u128) -> Captcha {
-            let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
-                                                                       // make sure the contract gets allocated the above account
-            set_callee(account);
-            // give the contract account some funds
-            set_account_balance(account, 1);
-            // set the caller to the first admin
-            set_caller(get_admin_account(0));
-            // now construct the contract instance
-            let mut contract = Captcha::new_unguarded();
-            // set the caller back to the unused acc
-            set_caller(get_unused_account());
-            // check the contract was created with the correct account
-            assert_eq!(contract.env().account_id(), account);
-            contract
+        fn nth_contract(index: u128) -> Captcha {
+            common::contract_utils::nth_contract::<Captcha>(index, Captcha::new_unguarded)
         }
 
         #[ink::test]
@@ -1470,7 +1379,7 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(get_admin_account(0));
+            set_caller(nth_admin_account(0).account_id());
             let contract = Captcha::new();
             // should construct successfully
         }
@@ -1491,12 +1400,12 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // ctor params should be set
             assert_eq!(contract.get_provider_stake_threshold(), STAKE_THRESHOLD);
             assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
-            assert_eq!(contract.get_admin(), get_admin_account(0));
+            assert_eq!(contract.get_admin(), nth_admin_account(0).account_id());
             assert_eq!(contract.get_max_user_history_len(), 10);
             assert_eq!(
                 contract.get_max_user_history_age_seconds(),
@@ -1526,71 +1435,6 @@ pub mod captcha {
             assert_eq!(contract.user_accounts.get(), None);
         }
 
-        /// Test accounts are funded with existential deposit
-        #[ink::test]
-        fn test_accounts_funded() {
-            let list: Vec<fn(u128) -> AccountId> = vec![
-                get_admin_account,
-                get_provider_account,
-                get_dapp_contract,
-                get_user_account,
-                get_contract_account,
-            ];
-            for func in list.iter() {
-                for i in 0..10 {
-                    let account = func(i);
-                    // check the account has funds. Will panic if not as no existential deposit == account not found
-                    get_account_balance(account).unwrap();
-                }
-            }
-
-            // same for contracts
-            for i in 0..10 {
-                let contract = get_contract(i);
-                // check the account has funds. Will panic if not as no existential deposit == account not found
-                get_account_balance(contract.env().account_id()).unwrap();
-            }
-        }
-
-        /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
-        #[ink::test]
-        fn test_accounts_unique() {
-            let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-            assert!(set.insert(*AsRef::<[u8; 32]>::as_ref(&get_admin_account(0))));
-
-            // for each method of generating an account
-            let list: Vec<fn(u128) -> AccountId> = vec![
-                get_provider_account,
-                get_dapp_contract,
-                get_user_account,
-                get_contract_account,
-            ];
-            for func in list.iter() {
-                // try the first 10 accounts
-                for i in 0..10 {
-                    let account = func(i);
-                    assert!(
-                        set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-                        "Duplicate account ID found: {:?}",
-                        account
-                    );
-                }
-            }
-
-            // do the same for non-account based IDs
-            for func in vec![get_code_hash].iter() {
-                // try the first 10 accounts
-                for i in 0..10 {
-                    let account = func(i);
-                    assert!(
-                        set.insert(account),
-                        "Duplicate account ID found: {:?}",
-                        account
-                    );
-                }
-            }
-        }
-
         /// Are the unit test contracts unique, i.e. make sure there's no collisions in contract accounts as two contracts with the same account could work around funding tests as utilising the same account
         #[ink::test]
         fn test_contracts_unique() {
@@ -1598,7 +1442,7 @@ pub mod captcha {
 
             // for the first 10 contracts
             for i in 0..9 {
-                let contract = get_contract(i);
+                let contract = nth_contract(i);
                 let account = contract.env().account_id();
                 assert!(
                     set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
@@ -1615,13 +1459,13 @@ pub mod captcha {
         //     set_caller(get_unused_account());
         //
 
-        //     let mut contract = get_contract(0);
+        //     let mut contract = nth_contract(0);
 
         //     let new_code_hash = get_code_hash(1);
         //     let old_code_hash = contract.env().own_code_hash().unwrap();
         //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
 
-        //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
+        //     set_caller(nth_admin_account(0)); // an account which does have permission to call set code hash
 
         //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
 
@@ -1633,11 +1477,11 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
-            set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
+            set_caller(nth_user_account(0).account_id()); // an account which does not have permission to call set code hash
 
-            let new_code_hash = get_code_hash(1);
+            let new_code_hash = nth_code_hash(1);
             assert_eq!(
                 contract.set_code_hash(new_code_hash),
                 Err(Error::NotAuthorised)
@@ -1649,7 +1493,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let admin = contract.get_admin();
             set_caller(admin); // an account which does have permission to call terminate
 
@@ -1668,8 +1512,8 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
-            set_caller(get_user_account(0)); // an account which does not have permission to call terminate
+            let mut contract = nth_contract(0);
+            set_caller(nth_user_account(0).account_id()); // an account which does not have permission to call terminate
 
             assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
         }
@@ -1679,7 +1523,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             println!("contract {:?}", contract.env().account_id());
 
             // give the contract funds
@@ -1705,7 +1549,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             set_caller(contract.get_admin()); // use the admin acc
             let admin_bal = get_account_balance(contract.get_admin()).unwrap();
@@ -1718,10 +1562,10 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // give the contract funds
-            set_caller(get_user_account(0)); // use the admin acc
+            set_caller(nth_user_account(0).account_id()); // use the admin acc
             assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
         }
 
@@ -1730,10 +1574,10 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // check the caller is admin
-            assert_eq!(contract.get_admin(), get_admin_account(0));
+            assert_eq!(contract.get_admin(), nth_admin_account(0).account_id());
         }
 
         /// Assert contract provider minimum stake default set from constructor.
@@ -1742,7 +1586,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             let provider_stake_threshold: u128 = contract.get_provider_stake_threshold();
             assert!(STAKE_THRESHOLD.eq(&provider_stake_threshold));
@@ -1754,7 +1598,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let dapp_stake_threshold: u128 = contract.get_dapp_stake_threshold();
             assert!(STAKE_THRESHOLD.eq(&dapp_stake_threshold));
         }
@@ -1765,7 +1609,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             // give provider some funds, but not enough to be above the minimum stake
@@ -1802,7 +1646,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let url: Vec<u8> = vec![1, 2, 3];
@@ -1820,7 +1664,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let provider_account = AccountId::from([0x2; 32]);
             let url: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
@@ -1841,7 +1685,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             contract.get_random_number(0, get_unused_account(), get_unused_account());
         }
 
@@ -1851,7 +1695,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let acc1 = AccountId::from([0x1; 32]);
             let acc2 = AccountId::from([0x2; 32]);
             const len: usize = 10;
@@ -1897,7 +1741,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let (provider_account, url, fee) = generate_provider_data(0x2, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_register(url, fee, Payee::Dapp).unwrap();
@@ -1941,7 +1785,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -1977,7 +1821,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2014,7 +1858,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             // give the contract some funds
             set_account_balance(contract.env().account_id(), 1000000000);
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2039,7 +1883,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 2000000000000;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2064,7 +1908,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
             // Call from the dapp account
@@ -2099,7 +1943,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2140,7 +1984,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2199,7 +2043,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2234,7 +2078,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             // give the contract some funds
             set_account_balance(contract.env().account_id(), 1000000000);
             let caller = AccountId::from([0x2; 32]);
@@ -2279,7 +2123,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // Register the provider
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
@@ -2377,7 +2221,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // Register the provider
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2443,7 +2287,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // Register the provider
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
@@ -2539,7 +2383,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // Register the provider
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2610,7 +2454,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             contract.get_dapp(dapp_contract).unwrap_err();
         }
 
@@ -2621,7 +2465,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             contract.get_provider(provider_account).unwrap_err();
         }
 
@@ -2631,7 +2475,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let provider_account = AccountId::from([0x2; 32]);
             let url: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
@@ -2672,7 +2516,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             let provider_account = AccountId::from([0x2; 32]);
             let user_account = AccountId::from([0x30; 32]);
             let url: Vec<u8> = vec![1, 2, 3];
@@ -2740,7 +2584,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // Register the provider
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2826,7 +2670,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
 
             // Register the provider
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2898,7 +2742,7 @@ pub mod captcha {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
-            let mut contract = get_contract(0);
+            let mut contract = nth_contract(0);
             (op1, op2, ops, contract)
         }
 
