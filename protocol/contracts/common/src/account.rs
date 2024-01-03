@@ -37,8 +37,10 @@ impl Account {
             seed: seed.to_string(),
             role: "".to_string(),
         };
-        // set the account balance to 0
-        result.fund(0);
+        // if the account has no balance, give it 1 unit of balance (the existential deposit)
+        if result.balance() == 0 {
+            result.fund(1);
+        }
         result
     }
 
@@ -105,8 +107,8 @@ pub mod tests {
     }
 
     #[ink::test]
-    fn test_account_balance_zero_on_creation() {
+    fn test_account_balance_existential_deposit_on_creation() {
         let account = Account::nth(0);
-        assert_eq!(account.balance(), 0);
+        assert_eq!(account.balance(), 1);
     }
 }

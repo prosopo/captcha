@@ -19,6 +19,12 @@ mod account;
 pub use account::{Account, Pair};
 
 #[cfg(feature = "test-dependency")]
+pub mod account_utils;
+
+#[cfg(all(feature = "test-dependency"))]
+pub mod contract_utils;
+
+#[cfg(feature = "test-dependency")]
 pub mod test_utils;
 #[cfg(feature = "test-dependency")]
 pub use test_utils::*;
