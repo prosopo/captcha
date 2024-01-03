@@ -66,7 +66,7 @@ impl Account {
     }
 
     pub fn balance(&self) -> u128 {
-        get_account_balance(self.account_id()).unwrap_or(0)
+        get_account_balance(self.account_id())
     }
 
     pub fn fund(&self, value: u128) {
