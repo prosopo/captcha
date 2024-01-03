@@ -42,8 +42,9 @@ pub fn set_account_balance(account: AccountId, balance: u128) {
     ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(account, balance)
 }
 
-pub fn get_account_balance(account: AccountId) -> Result<u128, ink::env::Error> {
-    ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(account)
+pub fn get_account_balance(account: AccountId) -> u128 {
+    // default to 0 if the account doesn't exist
+    ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(account).unwrap_or(0)
 }
 
 pub fn callee() -> AccountId {
