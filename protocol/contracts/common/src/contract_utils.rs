@@ -1,8 +1,6 @@
-use ink::codegen::Env;
 use ink::env::ContractEnv;
 use ink::env::ContractReference;
 use ink::env::DefaultEnvironment;
-use ink::EnvAccess;
 
 use crate::account_utils::*;
 use crate::test_utils::*;
@@ -29,7 +27,7 @@ pub fn create_contract<Contract: ContractReference + ContractEnv<Env = DefaultEn
     // set the caller to the author of the contract
     set_caller(author);
     // now construct the contract instance
-    let mut contract = ctor();
+    let contract = ctor();
     // set the caller back to the unused acc
     set_caller(get_unused_account());
     // check the contract was created with the correct account
