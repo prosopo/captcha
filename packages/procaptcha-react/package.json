@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-react",
-    "version": "0.2.19",
+    "version": "0.2.20",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -40,8 +40,8 @@
         "@polkadot/extension-dapp": "0.46.6",
         "@polkadot/extension-inject": "0.46.6",
         "@polkadot/types": "10.11.1",
-        "@prosopo/common": "0.2.19",
-        "@prosopo/procaptcha": "0.2.19",
+        "@prosopo/common": "0.2.20",
+        "@prosopo/procaptcha": "0.2.20",
         "i18next": "^21.9.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",

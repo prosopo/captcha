@@ -43,7 +43,7 @@ export default class ProviderApi extends HttpClientBase {
         this.account = account
     }
 
-    public getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
+    public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider
         const dappAccount = this.account
@@ -57,7 +57,7 @@ export default class ProviderApi extends HttpClientBase {
     public submitCaptchaSolution(
         captchas: CaptchaSolution[],
         requestHash: string,
-        userAccount: string,
+        userAccount: AccountId,
         salt: string,
         signature?: string
     ): Promise<CaptchaSolutionResponse> {
@@ -73,14 +73,14 @@ export default class ProviderApi extends HttpClientBase {
     }
 
     public verifyDappUser(
-        dapp: string,
-        userAccount: string,
+        dapp: AccountId,
+        userAccount: AccountId,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<VerificationResponse> {
         const payload: {
-            dapp: string
-            user: string
+            dapp: AccountId
+            user: AccountId
             commitmentId?: string
             maxVerifiedTime?: number
         } = { dapp: dapp, user: userAccount }
@@ -93,7 +93,7 @@ export default class ProviderApi extends HttpClientBase {
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 
-    public submitUserEvents(events: StoredEvents, accountId: string) {
+    public submitUserEvents(events: StoredEvents, accountId: AccountId) {
         return this.post(ApiPaths.SubmitUserEvents, { events, accountId })
     }
 
