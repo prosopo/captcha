@@ -240,6 +240,7 @@ export function Manager(
                 // so contact the provider to check if this is the case
                 try {
                     const verifyDappUserResponse = await providerApi.verifyDappUser(
+                        getDappAccount(),
                         account.account.address,
                         undefined,
                         configOptional.challengeValidLength

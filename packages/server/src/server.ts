@@ -135,7 +135,7 @@ export class ProsopoServer {
         console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(user, commitmentId, maxVerifiedTime)
+            const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
         } else {
             // Check the time since the last correct captcha is less than the maxVerifiedTime
