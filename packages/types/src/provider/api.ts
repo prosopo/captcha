@@ -75,6 +75,7 @@ export const CaptchaSolutionBody = object({
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = object({
+    [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.commitmentId]: string().optional(),
     [ApiParams.maxVerifiedTime]: number().optional(),
