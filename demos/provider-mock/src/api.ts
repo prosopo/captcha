@@ -20,7 +20,6 @@ import express, { Router } from 'express'
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
  */
 export function prosopoRouter(): Router {
     const router = express.Router()
