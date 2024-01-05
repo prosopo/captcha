@@ -17,8 +17,12 @@ pub fn nth_provider_account(index: u128) -> Account {
     Account::nth_role(index, "provider")
 }
 
-pub fn nth_dapp_account(index: u128) -> Account {
-    Account::nth_role(index, "dapp")
+pub fn nth_dapp_owner_account(index: u128) -> Account {
+    Account::nth_role(index, "dapp_owner")
+}
+
+pub fn nth_dapp_contract_account(index: u128) -> Account {
+    Account::nth_role(index, "dapp_contract")
 }
 
 pub fn nth_user_account(index: u128) -> Account {
