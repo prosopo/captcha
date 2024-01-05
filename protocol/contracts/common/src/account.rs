@@ -2,6 +2,7 @@ use super::test_utils::*;
 use ink::prelude::string::ToString;
 use ink::primitives::*;
 use scale::alloc::string::String;
+use scale::alloc::vec::Vec;
 pub use sp_core::crypto::Pair;
 use sp_core::crypto::DEV_PHRASE;
 use sp_core::sr25519;
@@ -89,6 +90,10 @@ impl Account {
 
     pub fn role(&self) -> &String {
         &self.role
+    }
+
+    pub fn sr25519_sign(&self, message: &Vec<u8>) -> [u8; 64] {
+        self.pair().sign(message).into()
     }
 }
 
