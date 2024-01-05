@@ -13,6 +13,14 @@ pub enum Error<Env: ink::env::Environment> {
         /// The account id bytes which failed to decode
         account_id_bytes: Vec<u8>,
     }, // returned if the account id decode fails, e.g. due to array of wrong length
+    InvalidSignature {
+        /// The message which was signed
+        message: Vec<u8>,
+        /// The signature which was provided
+        signature: Vec<u8>,
+        /// The public key which was provided
+        public_key: Vec<u8>,
+    }, // returned if the signature is invalid
     NotAuthorised,
     TransferFailed,
     SetCodeHashFailed,
