@@ -32,10 +32,13 @@ pub mod captcha {
 
     // define the error and config type based on the contract's environment
     use common::Config as ConfigTrait;
-    use common::Error as ErrorTrait;
-    type Error = ErrorTrait<Environment>;
-    enum Config {}
-    impl ConfigTrait<Environment> for Config {}
+    use common::DefaultConfig;
+    use common::DefaultUtils;
+    use common::Error as ErrorEnum;
+    use common::Utils as UtilsTrait;
+    type Error = ErrorEnum<Environment>;
+    type Config = DefaultConfig<Environment>;
+    type Utils = DefaultUtils<Environment>;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
@@ -188,6 +191,32 @@ pub mod captcha {
         requested_at: BlockNumber,   // the block number at which the captcha was requested
         completed_at: BlockNumber,   // the block number at which the captcha was completed
         user_signature: [u8; 64],    // the user's signature of the commitment
+    }
+
+    impl Commit {
+        pub fn get_user_signature_payload(&self) -> Vec<u8> {
+            // construct the payload / message bytes
+            let mut message: Vec<u8> = Vec::new();
+            // add the contents of the commit to the payload, except for the signature
+            // note that this has to be in the same order as used to generate the signature, otherwise the payloads will be different. I.e. must be the same as js side
+            message.extend_from_slice(&self.id.as_ref());
+            message.extend_from_slice(&self.user_account.as_ref());
+            message.extend_from_slice(&self.dataset_id.as_ref());
+            message.extend_from_slice(&(self.status as u8).to_le_bytes());
+            message.extend_from_slice(&self.dapp_contract.as_ref());
+            message.extend_from_slice(&self.provider_account.as_ref());
+            message.extend_from_slice(&self.requested_at.to_le_bytes());
+            message.extend_from_slice(&self.completed_at.to_le_bytes());
+            Utils::to_payload(&message)
+        }
+
+        pub fn check_user_signature(&self) -> Result<(), Error> {
+            Utils::sr25519_verify(
+                &self.user_signature,
+                &self.get_user_signature_payload(),
+                &self.user_account,
+            )
+        }
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
@@ -843,7 +872,20 @@ pub mod captcha {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commitment(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
+        fn record_commitment(
+            &mut self,
+            user_account: AccountId,
+            hash: Hash,
+            result: &Commit,
+        ) -> Result<(), Error> {
+            // check commitment doesn't already exist
+            if self.commits.get(result.id).is_some() {
+                return err!(self, Error::CommitAlreadyExists);
+            }
+
+            // check the signature is valid
+            result.check_user_signature()?;
+
             let mut user = self.get_user_or_create(user_account);
             // add the new commitment
             self.commits.insert(hash, result);
@@ -859,6 +901,8 @@ pub mod captcha {
             }
 
             self.users.insert(user_account, &user);
+
+            Ok(())
         }
 
         #[ink(message)]
@@ -926,12 +970,7 @@ pub mod captcha {
             // ensure the dapp is active
             self.check_dapp_active(&dapp)?;
 
-            // check commitment doesn't already exist
-            if self.commits.get(commit.id).is_some() {
-                return err!(self, Error::CommitAlreadyExists);
-            }
-
-            self.record_commitment(commit.user_account, commit.id, commit);
+            self.record_commitment(commit.user_account, commit.id, commit)?;
 
             self.pay_fee(caller, commit.dapp_contract)?;
 
