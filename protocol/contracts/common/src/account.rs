@@ -96,7 +96,7 @@ impl Account {
 pub mod tests {
     use super::*;
 
-    #[ink::test]
+    #[test]
     fn test_nth_account_unique_with_roles() {
         let mut account_ids: Vec<AccountId> = Vec::new();
         let mut seeds: Vec<String> = Vec::new();
@@ -114,7 +114,7 @@ pub mod tests {
         }
     }
 
-    #[ink::test]
+    #[test]
     fn test_reproducible_account() {
         let account1 = Account::nth(0); // will have dev seed + "//" + "" + "0" as the seed
         let account2 = Account::nth(0); // will have dev seed + "//" + "" + "0" as the seed
@@ -122,7 +122,7 @@ pub mod tests {
         assert_eq!(account1.account_id(), account2.account_id());
     }
 
-    #[ink::test]
+    #[test]
     fn test_account_balance_existential_deposit_on_creation() {
         let account = Account::nth(0);
         assert_eq!(account.balance(), 1);
