@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use super::errors::Error;
 use scale::Decode;
 
@@ -34,3 +36,10 @@ pub trait Config<Env: ink::env::Environment> {
         })
     }
 }
+
+/// Default config entrypoint. This implements the Config trait with default implementation of all fns.
+pub enum DefaultConfig<Env: ink::env::Environment> {
+    _Marker(PhantomData<Env>), // marker to use generic parameter
+}
+
+impl<Env: ink::env::Environment> Config<Env> for DefaultConfig<Env> {}
