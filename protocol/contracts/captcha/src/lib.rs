@@ -21,6 +21,7 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
+    use common::to_payload;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -207,7 +208,7 @@ pub mod captcha {
             message.extend_from_slice(&self.provider_account.as_ref());
             message.extend_from_slice(&self.requested_at.to_le_bytes());
             message.extend_from_slice(&self.completed_at.to_le_bytes());
-            Utils::to_payload(&message)
+            to_payload(&message)
         }
 
         pub fn check_user_signature(&self) -> Result<(), Error> {
@@ -1364,7 +1365,6 @@ pub mod captcha {
             unused_imports,
             unused_variables,
             unused_mut,
-            unused_must_use,
             non_upper_case_globals,
             non_shorthand_field_patterns
         )
