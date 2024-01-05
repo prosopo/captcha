@@ -60,11 +60,7 @@ pub mod proxy {
         #[ink(constructor)]
         pub fn new() -> Result<Self, Error> {
             let result = Self::new_unguarded();
-            let author = Config::get_admin()?;
-            let caller = Self::env().caller();
-            if caller != author {
-                return Err(Error::NotAuthor);
-            }
+            Config::check_is_admin(Self::env().caller())?;
             Ok(result)
         }
 
@@ -239,7 +235,7 @@ pub mod proxy {
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
             let contract = Proxy::new();
-            assert_eq!(contract.unwrap_err(), Error::NotAuthor);
+            assert_eq!(contract.unwrap_err(), Error::NotAuthorised);
         }
 
         #[ink::test]

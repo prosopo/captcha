@@ -302,11 +302,7 @@ pub mod captcha {
         #[ink(constructor, payable)]
         pub fn new() -> Result<Self, Error> {
             let result = Self::new_unguarded();
-            let author = Self::get_admin(&result);
-            let caller = Self::env().caller();
-            if caller != author {
-                return Err(Error::NotAuthor);
-            }
+            Config::check_is_admin(Self::env().caller())?;
             Ok(result)
         }
 
@@ -1400,7 +1396,7 @@ pub mod captcha {
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
             let contract = Captcha::new();
-            assert_eq!(contract.unwrap_err(), Error::NotAuthor);
+            assert_eq!(contract.unwrap_err(), Error::NotAuthorised);
         }
 
         #[ink::test]
