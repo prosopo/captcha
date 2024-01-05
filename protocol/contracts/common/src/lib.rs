@@ -13,27 +13,27 @@
 // limitations under the License.
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-#[cfg(feature = "test-dependency")]
+#[cfg(any(feature = "test-dependency", test))]
 mod account;
-#[cfg(feature = "test-dependency")]
+#[cfg(any(feature = "test-dependency", test))]
 pub use account::{Account, Pair};
 
-#[cfg(feature = "test-dependency")]
+#[cfg(any(feature = "test-dependency", test))]
 pub mod account_utils;
 
-#[cfg(all(feature = "test-dependency"))]
+#[cfg(any(feature = "test-dependency", test))]
 pub mod contract_utils;
 
-#[cfg(feature = "test-dependency")]
+#[cfg(any(feature = "test-dependency", test))]
 pub mod test_utils;
-#[cfg(feature = "test-dependency")]
+#[cfg(any(feature = "test-dependency", test))]
 pub use test_utils::*;
 
 mod errors;
 pub use errors::Error;
 
 mod config;
-pub use config::Config;
+pub use config::*;
 
 mod utils;
 pub use utils::*;
