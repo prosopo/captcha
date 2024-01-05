@@ -1,4 +1,5 @@
 use super::test_utils::*;
+use crate::to_payload;
 use ink::prelude::string::ToString;
 use ink::primitives::*;
 use scale::alloc::string::String;
@@ -93,7 +94,9 @@ impl Account {
     }
 
     pub fn sr25519_sign(&self, message: &Vec<u8>) -> [u8; 64] {
-        self.pair().sign(message).into()
+        // check message has been wrapped as a payload
+        let payload = to_payload(message);
+        self.pair().sign(&payload).into()
     }
 }
 
