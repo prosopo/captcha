@@ -198,7 +198,6 @@ pub mod proxy {
             unused_imports,
             unused_variables,
             unused_mut,
-            unused_must_use,
             non_upper_case_globals,
             non_shorthand_field_patterns
         )
@@ -270,7 +269,7 @@ pub mod proxy {
                 set_caller(admin);
                 // a lambda that terminates the contract and return nothing <-- this is important!
                 let should_terminate = move || {
-                    contract.handler(ProxyMessages::ProxyTerminate);
+                    contract.handler(ProxyMessages::ProxyTerminate).unwrap();
                 };
                 // the assert_contract_termination fn takes a lambda which will terminate the contract + a caller + a balance which should be returned
                 // it will then check that the contract terminates and returns the correct balance to the caller
