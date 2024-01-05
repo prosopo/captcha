@@ -48,17 +48,17 @@ macro_rules! lazy {
     };
 }
 
+/// Convert a byte array to payload. This wraps the '<Bytes>' tag around the byte array to conform with signing convention.
+pub fn to_payload(message: &Vec<u8>) -> Vec<u8> {
+    // if payload is already wrapped in <Bytes> tag, return it
+    if message.starts_with(b"<Bytes>") && message.ends_with(b"</Bytes>") {
+        return message.clone();
+    }
+    [b"<Bytes>", message.as_slice(), b"</Bytes>"].concat()
+}
+
 /// EnvUtils contains several util fns which need the environment to be defined.
 pub trait Utils<Env: ink::env::Environment> {
-    /// Convert a byte array to payload. This wraps the '<Bytes>' tag around the byte array to conform with signing convention.
-    fn to_payload(message: &Vec<u8>) -> Vec<u8> {
-        // if payload is already wrapped in <Bytes> tag, return it
-        if message.starts_with(b"<Bytes>") && message.ends_with(b"</Bytes>") {
-            return message.clone();
-        }
-        [b"<Bytes>", message.as_slice(), b"</Bytes>"].concat()
-    }
-
     /// get the account id in byte array format
     fn account_id_bytes(account: &Env::AccountId) -> [u8; 32] {
         let bytes = account.as_ref();
@@ -74,12 +74,13 @@ pub trait Utils<Env: ink::env::Environment> {
         account: &Env::AccountId,
     ) -> Result<(), Error<Env>> {
         let public_key = Self::account_id_bytes(account);
-        ink::env::sr25519_verify(signature, Self::to_payload(message).as_slice(), &public_key)
-            .map_err(|_| Error::InvalidSignature {
+        ink::env::sr25519_verify(signature, to_payload(message).as_slice(), &public_key).map_err(
+            |_| Error::InvalidSignature {
                 public_key: public_key.to_vec(),
                 message: message.clone(),
                 signature: signature.to_vec(),
-            })
+            },
+        )
     }
 }
 
@@ -92,15 +93,63 @@ impl<Env: ink::env::Environment> Utils<Env> for DefaultUtils<Env> {}
 
 #[cfg(test)]
 mod tests {
+    use crate::Account;
+
     use super::Utils as UtilsTrait;
+    use crate::to_payload;
     type Env = ink::env::DefaultEnvironment;
     type Utils = super::DefaultUtils<Env>;
+    use ink::primitives::AccountId;
     use scale_info::TypeInfo;
+
+    #[test]
+    fn test_sr25519_verify() {
+        let message = vec![1, 2, 3];
+        let account = Account::nth(0);
+        let signature = account.sr25519_sign(&message);
+        Utils::sr25519_verify(&signature, &message, &account.account_id()).unwrap();
+    }
+
+    #[test]
+    fn test_sr25519_verify_incorrect_payload() {
+        let mut message = vec![1, 2, 3];
+        let account = Account::nth(0);
+        let signature = account.sr25519_sign(&message);
+        let len = message.len();
+        // deliberately change the last byte of the payload
+        message[len - 1] = message[len - 1] + 1;
+        Utils::sr25519_verify(&signature, &message, &account.account_id())
+            .expect_err("should fail to verify due to incorrect payload");
+    }
+
+    #[test]
+    fn test_sr25519_verify_incorrect_signature() {
+        let message = vec![1, 2, 3];
+        let account = Account::nth(0);
+        let mut signature = account.sr25519_sign(&message);
+        // deliberately change the last byte of the signature
+        signature[63] = signature[63] + 1;
+        Utils::sr25519_verify(&signature, &message, &account.account_id())
+            .expect_err("should fail to verify due to incorrect signature");
+    }
+
+    #[test]
+    fn test_sr25519_verify_incorrect_public_key() {
+        let message = vec![1, 2, 3];
+        let account = Account::nth(0);
+        let account_id = account.account_id();
+        let mut pub_key: [u8; 32] = Utils::account_id_bytes(&account_id);
+        // deliberately change the last byte of the public key
+        pub_key[31] = pub_key[31] + 1;
+        let signature = account.sr25519_sign(&message);
+        Utils::sr25519_verify(&signature, &message, &AccountId::from(pub_key))
+            .expect_err("should fail to verify due to incorrect public key");
+    }
 
     #[test]
     fn test_to_payload() {
         let message = vec![1, 2, 3];
-        let payload = Utils::to_payload(&message);
+        let payload = to_payload(&message);
         assert_eq!(
             payload,
             vec![
@@ -109,7 +158,7 @@ mod tests {
             ]
         );
         // check a subsequent call returns the same result, i.e. doesn't wrap the payload again
-        let payload2 = Utils::to_payload(&payload);
+        let payload2 = to_payload(&payload);
         assert_eq!(payload, payload2);
     }
 
