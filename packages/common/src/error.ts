@@ -11,126 +11,128 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { TranslationKey, i18n as i18next, translationKeys } from './index.js'
+import { LogLevel, Logger, TranslationKey, getLoggerDefault, i18n as i18next } from './index.js'
 
-// Todo: impl err len
-const MAX_ERROR_LENGTH = 1000
-
-export function translateOrFallback(key: string, fallback?: string, i18n = i18next): string {
-    try {
-        if (key && translationKeys.includes(key as TranslationKey)) {
-            return i18n.t(key)
-        } else {
-            return fallback || key
-        }
-    } catch {
-        return fallback || key
-    }
+type ContextParams = { [key: string]: any }
+type ErrorOptions = {
+    name?: string
+    translationKey?: TranslationKey
+    context?: ContextParams
+    logger?: Logger
+    logLevel?: LogLevel
 }
 
 export abstract class ProsopoBaseError extends Error {
-    debugInfo: any
-    cause: Error | undefined
-    context: string | undefined
+    translationKey: string | undefined
+    context: ContextParams | undefined
 
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const logger = options?.logger || getLoggerDefault()
+        const logLevel = options?.logLevel || 'error'
+
         // Check if error is an Error
         if (error instanceof Error) {
             super(error.message)
-            this.cause = error
-
-            // Add context if provided
-            this.context = options?.context ? translateOrFallback(options.context) : undefined
-        }
-
-        // Check if error is a TranslationKey
-        else if (typeof error === 'string') {
-            super(translateOrFallback(error, `Translation key not found, original error: ${error}`))
+            this.translationKey = options?.translationKey
+            this.context = options?.context
+            if (options?.translationKey) {
+                this.context = { ...this.context, translationMessage: i18next.t(options.translationKey) }
+            }
         } else {
-            super('Unknown error')
-            this.debugInfo = { unknownError: error }
+            super(i18next.t(error))
+            this.translationKey = error
+            this.context = options?.context
         }
 
-        // Add options to debugInfo
-        this.debugInfo = { ...this.debugInfo, options }
+        this.logError(logger, logLevel)
+    }
+
+    private logError(logger: Logger, logLevel: LogLevel) {
+        const errorFormatter = '\n********************* ERROR *********************\n'
+        const errorName = `Error Type: ${this.name}\n`
+        const errorParams = JSON.stringify({ error: this.message, context: this.context })
+        const errorMessage = `${errorFormatter}${errorName}${errorParams}`
+
+        switch (logLevel) {
+            case 'trace':
+                logger.trace(errorMessage, this.stack)
+                break
+            case 'debug':
+                logger.debug(errorMessage)
+                break
+            case 'info':
+                logger.info(errorMessage)
+                break
+            case 'warn':
+                logger.warn(errorMessage)
+                break
+            case 'error':
+                logger.error(errorMessage)
+                break
+            case 'fatal':
+                logger.fatal(errorMessage)
+                break
+            default:
+                logger.error(errorMessage) // Default case
+                break
+        }
+    }
+}
+
+// Generic error class
+export class ProsopoError extends ProsopoBaseError {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoError'
+        options = { ...options, name: errorName }
+        super(error, options)
     }
 }
 
 export class ProsopoEnvError extends ProsopoBaseError {
-    missingParams: string[]
-
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; missingParams?: string[]; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoEnvError'
+        options = { ...options, name: errorName }
         super(error, options)
-        this.name = 'ProsopoEnvError'
-        this.missingParams = options?.missingParams || []
     }
 }
 
 export class ProsopoContractError extends ProsopoBaseError {
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoContractError'
+        options = { ...options, name: errorName }
         super(error, options)
-        this.name = 'ProsopoContractError'
     }
 }
 
 export class ProsopoDBError extends ProsopoBaseError {
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoDBError'
+        options = { ...options, name: errorName }
         super(error, options)
-        this.name = 'ProsopoDBError'
     }
 }
 
 export class ProsopoCliError extends ProsopoBaseError {
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoCliError'
+        options = { ...options, name: errorName }
         super(error, options)
-        this.name = 'ProsopoCliError'
     }
 }
 
 export class ProsopoDatasetError extends ProsopoBaseError {
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoDatasetError'
+        options = { ...options, name: errorName }
         super(error, options)
-        this.name = 'ProsopoDatasetError'
-    }
-}
-
-export class ProsopoError extends ProsopoBaseError {
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; [key: string]: any }
-    ) {
-        super(error, options)
-        this.name = 'ProsopoError'
     }
 }
 
 export class ProsopoApiError extends ProsopoEnvError {
-    code: number
-
-    constructor(
-        error: Error | TranslationKey | unknown,
-        options?: { context?: TranslationKey | string; code?: number; [key: string]: any }
-    ) {
+    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+        const errorName = options?.name || 'ProsopoApiError'
+        const errorCode = options?.context?.errorCode || 500
+        options = { ...options, name: errorName, context: { ...options?.context, errorCode } }
         super(error, options)
-        this.name = 'ProsopoApiError'
-        this.code = options?.code ?? 500
     }
 }
