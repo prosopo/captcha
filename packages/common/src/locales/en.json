@@ -45,7 +45,9 @@
         "INVALID_TYPE": "Invalid type",
         "INVALID_ABI": "Invalid ABI",
         "NOT_HANDLED": "Not handled",
-        "INVALID_STORAGE_TYPE": "Invalid storage type"
+        "INVALID_STORAGE_TYPE": "Invalid storage type",
+        "INTERRUPTED_EVENT": "Event interrupted",
+        "TOO_MANY_CALLS": "Too many calls"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",

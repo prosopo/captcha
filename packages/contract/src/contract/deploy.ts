@@ -145,7 +145,7 @@ export async function dryRunDeploy(
     try {
         const message = contractAbi?.constructors[constructorIndex]
         if (message === undefined) {
-            throw new Error('Unable to find constructor')
+            throw new ProsopoContractError('Unable to find constructor')
         }
         const method = message.method
         if (code && message && accountId) {
