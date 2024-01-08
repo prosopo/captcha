@@ -75,8 +75,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 }
                 return res.json(captchaResponse)
             } catch (err) {
-                // TODO fix error handling
-                return next(new ProsopoApiError(err as Error, undefined, 400))
+                return next(new ProsopoApiError('API.BAD_REQUEST', { context: { error: err, errorCode: 400 } }))
             }
         }
     )
@@ -94,8 +93,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { errorCode: 400, error: err } }))
         }
 
         try {
@@ -111,8 +109,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 ...result,
             })
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { errorCode: 400, error: err } }))
         }
     })
 
@@ -128,8 +125,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { errorCode: 400, error: err } }))
         }
         try {
             const solution = await (parsed.commitmentId
@@ -157,8 +153,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 commitmentId: solution.id,
             })
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
     })
 
@@ -174,8 +169,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             await tasks.saveCaptchaEvent(events, accountId)
             return res.json({ status: 'success' })
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
     })
 
@@ -187,8 +181,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const status = await tasks.providerStatus()
             return res.json({ status })
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
     })
 
@@ -200,8 +193,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const details = await tasks.getProviderDetails()
             return res.json(details)
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
     })
 

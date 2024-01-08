@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Captcha, CaptchaSolution, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoContractError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
@@ -24,9 +24,8 @@ import pl from 'nodejs-polars'
 export function encodeStringAddress(address: string) {
     try {
         return encodeAddress(isHex(address) ? hexToU8a(address) : decodeAddress(address))
-    } catch (error) {
-        // TODO fix error handling
-        throw new ProsopoEnvError(error as Error, 'CONTRACT.INVALID_ADDRESS', {}, address)
+    } catch (err) {
+        throw new ProsopoContractError('CONTRACT.INVALID_ADDRESS', { context: { address } })
     }
 }
 

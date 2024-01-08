@@ -21,9 +21,8 @@ import {
 import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api.js'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoApiError } from '../api/handlers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
@@ -60,9 +59,8 @@ export class ProsopoCaptchaApi {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             return captchaChallenge
-        } catch (e) {
-            // TODO fix/improve error handling
-            throw new ProsopoEnvError(e as Error)
+        } catch (error) {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
     }
 
@@ -133,9 +131,8 @@ export class ProsopoCaptchaApi {
                 salt,
                 signature
             )
-        } catch (err) {
-            // TODO fix/improve error handling
-            throw new ProsopoApiError(err as Response)
+        } catch (error) {
+            throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
 
         return [result, commitmentId, tx]
