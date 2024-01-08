@@ -20,6 +20,7 @@ export enum ApiPaths {
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
+    SubmitUserEvents = '/v1/prosopo/provider/events',
 }
 
 export enum ApiParams {
@@ -73,6 +74,7 @@ export const CaptchaSolutionBody = object({
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = object({
+    [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.commitmentId]: string().optional(),
     [ApiParams.maxVerifiedTime]: number().optional(),

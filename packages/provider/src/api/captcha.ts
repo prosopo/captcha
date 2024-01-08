@@ -163,6 +163,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     })
 
     /**
+     * Receives user events, store to database
+     *
+     * @param {StoredEvents}
+     * @param {string} accountId - Dapp User id
+     */
+    router.post(ApiPaths.SubmitUserEvents, async (req, res, next) => {
+        try {
+            const { events, accountId } = req.body
+            await tasks.saveCaptchaEvent(events, accountId)
+            return res.json({ status: 'success' })
+        } catch (err) {
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
+        }
+    })
+
+    /**
      * Verifies that the provider is running and registered in the contract
      */
     router.get(ApiPaths.GetProviderStatus, async (req, res, next) => {

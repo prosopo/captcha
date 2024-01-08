@@ -144,6 +144,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
         challengeValidLength: number().positive().optional(),
+        devOnlyWatchEvents: boolean().optional(),
     })
 )
 
@@ -166,6 +167,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
             maxBatchExtrinsicPercentage: 59,
         }),
         server: ProsopoImageServerConfigSchema,
+        mongoAtlasUri: string().optional(),
     })
 )
 

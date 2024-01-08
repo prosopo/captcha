@@ -26,6 +26,7 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
+    StoredEvents,
 } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
@@ -104,12 +105,14 @@ export function Manager(
             onError: alertError,
             onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
                 console.log('onHuman event triggered', output)
+                updateState({ sendData: !state.sendData })
             },
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
             onFailed: () => {
                 alert('Captcha challenge failed. Please try again')
+                updateState({ sendData: !state.sendData })
             },
             onExpired: () => {
                 alert('Completed challenge has expired, please try again')
@@ -119,6 +122,7 @@ export function Manager(
             },
             onOpen: () => {
                 console.log('onOpen event triggered')
+                updateState({ sendData: !state.sendData })
             },
             onClose: () => {
                 console.log('onClose event triggered')
@@ -236,6 +240,7 @@ export function Manager(
                 // so contact the provider to check if this is the case
                 try {
                     const verifyDappUserResponse = await providerApi.verifyDappUser(
+                        getDappAccount(),
                         account.account.address,
                         undefined,
                         configOptional.challengeValidLength
@@ -568,11 +573,21 @@ export function Manager(
         )
     }
 
+    const exportData = async (events: StoredEvents) => {
+        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
+        if (!providerUrl) {
+            return
+        }
+        const providerApi = await loadProviderApi(providerUrl)
+        await providerApi.submitUserEvents(events, getAccount().account.address)
+    }
+
     return {
         start,
         cancel,
         submit,
         select,
         nextRound,
+        exportData,
     }
 }

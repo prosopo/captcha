@@ -27,6 +27,7 @@ import {
     ProsopoConfigOutput,
     ProviderDetails,
     ProviderRegistered,
+    StoredEvents,
 } from '@prosopo/types'
 import {
     CaptchaMerkleTree,
@@ -47,6 +48,7 @@ import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { saveCaptchaEvent } from '@prosopo/database'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
@@ -564,5 +566,12 @@ export class Tasks {
     async getBlockTimeMs(): Promise<number> {
         const blockTime = this.contract.api.consts.babe.expectedBlockTime
         return blockTime.toNumber()
+    }
+
+    async saveCaptchaEvent(events: StoredEvents, accountId: string) {
+        if (!this.config.mongoAtlasUri) {
+            return
+        }
+        await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
     }
 }

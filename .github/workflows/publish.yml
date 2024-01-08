@@ -29,7 +29,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # get the next version number from the package.json
-                  NEXT=$(npm pkg get version)
+                  NEXT=$(npm pkg get version | tr -d '"')
 
                   # get the current version number from the current state of main branch
                   CURRENT=$(gh release list --limit 1 | awk '{print $2}')
@@ -57,13 +57,13 @@ jobs:
                   CURRENT_MINOR=$(echo $CURRENT | cut -d. -f2)
                   CURRENT_PATCH=$(echo $CURRENT | cut -d. -f3)
 
-                  if [[ "$NEXT_MAJOR" > "$CURRENT_MAJOR" ]]; then
+                  if [[ "$NEXT_MAJOR" -gt "$CURRENT_MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "$NEXT_MINOR" > "$CURRENT_MINOR" ]]; then
+                  elif [[ "$NEXT_MINOR" -gt "$CURRENT_MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "$NEXT_PATCH" > "$CURRENT_PATCH" ]]; then
+                  elif [[ "$NEXT_PATCH" -gt "$CURRENT_PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
@@ -78,19 +78,26 @@ jobs:
 
             # setup node
             - uses: actions/setup-node@v3
+              if: steps.check_version.outputs.bump == 'true'
               with:
                   node-version-file: '.nvmrc'
             - name: Install npm
+              if: steps.check_version.outputs.bump == 'true'
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             # get the latest build from the cache produced in the post_pr workflow
 
             - run: mkdir -p protocol/cargo-cache
+              if: steps.check_version.outputs.bump == 'true'
             - run: mkdir -p protocol/target
+              if: steps.check_version.outputs.bump == 'true'
             - run: mkdir -p node_modules
+              if: steps.check_version.outputs.bump == 'true'
             - run: mkdir -p ~/.cache/Cypress
+              if: steps.check_version.outputs.bump == 'true'
 
             - name: Restore cache
+              if: steps.check_version.outputs.bump == 'true'
               uses: actions/cache/restore@v3
               with:
                   path: |
@@ -106,9 +113,13 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: ls -la ~/.cache/Cypress || true
+              if: steps.check_version.outputs.bump == 'true'
             - run: ls -la protocol/cargo-cache || true
+              if: steps.check_version.outputs.bump == 'true'
             - run: ls -la protocol/target/ink || true
+              if: steps.check_version.outputs.bump == 'true'
             - run: ls -la node_modules || true
+              if: steps.check_version.outputs.bump == 'true'
 
             - name: Install
               if: steps.check_version.outputs.bump == 'true'
