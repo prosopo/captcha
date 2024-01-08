@@ -59,7 +59,8 @@ async function main() {
     const mongoose = connectionFactory(uri)
     if (!process.env.REACT_APP_SERVER_MNEMONIC) {
         const mnemonicError = new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
-            missingParams: ['REACT_APP_SERVER_MNEMONIC'],
+            context: { missingParams: ['REACT_APP_SERVER_MNEMONIC'] },
+            logger,
         })
 
         logger.error(mnemonicError)
