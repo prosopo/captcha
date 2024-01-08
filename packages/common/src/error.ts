@@ -20,7 +20,7 @@ type BaseErrorOptions = {
     logLevel?: LogLevel
 }
 
-type ContextParams = { [key: string]: any }
+type ContextParams = { [key: string]: any; failedFuncName?: string }
 type ErrorOptions = BaseErrorOptions & { context?: ContextParams }
 
 type EnvContextParams = ContextParams & { missingEnvVars?: string[] }
@@ -29,7 +29,7 @@ type EnvErrorOptions = ErrorOptions & { context?: EnvContextParams }
 type ContractContextParams = ContextParams
 type ContractErrorOptions = ErrorOptions & { context?: ContractContextParams }
 
-type DBContextParams = ContextParams
+type DBContextParams = ContextParams & { captchaId?: string[] }
 type DBErrorOptions = ErrorOptions & { context?: DBContextParams }
 
 type CliContextParams = ContextParams

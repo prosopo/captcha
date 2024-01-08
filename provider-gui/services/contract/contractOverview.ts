@@ -2,6 +2,7 @@ import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
 import { GovernanceStatus } from '@prosopo/captcha-contract'
 import { ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { hexToString } from '@polkadot/util'
 
@@ -16,7 +17,7 @@ const deployedContracts = {
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
     if (!network) {
-        throw new Error(`No network found for environment ${config.defaultEnvironment}`)
+        throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', { context: { network: config.defaultNetwork } })
     }
     return network
 }

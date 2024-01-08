@@ -52,10 +52,11 @@
         "INVALID_CAPTCHA_NUMBER": "Please configure captchas configurations correctly",
         "CONFIGURATIONS_LOAD_FAILED": "Prosopo configurations load failed",
         "INVALID_LOG_LEVEL": "Invalid log level",
-        "INVALID_PACKAGE_DIR": "Invalid package directory",
+        "INVALID_PACKAGE_DIR": "Invalid package directory"
     },
     "DATASET": {
-        "PARSE_ERROR": "Error parsing dataset",
+        "DATASET_PARSE_ERROR": "Error parsing dataset",
+        "SOLUTION_PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
         "INVALID_DATASET_ID": "Invalid dataset id",
         "DATASET_ID_UNDEFINED": "Dataset id undefined",
@@ -73,6 +74,8 @@
         "DATASET_LOAD_FAILED": "Data set load failed",
         "DATASET_GET_FAILED": "Failed to get dataset",
         "CAPTCHA_GET_FAILED": "Failed to get captcha",
+        "CAPTCHA_UPDATE_FAILED": "Failed to update captcha",
+        "IMAGE_GET_FAILED": "Failed to get image",
         "NO_CAPTCHAS_FOUND": "No captcha matching datasetId",
         "PENDING_RECORD_NOT_FOUND": "No pending record found",
         "INVALID_HASH": "Invalid hash",
@@ -108,7 +111,8 @@
         "BAD_REQUEST": "BadRequest",
         "PAYMENT_INFO_NOT_FOUND": "Payment info not found for given block and transaction hashes",
         "USER_VERIFIED": "User verified",
-        "USER_NOT_VERIFIED": "User not verified"
+        "USER_NOT_VERIFIED": "User not verified",
+        "UNKNOWN": "Unknown API error"
     },
     "CLI": {
         "PARAMETER_ERROR": "Invalid parameter"
@@ -124,7 +128,8 @@
         "NO_MOCK_ENV": "MockEnvironment not set up",
         "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator",
         "FUNDING_FAILED": "Funding failed",
-        "MISSING_PROVIDER_PAIR": "Missing provider pair"
+        "MISSING_PROVIDER_PAIR": "Missing provider pair",
+        "NETWORK_NOT_FOUND": "Network not found"
     },
     "FS": {
         "DIRECTORY_NOT_FOUND": "Directory not found",
@@ -132,5 +137,8 @@
         "FILE_ALREADY_EXISTS": "File already exists",
         "DIRECTORY_ALREADY_EXISTS": "Directory already exists",
         "SAME_FILE": "Same file"
+    },
+    "PROGUI": {
+        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider"
     }
 }

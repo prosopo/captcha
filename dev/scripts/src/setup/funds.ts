@@ -47,13 +47,13 @@ export async function sendFunds(
         data: { free: previousFree },
     } = await env.getContractInterface().api.query.system.account(pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
-        const lowBalanceError = new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
-            mnemonic,
-            previousFree: previousFree.toString(),
-            amount: amount.toString(),
+        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
+            context: {
+                mnemonic,
+                previousFree: previousFree.toString(),
+                amount: amount.toString(),
+            },
         })
-        env.logger.error(lowBalanceError)
-        throw lowBalanceError
     }
 
     const api = env.getContractInterface().api
@@ -101,9 +101,7 @@ export async function sendFunds(
             env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
         })
         .catch((e) => {
-            const fundingError = new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: e })
-            env.logger.error(fundingError)
-            throw fundingError
+            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error: e } })
         })
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { ProsopoError } from '@prosopo/common'
 import React, { ReactNode, createContext, useContext, useState } from 'react'
 
 interface GlobalStateContextProps {
@@ -34,7 +35,7 @@ export const GlobalStateProvider: React.FC<GlobalStateProviderProps> = ({ childr
 export const useGlobalState = () => {
     const context = useContext(GlobalStateContext)
     if (context === undefined) {
-        throw new Error('useGlobalState must be used within a GlobalStateProvider')
+        throw new ProsopoError('PROGUI.NO_STATE_PROVIDER')
     }
     return context
 }

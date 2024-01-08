@@ -21,8 +21,7 @@ export async function downloadImage(url: string): Promise<Uint8Array> {
         }
         const buffer = await response.arrayBuffer()
         return new Uint8Array(buffer)
-    } catch (error) {
-        // TODO fix/improve error handling
-        throw new ProsopoEnvError(error as Error)
+    } catch (err) {
+        throw new ProsopoEnvError('DATABASE.IMAGE_GET_FAILED', { context: { error: err } })
     }
 }

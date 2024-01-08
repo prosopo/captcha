@@ -106,7 +106,7 @@ export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
     try {
         return LogLevel.parse(logLevel)
     } catch (e) {
-        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', logLevel)
+        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
     }
 }
 
