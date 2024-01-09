@@ -345,15 +345,7 @@ function getCallRequest(
     console.log('gasLimit', u8aToHex($weightV2.encode(gasLimit)))
     console.log('Input data', u8aToHex(inputData))
 
-    return u8aConcat(
-        origin,
-        dest,
-        valueU8a,
-        //TODO what is the correct order for storage deposit and weight?
-        $weightV2.encode(gasLimit),
-        storageDepositLimit,
-        inputData
-    )
+    return u8aConcat(origin, dest, valueU8a, $weightV2.encode(gasLimit), storageDepositLimit, inputData)
 }
 
 const callRequest = getCallRequest(
