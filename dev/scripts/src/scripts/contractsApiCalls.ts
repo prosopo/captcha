@@ -3,7 +3,7 @@ import { AbiMessageType, AbiMetaDataSpec, AbiType, AbiTypesSpec } from './artifa
 import { ApiPromise } from '@polkadot/api'
 import { at } from '@prosopo/util'
 import { compactAddLength } from '@polkadot/util/compact/addLength'
-import { hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
+import { hexToU8a, u8aConcat, u8aEq, u8aToHex } from '@polkadot/util'
 import metadata from '@polkadot/types-support/metadata/v15/substrate-types.json'
 
 // Definition of a call request, taken from cargo contract (I think the order is maybe wrong)
@@ -296,24 +296,27 @@ type ContractArg = {
     value: never
     encoder: $.AnyVariant
 }
-const $weightV2 = $.variant(
-    'Struct',
-    $.object($.field('refTime', $.compact($.u64)), $.field('proofSize', $.compact($.u64)))
+const $weightV2 = $.option(
+    $.variant('Struct', $.object($.field('refTime', $.compact($.u64)), $.field('proofSize', $.compact($.u64)))).shape,
+    undefined
 )
 
 // Subshape encoded WeightV2
 
-const subshapeWeightV2 = $weightV2.shape.encode(gasLimit)
+const subshapeWeightV2 = $weightV2.encode(gasLimit)
 
 // PolkadotJS encoded WeightV2
 
 const api = new ApiPromise()
-const weightV2 = api.registry.createType('WeightV2', gasLimit)
+const weightV2 = api.registry.createType('Option<WeightV2>', gasLimit)
 
-if (weightV2.toHex() === u8aToHex(subshapeWeightV2)) {
+if (u8aEq(weightV2.toU8a(false), subshapeWeightV2)) {
     console.log('Both subshape and Polkadot encoders produce the same output for encoded weight', weightV2.toHex())
+    console.log(weightV2.inspect())
 } else {
     throw new Error('WeightV2 encoding error')
+    console.log('weightV2', weightV2)
+    console.log('subshapeWeightV2', subshapeWeightV2)
 }
 
 // Encode a Contract call request
@@ -339,7 +342,7 @@ function getCallRequest(
     console.log('dest', u8aToHex(dest))
     console.log('valueU8a', u8aToHex(valueU8a))
     console.log('StorageDepositLimit', u8aToHex(storageDepositLimit))
-    console.log('gasLimit', u8aToHex($weightV2.shape.encode(gasLimit)))
+    console.log('gasLimit', u8aToHex($weightV2.encode(gasLimit)))
     console.log('Input data', u8aToHex(inputData))
 
     return u8aConcat(
@@ -347,7 +350,7 @@ function getCallRequest(
         dest,
         valueU8a,
         //TODO what is the correct order for storage deposit and weight?
-        $weightV2.shape.encode(gasLimit),
+        $weightV2.encode(gasLimit),
         storageDepositLimit,
         inputData
     )
@@ -365,4 +368,4 @@ console.log('SUBSHAPE: call request', u8aToHex(callRequest))
 // REAL
 //0x76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487ec652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b00000000000000000000000000000000010b0000f2052a010bff4f39278c040010c9834fee
 // CONSTRUCTED
-//0x76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487ec652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b000000000000000000000000000000000  b0000f2052a010bff4f39278c040010c9834fee
+//0x76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487ec652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b00000000000000000000000000000000010b0000f2052a010bff4f39278c040010c9834fee  b0000f2052a010bff4f39278c040010c9834fee
