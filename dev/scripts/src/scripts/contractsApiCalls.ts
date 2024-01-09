@@ -327,13 +327,14 @@ function getCallRequest(
     args: ContractArg[]
 ) {
     // construct the message for the contract call
-    // origin//destination//value//storageDepositLimit//weight//inputData
+    // origin//destination//value//weight//storageDepositLimit//inputData
     // inputData = compactAddLength(u8aConcat(fnSelector, ...args.toU8a))
     const valueU8a = $.u128.encode(BigInt(value)) // 0 as 64 bytes hex string "0x
     const storageDepositLimit = $.compact($.u64).encode(0n)
     const inputData = compactAddLength(
         u8aConcat(selector, ...args.map(({ value, encoder }) => encoder.shape.encode(value)))
     )
+
     console.log('origin', u8aToHex(origin))
     console.log('dest', u8aToHex(dest))
     console.log('valueU8a', u8aToHex(valueU8a))
@@ -360,7 +361,6 @@ const callRequest = getCallRequest(
     gasLimit,
     []
 )
-
 console.log('SUBSHAPE: call request', u8aToHex(callRequest))
 // REAL
 //0x76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487ec652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b00000000000000000000000000000000010b0000f2052a010bff4f39278c040010c9834fee
