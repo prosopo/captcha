@@ -37,7 +37,9 @@
     },
     "types": "./dist/index.d.ts",
     "dependencies": {
+        "@polkadot/util": "^12.6.2",
         "lodash": "^4.17.21",
+        "scale-ts": "^1.4.3",
         "seedrandom": "^3.0.5"
     },
     "devDependencies": {
