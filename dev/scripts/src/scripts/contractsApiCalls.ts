@@ -301,6 +301,21 @@ const $weightV2 = $.variant(
     $.object($.field('refTime', $.compact($.u64)), $.field('proofSize', $.compact($.u64)))
 )
 
+// Subshape encoded WeightV2
+
+const subshapeWeightV2 = $weightV2.shape.encode(gasLimit)
+
+// PolkadotJS encoded WeightV2
+
+const api = new ApiPromise()
+const weightV2 = api.registry.createType('WeightV2', gasLimit)
+
+if (weightV2.toHex() === u8aToHex(subshapeWeightV2)) {
+    console.log('Both subshape and Polkadot encoders produce the same output for encoded weight', weightV2.toHex())
+} else {
+    throw new Error('WeightV2 encoding error')
+}
+
 // Encode a Contract call request
 // FIXME this only works when there are no args
 function getCallRequest(
@@ -314,18 +329,25 @@ function getCallRequest(
     // construct the message for the contract call
     // origin//destination//value//storageDepositLimit//weight//inputData
     // inputData = compactAddLength(u8aConcat(fnSelector, ...args.toU8a))
-    const valueU8a = $.u64.encode(BigInt(value)) // 0 as 32 bytes hex string "0x
-    const storageDepositLimit = compactAddLength($.u64.encode(0n))
+    const valueU8a = $.u128.encode(BigInt(value)) // 0 as 64 bytes hex string "0x
+    const storageDepositLimit = $.compact($.u64).encode(0n)
     const inputData = compactAddLength(
         u8aConcat(selector, ...args.map(({ value, encoder }) => encoder.shape.encode(value)))
     )
+    console.log('origin', u8aToHex(origin))
+    console.log('dest', u8aToHex(dest))
+    console.log('valueU8a', u8aToHex(valueU8a))
+    console.log('StorageDepositLimit', u8aToHex(storageDepositLimit))
+    console.log('gasLimit', u8aToHex($weightV2.shape.encode(gasLimit)))
+    console.log('Input data', u8aToHex(inputData))
+
     return u8aConcat(
         origin,
         dest,
         valueU8a,
         //TODO what is the correct order for storage deposit and weight?
+        $weightV2.shape.encode(gasLimit),
         storageDepositLimit,
-        compactAddLength($weightV2.shape.encode(gasLimit)),
         inputData
     )
 }
@@ -340,3 +362,7 @@ const callRequest = getCallRequest(
 )
 
 console.log('SUBSHAPE: call request', u8aToHex(callRequest))
+// REAL
+//0x76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487ec652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b00000000000000000000000000000000010b0000f2052a010bff4f39278c040010c9834fee
+// CONSTRUCTED
+//0x76058cdd6d2736982650893b737e457df52dbc3053845acbdd17dd2d06a5487ec652db019a0c1d12b49b1d12d4649930f6873a26c7e8e1fbcbd4d86cad09f13b000000000000000000000000000000000  b0000f2052a010bff4f39278c040010c9834fee

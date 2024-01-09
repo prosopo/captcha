@@ -103,7 +103,7 @@ export async function streamToJson(stream: ReadableStream<Uint8Array>): Promise<
     return await new Response(stream).json()
 }
 
-const errorHandler = async <T>(response: Response) => {
+const responseParser = async <T>(response: Response) => {
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -122,13 +122,13 @@ const getLoginPhrase = async (url?: URL): Promise<string> => {
     const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
     log.info('Calling:', apiURL.href)
     const response = await fetch(apiURL.toString())
-    return (await errorHandler<ResponseLoginPhrase>(response)).data
+    return (await responseParser<ResponseLoginPhrase>(response)).data
 }
 
-const getFluxAppsDetails = async (zelId: string, signature: string, loginPhrase: string) => {
+const getFluxAppsDetails = async (zelId: string, signature: string, loginPhrase: string): Promise<Record<any, any>> => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?filter=&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
     const response = await fetch(apiUrl)
-    return await errorHandler(response)
+    return await responseParser(response)
 }
 
 const getIndividualFluxAppDetails = async (
@@ -139,7 +139,7 @@ const getIndividualFluxAppDetails = async (
 ): Promise<DappDataResponse> => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?dapp=${dappName}&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
     const response = await fetch(apiUrl)
-    return await errorHandler(response)
+    return await responseParser(response)
 }
 
 const getFluxOSURLs = async (dappName: string, zelId: string, signature: string, loginPhrase: string) => {
@@ -162,7 +162,7 @@ const verifyLogin = async (zelid: string, signature: string, loginPhrase: string
         body: data,
         headers: { 'Content-Type': `application/x-www-form-urlencoded` },
     })
-    return await errorHandler(response)
+    return await responseParser(response)
 }
 
 const softRedeploy = async (zelid: string, signature: string, loginPhrase: string, url: URL, appName: string) => {
@@ -178,7 +178,7 @@ const softRedeploy = async (zelid: string, signature: string, loginPhrase: strin
             Zelidauth: Zelidauth,
         },
     })
-    return await errorHandler<ResponseSoftRedeploy>(response)
+    return await responseParser<ResponseSoftRedeploy>(response)
 }
 
 const setupArgs = () => {
@@ -218,6 +218,12 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
     // Get details of individual Flux app
     const individualNodeIPs = await getFluxOSURLs(appName, zelId, signature, loginPhrase)
     log.info('Individual Node IPs:', individualNodeIPs)
+
+    // Get details of all Flux apps
+    const appDetails = await getFluxAppsDetails(zelId, signature, loginPhrase)
+    if (!appDetails[appName.toLowerCase()]) {
+        throw new Error(`No app with name ${appName} found`)
+    }
 
     // Choose a node at random from individualNodeIPs
     const node = individualNodeIPs[Math.floor(Math.random() * individualNodeIPs.length)]
