@@ -314,9 +314,9 @@ if (u8aEq(weightV2.toU8a(false), subshapeWeightV2)) {
     console.log('Both subshape and Polkadot encoders produce the same output for encoded weight', weightV2.toHex())
     console.log(weightV2.inspect())
 } else {
-    throw new Error('WeightV2 encoding error')
     console.log('weightV2', weightV2)
     console.log('subshapeWeightV2', subshapeWeightV2)
+    throw new Error('WeightV2 encoding error')
 }
 
 // Encode a Contract call request
