@@ -25,7 +25,7 @@ async function getPackageDir(packageName: string): Promise<string> {
     if (stderr) {
         throw new ProsopoEnvError(new Error(stderr))
     }
-    return packageDir.trim()
+    return packageDir.trim() || path.resolve()
 }
 
 /**
