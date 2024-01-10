@@ -224,11 +224,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
 
-            // const providerMaxFee = await tasks.contractApi.getProviderMaxFee()
-            //
-            // console.log(providerMaxFee)
-            // process.exit()
-
             await tasks.contract.tx.providerRegister(_url, PROVIDER_FEE, PROVIDER_PAYEE)
 
             const provider = (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
@@ -254,9 +249,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 PROVIDER_PAYEE,
                 { value: this.stakeAmount }
             )
-
-            //const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
-            //console.log('provider', provider)
         } catch (e) {
             throw this.createError(e as Error, this.updateProvider.name)
         }

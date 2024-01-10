@@ -47,7 +47,8 @@
         "NOT_HANDLED": "Not handled",
         "INVALID_STORAGE_TYPE": "Invalid storage type",
         "INTERRUPTED_EVENT": "Event interrupted",
-        "TOO_MANY_CALLS": "Too many calls"
+        "TOO_MANY_CALLS": "Too many calls",
+        "UNKNOWN_ERROR": "Unknown error"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
