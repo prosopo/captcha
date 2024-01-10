@@ -46,7 +46,8 @@ export default async function (
     packageDir: string,
     entry: string,
     command?: string,
-    mode?: string
+    mode?: string,
+    optionalBaseDir = '../..'
 ): Promise<UserConfig> {
     const isProduction = mode === 'production'
 
@@ -54,7 +55,7 @@ export default async function (
     const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, true)
 
     // Assuming node_modules are at the root of the workspace
-    const baseDir = path.resolve('../..')
+    const baseDir = path.resolve(optionalBaseDir)
     const nodeModulesDir = path.resolve(baseDir, 'node_modules')
 
     // Output directory is relative to directory of the package
