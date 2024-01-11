@@ -474,19 +474,6 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance.toNumber())
     })
 
-    //TODO reinstate when https://github.com/polkadot-js/api/issues/5410 is resolved
-
-    // it.only('Dapp accounts', async ({env}): Promise<void> => {
-    //     const account = await getUser(env, AccountKey.dapps)
-    //
-    //     const tasks = await changeSigner(env,  account)
-    //
-    //     const result = await tasks.contractApi.getDappAccounts()
-    //     console.log(result)
-    //
-    //     expect(result).to.be.an('array')
-    // })
-
     test('Captchas are correctly formatted before being passed to the API layer', async ({ env }): Promise<void> => {
         const dappUserAccount = await getUser(env, AccountKey.dappUsers)
         const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
