@@ -8,8 +8,9 @@ on:
     # or run manually
     workflow_dispatch:
 
-permissions:
-    contents: write
+# enqueues multiple jobs to run sequentially, not in parallel. This avoids race conditions related to version bumping
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
 
 jobs:
     publish:
