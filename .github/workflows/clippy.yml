@@ -22,7 +22,6 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Print github vars
-              shell: bash
               run: |
                 echo "github: ${{ toJson(github) }}"
 
