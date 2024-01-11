@@ -333,6 +333,10 @@ jobs:
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
                   docker push prosopo/js_server:${{ steps.next_version.outputs.next_version }}
+                  
+                  # Push latest
+                  docker tag prosopo/js_server:${{ steps.next_version.outputs.next_version }} prosopo/js_server:latest
+                  docker push prosopo/js_server:latest
 
             - name: Build and Push the Provider Bundle
               continue-on-error: true
@@ -356,3 +360,7 @@ jobs:
                   docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.next_version }}
                   echo "Pushing Docker image..."
                   docker push prosopo/provider:${{ steps.next_version.outputs.next_version }}
+
+                  # Push latest
+                  docker tag prosopo/provider:${{ steps.next_version.outputs.next_version }} prosopo/provider:latest
+                  docker push prosopo/provider:latest
