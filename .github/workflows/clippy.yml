@@ -23,7 +23,7 @@ jobs:
         steps:
             - name: Print github vars
               run: |
-                echo "github: ${{ toJson(github) }}"
+                echo "${{ toJson(github) }}"
 
             # Checkout the repo
             - uses: actions/checkout@v3
