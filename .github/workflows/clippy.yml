@@ -24,7 +24,7 @@ jobs:
             
             - name: github context
               shell: bash
-              run: echo "${{ toJson(github) }}"
+              run: echo "${{ github }}"
 
             # Checkout the repo
             - uses: actions/checkout@v3
