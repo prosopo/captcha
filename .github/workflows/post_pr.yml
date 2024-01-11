@@ -24,27 +24,27 @@ jobs:
               shell: bash
               run: |
                   echo '******************************'
-                  echo "github context: ${{ toJson(github) }}"
+                  echo "github context:" "${{ toJson(github) }}"
                   echo '******************************'
-                  echo "env context: ${{ toJson(env) }}"
+                  echo "env context:" "${{ toJson(env) }}"
                   echo '******************************'
-                  echo "vars context: ${{ toJson(vars) }}"
+                  echo "vars context:" "${{ toJson(vars) }}"
                   echo '******************************'
-                  echo "job context: ${{ toJson(job) }}"
+                  echo "job context:" "${{ toJson(job) }}"
                   echo '******************************'
-                  echo "steps context: ${{ toJson(steps) }}"
+                  echo "steps context:" "${{ toJson(steps) }}"
                   echo '******************************'
-                  echo "runner context: ${{ toJson(runner) }}"
+                  echo "runner context:" "${{ toJson(runner) }}"
                   echo '******************************'
-                  echo "secrets context: ${{ toJson(secrets) }}"
+                  echo "secrets context:" "${{ toJson(secrets) }}"
                   echo '******************************'
-                  echo "strategy context: ${{ toJson(strategy) }}"
+                  echo "strategy context:" "${{ toJson(strategy) }}"
                   echo '******************************'
-                  echo "matrix context: ${{ toJson(matrix) }}"
+                  echo "matrix context:" "${{ toJson(matrix) }}"
                   echo '******************************'
-                  echo "needs context: ${{ toJson(needs) }}"
+                  echo "needs context:" "${{ toJson(needs) }}"
                   echo '******************************'
-                  echo "inputs context: ${{ toJson(inputs) }}"
+                  echo "inputs context:" "${{ toJson(inputs) }}"
                   echo '******************************'
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v3
