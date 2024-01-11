@@ -15,11 +15,12 @@ on:
                 required: false
                 default: false
 
+permissions:
+    contents: write
+
 jobs:
     publish:
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
             # checkout the repo
             - uses: actions/checkout@v3
