@@ -21,9 +21,10 @@ jobs:
     check:
         runs-on: ubuntu-latest
         steps:
-            - name: Print github vars
-              run: |
-                echo "${{ toJson(github) }}"
+            
+            - name: github context
+              shell: bash
+              run: echo "${{ toJson(github) }}"
 
             # Checkout the repo
             - uses: actions/checkout@v3
