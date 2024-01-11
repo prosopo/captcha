@@ -344,11 +344,11 @@ jobs:
               id: publish_docker_js_server
               if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
-                  docker pull prosopo/js_server:$latest
+                  docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.current_version_docker_js_server }}
 
                   # Create a temporary container from the latest image
                   echo "Building Docker image..."
-                  CONTAINER_ID=$(docker create prosopo/js_server:$latest)
+                  CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.current_version_docker_js_server }})
 
                   # Copy the bundle to the container and rename it to include the version
                   docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.next_version }}.js
