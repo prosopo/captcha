@@ -7,13 +7,6 @@ on:
             - main
     # or run manually
     workflow_dispatch:
-        inputs:
-            # ignore the version check and publish anyway
-            ignore_version_check:
-                type: boolean
-                description: 'Ignore the version check and publish anyway'
-                required: false
-                default: false
 
 permissions:
     contents: write
@@ -25,48 +18,62 @@ jobs:
             # checkout the repo
             - uses: actions/checkout@v3
 
-            # check if the root package.json has been changed, specifically if the version has been bumped
-            - name: Check version
-              id: check_version
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Dockerhub login
               run: |
-                  # get the next version number from the package.json
-                  NEXT=$(npm pkg get version | tr -d '"')
+                  echo "Logging into Docker Hub."
+                  echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
 
-                  # get the current version number from the current state of main branch
-                  CURRENT=$(gh release list --limit 1 | awk '{print $2}')
 
-                  if [[ -z "$NEXT" ]]; then
+            # get next version from root package.json
+            - name: Next version
+              id: next_version
+              run: |
+                  NEXT_VERSION=$(npm pkg get version | tr -d '"')
+
+                  if [[ -z "$NEXT_VERSION" ]]; then
                     echo "Failed to get next version"
                     exit 1
                   fi
 
-                  if [[ -z "$CURRENT" ]]; then
+                  NEXT_VERSION_MAJOR=$(echo $NEXT_VERSION | cut -d. -f1)
+                  NEXT_VERSION_MINOR=$(echo $NEXT_VERSION | cut -d. -f2)
+                  NEXT_VERSION_PATCH=$(echo $NEXT_VERSION | cut -d. -f3)
+                  echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+                  echo "next_version_major=$NEXT_VERSION_MAJOR" >> $GITHUB_OUTPUT
+                  echo "next_version_minor=$NEXT_VERSION_MINOR" >> $GITHUB_OUTPUT
+                  echo "next_version_patch=$NEXT_VERSION_PATCH" >> $GITHUB_OUTPUT
+                  echo "next_version: $NEXT_VERSION"
+
+            # check for version bump against github release
+            - name: Check version github
+              id: check_version_github
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  # get the current version number from latest release on gh
+                  CURRENT_VERSION=$(gh release list --limit 1 | awk '{print $2}')
+
+                  if [[ -z "$CURRENT_VERSION" ]]; then
                     echo "Failed to get current version"
                     exit 1
                   fi
 
-                  # compare the two versions
-                  echo "next version: $NEXT"
-                  echo "next_version=$NEXT" >> $GITHUB_OUTPUT
-                  echo "current version: $CURRENT"
-                  echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
+                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+                  echo "current_version_github=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+                  echo "current_version_github_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
+                  echo "current_version_github_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
+                  echo "current_version_github_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
+                  echo "current_version: $CURRENT_VERSION"
 
-                  NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
-                  NEXT_MINOR=$(echo $NEXT | cut -d. -f2)
-                  NEXT_PATCH=$(echo $NEXT | cut -d. -f3)
-                  CURRENT_MAJOR=$(echo $CURRENT | cut -d. -f1)
-                  CURRENT_MINOR=$(echo $CURRENT | cut -d. -f2)
-                  CURRENT_PATCH=$(echo $CURRENT | cut -d. -f3)
-
-                  if [[ "$NEXT_MAJOR" -gt "$CURRENT_MAJOR" ]]; then
+                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "$NEXT_MINOR" -gt "$CURRENT_MINOR" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "$NEXT_PATCH" -gt "$CURRENT_PATCH" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
@@ -74,33 +81,146 @@ jobs:
                     echo "bump=false" >> $GITHUB_OUTPUT
                   fi
 
-                  if [[ "${{ github.event.inputs.ignore_version_check }}" == true ]]; then
-                    echo "ignoring version check"
-                    echo "bump=true" >> $GITHUB_OUTPUT
+            - name: Check version npm
+              id: check_version_npm
+              run: |
+                  # get the current version number from latest release on npm (use procaptcha as the baseline, as workspace package is not published)
+                  CURRENT_VERSION=$(npm view @prosopo/procaptcha version)
+
+                  if [[ -z "$CURRENT_VERSION" ]]; then
+                    echo "Failed to get current version"
+                    exit 1
                   fi
+
+                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+                  echo "current_version_npm=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+                  echo "current_version_npm_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
+                  echo "current_version_npm_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
+                  echo "current_version_npm_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
+                  echo "current_version: $CURRENT_VERSION"
+
+                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                    echo "major version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                    echo "minor version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                    echo "patch version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "no version bump detected"
+                    echo "bump=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Check version docker js_server
+              id: check_version_docker_js_server
+              run: |
+                  # get the current version number from latest release on docker
+                  CURRENT_VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+
+                  if [[ -z "$CURRENT_VERSION" ]]; then
+                    echo "Failed to get current version"
+                    exit 1
+                  fi
+
+                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+                  echo "current_version_docker_js_server=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+                  echo "current_version_docker_js_server_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
+                  echo "current_version_docker_js_server_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
+                  echo "current_version_docker_js_server_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
+                  echo "current_version: $CURRENT_VERSION"
+
+                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                    echo "major version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                    echo "minor version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                    echo "patch version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "no version bump detected"
+                    echo "bump=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Check version docker provider
+              id: check_version_docker_provider
+              run: |
+                  # get the current version number from latest release on docker
+                  CURRENT_VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/provider/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+
+                  if [[ -z "$CURRENT_VERSION" ]]; then
+                    echo "Failed to get current version"
+                    exit 1
+                  fi
+
+                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+                  echo "current_version_docker_provider=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+                  echo "current_version_docker_provider_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
+                  echo "current_version_docker_provider_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
+                  echo "current_version_docker_provider_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
+                  echo "current_version: $CURRENT_VERSION"
+
+                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                    echo "major version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                    echo "minor version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                    echo "patch version bump detected"
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "no version bump detected"
+                    echo "bump=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Should bump?
+              id: check_version_any
+              run: |
+                # only bump if any of the version checks have detected a bump
+                if [[ "${{ steps.check_version_github.outputs.bump }}" == 'true' ]]; then
+                  echo "bump=true" >> $GITHUB_OUTPUT
+                elif [[ "${{ steps.check_version_npm.outputs.bump }}" == 'true' ]]; then
+                  echo "bump=true" >> $GITHUB_OUTPUT
+                elif [[ "${{ steps.check_version_docker_js_server.outputs.bump }}" == 'true' ]]; then
+                  echo "bump=true" >> $GITHUB_OUTPUT
+                elif [[ "${{ steps.check_version_docker_provider.outputs.bump }}" == 'true' ]]; then
+                  echo "bump=true" >> $GITHUB_OUTPUT
+                else
+                  echo "bump=false" >> $GITHUB_OUTPUT
+                fi
 
             # setup node
             - uses: actions/setup-node@v3
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               with:
                   node-version-file: '.nvmrc'
             - name: Install npm
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             # get the latest build from the cache produced in the post_pr workflow
 
             - run: mkdir -p protocol/cargo-cache
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
             - run: mkdir -p protocol/target
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
             - run: mkdir -p node_modules
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
             - run: mkdir -p ~/.cache/Cypress
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
 
             - name: Restore cache
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               uses: actions/cache/restore@v3
               with:
                   path: |
@@ -116,16 +236,16 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: ls -la ~/.cache/Cypress || true
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
             - run: ls -la protocol/cargo-cache || true
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
             - run: ls -la protocol/target/ink || true
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
             - run: ls -la node_modules || true
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
 
             - name: Install
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               run: |
                   npm install
                   npm run removePolkadotJSWarnings
@@ -133,7 +253,7 @@ jobs:
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
             - name: Install dependencies and build packages
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               run: |
                   echo "Installing dependencies..."
                   npm ci
@@ -142,7 +262,7 @@ jobs:
                   npm run build:all:cjs
 
             - name: Build the contract sources
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               run: |
                   cd protocol/dev
                   npm run build
@@ -150,7 +270,7 @@ jobs:
                   npm run cli -- build --docker --release
 
             - name: Build JS bundle
-              if: steps.check_version.outputs.bump == 'true'
+              if: steps.check_version_any.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
@@ -162,25 +282,16 @@ jobs:
 
                   NODE_ENV=production npm run bundle:prod
 
-            # by here we should have all the artifacts we need to publish. If any have experienced an error during build, we should skip publishing
-            # this step will be skipped if the build above has failed at any point
-            - name: Set publish var
-              if: steps.check_version.outputs.bump == 'true'
-              id: publish
-              run: |
-                  echo "Setting publish var..."
-                  echo "publish=true" >> $GITHUB_OUTPUT
-
-            - name: Publish to github
-              if: always() && steps.publish.outputs.publish == 'true'
+            - name: Github release
+              if: steps.check_version_github.outputs.bump == 'true'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # do a gh release with the contract sources + bundle
-                  gh release create --generate-notes "v${{ steps.check_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release create --generate-notes "v${{ steps.check_version_github.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
-            - name: Npm publish
-              if: always() && steps.publish.outputs.publish == 'true'
+            - name: Npm release
+              if: steps.check_version_npm.outputs.bump == 'true'
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                     echo "Running on GitHub Actions"
@@ -194,41 +305,9 @@ jobs:
                     echo "Running locally via act, skipping npm publish."
                   fi
 
-            - name: Publish bundle in js_server to dockerhub
-              if: always() && steps.publish.outputs.publish == 'true'
+            - name: Docker js_server release
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
-                  echo "Logging into Docker Hub."
-                  echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
-
-                  # Pull the latest Docker image. Note that this may not be the same version as the current version of main if the docker image did not get deployed for that version, e.g. due to a failed build
-                  # therefore, we have to lookup the latest version manually rather than relying on the version in package.json on main
-                  # find the version which is the predecessor to the next version
-                  latest=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-
-                  # check latest has been detected correctly (i.e. isn't empty)
-                  if [[ -z "$latest" ]]; then
-                    echo "Failed to find latest version"
-                    exit 1
-                  fi
-
-                  # check that latest is behind the next version, otherwise we're building off of a future image. This should not happen if version bumps are always monotonic, but let's check anyway
-                  # split into major, minor, patch
-                  latest_major=$(echo $latest | cut -d. -f1)
-                  latest_minor=$(echo $latest | cut -d. -f2)
-                  latest_patch=$(echo $latest | cut -d. -f3)
-                  next_major=$(echo ${{steps.check_version.outputs.next_version}} | cut -d. -f1)
-                  next_minor=$(echo ${{steps.check_version.outputs.next_version}} | cut -d. -f2)
-                  next_patch=$(echo ${{steps.check_version.outputs.next_version}} | cut -d. -f3)
-                  if [[ "$latest_major" -ge "$next_major" ]]; then
-                    if [[ "$latest_minor" -ge "$next_minor" ]]; then
-                      if [[ "$latest_patch" -ge "$next_patch" ]]; then
-                        echo "Latest docker image is equal to or newer than the next version, failing docker publish"
-                        exit 1
-                      fi
-                    fi
-                  fi
-                  # else latest image on docker is older than the next version, so we can proceed
-
                   docker pull prosopo/js_server:$latest
 
                   # Create a temporary container from the latest image
@@ -236,21 +315,21 @@ jobs:
                   CONTAINER_ID=$(docker create prosopo/js_server:$latest)
 
                   # Copy the bundle to the container and rename it to include the version
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.check_version.outputs.next_version }}.js
+                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.check_version_docker_js_server.outputs.next_version }}.js
 
                   # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
                   docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.js
 
                   # Commit the changes to the container
-                  docker commit $CONTAINER_ID prosopo/js_server:${{steps.check_version.outputs.next_version}}
+                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.next_version }}
 
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
-                  docker push prosopo/js_server:${{steps.check_version.outputs.next_version}}
+                  docker push prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.next_version }}
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
-              if: always() && steps.publish.outputs.publish == 'true'
+              if: steps.check_version_docker_provider.outputs.bump == 'true'
               run: |
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in cli package"
@@ -267,6 +346,6 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{steps.check_version.outputs.next_version}}
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.check_version_docker_provider.outputs.next_version }}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${{steps.check_version.outputs.next_version}}
+                  docker push prosopo/provider:${{ steps.check_version_docker_provider.outputs.next_version }}
