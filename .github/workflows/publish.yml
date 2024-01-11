@@ -50,7 +50,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # get the current version number from latest release on gh
-                  CURRENT_VERSION=$(gh release list --limit 1 | awk '{print $2}')
+                  CURRENT_VERSION=$(gh release list --limit 1 | awk '{print $1}' | tr -d v)
 
                   if [[ -z "$CURRENT_VERSION" ]]; then
                     echo "Failed to get current version"
