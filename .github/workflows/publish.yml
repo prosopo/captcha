@@ -19,7 +19,7 @@ jobs:
     publish:
         runs-on: ubuntu-latest
         permissions:
-          contents: write
+            contents: write
         steps:
             # checkout the repo
             - uses: actions/checkout@v3
