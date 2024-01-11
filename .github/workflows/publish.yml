@@ -288,6 +288,7 @@ jobs:
 
             - name: Github release
               continue-on-error: true
+              id: publish_github
               if: steps.check_version_github.outputs.bump == 'true'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -295,8 +296,18 @@ jobs:
                   # do a gh release with the contract sources + bundle
                   gh release create --generate-notes "v${{ steps.next_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
+            - name: Github release notification
+              if: always()
+              run: |
+                if [[ "${{ steps.publish_github.outcome }}" == 'success' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Github release <https://github.com/prosopo/captcha/releases/tag/v${{ steps.next_version.outputs.next_version }}|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                else if [[ "${{ steps.publish_github.outcome }}" == 'failure' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Github release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
             - name: Npm release
               continue-on-error: true
+              id: publish_release
               if: steps.check_version_npm.outputs.bump == 'true'
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
@@ -311,8 +322,18 @@ jobs:
                     echo "Running locally via act, skipping npm publish."
                   fi
 
+            - name: Npm release notification
+              if: always()
+              run: |
+                if [[ "${{ steps.publish_release.outcome }}" == 'success' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Npm release <https://www.npmjs.com/package/@prosopo/procaptcha/v/${{ steps.next_version.outputs.next_version }}|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                else if [[ "${{ steps.publish_release.outcome }}" == 'failure' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Npm release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
             - name: Docker js_server release
               continue-on-error: true
+              id: publish_docker_js_server
               if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
                   docker pull prosopo/js_server:$latest
@@ -334,7 +355,17 @@ jobs:
                   echo "Pushing Docker image..."
                   docker push prosopo/js_server:${{ steps.next_version.outputs.next_version }}
 
+            - name: Docker js_server release notification
+              if: always()
+              run: |
+                if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker js_server release <https://hub.docker.com/r/prosopo/js_server/tags|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                else if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'failure' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker js_server release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
             - name: Build and Push the Provider Bundle
+              id: publish_docker_provider
               continue-on-error: true
               if: steps.check_version_docker_provider.outputs.bump == 'true'
               run: |
@@ -356,3 +387,12 @@ jobs:
                   docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.next_version }}
                   echo "Pushing Docker image..."
                   docker push prosopo/provider:${{ steps.next_version.outputs.next_version }}
+
+            - name: Docker provider release notification
+              if: always()
+              run: |
+                if [[ "${{ steps.publish_docker_provider.outcome }}" == 'success' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker provider release <https://hub.docker.com/r/prosopo/provider/tags|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                else if [[ "${{ steps.publish_docker_provider.outcome }}" == 'failure' ]]; then
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker provider release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
