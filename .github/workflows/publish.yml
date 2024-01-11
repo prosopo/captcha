@@ -288,7 +288,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # do a gh release with the contract sources + bundle
-                  gh release create --generate-notes "v${{ steps.check_version_github.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release create --generate-notes "v${{ steps.next_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm release
               if: steps.check_version_npm.outputs.bump == 'true'
@@ -315,17 +315,17 @@ jobs:
                   CONTAINER_ID=$(docker create prosopo/js_server:$latest)
 
                   # Copy the bundle to the container and rename it to include the version
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.check_version_docker_js_server.outputs.next_version }}.js
+                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.next_version }}.js
 
                   # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
                   docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.js
 
                   # Commit the changes to the container
-                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.next_version }}
+                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.next_version }}
 
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
-                  docker push prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.next_version }}
+                  docker push prosopo/js_server:${{ steps.next_version.outputs.next_version }}
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if bump is true
@@ -346,6 +346,6 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.check_version_docker_provider.outputs.next_version }}
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.next_version }}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${{ steps.check_version_docker_provider.outputs.next_version }}
+                  docker push prosopo/provider:${{ steps.next_version.outputs.next_version }}
