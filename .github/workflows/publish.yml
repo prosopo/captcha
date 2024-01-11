@@ -301,7 +301,7 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_github.outcome }}" == 'success' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Github release <https://github.com/prosopo/captcha/releases/tag/v${{ steps.next_version.outputs.next_version }}|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  else if [[ "${{ steps.publish_github.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.publish_github.outcome }}" == 'failure' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Github release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   fi
 
@@ -327,7 +327,7 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_release.outcome }}" == 'success' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Npm release <https://www.npmjs.com/package/@prosopo/procaptcha/v/${{ steps.next_version.outputs.next_version }}|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  else if [[ "${{ steps.publish_release.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.publish_release.outcome }}" == 'failure' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Npm release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   fi
 
@@ -360,7 +360,7 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker js_server release <https://hub.docker.com/r/prosopo/js_server/tags|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  else if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.publish_docker_js_server.outcome }}" == 'failure' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker js_server release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   fi
 
@@ -393,6 +393,6 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_docker_provider.outcome }}" == 'success' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker provider release <https://hub.docker.com/r/prosopo/provider/tags|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  else if [[ "${{ steps.publish_docker_provider.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.publish_docker_provider.outcome }}" == 'failure' ]]; then
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker provider release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   fi
