@@ -44,7 +44,7 @@ export const validateValue = (argv: ArgumentsCamelCase) => {
 export const validateFee = (argv: ArgumentsCamelCase) => {
     if (typeof argv.fee !== 'number') {
         throw new ProsopoEnvError('CLI.PARAMETER_ERROR', {
-            context: { name: validateValue.name, fee: argv.fee, context: 'some extra info' },
+            context: { name: validateValue.name, fee: argv.fee },
         })
     }
     const fee: Compact<u128> = argv.fee as unknown as Compact<u128>

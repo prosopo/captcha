@@ -15,12 +15,12 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts.js'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util/bn'
-import { ContractDeployer, ProsopoContractError, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { ContractDeployer, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
 import { DatasetWithIdsAndTree } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
-import { ProsopoEnvError, TranslationKey } from '@prosopo/common'
+import { ProsopoContractError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '../../tasks/index.js'
@@ -227,7 +227,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             await tasks.contract.tx.providerRegister(_url, PROVIDER_FEE, PROVIDER_PAYEE)
 
             const provider = (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
-            //console.log('Registered provider', provider)
             if (!noPush) {
                 this._registeredProviders.push(account)
             }
@@ -344,7 +343,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const error = queryResult.value.err || queryResult.value.ok?.err
 
             if (error) {
-                throw new ProsopoContractError(error)
+                throw new ProsopoContractError(new Error(error))
             }
 
             await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)
@@ -402,7 +401,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         } = {
             error: err,
         }
-        return new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED' as TranslationKey, functionName, undefined, e)
+        return new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED', { context: { functionName, e } })
     }
 }
 

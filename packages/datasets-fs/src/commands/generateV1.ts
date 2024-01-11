@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import { CaptchaTypes, CaptchaWithoutId, Captchas, CaptchasContainerSchema, Item, RawSolution } from '@prosopo/types'
 import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { at, get } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto/blake2'
 import { lodash } from '@prosopo/util/lodash'
@@ -63,10 +63,9 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             bar.increment()
 
             if (this.targets.length <= 1) {
-                throw new ProsopoEnvError(
-                    new Error(`not enough different labels in labelled data`),
-                    'DATASET.NOT_ENOUGH_LABELS'
-                )
+                throw new ProsopoDatasetError(new Error(`not enough different labels in labelled data`), {
+                    translationKey: 'DATASET.NOT_ENOUGH_LABELS',
+                })
             }
 
             // uniformly sample targets
@@ -82,16 +81,14 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
 
             if (targetItems.length < nCorrect) {
-                throw new ProsopoEnvError(
-                    new Error(`not enough images for target (${target})`),
-                    'DATASET.NOT_ENOUGH_IMAGES'
-                )
+                throw new ProsopoEnvError(new Error(`not enough images for target (${target})`), {
+                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+                })
             }
             if (notTargetItems.length < nIncorrect) {
-                throw new ProsopoEnvError(
-                    new Error(`not enough non-matching images for target (${target})`),
-                    'DATASET.NOT_ENOUGH_IMAGES'
-                )
+                throw new ProsopoDatasetError(new Error(`not enough non-matching images for target (${target})`), {
+                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+                })
             }
 
             // get the correct items
@@ -147,15 +144,16 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         for (let i = 0; i < unsolved; i++) {
             bar.increment()
             if (this.unlabelled.length <= size) {
-                throw new ProsopoEnvError(
-                    new Error(`unlabelled map file does not contain enough data`),
-                    'DATASET.NOT_ENOUGH_IMAGES'
-                )
+                throw new ProsopoDatasetError(new Error(`unlabelled map file does not contain enough data`), {
+                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+                })
             }
             // pick a random label to be the target
             // note that these are potentially different to the labelled data labels
             if (this.labels.length <= 0) {
-                throw new ProsopoEnvError(new Error(`no labels found for unlabelled data`), 'DATASET.NOT_ENOUGH_LABELS')
+                throw new ProsopoDatasetError(new Error(`no labels found for unlabelled data`), {
+                    translationKey: 'DATASET.NOT_ENOUGH_LABELS',
+                })
             }
             const index = _.random(0, this.labels.length - 1)
             const target = at(this.labels, index)

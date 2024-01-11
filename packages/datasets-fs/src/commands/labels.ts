@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError } from '@prosopo/common'
 import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
 
@@ -30,7 +30,9 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
 
         const file = args.input
         if (!fs.existsSync(file)) {
-            throw new ProsopoEnvError(new Error(`file does not exist: ${file}`), 'FS.FILE_NOT_FOUND')
+            throw new ProsopoDatasetError(new Error(`file does not exist: ${file}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
 
         const labelled: LabelledItem[] = file

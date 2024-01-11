@@ -15,7 +15,7 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger, ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoDBError } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { get } from '@prosopo/util'
@@ -82,7 +82,7 @@ async function populateStep(
         .filter(({ error }) => error)
         .forEach(({ error }) => {
             if (error) {
-                throw new ProsopoEnvError(error)
+                throw new ProsopoDBError(error)
             }
         })
 }
@@ -114,8 +114,10 @@ export async function populateDatabase(
     })
     try {
         await Promise.all(userPromises)
-    } catch (e) {
-        throw new Error(String(e))
+    } catch (error) {
+        throw new ProsopoDBError('DATABASE.DATABASE_IMPORT_FAILED', {
+            context: { error, failedFuncName: populateDatabase.name },
+        })
     }
 
     if (exportData) {

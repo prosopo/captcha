@@ -55,7 +55,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
                 const api = env.api
                 if (api === undefined) {
-                    throw new Error('api not setup')
+                    throw new ProsopoApiError('DEVELOPER.METHOD_NOT_IMPLEMENTED', {
+                        context: { error: 'api not setup', env },
+                    })
                 }
                 validateAddress(user, false, api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)

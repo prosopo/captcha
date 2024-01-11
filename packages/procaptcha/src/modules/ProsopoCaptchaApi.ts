@@ -110,7 +110,9 @@ export class ProsopoCaptchaApi {
 
         if (this.web2) {
             if (!signer || !signer.signRaw) {
-                throw new Error('Signer is not defined, cannot sign message to prove account ownership')
+                throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
+                    context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
+                })
             }
             // sign the request hash to prove account ownership
             const signed = await signer.signRaw({

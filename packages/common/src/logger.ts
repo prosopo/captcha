@@ -83,7 +83,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
                     logLevel = ConsolaLogLevels.fatal
                     break
                 default:
-                    throw new Error('LOG.INVALID_LOG_LEVEL')
+                    throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
             }
             logger.level = logLevel
             currentLevel = level

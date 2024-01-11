@@ -52,13 +52,13 @@ export async function registerProvider(env: ProviderEnvironment, account: IProvi
 
         await setupProvider(env, account)
     } else {
-        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED', { account })
+        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED', { context: { account } })
     }
 }
 
 export async function setupProvider(env: ProviderEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
-        throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', { provider })
+        throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', { context: { provider } })
     }
     await env.changeSigner(provider.pair)
     const logger = env.logger

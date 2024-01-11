@@ -14,6 +14,7 @@
 /// <reference types="cypress" />
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
+import { ProsopoDatasetError } from '../../../../packages/common/src/error.js'
 import { at } from '@prosopo/util'
 import { checkboxClass } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
@@ -26,7 +27,9 @@ describe('Captchas', () => {
         }))
 
         if (!solutions) {
-            throw new Error('No solutions found')
+            throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
+                context: { datasetWithSolutionHashes },
+            })
         }
         cy.intercept('/dummy').as('dummy')
 

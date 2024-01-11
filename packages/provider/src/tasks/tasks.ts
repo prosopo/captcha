@@ -71,12 +71,9 @@ export class Tasks {
 
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
-            throw new ProsopoEnvError(
-                'CONTRACT.CONTRACT_UNDEFINED',
-                this.constructor.name,
-                {},
-                { contractAddress: env.contractAddress }
-            )
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
+                context: { failedFuncName: this.constructor.name, contractAddress: env.contractAddress },
+            })
         }
         this.config = env.config
         this.contract = env.contractInterface
@@ -96,7 +93,9 @@ export class Tasks {
         // check that the number of captchas contained within dataset.captchas is greater than or equal to the total
         // number of captchas that must be served
         if (datasetRaw.captchas.length < this.config.captchas.solved.count + this.config.captchas.unsolved.count) {
-            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
 
         // check that the number of solutions contained within dataset.captchas is greater than or equal to the number
@@ -105,15 +104,21 @@ export class Tasks {
             .map((captcha): number => (captcha.solution ? 1 : 0))
             .reduce((partialSum, b) => partialSum + b, 0)
         if (solutions < this.config.captchas.solved.count) {
-            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
         if (solutions < this.config.captchas.unsolved.count) {
-            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
 
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId || !dataset.datasetContentId) {
-            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
 
         await this.db?.storeDataset(dataset)
@@ -154,12 +159,9 @@ export class Tasks {
             }
             return captchas
         }
-        throw new ProsopoEnvError(
-            'DATABASE.CAPTCHA_GET_FAILED',
-            this.getCaptchaWithProof.name,
-            {},
-            { datasetId, solved, size }
-        )
+        throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
+            context: { failedFuncName: this.getCaptchaWithProof.name, datasetId, solved, size },
+        })
     }
 
     /**
@@ -179,14 +181,18 @@ export class Tasks {
         signature: string // the signature to indicate ownership of account (web2 only)
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
-            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', this.getPaymentInfo.name, {}, { dappAccount })
+            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
+                context: { failedFuncName: this.getPaymentInfo.name, dappAccount },
+            })
         }
 
         // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', this.dappUserSolution.name, {}, { userAccount })
+            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', {
+                context: { failedFuncName: this.dappUserSolution.name, userAccount },
+            })
         }
 
         let response: DappUserSolutionResult = {
@@ -284,20 +290,21 @@ export class Tasks {
         const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.INVALID_CAPTCHA_ID',
-                this.validateReceivedCaptchasAgainstStoredCaptchas.name,
-                {},
-                captchas
-            )
+            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_ID', {
+                context: {
+                    failedFuncName: this.validateReceivedCaptchasAgainstStoredCaptchas.name,
+
+                    captchas,
+                },
+            })
         }
         if (!storedCaptchas.every((captcha) => captcha.datasetId === at(storedCaptchas, 0).datasetId)) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.DIFFERENT_DATASET_IDS',
-                this.validateReceivedCaptchasAgainstStoredCaptchas.name,
-                {},
-                captchas
-            )
+            throw new ProsopoEnvError('CAPTCHA.DIFFERENT_DATASET_IDS', {
+                context: {
+                    failedFuncName: this.validateReceivedCaptchasAgainstStoredCaptchas.name,
+                    captchas,
+                },
+            })
         }
         return { storedCaptchas, receivedCaptchas, captchaIds }
     }
@@ -315,12 +322,12 @@ export class Tasks {
         tree.build(solutionsHashed)
         const commitmentId = tree.root?.hash
         if (!commitmentId) {
-            throw new ProsopoEnvError(
-                'CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST',
-                this.buildTreeAndGetCommitmentId.name,
-                {},
-                { commitmentId: commitmentId }
-            )
+            throw new ProsopoEnvError('CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST', {
+                context: {
+                    failedFuncName: this.buildTreeAndGetCommitmentId.name,
+                    commitmentId: commitmentId,
+                },
+            })
         }
 
         return { tree, commitmentId }
@@ -434,7 +441,9 @@ export class Tasks {
     ) {
         const contract = await this.contract.contract
         if (!contract) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', this.validateProviderWasRandomlyChosen.name)
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
+                context: { failedFuncName: this.validateProviderWasRandomlyChosen.name },
+            })
         }
 
         const header = await contract.api.rpc.chain.getHeader()
@@ -442,18 +451,16 @@ export class Tasks {
         const isBlockNoValid = await this.isRecentBlock(contract, header, blockNumber)
 
         if (!isBlockNoValid) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.INVALID_BLOCK_NO',
-                this.validateProviderWasRandomlyChosen.name,
-                {},
-                {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_BLOCK_NO', {
+                context: {
+                    failedFuncName: this.validateProviderWasRandomlyChosen.name,
                     userAccount,
                     dappContractAccount,
                     datasetId,
                     header,
                     blockNumber,
-                }
-            )
+                },
+            })
         }
 
         const block = (await contract.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
@@ -464,12 +471,12 @@ export class Tasks {
         )
 
         if (datasetId.toString().localeCompare(randomProviderAndBlockNo.provider.datasetId.toString())) {
-            throw new ProsopoEnvError(
-                'DATASET.INVALID_DATASET_ID',
-                this.validateProviderWasRandomlyChosen.name,
-                {},
-                randomProviderAndBlockNo
-            )
+            throw new ProsopoEnvError('DATASET.INVALID_DATASET_ID', {
+                context: {
+                    failedFuncName: this.validateProviderWasRandomlyChosen.name,
+                    randomProviderAndBlockNo,
+                },
+            })
         }
     }
 
@@ -511,12 +518,12 @@ export class Tasks {
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord> {
         const dappUserSolution = await this.db.getDappUserCommitmentById(commitmentId)
         if (!dappUserSolution) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND',
-                this.getDappUserCommitmentById.name,
-                {},
-                { commitmentId: commitmentId }
-            )
+            throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
+                context: {
+                    failedFuncName: this.getDappUserCommitmentById.name,
+                    commitmentId: commitmentId,
+                },
+            })
         }
         return dappUserSolution
     }

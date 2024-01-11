@@ -8,7 +8,8 @@
         "NO_ACCOUNTS_FOUND": "No accounts found",
         "ACCOUNT_NOT_FOUND": "Account not found",
         "NO_EXTENSION_FOUND": "No extension found",
-        "EXTENSION_NOT_FOUND": "Extension not found"
+        "EXTENSION_NOT_FOUND": "Extension not found",
+        "CANVAS": "Error with Captcha canvas"
     },
     "GENERAL": {
         "BAD_SURI": "Bad SURI",
@@ -48,7 +49,9 @@
         "INVALID_STORAGE_TYPE": "Invalid storage type",
         "INTERRUPTED_EVENT": "Event interrupted",
         "TOO_MANY_CALLS": "Too many calls",
-        "UNKNOWN_ERROR": "Unknown error"
+        "UNKNOWN_ERROR": "Unknown error",
+        "CHAIN_DECIMALS_UNDEFINED": "Chain decimals are not defined",
+        "INVALID_DATA_FORMAT": "Invalid data format"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
@@ -66,7 +69,8 @@
         "NOT_ENOUGH_LABELS": "Not enough labels",
         "NOT_ENOUGH_IMAGES": "Not enough images",
         "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
-        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions"
+        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions",
+        "DUPLICATE_IMAGE": "duplicate image detected"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
@@ -103,7 +107,8 @@
         "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
         "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id",
         "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-        "INVALID_PROVIDER_URL": "Invalid provider url"
+        "INVALID_PROVIDER_URL": "Invalid provider url",
+        "NO_CAPTCHA": "No captcha found"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",
@@ -126,20 +131,26 @@
         "CAPTCHA_ID_MISSING": "Cannot find captcha data id",
         "COMMITMENT_ID_MISSING": "Commitment id missing",
         "PROVIDER_NOT_FOUND": "Provider not found",
+        "PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
         "CREATE_ACCOUNT_FAILED": "Could not create an account!",
         "CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS": "Could not create an account as there are no funds. Restart the substrate node.",
         "NO_MOCK_ENV": "MockEnvironment not set up",
         "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator",
         "FUNDING_FAILED": "Funding failed",
         "MISSING_PROVIDER_PAIR": "Missing provider pair",
-        "NETWORK_NOT_FOUND": "Network not found"
+        "NETWORK_NOT_FOUND": "Network not found",
+        "MISSING_ENV_VARIABLE": "Missing environment variable",
+        "GENERAL": "General Dev Error, see context",
+        "MISSING_SECRET_KEY": "Missing secret key",
+        "METHOD_NOT_IMPLEMENTED": "Method not implemented"
     },
     "FS": {
         "DIRECTORY_NOT_FOUND": "Directory not found",
         "FILE_NOT_FOUND": "File not found",
         "FILE_ALREADY_EXISTS": "File already exists",
         "DIRECTORY_ALREADY_EXISTS": "Directory already exists",
-        "SAME_FILE": "Same file"
+        "SAME_FILE": "Same file",
+        "INVALID_DIR_FORMAT": "Invalid directory format"
     },
     "PROGUI": {
         "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider"

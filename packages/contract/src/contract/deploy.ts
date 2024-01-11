@@ -108,7 +108,11 @@ export class ContractDeployer {
                         resolve(new ContractSubmittableResult(result))
                     } else if (result.isError) {
                         unsub()
-                        reject(new ProsopoContractError(result.status.type))
+                        reject(
+                            new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
+                                context: { error: result.status.type },
+                            })
+                        )
                     }
                 })
             })
@@ -165,7 +169,7 @@ export async function dryRunDeploy(
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
             const func = code.tx[method]
             if (func === undefined) {
-                throw new Error('Unable to find method')
+                throw new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { func } })
             }
             const options: BlueprintOptions = {
                 gasLimit: dryRunResult.gasRequired,

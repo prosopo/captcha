@@ -24,9 +24,7 @@ async function getPackageDir(packageName: string): Promise<string> {
     // get package directory
     const { stdout: packageDir, stderr } = await exec(pkgCommand)
     if (stderr) {
-        const stdoutError = new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: stderr })
-        logger.error(stdoutError)
-        throw stdoutError
+        throw new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: { stderr } })
     }
     return packageDir.trim() || path.resolve()
 }
@@ -148,9 +146,7 @@ export async function getDependencies(
 
     const { stdout, stderr } = await exec(cmd)
     if (stderr) {
-        const stdoutError = new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: stderr })
-        logger.error(stdoutError)
-        throw stdoutError
+        throw new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: { stderr } })
     }
     const deps: string[] = []
     const peerDeps: string[] = []
@@ -221,12 +217,9 @@ export function getFilesInDirs(startDir: string, includePatterns: string[] = [],
     includePatterns.forEach((searchPattern) => {
         // get matching module directories
         const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf('.') > -1 ? '' : '/*'}`
-        //log.info(`globPattern: ${globPattern}`)
         const globResult = new Glob(globPattern, { recursive: true, ignore: ignorePatterns }).walkSync()
-        //log.info(`globResult: ${globResult}`)
         for (const filePath of globResult) {
             files.push(filePath)
-            //log.info(`ignoring ${filePath}`)
         }
     })
     return files
