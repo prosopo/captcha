@@ -1,6 +1,6 @@
 [package]
 name = "captcha"
-version = "0.2.21"
+version = "0.2.24"
 authors = [
   "Chris Taylor <chris@prosopo.io>",
   "George Oastler <george@prosopo.io>",
