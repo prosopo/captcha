@@ -21,7 +21,7 @@
         "bundle:dev": "vite build --config vite.config.ts --mode development",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
         "cli": "node ./dist/cli.js",
-        "start": "node ./dist/start.js --api",
+        "start": "node ./dist/cli.js --api",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
