@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/provider-mock",
-    "version": "0.2.24",
+    "version": "0.2.25",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -20,9 +20,9 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
-        "@prosopo/cli": "0.2.24",
-        "@prosopo/common": "0.2.24",
-        "@prosopo/types": "0.2.24",
+        "@prosopo/cli": "0.2.25",
+        "@prosopo/common": "0.2.25",
+        "@prosopo/types": "0.2.25",
         "es-main": "^1.3.0",
         "express": "^4.18.1"
     },
