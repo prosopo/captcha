@@ -24,9 +24,8 @@ jobs:
             - name: Print github vars
               shell: bash
               run: |
-                  echo '******************************'
-                  echo "github context:" "${{ toJson(github) }}"
-                  echo '******************************'
+                echo "github: ${{ toJson(github) }}"
+
             # Checkout the repo
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v3
