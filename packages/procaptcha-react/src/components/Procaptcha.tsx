@@ -236,7 +236,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
                                 <div style={{ padding: 1 }}>
-                                    <span style={{ color: theme.palette.primary.contrastText, paddingLeft: '4px' }}>
+                                    <span style={{ color: theme.palette.background.contrastText, paddingLeft: '4px' }}>
                                         I am a human
                                     </span>
                                 </div>
