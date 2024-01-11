@@ -27,21 +27,21 @@ jobs:
             - name: Next version
               id: next_version
               run: |
-                  NEXT_VERSION=$(npm pkg get version | tr -d '"')
+                  VERSION=$(npm pkg get version | tr -d '"')
 
-                  if [[ -z "$NEXT_VERSION" ]]; then
+                  if [[ -z "$VERSION" ]]; then
                     echo "Failed to get next version"
                     exit 1
                   fi
 
-                  NEXT_VERSION_MAJOR=$(echo $NEXT_VERSION | cut -d. -f1)
-                  NEXT_VERSION_MINOR=$(echo $NEXT_VERSION | cut -d. -f2)
-                  NEXT_VERSION_PATCH=$(echo $NEXT_VERSION | cut -d. -f3)
-                  echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-                  echo "next_version_major=$NEXT_VERSION_MAJOR" >> $GITHUB_OUTPUT
-                  echo "next_version_minor=$NEXT_VERSION_MINOR" >> $GITHUB_OUTPUT
-                  echo "next_version_patch=$NEXT_VERSION_PATCH" >> $GITHUB_OUTPUT
-                  echo "next_version: $NEXT_VERSION"
+                  MAJOR=$(echo $VERSION | cut -d. -f1)
+                  MINOR=$(echo $VERSION | cut -d. -f2)
+                  PATCH=$(echo $VERSION | cut -d. -f3)
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+                  echo "version: $VERSION"
 
             # check for version bump against github release
             - name: Check version github
@@ -50,29 +50,29 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # get the current version number from latest release on gh
-                  CURRENT_VERSION=$(gh release list --limit 1 | awk '{print $1}' | tr -d v)
+                  VERSION=$(gh release list --limit 1 | awk '{print $1}' | tr -d v)
 
-                  if [[ -z "$CURRENT_VERSION" ]]; then
+                  if [[ -z "$VERSION" ]]; then
                     echo "Failed to get current version"
                     exit 1
                   fi
 
-                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
-                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
-                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
-                  echo "current_version_github=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-                  echo "current_version_github_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
-                  echo "current_version_github_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
-                  echo "current_version_github_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
-                  echo "current_version: $CURRENT_VERSION"
+                  MAJOR=$(echo $VERSION | cut -d. -f1)
+                  MINOR=$(echo $VERSION | cut -d. -f2)
+                  PATCH=$(echo $VERSION | cut -d. -f3)
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+                  echo "version: $VERSION"
 
-                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                  if [[ "${{ steps.next_version.outputs.major }}" -gt "$MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.minor }}" -gt "$MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.patch }}" -gt "$PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
@@ -84,29 +84,29 @@ jobs:
               id: check_version_npm
               run: |
                   # get the current version number from latest release on npm (use procaptcha as the baseline, as workspace package is not published)
-                  CURRENT_VERSION=$(npm view @prosopo/procaptcha version)
+                  VERSION=$(npm view @prosopo/procaptcha version)
 
-                  if [[ -z "$CURRENT_VERSION" ]]; then
+                  if [[ -z "$VERSION" ]]; then
                     echo "Failed to get current version"
                     exit 1
                   fi
 
-                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
-                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
-                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
-                  echo "current_version_npm=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-                  echo "current_version_npm_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
-                  echo "current_version_npm_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
-                  echo "current_version_npm_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
-                  echo "current_version: $CURRENT_VERSION"
+                  MAJOR=$(echo $VERSION | cut -d. -f1)
+                  MINOR=$(echo $VERSION | cut -d. -f2)
+                  PATCH=$(echo $VERSION | cut -d. -f3)
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+                  echo "version: $VERSION"
 
-                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                  if [[ "${{ steps.next_version.outputs.major }}" -gt "$MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.minor }}" -gt "$MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.patch }}" -gt "$PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
@@ -118,29 +118,29 @@ jobs:
               id: check_version_docker_js_server
               run: |
                   # get the current version number from latest release on docker
-                  CURRENT_VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+                  VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
 
-                  if [[ -z "$CURRENT_VERSION" ]]; then
+                  if [[ -z "$VERSION" ]]; then
                     echo "Failed to get current version"
                     exit 1
                   fi
 
-                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
-                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
-                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
-                  echo "current_version_docker_js_server=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-                  echo "current_version_docker_js_server_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
-                  echo "current_version_docker_js_server_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
-                  echo "current_version_docker_js_server_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
-                  echo "current_version: $CURRENT_VERSION"
+                  MAJOR=$(echo $VERSION | cut -d. -f1)
+                  MINOR=$(echo $VERSION | cut -d. -f2)
+                  PATCH=$(echo $VERSION | cut -d. -f3)
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+                  echo "version: $VERSION"
 
-                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                  if [[ "${{ steps.next_version.outputs.major }}" -gt "$MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.minor }}" -gt "$MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.patch }}" -gt "$PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
@@ -152,29 +152,29 @@ jobs:
               id: check_version_docker_provider
               run: |
                   # get the current version number from latest release on docker
-                  CURRENT_VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/provider/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+                  VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/provider/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
 
-                  if [[ -z "$CURRENT_VERSION" ]]; then
+                  if [[ -z "$VERSION" ]]; then
                     echo "Failed to get current version"
                     exit 1
                   fi
 
-                  CURRENT_VERSION_MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
-                  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
-                  CURRENT_VERSION_PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
-                  echo "current_version_docker_provider=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-                  echo "current_version_docker_provider_major=$CURRENT_VERSION_MAJOR" >> $GITHUB_OUTPUT
-                  echo "current_version_docker_provider_minor=$CURRENT_VERSION_MINOR" >> $GITHUB_OUTPUT
-                  echo "current_version_docker_provider_patch=$CURRENT_VERSION_PATCH" >> $GITHUB_OUTPUT
-                  echo "current_version: $CURRENT_VERSION"
+                  MAJOR=$(echo $VERSION | cut -d. -f1)
+                  MINOR=$(echo $VERSION | cut -d. -f2)
+                  PATCH=$(echo $VERSION | cut -d. -f3)
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+                  echo "version: $VERSION"
 
-                  if [[ "${{ steps.next_version.outputs.next_version_major }}" -gt "$CURRENT_VERSION_MAJOR" ]]; then
+                  if [[ "${{ steps.next_version.outputs.major }}" -gt "$MAJOR" ]]; then
                     echo "major version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_minor }}" -gt "$CURRENT_VERSION_MINOR" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.minor }}" -gt "$MINOR" ]]; then
                     echo "minor version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
-                  elif [[ "${{ steps.next_version.outputs.next_version_patch }}" -gt "$CURRENT_VERSION_PATCH" ]]; then
+                  elif [[ "${{ steps.next_version.outputs.patch }}" -gt "$PATCH" ]]; then
                     echo "patch version bump detected"
                     echo "bump=true" >> $GITHUB_OUTPUT
                   else
@@ -294,17 +294,17 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # do a gh release with the contract sources + bundle
-                  gh release create --generate-notes "v${{ steps.next_version.outputs.next_version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release create --generate-notes "v${{ steps.next_version.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Github release notification
               if: always()
               run: |
                   if [[ "${{ steps.publish_github.outcome }}" == 'success' ]]; then
                     echo "Github release successful."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Github release <https://github.com/prosopo/captcha/releases/tag/v${{ steps.next_version.outputs.next_version }}|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Github release <https://github.com/prosopo/captcha/releases/tag/v${{ steps.next_version.outputs.version }}|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   elif [[ "${{ steps.publish_github.outcome }}" == 'failure' ]]; then
                     echo "Github release failed."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Github release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Github release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
                     echo "Github release skipped / cancelled."
                   fi
@@ -331,10 +331,10 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_release.outcome }}" == 'success' ]]; then
                     echo "Npm release successful."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Npm release <https://www.npmjs.com/package/@prosopo/procaptcha/v/${{ steps.next_version.outputs.next_version }}|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Npm release <https://www.npmjs.com/package/@prosopo/procaptcha/v/${{ steps.next_version.outputs.version }}|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   elif [[ "${{ steps.publish_release.outcome }}" == 'failure' ]]; then
                     echo "Npm release failed."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Npm release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Npm release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else 
                     echo "Npm release skipped / cancelled."
                   fi
@@ -344,27 +344,27 @@ jobs:
               id: publish_docker_js_server
               if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
-                  docker pull prosopo/js_server:$latest
+                  docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }}
 
                   # Create a temporary container from the latest image
                   echo "Building Docker image..."
-                  CONTAINER_ID=$(docker create prosopo/js_server:$latest)
+                  CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }})
 
                   # Copy the bundle to the container and rename it to include the version
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.next_version }}.js
+                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
 
                   # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
                   docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.js
 
                   # Commit the changes to the container
-                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.next_version }}
+                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
 
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
-                  docker push prosopo/js_server:${{ steps.next_version.outputs.next_version }}
+                  docker push prosopo/js_server:${{ steps.next_version.outputs.version }}
 
                   # Push latest
-                  docker tag prosopo/js_server:${{ steps.next_version.outputs.next_version }} prosopo/js_server:latest
+                  docker tag prosopo/js_server:${{ steps.next_version.outputs.version }} prosopo/js_server:latest
                   docker push prosopo/js_server:latest
 
             - name: Docker js_server release notification
@@ -372,10 +372,10 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
                     echo "Docker js_server release successful."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker js_server release <https://hub.docker.com/r/prosopo/js_server/tags|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker js_server release <https://hub.docker.com/r/prosopo/js_server/tags|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   elif [[ "${{ steps.publish_docker_js_server.outcome }}" == 'failure' ]]; then
                     echo "Docker js_server release failed."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker js_server release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker js_server release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
                     echo "Docker js_server release skipped / cancelled."
                   fi
@@ -400,12 +400,12 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.next_version }}
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.version }}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${{ steps.next_version.outputs.next_version }}
+                  docker push prosopo/provider:${{ steps.next_version.outputs.version }}
 
                   # Push latest
-                  docker tag prosopo/provider:${{ steps.next_version.outputs.next_version }} prosopo/provider:latest
+                  docker tag prosopo/provider:${{ steps.next_version.outputs.version }} prosopo/provider:latest
                   docker push prosopo/provider:latest
 
             - name: Docker provider release notification
@@ -413,10 +413,10 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_docker_provider.outcome }}" == 'success' ]]; then
                     echo "Docker provider release successful."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker provider release <https://hub.docker.com/r/prosopo/provider/tags|v${{ steps.next_version.outputs.next_version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker provider release <https://hub.docker.com/r/prosopo/provider/tags|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   elif [[ "${{ steps.publish_docker_provider.outcome }}" == 'failure' ]]; then
                     echo "Docker provider release failed."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker provider release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.next_version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker provider release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
                     echo "Docker provider release skipped / cancelled."
                   fi
