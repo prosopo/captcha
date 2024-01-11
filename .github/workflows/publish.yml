@@ -188,14 +188,19 @@ jobs:
                   # only bump if any of the version checks have detected a bump
                   if [[ "${{ steps.check_version_github.outputs.bump }}" == 'true' ]]; then
                     echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "github bump required"
                   elif [[ "${{ steps.check_version_npm.outputs.bump }}" == 'true' ]]; then
                     echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "npm bump required"
                   elif [[ "${{ steps.check_version_docker_js_server.outputs.bump }}" == 'true' ]]; then
                     echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "docker js_server bump required"
                   elif [[ "${{ steps.check_version_docker_provider.outputs.bump }}" == 'true' ]]; then
                     echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "docker provider bump required"
                   else
                     echo "bump=false" >> $GITHUB_OUTPUT
+                    echo "no bump required"
                   fi
 
             # setup node
