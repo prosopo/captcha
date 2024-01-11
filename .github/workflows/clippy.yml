@@ -23,8 +23,9 @@ jobs:
         steps:
             
             - name: github context
-              shell: bash
-              run: echo "${{ github }}"
+              env: 
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+              run: echo "github:" "$GITHUB_CONTEXT"
 
             # Checkout the repo
             - uses: actions/checkout@v3
