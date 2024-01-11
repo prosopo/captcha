@@ -355,6 +355,10 @@ jobs:
                   echo "Pushing Docker image..."
                   docker push prosopo/js_server:${{ steps.next_version.outputs.next_version }}
 
+                  # Push latest
+                  docker tag prosopo/js_server:${{ steps.next_version.outputs.next_version }} prosopo/js_server:latest
+                  docker push prosopo/js_server:latest
+
             - name: Docker js_server release notification
               if: always()
               run: |
@@ -387,6 +391,10 @@ jobs:
                   docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.next_version }}
                   echo "Pushing Docker image..."
                   docker push prosopo/provider:${{ steps.next_version.outputs.next_version }}
+
+                  # Push latest
+                  docker tag prosopo/provider:${{ steps.next_version.outputs.next_version }} prosopo/provider:latest
+                  docker push prosopo/provider:latest
 
             - name: Docker provider release notification
               if: always()
