@@ -15,7 +15,6 @@ import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
-import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
@@ -75,11 +74,4 @@ export async function start(env?: ProviderEnvironment) {
     }
     await env.isReady()
     startApi(env)
-}
-
-//if main process
-if (isMain(import.meta.url, 'provider')) {
-    start().catch((error) => {
-        console.error(error)
-    })
 }
