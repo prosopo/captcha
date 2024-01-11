@@ -202,13 +202,31 @@ jobs:
                   # Pull the latest Docker image. Note that this may not be the same version as the current version of main if the docker image did not get deployed for that version, e.g. due to a failed build
                   # therefore, we have to lookup the latest version manually rather than relying on the version in package.json on main
                   # find the version which is the predecessor to the next version
-                  latest=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | sort | grep -B 1 ${{ steps.check_version.outputs.next_version }} | head -n 1)
+                  latest=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
 
                   # check latest has been detected correctly (i.e. isn't empty)
                   if [[ -z "$latest" ]]; then
                     echo "Failed to find latest version"
                     exit 1
                   fi
+
+                  # check that latest is behind the next version, otherwise we're building off of a future image. This should not happen if version bumps are always monotonic, but let's check anyway
+                  # split into major, minor, patch
+                  latest_major=$(echo $latest | cut -d. -f1)
+                  latest_minor=$(echo $latest | cut -d. -f2)
+                  latest_patch=$(echo $latest | cut -d. -f3)
+                  next_major=$(echo ${{steps.check_version.outputs.next_version}} | cut -d. -f1)
+                  next_minor=$(echo ${{steps.check_version.outputs.next_version}} | cut -d. -f2)
+                  next_patch=$(echo ${{steps.check_version.outputs.next_version}} | cut -d. -f3)
+                  if [[ "$latest_major" -ge "$next_major" ]]; then
+                    if [[ "$latest_minor" -ge "$next_minor" ]]; then
+                      if [[ "$latest_patch" -ge "$next_patch" ]]; then
+                        echo "Latest docker image is equal to or newer than the next version, failing docker publish"
+                        exit 1
+                      fi
+                    fi
+                  fi
+                  # else latest image on docker is older than the next version, so we can proceed
 
                   docker pull prosopo/js_server:$latest
 
