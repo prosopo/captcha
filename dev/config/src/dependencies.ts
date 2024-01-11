@@ -28,7 +28,7 @@ async function getPackageDir(packageName: string): Promise<string> {
         logger.error(stdoutError)
         throw stdoutError
     }
-    return packageDir.trim()
+    return packageDir.trim() || path.resolve()
 }
 
 /**
