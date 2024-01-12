@@ -48,11 +48,10 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-                  
+
             - name: Enable auto-merge on PR
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                echo "Enabling auto-merge on PR"
-                gh pr merge ${{ github.event.number }} --auto --squash
-
+                  echo "Enabling auto-merge on PR"
+                  gh pr merge ${{ github.event.number }} --auto --squash
