@@ -13,7 +13,7 @@ export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => 
     const StyledDiv = styled.div`
         width: 2em;
         height: 2em;
-        border: 4px solid ${theme.palette.primary.contrastText};
+        border: 4px solid ${theme.palette.background.contrastText};
         border-bottom-color: transparent;
         border-radius: 50%;
         display: inherit;
