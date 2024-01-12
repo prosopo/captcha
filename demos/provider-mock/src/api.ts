@@ -20,7 +20,6 @@ import express, { Router } from 'express'
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
  */
 export function prosopoRouter(): Router {
     const router = express.Router()
@@ -43,11 +42,13 @@ export function prosopoRouter(): Router {
         try {
             const testCommitmentId = '0x123456789test'
             const testAccount = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+            const testDapp = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
             let statusMessage = 'API.USER_NOT_VERIFIED'
             let approved = false
             if (
                 (parsed.user && parsed.user === testAccount) ||
-                (parsed.commitmentId && parsed.commitmentId === testCommitmentId)
+                (parsed.commitmentId && parsed.commitmentId === testCommitmentId) ||
+                (parsed.dapp && parsed.dapp === testDapp)
             ) {
                 approved = true
                 statusMessage = 'API.USER_VERIFIED'

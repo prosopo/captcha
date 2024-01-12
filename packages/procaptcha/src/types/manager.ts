@@ -48,6 +48,7 @@ export interface ProcaptchaState {
     timeout: NodeJS.Timeout | undefined // the timer for the captcha challenge. undefined if not set
     successfullChallengeTimeout: NodeJS.Timeout | undefined // the timer for the captcha challenge. undefined if not set
     blockNumber: number | undefined // the block number in which the random provider was chosen. undefined if not set
+    sendData: boolean // whether to trigger sending user event data (mouse, keyboard, touch) to the provider
 }
 
 /**

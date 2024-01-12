@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
@@ -20,6 +21,7 @@ export enum ApiPaths {
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
+    SubmitUserEvents = '/v1/prosopo/provider/events',
 }
 
 export enum ApiParams {
@@ -73,6 +75,7 @@ export const CaptchaSolutionBody = object({
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = object({
+    [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.commitmentId]: string().optional(),
     [ApiParams.maxVerifiedTime]: number().optional(),
@@ -91,4 +94,9 @@ export interface PendingCaptchaRequest {
 
 export interface ProviderRegistered {
     status: 'Registered' | 'Unregistered'
+}
+
+export interface ProviderDetails {
+    provider: Provider
+    dbConnectionOk: boolean
 }

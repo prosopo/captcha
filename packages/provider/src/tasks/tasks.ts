@@ -25,7 +25,9 @@ import {
     Hash,
     PendingCaptchaRequest,
     ProsopoConfigOutput,
+    ProviderDetails,
     ProviderRegistered,
+    StoredEvents,
 } from '@prosopo/types'
 import {
     CaptchaMerkleTree,
@@ -46,6 +48,7 @@ import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { saveCaptchaEvent } from '@prosopo/database'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
@@ -532,13 +535,28 @@ export class Tasks {
     }
 
     /* Returns public details of provider */
-    async getProviderDetails(): Promise<Provider> {
-        return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    async getProviderDetails(): Promise<ProviderDetails> {
+        const provider: Provider = await wrapQuery(
+            this.contract.query.getProvider,
+            this.contract.query
+        )(this.contract.pair.address)
+
+        const dbConnectionOk = await this.getCaptchaWithProof(provider.datasetId, true, 1)
+            .then(() => true)
+            .catch(() => false)
+
+        return { provider, dbConnectionOk }
     }
 
     /** Get the dataset from the databse */
-
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
+    }
+
+    async saveCaptchaEvent(events: StoredEvents, accountId: string) {
+        if (!this.config.mongoAtlasUri) {
+            return
+        }
+        await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
     }
 }

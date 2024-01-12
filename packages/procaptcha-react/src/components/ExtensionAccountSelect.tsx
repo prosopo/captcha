@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Autocomplete, TextField } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { SyntheticEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '@prosopo/common'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
-// import Autocomplete from '@mui/material/Autocomplete/Autocomplete.js'
-// import TextField from '@mui/material/TextField/TextField.js'
 
 export const ExtensionAccountSelect = ({
     value,
@@ -31,7 +28,6 @@ export const ExtensionAccountSelect = ({
 }) => {
     const { t } = useTranslation()
     const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-
     useEffect(() => {
         const prom = web3Enable(dappName).then(() => {
             return web3AccountsSubscribe(setAccounts)
@@ -44,25 +40,27 @@ export const ExtensionAccountSelect = ({
     const account: InjectedAccountWithMeta | null = accounts.find((a) => a.address === value) || null
 
     return (
-        <Autocomplete
-            disablePortal
+        // react select box
+        <select
             id="select-account"
-            options={accounts}
-            value={account}
-            isOptionEqualToValue={(option, value) => option.address === value.address}
-            onChange={(event: SyntheticEvent<Element, Event>, value: InjectedAccountWithMeta | null) => {
-                if (value) {
+            onChange={(e) => {
+                const value = e.target.value
+                const account = accounts.find((a) => a.address === value) || null
+                if (account) {
                     console.log('Selected account:', value)
-                    onChange(value.address)
+                    onChange(account.address)
                 } else {
                     console.log('Deselected account')
                     onChange('')
                 }
             }}
-            sx={{ width: 550 }}
-            getOptionLabel={(option: InjectedAccountWithMeta) => `${option.meta.name}: ${option.address}`}
-            renderInput={(props) => <TextField {...props} label={t('WIDGET.SELECT_ACCOUNT')} />}
-        />
+            value={accounts.length > 0 && account ? account.address : undefined}
+            style={{ width: '550px' }}
+        >
+            {accounts.map(({ address, meta: { name } }) => (
+                <option value={address}>{name}</option>
+            ))}
+        </select>
     )
 }
 

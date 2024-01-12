@@ -21,7 +21,6 @@ import {
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
-
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
@@ -51,6 +50,7 @@ function App() {
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 
     const label = isLogin ? 'Login' : 'Sign up'
