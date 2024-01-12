@@ -120,6 +120,3 @@ jobs:
 
                   # create a PR for the release
                   ID=$(gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill 2>&1 | grep http | xargs -n1 basename)
-
-                  # enable auto-merge via squash merge
-                  gh pr merge $ID --auto --squash
