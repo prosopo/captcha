@@ -157,13 +157,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
     /** Close connection to the database */
     async close(): Promise<void> {
-        this.logger.info(`Closing connection to ${this.url}`)
+        this.logger.debug(`Closing connection to ${this.url}`)
         // eslint-disable-next-line no-async-promise-executor
         await new Promise<void>(async (resolve, reject): Promise<void> => {
             mongoose.connection
                 .close()
                 .then(() => {
-                    this.logger.info(`Connection to ${this.url} closed`)
+                    this.logger.debug(`Connection to ${this.url} closed`)
                     resolve()
                 })
                 .catch(reject)
@@ -176,7 +176,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
         try {
-            this.logger.info(`Storing dataset in database`)
+            this.logger.debug(`Storing dataset in database`)
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
@@ -201,7 +201,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solved: !!solution?.length,
             }))
 
-            this.logger.info(`Inserting captcha records`)
+            this.logger.debug(`Inserting captcha records`)
             // create a bulk upsert operation and execute
             if (captchaDocs.length) {
                 await this.tables?.captcha.bulkWrite(
@@ -227,7 +227,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     datasetContentId: parsedDataset.datasetContentId,
                 }))
 
-            this.logger.info(`Inserting solution records`)
+            this.logger.debug(`Inserting solution records`)
             // create a bulk upsert operation and execute
             if (captchaSolutionDocs.length) {
                 await this.tables?.solution.bulkWrite(
@@ -240,11 +240,19 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
-            this.logger.info(`Dataset stored in database`)
+            this.logger.debug(`Dataset stored in database`)
         } catch (err) {
             // TODO should not cast error here, improve error handling
             throw new ProsopoEnvError(err as Error, 'DATABASE.DATASET_LOAD_FAILED')
         }
+    }
+
+    /** @description Get solutions for a dataset
+     * @param {string} datasetId
+     */
+    async getSolutions(datasetId: string): Promise<SolutionRecord[]> {
+        const docs = await this.tables?.solution.find({ datasetId }).lean<SolutionRecord[]>()
+        return docs ? docs : []
     }
 
     /** @description Get a dataset from the database

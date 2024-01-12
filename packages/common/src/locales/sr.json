@@ -83,6 +83,7 @@
         "INVALID_CAPTCHA_ID": "Nevažeći ID captcha-e",
         "SOLUTION_HASH_ERROR": "Greška pri heširanju rešenja",
         "INVALID_ITEM_FORMAT": "Dozvoljeni su samo slikovni i tekstualni tipovi stavki",
+        "INVALID_SOLUTION_TYPE": "Nevažeći tip rešenja",
         "DIFFERENT_DATASET_IDS": "ID-ovi skupova podataka se ne podudaraju",
         "INVALID_BLOCK_NO": "Broj bloka nije validan",
         "ID_MISMATCH": "ID-ovi captcha-i se ne podudaraju",
@@ -108,7 +109,7 @@
         "PARAMETER_ERROR": "Nevažeći parametar"
     },
     "DEVELOPER": {
-        "DAPP_SITE_KEY_MISSING": "DAPP_SITE_KEY nije podešen u .env datoteci.",
+        "PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY nije podešen u .env datoteci.",
         "BALANCE_TOO_LOW": "{{mnemonic}} balans je prenizak: {{balance}}",
         "CAPTCHA_ID_MISSING": "Nije moguće pronaći ID podataka captcha-e",
         "COMMITMENT_ID_MISSING": "Nedostaje ID predaje",

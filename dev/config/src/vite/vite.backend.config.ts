@@ -46,7 +46,8 @@ export default async function (
     packageDir: string,
     entry: string,
     command?: string,
-    mode?: string
+    mode?: string,
+    optionalBaseDir = '../..'
 ): Promise<UserConfig> {
     const isProduction = mode === 'production'
 
@@ -54,7 +55,7 @@ export default async function (
     const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, true)
 
     // Assuming node_modules are at the root of the workspace
-    const baseDir = path.resolve('../..')
+    const baseDir = path.resolve(optionalBaseDir)
     const nodeModulesDir = path.resolve(baseDir, 'node_modules')
 
     // Output directory is relative to directory of the package
@@ -71,8 +72,6 @@ export default async function (
         ...optionalPeerDependencies,
     ]
 
-    console.log('allExternal', allExternal)
-
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
 
     const nodeJsNodeFileToCopy = path.resolve(
@@ -85,6 +84,12 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': 'true',
         'process.env.WS_NO_UTF_8_VALIDATE': 'true',
         'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(packageVersion),
+        ...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
+            'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        }),
+        ...(process.env.PROSOPO_DEFAULT_NETWORK && {
+            'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
+        }),
     }
 
     logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`)
@@ -199,7 +204,7 @@ export default async function (
                 {
                     filter: new RegExp(filterEntry),
                     replace: {
-                        from: 'esMain(import.meta)',
+                        from: 'isMain(import.meta)',
                         to: 'false',
                     },
                 },

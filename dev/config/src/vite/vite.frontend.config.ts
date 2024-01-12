@@ -40,12 +40,12 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-        'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(''),
-        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-        'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
-        'process.env.SERVER_URL': JSON.stringify(process.env.SERVER_URL),
+        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
+        'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
+        'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
+        'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }
@@ -65,17 +65,18 @@ export default async function (
         ...external,
         ...optionalPeerDependencies,
     ]
-    logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
+    logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const alias = getAliases(dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
     proto['toJSON'] = RegExp.prototype.toString
-    logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
+    logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
+    logger.info('Bundle name', bundleName)
     return {
         ssr: {
             target: 'webworker',
@@ -102,6 +103,7 @@ export default async function (
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
             minify: isProduction,
+            ssr: false,
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
@@ -109,7 +111,6 @@ export default async function (
                 fileName: `${bundleName}.bundle.js`,
                 formats: ['iife'],
             },
-
             modulePreload: { polyfill: true },
             commonjsOptions: {
                 exclude: ['mongodb/*'],

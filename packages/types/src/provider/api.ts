@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaSolutionSchema } from '../datasets/index.js'
-import { array, object, string, infer as zInfer } from 'zod'
+import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { Provider } from '@prosopo/captcha-contract/types-returns'
+import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
@@ -20,6 +21,7 @@ export enum ApiPaths {
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
+    SubmitUserEvents = '/v1/prosopo/provider/events',
 }
 
 export enum ApiParams {
@@ -31,8 +33,10 @@ export enum ApiParams {
     requestHash = 'requestHash',
     captchas = 'captchas',
     commitmentId = 'commitmentId',
+    proof = 'proof',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
+    maxVerifiedTime = 'maxVerifiedTime',
 }
 
 export interface DappUserSolutionResult {
@@ -55,6 +59,11 @@ export const CaptchaRequestBody = object({
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>
 
+export type CaptchaResponseBody = {
+    [ApiParams.captchas]: CaptchaWithProof[]
+    [ApiParams.requestHash]: string
+}
+
 export const CaptchaSolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.dapp]: string(),
@@ -66,8 +75,10 @@ export const CaptchaSolutionBody = object({
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = object({
+    [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.commitmentId]: string().optional(),
+    [ApiParams.maxVerifiedTime]: number().optional(),
 })
 
 export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
@@ -83,4 +94,9 @@ export interface PendingCaptchaRequest {
 
 export interface ProviderRegistered {
     status: 'Registered' | 'Unregistered'
+}
+
+export interface ProviderDetails {
+    provider: Provider
+    dbConnectionOk: boolean
 }

@@ -17,6 +17,7 @@ import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util/bn'
 import { ContractDeployer, ProsopoContractError, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
+import { DatasetWithIdsAndTree } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
 import { ProsopoEnvError, TranslationKey } from '@prosopo/common'
@@ -24,8 +25,8 @@ import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
-import { captchaData } from '../data/captchas.js'
 import { createType } from '@polkadot/types/create'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
 import { get } from '@prosopo/util'
 import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 import { randomAsHex } from '@polkadot/util-crypto/random'
@@ -277,13 +278,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async addDataset(account: Account, datasetJSON: JSON) {
+    private async addDataset(account: Account, dataset: DatasetWithIdsAndTree) {
         try {
             await this.changeSigner(account)
 
             const tasks = new Tasks(this.mockEnv)
 
-            await tasks.providerSetDatasetFromFile(datasetJSON)
+            await tasks.providerSetDataset(dataset)
         } catch (e) {
             throw this.createError(e as Error, this.addDataset.name)
         }
@@ -295,8 +296,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const account = await this.registerProvider(fund, url, true)
             await this.updateProvider(account, url)
-            const datasetJSON = JSON.parse(JSON.stringify(captchaData))
-            await this.addDataset(account, datasetJSON)
+            await this.addDataset(account, datasetWithSolutionHashes)
 
             this._registeredProvidersWithStakeAndDataset.push(account)
 

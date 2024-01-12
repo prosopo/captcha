@@ -9,7 +9,7 @@ import util from 'util'
 
 const logger = getLogger(`Info`, `config.dependencies.js`)
 const exec = util.promisify(child_process.exec)
-// find a tScOnFiG.jSoN file
+// find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/
 const depsRegex = /\s+(@*[\w\-/.]+)@/
@@ -25,7 +25,7 @@ async function getPackageDir(packageName: string): Promise<string> {
     if (stderr) {
         throw new ProsopoEnvError(new Error(stderr))
     }
-    return packageDir.trim()
+    return packageDir.trim() || path.resolve()
 }
 
 /**

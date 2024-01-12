@@ -57,9 +57,9 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    logger.info(`Adding solution hashes to dataset`)
+    logger.debug(`Adding solution hashes to dataset`)
     const dataset = await addSolutionHashesToDataset(datasetRaw)
-    logger.info(`Building dataset merkle trees`)
+    logger.debug(`Building dataset merkle trees`)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
@@ -98,8 +98,8 @@ export async function buildCaptchaTree(
     }
 }
 
-export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
+export function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Dataset {
+    const captchas = datasetRaw.captchas.map((captcha) => {
         return {
             ...captcha,
             items: captcha.items,
@@ -107,8 +107,6 @@ export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promis
             ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, captcha.items) }),
         }
     })
-
-    const captchas = await Promise.all(captchaPromises)
 
     return {
         ...datasetRaw,

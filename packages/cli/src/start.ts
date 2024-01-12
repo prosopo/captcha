@@ -18,7 +18,6 @@ import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
-import esMain from 'es-main'
 import express, { NextFunction, Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
 
@@ -66,17 +65,13 @@ export async function start(env?: ProviderEnvironment) {
         getDB()
 
         const secret = getSecret()
-        const config = getConfig()
+        const config = getConfig(undefined, undefined, undefined, {
+            solved: { count: 2 },
+            unsolved: { count: 0 },
+        })
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
     startApi(env)
-}
-
-//if main process
-if (esMain(import.meta)) {
-    start().catch((error) => {
-        console.error(error)
-    })
 }

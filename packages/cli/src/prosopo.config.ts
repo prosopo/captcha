@@ -28,12 +28,12 @@ import { getLogLevel } from '@prosopo/common'
 import { getSecret } from './process.env.js'
 
 function getMongoURI(): string {
-    const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
+    const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || 'mongodb'
     const mongoSrv = protocol === 'mongodb+srv'
-    const password = process.env.DATABASE_PASSWORD || ''
-    const username = process.env.DATABASE_USERNAME || ''
-    const host = process.env.DATABASE_HOST || 'localhost'
-    const port = mongoSrv ? '' : `:${process.env.DATABASE_PORT ? process.env.DATABASE_PORT : 27017}`
+    const password = process.env.PROSOPO_DATABASE_PASSWORD || ''
+    const username = process.env.PROSOPO_DATABASE_USERNAME || ''
+    const host = process.env.PROSOPO_DATABASE_HOST || 'localhost'
+    const port = mongoSrv ? '' : `:${process.env.PROSOPO_DATABASE_PORT ? process.env.PROSOPO_DATABASE_PORT : 27017}`
     const retries = mongoSrv ? '?retryWrites=true&w=majority' : ''
     return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
@@ -46,28 +46,34 @@ export default function getConfig(
 ): ProsopoConfigOutput {
     return ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
-        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
+        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
+            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
             : EnvironmentTypesSchema.enum.development,
-        defaultNetwork: process.env.DEFAULT_NETWORK
-            ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
+        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
+            ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
             : NetworkNamesSchema.enum.development,
         account: {
-            address: process.env.PROVIDER_ADDRESS || undefined,
-            password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
+            address: process.env.PROSOPO_PROVIDER_ADDRESS || undefined,
+            password: process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD || undefined,
             secret: getSecret(),
         },
         database: {
             development: {
                 type: DatabaseTypes.enum.mongo,
                 endpoint: getMongoURI(),
-                dbname: process.env.DATABASE_NAME || '',
+                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                authSource: 'admin',
+            },
+            production: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.PROSOPO_DATABASE_NAME || '',
                 authSource: 'admin',
             },
         },
         server: {
-            baseURL: process.env.API_BASE_URL || 'http://localhost',
-            port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
+            baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
+            port: process.env.PROSOPO_API_PORT ? parseInt(process.env.PROSOPO_API_PORT) : 9229,
         },
         networks: networksConfig,
         captchaSolutions: captchaSolutionsConfig,

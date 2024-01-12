@@ -14,6 +14,8 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 pub use self::common::{Common, CommonRef};
+pub mod math;
+pub use math::Math;
 
 /// Print and return an error in ink
 #[macro_export]
@@ -71,8 +73,8 @@ pub mod common {
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
             let env_git_commit_id: [u8; 20] = [
-                168, 166, 59, 69, 143, 150, 18, 81, 62, 172, 249, 6, 111, 124, 251, 57, 205, 179,
-                12, 76,
+                43, 191, 45, 67, 204, 50, 237, 106, 247, 125, 12, 33, 254, 202, 164, 155, 126, 35,
+                94, 144,
             ];
             env_git_commit_id
         }
@@ -160,6 +162,8 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
+        /// Returned if there is an math error, e.g. overflow, div 0, etc
+        Math,
     }
 
     /// get the account id in byte array format

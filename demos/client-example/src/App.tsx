@@ -21,7 +21,6 @@ import {
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
-
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
@@ -44,13 +43,14 @@ function App() {
     const config = ProsopoClientConfigSchema.parse({
         userAccountAddress: account,
         account: {
-            address: process.env.REACT_APP_DAPP_SITE_KEY || '',
+            address: process.env.PROSOPO_SITE_KEY || '',
         },
-        web2: process.env.REACT_APP_WEB2 === 'true',
+        web2: process.env.PROSOPO_WEB2 === 'true',
         dappName: 'client-example',
         defaultEnvironment:
-            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.REACT_APP_SERVER_URL || '',
+            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 
     const label = isLogin ? 'Login' : 'Sign up'
@@ -167,59 +167,65 @@ function App() {
                     )}
                     <Box>
                         <h1>{label}</h1>
-                        <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
-                            <FormControl>
-                                <TextField
-                                    id="email"
-                                    label="Email"
-                                    type="text"
-                                    autoComplete="Email"
-                                    autoCapitalize="none"
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </FormControl>
-
-                            {!isLogin && (
+                        <form>
+                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
                                 <FormControl>
                                     <TextField
-                                        id="name"
-                                        label="Name"
+                                        id="email"
+                                        label="Email"
                                         type="text"
-                                        autoComplete="Name"
-                                        onChange={(e) => setName(e.target.value)}
+                                        autoComplete="Email"
+                                        autoCapitalize="none"
+                                        onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </FormControl>
-                            )}
 
-                            <FormControl>
-                                <TextField
-                                    id="password"
-                                    label="Password"
-                                    type="password"
-                                    autoComplete="Password"
-                                    onChange={(e) => setPassword(e.target.value)}
+                                {!isLogin && (
+                                    <FormControl>
+                                        <TextField
+                                            id="name"
+                                            label="Name"
+                                            type="text"
+                                            autoComplete="Name"
+                                            onChange={(e) => setName(e.target.value)}
+                                        />
+                                    </FormControl>
+                                )}
+
+                                <FormControl>
+                                    <TextField
+                                        id="password"
+                                        label="Password"
+                                        type="password"
+                                        autoComplete="Password"
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </FormControl>
+
+                                <Procaptcha
+                                    config={config}
+                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
                                 />
-                            </FormControl>
 
-                            <Procaptcha
-                                config={config}
-                                callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                            />
-
-                            <div>
-                                <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                    <Button variant="contained" onClick={onActionHandler} disabled={!procaptchaOutput}>
-                                        {isLogin ? 'Login' : 'Sign up'}
-                                    </Button>
-                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                        <Box>
-                                            <Typography>- or -</Typography>
+                                <Box sx={{ p: 1 }}>
+                                    <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                        <Button
+                                            variant="contained"
+                                            onClick={onActionHandler}
+                                            disabled={!procaptchaOutput}
+                                        >
+                                            {isLogin ? 'Login' : 'Sign up'}
+                                        </Button>
+                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                            <Box>
+                                                <Typography>- or -</Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
-                                    <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
-                                </Stack>
-                            </div>
-                        </FormGroup>
+                                        <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                    </Stack>
+                                </Box>
+                            </FormGroup>
+                        </form>
                     </Box>
                 </Box>
             </Box>

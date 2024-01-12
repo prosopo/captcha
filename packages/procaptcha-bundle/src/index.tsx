@@ -60,20 +60,21 @@ const extractParams = (name: string): ProcaptchaUrlParams => {
 
 const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
     if (!siteKey) {
-        siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || process.env.REACT_APP_DAPP_SITE_KEY || ''
+        siteKey = process.env.PROSOPO_SITE_KEY || ''
     }
     return ProcaptchaConfigSchema.parse({
-        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(process.env.DEFAULT_ENVIRONMENT)
+        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
+            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
             : EnvironmentTypesSchema.enum.development,
-        defaultNetwork: process.env.DEFAULT_NETWORK
-            ? NetworkNamesSchema.parse(process.env.DEFAULT_NETWORK)
+        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
+            ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
             : NetworkNamesSchema.enum.development,
         userAccountAddress: '',
         account: {
             address: siteKey,
         },
-        serverUrl: process.env.SERVER_URL || '',
+        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        mongoAtlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 

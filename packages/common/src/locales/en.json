@@ -86,6 +86,7 @@
         "INVALID_CAPTCHA_ID": "Invalid captcha id",
         "SOLUTION_HASH_ERROR": "Error hashing solution",
         "INVALID_ITEM_FORMAT": "Only image and text item types allowed",
+        "INVALID_SOLUTION_TYPE": "Invalid solution type",
         "INVALID_ITEM_HASH": "Invalid item hash",
         "DIFFERENT_DATASET_IDS": "Dataset ids do not match",
         "INVALID_BLOCK_NO": "Invalid block number",
@@ -112,7 +113,7 @@
         "PARAMETER_ERROR": "Invalid parameter"
     },
     "DEVELOPER": {
-        "DAPP_SITE_KEY_MISSING": "DAPP_SITE_KEY is not set in .env file.",
+        "PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
         "BALANCE_TOO_LOW": "{{mnemonic}} balance too low: {{balance}}",
         "CAPTCHA_ID_MISSING": "Cannot find captcha data id",
         "COMMITMENT_ID_MISSING": "Commitment id missing",
