@@ -64,6 +64,12 @@ export default function getConfig(
                 dbname: process.env.PROSOPO_DATABASE_NAME || '',
                 authSource: 'admin',
             },
+            production: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                authSource: 'admin',
+            },
         },
         server: {
             baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
