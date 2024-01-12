@@ -435,12 +435,12 @@ jobs:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
-                if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
-                  echo "Redeploying flux docker js_server."
-                  npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
-                else
-                  echo "Skipping flux redeploy."
-                fi
+                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                    echo "Redeploying flux docker js_server."
+                    npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
+                  else
+                    echo "Skipping flux redeploy."
+                  fi
 
             - name: Build and Push the Provider Bundle
               id: publish_docker_provider
