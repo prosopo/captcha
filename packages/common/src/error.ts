@@ -19,6 +19,7 @@ type BaseErrorOptions<ContextType> = {
     logger?: Logger
     logLevel?: LogLevel
     context?: ContextType
+    silent?: boolean
 }
 
 interface BaseContextParams {
@@ -53,8 +54,7 @@ export abstract class ProsopoBaseError<ContextType extends BaseContextParams = B
             this.translationKey = error
             this.context = options?.context
         }
-
-        this.logError(logger, logLevel)
+        if (options?.silent) this.logError(logger, logLevel)
     }
 
     private logError(logger: Logger, logLevel: LogLevel) {
