@@ -1,11 +1,29 @@
 version: '3.8'
 services:
+  provider:
+    image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+    build:
+      context: ..
+      dockerfile: ./docker/images/provider.dockerfile
+    env_file:
+      - ../dev/scripts/.env.test
+    ports:
+      - "9229:9229"
+    tty: true
+    depends_on:
+      - substrate
+    networks:
+      - internal
+      - external
   substrate:
     image: prosopo/substrate-contracts-node:v0.25
     ports:
       - "9615:9615"
       - "9944:9944"
       - "9933:9933"
+    networks:
+      - internal
+      - external
   database:
     image: mongo:5.0.4
     # volumes:
@@ -16,3 +34,11 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
       - MONGO_INITDB_DATABASE=prosopo
+    networks:
+      - internal
+networks:
+  internal:
+    name: internal
+    internal: true
+  external:
+    name: external

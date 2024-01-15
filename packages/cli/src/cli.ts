@@ -13,20 +13,19 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProviderEnvironment } from '@prosopo/env'
 import { getPairAsync } from '@prosopo/contract'
 import { getSecret } from './process.env.js'
 import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
-import { start } from './start.js'
+import ReloadingAPI from './restarter.js'
 import getConfig from './prosopo.config.js'
 import process from 'process'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
 
 async function main() {
-    loadEnv()
+    const envPath = loadEnv()
 
     const secret = getSecret()
 
@@ -43,11 +42,10 @@ async function main() {
     log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`)
 
     const processedArgs = await processArgs(process.argv, pair, config)
+
+    log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`)
     if (processedArgs.api) {
-        const env = new ProviderEnvironment(config, pair)
-        await env.isReady()
-        log.info('Starting API')
-        await start(env)
+        await new ReloadingAPI(envPath, config, pair, processedArgs).start()
     } else {
         process.exit(0)
     }
