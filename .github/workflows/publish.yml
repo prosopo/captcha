@@ -11,6 +11,10 @@ on:
     # or run manually
     workflow_dispatch:
 
+permissions:
+  pull-requests: write
+  contents: write
+
 jobs:
     publish:
         runs-on: ubuntu-latest
