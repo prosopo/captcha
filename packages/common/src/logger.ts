@@ -28,7 +28,7 @@ export type Logger = {
     
 } & LoggerLevelFns
 
-export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 export type LogLevel = zInfer<typeof LogLevel>
 
 // Create a new logger with the given level and scope
