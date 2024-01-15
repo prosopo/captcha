@@ -70,7 +70,8 @@
         "NOT_ENOUGH_IMAGES": "Not enough images",
         "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
         "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions",
-        "DUPLICATE_IMAGE": "duplicate image detected"
+        "DUPLICATE_IMAGE": "duplicate image detected",
+        "MERKLE_ERROR": "Error creating merkle tree"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",

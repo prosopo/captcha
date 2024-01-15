@@ -94,7 +94,7 @@ export class CaptchaMerkleTree {
         while (layerNum < this.layers.length - 1) {
             const layer = this.layers[layerNum]
             if (layer === undefined) {
-                throw new ProsopoError('DEVELOPER.GENERAL', {
+                throw new ProsopoError('DATASET.MERKLE_ERROR', {
                     context: { error: 'layer undefined', failedFuncName: this.proof.name, layerNum },
                 })
             }
