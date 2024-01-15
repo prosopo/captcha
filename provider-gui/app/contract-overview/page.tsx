@@ -25,7 +25,6 @@ const ContractOverview = () => {
     useEffect(() => {
         // Check if currentAccount (and any other dependencies) is loaded
         if (!currentAccount || !network) {
-            // If not loaded, you can either do nothing or set some state to indicate the missing data
             console.log('Waiting for currentAccount and network to be loaded')
             return
         }
