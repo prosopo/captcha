@@ -142,6 +142,7 @@
         "MISSING_ENV_VARIABLE": "Missing environment variable",
         "GENERAL": "General Dev Error, see context",
         "MISSING_SECRET_KEY": "Missing secret key",
+        "KEY_ERROR": "Key error",
         "METHOD_NOT_IMPLEMENTED": "Method not implemented"
     },
     "FS": {

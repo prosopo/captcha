@@ -44,7 +44,7 @@ function getLeafFieldPath(obj: Node): string[] {
     return Object.keys(obj).reduce((arr, key) => {
         const value = obj[key]
         if (value === undefined) {
-            throw new ProsopoError('DEVELOPER.GENERAL', { context: { error: `Undefined value for key ${key}` } })
+            throw new ProsopoError('DEVELOPER.KEY_ERROR', { context: { error: `Undefined value for key ${key}` } })
         }
         const children = getLeafFieldPath(value)
 
