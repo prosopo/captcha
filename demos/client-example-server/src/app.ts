@@ -57,9 +57,9 @@ async function main() {
     const uri = await memoryServerSetup()
     console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
-    if (!process.env.REACT_APP_SERVER_MNEMONIC) {
+    if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
         const mnemonicError = new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
-            context: { missingParams: ['REACT_APP_SERVER_MNEMONIC'] },
+            context: { missingParams: ['PROSOPO_SITE_PRIVATE_KEY'] },
             logger,
         })
 
