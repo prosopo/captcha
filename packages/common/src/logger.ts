@@ -21,11 +21,9 @@ type LoggerLevelFns = {
 }
 
 export type Logger = {
-    
     setLogLevel(level: LogLevel | string): void
-    
+
     getLogLevel(): LogLevel
-    
 } & LoggerLevelFns
 
 export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
