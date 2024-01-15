@@ -53,7 +53,7 @@ jobs:
 
             - name: Enable auto-merge on PR
               env:
-                  PROSOPONATOR_PAT: ${{ secrets.PROSOPONATOR_PAT }}
+                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                   echo "Enabling auto-merge on PR"
                   gh pr merge ${{ github.event.number }} --auto --squash
