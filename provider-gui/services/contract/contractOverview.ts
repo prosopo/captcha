@@ -4,6 +4,7 @@ import { ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { hexToString } from '@polkadot/util'
+import getConfig from '@prosopo/cli/dist/prosopo.config'
 
 const deployedContracts = {
     rococo: {
@@ -12,6 +13,8 @@ const deployedContracts = {
     },
     development: { wsProviderUrl: 'ws://localhost:9944', contracts: [] },
 }
+
+const config = getConfig()
 
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
