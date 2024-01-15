@@ -15,25 +15,18 @@ import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
 import { ProsopoEnvError } from './error.js'
 import { enum as zEnum, infer as zInfer } from 'zod'
 
-export interface Logger {
-    log(message: unknown, ...args: unknown[]): void
-
-    info(message: unknown, ...args: unknown[]): void
-
-    debug(message: unknown, ...args: unknown[]): void
-
-    trace(message: unknown, ...args: unknown[]): void
-
-    warn(message: unknown, ...args: unknown[]): void
-
-    error(message: unknown, ...args: unknown[]): void
-
-    fatal(message: unknown, ...args: unknown[]): void
-
-    setLogLevel(level: LogLevel | string): void
-
-    getLogLevel(): LogLevel
+// allows access to log levels via index, e.g. myLogger[LogLevel.enum.debug](...) or myLogger['error'](...), etc
+type LoggerLevelFns = {
+    [key in LogLevel]: (message: unknown, ...args: unknown[]) => void
 }
+
+export type Logger = {
+    
+    setLogLevel(level: LogLevel | string): void
+    
+    getLogLevel(): LogLevel
+    
+} & LoggerLevelFns
 
 export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
 export type LogLevel = zInfer<typeof LogLevel>
