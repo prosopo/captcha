@@ -31,7 +31,7 @@ type ContractContextParams = BaseContextParams
 type DBContextParams = BaseContextParams & { captchaId?: string[] }
 type CliContextParams = BaseContextParams
 type DatasetContextParams = BaseContextParams
-type ApiContextParams = BaseContextParams & { errorCode?: number }
+type ApiContextParams = BaseContextParams & { code?: number }
 
 export abstract class ProsopoBaseError<ContextType extends BaseContextParams = BaseContextParams> extends Error {
     translationKey: string | undefined
@@ -139,10 +139,13 @@ export class ProsopoDatasetError extends ProsopoBaseError<DatasetContextParams> 
 }
 
 export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
+    code: number
+
     constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ApiContextParams>) {
         const errorName = options?.name || 'ProsopoApiError'
-        const errorCode = options?.context?.errorCode || 500
+        const errorCode = options?.context?.code || 500
         options = { ...options, name: errorName, context: { ...options?.context, errorCode } }
         super(error, options)
+        this.code = errorCode
     }
 }
