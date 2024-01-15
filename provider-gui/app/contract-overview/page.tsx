@@ -1,12 +1,11 @@
 'use client'
 
 import { Box, Button, TextField } from '@mui/material'
-import { ContractOverview } from '@/types/ContractOverview'
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
 import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 
 const calculateFlex = (length: number) => {
     if (length < 4) {
@@ -17,33 +16,24 @@ const calculateFlex = (length: number) => {
 }
 
 const ContractOverview = () => {
-    const { currentAccount, network } = useGlobalState()
-    const [contractsData, setContractsData] = useState<ContractOverview[]>([])
+    const { currentAccount, network, contracts, setContracts } = useGlobalState()
 
     useEffect(() => {
-        const fetchData = () => {
-            contractOverview(network, currentAccount)
-                .then((data) => {
-                    setContractsData(data)
-                })
-                .catch((error) => {
-                    console.error('An error occurred while fetching contract overview data', error)
-                })
-        }
-
-        fetchData()
+        contractOverview(network, currentAccount, contracts).catch((error) => {
+            console.error('An error occurred while fetching contract overview data', error)
+        })
     }, [currentAccount, network])
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         const data = new FormData(event.currentTarget)
 
-        contractOverview(network, currentAccount, data.get('contractAddress') as string)
-            .then((data) => {
-                setContractsData(data)
-            })
+        contractOverview(network, currentAccount, contracts, data.get('contractAddress') as string)
             .catch((error) => {
                 console.error('An error occurred while fetching contract overview data', error)
+            })
+            .then((contract) => {
+                if (contract) setContracts([...contracts, contract])
             })
     }
     return (
@@ -57,7 +47,7 @@ const ContractOverview = () => {
             </form>
             <hr />
             <h1>Contract Details</h1>
-            {contractsData.map((contract, contractIndex) => {
+            {contracts.map((contract, contractIndex) => {
                 const rows: GridRowsProp = contract.providers.map((provider, providerIndex) => {
                     return {
                         id: providerIndex,

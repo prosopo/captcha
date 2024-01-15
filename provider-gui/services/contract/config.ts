@@ -1,21 +1,21 @@
 import {
     DatabaseTypes,
-    EnvironmentTypesSchema,
-    NetworkNamesSchema,
+    EnvironmentTypes,
+    NetworkNames,
     NetworkPairTypeSchema,
     ProsopoConfigSchema,
 } from '@prosopo/types'
 import { getLogLevel } from '@prosopo/common'
 
 const logLevel = getLogLevel()
-export const getTestConfig = (network: NetworkNamesSchema) => {
+export const getConfig = (environment: EnvironmentTypes, network: NetworkNames) => {
     return ProsopoConfigSchema.parse({
         logLevel,
-        defaultEnvironment: EnvironmentTypesSchema.Values.development,
-        defaultNetwork: NetworkNamesSchema.Values.development,
+        defaultEnvironment: environment,
+        defaultNetwork: network,
         account: {
             password: '',
-            address: '',
+            address: 'currentAccount',
         },
         database: {
             development: { type: DatabaseTypes.enum.mongoMemory, endpoint: '', dbname: 'prosopo_test', authSource: '' },
@@ -29,7 +29,16 @@ export const getTestConfig = (network: NetworkNamesSchema) => {
             development: {
                 endpoint: 'ws://localhost:9944',
                 contract: {
-                    address: process.env.PROSOPO_CONTRACT_ADDRESS || '',
+                    address: process.env.PROSOPO_CONTRACT_ADDRESS || '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u',
+                    name: 'prosopo',
+                },
+                pairType: NetworkPairTypeSchema.parse('sr25519'),
+                ss58Format: 42,
+            },
+            rococo: {
+                endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443',
+                contract: {
+                    address: process.env.PROSOPO_CONTRACT_ADDRESS || '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u',
                     name: 'prosopo',
                 },
                 pairType: NetworkPairTypeSchema.parse('sr25519'),
