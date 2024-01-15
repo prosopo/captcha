@@ -20,21 +20,12 @@ const loadContract = async (
     contractAddress: string,
     wsProviderUrl: string
 ): Promise<ProsopoCaptchaContract> => {
-    const network = {
-        endpoint: wsProviderUrl,
-        contract: {
-            address: contractAddress,
-            name: 'Captcha',
-        },
-        pairType: 'sr25519',
-        ss58Format: 'number',
-    }
-    const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint) })
+    const api = await ApiPromise.create({ provider: new WsProvider(wsProviderUrl) })
     const type = 'sr25519'
     return new ProsopoCaptchaContract(
         api,
         JSON.parse(abiJson),
-        network.contract.address,
+        contractAddress,
         'prosopo',
         0,
         new Keyring({ type, ss58Format: api.registry.chainSS58 }).addFromAddress(account)
@@ -47,6 +38,7 @@ export const contractOverview = async (
     contracts: GuiContract[],
     contractAddress?: string
 ) => {
+    console.log(contractAddress)
     const config = getConfig('development', network)
     const contract = contractAddress
         ? { address: contractAddress, name: 'Captcha' }
