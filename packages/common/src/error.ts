@@ -13,49 +13,40 @@
 // limitations under the License.
 import { LogLevel, Logger, TranslationKey, getLoggerDefault, i18n as i18next } from './index.js'
 
-type BaseErrorOptions = {
+type BaseErrorOptions<ContextType> = {
     name?: string
     translationKey?: TranslationKey
     logger?: Logger
     logLevel?: LogLevel
+    context?: ContextType
 }
 
-type ContextParams = { [key: string]: any; failedFuncName?: string }
-type ErrorOptions = BaseErrorOptions & { context?: ContextParams }
+interface BaseContextParams {
+    [key: string]: any
+    failedFuncName?: string
+}
 
-type EnvContextParams = ContextParams & { missingEnvVars?: string[] }
-type EnvErrorOptions = ErrorOptions & { context?: EnvContextParams }
+type EnvContextParams = BaseContextParams & { missingEnvVars?: string[] }
+type ContractContextParams = BaseContextParams
+type DBContextParams = BaseContextParams & { captchaId?: string[] }
+type CliContextParams = BaseContextParams
+type DatasetContextParams = BaseContextParams
+type ApiContextParams = BaseContextParams & { errorCode?: number }
 
-type ContractContextParams = ContextParams
-type ContractErrorOptions = ErrorOptions & { context?: ContractContextParams }
-
-type DBContextParams = ContextParams & { captchaId?: string[] }
-type DBErrorOptions = ErrorOptions & { context?: DBContextParams }
-
-type CliContextParams = ContextParams
-type CliErrorOptions = ErrorOptions & { context?: CliContextParams }
-
-type DatasetContextParams = ContextParams
-type DatasetErrorOptions = ErrorOptions & { context?: DatasetContextParams }
-
-type ApiContextParams = ContextParams & { errorCode?: number }
-type ApiErrorOptions = ErrorOptions & { context?: ApiContextParams }
-
-export abstract class ProsopoBaseError extends Error {
+export abstract class ProsopoBaseError<ContextType extends BaseContextParams = BaseContextParams> extends Error {
     translationKey: string | undefined
-    context: ContextParams | undefined
+    context: ContextType | undefined
 
-    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ContextType>) {
         const logger = options?.logger || getLoggerDefault()
         const logLevel = options?.logLevel || 'error'
 
-        // Check if error is an Error
         if (error instanceof Error) {
             super(error.message)
             this.translationKey = options?.translationKey
-            this.context = options?.context
-            if (options?.translationKey) {
-                this.context = { ...this.context, translationMessage: i18next.t(options.translationKey) }
+            this.context = {
+                ...(options?.context as ContextType),
+                ...(options?.translationKey ? { translationMessage: i18next.t(options.translationKey) } : {}),
             }
         } else {
             super(i18next.t(error))
@@ -67,7 +58,7 @@ export abstract class ProsopoBaseError extends Error {
     }
 
     private logError(logger: Logger, logLevel: LogLevel) {
-        const errorFormatter = '\n********************* ERROR *********************\n'
+        const errorFormatter = '\n*************** ERROR ***************\n'
         const errorName = `Error Type: ${this.name}\n`
         const errorParams = JSON.stringify({ error: this.message, context: this.context })
         const errorMessage = `${errorFormatter}${errorName}${errorParams}`
@@ -99,56 +90,56 @@ export abstract class ProsopoBaseError extends Error {
 }
 
 // Generic error class
-export class ProsopoError extends ProsopoBaseError {
-    constructor(error: Error | TranslationKey, options?: ErrorOptions) {
+export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<BaseContextParams>) {
         const errorName = options?.name || 'ProsopoError'
         options = { ...options, name: errorName }
         super(error, options)
     }
 }
 
-export class ProsopoEnvError extends ProsopoBaseError {
-    constructor(error: Error | TranslationKey, options?: EnvErrorOptions) {
+export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<EnvContextParams>) {
         const errorName = options?.name || 'ProsopoEnvError'
         options = { ...options, name: errorName }
         super(error, options)
     }
 }
 
-export class ProsopoContractError extends ProsopoBaseError {
-    constructor(error: Error | TranslationKey, options?: ContractErrorOptions) {
+export class ProsopoContractError extends ProsopoBaseError<ContractContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ContractContextParams>) {
         const errorName = options?.name || 'ProsopoContractError'
         options = { ...options, name: errorName }
         super(error, options)
     }
 }
 
-export class ProsopoDBError extends ProsopoBaseError {
-    constructor(error: Error | TranslationKey, options?: DBErrorOptions) {
+export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<DBContextParams>) {
         const errorName = options?.name || 'ProsopoDBError'
         options = { ...options, name: errorName }
         super(error, options)
     }
 }
 
-export class ProsopoCliError extends ProsopoBaseError {
-    constructor(error: Error | TranslationKey, options?: CliErrorOptions) {
+export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<CliContextParams>) {
         const errorName = options?.name || 'ProsopoCliError'
         options = { ...options, name: errorName }
         super(error, options)
     }
 }
 
-export class ProsopoDatasetError extends ProsopoBaseError {
-    constructor(error: Error | TranslationKey, options?: DatasetErrorOptions) {
+export class ProsopoDatasetError extends ProsopoBaseError<DatasetContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<DatasetContextParams>) {
         const errorName = options?.name || 'ProsopoDatasetError'
         options = { ...options, name: errorName }
         super(error, options)
     }
 }
 
-export class ProsopoApiError extends ProsopoEnvError {
-    constructor(error: Error | TranslationKey, options?: ApiErrorOptions) {
+export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ApiContextParams>) {
         const errorName = options?.name || 'ProsopoApiError'
         const errorCode = options?.context?.errorCode || 500
         options = { ...options, name: errorName, context: { ...options?.context, errorCode } }
