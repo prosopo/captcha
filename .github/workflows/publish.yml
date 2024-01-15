@@ -340,7 +340,7 @@ jobs:
               id: publish_github
               if: steps.check_version_github.outputs.bump == 'true'
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                   # do a gh release with the contract sources + bundle
                   gh release create --generate-notes "v${{ steps.next_version.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"

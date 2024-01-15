@@ -96,7 +96,7 @@ jobs:
 
             - name: Bump version
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                   # make a new branch for the version changes
                   git switch -c bump-version-${{ github.event.inputs.version }}
