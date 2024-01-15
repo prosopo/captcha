@@ -62,30 +62,7 @@ export abstract class ProsopoBaseError<ContextType extends BaseContextParams = B
         const errorName = `Error Type: ${this.name}\n`
         const errorParams = JSON.stringify({ error: this.message, context: this.context })
         const errorMessage = `${errorFormatter}${errorName}${errorParams}`
-
-        switch (logLevel) {
-            case 'trace':
-                logger.trace(errorMessage, this.stack)
-                break
-            case 'debug':
-                logger.debug(errorMessage)
-                break
-            case 'info':
-                logger.info(errorMessage)
-                break
-            case 'warn':
-                logger.warn(errorMessage)
-                break
-            case 'error':
-                logger.error(errorMessage)
-                break
-            case 'fatal':
-                logger.fatal(errorMessage)
-                break
-            default:
-                logger.error(errorMessage) // Default case
-                break
-        }
+        logger[logLevel](errorMessage)
     }
 }
 
