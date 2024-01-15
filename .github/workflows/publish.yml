@@ -2,12 +2,10 @@ name: publish
 
 on:
     push:
-        # only on the main branch
         branches:
             - main
         paths:
-            # only when the package.json file changes
-            - package.json
+            - '**/package.json'
     # or run manually
     workflow_dispatch:
 
