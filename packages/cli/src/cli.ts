@@ -18,7 +18,7 @@ import { getSecret } from './process.env.js'
 import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
-import ReloadingAPI from './restarter.js'
+import ReloadingAPI from './reloader.js'
 import getConfig from './prosopo.config.js'
 import process from 'process'
 
