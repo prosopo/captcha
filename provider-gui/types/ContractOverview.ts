@@ -1,6 +1,6 @@
-export interface ContractOverview {
+export interface GuiContract {
     contractAddress: string
-    network: 'development' | 'rococo'
+    network: 'development' | 'rococo' | 'shiden'
     providers: {
         status: string
         balance: number
