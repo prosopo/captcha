@@ -17,7 +17,7 @@ services:
       - internal
       - external
   substrate:
-    image: prosopo/substrate-contracts-node:v0.29
+    image: prosopo/substrate-contracts-node:v0.35
     ports:
       - "9615:9615"
       - "9944:9944"
