@@ -1,6 +1,7 @@
 import * as z from 'zod'
 import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { ProsopoDatasetError } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util/lodash'
@@ -89,7 +90,9 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
                         }
                     }
                     if (!args.allowDuplicates) {
-                        throw new Error(`duplicate image detected`)
+                        throw new ProsopoDatasetError('DATASET.DUPLICATE_IMAGE', {
+                            context: { image: `${label}/${image}` },
+                        })
                     }
                 }
                 fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)

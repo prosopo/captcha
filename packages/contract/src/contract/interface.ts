@@ -19,9 +19,8 @@ import { Contract } from '@prosopo/captcha-contract'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LangError } from '@prosopo/captcha-contract/types-arguments'
-import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoContractError, getLogger, snakeToCamelCase } from '@prosopo/common'
 import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
-import { ProsopoContractError } from '../handlers.js'
 import { default as Query } from '@prosopo/captcha-contract/query'
 import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
@@ -49,19 +48,32 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
                 Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, Error>, LangError>
             >
         } catch (e: any) {
-            throw new ProsopoContractError(e._asError, fn.name, undefined, {
-                args: args,
+            throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+                context: {
+                    error: e._asError,
+                    failedFuncName: fn.name,
+                    args,
+                },
             })
         }
         if (result && result.value.err) {
-            throw new ProsopoContractError(result.value.err.toString(), fn.name, {
-                result: JSON.stringify(result),
+            throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+                context: {
+                    error: result.value.err.toString(),
+                    failedFuncName: fn.name,
+                    result: JSON.stringify(result),
+                },
             })
         }
         if (result.value) {
             return result.value.unwrapRecursively() as QueryReturnTypeInner<QueryFunctionReturnType>
         }
-        throw new ProsopoContractError('CONTRACT.QUERY_ERROR', fn.name, {}, { result: JSON.stringify(result) })
+        throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+            context: {
+                failedFuncName: fn.name,
+                result: JSON.stringify(result),
+            },
+        })
     }
 }
 export class ProsopoCaptchaContract extends Contract {
@@ -186,7 +198,9 @@ export class ProsopoCaptchaContract extends Contract {
                 storageDeposit: response.storageDeposit,
             }
         } else {
-            throw new ProsopoContractError(response.result.asErr, this.getExtrinsicAndGasEstimates.name)
+            throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+                context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
+            })
         }
     }
 
@@ -212,6 +226,8 @@ export class ProsopoCaptchaContract extends Contract {
                 return this.abi.registry.createType(typeDef.type, [optionBytes.unwrap().toU8a(true)]) as T
             }
         }
-        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', this.getStorage.name)
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', {
+            context: { failedFuncName: this.getStorage.name },
+        })
     }
 }

@@ -1,6 +1,6 @@
+import { ProsopoApiError, ProsopoEnvError, ProsopoError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { base64Encode } from '@polkadot/util-crypto'
-import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import { sign, wifToPrivateKey } from './sep256k1Sign.js'
 import qs from 'qs'
@@ -105,13 +105,15 @@ export async function streamToJson(stream: ReadableStream<Uint8Array>): Promise<
 
 const errorHandler = async <T>(response: Response) => {
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new ProsopoApiError('API.BAD_REQUEST', { context: { error: `HTTP error! status: ${response.status}` } })
     }
     if (response.body && !response.bodyUsed) {
         const data = await streamToJson(response.body)
 
         if (data.status === 'error') {
-            throw new Error(data.data.message)
+            throw new ProsopoApiError('API.BAD_REQUEST', {
+                context: { error: `HTTP error! status: ${data.data.message} ` },
+            })
         }
         return data as T
     }
@@ -184,16 +186,20 @@ const softRedeploy = async (zelid: string, signature: string, loginPhrase: strin
 const setupArgs = () => {
     const appName = process.argv.slice(2)[0]
     if (!appName) {
-        throw new Error('Please provide an app name')
+        throw new ProsopoError(Error('Please provide an app name'))
     }
 
     const secretWIFKey = process.env.PROSOPO_ZELCORE_PRIVATE_KEY
     if (!secretWIFKey) {
-        throw new Error('No private key provided')
+        throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', {
+            context: { missingEnvVars: ['PROSOPO_ZELCORE_PRIVATE_KEY'] },
+        })
     }
     const zelId = process.env.PROSOPO_ZELCORE_PUBLIC_KEY
     if (!zelId) {
-        throw new Error('No zelId provided')
+        throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', {
+            context: { missingEnvVars: ['PROSOPO_ZELCORE_PUBLIC_KEY'] },
+        })
     }
     const secretKey = wifToPrivateKey(secretWIFKey)
     return { appName, secretKey, zelId }
@@ -222,7 +228,9 @@ const getNode = async (appName: string, zelId: string, secretKey: Uint8Array) =>
     // Choose a node at random from individualNodeIPs
     const node = individualNodeIPs[Math.floor(Math.random() * individualNodeIPs.length)]
     if (!node) {
-        throw new Error('Failed to randomly select node')
+        throw new ProsopoError('DEVELOPER.GENERAL', {
+            context: { error: 'Failed to randomly select node', appName, zelId, individualNodeIPs },
+        })
     }
     log.info('Node:', node)
     return node

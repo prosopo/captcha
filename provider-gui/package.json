@@ -1,7 +1,7 @@
 {
     "name": "@prosopo/provider-gui",
     "version": "0.2.27",
-    "private": true,
+    "private": false,
     "engines": {
         "node": ">=18",
         "npm": ">=9"
@@ -28,6 +28,7 @@
         "@polkadot/extension-inject": "^0.46.5",
         "@polkadot/keyring": "12.6.1",
         "@polkadot/types": "10.11.1",
+        "@prosopo/common": "0.2.27",
         "@prosopo/api": "0.2.27",
         "@prosopo/cli": "0.2.27",
         "@prosopo/env": "0.2.27",
