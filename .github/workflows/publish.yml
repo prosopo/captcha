@@ -80,7 +80,7 @@ jobs:
                   # get the version number on the PR branch
                   PR_VERSION=$(cat package.json | jq -r '.version' || echo "0.0.0")
                   echo "pr version: $PR_VERSION"
-                  
+
                   # split into major, minor, patch
                   MAIN_MAJOR=$(echo $MAIN_VERSION | cut -d. -f1)
                   MAIN_MINOR=$(echo $MAIN_VERSION | cut -d. -f2)
@@ -94,7 +94,7 @@ jobs:
                   echo "pr major: $PR_MAJOR"
                   echo "pr minor: $PR_MINOR"
                   echo "pr patch: $PR_PATCH"
-                  
+
                   # export the next version numbers
                   echo "major=$PR_MAJOR" >> $GITHUB_OUTPUT
                   echo "minor=$PR_MINOR" >> $GITHUB_OUTPUT
