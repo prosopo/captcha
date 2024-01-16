@@ -20,6 +20,7 @@ import {
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { ProsopoEnvError } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 interface ProcaptchaRenderOptions {
@@ -83,7 +84,9 @@ const getParentForm = (element: Element): HTMLFormElement | null => element.clos
 const getWindowCallback = (callbackName: string) => {
     const fn = (window as any)[callbackName.replace('window.', '')]
     if (typeof fn !== 'function') {
-        throw new Error(`Callback ${callbackName} is not defined on the window object`)
+        throw new ProsopoEnvError('DEVELOPER.METHOD_NOT_IMPLEMENTED', {
+            context: { error: `Callback ${callbackName} is not defined on the window object` },
+        })
     }
     return fn
 }

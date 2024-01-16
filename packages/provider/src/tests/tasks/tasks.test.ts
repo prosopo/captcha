@@ -22,19 +22,12 @@ import {
 } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
 import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
-import {
-    ContractDeployer,
-    ProsopoContractError,
-    getBlockNumber,
-    getDispatchError,
-    getPairAsync,
-    wrapQuery,
-} from '@prosopo/contract'
+import { ContractDeployer, getBlockNumber, getDispatchError, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
 import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
-import { ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
+import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { ViteTestContext } from '@prosopo/env'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
@@ -195,7 +188,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         ).result
         if (result?.isError && result?.dispatchError) {
             const dispatchError = getDispatchError(result?.dispatchError)
-            throw new ProsopoContractError(dispatchError)
+            throw new ProsopoContractError(new Error(dispatchError))
         }
         expect(result?.isError).to.be.false
     }, 8000)
@@ -291,7 +284,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const result = await providerTasks.contract.tx.providerCommit(commit)
         if (result.result?.isError && result.result?.dispatchError) {
             const dispatchError = getDispatchError(result.result?.dispatchError)
-            throw new ProsopoContractError(dispatchError)
+            throw new ProsopoContractError(new Error(dispatchError))
         }
         expect(result.result?.isError).to.be.false
         if (result.error) {
@@ -480,19 +473,6 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const dappAfter = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
         expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance.toNumber())
     })
-
-    //TODO reinstate when https://github.com/polkadot-js/api/issues/5410 is resolved
-
-    // it.only('Dapp accounts', async ({env}): Promise<void> => {
-    //     const account = await getUser(env, AccountKey.dapps)
-    //
-    //     const tasks = await changeSigner(env,  account)
-    //
-    //     const result = await tasks.contractApi.getDappAccounts()
-    //     console.log(result)
-    //
-    //     expect(result).to.be.an('array')
-    // })
 
     test('Captchas are correctly formatted before being passed to the API layer', async ({ env }): Promise<void> => {
         const dappUserAccount = await getUser(env, AccountKey.dappUsers)

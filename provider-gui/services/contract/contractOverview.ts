@@ -1,8 +1,9 @@
 import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
 import { GovernanceStatus } from '@prosopo/captcha-contract'
 import { GuiContract } from '@/types/ContractOverview'
-import { NetworkNames, ProcaptchaClientConfigOutput, ProsopoConfigOutput } from '@prosopo/types'
+import { NetworkNames, ProcaptchaClientConfigOutput, ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { getConfig } from './config'
 import { hexToString } from '@polkadot/util'
@@ -10,7 +11,7 @@ import { hexToString } from '@polkadot/util'
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
     if (!network) {
-        throw new Error(`No network found for environment ${config.defaultEnvironment}`)
+        throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', { context: { network: config.defaultNetwork } })
     }
     return network
 }
@@ -56,7 +57,7 @@ export const contractOverview = async (
 const getContract = async (
     accountAddress: string,
     contract: { address: string; name: string },
-    config: ProsopoConfigOutput,
+    config: ProsopoBasicConfigOutput,
     network: NetworkNames
 ): Promise<GuiContract> => {
     const contractApi = await loadContract(accountAddress, contract.address, config.networks[network].endpoint)
