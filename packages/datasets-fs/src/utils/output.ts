@@ -1,5 +1,5 @@
 import { CliCommand } from '../cli/cliCommand.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvError, ProsopoError } from '@prosopo/common'
 import { boolean, object, string, infer as zInfer } from 'zod'
 import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
@@ -19,10 +19,10 @@ export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliComm
     }
 
     public override getArgSchema(): T {
-        throw new Error('Method not implemented.')
+        throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
     public override getDescription(): string {
-        throw new Error('Method not implemented.')
+        throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
@@ -49,10 +49,9 @@ export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliComm
         // output must not exist, unless overwrite is true
         if (this.outputExists()) {
             if (!args.overwrite) {
-                throw new ProsopoEnvError(
-                    new Error(`output path already exists: ${args.output}`),
-                    'FS.FILE_ALREADY_EXISTS'
-                )
+                throw new ProsopoEnvError(new Error(`output path already exists: ${args.output}`), {
+                    translationKey: 'FS.FILE_ALREADY_EXISTS',
+                })
             }
         }
     }

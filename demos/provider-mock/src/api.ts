@@ -35,9 +35,12 @@ export function prosopoRouter(): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            // TODO fix error handling
-            console.log('parsing error')
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(
+                new ProsopoApiError('CAPTCHA.PARSE_ERROR', {
+                    context: { error: err, errorCode: 400 },
+                    logLevel: 'info',
+                })
+            )
         }
         try {
             const testCommitmentId = '0x123456789test'
@@ -64,8 +67,7 @@ export function prosopoRouter(): Router {
                 solutionApproved: false,
             })
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
         }
     })
 

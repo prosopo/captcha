@@ -70,12 +70,9 @@ export class Environment implements ProsopoEnvironment {
                 this.logger.error(err)
             })
         } else {
-            throw new ProsopoEnvError(
-                'CONFIG.UNKNOWN_ENVIRONMENT',
-                this.constructor.name,
-                {},
-                this.config.defaultEnvironment
-            )
+            throw new ProsopoEnvError('CONFIG.UNKNOWN_ENVIRONMENT', {
+                context: { constructor: this.constructor.name, environment: this.config.defaultEnvironment },
+            })
         }
     }
 
@@ -84,8 +81,10 @@ export class Environment implements ProsopoEnvironment {
             await this.getApi().isReadyOrError
             try {
                 this.pair = this.keyring.addPair(this.pair)
-            } catch (err) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+            } catch (error) {
+                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                    context: { failedFuncName: this.getSigner.name, error },
+                })
             }
         }
     }
@@ -153,9 +152,7 @@ export class Environment implements ProsopoEnvironment {
                 this.logger.info(`Connected to db`)
             }
         } catch (err) {
-            this.logger.error(err)
-            // TODO fix / improve error handling
-            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
+            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error: err }, logger: this.logger })
         }
     }
 
@@ -173,18 +170,17 @@ export class Environment implements ProsopoEnvironment {
                     )
                 }
             }
-        } catch (err) {
-            // TODO fix/improve error handling
-            throw new ProsopoEnvError(
-                err as Error,
-                'DATABASE.DATABASE_IMPORT_FAILED',
-                {},
-                this.config.database
-                    ? this.config.database[this.defaultEnvironment]
-                        ? this.config.database[this.defaultEnvironment]?.type
-                        : undefined
-                    : undefined
-            )
+        } catch (error) {
+            throw new ProsopoEnvError('DATABASE.DATABASE_IMPORT_FAILED', {
+                context: {
+                    error,
+                    environment: this.config.database
+                        ? this.config.database[this.defaultEnvironment]
+                            ? this.config.database[this.defaultEnvironment]?.type
+                            : undefined
+                        : undefined,
+                },
+            })
         }
     }
 }
