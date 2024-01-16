@@ -21,9 +21,8 @@ import {
 import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api.js'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoApiError } from '../api/handlers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
@@ -75,9 +74,8 @@ export class ProsopoCaptchaApi {
             })
 
             return captchaChallenge
-        } catch (e) {
-            // TODO fix/improve error handling
-            throw new ProsopoEnvError(e as Error)
+        } catch (error) {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
     }
 
@@ -127,7 +125,9 @@ export class ProsopoCaptchaApi {
 
         if (this.web2) {
             if (!signer || !signer.signRaw) {
-                throw new Error('Signer is not defined, cannot sign message to prove account ownership')
+                throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
+                    context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
+                })
             }
             // sign the request hash to prove account ownership
             const signed = await signer.signRaw({
@@ -148,9 +148,8 @@ export class ProsopoCaptchaApi {
                 salt,
                 signature
             )
-        } catch (err) {
-            // TODO fix/improve error handling
-            throw new ProsopoApiError(err as Response)
+        } catch (error) {
+            throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
 
         return [result, commitmentId, tx]

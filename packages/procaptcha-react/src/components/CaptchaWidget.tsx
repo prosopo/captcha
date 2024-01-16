@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
+import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo } from 'react'
 
@@ -24,7 +25,7 @@ export interface CaptchaWidgetProps {
 
 const getHash = (item: any) => {
     if (!item.hash) {
-        throw new Error('item.hash is undefined')
+        throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', { context: { item } })
     }
     return item.hash
 }

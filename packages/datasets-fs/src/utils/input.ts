@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { CliCommand } from '../cli/cliCommand.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoError } from '@prosopo/common'
 import fs from 'fs'
 
 export const InputArgsSchema = z.object({
@@ -11,10 +11,10 @@ export type InputArgs = z.infer<typeof InputArgsSchema>
 
 export class InputCliCommand<T extends typeof InputArgsSchema> extends CliCommand<T> {
     public override getArgSchema(): T {
-        throw new Error('Method not implemented.')
+        throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
     public override getDescription(): string {
-        throw new Error('Method not implemented.')
+        throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
     public override getOptions() {
         return {
@@ -32,7 +32,9 @@ export class InputCliCommand<T extends typeof InputArgsSchema> extends CliComman
         await super._check(args)
         // input must exist
         if (!fs.existsSync(args.input)) {
-            throw new ProsopoEnvError(new Error(`input path does not exist: ${args.input}`), 'FS.FILE_NOT_FOUND')
+            throw new ProsopoDatasetError(new Error(`input path does not exist: ${args.input}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
     }
 }
