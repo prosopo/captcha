@@ -16,8 +16,8 @@ import { BN } from '@polkadot/util/bn'
 import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger } from '@prosopo/common'
-import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { Logger, ProsopoContractError } from '@prosopo/common'
+import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
@@ -173,7 +173,7 @@ export class BatchCommitmentsTask {
             }
         }
         if (!extrinsic) {
-            throw new ProsopoContractError('No extrinsics created')
+            throw new ProsopoContractError('CONTRACT.TX_ERROR', { context: { error: 'No extrinsics created' } })
         }
         txs.push(extrinsic)
         this.logger.info(`${txs.length} transactions will be batched`)

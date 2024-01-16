@@ -92,8 +92,7 @@ export class CalculateSolutionsTask extends Tasks {
             }
             return 0
         } catch (error) {
-            // TODO fix error handling
-            throw new ProsopoEnvError(error as Error, 'GENERAL.CALCULATE_CAPTCHA_SOLUTION')
+            throw new ProsopoEnvError('GENERAL.CALCULATE_CAPTCHA_SOLUTION', { context: { error } })
         }
     }
 }

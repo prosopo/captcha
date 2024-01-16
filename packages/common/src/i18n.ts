@@ -18,7 +18,6 @@ import Backend from 'i18next-http-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import i18n, { InitOptions } from 'i18next'
 import translationEn from './locales/en.json' assert { type: 'json' }
-import translationSr from './locales/sr.json' assert { type: 'json' }
 
 const commonOptions: InitOptions = {
     debug: false,
@@ -26,9 +25,6 @@ const commonOptions: InitOptions = {
     resources: {
         en: {
             translation: translationEn,
-        },
-        sr: {
-            translation: translationSr,
         },
     },
 }

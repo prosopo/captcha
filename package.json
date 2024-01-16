@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.2.25",
+    "version": "0.2.29",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -60,7 +60,7 @@
         "lint:fix": "npm --workspaces run lint:fix && npm run lint:fix:workspace",
         "lint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
-        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js 2>/dev/null && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js 2>/dev/null",
+        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js 2>/dev/null && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js 2>/dev/null || true",
         "postinstall": "npm run removePolkadotJSWarnings"
     },
     "private": true,

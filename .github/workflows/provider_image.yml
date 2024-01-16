@@ -1,4 +1,4 @@
-name: image_provider
+name: provider_image
 
 on:
     pull_request:

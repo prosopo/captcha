@@ -7,7 +7,8 @@ on:
             - main
         paths:
             # only when the package.json file changes
-            - package.json
+            - 'package.json'
+            - '**/package.json'
     # or run manually
     workflow_dispatch:
 
@@ -427,6 +428,19 @@ jobs:
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker js_server release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
                     echo "Docker js_server release skipped / cancelled."
+                  fi
+
+            - name: Redeploy flux docker js_server
+              if: always()
+              env:
+                  PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
+                  PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
+              run: |
+                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                    echo "Redeploying flux docker js_server."
+                    npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
+                  else
+                    echo "Skipping flux redeploy."
                   fi
 
             - name: Build and Push the Provider Bundle

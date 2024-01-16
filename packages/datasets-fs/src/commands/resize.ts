@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import { Data, DataSchema, Item } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util/lodash'
 import { u8aToHex } from '@polkadot/util/u8a'
@@ -51,12 +51,16 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 
         const mapFile: string = args.input
         if (!fs.existsSync(mapFile)) {
-            throw new ProsopoEnvError(new Error(`Map file does not exist: ${mapFile}`), 'FS.FILE_NOT_FOUND')
+            throw new ProsopoDatasetError(new Error(`Map file does not exist: ${mapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         const outDir: string = args.output
         const overwrite = args.overwrite || false
         if (!overwrite && fs.existsSync(outDir)) {
-            throw new ProsopoEnvError(new Error(`Output directory already exists: ${outDir}`), 'FS.FILE_NOT_FOUND')
+            throw new ProsopoEnvError(new Error(`Output directory already exists: ${outDir}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
 
         // create the output directory

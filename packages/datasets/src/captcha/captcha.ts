@@ -24,7 +24,7 @@ import {
     Item,
     RawSolution,
 } from '@prosopo/types'
-import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { downloadImage } from './util.js'
 import { isHex } from '@polkadot/util'
@@ -56,7 +56,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
         if (result.solutionTree !== undefined) result2.solutionTree = result.solutionTree
         return result2
     } catch (err) {
-        throw new ProsopoEnvError(err as Error)
+        throw new ProsopoDatasetError('DATASET.DATASET_PARSE_ERROR', { context: { error: err } })
     }
 }
 
@@ -72,8 +72,7 @@ export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): Ca
             solution: captcha.solution.sort(),
         }))
     } catch (err) {
-        // TODO fix / improve error handling
-        throw new ProsopoEnvError(err as Error)
+        throw new ProsopoDatasetError('DATASET.SOLUTION_PARSE_ERROR', { context: { error: err } })
     }
 }
 
@@ -145,7 +144,12 @@ export function computeCaptchaHash(
             if (item.hash) {
                 return item.hash
             } else {
-                throw new ProsopoEnvError('CAPTCHA.MISSING_ITEM_HASH', computeCaptchaHash.name, undefined, index)
+                throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', {
+                    context: {
+                        computeCaptchaHashName: computeCaptchaHash.name,
+                        index,
+                    },
+                })
             }
         })
         return hexHashArray([
@@ -157,8 +161,7 @@ export function computeCaptchaHash(
             sortItemHashes ? itemHashes.sort() : itemHashes,
         ])
     } catch (err) {
-        // TODO fix / improve error handling
-        throw new ProsopoEnvError(err as Error)
+        throw new ProsopoDatasetError('DATASET.HASH_ERROR', { context: { error: err } })
     }
 }
 
@@ -180,7 +183,7 @@ export async function computeItemHash(item: Item): Promise<HashedItem> {
     } else if (item.type === 'image') {
         return { ...item, hash: hexHash(await downloadImage(item.data)) }
     } else {
-        throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
+        throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_FORMAT')
     }
 }
 
@@ -202,7 +205,7 @@ export function matchItemsToSolutions(
             // solution must already be a hash
             // check that solution is in items array
             if (!items?.some((item) => item.hash === solution)) {
-                throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_HASH')
+                throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_HASH')
             }
             return solution
         } else if (typeof solution === 'number') {
@@ -212,7 +215,7 @@ export function matchItemsToSolutions(
             // get the hash of the item
             return item.hash
         } else {
-            throw new ProsopoEnvError('CAPTCHA.INVALID_SOLUTION_TYPE')
+            throw new ProsopoDatasetError('CAPTCHA.INVALID_SOLUTION_TYPE')
         }
     })
 }
