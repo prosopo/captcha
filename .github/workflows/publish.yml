@@ -8,7 +8,6 @@ on:
         paths:
             # only when the package.json file changes
             - 'package.json'
-            - '**/package.json'
     # or run manually
     workflow_dispatch:
 
@@ -61,41 +60,72 @@ jobs:
                   echo "Logging into Docker Hub."
                   echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
 
-            # could have a fail-fast step here which checks the git history for a change to the version line in package.json
-            # however, this would make running the workflow manually a pain, as it wouldn't be able to publish a release if the version line hadn't changed
-            # this could be skipped for a manual run, however
-            # but at that point I wonder the value of this check
-            # anyway, here's how to do it: git show --pretty=format: --no-notes ${{github.event.before}}..${{github.event.after}} package.json | grep -e "[-\+]\s*\"version\""
-            # if there's lines returned, then the version line has changed. The lines will look like:
-            # -    "version": "0.2.24",
-            # +    "version": "0.2.25",
-            # -    "version": "0.2.23",
-            # +    "version": "0.2.24",
-            # note there may be multiple changes if the version line has been changed multiple times. - == removed, + == added
-
-            # get next version from root package.json
-            - name: Next version
+            # fail-fast step to check if the version has been bumped
+            # when running manually, there won't be a version line change, so we need to skip this step in that case
+            - name: Detect version bump
               id: next_version
               run: |
-                  VERSION=$(npm pkg get version | tr -d '"')
+                  PR_HEAD=$(git rev-parse HEAD)
+                  # checkout the default branch
+                  git fetch
+                  git checkout ${{ github.base_ref }}
 
-                  if [[ -z "$VERSION" ]]; then
-                    echo "Failed to get next version"
+                  # get the version number currently on default branch
+                  MAIN_VERSION=$(cat package.json | jq -r '.version' || echo "0.0.0")
+                  echo "main version: $MAIN_VERSION"
+
+                  # checkout the PR branch
+                  git checkout $PR_HEAD
+
+                  # get the version number on the PR branch
+                  PR_VERSION=$(cat package.json | jq -r '.version' || echo "0.0.0")
+                  echo "pr version: $PR_VERSION"
+
+                  # split into major, minor, patch
+                  MAIN_MAJOR=$(echo $MAIN_VERSION | cut -d. -f1)
+                  MAIN_MINOR=$(echo $MAIN_VERSION | cut -d. -f2)
+                  MAIN_PATCH=$(echo $MAIN_VERSION | cut -d. -f3)
+                  PR_MAJOR=$(echo $PR_VERSION | cut -d. -f1)
+                  PR_MINOR=$(echo $PR_VERSION | cut -d. -f2)
+                  PR_PATCH=$(echo $PR_VERSION | cut -d. -f3)
+                  echo "main major: $MAIN_MAJOR"
+                  echo "main minor: $MAIN_MINOR"
+                  echo "main patch: $MAIN_PATCH"
+                  echo "pr major: $PR_MAJOR"
+                  echo "pr minor: $PR_MINOR"
+                  echo "pr patch: $PR_PATCH"
+
+                  # export the next version numbers
+                  echo "major=$PR_MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$PR_MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PR_PATCH" >> $GITHUB_OUTPUT
+
+                  # compare the major, minor, patch versions
+                  if [[ "$MAIN_MAJOR" -lt "$PR_MAJOR" ]]; then
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "major version bump detected"
+                  elif [[ "$MAIN_MINOR" -lt "$PR_MINOR" ]]; then
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "minor version bump detected"
+                  elif [[ "$MAIN_PATCH" -lt "$PR_PATCH" ]]; then
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "patch version bump detected"
+                  elif [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+                    # if run from workflow_dispatch, then skip this step
+                    echo "Skipping version bump detection as this is a manual run."
+                    # assume there has been a version bump, as this is a manual run
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "bump=false" >> $GITHUB_OUTPUT
+                    echo "no version bump detected"
+                    # quit, as there is no version bump
                     exit 1
                   fi
-
-                  MAJOR=$(echo $VERSION | cut -d. -f1)
-                  MINOR=$(echo $VERSION | cut -d. -f2)
-                  PATCH=$(echo $VERSION | cut -d. -f3)
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
-                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
-                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
-                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
-                  echo "version: $VERSION"
 
             # check for version bump against github release
             - name: Check version github
               id: check_version_github
+
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -431,6 +461,7 @@ jobs:
                   fi
 
             - name: Redeploy flux docker js_server
+              id: redeploy_flux_docker_js_server
               if: always()
               env:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
@@ -441,6 +472,22 @@ jobs:
                     npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
                   else
                     echo "Skipping flux redeploy."
+                  fi
+
+            - name:
+              if: always()
+              env:
+                  PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
+                  PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
+              run: |
+                  if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
+                    echo "Redeployed flux docker js_server."
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
+                    echo "Redeploying flux docker js_server failed."
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  else
+                    echo "Redeploying flux docker js_server skipped / cancelled."
                   fi
 
             - name: Build and Push the Provider Bundle
