@@ -1,4 +1,4 @@
-import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { ProsopoDBError, getLoggerDefault } from '@prosopo/common'
 import { StoredEventRecord, StoredEvents } from '@prosopo/types'
 import mongoose, { Model } from 'mongoose'
 const logger = getLoggerDefault()
@@ -56,7 +56,12 @@ export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, 
 
                 // Only reject on the last attempt, otherwise handle the retry logic
                 if (attempt === MAX_RETRIES) {
-                    reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, atlasUri))
+                    reject(
+                        new ProsopoDBError('DATABASE.CONNECT_ERROR', {
+                            context: { failedFuncName: saveCaptchaEvent.name, db: 'events database' },
+                            logger: logger,
+                        })
+                    )
                 } else {
                     // Remove the error listener to avoid accumulated listeners on retries
                     connection?.removeAllListeners('error')
