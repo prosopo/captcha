@@ -1,5 +1,6 @@
 import { BN_BE_256_OPTS } from '@polkadot/util-crypto/bn'
 import { Keypair } from '@polkadot/util-crypto/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { base58Decode, base64Encode, cryptoWaitReady, sha256AsU8a } from '@polkadot/util-crypto'
 import { bnToU8a, hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
@@ -28,7 +29,10 @@ function hasher(message: string, messagePrefix: string): Buffer {
 }
 
 export async function sign(message: string, { secretKey }: Partial<Keypair>) {
-    if (!secretKey) throw new Error('No secret key provided')
+    if (!secretKey)
+        throw new ProsopoEnvError('DEVELOPER.MISSING_SECRET_KEY', {
+            context: { error: 'No secret key provided', failedFuncName: sign.name },
+        })
     await cryptoWaitReady()
     const data: Buffer = hasher(message, MESSAGE_MAGIC)
     const signature = secp256k1.sign(data, secretKey)
@@ -54,7 +58,9 @@ export function wifToPrivateKey(wif: string): Uint8Array {
         // compression included
         substractLength = 10 // remove 5 bytes from WIF so 10 in hex
     } else {
-        throw new Error('Invalid WIF')
+        throw new ProsopoEnvError('DEVELOPER.GENERAL', {
+            context: { error: 'Invalid WIF', failedFuncName: wifToPrivateKey.name },
+        })
     }
     const secretKeyHexLong = u8aToHex(base58Decode(wif))
     // remove 0x and the version byte prefix 80 from the start. Remove the Compression Byte suffix and the Checksum from

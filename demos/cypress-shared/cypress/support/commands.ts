@@ -103,7 +103,6 @@ function getSelectors(captcha: Captcha) {
 function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLElement>> {
     return cy.captchaImages().then(() => {
         cy.getSelectors(captcha).then((selectors: string[]) => {
-            ///throw new Error(selectors.join(', '))
             console.log('captchaId', captcha.captchaId, 'selectors', selectors)
             // Click the correct images
             return cy.get(selectors.join(', ')).then((elements) => {
