@@ -1,0 +1,11 @@
+[build]
+  command = "npm --workspace @prosopo/provider-gui run build"
+  functions = "netlify/functions"
+  publish = "provider-gui/.next"
+
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[dev]
+  targetPort = 9231
