@@ -461,6 +461,7 @@ jobs:
                   fi
 
             - name: Redeploy flux docker js_server
+              id: redeploy_flux_docker_js_server
               if: always()
               env:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
@@ -471,6 +472,22 @@ jobs:
                     npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
                   else
                     echo "Skipping flux redeploy."
+                  fi
+
+            - name:
+              if: always()
+              env:
+                  PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
+                  PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
+              run: |
+                  if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
+                    echo "Redeployed flux docker js_server."
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
+                    echo "Redeploying flux docker js_server failed."
+                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  else
+                    echo "Redeploying flux docker js_server skipped / cancelled."
                   fi
 
             - name: Build and Push the Provider Bundle
