@@ -7,10 +7,6 @@ on:
             - opened
             - reopened
 
-permissions:
-  pull-requests: write
-  contents: write
-
 jobs:
     auto_merge:
         runs-on: ubuntu-latest
