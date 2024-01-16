@@ -128,19 +128,18 @@ describe('util', () => {
             const v6: string = at('abc', 0, { optional: false })
             const v7: number = at([1, 2, 3], 0, { optional: false })
 
-            const a3: number = at([1,2,3], 0)
-            const a4: number | undefined = at([1,2,3,undefined], 0)
-            const a6: number | undefined = at([1,2,3], 0, { optional: true })
-            const a7: number = at([1,2,3], 0, { optional: false })
-            const a8: number = at([1,2,3], 0, { })
-            const a9: number = at([1,2,3], 0, { noWrap: true })
+            const a3: number = at([1, 2, 3], 0)
+            const a4: number | undefined = at([1, 2, 3, undefined], 0)
+            const a6: number | undefined = at([1, 2, 3], 0, { optional: true })
+            const a7: number = at([1, 2, 3], 0, { optional: false })
+            const a8: number = at([1, 2, 3], 0, {})
+            const a9: number = at([1, 2, 3], 0, { noWrap: true })
             const a5: string = at('abc', 0)
             const a10: string = at('abc', 0, { optional: false })
             const a11: string | undefined = at('abc', 0, { optional: true })
             const a12: undefined = at([undefined, undefined, undefined], 0)
             const a13: undefined = at([undefined, undefined, undefined], 0, { optional: true })
             const a14: undefined = at([undefined, undefined, undefined], 0, { optional: false })
-
         })
 
         test('compatible with string', () => {
