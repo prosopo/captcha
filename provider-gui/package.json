@@ -1,7 +1,7 @@
 {
     "name": "@prosopo/provider-gui",
     "version": "0.2.27",
-    "private": true,
+    "private": false,
     "engines": {
         "node": ">=18",
         "npm": ">=9"

@@ -1,7 +1,7 @@
 import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
 import { GovernanceStatus } from '@prosopo/captcha-contract'
 import { GuiContract } from '@/types/ContractOverview'
-import { NetworkNames, ProcaptchaClientConfigOutput, ProsopoConfigOutput } from '@prosopo/types'
+import { NetworkNames, ProcaptchaClientConfigOutput, ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
@@ -57,7 +57,7 @@ export const contractOverview = async (
 const getContract = async (
     accountAddress: string,
     contract: { address: string; name: string },
-    config: ProsopoConfigOutput,
+    config: ProsopoBasicConfigOutput,
     network: NetworkNames
 ): Promise<GuiContract> => {
     const contractApi = await loadContract(accountAddress, contract.address, config.networks[network].endpoint)
