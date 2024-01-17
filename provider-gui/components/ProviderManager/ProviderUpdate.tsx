@@ -1,0 +1,88 @@
+import { Box } from '@mui/system'
+import {
+    Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
+    TextField,
+    Typography,
+} from '@mui/material'
+import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { signedBlockNumberHeaders } from '@/services/provider/provider'
+import { useState } from 'react'
+
+type ProviderUpdateProps = {
+    currentAccount: InjectedAccountWithMeta
+}
+
+export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount }) => {
+    const [payee, setPayee] = useState('')
+    const [url, setUrl] = useState('')
+    const [fee, setFee] = useState('')
+    const [value, setValue] = useState('')
+
+    const handlePayeeChange = (event: SelectChangeEvent<string>) => {
+        setPayee(event.target.value as string)
+    }
+
+    const handleUpdateProvider = async () => {
+        if (!currentAccount) {
+            alert('Please select an account.')
+            return
+        }
+
+        if (isNaN(Number(fee)) || isNaN(Number(value))) {
+            alert('Fee and Value must be numbers.')
+            return
+        }
+
+        const headers = await signedBlockNumberHeaders(currentAccount)
+    }
+
+    return (
+        <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+                Provider Update
+            </Typography>
+            <TextField
+                fullWidth
+                label="URL"
+                variant="outlined"
+                sx={{ mb: 2 }}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+            />
+            <TextField
+                fullWidth
+                label="Fee"
+                variant="outlined"
+                sx={{ mb: 2 }}
+                value={fee}
+                onChange={(e) => setFee(e.target.value)}
+            />
+
+            <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="payee-label">Payee</InputLabel>
+                <Select labelId="payee-label" value={payee} label="Payee" onChange={handlePayeeChange}>
+                    <MenuItem value="Dapp">Dapp</MenuItem>
+                    <MenuItem value="Provider">Provider</MenuItem>
+                </Select>
+            </FormControl>
+
+            <TextField
+                fullWidth
+                label="Value"
+                variant="outlined"
+                sx={{ mb: 2 }}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+            />
+
+            <Button fullWidth variant="contained" color="primary" onClick={handleUpdateProvider}>
+                Update Provider
+            </Button>
+        </Box>
+    )
+}

@@ -9,12 +9,21 @@ type ProviderManagementProps = {
     isModalOpen: boolean
     handleCloseModal: () => void
     selectedRow: ProviderSummary | null
+    handleOpenDeregisterDialog: () => void
+    handleCloseDeregisterDialog: () => void
+    isDeregisterDialogOpen: boolean
 }
 
-export const RowDataModal: React.FC<ProviderManagementProps> = ({ isModalOpen, handleCloseModal, selectedRow }) => {
+export const RowDataModal: React.FC<ProviderManagementProps> = ({
+    isModalOpen,
+    handleCloseModal,
+    selectedRow,
+    handleOpenDeregisterDialog,
+    handleCloseDeregisterDialog,
+    isDeregisterDialogOpen,
+}) => {
     const [isManageProvider, setIsManageProvider] = useState(false)
 
-    // Toggle between view and manage provider
     const handleManageProviderClick = () => {
         setIsManageProvider(!isManageProvider)
     }
@@ -49,7 +58,13 @@ export const RowDataModal: React.FC<ProviderManagementProps> = ({ isModalOpen, h
                     {isManageProvider ? 'Manage Provider' : 'Edit Row Data'}
                 </Typography>
                 {isManageProvider ? (
-                    <ProviderManagementOptions onBack={handleBackToDetails} />
+                    <ProviderManagementOptions
+                        onBack={handleBackToDetails}
+                        handleOpenDeregisterDialog={handleOpenDeregisterDialog}
+                        handleCloseDeregisterDialog={handleCloseDeregisterDialog}
+                        isDeregisterDialogOpen={isDeregisterDialogOpen}
+                        providerBaseUrl={selectedRow?.url || ''}
+                    />
                 ) : (
                     <Box>
                         <Paper elevation={3} sx={{ mb: 3 }}>

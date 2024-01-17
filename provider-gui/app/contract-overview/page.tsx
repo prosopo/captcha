@@ -2,7 +2,6 @@
 
 import { Box, Button, Chip, CircularProgress, Grid, TextField } from '@mui/material'
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
-import { DeregisterConfirmationDialog } from '@/components/ProviderManager/DeregisterProviderDialog'
 import { GuiContract } from '@/types/ContractOverview'
 import { RowDataModal } from '@/components/ProviderManager/ProviderModal'
 import { at, get } from '@prosopo/util'
@@ -41,6 +40,10 @@ const ContractOverview = () => {
 
     const handleCloseDeregisterDialog = () => {
         setIsDeregisterDialogOpen(false)
+    }
+
+    const handleOpenDeregisterDialog = () => {
+        setIsDeregisterDialogOpen(true)
     }
 
     useEffect(() => {
@@ -153,8 +156,11 @@ const ContractOverview = () => {
             <h1>Contract Details {isModalOpen ? 'model' : 'nope'}</h1>
             {contracts.map(renderDataGrid)}
 
-            <RowDataModal handleCloseModal={handleCloseModal} isModalOpen={isModalOpen} selectedRow={selectedRow} />
-            <DeregisterConfirmationDialog
+            <RowDataModal
+                handleCloseModal={handleCloseModal}
+                isModalOpen={isModalOpen}
+                selectedRow={selectedRow}
+                handleOpenDeregisterDialog={handleOpenDeregisterDialog}
                 handleCloseDeregisterDialog={handleCloseDeregisterDialog}
                 isDeregisterDialogOpen={isDeregisterDialogOpen}
             />

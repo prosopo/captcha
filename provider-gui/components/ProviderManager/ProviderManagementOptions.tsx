@@ -1,116 +1,102 @@
-import {
-    Box,
-    Button,
-    Divider,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
-    TextField,
-    Typography,
-} from '@mui/material'
-import { signedBlockNumberHeaders } from '@/services/provider/provider'
+import { Box, Button, Divider, FormControlLabel, Switch, TextField } from '@mui/material'
+import { DeregisterConfirmationDialog } from './DeregisterProviderDialog'
+import { ProviderUpdate } from './ProviderUpdate'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import React, { useState } from 'react'
 
 type ProviderManagementOptionsProps = {
     onBack: () => void // Prop for the callback function
+    handleOpenDeregisterDialog: () => void
+    handleCloseDeregisterDialog: () => void
+    isDeregisterDialogOpen: boolean
+    providerBaseUrl: string
 }
 
-export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps> = ({ onBack }) => {
-    const [payee, setPayee] = useState('')
-    const [url, setUrl] = useState('')
-    const [fee, setFee] = useState('')
-    const [value, setValue] = useState('')
-
+export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps> = ({
+    onBack,
+    handleOpenDeregisterDialog,
+    handleCloseDeregisterDialog,
+    isDeregisterDialogOpen,
+    providerBaseUrl,
+}) => {
     const { currentAccount } = useGlobalState()
+    const [isJson, setIsJson] = useState(false)
+    const [datasetInput, setDatasetInput] = useState('')
 
-    const handlePayeeChange = (event: SelectChangeEvent<string>) => {
-        setPayee(event.target.value as string)
+    const handleToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setIsJson(event.target.checked)
     }
 
-    const handleUpdateProvider = async () => {
-        if (!currentAccount) {
-            alert('Please select an account.')
-            return
-        }
-        const signedHeaders = await signedBlockNumberHeaders(currentAccount)
+    const handleDatasetInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setDatasetInput(event.target.value)
+    }
 
-        console.log(signedHeaders)
-        // Validate fee and value
-        if (isNaN(Number(fee)) || isNaN(Number(value))) {
-            alert('Fee and Value must be numbers.')
-            return
+    const handleSubmitDataset = () => {
+        let dataset
+        try {
+            dataset = isJson ? JSON.parse(datasetInput) : { text: datasetInput }
+            console.log('Dataset:', dataset)
+            // TODO: Handle dataset submission
+        } catch (error) {
+            console.error('Invalid JSON input:', error)
         }
-
-        // TODO: Implement update provider logic
-        console.log({ url, fee, payee, value })
     }
 
     return (
         <Box>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                    Provider Update
-                </Typography>
-                <TextField
-                    fullWidth
-                    label="URL"
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                />
-                <TextField
-                    fullWidth
-                    label="Fee"
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                    value={fee}
-                    onChange={(e) => setFee(e.target.value)}
-                />
+            {currentAccount ? (
+                <>
+                    <ProviderUpdate currentAccount={currentAccount} />
+                    <Divider sx={{ mb: 4 }} />
+                    <Button fullWidth variant="contained" color="primary">
+                        Batch Commit
+                    </Button>
+                    <Divider sx={{ mb: 4 }} />
+                    <Divider sx={{ mb: 4 }} />
 
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel id="payee-label">Payee</InputLabel>
-                    <Select labelId="payee-label" value={payee} label="Payee" onChange={handlePayeeChange}>
-                        <MenuItem value="Dapp">Dapp</MenuItem>
-                        <MenuItem value="Provider">Provider</MenuItem>
-                    </Select>
-                </FormControl>
+                    <Box sx={{ mb: 4 }}>
+                        <FormControlLabel
+                            control={<Switch checked={isJson} onChange={handleToggleChange} />}
+                            label="Input as JSON or text"
+                        />
+                        <TextField
+                            fullWidth
+                            label={isJson ? 'JSON Input' : 'Cleartext Input'}
+                            multiline
+                            rows={4}
+                            value={datasetInput}
+                            onChange={handleDatasetInputChange}
+                            variant="outlined"
+                            sx={{ mb: 2 }}
+                        />
+                        <Button fullWidth variant="contained" color="primary" onClick={handleSubmitDataset}>
+                            Set Provider Dataset
+                        </Button>
+                    </Box>
+                    <Divider sx={{ mb: 4 }} />
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        color="error"
+                        sx={{ mb: 4 }}
+                        onClick={handleOpenDeregisterDialog}
+                    >
+                        Provider Deregister
+                    </Button>
+                    <Divider />
+                    <Button fullWidth variant="outlined" color="primary" onClick={onBack} sx={{ mt: 4 }}>
+                        Back to Details
+                    </Button>
+                </>
+            ) : (
+                <>How have you got here without selecting an account??</>
+            )}
 
-                <TextField
-                    fullWidth
-                    label="Value"
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                />
-
-                <Button fullWidth variant="contained" color="primary" onClick={handleUpdateProvider}>
-                    Update Provider
-                </Button>
-            </Box>
-
-            <Divider sx={{ mb: 4 }} />
-
-            <Button fullWidth variant="contained" color="primary">
-                Batch Commit
-            </Button>
-
-            <Divider sx={{ mb: 4 }} />
-            <Divider sx={{ mb: 4 }} />
-
-            <Button fullWidth variant="contained" color="error" sx={{ mb: 4 }}>
-                Provider Deregister
-            </Button>
-
-            <Divider />
-
-            <Button fullWidth variant="outlined" color="primary" onClick={onBack} sx={{ mt: 4 }}>
-                Back to Details
-            </Button>
+            <DeregisterConfirmationDialog
+                handleCloseDeregisterDialog={handleCloseDeregisterDialog}
+                isDeregisterDialogOpen={isDeregisterDialogOpen}
+                providerBaseUrl={providerBaseUrl}
+            />
         </Box>
     )
 }

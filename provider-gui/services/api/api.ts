@@ -9,32 +9,39 @@ async function handleResponse(response: any) {
     return response.json()
 }
 
-export async function batchCommit(BASE_URL: string) {
+export async function batchCommit(BASE_URL: string, additionalHeaders: Record<string, string> = {}) {
     const response = await fetch(`${BASE_URL}${AdminApiPaths.BatchCommit}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...additionalHeaders,
         },
     })
     return handleResponse(response)
 }
 
-export async function updateDataset(BASE_URL: string, jsonFile: DatasetRaw) {
+export async function updateDataset(
+    BASE_URL: string,
+    additionalHeaders: Record<string, string> = {},
+    jsonFile: DatasetRaw
+) {
     const response = await fetch(`${BASE_URL}${AdminApiPaths.UpdateDataset}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...additionalHeaders,
         },
         body: JSON.stringify(jsonFile),
     })
     return handleResponse(response)
 }
 
-export async function providerDeregister(BASE_URL: string) {
+export async function providerDeregister(BASE_URL: string, additionalHeaders: Record<string, string> = {}) {
     const response = await fetch(`${BASE_URL}${AdminApiPaths.ProviderDeregister}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...additionalHeaders,
         },
     })
     return handleResponse(response)
@@ -42,6 +49,7 @@ export async function providerDeregister(BASE_URL: string) {
 
 export async function providerUpdate(
     BASE_URL: string,
+    additionalHeaders: Record<string, string> = {},
     url: string,
     fee: number,
     payee: string,
@@ -52,6 +60,7 @@ export async function providerUpdate(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...additionalHeaders,
         },
         body: JSON.stringify({ url, fee, payee, value, address }),
     })

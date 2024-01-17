@@ -1,28 +1,56 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material'
+import {
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+} from '@mui/material'
+import { providerDeregister } from '@/services/api/api'
+import { useState } from 'react'
 
 type DeregisterDialogProps = {
     isDeregisterDialogOpen: boolean
     handleCloseDeregisterDialog: () => void
+    providerBaseUrl: string
 }
 // Confirmation Dialog for Deregistering the Provider
 export const DeregisterConfirmationDialog: React.FC<DeregisterDialogProps> = ({
     isDeregisterDialogOpen,
     handleCloseDeregisterDialog,
-}) => (
-    <Dialog open={isDeregisterDialogOpen} onClose={handleCloseDeregisterDialog}>
-        <DialogTitle>Confirm Deregistration</DialogTitle>
-        <DialogContent>
-            <DialogContentText>
-                Are you sure you want to deregister this provider? This action cannot be undone.
-            </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={handleCloseDeregisterDialog} color="primary">
-                Cancel
-            </Button>
-            <Button onClick={handleCloseDeregisterDialog} color="error">
-                Deregister
-            </Button>
-        </DialogActions>
-    </Dialog>
-)
+    providerBaseUrl,
+}) => {
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const handleDeregister = async () => {
+        setLoading(true)
+        await providerDeregister(providerBaseUrl)
+        setLoading(false)
+    }
+
+    return (
+        <Dialog open={isDeregisterDialogOpen} onClose={handleCloseDeregisterDialog}>
+            {loading ? (
+                <CircularProgress />
+            ) : (
+                <>
+                    <DialogTitle>Confirm Deregistration</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to deregister this provider? This is really annoying to set up again.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleDeregister} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleCloseDeregisterDialog} color="error">
+                            Deregister
+                        </Button>
+                    </DialogActions>
+                </>
+            )}
+        </Dialog>
+    )
+}

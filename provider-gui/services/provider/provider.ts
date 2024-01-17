@@ -1,7 +1,7 @@
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { stringToHex } from '@polkadot/util'
-import { web3FromSource } from '@polkadot/extension-dapp'
+import { web3Enable, web3FromSource } from '@polkadot/extension-dapp'
 
 export const signedBlockNumberHeaders = async (currentAccount: InjectedAccountWithMeta) => {
     const blocknumber = await getCurrentBlockNumber()
@@ -26,6 +26,8 @@ const signMessage = async (currentAccount: InjectedAccountWithMeta) => {
     if (!currentAccount) {
         throw new Error('Current account not found')
     }
+
+    web3Enable('Provider GUI')
 
     const injector = await web3FromSource(currentAccount.meta.source)
     const signRaw = injector?.signer?.signRaw
