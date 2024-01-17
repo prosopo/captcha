@@ -18,13 +18,14 @@ const AccountPicker: React.FC = () => {
             await web3Enable('Prosopo Provider GUI')
             const accounts = await web3Accounts()
             setAccounts(accounts)
-            if (accounts.length > 0) setCurrentAccount(accounts[0]?.address ?? '')
+            if (accounts.length > 0 && accounts[0]) setCurrentAccount(accounts[0])
         }
         enableExtension()
     }, [])
 
-    const handleAccountChange = (event: SelectChangeEvent<string>) => {
-        setCurrentAccount(event.target.value)
+    const handleAccountChange = (event: SelectChangeEvent<InjectedAccountWithMeta>) => {
+        const account = accounts.find((account) => account.address === event.target.value)
+        if (account) setCurrentAccount(account)
     }
 
     const handleNetworkChange = (event: SelectChangeEvent<'rococo' | 'development'>) => {

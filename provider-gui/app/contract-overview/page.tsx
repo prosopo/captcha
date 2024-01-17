@@ -7,6 +7,7 @@ import { GuiContract } from '@/types/ContractOverview'
 import { RowDataModal } from '@/components/ProviderManager/ProviderModal'
 import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
+import { signedBlockNumber } from '@/services/provider-api/provider-api'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import { useState } from 'react'
 import React, { useEffect } from 'react'
@@ -20,7 +21,7 @@ const calculateFlex = (length: number) => {
 }
 
 const ContractOverview = () => {
-    const { currentAccount, network, contracts, setContracts } = useGlobalState()
+    const { currentAccount: currentAccount, network, contracts, setContracts } = useGlobalState()
     const [loading, setLoading] = useState<boolean>(false)
     const [newContractAddr, setNewContractAddr] = useState<string>('')
     const [isDeregisterDialogOpen, setIsDeregisterDialogOpen] = useState(false)
@@ -50,8 +51,10 @@ const ContractOverview = () => {
             return
         }
 
+        console.log('signed msg', signedBlockNumber(currentAccount))
+
         setLoading(true)
-        contractOverview(network, currentAccount, contracts)
+        contractOverview(network, currentAccount.address, contracts)
             .catch((error) => {
                 console.error('An error occurred while fetching contract overview data', error)
             })
@@ -69,7 +72,12 @@ const ContractOverview = () => {
 
     const handleSubmit = () => {
         setLoading(true)
-        contractOverview(network, currentAccount, contracts, newContractAddr)
+
+        if (!currentAccount) {
+            console.log('No account selected')
+            return
+        }
+        contractOverview(network, currentAccount.address, contracts, newContractAddr)
             .catch((error) => {
                 console.error('An error occurred while fetching contract overview data', error)
             })
