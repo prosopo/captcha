@@ -47,7 +47,7 @@ function startApi(env: ProviderEnvironment) {
     const apiPort = env.config.server.port
 
     apiApp.use(cors())
-    apiApp.use(express.json())
+    apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
     apiApp.use(prosopoAdminRouter(env))
