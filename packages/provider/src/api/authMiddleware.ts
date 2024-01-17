@@ -25,6 +25,7 @@ const validateHeaders = (headers: { [key: string]: string | string[] | undefined
     const { signature, blocknumber } = headers
 
     if (!signature || !blocknumber) {
+        console.log('headers', signature, blocknumber)
         throw new Error('Missing signature or block number')
     }
 

@@ -7,7 +7,6 @@ import { GuiContract } from '@/types/ContractOverview'
 import { RowDataModal } from '@/components/ProviderManager/ProviderModal'
 import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
-import { signedBlockNumber } from '@/services/provider-api/provider-api'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import { useState } from 'react'
 import React, { useEffect } from 'react'
@@ -50,8 +49,6 @@ const ContractOverview = () => {
             console.log('Waiting for currentAccount and network to be loaded')
             return
         }
-
-        console.log('signed msg', signedBlockNumber(currentAccount))
 
         setLoading(true)
         contractOverview(network, currentAccount.address, contracts)
