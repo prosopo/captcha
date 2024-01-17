@@ -40,8 +40,8 @@ const validateHeaders = (headers: { [key: string]: string | string[] | undefined
 }
 
 const validateBlockNumber = (blockNumber: number, currentBlockNumber: number) => {
-    if (isNaN(blockNumber) || blockNumber < currentBlockNumber - 5 || blockNumber > currentBlockNumber) {
-        throw new Error('Invalid block number')
+    if (isNaN(blockNumber) || blockNumber < currentBlockNumber - 500 || blockNumber > currentBlockNumber) {
+        throw new Error(`Invalid block number ${blockNumber}, current block number is ${currentBlockNumber}`)
     }
 }
 

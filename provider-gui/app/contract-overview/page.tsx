@@ -2,7 +2,9 @@
 
 import { Box, Button, Chip, CircularProgress, Grid, TextField } from '@mui/material'
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
+import { DeregisterConfirmationDialog } from '@/components/ProviderManager/DeregisterProviderDialog'
 import { GuiContract } from '@/types/ContractOverview'
+import { RowDataModal } from '@/components/ProviderManager/ProviderModal'
 import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
@@ -18,9 +20,28 @@ const calculateFlex = (length: number) => {
 }
 
 const ContractOverview = () => {
+    const { currentAccount, network, contracts, setContracts } = useGlobalState()
     const [loading, setLoading] = useState<boolean>(false)
     const [newContractAddr, setNewContractAddr] = useState<string>('')
-    const { currentAccount, network, contracts, setContracts } = useGlobalState()
+    const [isDeregisterDialogOpen, setIsDeregisterDialogOpen] = useState(false)
+    const [selectedRow, setSelectedRow] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
+    // Handle opening the modal with selected row data
+    const handleEditClick = (row: any) => {
+        setSelectedRow(row)
+        setIsModalOpen(true)
+    }
+
+    // Handle closing the modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false)
+        setSelectedRow(null)
+    }
+
+    const handleCloseDeregisterDialog = () => {
+        setIsDeregisterDialogOpen(false)
+    }
 
     useEffect(() => {
         // Check if currentAccount (and any other dependencies) is loaded
@@ -43,7 +64,6 @@ const ContractOverview = () => {
     }, [currentAccount, network])
 
     function handleNewAddrChange(event: React.ChangeEvent<HTMLInputElement>) {
-        console.log(event.target.value)
         setNewContractAddr(event.target.value)
     }
 
@@ -61,6 +81,7 @@ const ContractOverview = () => {
                 setLoading(false)
             })
     }
+
     const renderDataGrid = (contract: GuiContract, contractIndex: number) => {
         const rows: GridRowsProp = contract.providers.map((provider, providerIndex) => ({
             id: providerIndex,
@@ -75,6 +96,16 @@ const ContractOverview = () => {
                 headerName: key,
                 flex: calculateFlex(get(firstProvider, key).toString().length),
             }))
+            columns.push({
+                field: 'actions',
+                headerName: 'Actions',
+                flex: 1,
+                renderCell: (params) => (
+                    <Button variant="contained" size="small" onClick={() => handleEditClick(params.row)}>
+                        Edit
+                    </Button>
+                ),
+            })
         }
 
         return (
@@ -90,7 +121,7 @@ const ContractOverview = () => {
 
     return (
         <Box>
-            <h1>Add contract</h1>
+            <h1>Add contract {isModalOpen ? 'yep modal' : 'nope'}</h1>
             <Grid container spacing={2}>
                 <Grid item>
                     <TextField
@@ -114,8 +145,14 @@ const ContractOverview = () => {
                 </Grid>
             </Grid>
             <hr />
-            <h1>Contract Details</h1>
+            <h1>Contract Details {isModalOpen ? 'model' : 'nope'}</h1>
             {contracts.map(renderDataGrid)}
+
+            <RowDataModal handleCloseModal={handleCloseModal} isModalOpen={isModalOpen} selectedRow={selectedRow} />
+            <DeregisterConfirmationDialog
+                handleCloseDeregisterDialog={handleCloseDeregisterDialog}
+                isDeregisterDialogOpen={isDeregisterDialogOpen}
+            />
         </Box>
     )
 }
