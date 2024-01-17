@@ -24,6 +24,10 @@ export enum ApiPaths {
     SubmitUserEvents = '/v1/prosopo/provider/events',
 }
 
+export enum AdminApiPaths {
+    BatchCommit = '/v1/prosopo/provider/admin/batch',
+}
+
 export enum ApiParams {
     datasetId = 'datasetId',
     user = 'user',
