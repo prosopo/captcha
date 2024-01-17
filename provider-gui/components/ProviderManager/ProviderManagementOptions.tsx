@@ -10,7 +10,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material'
-import { signedBlockNumberHeaders } from '@/services/provider-api/provider-api'
+import { signedBlockNumberHeaders } from '@/services/provider/provider'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import React, { useState } from 'react'
 

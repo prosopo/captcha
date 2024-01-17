@@ -27,6 +27,8 @@ export enum ApiPaths {
 export enum AdminApiPaths {
     BatchCommit = '/v1/prosopo/provider/admin/batch',
     UpdateDataset = '/v1/prosopo/provider/admin/dataset',
+    ProviderDeregister = '/v1/prosopo/provider/admin/deregister',
+    ProviderUpdate = '/v1/prosopo/provider/admin/update',
 }
 
 export enum ApiParams {

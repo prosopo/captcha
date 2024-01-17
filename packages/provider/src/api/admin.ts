@@ -1,8 +1,12 @@
+import * as z from 'zod'
 import { AdminApiPaths } from '@prosopo/types'
 import { BatchCommitmentsTask, Tasks } from '../index.js'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Router } from 'express'
+import { UrlConverter } from '@prosopo/common'
 import { authMiddleware } from './authMiddleware.js'
+import { wrapQuery } from '@prosopo/contract'
 
 // Setting batch commit interval to 0 for API calls
 const apiBatchCommitConfig = {
@@ -27,6 +31,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
                 env.logger
             )
             const result = await batchCommitter.run()
+
             console.info(`Batch commit complete: ${result}`)
             res.status(200).send(result)
         } else {
@@ -37,11 +42,57 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
         const jsonFile = req.body
-        console.log(jsonFile)
         const result = await tasks.providerSetDataset(jsonFile)
 
         console.info(`Dataset update complete: ${result}`)
         res.status(200).send(result)
+    })
+
+    router.post(AdminApiPaths.ProviderDeregister, async (req, res, next) => {
+        try {
+            const address = env.pair?.address
+            if (!address) {
+                throw new Error('No address')
+            }
+            await tasks.contract.tx.providerDeregister()
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
+        }
+    })
+
+    router.post(AdminApiPaths.ProviderUpdate, async (req, res, next) => {
+        try {
+            const { url, fee, payee, value, address } = z
+                .object({
+                    url: z.string(),
+                    fee: z.number().optional(),
+                    payee: z.nativeEnum(Payee).optional(),
+                    value: z.number().optional(),
+                    address: z.string(),
+                })
+                .parse(req.body)
+            const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
+            if (provider && (url || fee || payee || value)) {
+                const urlConverted = url ? Array.from(new UrlConverter().encode(url.toString())) : provider.url
+                await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
+                    urlConverted,
+                    fee || provider.fee,
+                    payee || provider.payee,
+                    { value: value || 0 }
+                )
+                const result = await tasks.contract.tx.providerUpdate(
+                    urlConverted,
+                    fee || provider.fee,
+                    payee || provider.payee,
+                    { value: value || 0 }
+                )
+
+                console.info(JSON.stringify(result, null, 2))
+            }
+        } catch (e) {
+            throw new Error('alisdfb')
+        }
     })
 
     return router
