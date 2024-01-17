@@ -1,6 +1,8 @@
 import { Box, Button, Divider, FormControlLabel, Switch, TextField } from '@mui/material'
 import { DeregisterConfirmationDialog } from './DeregisterProviderDialog'
 import { ProviderUpdate } from './ProviderUpdate'
+import { signedBlockNumberHeaders } from '@/services/provider/provider'
+import { updateDataset } from '@/services/api/api'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import React, { useState } from 'react'
 
@@ -31,12 +33,20 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
         setDatasetInput(event.target.value)
     }
 
-    const handleSubmitDataset = () => {
+    const handleSubmitDataset = async () => {
         let dataset
         try {
+            if (!currentAccount) {
+                alert('Please select an account.')
+                return
+            }
             dataset = isJson ? JSON.parse(datasetInput) : { text: datasetInput }
             console.log('Dataset:', dataset)
-            // TODO: Handle dataset submission
+
+            const signedHeaders = await signedBlockNumberHeaders(currentAccount)
+            const updatedDataset = await updateDataset(providerBaseUrl, signedHeaders, dataset)
+
+            return updatedDataset
         } catch (error) {
             console.error('Invalid JSON input:', error)
         }

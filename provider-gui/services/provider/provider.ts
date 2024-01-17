@@ -8,7 +8,7 @@ export const signedBlockNumberHeaders = async (currentAccount: InjectedAccountWi
     const signature = await signedBlockNumber(currentAccount)
 
     return {
-        blocknumber,
+        blocknumber: blocknumber.toString(),
         signature,
     }
 }
