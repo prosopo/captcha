@@ -1,7 +1,6 @@
 import { AdminApiPaths } from '@prosopo/types'
 
-// Helper function to handle the response: TODO - make it not any
-async function handleResponse(response: any) {
+async function handleResponse(response: Response) {
     if (!response.ok) {
         const errorMessage = await response.text()
         throw new Error(errorMessage)
@@ -21,7 +20,6 @@ export async function batchCommit(BASE_URL: string, additionalHeaders: Record<st
 }
 
 export async function updateDataset(BASE_URL: string, additionalHeaders: Record<string, string> = {}, jsonFile: any) {
-    // convert jsonFile to string
     const jsonFileString = JSON.stringify(jsonFile)
     const response = await fetch(`${BASE_URL}${AdminApiPaths.UpdateDataset}`, {
         method: 'POST',

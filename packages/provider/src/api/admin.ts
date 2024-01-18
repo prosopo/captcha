@@ -41,9 +41,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
     })
 
     router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
-        const jsonFile = req.body
-        console.log(jsonFile)
-        const result = await tasks.providerSetDataset(jsonFile)
+        const result = await tasks.providerSetDataset(req.body)
 
         console.info(`Dataset update complete: ${result}`)
         res.status(200).send(result)

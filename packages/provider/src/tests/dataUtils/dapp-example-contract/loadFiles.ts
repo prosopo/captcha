@@ -12,20 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract/Abi'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
 import { hexToU8a } from '@polkadot/util/hex'
 import { isWasm } from '@polkadot/util/is'
 import fse from 'fs-extra'
 import path from 'path'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
 // TODO use the .contract file instead of the .json and .wasm files. Polkadot-JS apps is also erroring out when using
 //   the .wasm and .json files. The .contract file works but I don't know why.
 
 export async function DappAbiJSON(): Promise<Abi> {
     try {
-        const json = JSON.parse(await fse.readFile(path.resolve(__dirname, 'dapp.json'), { encoding: 'utf8' }))
+        const json = JSON.parse(await fse.readFile(path.resolve(__dirname, 'dapp.contract'), { encoding: 'utf8' }))
         return new Abi(json)
     } catch (e) {
         console.error(`Error loading dapp.json: ${e}`)

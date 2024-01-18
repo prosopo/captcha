@@ -41,7 +41,6 @@
         "@prosopo/provider": "0.2.30",
         "@prosopo/types": "0.2.30",
         "@prosopo/util": "0.2.30",
-        "body-parser": "^1.20.2",
         "cors": "^2.8.5",
         "cron-parser": "^4.9.0",
         "dotenv": "^16.0.1",
@@ -49,14 +48,14 @@
         "zod": "^3.22.4"
     },
     "devDependencies": {
-        "@prosopo/config": "0.2.30",
-        "@types/cors": "^2.8.14",
         "es-main": "^1.2.0",
         "express": "^4.18.2",
-        "tslib": "2.6.2",
-        "typescript": "5.1.6",
         "vite": "^4.5.0",
-        "vitest": "^0.34.6"
+        "vitest": "^0.34.6",
+        "@prosopo/config": "0.2.30",
+        "@types/cors": "^2.8.14",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
     },
     "author": "Prosopo",
     "license": "Apache-2.0",
