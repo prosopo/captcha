@@ -33,6 +33,8 @@ import {
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
+export type AwaitedProcessedArgs = { [x: string]: unknown; api: boolean; _: (string | number)[]; $0: string }
+
 export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfigOutput) {
     const logger = getLogger(LogLevel.enum.info, 'CLI')
     return yargs(hideBin(args))

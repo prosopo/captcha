@@ -47,7 +47,7 @@ function getDefaultProvider(): IProviderAccount {
     return {
         url: process.env.PROSOPO_API_PORT
             ? `http://localhost:${process.env.PROSOPO_API_PORT}`
-            : 'http://localhost:3000',
+            : 'http://localhost:9229',
         fee: 10,
         payee: Payee.dapp,
         stake: Math.pow(10, 13),
