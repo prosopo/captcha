@@ -1,5 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { stringToHex } from '@polkadot/util'
 import { web3Enable, web3FromSource } from '@polkadot/extension-dapp'
 
@@ -24,7 +25,7 @@ const signedBlockNumber = async (currentAccount: InjectedAccountWithMeta) => {
 
 const signMessage = async (currentAccount: InjectedAccountWithMeta) => {
     if (!currentAccount) {
-        throw new Error('Current account not found')
+        throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR')
     }
 
     web3Enable('Provider GUI')
@@ -33,19 +34,16 @@ const signMessage = async (currentAccount: InjectedAccountWithMeta) => {
     const signRaw = injector?.signer?.signRaw
 
     if (!signRaw) {
-        throw new Error('signRaw is undefined')
+        throw new ProsopoEnvError('PROGUI.NO_POLKADOT_EXTENSION')
     }
 
     const blockNumberString = (await getCurrentBlockNumber()).toString()
 
-    console.log('blockNumberString', blockNumberString)
     const signedData = await signRaw({
         address: currentAccount.address,
         data: stringToHex(blockNumberString),
         type: 'bytes',
     })
-
-    console.log('signedData', signedData)
 
     return signedData.signature
 }

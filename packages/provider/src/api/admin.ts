@@ -2,9 +2,9 @@ import * as z from 'zod'
 import { AdminApiPaths } from '@prosopo/types'
 import { BatchCommitmentsTask, Tasks } from '../index.js'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Router } from 'express'
-import { UrlConverter } from '@prosopo/common'
 import { authMiddleware } from './authMiddleware.js'
 import { wrapQuery } from '@prosopo/contract'
 
@@ -23,17 +23,22 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     router.post(AdminApiPaths.BatchCommit, async (req, res, next) => {
         if (env.db) {
-            const batchCommitter = new BatchCommitmentsTask(
-                apiBatchCommitConfig,
-                env.getContractInterface(),
-                env.db,
-                0n,
-                env.logger
-            )
-            const result = await batchCommitter.run()
+            try {
+                const batchCommitter = new BatchCommitmentsTask(
+                    apiBatchCommitConfig,
+                    env.getContractInterface(),
+                    env.db,
+                    0n,
+                    env.logger
+                )
+                const result = await batchCommitter.run()
 
-            console.info(`Batch commit complete: ${result}`)
-            res.status(200).send(result)
+                console.info(`Batch commit complete: ${result}`)
+                res.status(200).send(result)
+            } catch (err) {
+                console.error(err)
+                res.status(500).send(err)
+            }
         } else {
             console.error('No database configured')
             res.status(500).send('No database configured')
@@ -41,17 +46,22 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
     })
 
     router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
-        const result = await tasks.providerSetDataset(req.body)
+        try {
+            const result = await tasks.providerSetDataset(req.body)
 
-        console.info(`Dataset update complete: ${result}`)
-        res.status(200).send(result)
+            console.info(`Dataset update complete: ${result}`)
+            res.status(200).send(result)
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
+        }
     })
 
     router.post(AdminApiPaths.ProviderDeregister, async (req, res, next) => {
         try {
             const address = env.pair?.address
             if (!address) {
-                throw new Error('No address')
+                throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', { context: { error: 'No address' } })
             }
             await tasks.contract.tx.providerDeregister()
         } catch (err) {
@@ -89,9 +99,9 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
                 console.info(JSON.stringify(result, null, 2))
             }
-        } catch (e) {
-            console.error(e)
-            throw new Error('error')
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
         }
     })
 

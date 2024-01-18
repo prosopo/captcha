@@ -1,9 +1,10 @@
 import { AdminApiPaths } from '@prosopo/types'
+import { ProsopoApiError } from '@prosopo/common'
 
 async function handleResponse(response: Response) {
     if (!response.ok) {
         const errorMessage = await response.text()
-        throw new Error(errorMessage)
+        throw new ProsopoApiError('API.BAD_REQUEST', { context: { error: errorMessage } })
     }
     return response.json()
 }
