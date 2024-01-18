@@ -42,6 +42,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
         const jsonFile = req.body
+        console.log(jsonFile)
         const result = await tasks.providerSetDataset(jsonFile)
 
         console.info(`Dataset update complete: ${result}`)
@@ -91,7 +92,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
                 console.info(JSON.stringify(result, null, 2))
             }
         } catch (e) {
-            throw new Error('alisdfb')
+            console.error(e)
+            throw new Error('error')
         }
     })
 

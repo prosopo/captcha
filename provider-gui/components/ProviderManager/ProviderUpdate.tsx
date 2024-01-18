@@ -1,5 +1,5 @@
-import { Box } from '@mui/system'
 import {
+    Box,
     Button,
     FormControl,
     InputLabel,
@@ -10,18 +10,26 @@ import {
     Typography,
 } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { providerUpdate } from '@/services/api/api'
 import { signedBlockNumberHeaders } from '@/services/provider/provider'
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 type ProviderUpdateProps = {
     currentAccount: InjectedAccountWithMeta
+    providerBaseUrl: string
 }
 
-export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount }) => {
+export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount, providerBaseUrl }) => {
     const [payee, setPayee] = useState('')
     const [url, setUrl] = useState('')
     const [fee, setFee] = useState('')
     const [value, setValue] = useState('')
+
+    const handleFieldChange =
+        (setter: React.Dispatch<React.SetStateAction<string>>) =>
+        (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            setter(event.target.value)
+        }
 
     const handlePayeeChange = (event: SelectChangeEvent<string>) => {
         setPayee(event.target.value as string)
@@ -39,6 +47,16 @@ export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount }
         }
 
         const headers = await signedBlockNumberHeaders(currentAccount)
+        const updateData = {
+            url,
+            address: currentAccount.address,
+            ...(fee && { fee }),
+            ...(payee && { payee }),
+            ...(value && { value }),
+        }
+
+        const request = await providerUpdate(providerBaseUrl, headers, updateData)
+        return request
     }
 
     return (
@@ -52,7 +70,7 @@ export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount }
                 variant="outlined"
                 sx={{ mb: 2 }}
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={handleFieldChange(setUrl)}
             />
             <TextField
                 fullWidth
@@ -60,9 +78,8 @@ export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount }
                 variant="outlined"
                 sx={{ mb: 2 }}
                 value={fee}
-                onChange={(e) => setFee(e.target.value)}
+                onChange={handleFieldChange(setFee)}
             />
-
             <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel id="payee-label">Payee</InputLabel>
                 <Select labelId="payee-label" value={payee} label="Payee" onChange={handlePayeeChange}>
@@ -70,16 +87,14 @@ export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount }
                     <MenuItem value="Provider">Provider</MenuItem>
                 </Select>
             </FormControl>
-
             <TextField
                 fullWidth
                 label="Value"
                 variant="outlined"
                 sx={{ mb: 2 }}
                 value={value}
-                onChange={(e) => setValue(e.target.value)}
+                onChange={handleFieldChange(setValue)}
             />
-
             <Button fullWidth variant="contained" color="primary" onClick={handleUpdateProvider}>
                 Update Provider
             </Button>

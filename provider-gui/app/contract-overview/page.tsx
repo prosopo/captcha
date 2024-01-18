@@ -83,7 +83,6 @@ const ContractOverview = () => {
             })
             .then((contract) => {
                 if (contract) setContracts([...contracts, contract])
-                console.log(contract)
             })
             .finally(() => {
                 setLoading(false)
@@ -129,7 +128,7 @@ const ContractOverview = () => {
 
     return (
         <Box>
-            <h1>Add contract {isModalOpen ? 'yep modal' : 'nope'}</h1>
+            <h1>Add contract</h1>
             <Grid container spacing={2}>
                 <Grid item>
                     <TextField
@@ -153,7 +152,7 @@ const ContractOverview = () => {
                 </Grid>
             </Grid>
             <hr />
-            <h1>Contract Details {isModalOpen ? 'model' : 'nope'}</h1>
+            <h1>Contract Details</h1>
             {contracts.map(renderDataGrid)}
 
             <RowDataModal

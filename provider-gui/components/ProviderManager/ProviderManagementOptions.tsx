@@ -1,13 +1,13 @@
 import { Box, Button, Divider, FormControlLabel, Switch, TextField } from '@mui/material'
 import { DeregisterConfirmationDialog } from './DeregisterProviderDialog'
 import { ProviderUpdate } from './ProviderUpdate'
+import { batchCommit, updateDataset } from '@/services/api/api'
 import { signedBlockNumberHeaders } from '@/services/provider/provider'
-import { updateDataset } from '@/services/api/api'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import React, { useState } from 'react'
 
 type ProviderManagementOptionsProps = {
-    onBack: () => void // Prop for the callback function
+    onBack: () => void
     handleOpenDeregisterDialog: () => void
     handleCloseDeregisterDialog: () => void
     isDeregisterDialogOpen: boolean
@@ -25,30 +25,43 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
     const [isJson, setIsJson] = useState(false)
     const [datasetInput, setDatasetInput] = useState('')
 
-    const handleToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const toggleJsonInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setIsJson(event.target.checked)
     }
 
-    const handleDatasetInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const updateDatasetInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setDatasetInput(event.target.value)
     }
 
-    const handleSubmitDataset = async () => {
-        let dataset
+    const submitDataset = async () => {
+        if (!currentAccount) {
+            alert('Please select an account.')
+            return
+        }
+        if (!datasetInput) {
+            alert('Please enter a dataset.')
+            return
+        }
         try {
-            if (!currentAccount) {
-                alert('Please select an account.')
-                return
-            }
-            dataset = isJson ? JSON.parse(datasetInput) : { text: datasetInput }
-            console.log('Dataset:', dataset)
-
             const signedHeaders = await signedBlockNumberHeaders(currentAccount)
-            const updatedDataset = await updateDataset(providerBaseUrl, signedHeaders, dataset)
-
-            return updatedDataset
+            const updatedDataset = await updateDataset(providerBaseUrl, signedHeaders, JSON.parse(datasetInput))
+            console.log('Dataset updated:', updatedDataset)
         } catch (error) {
             console.error('Invalid JSON input:', error)
+        }
+    }
+
+    const batchCommitHandler = async () => {
+        if (!currentAccount) {
+            alert('Please select an account.')
+            return
+        }
+        try {
+            const signedHeaders = await signedBlockNumberHeaders(currentAccount)
+            const batchedCommitResponse = await batchCommit(providerBaseUrl, signedHeaders)
+            console.log('Batch commit response:', batchedCommitResponse)
+        } catch (error) {
+            console.error('Error in batch commit:', error)
         }
     }
 
@@ -56,17 +69,16 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
         <Box>
             {currentAccount ? (
                 <>
-                    <ProviderUpdate currentAccount={currentAccount} />
+                    <ProviderUpdate currentAccount={currentAccount} providerBaseUrl={providerBaseUrl} />
                     <Divider sx={{ mb: 4 }} />
-                    <Button fullWidth variant="contained" color="primary">
+                    <Button fullWidth variant="contained" color="primary" onClick={batchCommitHandler}>
                         Batch Commit
                     </Button>
-                    <Divider sx={{ mb: 4 }} />
                     <Divider sx={{ mb: 4 }} />
 
                     <Box sx={{ mb: 4 }}>
                         <FormControlLabel
-                            control={<Switch checked={isJson} onChange={handleToggleChange} />}
+                            control={<Switch checked={isJson} onChange={toggleJsonInput} />}
                             label="Input as JSON or text"
                         />
                         <TextField
@@ -75,15 +87,15 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
                             multiline
                             rows={4}
                             value={datasetInput}
-                            onChange={handleDatasetInputChange}
+                            onChange={updateDatasetInput}
                             variant="outlined"
                             sx={{ mb: 2 }}
                         />
-                        <Button fullWidth variant="contained" color="primary" onClick={handleSubmitDataset}>
+                        <Button fullWidth variant="contained" color="primary" onClick={submitDataset}>
                             Set Provider Dataset
                         </Button>
                     </Box>
-                    <Divider sx={{ mb: 4 }} />
+
                     <Button
                         fullWidth
                         variant="contained"

@@ -1,4 +1,4 @@
-import { AdminApiPaths, DatasetRaw } from '@prosopo/types'
+import { AdminApiPaths } from '@prosopo/types'
 
 // Helper function to handle the response: TODO - make it not any
 async function handleResponse(response: any) {
@@ -20,18 +20,16 @@ export async function batchCommit(BASE_URL: string, additionalHeaders: Record<st
     return handleResponse(response)
 }
 
-export async function updateDataset(
-    BASE_URL: string,
-    additionalHeaders: Record<string, string> = {},
-    jsonFile: DatasetRaw
-) {
+export async function updateDataset(BASE_URL: string, additionalHeaders: Record<string, string> = {}, jsonFile: any) {
+    // convert jsonFile to string
+    const jsonFileString = JSON.stringify(jsonFile)
     const response = await fetch(`${BASE_URL}${AdminApiPaths.UpdateDataset}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             ...additionalHeaders,
         },
-        body: JSON.stringify(jsonFile),
+        body: jsonFileString,
     })
     return handleResponse(response)
 }
@@ -50,19 +48,24 @@ export async function providerDeregister(BASE_URL: string, additionalHeaders: Re
 export async function providerUpdate(
     BASE_URL: string,
     additionalHeaders: Record<string, string> = {},
-    url: string,
-    fee: number,
-    payee: string,
-    value: number,
-    address: string
+    updateData: {
+        url: string
+        address: string
+        fee?: string
+        payee?: string
+        value?: string
+    }
 ) {
+    const body: { url: string; address: string; fee?: string; payee?: string; value?: string } = updateData
+
     const response = await fetch(`${BASE_URL}${AdminApiPaths.ProviderUpdate}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             ...additionalHeaders,
         },
-        body: JSON.stringify({ url, fee, payee, value, address }),
+        body: JSON.stringify(body),
     })
+
     return handleResponse(response)
 }

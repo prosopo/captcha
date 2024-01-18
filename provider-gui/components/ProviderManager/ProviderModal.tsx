@@ -1,9 +1,7 @@
-import { Box } from '@mui/system'
-import { Button, Divider, List, ListItem, Modal, Paper, Typography } from '@mui/material'
+import { Box, Button, Divider, List, ListItem, Modal, Paper, Typography } from '@mui/material'
 import { ProviderManagementOptions } from './ProviderManagementOptions'
 import { ProviderSummary } from '@/types/ProviderProfileTypes'
-import { useState } from 'react'
-import React from 'react'
+import React, { useState } from 'react'
 
 type ProviderManagementProps = {
     isModalOpen: boolean
@@ -24,21 +22,31 @@ export const RowDataModal: React.FC<ProviderManagementProps> = ({
 }) => {
     const [isManageProvider, setIsManageProvider] = useState(false)
 
-    const handleManageProviderClick = () => {
-        setIsManageProvider(!isManageProvider)
-    }
-
-    const handleBackToDetails = () => {
+    const toggleManageProvider = () => setIsManageProvider((prev) => !prev)
+    const closeModalAndReset = () => {
+        handleCloseModal()
         setIsManageProvider(false)
     }
 
-    const closeModal = () => {
-        handleCloseModal()
-        handleBackToDetails()
-    }
+    const renderRowDetails = () => (
+        <Paper elevation={3} sx={{ mb: 3 }}>
+            <List>
+                {selectedRow &&
+                    Object.entries(selectedRow).map(([key, value], index) => (
+                        <React.Fragment key={key}>
+                            <ListItem sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography variant="subtitle1">{key}:</Typography>
+                                <Typography variant="body2">{value.toString()}</Typography>
+                            </ListItem>
+                            {index < Object.entries(selectedRow).length - 1 && <Divider />}
+                        </React.Fragment>
+                    ))}
+            </List>
+        </Paper>
+    )
 
     return (
-        <Modal open={isModalOpen} onClose={closeModal}>
+        <Modal open={isModalOpen} onClose={closeModalAndReset}>
             <Box
                 sx={{
                     position: 'absolute',
@@ -59,7 +67,7 @@ export const RowDataModal: React.FC<ProviderManagementProps> = ({
                 </Typography>
                 {isManageProvider ? (
                     <ProviderManagementOptions
-                        onBack={handleBackToDetails}
+                        onBack={() => setIsManageProvider(false)}
                         handleOpenDeregisterDialog={handleOpenDeregisterDialog}
                         handleCloseDeregisterDialog={handleCloseDeregisterDialog}
                         isDeregisterDialogOpen={isDeregisterDialogOpen}
@@ -67,25 +75,8 @@ export const RowDataModal: React.FC<ProviderManagementProps> = ({
                     />
                 ) : (
                     <Box>
-                        <Paper elevation={3} sx={{ mb: 3 }}>
-                            <List>
-                                {selectedRow &&
-                                    Object.entries(selectedRow).map(([key, value], index) => (
-                                        <React.Fragment key={key}>
-                                            <ListItem sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <Typography variant="subtitle1" component="span">
-                                                    {key}:
-                                                </Typography>
-                                                <Typography variant="body2" component="span">
-                                                    {value.toString()}
-                                                </Typography>
-                                            </ListItem>
-                                            {index < Object.entries(selectedRow).length - 1 && <Divider />}
-                                        </React.Fragment>
-                                    ))}
-                            </List>
-                        </Paper>
-                        <Button variant="contained" onClick={handleManageProviderClick}>
+                        {renderRowDetails()}
+                        <Button variant="contained" onClick={toggleManageProvider}>
                             Manage Provider
                         </Button>
                     </Box>
