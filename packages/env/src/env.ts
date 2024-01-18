@@ -18,7 +18,7 @@ import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
@@ -76,17 +76,23 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    async getSigner(): Promise<void> {
-        if (this.pair) {
-            await this.getApi().isReadyOrError
-            try {
-                this.pair = this.keyring.addPair(this.pair)
-            } catch (error) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
-                    context: { failedFuncName: this.getSigner.name, error },
-                })
-            }
+    async getSigner(): Promise<KeyringPair> {
+        if (!this.pair) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                context: { failedFuncName: this.getSigner.name },
+            })
         }
+
+        await this.getApi().isReadyOrError
+        try {
+            this.pair = this.keyring.addPair(this.pair)
+        } catch (error) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                context: { failedFuncName: this.getSigner.name, error },
+            })
+        }
+
+        return this.pair
     }
 
     getContractInterface(): ProsopoCaptchaContract {
@@ -101,6 +107,13 @@ export class Environment implements ProsopoEnvironment {
             throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
         }
         return this.api
+    }
+
+    getPair(): KeyringPair {
+        if (this.pair === undefined) {
+            throw new ProsopoEnvError(new Error('pair not defined!'))
+        }
+        return this.pair
     }
 
     async changeSigner(pair: KeyringPair): Promise<void> {
@@ -122,7 +135,7 @@ export class Environment implements ProsopoEnvironment {
             this.contractName,
             parseInt(nonce.toString()),
             this.pair,
-            this.config.logLevel as unknown as LogLevel,
+            this.config.logLevel,
             this.config.account.address // allows calling the contract from a public address only
         )
         return this.contractInterface

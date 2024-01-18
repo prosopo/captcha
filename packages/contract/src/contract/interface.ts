@@ -14,9 +14,12 @@
 import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN } from '@polkadot/util/bn'
-import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
+import { BlockHash, EventRecord, StorageDeposit } from '@polkadot/types/interfaces'
+import { Bytes } from '@polkadot/types-codec/extended'
 import { Contract } from '@prosopo/captcha-contract'
 import { ContractPromise } from '@polkadot/api-contract/promise'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { ISubmittableResult } from '@polkadot/types/types'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LangError } from '@prosopo/captcha-contract/types-arguments'
 import { LogLevel, Logger, ProsopoContractError, getLogger, snakeToCamelCase } from '@prosopo/common'
@@ -24,8 +27,10 @@ import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
 import { default as Query } from '@prosopo/captcha-contract/query'
 import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
+import { applyOnEvent } from '@polkadot/api-contract/util'
+import { encodeStringArgs, getContractError, getExpectedBlockTime, getOptions } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
+import { get } from '@prosopo/util'
 import {
     getPrimitiveStorageFields,
     getPrimitiveStorageValue,
@@ -33,8 +38,9 @@ import {
     getStorageKeyAndType,
 } from './storage.js'
 import { getReadOnlyPair } from '../accounts/index.js'
-import { useWeightImpl } from './useWeight.js'
-import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
+import { getWeight, useWeightImpl } from './useWeight.js'
+import { u8aToString } from '@polkadot/util'
+import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
 export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
@@ -146,6 +152,163 @@ export class ProsopoCaptchaContract extends Contract {
     }
 
     /**
+     * Decode the return value of a contract query function
+     * @param message
+     * @param outcome
+     */
+    decodeQueryData(message: AbiMessage, outcome: ContractCallOutcome) {
+        if (!message.returnType) {
+            throw new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { method: message.method, message } })
+        }
+
+        return this.abi.registry.createTypeUnsafe(
+            message.returnType.lookupName || message.returnType.type,
+            [outcome.result.asOk.data.toU8a(true)],
+            { isPedantic: true }
+        )
+    }
+
+    private argDecoder(arg: any): string {
+        let decoded = arg.toString()
+        // if the arg is an array
+        if (Array.isArray(arg)) {
+            decoded = u8aToString(new Uint8Array(new Uint8ClampedArray(arg)))
+        }
+        return decoded
+    }
+
+    /**
+     * Get the contract result or throw an error if a contract reverted
+     * @param message
+     * @param outcome
+     * @param args
+     */
+    getQueryResult(message: AbiMessage, outcome: ContractCallOutcome, args: any[]) {
+        if (message.returnType) {
+            if (outcome.result.asOk.flags.isRevert) {
+                throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+                    context: {
+                        error: getContractError(outcome),
+                        failedFuncName: this.dryRunContractMethod.name,
+                        failedContractMethod: message.method,
+                        args: args.map(this.argDecoder), // TODO decode args using AbiMessage
+                    },
+                    logLevel: this.logger.getLogLevel(),
+                })
+            }
+            return this.decodeQueryData(message, outcome)
+        }
+
+        return outcome.result.asOk.data.toString()
+    }
+
+    /**
+     * Dry run a contract method to see how much gas it will need
+     */
+    async dryRunContractMethod<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<SubmittableExtrinsic> {
+        const message = this.getContractMethod(contractMethodName)
+        if (!this.nativeContract.query[message.method]) {
+            throw new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { method: message.method } })
+        }
+
+        const weight = await getWeight(this.api)
+
+        const { gasRequired, storageDeposit } = await this.nativeContract.query[message.method]!(
+            this.pair.address,
+            { gasLimit: weight.weightV2, storageDepositLimit: null, value: message.isPayable && value ? value : 0 },
+            ...args
+        )
+
+        // Increase the gas required by a factor of 1.1 to make sure we don't hit contracts.StorageDepositLimitExhausted
+        const options = getOptions(this.api, true, value, gasRequired, storageDeposit, true)
+        const method = get(this.nativeContract.query, message.method)
+        const extrinsic = method(this.pair.address, options, ...args)
+        const secondResult = await extrinsic
+
+        if (secondResult.result.isErr) {
+            const error = secondResult.result.asErr
+            const mod = error.asModule
+            const dispatchError = error.registry.findMetaError(mod)
+            throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+                context: {
+                    error: `${dispatchError.section}.${dispatchError.name}`,
+                    failedFuncName: this.dryRunContractMethod.name,
+                    failedContractMethod: message.method,
+                    args,
+                },
+                logLevel: this.logger.getLogLevel(),
+            })
+        }
+        // will throw an error if the contract reverted
+        this.getQueryResult(message, secondResult, args)
+
+        return get(this.nativeContract.tx, message.method)(options, ...args)
+    }
+
+    /**
+     * Perform a contract tx (mutating) calling the specified method
+     * @param {string} contractMethodName
+     * @param args
+     * @param {number | undefined} value   The value of token that is sent with the transaction
+     * @return JSON result containing the contract event
+     */
+    async contractTx<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<ContractSubmittableResult> {
+        const extrinsic = await this.dryRunContractMethod(contractMethodName, args, value)
+        const nextNonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        this.nonce = nextNonce ? nextNonce.toNumber() : this.nonce
+
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const unsub = await extrinsic.signAndSend(
+                this.pair,
+                { nonce: this.nonce },
+                (result: ISubmittableResult) => {
+                    if (result.status.isFinalized || result.status.isInBlock) {
+                        // ContractEmitted is the current generation, ContractExecution is the previous generation
+                        const contractResult = new ContractSubmittableResult(
+                            result,
+                            applyOnEvent(result, ['ContractEmitted', 'ContractExecution'], (records: EventRecord[]) =>
+                                records
+                                    .map(
+                                        ({
+                                            event: {
+                                                data: [, data],
+                                            },
+                                        }): DecodedEvent | null => {
+                                            try {
+                                                return this.abi.decodeEvent(data as Bytes)
+                                            } catch (error) {
+                                                this.logger.error(
+                                                    `Unable to decode contract event: ${(error as Error).message}`
+                                                )
+
+                                                return null
+                                            }
+                                        }
+                                    )
+                                    .filter((decoded): decoded is DecodedEvent => !!decoded)
+                            )
+                        )
+                        unsub()
+                        resolve(contractResult)
+                    } else if (result.isError) {
+                        unsub()
+                        reject(new ProsopoContractError(new Error(result.status.type)))
+                    }
+                }
+            )
+        })
+    }
+
+    /**
      * Get the extrinsic for submitting in a transaction
      * @return {SubmittableExtrinsic} extrinsic
      */
@@ -187,7 +350,9 @@ export class ProsopoCaptchaContract extends Contract {
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
             // increase the gas limit to make sure the tx succeeds
             options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
-            handleContractCallOutcomeErrors(response, contractMethodName)
+            // Will throw an error if the contract reverted
+            this.getQueryResult(message, response, args)
+
             method = this.contract.tx[contractMethodName]
             if (method === undefined) {
                 throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
@@ -202,6 +367,17 @@ export class ProsopoCaptchaContract extends Contract {
                 context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
             })
         }
+    }
+
+    /** Get the contract method from the ABI
+     * @return the contract method object
+     */
+    getContractMethod(contractMethodName: string): AbiMessage {
+        const methodObj = this.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
+        if (methodObj !== undefined) {
+            return methodObj as unknown as AbiMessage
+        }
+        throw new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { contractMethodName } })
     }
 
     /**

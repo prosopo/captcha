@@ -14,7 +14,7 @@
 import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex } from '@polkadot/util'
+import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
 
 const ss58Format = 42
 
@@ -54,12 +54,24 @@ if (argIsHex) {
     console.log(blake2AsHex(arg))
 }
 
-try {
-    const u8a = new Uint8Array(JSON.parse(arg))
-    console.log(`Found uint8array ${u8a}`)
-    const hex = u8aToHex(u8a)
+function isJSON(arg: string): boolean {
+    try {
+        JSON.parse(arg)
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+if (isJSON(arg)) {
+    const u8aMaybe = JSON.parse(arg)
+    console.log('U8aMaybe', u8aMaybe)
+    // pad the array
+    const padded = new Uint8Array(32)
+    padded.set(u8aMaybe)
+    console.log(`Found uint8array ${padded}`)
+    const hex = u8aToHex(padded)
     console.log(`Hex version ${hex}`)
     console.log(`Encoded address ${encodeAddress(hex, ss58Format)}`)
-} catch (e) {
-    console.log(`Not a uint8array ${e}`)
+    console.log('Converting u8a to string', u8aToString(padded))
 }

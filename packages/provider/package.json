@@ -23,7 +23,7 @@
         "build:config": "tsc --project",
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
-        "populate-data": "ts-node ./tests/dataUtils/populateDatabase.ts",
+        "populate-data": "tsx ./src/tests/dataUtils/populateDatabase.ts",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",

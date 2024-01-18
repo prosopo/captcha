@@ -84,20 +84,19 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
     return encodedArgs
 }
 
-/** Handle errors returned from contract queries by throwing them
+/** Get errors returned from contract queries
  */
-export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
+export function getContractError(response: ContractCallOutcome): string | undefined {
     if (response.output) {
         const out: any = response.output
         if (out.isOk) {
             const responseOk = out.asOk
             if (responseOk.isErr) {
-                throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                    context: { error: responseOk.toPrimitive().err.toString(), contractMethodName },
-                })
+                return responseOk.toPrimitive().err.toString()
             }
         }
     }
+    return undefined
 }
 
 /** Hash a string, padding with zeroes until its 32 bytes long
@@ -217,6 +216,7 @@ export function getDispatchError(dispatchError: DispatchError): string {
 
             message = `${error.section}.${error.name}`
         } catch (error) {
+            console.log('ERROR GETTING ERROR!', error)
             // swallow
         }
     } else if (dispatchError.isToken) {

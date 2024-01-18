@@ -15,13 +15,18 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger, ProsopoDBError } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoDBError, getLogLevel } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
-import { get } from '@prosopo/util'
-import { promiseQueue } from '../../util.js'
+import { defaultConfig, loadEnv } from '@prosopo/cli'
+import { get, isMain } from '@prosopo/util'
+import { getLogger } from '@prosopo/common'
+import { getPairAsync } from '@prosopo/contract'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
 
+loadEnv('../../dev/scripts')
+
+const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.Values.info, 'populateDatabase.ts')
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
 export type UserCount = {
@@ -73,18 +78,19 @@ async function populateStep(
     logger.debug(text)
 
     const dummyArray = new Array(userCount).fill(userCount)
-    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key](fund)))
+    const accountPromises = dummyArray.map(() => () => databasePopulator[key](fund))
+    const promise = await Promise.all(accountPromises.map((promise) => promise()))
     const time = Date.now() - startDate
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
 
-    promise
-        .filter(({ error }) => error)
-        .forEach(({ error }) => {
-            if (error) {
-                throw new ProsopoDBError(error)
-            }
-        })
+    // promise
+    //     .filter(({ error }) => error)
+    //     .forEach(({ error }) => {
+    //         if (error) {
+    //             throw new ProsopoDBError(error)
+    //         }
+    //     })
 }
 
 export async function populateDatabase(
@@ -93,10 +99,11 @@ export async function populateDatabase(
     fundMap: UserFund,
     exportData: boolean,
     dappAbi: Abi,
-    dappWasm: Uint8Array
+    dappWasm: Uint8Array,
+    logLevel?: LogLevel
 ): Promise<IDatabaseAccounts> {
     env.logger.debug('Starting database populator...')
-    const databasePopulator = new DatabasePopulator(env, dappAbi, dappWasm)
+    const databasePopulator = new DatabasePopulator(env, dappAbi, dappWasm, logLevel)
     await databasePopulator.isReady()
 
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
@@ -127,7 +134,7 @@ export async function populateDatabase(
     return databasePopulator
 }
 
-export default async function run(pair: KeyringPair, config: ProsopoConfigOutput) {
+export default async function run(pair: KeyringPair, config: ProsopoConfigOutput, logLevel?: LogLevel) {
     const dappAbiMetadata = await DappAbiJSON()
     const dappWasm = await DappWasm()
 
@@ -137,6 +144,22 @@ export default async function run(pair: KeyringPair, config: ProsopoConfigOutput
         userFundMapDefault,
         true,
         dappAbiMetadata,
-        dappWasm
+        dappWasm,
+        logLevel
     )
+}
+
+//if main process
+if (isMain(import.meta.url, 'provider')) {
+    const startDate = Date.now()
+    const config = defaultConfig()
+    const secret = '//Alice'
+    const pair = await getPairAsync(config.networks[config.defaultNetwork], secret)
+    const logLevel = getLogLevel()
+    run(pair, config, logLevel)
+        .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
+        .finally(() => process.exit())
+        .catch((error) => {
+            logger.error(error)
+        })
 }

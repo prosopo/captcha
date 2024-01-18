@@ -54,13 +54,13 @@ export abstract class ProsopoBaseError<ContextType extends BaseContextParams = B
             this.translationKey = error
             this.context = options?.context
         }
-        if (options?.silent) this.logError(logger, logLevel)
+        if (!options?.silent) this.logError(logger, logLevel)
     }
 
     private logError(logger: Logger, logLevel: LogLevel) {
         const errorFormatter = '\n*************** ERROR ***************\n'
         const errorName = `Error Type: ${this.name}\n`
-        const errorParams = JSON.stringify({ error: this.message, context: this.context })
+        const errorParams = JSON.stringify({ error: this.message, context: this.context }, null, 4)
         const errorMessage = `${errorFormatter}${errorName}${errorParams}`
         logger[logLevel](errorMessage)
     }
@@ -86,6 +86,14 @@ export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
 export class ProsopoContractError extends ProsopoBaseError<ContractContextParams> {
     constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ContractContextParams>) {
         const errorName = options?.name || 'ProsopoContractError'
+        options = { ...options, name: errorName }
+        super(error, options)
+    }
+}
+
+export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams> {
+    constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ContractContextParams>) {
+        const errorName = options?.name || 'ProsopoTxQueueError'
         options = { ...options, name: errorName }
         super(error, options)
     }
