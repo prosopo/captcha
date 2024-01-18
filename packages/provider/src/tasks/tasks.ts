@@ -555,7 +555,7 @@ export class Tasks {
         return { provider, dbConnectionOk }
     }
 
-    /** Get the dataset from the databse */
+    /** Get the dataset from the database */
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
     }
