@@ -3,12 +3,16 @@
 import { Box, Button, Chip, CircularProgress, Grid, TextField } from '@mui/material'
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
 import { GuiContract } from '@/types/ContractOverview'
-import { RowDataModal } from '@/components/ProviderManager/ProviderModal'
 import { at, get } from '@prosopo/util'
 import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import { useState } from 'react'
 import React, { useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const RowDataModal = dynamic(() => import('@/components/ProviderManager/ProviderModal'), {
+    ssr: false,
+})
 
 const calculateFlex = (length: number) => {
     if (length < 4) {

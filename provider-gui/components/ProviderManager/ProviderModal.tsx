@@ -12,7 +12,7 @@ type ProviderManagementProps = {
     isDeregisterDialogOpen: boolean
 }
 
-export const RowDataModal: React.FC<ProviderManagementProps> = ({
+const RowDataModal: React.FC<ProviderManagementProps> = ({
     isModalOpen,
     handleCloseModal,
     selectedRow,
@@ -85,3 +85,5 @@ export const RowDataModal: React.FC<ProviderManagementProps> = ({
         </Modal>
     )
 }
+
+export default RowDataModal
