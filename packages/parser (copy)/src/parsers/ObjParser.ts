@@ -1,19 +1,19 @@
 
 
-interface Parser2<T> {
+interface Parser<T> {
     parse(value: unknown): T
 }
 
 type Schema = {
-    [key: string]: Parser2<any>
+    [key: string]: Parser<any>
 }
 
 type SchemaShape<T extends Schema> = {
-    [K in keyof T]: T[K] extends Parser2<infer U> ? U : never
+    [K in keyof T]: T[K] extends Parser<infer U> ? U : never
 }
 
-class ObjParser<T extends Schema> implements Parser2<{
-    [K in keyof T]: T[K] extends Parser2<infer U> ? U : never
+class ObjParser<T extends Schema> implements Parser<{
+    [K in keyof T]: T[K] extends Parser<infer U> ? U : never
 }> {
 
     constructor(private schema: T) {
@@ -23,13 +23,13 @@ class ObjParser<T extends Schema> implements Parser2<{
     readonly shape: SchemaShape<T> = null!
 
     parse(value: unknown): {
-    [K in keyof T]: T[K] extends Parser2<infer U> ? U : never
+    [K in keyof T]: T[K] extends Parser<infer U> ? U : never
 } {
         return null!
     }
 }
 
-class StringParser2 implements Parser2<string> {
+class StringParser implements Parser<string> {
     parse(value: unknown): string {
         if (typeof value !== 'string') {
             throw new Error(`Expected string but got ${typeof value}`)
@@ -38,7 +38,7 @@ class StringParser2 implements Parser2<string> {
     }
 }
 
-class BooleanParser2 implements Parser2<boolean> {
+class BooleanParser implements Parser<boolean> {
     parse(value: unknown): boolean {
         if (typeof value !== 'boolean') {
             throw new Error(`Expected boolean but got ${typeof value}: ${value}`)
@@ -47,7 +47,7 @@ class BooleanParser2 implements Parser2<boolean> {
     }
 }
 
-class NumberParser2 implements Parser2<number> {
+class NumberParser implements Parser<number> {
     parse(value: unknown): number {
         if (typeof value !== 'number') {
             throw new Error(`Expected number but got ${typeof value}`)
@@ -57,13 +57,13 @@ class NumberParser2 implements Parser2<number> {
 }
 
 const a1 = new ObjParser({
-    a: new NumberParser2(),
-    b: new BooleanParser2(),
-    c: new StringParser2(),
+    a: new NumberParser(),
+    b: new BooleanParser(),
+    c: new StringParser(),
     d: new ObjParser({
-        e: new NumberParser2(),
-        f: new BooleanParser2(),
-        g: new StringParser2(),
+        e: new NumberParser(),
+        f: new BooleanParser(),
+        g: new StringParser(),
     })
 })
 type A1 = typeof a1.shape;

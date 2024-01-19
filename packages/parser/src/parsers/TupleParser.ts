@@ -1,22 +1,30 @@
-// import { BooleanParser } from "./BooleanParser.js"
-// import { NumberParser } from "./NumberParser.js"
-// import { BaseParser, ParseOptions, Parser } from "./Parser.js"
-// import { StringParser } from "./StringParser.js"
+import { Parser, BaseParser } from "./Parser.js"
+import { at } from "@prosopo/util"
 
-// export type TupleElement<T> = T extends readonly [Parser<infer U>, ...infer V] ? [U, ...TupleElement<V>] : []
+export type SchemaShape<T extends readonly any[]> = T extends readonly [Parser<infer U>, ...infer V] ? [U, ...SchemaShape<V>] : []
 
-// class TupleParser<const T> extends BaseParser<TupleElement<T>> {
-//     constructor(private parsers: T) {
-//         super()
-//     }
+export class TupleParser<const T extends readonly Parser<any>[], const U extends SchemaShape<T>> extends BaseParser<U> {
+    constructor(private parsers: T) {
+        super()
+    }
 
-//     override _parse(value: unknown, options?: ParseOptions): TupleElement<T> {
-//         throw new Error("Method not implemented.")
-//     }
-// }
+    parse(value: unknown): U {
+        if(!Array.isArray(value)) {
+            throw new Error(`Expected array but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+        }
+        const array = value as unknown[]
+        if(array.length !== this.parsers.length) {
+            throw new Error(`Expected ${this.parsers.length} elements but got ${array.length}`)
+        }
+        return array.map((item, index) => {
+            const parser = this.parsers[index]
+            // TODO replace with 'at' fn once readonly version is available
+            if (parser === undefined) {
+                throw new Error(`No parser for index ${index}`)
+            }
+            return parser.parse(item)
+        }) as U
+    }
+}
 
-// // TODO finish this
-// const t = new TupleParser([new StringParser(), new NumberParser(), new BooleanParser()])
-// const t2 = t.parse(['hello', 1, true])
-
-// export const pTuple = <const T, U extends T[]>(...parsers: U): Parser<TupleElement<U>> => new TupleParser(parsers) // TODO check generics work here
+export const pTuple = <const T extends readonly Parser<any>[]>(parsers: T) => new TupleParser(parsers)
