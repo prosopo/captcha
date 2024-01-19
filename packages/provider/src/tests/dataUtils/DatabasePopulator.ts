@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract/Abi'
-import { Account, accountAddress, accountMnemonic } from '../accounts.js'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util/bn'
 import { ContractDeployer, TransactionQueue, getPairAsync, wrapQuery } from '@prosopo/contract'
@@ -23,10 +22,11 @@ import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoContractError, ProsopoEnvError, getLogLevel, getLogger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
+import { ProviderEnvironment, TestAccount } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '../../tasks/index.js'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
+import { accountAddress, accountMnemonic } from '../accounts.js'
 import { createType } from '@polkadot/types/create'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
 import { get } from '@prosopo/util'
@@ -34,7 +34,7 @@ import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { stringToU8a } from '@polkadot/util/string'
 
-const urlBase = 'http://localhost:'
+const urlBase = 'http://localhost'
 
 const PROVIDER_FEE = 10
 const PROVIDER_PAYEE = Payee.dapp
@@ -51,22 +51,22 @@ export enum IDatabasePopulatorMethodNames {
 export class IDatabasePopulatorMethods {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    registerProvider: (fund: boolean, url?: string, noPush?: boolean) => Promise<Account>
+    registerProvider: (fund: boolean, url?: string, noPush?: boolean) => Promise<TestAccount>
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    registerProviderWithStake: (fund: boolean) => Promise<Account>
+    registerProviderWithStake: (fund: boolean) => Promise<TestAccount>
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    registerProviderWithStakeAndDataset: (fund: boolean) => Promise<Account>
+    registerProviderWithStakeAndDataset: (fund: boolean) => Promise<TestAccount>
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    registerDapp: (fund: boolean, url?: string, noPush?: boolean) => Promise<Account>
+    registerDapp: (fund: boolean, url?: string, noPush?: boolean) => Promise<TestAccount>
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    registerDappWithStake: (fund: boolean) => Promise<Account>
+    registerDappWithStake: (fund: boolean) => Promise<TestAccount>
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    registerDappUser: (fund: boolean) => Promise<Account>
+    registerDappUser: (fund: boolean) => Promise<TestAccount>
 }
 
 class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods {
@@ -74,17 +74,19 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     private _transactionQueue: TransactionQueue | undefined
 
-    private _registeredProviders: Account[] = []
+    private _registeredProviders: TestAccount[] = []
 
-    private _registeredProvidersWithStake: Account[] = []
+    private _registeredProvidersWithStake: TestAccount[] = []
 
-    private _registeredProvidersWithStakeAndDataset: Account[] = []
+    private _registeredProvidersWithStakeAndDataset: TestAccount[] = []
 
-    private _registeredDapps: Account[] = []
+    private _registeredDapps: TestAccount[] = []
 
-    private _registeredDappsWithStake: Account[] = []
+    private _registeredDappsWithStake: TestAccount[] = []
 
-    private _registeredDappUsers: Account[] = []
+    private _registeredDappUsers: TestAccount[] = []
+
+    private _registeredProviderUrls: Set<string> = new Set<string>()
 
     private providerStakeDefault: number | BN = 0
 
@@ -135,51 +137,51 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         this._transactionQueue = txQueue
     }
 
-    get providers(): Account[] {
+    get providers(): TestAccount[] {
         return this._registeredProviders
     }
 
-    set providers(accounts: Account[]) {
-        this._registeredProviders = accounts
+    set providers(providers: TestAccount[]) {
+        this._registeredProviders = providers
     }
 
-    get providersWithStake(): Account[] {
+    get providersWithStake(): TestAccount[] {
         return this._registeredProvidersWithStake
     }
 
-    set providersWithStake(accounts: Account[]) {
+    set providersWithStake(accounts: TestAccount[]) {
         this._registeredProvidersWithStake = accounts
     }
 
-    get providersWithStakeAndDataset(): Account[] {
+    get providersWithStakeAndDataset(): TestAccount[] {
         return this._registeredProvidersWithStakeAndDataset
     }
 
-    set providersWithStakeAndDataset(accounts: Account[]) {
+    set providersWithStakeAndDataset(accounts: TestAccount[]) {
         this._registeredProvidersWithStakeAndDataset = accounts
     }
 
-    get dapps(): Account[] {
+    get dapps(): TestAccount[] {
         return this._registeredDapps
     }
 
-    set dapps(accounts: Account[]) {
+    set dapps(accounts: TestAccount[]) {
         this._registeredDapps = accounts
     }
 
-    get dappsWithStake(): Account[] {
+    get dappsWithStake(): TestAccount[] {
         return this._registeredDappsWithStake
     }
 
-    set dappsWithStake(accounts: Account[]) {
+    set dappsWithStake(accounts: TestAccount[]) {
         this._registeredDappsWithStake = accounts
     }
 
-    get dappUsers(): Account[] {
+    get dappUsers(): TestAccount[] {
         return this._registeredDappUsers
     }
 
-    set dappUsers(accounts: Account[]) {
+    set dappUsers(accounts: TestAccount[]) {
         this._registeredDappUsers = accounts
     }
 
@@ -187,14 +189,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return this._isReady
     }
 
-    private createAccount(): Account {
+    private createAccount(): TestAccount {
         const account = this.createAccountAndAddToKeyring()
 
         if (!account) {
             throw new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED')
         }
 
-        return account
+        return { address: account[1], mnemonic: account[0], contractValue: undefined, contractAddress: undefined }
     }
 
     private createAccountAndAddToKeyring(): [string, string] {
@@ -204,17 +206,17 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return [mnemonic, address]
     }
 
-    private sendFunds(account: Account, payee: string, amount: AnyNumber): Promise<void>
+    private sendFunds(account: TestAccount, payee: string, amount: AnyNumber): Promise<void>
     private sendFunds(address: string, payee: string, amount: AnyNumber): Promise<void>
-    private sendFunds(account: Account | string, payee: string, amount: AnyNumber): Promise<void> {
+    private sendFunds(account: TestAccount | string, payee: string, amount: AnyNumber): Promise<void> {
         const address = typeof account === 'string' ? account : accountAddress(account)
 
         return _sendFunds(this.mockEnv, address, payee.toString(), amount, this.transactionQueue)
     }
 
-    private async changeSigner(account: Account): Promise<void>
+    private async changeSigner(account: TestAccount): Promise<void>
     private async changeSigner(mnemonic: string): Promise<void>
-    private async changeSigner(account: Account | string): Promise<void> {
+    private async changeSigner(account: TestAccount | string): Promise<void> {
         const mnemonic = typeof account === 'string' ? account : accountMnemonic(account)
 
         if (!this.mockEnv.contractInterface) {
@@ -226,9 +228,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return this.mockEnv.changeSigner(pair)
     }
 
-    public async registerProvider(fund: boolean, url?: string, noPush?: boolean): Promise<Account> {
+    public async registerProvider(fund: boolean, url?: string, noPush?: boolean): Promise<TestAccount> {
         try {
-            const urlString = url || urlBase + randomAsHex()
+            const urlString = url || this.randomUrl()
             const _url = Array.from(stringToU8a(urlString))
 
             const account = this.createAccount()
@@ -251,11 +253,15 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const tasks = new Tasks(this.mockEnv)
             const args = [_url, PROVIDER_FEE, PROVIDER_PAYEE]
             const result = await this.submitTx(tasks, 'providerRegister', args, this.stakeAmount, pair)
-            this.logger.info('Provider registered', result.toHuman())
+            this.logger.info('Provider registered with account', accountAddress(account), 'url', urlString)
             await new Promise((resolve) => setTimeout(resolve, 1000))
             const _provider = (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
             if (!noPush) {
-                this._registeredProviders.push(account)
+                this._registeredProviders.push({
+                    ...account,
+                    contractValue: _provider,
+                })
+                this._registeredProviderUrls.add(urlString)
             }
             return account
         } catch (e) {
@@ -263,7 +269,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async updateProvider(account: Account, url: string) {
+    private async updateProvider(account: TestAccount, url: string) {
         try {
             await this.changeSigner(account)
             const tasks = new Tasks(this.mockEnv)
@@ -274,20 +280,25 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             ]
             await this.submitTx(tasks, 'providerUpdate', args, 0)
             this.logger.info('Provider updated')
+            return (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
         } catch (e) {
             throw this.createError(e as Error, this.updateProvider.name)
         }
     }
 
-    public async registerProviderWithStake(fund: boolean): Promise<Account> {
+    public async registerProviderWithStake(fund: boolean): Promise<TestAccount> {
         try {
-            const url = urlBase + randomAsHex()
+            const url = this.randomUrl()
 
             const account = await this.registerProvider(fund, url, true)
 
-            await this.updateProvider(account, url)
+            const provider = await this.updateProvider(account, url)
 
-            this._registeredProvidersWithStake.push(account)
+            this._registeredProvidersWithStake.push({
+                ...account,
+                contractValue: provider,
+            })
+            this._registeredProviderUrls.add(url)
 
             return account
         } catch (e) {
@@ -295,27 +306,32 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async addDataset(account: Account, dataset: DatasetWithIdsAndTree) {
+    private async addDataset(account: TestAccount, dataset: DatasetWithIdsAndTree) {
         try {
             await this.changeSigner(account)
 
             const tasks = new Tasks(this.mockEnv)
 
             await tasks.providerSetDataset(dataset)
+            return (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
         } catch (e) {
             throw this.createError(e as Error, this.addDataset.name)
         }
     }
 
-    public async registerProviderWithStakeAndDataset(fund: boolean): Promise<Account> {
+    public async registerProviderWithStakeAndDataset(fund: boolean): Promise<TestAccount> {
         try {
-            const url = urlBase + randomAsHex()
+            const url = this.randomUrl()
 
             const account = await this.registerProvider(fund, url, true)
             await this.updateProvider(account, url)
-            await this.addDataset(account, datasetWithSolutionHashes)
+            const provider = await this.addDataset(account, datasetWithSolutionHashes)
 
-            this._registeredProvidersWithStakeAndDataset.push(account)
+            this._registeredProvidersWithStakeAndDataset.push({
+                ...account,
+                contractValue: provider,
+            })
+            this._registeredProviderUrls.add(url)
 
             return account
         } catch (e) {
@@ -323,7 +339,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerDapp(fund: boolean, url?: string, noPush?: boolean): Promise<Account> {
+    public async registerDapp(fund: boolean, url?: string, noPush?: boolean): Promise<TestAccount> {
         try {
             const account = this.createAccount()
             this.logger.debug('Sending funds to `', accountAddress(account), '`')
@@ -361,7 +377,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             )
             const contractAddress = String(get<unknown>(instantiateEvent?.event.data, 'contract'))
 
-            account.push(contractAddress)
+            account.contractAddress = contractAddress
 
             this.logger.debug('Dapp contract address', contractAddress)
 
@@ -387,7 +403,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             this.logger.info('App registered result', dapp.value.unwrap().unwrap())
 
             if (!noPush) {
-                this._registeredDapps.push(account)
+                this._registeredDapps.push({
+                    ...account,
+                    contractValue: dapp.value.unwrap().unwrap(),
+                })
             }
 
             return account
@@ -396,22 +415,26 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async dappFund(account: Account) {
+    private async dappFund(account: TestAccount) {
         await this.changeSigner(account)
 
         const tasks = new Tasks(this.mockEnv)
         this.logger.info('Funding app', accountAddress(account))
         await this.submitTx(tasks, 'dappFund', [accountAddress(account)], this.stakeAmount)
         this.logger.info('App funded')
+        return (await tasks.contract.query.getDapp(accountAddress(account))).value.unwrap().unwrap()
     }
 
-    public async registerDappWithStake(fund: boolean): Promise<Account> {
+    public async registerDappWithStake(fund: boolean): Promise<TestAccount> {
         try {
-            const url = urlBase + randomAsHex().slice(0, 8)
+            const url = this.randomUrl()
             const account = await this.registerDapp(fund, url, true)
-            await this.dappFund(account)
+            const dapp = await this.dappFund(account)
 
-            this._registeredDappsWithStake.push(account)
+            this._registeredDappsWithStake.push({
+                ...account,
+                contractValue: dapp,
+            })
 
             return account
         } catch (e) {
@@ -419,15 +442,27 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerDappUser(fund: boolean): Promise<Account> {
+    public async registerDappUser(fund: boolean): Promise<TestAccount> {
         const account = this.createAccount()
+
         if (fund) {
             await this.sendFunds(accountAddress(account), 'DappUser', this.sendAmount)
         }
 
-        this._registeredDappUsers.push(account)
+        this._registeredDappUsers.push({
+            ...account,
+            contractValue: undefined,
+        })
 
         return account
+    }
+
+    private randomUrl(): string {
+        let url = `${urlBase}/${randomAsHex()}`
+        while (this._registeredProviderUrls.has(url)) {
+            url = urlBase + randomAsHex()
+        }
+        return url
     }
 
     private async submitTx(

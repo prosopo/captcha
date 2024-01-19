@@ -145,11 +145,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     }
 
     test('Provider registration', async function ({ env, providerStakeThreshold }) {
-        const [providerMnemonic, providerAddress] = env.createAccountAndAddToKeyring() || ['', '']
-        const tasks = await getSignedTasks(env, [providerMnemonic, providerAddress])
+        const providerAccount = env.createAccountAndAddToKeyring() || ['', '']
+        const tasks = await getSignedTasks(env, providerAccount)
         const stakeAmount = getStakeAmount(env, providerStakeThreshold)
         const sendAmount = getSendAmount(env, stakeAmount)
-        await sendFunds(env, providerAddress, 'ProsopoPayee', sendAmount)
+        await sendFunds(env, providerAccount.address, 'ProsopoPayee', sendAmount)
 
         const queryResult = await tasks.contract.query.providerRegister(
             Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),
