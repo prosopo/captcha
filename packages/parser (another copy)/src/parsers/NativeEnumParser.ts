@@ -1,0 +1,76 @@
+import { at, get } from "@prosopo/util";
+import { BaseParser } from "./Parser.js";
+
+// ts enums are a simple mapping from string to number
+// they also have a reverse mapping from number to string IFF the enum values are not specified
+// e.g. enum Foo { A, B, C } is converted to {
+//    A: 0,
+//    B: 1,
+//    C: 2,
+//    "0": "A",
+//    "1": "B",
+//    "2": "C"
+// }
+// a string enum of Bar { A = "A", B = "B", C = "C" } is converted to {
+//    A: "A",
+//    B: "B",
+//    C: "C"
+// }
+// a non-matching string enum of Baz { A = "x", B = "y", C = "z" } is converted to {
+//    A: "x",
+//    B: "y",
+//    C: "z",
+// }
+// note how the values of the enum are reverse mapped as strings, e.g. in Foo the value 0 is mapped to "A", but 0 is a string, "0", not a number.
+// note how reverse mapping only occurs if the enum values are not specified.
+// note that enum members can only have string names.
+// note that if one enum value has a value, all must.
+// note that enum values of string or number can be mixed, e.g. Qux { A = "x", B = 2, C = 3, D = "y" } is converted to {
+//    A: "x",
+//    B: 2,
+//    C: 3,
+//    D: "y",
+//    "x": "A",
+//    "2": "B",
+//    "3": "C",
+//    "y": "D"
+// }
+// note 
+export type NativeEnum = {
+    [key: string]: string | number
+}
+
+export class NativeEnumParser<T> extends BaseParser<T[keyof T]> {
+    constructor(private readonly nativeEnum: T) {
+        super()
+    }
+
+    parse(value: unknown): T[keyof T] {
+        const nativeEnumObj = this.nativeEnum as object
+        // iterate over the enum key/value mapping (which is just an obj under the hood)
+        for (const [key, enumValue] of Object.entries(nativeEnumObj)) {
+            // if the key is numeric, ignore it. This is a reverse mapping. E.g. given enum Foo { A, B, C }, the enum becomes {
+            //    A: 0,
+            //    B: 1,
+            //    C: 2,
+            //    "0": "A",
+            //    "1": "B",
+            //    "2": "C"
+            // }
+            // under the hood. We don't want to allow a value matching the reverse mapping through, e.g. reject values of 'A', 'B', or 'C', accept values of 0, 1, or 2.
+            // we can detect this by checking if the key is numeric.
+            if (!Number.isNaN(parseInt(key))) {
+                // and skip if so
+                continue
+            }
+            // if the value matches the enum value, return the enum key
+            if (value === enumValue) {
+                return value as T[keyof T]
+            }   
+        }
+
+        // by here, we've looked through all the enum values without a match, so throw an error
+        throw new Error(`Expected one of ${Object.entries(nativeEnumObj).join(', ')} but got ${value}`)
+    }
+
+}

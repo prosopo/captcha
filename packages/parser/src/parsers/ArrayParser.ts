@@ -1,22 +1,18 @@
-// import { BaseParser, ParseOptions, Parser } from "./Parser.js"
+import { BaseParser, Parser } from "./Parser.js"
 
+export class ArrayParser<T> extends BaseParser<T[]> {
 
-// class ArrayParser<T> extends BaseParser<T[]> {
-//     constructor(private schema: Parser<T>) {
-//         super()
-//     }
+    constructor(private parser: Parser<T>) {
+        super()
+    }
 
-//     _parse(value: unknown, options?: ParseOptions): T[] {
-//         // check runtime type
-//         if (!Array.isArray(value)) {
-//             throw new Error(`Expected array but got ${typeof value}`)
-//         }
-//         // parse each element
-//         for (const [index, el] of value.entries()) {
-//             this.schema.parse(el)
-//         }
-//         return value as T[]
-//     }
-// }
+    parse(value: unknown): T[] {
+        if (Array.isArray(value)) {
+            const array = value as unknown[]
+            return array.map(item => this.parser.parse(item))
+        }
+        throw new Error(`Expected array but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+    }
+}
 
-// export const pArray = <T>(schema: Parser<T>): Parser<T[]> => new ArrayParser(schema)
+export const pArray = <T>(parser: Parser<T>) => new ArrayParser(parser)

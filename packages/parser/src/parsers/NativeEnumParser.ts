@@ -1,53 +1,80 @@
-// import { BaseParser, ParseOptions } from "./Parser.js"
+import { at, get } from "@prosopo/util";
+import { BaseParser } from "./Parser.js";
 
-// export type NativeEnum = {
-//     [key: string]: number | string
+// ts enums are a simple mapping from string to number
+// they also have a reverse mapping from number to string IFF the enum values are not specified
+// e.g. enum Foo { A, B, C } is converted to {
+//    A: 0,
+//    B: 1,
+//    C: 2,
+//    "0": "A",
+//    "1": "B",
+//    "2": "C"
+// }
+// a string enum of Bar { A = "A", B = "B", C = "C" } is converted to {
+//    A: "A",
+//    B: "B",
+//    C: "C"
+// }
+// a non-matching string enum of Baz { A = "x", B = "y", C = "z" } is converted to {
+//    A: "x",
+//    B: "y",
+//    C: "z",
+// }
+// note how the values of the enum are reverse mapped as strings, e.g. in Foo the value 0 is mapped to "A", but 0 is a string, "0", not a number.
+// note how reverse mapping only occurs if the enum values are not specified.
+// note that enum members can only have string names.
+// note that if one enum value has a value, all must.
+// note that enum values of string or number can be mixed, e.g. Qux { A = "x", B = 2, C = 3, D = "y" } is converted to {
+//    A: "x",
+//    B: 2,
+//    C: 3,
+//    D: "y",
+//    "x": "A",
+//    "2": "B",
+//    "3": "C",
+//    "y": "D"
 // }
 
-// class NativeEnumParser<T extends NativeEnum> extends BaseParser<T> {
-//     constructor(private nativeEnum: T) {
-//         super()
-//     }
+export class NativeEnumParser<T> extends BaseParser<T[keyof T]> {
+    readonly variants: readonly T[keyof T][]
 
-//     _parse(value: unknown, options?: ParseOptions): T {
-//         // check runtime type
-//         if (!this.options.includes(value as T)) {
-//             throw new Error(`Expected enum value to be one of ${this.options.join(', ')} but got ${value}`)
-//         }
-//         return value as T
-//     }
+    constructor(private readonly nativeEnum: T) {
+        super()
+        const nativeEnumObj = this.nativeEnum as object
+        // iterate over the enum key/value mapping (which is just an obj under the hood)
+        const result: T[keyof T][] = []
+        for (const [key, enumValue] of Object.entries(nativeEnumObj)) {
+            // if the key is numeric, ignore it. This is a reverse mapping. E.g. given enum Foo { A, B, C }, the enum becomes {
+            //    A: 0,
+            //    B: 1,
+            //    C: 2,
+            //    "0": "A",
+            //    "1": "B",
+            //    "2": "C"
+            // }
+            // under the hood. We don't want to allow a value matching the reverse mapping through, e.g. reject values of 'A', 'B', or 'C', accept values of 0, 1, or 2.
+            // we can detect this by checking if the key is numeric.
+            if (!Number.isNaN(parseInt(key))) {
+                // and skip if so
+                continue
+            }
+            // otherwise, add the enum value to the result
+            result.push(enumValue)
+        }
+        this.variants = result
+    }
 
-//     get options(): Readonly<T[]> {
-//         const result = [] as T[]
-//         // enums are laid out like this:
-//         // {
-//         //   '0': 'Red',
-//         //   '1': 'Green',
-//         //   '2': 'Blue',
-//         //   Red: 0,
-//         //   Green: 1,
-//         //   Blue: 2
-//         // }
-//         // to allow for reverse lookup. All of the keys map to numeric values
-//         for (const key in this.nativeEnum) {
-//             if (typeof this.nativeEnum[key] === 'number') {
-//                 result.push(key as unknown as T)
-//             }
-//         }
-//         return result
-//     }
+    parse(value: unknown): T[keyof T] {
+        for(const variant of this.variants) {
+            if(variant === value) {
+                return variant
+            }
+        }
+        // by here, we've looked through all the enum values without a match, so throw an error
+        throw new Error(`Expected one of ${JSON.stringify(this.nativeEnum)} but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+    }
 
-//     get enum() {
-//         const result = {} as {
-//             [K in keyof T]: K
-//         }
-//         for (const key in this.nativeEnum) {
-//             if (typeof key === 'string') {
-//                 result[key] = key
-//             }
-//         }
-//         return result
-//     }
-// }
+}
 
-// export const pNativeEnum = <T extends NativeEnum>(nativeEnum: T): NativeEnumParser<T> => new NativeEnumParser(nativeEnum)
+export const pNativeEnum = <T>(nativeEnum: T) => new NativeEnumParser(nativeEnum)

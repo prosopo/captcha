@@ -32,7 +32,8 @@
     "types": "./dist/index.d.ts",
     "dependencies": {
         "lodash": "^4.17.21",
-        "seedrandom": "^3.0.5"
+        "seedrandom": "^3.0.5",
+        "@prosopo/util": "0.2.14"
     },
     "devDependencies": {
         "@types/chai": "^4.3.5",

@@ -1,12 +1,12 @@
-import { BaseParser, ParserOptions, Parser } from "./Parser.js"
+import { BaseParser, Parser } from "./Parser.js"
 
-class NumberParser extends BaseParser<number> {
-    override _parse(value: unknown): number {
+export class NumberParser extends BaseParser<number> {
+    parse(value: unknown): number {
         if (typeof value !== 'number') {
-            throw new Error(`Expected number but got ${typeof value}`)
+            throw new Error(`Expected number but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
         return value
     }
 }
 
-export const pNumber = (): NumberParser => new NumberParser()
+export const pNumber = () => new NumberParser()

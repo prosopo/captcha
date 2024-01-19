@@ -1,9 +1,10 @@
-// import { BaseParser, ParseOptions, Parser } from "./Parser.js";
+import { BaseParser } from "./Parser.js";
 
-// class AnyParser extends BaseParser<any> {
-//     override _parse(value: unknown, options?: ParseOptions): any {
-//         return value
-//     }
-// }
 
-// export const pAny = (): Parser<any> => new AnyParser()
+export class AnyParser extends BaseParser<any> {
+    parse(value: unknown): any {
+        return value
+    }
+}
+
+export const pAny = () => new AnyParser()
