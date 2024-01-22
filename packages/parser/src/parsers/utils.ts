@@ -1,3 +1,4 @@
+import { Parser } from "./Parser.js";
 
 export type Mask<T> = {
     [K in keyof T]?: any
@@ -16,3 +17,11 @@ export type OmitMask<T, U extends Mask<T>> = {
 }
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+
+export type Schema = {
+    [key: string]: Parser<any>
+}
+
+export type Shape<T extends Schema> = {
+    [K in keyof T]: T[K] extends Parser<infer U> ? U : never
+}
