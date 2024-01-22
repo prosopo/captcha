@@ -14,7 +14,7 @@
 import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
+import { hexToNumber, hexToString, hexToU8a, isHex, isU8a, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
 
 // https://stackoverflow.com/a/75872362/1178971
 function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
@@ -58,11 +58,16 @@ function main() {
     const arg = at(process.argv.slice(2), 0).trim()
     const argIsHex = isHex(arg)
     const argIsAddress = isAddress(arg, false, ss58Format)
+    const argIsJSON = isJSON(arg)
+    const argIsU8a = isU8a(arg)
     const output: { name: string; value: string }[] = []
     output.push({ name: 'arg', value: arg })
     output.push({ name: 'length', value: arg.length.toString() })
     output.push({ name: 'argIsAddress', value: argIsAddress.toString() })
     output.push({ name: 'argIsHex', value: argIsHex.toString() })
+    output.push({ name: 'argIsJSON', value: argIsJSON.toString() })
+    output.push({ name: 'argIsU8a', value: argIsU8a.toString() })
+
     if (argIsAddress) {
         try {
             const encodedAddress = encodeAddress(decodeAddress(arg, false, ss58Format), ss58Format)
@@ -79,6 +84,7 @@ function main() {
             output.push({ name: `Failure encoding/decoding address`, value: `${e}` })
         }
     }
+
     if (argIsHex) {
         output.push({ name: `Decoding hex to string`, value: hexToString(arg) })
         try {
@@ -87,11 +93,10 @@ function main() {
             output.push({ name: `Decoding hex to number`, value: `${e}` })
         }
         output.push({ name: `Decoding string to hex to u8a`, value: hexToU8a(stringToHex(arg)).toString() })
-    } else {
         output.push({ name: `Hashing string using blake2AsHex`, value: blake2AsHex(arg) })
     }
 
-    if (isJSON(arg)) {
+    if (argIsJSON) {
         const u8aMaybe = JSON.parse(arg)
         output.push({ name: `Found JSON`, value: u8aMaybe })
         // pad the array
@@ -105,10 +110,10 @@ function main() {
         output.push({ name: `u8aToString`, value: u8aToString(padded) })
     }
 
-    console.log('\nTABLE OUTPUT\n')
-    consoleTableWithWrapping(output)
     console.log('\nJSON OUTPUT\n')
     console.log(JSON.stringify(output, null, 4))
+    console.log('\nTABLE OUTPUT\n')
+    consoleTableWithWrapping(output)
 }
 
 main()
