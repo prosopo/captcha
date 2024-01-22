@@ -14,3 +14,5 @@ export type PickMask<T, U> = {
 export type OmitMask<T, U extends Mask<T>> = {
     [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: U[K] extends Mask<T[K]> ? Infer<OmitMask<T[K], U[K]>> : T[K]
 }
+
+export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
