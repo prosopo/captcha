@@ -13,7 +13,17 @@
 // limitations under the License.
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToNumber, hexToString, hexToU8a, isHex, isU8a, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
+import {
+    hexToNumber,
+    hexToString,
+    hexToU8a,
+    isHex,
+    isU8a,
+    stringToHex,
+    stringToU8a,
+    u8aToHex,
+    u8aToString,
+} from '@polkadot/util'
 
 // https://stackoverflow.com/a/75872362/1178971
 function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
@@ -69,6 +79,7 @@ function main() {
     output.push({ name: 'argIsJSON', value: argIsJSON.toString() })
     output.push({ name: 'argIsU8a', value: argIsU8a.toString() })
     output.push({ name: 'stringToHex', value: stringToHex(arg) })
+    output.push({ name: 'stringToU8a', value: stringToU8a(arg).toString() })
 
     if (argIsAddress) {
         try {
