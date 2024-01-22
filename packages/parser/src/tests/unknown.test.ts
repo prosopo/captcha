@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { assertType, describe, expect, test } from 'vitest'
 import { pUnknown } from '../parsers/UnknownParser.js'
 
 describe("any", () => {
@@ -64,5 +64,9 @@ describe("any", () => {
 
     test("tuple", () => {
         expect(pUnknown().parse(["a", 1, true])).toEqual(["a", 1, true])
+    })
+
+    test("type", () => {
+        assertType<unknown>(pUnknown().parse(1))
     })
 })
