@@ -13,6 +13,7 @@ export class PickParser<T extends {}, U extends {}> extends BaseParser<PickMask<
             const value = mask[key as keyof typeof mask]
             if (value !== undefined) {
                 // check that the key exists in the target
+                // TODO pass root key in recursion to provide better err msgs
                 if (!(key in target)) {
                     throw new Error(`Expected key ${key} in object ${JSON.stringify(target)}`)
                 }
