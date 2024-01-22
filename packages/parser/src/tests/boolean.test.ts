@@ -1,7 +1,7 @@
 import { assertType, describe, expect, test } from 'vitest'
 import { pBoolean } from '../parsers/BooleanParser.js'
 
-describe("number", () => {
+describe("boolean", () => {
 
     test("number", () => {
         expect(() => pBoolean().parse(1)).toThrow()
