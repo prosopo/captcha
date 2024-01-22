@@ -1,14 +1,14 @@
 import { BaseParser, Parser } from "./Parser.js"
-import { PickMask } from "./utils.js"
+import { OmitMask } from "./utils.js"
 
 
-export class PickParser<T, U> extends BaseParser<PickMask<T, U>> {
+export class OmitParser<T, U> extends BaseParser<OmitMask<T, U>> {
 
     constructor(private target: T, private mask: U) {
         super()
     }
 
-    parse(value: unknown): PickMask<T, U> {
+    parse(value: unknown): OmitMask<T, U> {
         // TODO
         return null!
     }
@@ -31,6 +31,6 @@ const b = {
         e: true,
     }
 }
-const c = new PickParser(a, b)
+const c = new OmitParser(a, b)
 const d = c.parse(a)
 type t = typeof d
