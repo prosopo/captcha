@@ -76,7 +76,7 @@ function main() {
                 output.push({ name: `Address as hex`, value: u8aToHex(decodeAddress(encodedAddress)) })
             }
         } catch (e) {
-            output.push({ name: `Failure encoding/decoding address`, value: `FAIL - ${e}` })
+            output.push({ name: `Failure encoding/decoding address`, value: `${e}` })
         }
     }
     if (argIsHex) {
@@ -84,7 +84,7 @@ function main() {
         try {
             output.push({ name: `Decoding hex to number`, value: hexToNumber(arg).toString() })
         } catch (e) {
-            output.push({ name: `Decoding hex to number`, value: `FAIL - ${e}` })
+            output.push({ name: `Decoding hex to number`, value: `${e}` })
         }
         output.push({ name: `Decoding string to hex to u8a`, value: hexToU8a(stringToHex(arg)).toString() })
     } else {
