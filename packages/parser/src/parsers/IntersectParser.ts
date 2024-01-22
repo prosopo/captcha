@@ -42,12 +42,12 @@ type f = ParserShapeIntersect<[Parser<{ a: number }>, Parser<{
 }>]>
 
 type ElementIntersection<T> = T extends [Parser<infer U>, ...infer V] ? UnionToIntersection<U | ElementIntersection<V>> : never
-const fn = <const T extends unknown[]>(arr: T): ParserShapeIntersect<T> => {
+const fn = <const T extends Parser<unknown>[]>(arr: T): ParserShapeIntersect<T> => {
     return null!
 }
-const i = fn(['a', 1, true])
-const j = fn(['a', 1])
-const k = fn(['a'])
+// const i = fn(['a', 1, true])
+// const j = fn(['a', 1])
+// const k = fn(['a'])
 class m implements Parser<{ a: string }> {
     parse(value: unknown): { a: string } {
         return null!
@@ -64,3 +64,8 @@ type q = ReturnType<typeof o.parse>
 type r = ReturnType<typeof p.parse>
 const l = fn([new m(), new n()])
 const s = fn([o, p])
+const t = fn([new ObjectParser({
+    a: pString()
+}), new ObjectParser({
+    b: pNumber()
+}), new ObjectParser({ c: pNumber() })])

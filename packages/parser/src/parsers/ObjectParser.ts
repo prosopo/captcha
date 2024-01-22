@@ -1,21 +1,14 @@
 import { get } from "@prosopo/util"
 import { BaseParser, Parser } from "./Parser.js"
+import { Schema, Shape } from "./utils.js"
 
-export type Schema = {
-    [key: string]: Parser<any>
-}
-
-export type SchemaShape<T extends Schema> = {
-    [K in keyof T]: T[K] extends Parser<infer U> ? U : never
-}
-
-export class ObjectParser<T extends Schema> extends BaseParser<SchemaShape<T>> {
+export class ObjectParser<T extends Schema> extends BaseParser<Shape<T>> {
 
     constructor(private schema: T) {
         super()
     }
 
-    parse(value: unknown): SchemaShape<T> {
+    parse(value: unknown): Shape<T> {
         if (typeof value !== 'object' || value === null || Array.isArray(value)) {
             throw new Error(`Expected object but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
