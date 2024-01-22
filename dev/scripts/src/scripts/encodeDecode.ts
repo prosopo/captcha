@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToNumber, hexToString, hexToU8a, isHex, isU8a, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
@@ -55,7 +54,9 @@ function isJSON(arg: string): boolean {
 
 function main() {
     const ss58Format = process.env.PROSOPO_SS58_FORMAT ? parseInt(process.env.PROSOPO_SS58_FORMAT) : 42
-    const arg = at(process.argv.slice(2), 0).trim()
+
+    // join any multiline args
+    const arg = process.argv.slice(2).join('').replace(/\s/g, '').trim()
     const argIsHex = isHex(arg)
     const argIsAddress = isAddress(arg, false, ss58Format)
     const argIsJSON = isJSON(arg)
@@ -67,6 +68,7 @@ function main() {
     output.push({ name: 'argIsHex', value: argIsHex.toString() })
     output.push({ name: 'argIsJSON', value: argIsJSON.toString() })
     output.push({ name: 'argIsU8a', value: argIsU8a.toString() })
+    output.push({ name: 'stringToHex', value: stringToHex(arg) })
 
     if (argIsAddress) {
         try {
@@ -106,7 +108,11 @@ function main() {
 
         const hex = u8aToHex(padded)
         output.push({ name: `u8aToHex`, value: u8aToHex(padded) })
-        output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
+        try {
+            output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
+        } catch (e: any) {
+            output.push({ name: `encodeAddress(_, ss58Format)`, value: e.toString() })
+        }
         output.push({ name: `u8aToString`, value: u8aToString(padded) })
     }
 
