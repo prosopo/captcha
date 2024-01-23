@@ -95,6 +95,7 @@ export class ContractDeployer {
                     this.transactionQueue?.add(
                         contract,
                         (result: ISubmittableResult) => {
+                            this.logger.info('Contract deployed by', this.pair.address)
                             resolve(new CodeSubmittableResult(result))
                         },
                         this.pair,

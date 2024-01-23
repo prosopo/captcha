@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { AppTestAccount, ProviderTestAccount, TestAccount } from '@prosopo/env'
 import { IDatabasePopulatorMethods } from './DatabasePopulator.js'
-import { TestAccount } from '@prosopo/env'
 import { at, get } from '@prosopo/util'
 import { readFile, writeFile } from 'fs'
 import path from 'path'
@@ -27,15 +27,15 @@ export enum AccountKey {
 }
 
 export interface IDatabaseAccounts {
-    providers: TestAccount[]
+    providers: ProviderTestAccount[]
 
-    providersWithStake: TestAccount[]
+    providersWithStake: ProviderTestAccount[]
 
-    providersWithStakeAndDataset: TestAccount[]
+    providersWithStakeAndDataset: ProviderTestAccount[]
 
-    dapps: TestAccount[]
+    dapps: AppTestAccount[]
 
-    dappsWithStake: TestAccount[]
+    dappsWithStake: AppTestAccount[]
 
     dappUsers: TestAccount[]
 }
@@ -68,26 +68,26 @@ export async function exportDatabaseAccounts(database: IDatabaseAccounts) {
 }
 
 class DatabaseAccounts implements IDatabaseAccounts {
-    private _registeredProviders: TestAccount[] = []
-    private _registeredProvidersWithStake: TestAccount[] = []
-    private _registeredProvidersWithStakeAndDataset: TestAccount[] = []
-    private _registeredDapps: TestAccount[] = []
-    private _registeredDappsWithStake: TestAccount[] = []
+    private _registeredProviders: ProviderTestAccount[] = []
+    private _registeredProvidersWithStake: ProviderTestAccount[] = []
+    private _registeredProvidersWithStakeAndDataset: ProviderTestAccount[] = []
+    private _registeredDapps: AppTestAccount[] = []
+    private _registeredDappsWithStake: AppTestAccount[] = []
     private _registeredDappUsers: TestAccount[] = []
 
-    get providers(): TestAccount[] {
+    get providers(): ProviderTestAccount[] {
         return this._registeredProviders
     }
-    get providersWithStake(): TestAccount[] {
+    get providersWithStake(): ProviderTestAccount[] {
         return this._registeredProvidersWithStake
     }
-    get providersWithStakeAndDataset(): TestAccount[] {
+    get providersWithStakeAndDataset(): ProviderTestAccount[] {
         return this._registeredProvidersWithStakeAndDataset
     }
-    get dapps(): TestAccount[] {
+    get dapps(): AppTestAccount[] {
         return this._registeredDapps
     }
-    get dappsWithStake(): TestAccount[] {
+    get dappsWithStake(): AppTestAccount[] {
         return this._registeredDappsWithStake
     }
 

@@ -17,10 +17,17 @@ import { ProviderEnvironment } from './provider.js'
 import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 
 export type TestAccount = {
-    contractValue: Provider | Dapp | undefined
     mnemonic: string
     address: string
     contractAddress: string | undefined
+}
+
+export interface ProviderTestAccount extends TestAccount {
+    contractValue: Provider
+}
+
+export interface AppTestAccount extends TestAccount {
+    contractValue: Dapp
 }
 
 export class MockEnvironment extends ProviderEnvironment {
@@ -28,7 +35,7 @@ export class MockEnvironment extends ProviderEnvironment {
         const mnemonic: string = mnemonicGenerate()
         const account = this.keyring.addFromMnemonic(mnemonic)
         const { address } = account
-        return { address, mnemonic, contractAddress: undefined, contractValue: undefined }
+        return { address, mnemonic, contractAddress: undefined }
     }
 }
 

@@ -39,7 +39,8 @@ import {
 } from './storage.js'
 import { getReadOnlyPair } from '../accounts/index.js'
 import { getWeight, useWeightImpl } from './useWeight.js'
-import { u8aToString } from '@polkadot/util'
+import { hexToString, u8aToString } from '@polkadot/util'
+import { isHex } from '@polkadot/util/is'
 import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
@@ -170,9 +171,10 @@ export class ProsopoCaptchaContract extends Contract {
 
     private argDecoder(arg: any): string {
         let decoded = arg.toString()
-        // if the arg is an array
         if (Array.isArray(arg)) {
             decoded = u8aToString(new Uint8Array(new Uint8ClampedArray(arg)))
+        } else if (isHex(arg)) {
+            decoded = hexToString(arg)
         }
         return decoded
     }
@@ -189,6 +191,7 @@ export class ProsopoCaptchaContract extends Contract {
                 throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
                     context: {
                         error: getContractError(outcome),
+                        caller: this.pair.address,
                         failedFuncName: this.dryRunContractMethod.name,
                         failedContractMethod: message.method,
                         args: args.map(this.argDecoder), // TODO decode args using AbiMessage
@@ -236,9 +239,10 @@ export class ProsopoCaptchaContract extends Contract {
             throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
                 context: {
                     error: `${dispatchError.section}.${dispatchError.name}`,
+                    caller: this.pair.address,
                     failedFuncName: this.dryRunContractMethod.name,
                     failedContractMethod: message.method,
-                    args,
+                    args: args.map(this.argDecoder), // TODO decode args using AbiMessage
                 },
                 logLevel: this.logger.getLogLevel(),
             })
