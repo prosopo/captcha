@@ -38,7 +38,7 @@ npm install
 Place the required variables in the `prosopo.config.ts` file in the root of the `provider` repo.
 
 | Param                                    | Description                                                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| ---------------------------------------- |--------------------------------------------------------------------------------|
 | PROTOCOL_CONTRACT_JSON_ABI_PATH          | The path to the protocol JSON file                                             |
 | SUBSTATE_NODE_ENDPOINT                   | The substrate node endpoint, e.g. ws://localhost:9944                          |
 | PROTOCOL_CONTRACT_ADDRESS                | The protocol contract address                                                  |
@@ -52,7 +52,7 @@ Place the required variables in the `prosopo.config.ts` file in the root of the 
 | MONGO_HOST                               | MongoDB host                                                                   |
 | MONGO_PORT                               | MongoDB port                                                                   |
 | DATABASE_NAME                            | Database name                                                                  |
-| API_BASE_URL                             | Base URL for API, e.g. http://localhost:3000                                   |
+| API_BASE_URL                             | Base URL for API, e.g. http://localhost:9229                                   |
 
 #### Config
 
