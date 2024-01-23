@@ -64,9 +64,7 @@ describe("pick", () => {
     })
 
     test("type", () => {
-        const parser = pPick({ a: pString(), b: pNumber(), c: pBoolean() }, { a: true })
-        const result = parser.parse({ a: "a", b: 1, c: true })
-        assertType<{ a: string }>(result)
+        assertType<{ a: string }>(pPick({ a: pString(), b: pNumber(), c: pBoolean() }, { a: true }).parse({ a: "a", b: 1, c: true }))
     })
 
     test("tuple", () => {
