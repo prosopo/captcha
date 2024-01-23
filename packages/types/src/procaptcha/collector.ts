@@ -22,3 +22,7 @@ export type StoredEvents = {
     touchEvents?: ProsopoTouchEvent[]
     keyboardEvents?: ProsopoKeyboardEvent[]
 }
+
+export interface StoredEventRecord extends StoredEvents {
+    accountId: string
+}
