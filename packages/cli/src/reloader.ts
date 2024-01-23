@@ -43,7 +43,7 @@ export default class ReloadingAPI {
         this._envWatcher = await this._watchEnv()
         const env = new ProviderEnvironment(this._config, this._pair)
         await env.isReady()
-        this.api = await start(env)
+        this.api = await start(env, !!this._processedArgs.adminApi)
     }
 
     public async stop() {
