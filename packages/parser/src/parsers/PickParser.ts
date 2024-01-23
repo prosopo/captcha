@@ -1,8 +1,10 @@
+import { pNumber } from "./NumberParser.js"
 import { BaseParser, Parser } from "./Parser.js"
-import { PickMask } from "./utils.js"
+import { pString } from "./StringParser.js"
+import { Mask, PickMask, Schema, Shape } from "./utils.js"
 
 
-export class PickParser<T extends {}, U extends {}> extends BaseParser<PickMask<T, U>> {
+export class PickParser<S, T extends Parser<S>, U extends Mask<S>> extends BaseParser<PickMask<S, U>> {
 
     constructor(private target: T, private mask: U) {
         super()
@@ -27,38 +29,16 @@ export class PickParser<T extends {}, U extends {}> extends BaseParser<PickMask<
         }
     }
 
-    parse(value: unknown): PickMask<T, U> {
+    parse(value: unknown): PickMask<Shape<T>, U> {
         value = value as object // cast to obj // TODO should we be doing this? this is so given similar functionality to Pick<number, 'toString'> works
         const object = value as Record<string, unknown>
         // check the mask matches
         this.checkMask(this.target, this.mask)
-        return value as PickMask<T, U>
+        return value as PickMask<Shape<T>, U>
     }
 }
 
-export const pPick = <T extends {}, U extends {}>(target: T, mask: U) => new PickParser(target, mask)
+export const pPick = <T extends Schema, U extends {}>(target: T, mask: U) => new PickParser(target, mask)
 
-const m = pPick({ a: 1, b: true, c: 'hello', d: { e: 1, f: true, g: 'hello' } }, { a: true, d: { e: true } })
-type n = ReturnType<typeof m.parse>
-
-const a = {
-    a: 1,
-    b: true,
-    c: 'hello',
-    d: {
-        e: 1,
-        f: true,
-        g: 'hello',
-    }
-}
-const b = {
-    a: true,
-    d: {
-        e: true,
-    }
-}
-const c = new PickParser(a, b)
-const d = c.parse(a)
-type t = typeof d
-type e = Omit<typeof a, 'b'>
-type f = Pick<typeof a, 'b'>
+// const a = pPick({ a: pString(), b: pNumber() }, { a: true })
+// type b = ReturnType<typeof a.parse>
