@@ -22,6 +22,6 @@ export type Schema = {
     [key: string]: Parser<any>
 }
 
-export type Shape<T extends Schema> = {
+export type Shape<T extends Schema> = Infer<{
     [K in keyof T]: T[K] extends Parser<infer U> ? U : never
-}
+}>
