@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at, get, merge, permutations } from '../util.js'
+import { isArray } from 'lodash'
+import { at, clone, get, isObject, merge, permutations } from '../util.js'
 import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
@@ -259,6 +260,171 @@ describe('util', () => {
                 [0, 1, 1],
                 [0, 1, 2],
             ])
+        })
+    })
+
+    describe('isObject', () => {
+        test('object', () => {
+            expect(isObject({})).to.equal(true)
+            expect(isObject({ a: 1 })).to.equal(true)
+        })
+
+        test('array', () => {
+            expect(isObject([])).to.equal(false)
+            expect(isObject([1])).to.equal(false)
+        })
+
+        test('string', () => {
+            expect(isObject('')).to.equal(false)
+            expect(isObject('a')).to.equal(false)
+        })
+
+        test('number', () => {
+            expect(isObject(1)).to.equal(false)
+        })
+
+        test('boolean', () => {
+            expect(isObject(true)).to.equal(false)
+            expect(isObject(false)).to.equal(false)
+        })
+
+        test('null', () => {
+            expect(isObject(null)).to.equal(false)
+        })
+
+        test('undefined', () => {
+            expect(isObject(undefined)).to.equal(false)
+        })
+    })
+
+    describe('isArray', () => {
+        test('object', () => {
+            expect(isArray({})).to.equal(false)
+            expect(isArray({ a: 1 })).to.equal(false)
+        })
+
+        test('array', () => {
+            expect(isArray([])).to.equal(true)
+            expect(isArray([1])).to.equal(true)
+        })
+
+        test('string', () => {
+            expect(isArray('')).to.equal(false)
+            expect(isArray('a')).to.equal(false)
+        })
+
+        test('number', () => {
+            expect(isArray(1)).to.equal(false)
+        })
+
+        test('boolean', () => {
+            expect(isArray(true)).to.equal(false)
+            expect(isArray(false)).to.equal(false)
+        })
+
+        test('null', () => {
+            expect(isArray(null)).to.equal(false)
+        })
+
+        test('undefined', () => {
+            expect(isArray(undefined)).to.equal(false)
+        })
+
+    })
+
+    describe('clone', () => {
+        test('recursive object', () => {
+            type T = {
+                a: number,
+                b?: T // recursive
+            }
+            const src: T = { a: 1 }
+            const src2: T = { a: 2, b: src }
+            src.b = src2
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).not.toBe(src)
+            expect(dest.b).not.toBe(src)
+            expect(dest.b?.b).not.toBe(src2)
+        })
+
+        test('nested object', () => {
+            const src = { a: { b: 1 } }
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).not.toBe(src)
+            expect(dest.a).not.toBe(src.a)
+        })
+
+        test('nested array', () => {
+            const src = { a: [1] }
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).not.toBe(src)
+            expect(dest.a).not.toBe(src.a)
+        })
+
+        test('nested object and arrays', () => {
+            const src = {
+                a: {
+                    b: [1], c: [{
+                        d: [3]
+                    }]
+            } }
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).not.toBe(src)
+            expect(dest.a).not.toBe(src.a)
+            expect(dest.a.b).not.toBe(src.a.b)
+        })
+
+        test('object', () => {
+            const src = { a: 1 }
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).not.toBe(src)
+        })
+
+        test('array', () => {
+            const src = [1]
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).not.toBe(src)
+        })
+
+        test('string', () => {
+            const src = 'a'
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).toBe(src)
+        })
+
+        test('number', () => {
+            const src = 1
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).toBe(src)
+        })
+          
+        test('boolean', () => {
+            const src = true
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).toBe(src)
+        })
+
+        test('null', () => {
+            const src = null
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).toBe(src)
+        })
+
+        test('undefined', () => {
+            const src = undefined
+            const dest = clone(src)
+            expect(dest).toEqual(src)
+            expect(dest).toBe(src)
         })
     })
 })

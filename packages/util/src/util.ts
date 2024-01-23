@@ -254,9 +254,70 @@ export function merge<T extends object | A[], U extends object | B[], A, B>(
 }
 
 export const isArray = (value: unknown): boolean => {
-    return Array.isArray(value)
+    return Array.isArray(value) && value !== null
 }
 
 export const isObject = (value: unknown): boolean => {
-    return value instanceof Object && !isArray(value)
+    return value instanceof Object && !isArray(value) && value != null
+}
+
+export const clone = <T>(content: T): T => {
+    const src = { content }
+    const dest = { content: undefined }
+    // create a queue of steps to perform
+    // the first step is to clone the root object into the result
+    const queue: CloneStep[] = [{
+        src,
+        dest,
+    }]
+    // use a cache to ensure duplicate objects / recursive data structures are handled correctly
+    // this also avoids cloning the same object multiple times
+    const cache = new WeakMap()
+    // while there are steps to perform
+    while (queue.length > 0) {
+        // get the next step
+        // doesn't matter what order we do these in, but treating it as a stack is most efficient to avoid loads of steps blossoming due to nested objects / arrays
+        const step = queue.pop()
+        if (step === undefined) {
+            // this should never happen
+            throw new Error('queue is empty')
+        }
+        const { src, dest } = step
+        // loop through all fields in src, clone to dest
+        for (const [key, value] of Object.entries(src)) {
+            // if the value is an object or array, then we need to clone it
+            if (typeof value === 'object' && value != null) {
+                // check if we've already cloned this value
+                const cachedValue = cache.get(value)
+                if (cachedValue !== undefined) {
+                    // we've already cloned this value, so just set it
+                    dest[key] = cachedValue
+                    continue
+                }
+                const isArray = Array.isArray(value)
+                // src value is an array / object
+                // create a new step to clone the array
+                dest[key] = isArray ? [] : {}
+                queue.push({
+                    src: value,
+                    dest: dest[key],
+                })
+            } else {
+                // src value is a primitive
+                // just copy it
+                dest[key] = value
+            }
+        }
+        // set the prototype of dest to the prototype of src
+        // this is required to maintain the prototype chain
+        Object.setPrototypeOf(dest, Object.getPrototypeOf(src))
+        // put the cloned object into the cache
+        cache.set(src, dest)
+    }
+    return dest.content as T
+}
+
+type CloneStep = {
+    src: any
+    dest: any
 }
