@@ -17,7 +17,7 @@ import { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
-import { prosopoRouter } from '@prosopo/provider'
+import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
@@ -42,7 +42,7 @@ export const handleErrors = (
     })
 }
 
-function startApi(env: ProviderEnvironment): Server {
+function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info(`Starting Prosopo API`)
     const apiApp = express()
     const apiPort = env.config.server.port
@@ -51,6 +51,9 @@ function startApi(env: ProviderEnvironment): Server {
     apiApp.use(express.json())
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+    if (admin) {
+        apiApp.use(prosopoAdminRouter(env))
+    }
 
     apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
@@ -58,7 +61,7 @@ function startApi(env: ProviderEnvironment): Server {
     })
 }
 
-export async function start(env?: ProviderEnvironment) {
+export async function start(env?: ProviderEnvironment, admin?: boolean) {
     if (!env) {
         loadEnv()
 
@@ -74,5 +77,5 @@ export async function start(env?: ProviderEnvironment) {
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
-    return startApi(env)
+    return startApi(env, admin)
 }
