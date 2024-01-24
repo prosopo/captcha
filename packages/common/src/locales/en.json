@@ -155,6 +155,7 @@
         "INVALID_DIR_FORMAT": "Invalid directory format"
     },
     "PROGUI": {
-        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider"
+        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider",
+        "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
     }
 }
