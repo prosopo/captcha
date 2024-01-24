@@ -45,7 +45,7 @@ export class BatchCommitmentsTask {
         this.logger = logger
         this.nonce = startNonce
     }
-    async run(): Promise<void> {
+    async run(): Promise<any> {
         // create a task id
         const taskId = randomAsHex(32)
         const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, this.db)
@@ -84,6 +84,7 @@ export class BatchCommitmentsTask {
                             }
                         )
                     }
+                    return commitments
                 } catch (e) {
                     const err = e as Error
                     this.logger.error(e)
@@ -95,6 +96,7 @@ export class BatchCommitmentsTask {
                             error: JSON.stringify(e && err.message ? err.message : e),
                         }
                     )
+                    return err.message
                 }
             }
         }

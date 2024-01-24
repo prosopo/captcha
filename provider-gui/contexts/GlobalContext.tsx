@@ -1,12 +1,13 @@
 'use client'
 
 import { GuiContract } from '@/types/ContractOverview'
+import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import React, { ReactNode, createContext, useContext, useState } from 'react'
 
 interface GlobalStateContextProps {
-    currentAccount: string
-    setCurrentAccount: (updateStr: string) => void
+    currentAccount: InjectedAccountWithMeta | undefined
+    setCurrentAccount: (updateStr: InjectedAccountWithMeta) => void
     network: 'rococo' | 'development'
     setNetwork: (updateStr: 'rococo' | 'development') => void
     contracts: GuiContract[]
@@ -14,7 +15,7 @@ interface GlobalStateContextProps {
 }
 
 const GlobalStateContext = createContext<GlobalStateContextProps>({
-    currentAccount: '',
+    currentAccount: undefined,
     setCurrentAccount: () => void 0,
     network: 'rococo',
     setNetwork: () => void 0,
@@ -27,13 +28,20 @@ interface GlobalStateProviderProps {
 }
 
 export const GlobalStateProvider: React.FC<GlobalStateProviderProps> = ({ children }) => {
-    const [currentAccount, setCurrentAccount] = useState<string>('')
+    const [currentAccount, setCurrentAccount] = useState<InjectedAccountWithMeta | undefined>(undefined)
     const [network, setNetwork] = useState<'rococo' | 'development'>('rococo' as const)
     const [contracts, setContracts] = useState<GuiContract[]>([])
 
     return (
         <GlobalStateContext.Provider
-            value={{ currentAccount, setCurrentAccount, network, setNetwork, contracts, setContracts }}
+            value={{
+                currentAccount,
+                setCurrentAccount,
+                network,
+                setNetwork,
+                contracts,
+                setContracts,
+            }}
         >
             {children}
         </GlobalStateContext.Provider>

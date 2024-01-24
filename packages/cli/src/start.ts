@@ -17,7 +17,7 @@ import { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
-import { prosopoRouter } from '@prosopo/provider'
+import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
@@ -48,9 +48,10 @@ function startApi(env: ProviderEnvironment): Server {
     const apiPort = env.config.server.port
 
     apiApp.use(cors())
-    apiApp.use(express.json())
+    apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+    apiApp.use(prosopoAdminRouter(env))
 
     apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
