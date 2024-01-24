@@ -67,7 +67,7 @@ const onData = async (data: any, rootDir: string, appended: boolean): Promise<{ 
             const envPath = path.resolve(`${rootDir}/.env.test`)
 
             // Append a key value pair to the .env file
-            await promisify(fs.appendFile)(envPath, 'TEST=TEST\n')
+            await promisify(fs.appendFile)(envPath, '\nTEST=TEST')
             return {
                 appended: true,
                 kill: false,
