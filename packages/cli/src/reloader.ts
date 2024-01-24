@@ -30,12 +30,14 @@ export default class ReloadingAPI {
     private _pair: KeyringPair
     private _processedArgs: AwaitedProcessedArgs
     private api: Server | undefined
+    private _restarting: boolean
 
     constructor(envPath: string, config: ProsopoConfigOutput, pair: KeyringPair, processedArgs: AwaitedProcessedArgs) {
         this._envPath = envPath
         this._config = config
         this._pair = pair
         this._processedArgs = processedArgs
+        this._restarting = false
     }
 
     public async start() {
@@ -48,16 +50,23 @@ export default class ReloadingAPI {
 
     public async stop() {
         log.info('Stopping API')
-        if (this.api) {
-            this.api.close()
-        }
+        return new Promise((resolve) => {
+            if (this.api) {
+                this.api.close(resolve)
+            }
+        })
     }
 
     private async _watchEnv() {
         return fs.watchFile(this._envPath, async () => {
-            await this.stop()
-            loadEnv()
-            await this.start()
+            if (!this._restarting) {
+                this._restarting = true
+                await this.stop()
+                loadEnv()
+
+                await this.start()
+                this._restarting = false
+            }
         })
     }
 }
