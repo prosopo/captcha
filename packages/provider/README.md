@@ -38,7 +38,7 @@ npm install
 Place the required variables in the `prosopo.config.ts` file in the root of the `provider` repo.
 
 | Param                                    | Description                                                                    |
-| ---------------------------------------- |--------------------------------------------------------------------------------|
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
 | PROTOCOL_CONTRACT_JSON_ABI_PATH          | The path to the protocol JSON file                                             |
 | SUBSTATE_NODE_ENDPOINT                   | The substrate node endpoint, e.g. ws://localhost:9944                          |
 | PROTOCOL_CONTRACT_ADDRESS                | The protocol contract address                                                  |
