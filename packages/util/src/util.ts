@@ -87,7 +87,7 @@ export function at<T>(items: T[] | string, index: number, options?: AtOptions): 
             // negative index, so index wraps in reverse
             // e.g. say the index is -25 and the items length is 10
             // ceil(25 / 10) = 3 * 10 = 30 + -25 = 5
-            index = Math.ceil(index / items.length) * items.length + index
+            index = Math.ceil(Math.abs(index) / items.length) * items.length + index
         }
     }
 
