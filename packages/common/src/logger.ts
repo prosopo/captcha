@@ -73,6 +73,9 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
                 case LogLevel.enum.fatal:
                     logLevel = ConsolaLogLevels.fatal
                     break
+                case LogLevel.enum.log:
+                    logLevel = ConsolaLogLevels.log
+                    break
                 default:
                     // this cannot be a ProsopoEnvError. The default logger calls this method, which creates a new ProsopoEnvError, which requires the default logger, which hasn't been constructed yet, leading to ts not being able to find getLoggerDefault() during runtime as it has not completed yet (I think).
                     // Either way, this should never happen in runtime, this error is just an edge case, every log level should be translated properly.
