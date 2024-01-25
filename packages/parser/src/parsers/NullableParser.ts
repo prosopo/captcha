@@ -8,6 +8,10 @@ export class NullableParser<T> extends BaseParser<T | null> {
         }
         throw new Error(`Expected null but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
     }
+
+    override clone(): Parser<T | null> {
+        return pNullable()
+    }
 }
 
 export const pNullable = () => new NullableParser()

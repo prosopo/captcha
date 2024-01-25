@@ -25,3 +25,11 @@ export type Schema = {
 export type Shape<T extends Schema> = Infer<{
     [K in keyof T]: T[K] extends Parser<infer U> ? U : never
 }>
+
+export const cloneSchema = <T extends Schema>(schema: T): T => {
+    const result = {...schema}
+    for (const key of Object.keys(schema)) {
+        (result as any)[key] = (schema as any)[key].clone()
+    }
+    return result
+}

@@ -15,6 +15,9 @@ export class InstanceParser<T extends Ctor<unknown>, U extends InferTypeFromCtor
         return value as U
     }
 
+    override clone(): InstanceParser<T, U> {
+        return pInstance(this.clas)
+    }
 }
 
 export const pInstance = <T extends Ctor<unknown>>(clas: T) => new InstanceParser(clas)

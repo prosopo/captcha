@@ -13,6 +13,10 @@ export class ArrayParser<T> extends BaseParser<T[]> {
         }
         throw new Error(`Expected array but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
     }
+
+    override clone(): Parser<T[]> {
+        return pArray(this.parser.clone())
+    }
 }
 
 export const pArray = <T>(parser: Parser<T>) => new ArrayParser(parser)

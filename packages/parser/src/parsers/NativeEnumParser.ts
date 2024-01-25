@@ -75,6 +75,10 @@ export class NativeEnumParser<T> extends BaseParser<T[keyof T]> {
         throw new Error(`Expected one of ${JSON.stringify(this.nativeEnum)} but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
     }
 
+    override clone(): NativeEnumParser<T> {
+        return pNativeEnum(this.nativeEnum)
+    }
+
 }
 
 export const pNativeEnum = <T>(nativeEnum: T) => new NativeEnumParser(nativeEnum)

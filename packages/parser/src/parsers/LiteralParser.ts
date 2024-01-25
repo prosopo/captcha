@@ -1,4 +1,4 @@
-import { BaseParser } from "./Parser.js";
+import { BaseParser, Parser } from "./Parser.js";
 
 export class LiteralParser<const T> extends BaseParser<T> {
     constructor(private value: T) {
@@ -12,6 +12,9 @@ export class LiteralParser<const T> extends BaseParser<T> {
         return this.value
     }
 
+    override clone(): Parser<T> {
+        return pLiteral(this.value)
+    }
 }
 
 export const pLiteral = <const T>(value: T) => new LiteralParser(value)

@@ -13,6 +13,10 @@ export class EnumParser<const T> extends BaseParser<T> {
         return value as T
     }
 
+    override clone(): EnumParser<T> {
+        return pEnum([...this.variants])
+    }
+
 }
 
 

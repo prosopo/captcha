@@ -24,41 +24,81 @@ export class ObjectParser<T extends Schema> extends BaseParser<Shape<T>> {
         return result
     }
 
-    // public extend<U extends Schema>(schema: U): ObjectParser<T & U> {
-    //     return new ObjectParser({ ...this.schema, ...schema })
-    // }
-
-    public pick<U extends Mask<T>>(mask: U): ObjectParser<PickSchema<T, U>> {
-        return null!
+    public extend<U extends Schema>(schema: U): ObjectParser<T & U> {
+        return new ObjectParser({ ...this.schema, ...schema })
     }
 
-    public omit<U extends Mask<T>> (mask: U): ObjectParser<OmitSchema<T, U>> {
-        return null!
+    public pick<U extends Mask<T>>(mask: U): ObjectParser<PickSchema<T, U>> {
+        const schema: Schema = {}
+        for (const key of Object.keys(mask)) {
+            // if mask contains nested mask, recurse
+            const subMask = get(mask, key)
+            if (typeof subMask === 'object') {
+                // recursively pick
+                schema[key] = (this.schema[key] as ObjectParser<any>).pick(subMask)
+            } else {
+                // copy the parser to the new schema
+                schema[key] = get(this.schema, key).clone()
+            }
+        }
+        return new ObjectParser<PickSchema<T, U>>(schema as PickSchema<T, U>)
+    }
+
+    public omit<U extends Mask<T>>(mask: U): ObjectParser<OmitSchema<T, U>> {
+        // TODO make this non-recursive
+        const schema: Schema = {}
+        for (const key of Object.keys(schema)) {
+            if (Object.keys(mask).includes(key)) {
+                // skip, we're omitting this key
+            } else {
+                // copy the parser to the new schema
+                if (this.schema[key] instanceof ObjectParser) {
+                    const subMask = get(mask, key)
+                    schema[key] = (this.schema[key] as ObjectParser<any>).omit(subMask)
+                } else {
+                    schema[key] = get(this.schema, key).clone()
+                }
+            }
+        }
+        return new ObjectParser<OmitSchema<T, U>>(schema as OmitSchema<T, U>)
+    }
+
+    override clone(): Parser<Shape<T>> {
+        const schema = { ... this.schema }
+        for (const key of Object.keys(schema)) {
+            (schema as any)[key] = get(this.schema, key).clone()
+        }
+        return pObject(schema as T)
     }
 }
 
 export const pObject = <T extends Schema>(schema: T) => new ObjectParser(schema)
 
-const a = pObject({ a: pString(), b: pNumber(), c: pObject({ d: pString(), e: pNumber() }) })
-type d = ReturnType<typeof a.parse>
-const b = a.pick({ a: true, c: { d: true } })
-type c = ReturnType<typeof b.parse>
-const e = a.omit({ b: true, c: { e: true } })
-type f = ReturnType<typeof e.parse>
+// const a = pObject({ a: pString(), b: pNumber(), c: pObject({ d: pString(), e: pNumber() }) })
+// type d = ReturnType<typeof a.parse>
+// const b = a.pick({ a: true, c: { d: true } })
+// type c = ReturnType<typeof b.parse>
+// const e = a.omit({ b: true, c: { e: true } })
+// type f = ReturnType<typeof e.parse>
+
+const a = {
+    a: 1,
+    b: 2,
+    c: 3,
+}
+const b = {
+    a: 'a'
+}
+type c = typeof a & typeof b
+const d: c = {
+    a: 'a',
+    b: 2,
+    c: 3
+}
 
 export type OmitSchema<T extends Schema, U extends Mask<T>> = {
     [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<OmitSchema<V, U[K]>> : T[K] : T[K]
 }
-
-// export type OmitSchema<T extends Schema, U extends {}> = {
-//     [K in keyof T as U extends {
-//         [K2 in keyof T]?: any
-//     } ? U[K] extends {} ? K : never : K]: U extends {
-//         [K2 in keyof T]?: any
-//     } ? T[K] extends ObjectParser<infer V> ? U[K] extends {
-//         [K3 in keyof V]?: any
-//     } ?  ObjectParser<Infer<OmitSchema<V, U[K]>>> : T[K] : never : T[K]
-// }
 
 export type PickSchema<T extends Schema, U extends Mask<T>> = {
     [K in keyof U & keyof T]: 
@@ -66,14 +106,3 @@ export type PickSchema<T extends Schema, U extends Mask<T>> = {
             ObjectParser<Infer<PickSchema<V, U[K]>>>
             : T[K]
 }
-
-// export type PickSchema<T extends Schema, U extends {}> = {
-//     [K in keyof U & keyof T]: 
-//         T[K] extends ObjectParser<infer V> ?
-//             U[K] extends {
-//                 [K2 in keyof V]?: any
-//             } ? 
-//                 ObjectParser<Infer<PickSchema<V, U[K]>>>
-//                 : never
-//             : T[K]
-// }
