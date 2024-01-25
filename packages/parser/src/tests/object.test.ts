@@ -44,6 +44,56 @@ describe("object", () => {
         expect(() => pObject({ a: pString() }).parse({ a: 1 })).toThrow()
     })
 
+    test("extend", () => {
+        expect(pObject({ a: pString() }).extend({ b: pNumber() }).parse({ a: "a", b: 1 })).toEqual({ a: "a", b: 1 })
+    })
+
+    test("extend type", () => {
+        assertType<{ a: string, b: number }>(pObject({ a: pString() }).extend({ b: pNumber() }).parse({ a: "a", b: 1 }))
+    })
+
+    test("pick", () => {
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ a: true }).parse({ a: "a" })).toEqual({ a: "a" })
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ b: true }).parse({ b: 1 })).toEqual({ b: 1 })
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ c: true }).parse({ c: true })).toEqual({ c: true })
+        expect(() => pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ a: true }).parse({ b: "a" })).toThrow()
+    })
+
+    test("pick type", () => {
+        assertType<{ a: string }>(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ a: true }).parse({ a: "a" }))
+        assertType<{ b: number }>(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ b: true }).parse({ b: 1 }))
+        assertType<{ c: boolean }>(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ c: true }).parse({ c: true }))
+    })
+
+    test("pick is key based", () => {
+        // i.e. the value can be anything, it's the presence of the key that matters
+        // e.g. { a: undefined } should pick the 'a' field because there's an entry in the mask for the field 'a', not because the value is undefined
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ a: undefined }).parse({ a: 1 })).toEqual({ a: 1 })
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ a: null }).parse({ a: 1 })).toEqual({ a: 1 })
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).pick({ a: false }).parse({ a: 1 })).toEqual({ a: 1 })
+    })
+
+    test("omit", () => {
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ a: true }).parse({ b: 1, c: true })).toEqual({ b: 1, c: true })
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ b: true }).parse({ a: "a", c: true })).toEqual({ a: "a", c: true })
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ c: true }).parse({ a: "a", b: 1 })).toEqual({ a: "a", b: 1 })
+        expect(() => pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ a: true }).parse({ a: "a" })).toThrow()
+    })
+
+    test("omit type", () => {
+        assertType<{ b: number, c: boolean }>(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ a: true }).parse({ b: 1, c: true }))
+        assertType<{ a: string, c: boolean }>(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ b: true }).parse({ a: "a", c: true }))
+        assertType<{ a: string, b: number }>(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ c: true }).parse({ a: "a", b: 1 }))
+    })
+
+    test("omit is key based", () => {
+        // i.e. the value can be anything, it's the presence of the key that matters
+        // e.g. { a: undefined } should omit the 'a' field because there's an entry in the mask for the field 'a', not because the value is undefined
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ a: undefined }).parse({ b: 1, c: true })).toEqual({})
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ a: null }).parse({ b: 1, c: true })).toEqual({})
+        expect(pObject({ a: pString(), b: pNumber(), c: pBoolean() }).omit({ a: false }).parse({ b: 1, c: true })).toEqual({})
+    })
+
     test("instance", () => {
         class Foo { }
         const foo = new Foo()
