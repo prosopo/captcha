@@ -1,9 +1,9 @@
 import { getLogLevel, getLogger } from '@prosopo/common'
-import { getPaths } from '@prosopo/config'
 import { loadEnv } from '@prosopo/cli'
 import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
+import { getRootDir } from '@prosopo/config'
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
@@ -53,7 +53,7 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
 export default async function setVersion(version: string, ignore?: string[]) {
     log.info('Setting version to ', version)
     version = parseVersion(version)
-    const root = getPaths().root
+    const root = getRootDir()
     const ignorePaths = ['node_modules', 'cargo-cache', ...(ignore ?? [])]
     log.debug('Ignoring paths: ', ignorePaths)
     // walk through all files finding .json or .toml
