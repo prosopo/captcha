@@ -2,11 +2,14 @@ import { Plugin } from 'vite'
 import { getLogger } from '@prosopo/common'
 import fs from 'node:fs'
 import path from 'path'
-const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
+
 export interface ClosePluginOptions {
     srcDir: string
     destDir: string
 }
+
+const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
+
 /**
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.
  *   @param { ClosePluginOptions } options - The options object
@@ -28,11 +31,9 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
         closeBundle() {
             if (options) {
                 clearOutputDirJS(__dirname, options)
-                for (const file of fs.readdirSync(path.resolve(__dirname, options.srcDir))) {
-                    if (file.endsWith('js')) {
-                        copyFile(__dirname, options, file)
-                    }
-                }
+                log.info(`Bundle cleared from ${options.destDir}`)
+                copyBundle(__dirname, options)
+                log.info(`Bundle copied to ${options.destDir}`)
             }
             log.info('Bundle closed')
             process.exit(0)
@@ -40,15 +41,21 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
     }
 }
 
-function copyFile(__dirname: string, options: ClosePluginOptions, file: string) {
-    const src = path.resolve(__dirname, options.srcDir, file)
-    const dest = path.resolve(__dirname, options.destDir, file)
-    fs.copyFileSync(src, dest)
-    log.info(`Copied ${src} to ${dest}`)
-}
+const clearOutputDirJS = (__dirname: string, options: ClosePluginOptions) =>
+    fs
+        .readdirSync(path.resolve(__dirname, options.destDir))
+        .filter((file) => file.endsWith('js'))
+        .map((file) => {
+            fs.rmSync(path.resolve(__dirname, options.destDir, file))
+        })
 
-function clearOutputDirJS(__dirname: string, options: ClosePluginOptions) {
-    fs.readdirSync(path.resolve(__dirname, options.destDir)).map((filepath) => {
-        if (filepath.endsWith('js')) fs.rmSync(filepath)
-    })
-}
+const copyBundle = (__dirname: string, options: ClosePluginOptions) =>
+    fs
+        .readdirSync(path.resolve(__dirname, options.srcDir))
+        .filter((file) => file.endsWith('js'))
+        .map((file) => {
+            fs.copyFileSync(
+                path.resolve(__dirname, options.srcDir, file),
+                path.resolve(__dirname, options.destDir, file)
+            )
+        })
