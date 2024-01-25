@@ -35,20 +35,15 @@
     "dependencies": {
         "@emotion/react": "^11.11.1",
         "@emotion/styled": "^11.11.0",
-        "@mui/icons-material": "^5.14.3",
-        "@mui/material": "^5.14.5",
         "@polkadot/extension-dapp": "0.46.6",
         "@polkadot/extension-inject": "0.46.6",
-        "@polkadot/types": "10.11.1",
         "@prosopo/api": "^0.2.30",
         "@prosopo/common": "0.2.30",
         "@prosopo/procaptcha": "0.2.30",
         "@prosopo/types": "^0.2.30",
         "@prosopo/util": "^0.2.30",
-        "i18next": "^21.9.2",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "zod": "^3.22.3"
+        "react-dom": "^18.2.0"
     },
     "devDependencies": {
         "tslib": "2.6.2",

@@ -46,7 +46,6 @@ const CaptchaComponent = ({
     const solution = solutions ? at(solutions, index) : []
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
-
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <div

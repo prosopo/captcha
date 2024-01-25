@@ -36,12 +36,6 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@emotion/react": "^11.11.1",
-        "@emotion/styled": "^11.11.0",
-        "@mui/icons-material": "^5.14.3",
-        "@mui/material": "^5.14.5",
-        "@prosopo/common": "0.2.30",
-        "@prosopo/procaptcha": "0.2.30",
         "@prosopo/procaptcha-react": "0.2.30",
         "@prosopo/types": "0.2.30",
         "@prosopo/util": "0.2.30"
