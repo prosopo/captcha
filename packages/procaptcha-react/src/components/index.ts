@@ -14,4 +14,5 @@
 export * from './CaptchaWidget.js'
 export * from './CaptchaComponent.js'
 export { default as ExtensionAccountSelect } from './ExtensionAccountSelect.js'
-export * from './Procaptcha.js'
+export { default as Procaptcha } from './Procaptcha.js'
+export * from "./ProcaptchaWrapper.js"

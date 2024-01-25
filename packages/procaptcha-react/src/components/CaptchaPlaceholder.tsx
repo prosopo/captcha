@@ -12,25 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
-import {
-    Account,
-    GetCaptchaResponse,
-    Manager,
-    ProcaptchaCallbacks,
-    ProcaptchaConfigOptional,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-    ProsopoCaptchaApi,
-    TCaptchaSubmitResult,
-} from '@prosopo/procaptcha'
 import { LoadingSpinner } from './LoadingSpinner.js'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
-import { useMemo, useRef, useState } from 'react'
-import CaptchaComponent from './CaptchaComponent.js'
-import Checkbox from './Checkbox.js'
-import Collector from './collector.js'
-import Modal from './Modal.js'
+import { useMemo } from 'react'
 
 const logoStyle = css`
     align-items: center;
@@ -64,121 +49,16 @@ const logoStyle = css`
     }
 `
 
-/**
- * The props for the Procaptcha component.
- */
-export interface ProcaptchaProps {
-    // the configuration for procaptcha
-    config: ProcaptchaConfigOptional
-    // optional set of callbacks for various captcha events
-    callbacks?: Partial<ProcaptchaCallbacks>
-}
+type PlaceholderProps = {darkMode: 'light' | 'dark' | undefined}
 
-/**
- * Wrap a ref to be the same format as useState.
- * @param defaultValue the default value if the state is not already initialised
- * @returns a ref in the same format as a state, e.g. [value, setValue]
- */
-const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
-    const ref = useRef<T>(defaultValue)
-    const setter = (value: T) => {
-        ref.current = value
-    }
-    const value: T = ref.current
-    return [value, setter]
-}
-
-const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
-    const [isHuman, setIsHuman] = useState(false)
-    const [index, setIndex] = useState(0)
-    const [solutions, setSolutions] = useState([] as string[][])
-    const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
-    const [showModal, setShowModal] = useState(false)
-    const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
-    const [loading, setLoading] = useState(false)
-    const [account, setAccount] = useState<Account | undefined>(undefined)
-    const [dappAccount, setDappAccount] = useState<string | undefined>(undefined)
-    const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
-    const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
-    const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
-    const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
-        undefined
-    )
-    const [sendData, setSendData] = useState(false)
-    return [
-        // the state
-        {
-            isHuman,
-            index,
-            solutions,
-            captchaApi,
-            showModal,
-            challenge,
-            loading,
-            account,
-            dappAccount,
-            submission,
-            timeout,
-            blockNumber,
-            successfullChallengeTimeout,
-            sendData,
-        },
-        // and method to update the state
-        (nextState: Partial<ProcaptchaState>) => {
-            if (nextState.account !== undefined) setAccount(nextState.account)
-            if (nextState.isHuman !== undefined) setIsHuman(nextState.isHuman)
-            if (nextState.index !== undefined) setIndex(nextState.index)
-            // force a copy of the array to ensure a re-render
-            // nutshell: react doesn't look inside an array for changes, hence changes to the array need to result in a fresh array
-            if (nextState.solutions !== undefined) setSolutions(nextState.solutions.slice())
-            if (nextState.captchaApi !== undefined) setCaptchaApi(nextState.captchaApi)
-            if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
-            if (nextState.challenge !== undefined) setChallenge(nextState.challenge)
-            if (nextState.loading !== undefined) setLoading(nextState.loading)
-            if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
-            if (nextState.dappAccount !== undefined) setDappAccount(nextState.dappAccount)
-            if (nextState.submission !== undefined) setSubmission(nextState.submission)
-            if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
-            if (nextState.successfullChallengeTimeout !== undefined) setSuccessfullChallengeTimeout(nextState.timeout)
-            if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
-            if (nextState.sendData !== undefined) setSendData(nextState.sendData)
-        },
-    ]
-}
-
-const Procaptcha = (props: ProcaptchaProps) => {
-    console.log('config', props.config)
-    const config = props.config
-    const callbacks = props.callbacks || {}
-
-    const [state, updateState] = useProcaptcha()
-    console.log('state', state)
-
-    const manager = Manager(config, state, updateState, callbacks)
+export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
+    const darkMode = props.darkMode
     const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
-    const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
-    console.log('theme', theme)
-    console.log('showModal', state.showModal)
+    const themeColor = darkMode ? 'light' : 'dark'
+    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
     return (
         <div>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-                <Modal show={state.showModal}>
-                    {state.challenge ? (
-                        <CaptchaComponent
-                            challenge={state.challenge}
-                            index={state.index}
-                            solutions={state.solutions}
-                            onSubmit={manager.submit}
-                            onCancel={manager.cancel}
-                            onClick={manager.select}
-                            onNext={manager.nextRound}
-                            themeColor={config.theme ?? 'light'}
-                        />
-                    ) : (
-                        <div>No challenge set.</div>
-                    )}
-                </Modal>
                 <div style={styleWidth} data-cy={'button-human'}>
                     {' '}
                     <div
@@ -216,29 +96,13 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 >
                                     <div
                                         style={{
-                                            display: !state.loading ? 'flex' : 'none',
-                                        }}
-                                    >
-                                        <Checkbox
-                                            themeColor={themeColor}
-                                            onChange={manager.start}
-                                            checked={state.isHuman}
-                                        />
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: state.loading ? 'flex' : 'none',
+                                            display: 'flex',
                                         }}
                                     >
                                         <div style={{ flex: 1 }}>
                                             <LoadingSpinner themeColor={themeColor} />
                                         </div>
                                     </div>
-                                </div>
-                                <div style={{ padding: 1 }}>
-                                    <span style={{ color: theme.palette.background.contrastText, paddingLeft: '4px' }}>
-                                        I am a human
-                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -254,18 +118,13 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                             css={logoStyle}
                                             dangerouslySetInnerHTML={{
                                                 __html:
-                                                    props.config.theme === 'light'
-                                                        ? logoWithoutTextBlack
-                                                        : logoWithoutTextWhite,
+                                                    darkMode === 'light' ? logoWithoutTextBlack : logoWithoutTextWhite,
                                             }}
                                         />
                                         <div
                                             css={logoStyle}
                                             dangerouslySetInnerHTML={{
-                                                __html:
-                                                    props.config.theme === 'light'
-                                                        ? logoWithTextBlack
-                                                        : logoWithTextWhite,
+                                                __html: darkMode === 'light' ? logoWithTextBlack : logoWithTextWhite,
                                             }}
                                         />
                                     </div>
@@ -275,9 +134,6 @@ const Procaptcha = (props: ProcaptchaProps) => {
                     </div>
                 </div>
             </div>
-            {config.devOnlyWatchEvents && (
-                <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
-            )}
         </div>
     )
 }
@@ -294,4 +150,4 @@ const logoWithoutTextWhite =
 const logoWithoutTextBlack =
     '<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 348" height="35px"><path id="Vector" d="M95.7053 40.2707C127.005 40.2707 157.022 52.6841 179.154 74.78C201.286 96.8759 213.719 126.844 213.719 158.093H254.056C254.056 70.7808 183.16 -4.57764e-05 95.7053 -4.57764e-05V40.2707Z" fill="#000000"/><path id="Vector_2" d="M42.8365 93.0614C58.3333 93.0614 73.6784 96.1087 87.9955 102.029C102.313 107.95 115.322 116.628 126.279 127.568C137.237 138.508 145.93 151.496 151.86 165.79C157.79 180.084 160.843 195.404 160.843 210.875H201.179C201.179 123.564 130.291 52.7906 42.8365 52.7906V93.0614Z" fill="#000000"/><path id="Vector_3" d="M158.367 305.005C127.07 305.003 97.056 292.59 74.926 270.496C52.796 248.402 40.3626 218.437 40.3604 187.191H0.0239563C0.0239563 274.503 70.9123 345.276 158.367 345.276V305.005Z" fill="#000000"/><path id="Vector_4" d="M211.219 252.239C195.722 252.239 180.376 249.191 166.059 243.27C151.741 237.349 138.732 228.67 127.774 217.729C116.816 206.788 108.123 193.799 102.194 179.505C96.2637 165.21 93.2121 149.889 93.2132 134.417H52.8687C52.8687 221.729 123.765 292.509 211.219 292.509V252.239Z" fill="#000000"/></g><defs><clipPath id="clip0_1_2"><rect width="254" height="345" fill="white"/></clipPath></defs></svg>'
 
-export default Procaptcha
+

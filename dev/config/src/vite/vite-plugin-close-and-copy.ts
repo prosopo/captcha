@@ -6,7 +6,6 @@ const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
 export interface ClosePluginOptions {
     srcDir: string
     destDir: string
-    bundleName: string
 }
 /**
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.
@@ -28,12 +27,10 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
         },
         closeBundle() {
             if (options) {
+                clearOutputDirJS(__dirname, options)
                 for (const file of fs.readdirSync(path.resolve(__dirname, options.srcDir))) {
-                    if (file.startsWith(options.bundleName) && file.endsWith('js')) {
-                        const src = path.resolve(__dirname, options.srcDir, file)
-                        const dest = path.resolve(__dirname, options.destDir, file)
-                        fs.copyFileSync(src, dest)
-                        log.info(`Copied ${src} to ${dest}`)
+                    if (file.endsWith('js')) {
+                        copyFile(__dirname, options, file)
                     }
                 }
             }
@@ -41,4 +38,17 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
             process.exit(0)
         },
     }
+}
+
+function copyFile(__dirname: string, options: ClosePluginOptions, file: string) {
+    const src = path.resolve(__dirname, options.srcDir, file)
+    const dest = path.resolve(__dirname, options.destDir, file)
+    fs.copyFileSync(src, dest)
+    log.info(`Copied ${src} to ${dest}`)
+}
+
+function clearOutputDirJS(__dirname: string, options: ClosePluginOptions) {
+    fs.readdirSync(path.resolve(__dirname, options.destDir)).map((filepath) => {
+        if (filepath.endsWith('js')) fs.rmSync(filepath)
+    })
 }
