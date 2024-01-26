@@ -64,11 +64,7 @@ export class ProsopoCaptchaApi {
                     if (item.data) {
                         // drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
                         // https://stackoverflow.com/a/18320348/7215926
-                        if (item.data.startsWith('https://')) {
-                            item.data = item.data.slice('https:'.length)
-                        } else if (item.data.startsWith('http://')) {
-                            item.data = item.data.slice('http:'.length)
-                        }
+                        item.data = item.data.replace(/^http(s)*:\/\//, '//')
                     }
                 })
             })
