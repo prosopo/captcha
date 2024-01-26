@@ -68,7 +68,7 @@ jobs:
                         name=$(echo "$first_line" | awk -F ': ' '{print $2}')
                         
                         # Check if the extracted value matches the filename
-                        if [[ "$name" == $(basename "$file") ]]; then
+                        if [[ "$name" == "${filename%.*}" ]]; then
                             echo "File: $file - Name: $name (Match)"
                         else
                             echo "File: $file - Name: $name (No Match)"
