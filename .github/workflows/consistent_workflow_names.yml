@@ -1,10 +1,10 @@
-name: auto_project
+name: consistent_workflow_names
 
 on:
     pull_request:
         branches: [main]
-        types:
-            - opened
+        # only when workflow file is changed
+        paths: [".github/workflows/**"]
 
 jobs:
     auto_merge:
@@ -50,9 +50,25 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - name: Add project, status and sprint to PR
-              env:
-                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+            - name: Check workflow names
               run: |
-                    PR_NUMBER=${{ github.event.number }}
-                    gh pr edit --add-project Prosopo 
+                cd .github/workflows
+                # Iterate through files in the current directory
+                for file in *.yml *.yaml; do
+                    # Check if the item is a file (not a directory)
+                    if [[ -f "$file" ]]; then
+                        # Read the first line of the file
+                        first_line=$(head -n 1 "$file")
+                        
+                        # Extract name from the first line
+                        name=$(echo "$first_line" | awk -F ': ' '{print $2}')
+                        
+                        # Check if the extracted value matches the filename
+                        if [[ "$name" == $(basename "$file") ]]; then
+                            echo "File: $file - Name: $name (Match)"
+                        else
+                            echo "File: $file - Name: $name (No Match)"
+                        fi
+                    fi
+                done
+
