@@ -1,9 +1,9 @@
 import { getLogLevel, getLogger } from '@prosopo/common'
+import { getRootDir } from '@prosopo/config'
 import { loadEnv } from '@prosopo/cli'
 import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
-import { getRootDir } from '@prosopo/config'
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
