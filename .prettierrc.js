@@ -29,6 +29,7 @@ export default {
                 '.*.yaml',
                 '.*.yml',
                 '.*.toml',
+                'tsconfig.json',
             ],
         },
     ],

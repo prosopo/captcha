@@ -13,10 +13,11 @@
 // limitations under the License.
 import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
+import { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
-import { prosopoRouter } from '@prosopo/provider'
+import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
@@ -41,18 +42,19 @@ export const handleErrors = (
     })
 }
 
-function startApi(env: ProviderEnvironment) {
+function startApi(env: ProviderEnvironment): Server {
     env.logger.info(`Starting Prosopo API`)
     const apiApp = express()
     const apiPort = env.config.server.port
 
     apiApp.use(cors())
-    apiApp.use(express.json())
+    apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+    apiApp.use(prosopoAdminRouter(env))
 
     apiApp.use(handleErrors)
-    apiApp.listen(apiPort, () => {
+    return apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })
 }
@@ -73,5 +75,5 @@ export async function start(env?: ProviderEnvironment) {
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
-    startApi(env)
+    return startApi(env)
 }

@@ -32,7 +32,7 @@ export interface Dataset {
     datasetId: string
 }
 
-export interface Summary {
+export interface ProviderSummary {
     balance: number
     payee: string
     status: string

@@ -81,7 +81,7 @@ const getContract = async (
                     balance: provider.balance.toNumber(),
                     fee: provider.fee.toString(),
                     payee: provider.payee.toString(),
-                    url: url,
+                    url: hexToString(provider.url.toString()),
                     datasetId: provider.datasetId.toString(),
                     datasetIdContent: provider.datasetIdContent.toString(),
                     isOnline,
