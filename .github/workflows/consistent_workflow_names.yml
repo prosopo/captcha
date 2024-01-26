@@ -6,6 +6,10 @@ on:
         # only when workflow file is changed
         paths: [".github/workflows/**"]
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 jobs:
     check:
         runs-on: ubuntu-latest
