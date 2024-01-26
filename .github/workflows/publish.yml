@@ -101,7 +101,7 @@ jobs:
                   echo "major=$MAJOR"
                   echo "minor=$MINOR"
                   echo "patch=$PATCH"
-                  
+
                   # export the next version numbers
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
                   echo "major=$MAJOR" >> $GITHUB_OUTPUT
