@@ -7,7 +7,7 @@ on:
         paths: [".github/workflows/**"]
 
 jobs:
-    auto_merge:
+    check:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
