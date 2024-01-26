@@ -4,7 +4,7 @@ on:
     pull_request:
         branches: [main]
         # only when workflow file is changed
-        paths: [".github/workflows/**"]
+        paths: ['.github/workflows/**']
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -56,24 +56,23 @@ jobs:
 
             - name: Check workflow names
               run: |
-                cd .github/workflows
-                # Iterate through files in the current directory
-                for file in *.yml *.yaml; do
-                    # Check if the item is a file (not a directory)
-                    if [[ -f "$file" ]]; then
-                        # Read the first line of the file
-                        first_line=$(head -n 1 "$file")
-                        
-                        # Extract name from the first line
-                        name=$(echo "$first_line" | awk -F ': ' '{print $2}')
-                        
-                        # Check if the extracted value matches the filename
-                        if [[ "$name" == "${file%.*}" ]]; then
-                            echo "File: $file - Name: $name (Match)"
-                        else
-                            echo "File: $file - Name: $name (No Match)"
-                            exit 1
-                        fi
-                    fi
-                done
-
+                  cd .github/workflows
+                  # Iterate through files in the current directory
+                  for file in *.yml *.yaml; do
+                      # Check if the item is a file (not a directory)
+                      if [[ -f "$file" ]]; then
+                          # Read the first line of the file
+                          first_line=$(head -n 1 "$file")
+                          
+                          # Extract name from the first line
+                          name=$(echo "$first_line" | awk -F ': ' '{print $2}')
+                          
+                          # Check if the extracted value matches the filename
+                          if [[ "$name" == "${file%.*}" ]]; then
+                              echo "File: $file - Name: $name (Match)"
+                          else
+                              echo "File: $file - Name: $name (No Match)"
+                              exit 1
+                          fi
+                      fi
+                  done
