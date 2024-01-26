@@ -115,7 +115,7 @@ jobs:
 
             # deploy protocol and run the unit tests
             - run: npm run deploy_protocol
-            - run: npm run test -- --watch=false
+            - run: npm run test
 
             # restart the docker images to drop any changes made by the unit tests to the contract(s) before running cypress tests
             - name: Reset the docker containers
