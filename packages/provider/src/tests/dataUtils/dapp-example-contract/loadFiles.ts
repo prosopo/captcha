@@ -16,6 +16,7 @@ import { hexToU8a } from '@polkadot/util/hex'
 import { isWasm } from '@polkadot/util/is'
 import fse from 'fs-extra'
 import path from 'path'
+
 // TODO use the .contract file instead of the .json and .wasm files. Polkadot-JS apps is also erroring out when using
 //   the .wasm and .json files. The .contract file works but I don't know why.
 

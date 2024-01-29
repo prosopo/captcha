@@ -8,6 +8,11 @@ import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
 import { useState } from 'react'
 import React, { useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const RowDataModal = dynamic(() => import('@/components/ProviderManager/ProviderModal'), {
+    ssr: false,
+})
 
 const calculateFlex = (length: number) => {
     if (length < 4) {
@@ -18,9 +23,32 @@ const calculateFlex = (length: number) => {
 }
 
 const ContractOverview = () => {
+    const { currentAccount: currentAccount, network, contracts, setContracts } = useGlobalState()
     const [loading, setLoading] = useState<boolean>(false)
     const [newContractAddr, setNewContractAddr] = useState<string>('')
-    const { currentAccount, network, contracts, setContracts } = useGlobalState()
+    const [isDeregisterDialogOpen, setIsDeregisterDialogOpen] = useState(false)
+    const [selectedRow, setSelectedRow] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
+    // Handle opening the modal with selected row data
+    const handleEditClick = (row: any) => {
+        setSelectedRow(row)
+        setIsModalOpen(true)
+    }
+
+    // Handle closing the modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false)
+        setSelectedRow(null)
+    }
+
+    const handleCloseDeregisterDialog = () => {
+        setIsDeregisterDialogOpen(false)
+    }
+
+    const handleOpenDeregisterDialog = () => {
+        setIsDeregisterDialogOpen(true)
+    }
 
     useEffect(() => {
         // Check if currentAccount (and any other dependencies) is loaded
@@ -30,7 +58,7 @@ const ContractOverview = () => {
         }
 
         setLoading(true)
-        contractOverview(network, currentAccount, contracts)
+        contractOverview(network, currentAccount.address, contracts)
             .catch((error) => {
                 console.error('An error occurred while fetching contract overview data', error)
             })
@@ -43,24 +71,28 @@ const ContractOverview = () => {
     }, [currentAccount, network])
 
     function handleNewAddrChange(event: React.ChangeEvent<HTMLInputElement>) {
-        console.log(event.target.value)
         setNewContractAddr(event.target.value)
     }
 
     const handleSubmit = () => {
         setLoading(true)
-        contractOverview(network, currentAccount, contracts, newContractAddr)
+
+        if (!currentAccount) {
+            console.log('No account selected')
+            return
+        }
+        contractOverview(network, currentAccount.address, contracts, newContractAddr)
             .catch((error) => {
                 console.error('An error occurred while fetching contract overview data', error)
             })
             .then((contract) => {
                 if (contract) setContracts([...contracts, contract])
-                console.log(contract)
             })
             .finally(() => {
                 setLoading(false)
             })
     }
+
     const renderDataGrid = (contract: GuiContract, contractIndex: number) => {
         const rows: GridRowsProp = contract.providers.map((provider, providerIndex) => ({
             id: providerIndex,
@@ -75,6 +107,16 @@ const ContractOverview = () => {
                 headerName: key,
                 flex: calculateFlex(get(firstProvider, key).toString().length),
             }))
+            columns.push({
+                field: 'actions',
+                headerName: 'Actions',
+                flex: 1,
+                renderCell: (params) => (
+                    <Button variant="contained" size="small" onClick={() => handleEditClick(params.row)}>
+                        Edit
+                    </Button>
+                ),
+            })
         }
 
         return (
@@ -116,6 +158,15 @@ const ContractOverview = () => {
             <hr />
             <h1>Contract Details</h1>
             {contracts.map(renderDataGrid)}
+
+            <RowDataModal
+                handleCloseModal={handleCloseModal}
+                isModalOpen={isModalOpen}
+                selectedRow={selectedRow}
+                handleOpenDeregisterDialog={handleOpenDeregisterDialog}
+                handleCloseDeregisterDialog={handleCloseDeregisterDialog}
+                isDeregisterDialogOpen={isDeregisterDialogOpen}
+            />
         </Box>
     )
 }
