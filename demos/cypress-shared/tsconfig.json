@@ -5,15 +5,15 @@
         "types": ["cypress", "node"],
         "noEmit": true,
         "noEmitOnError": true,
-        "sourceMap": false,
+        "sourceMap": false
     },
     "include": ["**/*.ts"],
     "references": [
         {
-            "path": "../../packages/types",
+            "path": "../../packages/types"
         },
         {
-            "path": "../../packages/util",
-        },
-    ],
+            "path": "../../packages/util"
+        }
+    ]
 }

@@ -3,33 +3,33 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "module": "NodeNext",
+        "module": "NodeNext"
     },
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../contracts/captcha",
+            "path": "../../contracts/captcha"
         },
         {
-            "path": "../../dev/config",
+            "path": "../../dev/config"
         },
         {
-            "path": "../common",
+            "path": "../common"
         },
         {
-            "path": "../contract",
+            "path": "../contract"
         },
         {
-            "path": "../env",
+            "path": "../env"
         },
         {
-            "path": "../provider",
+            "path": "../provider"
         },
         {
-            "path": "../types",
+            "path": "../types"
         },
         {
-            "path": "../util",
-        },
-    ],
+            "path": "../util"
+        }
+    ]
 }

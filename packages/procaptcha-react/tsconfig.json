@@ -4,22 +4,22 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "lib": ["es6", "dom"],
-        "jsxImportSource": "@emotion/react",
+        "jsxImportSource": "@emotion/react"
     },
     "include": ["src", "src/**/*.json"],
 
     "references": [
         {
-            "path": "../api",
+            "path": "../api"
         },
         {
-            "path": "../common",
+            "path": "../common"
         },
         {
-            "path": "../procaptcha",
+            "path": "../procaptcha"
         },
         {
-            "path": "../util",
-        },
-    ],
+            "path": "../util"
+        }
+    ]
 }

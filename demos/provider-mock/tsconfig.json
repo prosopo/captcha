@@ -3,21 +3,21 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "module": "NodeNext",
+        "module": "NodeNext"
     },
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../dev/config",
+            "path": "../../dev/config"
         },
         {
-            "path": "../../packages/cli",
+            "path": "../../packages/cli"
         },
         {
-            "path": "../../packages/common",
+            "path": "../../packages/common"
         },
         {
-            "path": "../../packages/types",
-        },
-    ],
+            "path": "../../packages/types"
+        }
+    ]
 }

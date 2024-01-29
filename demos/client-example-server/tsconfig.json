@@ -3,27 +3,27 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "lib": ["dom", "dom.iterable", "esnext"],
+        "lib": ["dom", "dom.iterable", "esnext"]
     },
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../packages/api",
+            "path": "../../packages/api"
         },
         {
-            "path": "../../packages/cli",
+            "path": "../../packages/cli"
         },
         {
-            "path": "../../packages/contract",
+            "path": "../../packages/contract"
         },
         {
-            "path": "../../packages/procaptcha",
+            "path": "../../packages/procaptcha"
         },
         {
-            "path": "../../packages/server",
+            "path": "../../packages/server"
         },
         {
-            "path": "../../packages/types",
-        },
-    ],
+            "path": "../../packages/types"
+        }
+    ]
 }
