@@ -32,5 +32,11 @@ export default {
                 'tsconfig.json',
             ],
         },
+           {
+     files: ["tsconfig.json"],
+     options: {
+       trailingComma: "none",
+     },
+   },
     ],
 }
