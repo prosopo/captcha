@@ -1,7 +1,6 @@
 {
     "name": "@prosopo/client-bundle-example",
     "main": "index.js",
-    "type": "module",
     "engines": {
         "node": ">=18",
         "npm": ">=9"

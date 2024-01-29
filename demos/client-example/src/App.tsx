@@ -19,7 +19,7 @@ import {
     ProcaptchaOutput,
     ProsopoClientConfigSchema,
 } from '@prosopo/types'
-import { ExtensionAccountSelect, LazyLoadedWrapper, Procaptcha } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
@@ -201,11 +201,6 @@ function App() {
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
                                 </FormControl>
-
-                                <LazyLoadedWrapper
-                                    config={config}
-                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                                />
 
                                 <Procaptcha
                                     config={config}
