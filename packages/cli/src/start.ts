@@ -42,7 +42,7 @@ export const handleErrors = (
     })
 }
 
-function startApi(env: ProviderEnvironment): Server {
+function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info(`Starting Prosopo API`)
     const apiApp = express()
     const apiPort = env.config.server.port
@@ -51,7 +51,9 @@ function startApi(env: ProviderEnvironment): Server {
     apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
-    apiApp.use(prosopoAdminRouter(env))
+    if (admin) {
+        apiApp.use(prosopoAdminRouter(env))
+    }
 
     apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
@@ -59,7 +61,7 @@ function startApi(env: ProviderEnvironment): Server {
     })
 }
 
-export async function start(env?: ProviderEnvironment) {
+export async function start(env?: ProviderEnvironment, admin?: boolean) {
     if (!env) {
         loadEnv()
 
@@ -75,5 +77,5 @@ export async function start(env?: ProviderEnvironment) {
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
-    return startApi(env)
+    return startApi(env, admin)
 }
