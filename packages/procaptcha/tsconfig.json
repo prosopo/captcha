@@ -3,30 +3,30 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "lib": ["es6", "dom"]
+        "lib": ["es6", "dom"],
     },
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../contracts/captcha"
+            "path": "../../contracts/captcha",
         },
         {
-            "path": "../api"
+            "path": "../api",
         },
         {
-            "path": "../common"
+            "path": "../common",
         },
         {
-            "path": "../contract"
+            "path": "../contract",
         },
         {
-            "path": "../datasets"
+            "path": "../datasets",
         },
         {
-            "path": "../types"
+            "path": "../types",
         },
         {
-            "path": "../util"
-        }
-    ]
+            "path": "../util",
+        },
+    ],
 }

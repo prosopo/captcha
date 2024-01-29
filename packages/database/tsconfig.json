@@ -2,24 +2,24 @@
     "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist"
+        "outDir": "./dist",
     },
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../contracts/captcha"
+            "path": "../../contracts/captcha",
         },
         {
-            "path": "../common"
+            "path": "../common",
         },
         {
-            "path": "../types"
+            "path": "../types",
         },
         {
-            "path": "../types-database"
+            "path": "../types-database",
         },
         {
-            "path": "../util"
-        }
-    ]
+            "path": "../util",
+        },
+    ],
 }
