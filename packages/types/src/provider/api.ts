@@ -17,7 +17,9 @@ import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
+    GetPowCaptchaChallenge = '/v1/prosopo/provider/captcha/pow',
     SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
+    SubmitPowCaptchaSolution = '/v1/prosopo/provider/pow/solution',
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',

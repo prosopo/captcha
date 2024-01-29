@@ -44,6 +44,11 @@ export interface GetCaptchaResponse {
     requestHash: string
 }
 
+export interface GetPowCaptchaResponse {
+    message: string
+    difficulty: number
+}
+
 export interface VerificationResponse {
     status: string
     solutionApproved: boolean
@@ -54,6 +59,11 @@ export interface CaptchaSolutionResponse {
     captchas: CaptchaResponseCaptcha[]
     status: string
     partialFee: string
+    solutionApproved: boolean
+}
+
+export interface PowCaptchaSolutionResponse {
+    status: string
     solutionApproved: boolean
 }
 
