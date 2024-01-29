@@ -49,7 +49,7 @@
         "@polkadot/util": "^12.3.2",
         "@prosopo/common": "0.2.30",
         "@prosopo/types": "0.2.30",
-        "vitest": "^0.34.6"
+        "vitest": "^1.2.2"
     },
     "devDependencies": {
         "@prosopo/config": "0.2.30",
