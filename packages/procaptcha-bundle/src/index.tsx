@@ -15,14 +15,14 @@ import {
     ApiParams,
     EnvironmentTypesSchema,
     NetworkNamesSchema,
+    ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
-import { ProsopoEnvError } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
@@ -35,11 +35,6 @@ interface ProcaptchaRenderOptions {
     'error-callback'?: string
 }
 
-type ProcaptchaUrlParams = {
-    onloadUrlCallback: string | undefined
-    renderExplicit: string | undefined
-}
-
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
 const getCurrentScript = () =>
@@ -47,7 +42,7 @@ const getCurrentScript = () =>
         ? document.currentScript
         : undefined
 
-const extractParams = (name: string): ProcaptchaUrlParams => {
+const extractParams = (name: string) => {
     const script = getCurrentScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
@@ -59,7 +54,7 @@ const extractParams = (name: string): ProcaptchaUrlParams => {
     return { onloadUrlCallback: undefined, renderExplicit: undefined }
 }
 
-const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
+const getConfig = (siteKey?: string) => {
     if (!siteKey) {
         siteKey = process.env.PROSOPO_SITE_KEY || ''
     }
@@ -84,9 +79,7 @@ const getParentForm = (element: Element): HTMLFormElement | null => element.clos
 const getWindowCallback = (callbackName: string) => {
     const fn = (window as any)[callbackName.replace('window.', '')]
     if (typeof fn !== 'function') {
-        throw new ProsopoEnvError('DEVELOPER.METHOD_NOT_IMPLEMENTED', {
-            context: { error: `Callback ${callbackName} is not defined on the window object` },
-        })
+        throw new Error(`Callback ${callbackName} is not defined on the window object`)
     }
     return fn
 }
@@ -112,7 +105,7 @@ const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
 
 const renderLogic = (
     elements: Element[],
-    config: ProcaptchaConfigOptional,
+    config: ProcaptchaClientConfigInput,
     renderOptions?: ProcaptchaRenderOptions
 ) => {
     elements.forEach((element) => {
