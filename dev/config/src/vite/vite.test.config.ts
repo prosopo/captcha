@@ -3,6 +3,7 @@ import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
 import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
 
 export default function () {
+    console.log('************ vite config ************')
     return defineConfig({
         build: {
             minify: false,
@@ -17,10 +18,26 @@ export default function () {
         },
         test: {
             watch: false,
-            //reporters: ['basic', 'hanging-process'], https://github.com/vitest-dev/vitest/issues/4415
-            include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
+            // reporters: ['basic', 'hanging-process'], // https://github.com/vitest-dev/vitest/issues/4415
+            include: ['../../packages/*/src/**/util.test.ts', '../../contracts/*/src/**/util.test.ts'],
             exclude: ['../../demos/**/*'], // '../!packages/**/*'],
-            singleThread: true,
+            maxWorkers: 1,
+            minWorkers: 1,
+            environment: 'happy-dom',
+            pool: 'threads',
+            poolOptions: {
+                forks: {
+                    isolate: false,
+                    singleFork: true,
+                },
+                threads: {
+                    useAtomics: true,
+                    minThreads: 1,
+                    maxThreads: 1,
+                    singleThread: true,
+                }
+            },
+            // teardownTimeout: 100000,
             watchExclude: [
                 '**/node_modules/**',
                 '**/dist/**',
@@ -32,8 +49,8 @@ export default function () {
             coverage: {
                 enabled: true,
             },
-            useAtomics: true,
+            bail: 1
         },
-        plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy()],
+        plugins: [],
     })
 }

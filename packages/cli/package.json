@@ -51,7 +51,7 @@
         "es-main": "^1.2.0",
         "express": "^4.18.2",
         "vite": "^4.5.0",
-        "vitest": "^0.34.6",
+        "vitest": "^1.2.2",
         "@prosopo/config": "0.2.30",
         "@types/cors": "^2.8.14",
         "tslib": "2.6.2",
