@@ -96,8 +96,7 @@ export const Manager = async (configInput: ProcaptchaClientConfigInput, callback
 
     const challenge = await providerApi.getPowCaptchaChallenge(
         account.account.address,
-        configInput.account.address || '',
-        getRandomProviderResponse
+        configInput.account.address || ''
     )
 
     const solution = solvePoW(challenge.message, challenge.difficulty)

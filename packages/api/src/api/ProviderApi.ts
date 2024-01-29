@@ -94,13 +94,8 @@ export default class ProviderApi extends HttpClientBase {
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 
-    public getPowCaptchaChallenge(
-        userAccount: AccountId,
-        dappAccount: AccountId,
-        randomProvider: RandomProvider
-    ): Promise<GetPowCaptchaResponse> {
-        const { provider, blockNumber } = randomProvider
-        return this.post(ApiPaths.GetPowCaptchaChallenge, { userAccount, dappAccount, provider, blockNumber })
+    public getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse> {
+        return this.post(ApiPaths.GetPowCaptchaChallenge, { userAccount, dappAccount })
     }
 
     public submitPowCaptchaSolution(

@@ -24,6 +24,7 @@ import {
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
+    PoWCaptcha,
     ProsopoConfigOutput,
     ProviderDetails,
     ProviderRegistered,
@@ -162,6 +163,28 @@ export class Tasks {
         throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
             context: { failedFuncName: this.getCaptchaWithProof.name, datasetId, solved, size },
         })
+    }
+
+    /**
+     * @description Generates a PoW Captcha for a given user and dapp#
+     *
+     * @param {string} userAccount - Dapp User address
+     * @param {string} dappAccount - Dapp User address
+     */
+    async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
+        // Verify that the origin matches the url of the dapp
+        // Check the dapp is active in the contract and has PoW enabled
+        // TODO: Simple browser fingerprinting for risk scoring and issuing captcha of varying difficulty
+
+        //for now difficulty is 4
+        const difficulty = 4
+
+        // Get current blockhash
+        const blockHash = await this.contract.api.rpc.chain.getBlockHash()
+        // Use blockhash, userAccount and dappAccount for string for challenge
+        const challenge = `${blockHash}${userAccount}${dappAccount}`
+
+        return { challenge, difficulty }
     }
 
     /**

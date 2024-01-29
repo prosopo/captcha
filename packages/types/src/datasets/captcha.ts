@@ -82,6 +82,11 @@ export interface CaptchaWithProof {
     proof: string[][]
 }
 
+export interface PoWCaptcha {
+    challenge: string
+    difficulty: number
+}
+
 export type CaptchaConfig = {
     solved: {
         count: number

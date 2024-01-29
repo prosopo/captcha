@@ -160,6 +160,36 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     })
 
     /**
+     * Supplies a PoW challenge to a Dapp User
+     *
+     * @param {string} userAccount - Dapp User address
+     * @param {string} dappAccount - Dapp User address
+     */
+    router.get(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
+        try {
+            const { userAccount, dappAccount } = req.query
+            // Assert that the user and dapp accounts are strings
+            if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
+                throw new ProsopoApiError('API.BAD_REQUEST', {
+                    context: { errorCode: 400, error: 'userAccount and dappAccount must be strings' },
+                })
+            }
+            const origin = req.headers.origin
+
+            if (!origin) {
+                throw new ProsopoApiError('API.BAD_REQUEST', {
+                    context: { errorCode: 400, error: 'origin header not found' },
+                })
+            }
+
+            const challenge = await tasks.getPowCaptchaChallenge(userAccount, dappAccount, origin)
+            return res.json(challenge)
+        } catch (err) {
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+        }
+    })
+
+    /**
      * Receives user events, store to database
      *
      * @param {StoredEvents}
