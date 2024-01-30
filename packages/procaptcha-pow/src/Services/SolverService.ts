@@ -21,3 +21,10 @@ const bufferToHex = (buffer: Uint8Array): string =>
     Array.from(buffer)
         .map((byte) => byte.toString(16).padStart(2, '0'))
         .join('')
+
+const data = 'aweifbajlshbfiebafalwiufbo8723hgfibsdkjfuyh23987fgisf'
+const difficulty = 4
+
+const solution = solvePoW(data, difficulty)
+
+console.log(solution)

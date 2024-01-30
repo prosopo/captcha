@@ -190,6 +190,33 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     })
 
     /**
+     * Verifies a user's PoW solution as being approved or not
+     *
+     * @param {string} blockhash - Dapp User address
+     * @param {string} blocknumber - Dapp User address
+     * @param {string} message - Dapp User address
+     * @param {string} signature - Dapp User address
+     * @param {string} difficulty - Dapp User address
+     * @param {string} nonce - Dapp User address
+     */
+    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
+        try {
+            const { blockhash, blocknumber, message, signature, difficulty, nonce } = req.body
+            const verified = await tasks.verifyPowCaptchaSolution(
+                blockhash,
+                blocknumber,
+                message,
+                signature,
+                difficulty,
+                nonce
+            )
+            return res.json({ verified })
+        } catch (err) {
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+        }
+    })
+
+    /**
      * Receives user events, store to database
      *
      * @param {StoredEvents}

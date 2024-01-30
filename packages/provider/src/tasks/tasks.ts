@@ -42,7 +42,7 @@ import {
 import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
@@ -50,6 +50,7 @@ import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { saveCaptchaEvent } from '@prosopo/database'
+import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
@@ -166,17 +167,24 @@ export class Tasks {
     }
 
     /**
-     * @description Generates a PoW Captcha for a given user and dapp#
+     * @description Generates a PoW Captcha for a given user and dapp
      *
      * @param {string} userAccount - Dapp User address
      * @param {string} dappAccount - Dapp User address
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         // Verify that the origin matches the url of the dapp
-        // Check the dapp is active in the contract and has PoW enabled
-        // TODO: Simple browser fingerprinting for risk scoring and issuing captcha of varying difficulty
+        const dapp: Dapp = await wrapQuery(this.contract.query.getDapp, this.contract.query)(dappAccount)
 
-        //for now difficulty is 4
+        if (dapp.status.toString() !== 'Active') {
+            // TODO: check Dapp has POW enabled
+            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
+                context: { failedFuncName: this.getPowCaptchaChallenge.name, dappAccount },
+            })
+        }
+
+        // TODO: Dapps should be associated with origin urls
+
         const difficulty = 4
 
         // Get current blockhash
@@ -184,7 +192,81 @@ export class Tasks {
         // Use blockhash, userAccount and dappAccount for string for challenge
         const challenge = `${blockHash}${userAccount}${dappAccount}`
 
+        // Sign challenge as provider,
+
         return { challenge, difficulty }
+    }
+
+    /**
+     * @description Generates a PoW Captcha for a given user and dapp
+     *
+     * @param {string} blockhash - Dapp User address
+     * @param {string} blocknumber - Dapp User address
+     * @param {string} message - Dapp User address
+     * @param {string} signature - Dapp User address
+     * @param {string} difficulty - Dapp User address
+     * @param {string} nonce - Dapp User address
+     */
+    async verifyPowCaptchaSolution(
+        blockhash: string,
+        blocknumber: number,
+        message: string,
+        signature: string,
+        difficulty: number,
+        nonce: number
+    ): Promise<boolean> {
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        if (latestBlockNumber > blocknumber - 5) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blockhash,
+                },
+            })
+        }
+
+        const blockHashCheck = await this.contract.api.rpc.chain.getBlockHash(blocknumber)
+
+        if (blockHashCheck.toString() !== blockhash) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash does not match blocknumber',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blockhash,
+                },
+            })
+        }
+
+        // Verify that blockhash is included in message
+        if (!message.includes(blockhash)) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be included in message',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blockhash,
+                },
+            })
+        }
+
+        const signatureVerification = signatureVerify(stringToHex(message), signature, this.contract.pair.address)
+
+        if (!signatureVerification.isValid) {
+            throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
+                context: {
+                    ERROR: 'Provider signature is invalid for this message',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    signature,
+                },
+            })
+        }
+
+        return Array.from(sha256(new TextEncoder().encode(nonce + message)))
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join('')
+            .startsWith('0'.repeat(difficulty))
     }
 
     /**
