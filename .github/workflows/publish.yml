@@ -462,6 +462,7 @@ jobs:
 
             - name: Redeploy flux docker js_server
               id: redeploy_flux_docker_js_server
+              continue-on-error: true
               if: always()
               env:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
@@ -472,6 +473,7 @@ jobs:
                     npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
                   else
                     echo "Skipping flux redeploy."
+                    exit 1
                   fi
 
             - name:
