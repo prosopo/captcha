@@ -107,9 +107,8 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                // sets the bundle to an Instantly Invoked Function Expression (IIFE)
                 fileName: `${bundleName}.bundle.js`,
-                formats: ['iife'],
+                formats: ['es'],
             },
             modulePreload: { polyfill: true },
             commonjsOptions: {

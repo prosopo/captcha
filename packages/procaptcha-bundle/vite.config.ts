@@ -18,7 +18,6 @@ const copyOptions = copyTo
     ? {
           srcDir: './dist/bundle',
           destDir: copyTo,
-          bundleName: bundleName,
       }
     : undefined
 const tsConfigPaths = [path.resolve('./tsconfig.json')]
