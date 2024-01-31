@@ -1,4 +1,4 @@
-name: Dependent Issues
+name: dependent_issues
 
 on:
     pull_request:
