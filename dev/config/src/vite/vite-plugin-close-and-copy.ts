@@ -36,7 +36,6 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
                 log.info(`Bundle copied to ${options.destDir}`)
             }
             log.info('Bundle closed')
-            process.exit(0)
         },
     }
 }
