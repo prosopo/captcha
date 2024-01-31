@@ -14,14 +14,6 @@
 import { at, get, merge, permutations } from '../util.js'
 import { describe, expect, test } from 'vitest'
 
-describe('fail', () => {
-    test('fail', () => {
-        expect(() => {
-            throw new Error('test')
-        }).to.throw()
-    })
-})
-
 describe('util', () => {
     describe('merge', () => {
         // factors:
