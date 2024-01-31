@@ -89,7 +89,8 @@ function getSelectors(captcha: Captcha) {
                     selectors = captcha.items
                         .filter((item) => solution.includes(item.hash))
                         // create a query selector for each image that is a solution
-                        .map((item) => `img[src="${item.data}"]`)
+                        // drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
+                        .map((item) => `img[src="${item.data.replace(/^http(s)*:\/\//, '//')}"]`)
                 } else {
                     console.log('Unsolved captcha or captcha with zero solutions')
                 }
