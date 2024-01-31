@@ -16,9 +16,7 @@ import { describe, expect, test } from 'vitest'
 
 describe('fail', () => {
     test('fail', () => {
-        expect(() => {
-            throw new Error('test')
-        }).to.throw()
+        expect(1).toEqual(2)
     })
 })
 
