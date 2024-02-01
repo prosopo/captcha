@@ -1,9 +1,8 @@
 import { get } from "@prosopo/util"
 import { BaseParser, Parser } from "./Parser.js"
-import { Infer, Mask, RemoveNever, Schema, Shape } from "./utils.js"
+import { Infer, Mask, Schema, Shape } from "./utils.js"
 import { pNumber } from "./NumberParser.js"
 import { pString } from "./StringParser.js"
-import { E } from "vitest/dist/reporters-5f784f42.js"
 
 export class ObjectParser<T extends Schema> extends BaseParser<Shape<T>> {
 
@@ -25,7 +24,7 @@ export class ObjectParser<T extends Schema> extends BaseParser<Shape<T>> {
     }
 
     public extend<U extends Schema>(schema: U): ObjectParser<T & U> {
-        return new ObjectParser({ ...this.schema, ...schema })
+        return new ObjectParser({ ...this.clone().schema, ...schema.clone() })
     }
 
     public pick<U extends Mask<T>>(mask: U): ObjectParser<PickSchema<T, U>> {
@@ -63,6 +62,14 @@ export class ObjectParser<T extends Schema> extends BaseParser<Shape<T>> {
         return new ObjectParser<OmitSchema<T, U>>(schema as OmitSchema<T, U>)
     }
 
+    public partial<U extends Mask<T>>(mask: U): ObjectParser<PartialSchema<T, U>> {
+        throw new Error("Method not implemented.")
+    }
+
+    public required(): ObjectParser<RequiredSchema<T>> {
+        throw new Error("Method not implemented.")
+    }
+
     override clone(): Parser<Shape<T>> {
         const schema = { ... this.schema }
         for (const key of Object.keys(schema)) {
@@ -74,35 +81,51 @@ export class ObjectParser<T extends Schema> extends BaseParser<Shape<T>> {
 
 export const pObject = <T extends Schema>(schema: T) => new ObjectParser(schema)
 
-// const a = pObject({ a: pString(), b: pNumber(), c: pObject({ d: pString(), e: pNumber() }) })
-// type d = ReturnType<typeof a.parse>
-// const b = a.pick({ a: true, c: { d: true } })
-// type c = ReturnType<typeof b.parse>
-// const e = a.omit({ b: true, c: { e: true } })
-// type f = ReturnType<typeof e.parse>
+type Key<T, U> = U extends keyof T ? T[U] : never
 
-const a = {
-    a: 1,
-    b: 2,
-    c: 3,
-}
-const b = {
-    a: 'a'
-}
-type c = typeof a & typeof b
-const d: c = {
-    a: 'a',
-    b: 2,
-    c: 3
+type Output<T extends Parser<any>> = T extends Parser<infer U> ? U : never
+
+export type PartialSchema<T extends Schema, U extends Mask<T>> = {
+    [K in keyof T]: K extends keyof U ? (Output<T[K]> extends object ? PartialSchema<, U[K]> : T[K]) : T[K]
 }
 
-export type OmitSchema<T extends Schema, U extends Mask<T>> = {
+type x1 = PartialSchema<{ a: Parser<number>, b: Parser<string> }, { a: true }>
+
+const a = pObject({
+    a: pString(),
+    b: pNumber(),
+})
+const b = a.partial({
+    a: true
+})
+type c = ReturnType<typeof b.parse>
+const d = a.omit({
+    a: {
+        b: true
+    }
+})
+type e = ReturnType<typeof d.parse>
+type f = Partial<{ a: { b: number } }>
+
+export type RequiredSchema<T extends Schema> = Infer<{
+    [K in keyof T]-?: T[K] extends ObjectParser<infer V> ? ObjectParser<RequiredSchema<V>> : T[K]
+}>
+
+// export type PartialSchema<T extends Schema> = Infer<{
+//     [K in keyof T]?: T[K] extends ObjectParser<infer V> ? ObjectParser<PartialSchema<V>> : T[K]
+// }>
+
+// export type RequiredSchema<T extends Schema> = Infer<{
+//     [K in keyof T]-?: T[K] extends ObjectParser<infer V> ? ObjectParser<RequiredSchema<V>> : T[K]
+// }>
+
+export type OmitSchema<T extends Schema, U extends Mask<T>> = Infer<{
     [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<OmitSchema<V, U[K]>> : T[K] : T[K]
-}
+}>
 
-export type PickSchema<T extends Schema, U extends Mask<T>> = {
+export type PickSchema<T extends Schema, U extends Mask<T>> = Infer<{
     [K in keyof U & keyof T]: 
         T[K] extends ObjectParser<infer V> ? 
-            ObjectParser<Infer<PickSchema<V, U[K]>>>
+            ObjectParser<PickSchema<V, U[K]>>
             : T[K]
-}
+}>
