@@ -174,14 +174,14 @@ export class Tasks {
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         // Verify that the origin matches the url of the dapp
-        const dapp: Dapp = await wrapQuery(this.contract.query.getDapp, this.contract.query)(dappAccount)
+        // const dapp: Dapp = await wrapQuery(this.contract.query.getDapp, this.contract.query)(dappAccount)
 
-        if (dapp.status.toString() !== 'Active') {
-            // TODO: check Dapp has POW enabled
-            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
-                context: { failedFuncName: this.getPowCaptchaChallenge.name, dappAccount },
-            })
-        }
+        // if (dapp.status.toString() !== 'Active') {
+        //     // TODO: check Dapp has POW enabled
+        //     throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
+        //         context: { failedFuncName: this.getPowCaptchaChallenge.name, dappAccount },
+        //     })
+        // }
 
         // TODO: Dapps should be associated with origin urls
 

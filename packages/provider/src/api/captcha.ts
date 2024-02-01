@@ -167,7 +167,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.get(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
         try {
-            const { userAccount, dappAccount } = req.query
+            const { userAccount, dappAccount } = req.body
+            console.log(userAccount, dappAccount)
             // Assert that the user and dapp accounts are strings
             if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
                 throw new ProsopoApiError('API.BAD_REQUEST', {
@@ -185,6 +186,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const challenge = await tasks.getPowCaptchaChallenge(userAccount, dappAccount, origin)
             return res.json(challenge)
         } catch (err) {
+            console.log(err)
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
     })
