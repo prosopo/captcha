@@ -2,7 +2,7 @@ import { Cloneable, Resolve } from "./utils.js"
 
 // a parser parses an unknown value into a known value of type T, throwing an error if the value is not of type T
 export abstract class FieldParser<T, F extends FieldOptions> extends Cloneable<FieldParser<T, F>> {
-    constructor(private options: F) {
+    constructor(readonly options: F) {
         super()
     }
 

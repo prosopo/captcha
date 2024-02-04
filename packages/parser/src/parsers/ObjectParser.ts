@@ -1,21 +1,12 @@
 import { pBoolean } from "./BooleanParser.js"
 import { pNumber } from "./NumberParser.js"
+import { opt } from "./OptionalParser.js"
 import { FieldParser, FieldOptions, SetFieldOptions, IsRequired, IsReadWrite, IsOptional, IsReadonly } from "./Parser.js"
+import { rw } from "./ReadWriteParser.js"
+import { ro } from "./ReadonlyParser.js"
+import { req } from "./RequiredParser.js"
 import { pString } from "./StringParser.js"
 import { Resolve } from "./utils.js"
-
-const opt: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
-    optional: true
-}>> = null!
-const req: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
-    optional: false
-}>> = null!
-const ro: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
-    readonly: true
-}>> = null!
-const rw: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
-    readonly: false
-}>> = null!
 
 export type Unpack<T extends Schema<any>> = {
     // required + readwrite keys
