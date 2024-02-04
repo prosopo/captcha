@@ -1,8 +1,14 @@
+import { FieldOptions, FieldParser, SetFieldOptions } from "./Parser.js"
 
 
-export class OptionalParser<T> extends BaseParser<T | undefined> {
-    constructor(private parser: Parser<T>) {
-        super()
+export class OptionalParser<T, F extends FieldOptions> extends FieldParser<T | undefined, SetFieldOptions<F, {
+    optional: true
+}>> {
+    constructor(private parser: FieldParser<T, F>) {
+        super({
+            ...parser.options,
+            optional: true
+        })
     }
 
     parse(value: unknown): T | undefined {
@@ -12,3 +18,6 @@ export class OptionalParser<T> extends BaseParser<T | undefined> {
         return this.parser.parse(value)
     }
 }
+
+export const pOptional = <T, F extends FieldOptions>(parser: FieldParser<T, F>) => new OptionalParser(parser)
+export const opt = pOptional
