@@ -1,41 +1,41 @@
-import { Parser, FieldOptions, SetFieldOptions, IsRequired, IsReadWrite, IsOptional, IsReadonly } from "./Parser.js"
+import { pBoolean } from "./BooleanParser.js"
+import { pNumber } from "./NumberParser.js"
+import { FieldParser, FieldOptions, SetFieldOptions, IsRequired, IsReadWrite, IsOptional, IsReadonly } from "./Parser.js"
+import { pString } from "./StringParser.js"
 import { Resolve } from "./utils.js"
 
-const pString: () => Parser<string> = null!
-const pNumber: () => Parser<number> = null!
-const pBoolean: () => Parser<boolean> = null!
-const opt: <T, F extends FieldOptions>(p: Parser<T, F>) => Parser<T, SetFieldOptions<F, {
+const opt: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
     optional: true
 }>> = null!
-const req: <T, F extends FieldOptions>(p: Parser<T, F>) => Parser<T, SetFieldOptions<F, {
+const req: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
     optional: false
 }>> = null!
-const ro: <T, F extends FieldOptions>(p: Parser<T, F>) => Parser<T, SetFieldOptions<F, {
+const ro: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
     readonly: true
 }>> = null!
-const rw: <T, F extends FieldOptions>(p: Parser<T, F>) => Parser<T, SetFieldOptions<F, {
+const rw: <T, F extends FieldOptions>(p: FieldParser<T, F>) => FieldParser<T, SetFieldOptions<F, {
     readonly: false
 }>> = null!
 
 export type Unpack<T extends Schema<any>> = {
     // required + readwrite keys
-    [K in keyof T as IsRequired<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]: T[K] extends Parser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
+    [K in keyof T as IsRequired<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
 } & {
     // optional + readwrite keys
-    [K in keyof T as IsOptional<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
+    [K in keyof T as IsOptional<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]?: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
 } & {
     // required + readonly keys
-    readonly [K in keyof T as IsRequired<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]: T[K] extends Parser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
+    readonly [K in keyof T as IsRequired<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
 } & {
     // optional + readonly keys
-    readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
+    readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
 }
 
 export type Schema<T> = {
-    [K in keyof T]: Parser<T[K], any>
+    [K in keyof T]: FieldParser<T[K], any>
 }
 
-export class ObjectParser<T> extends Parser<Resolve<T>, {
+export class ObjectParser<T> extends FieldParser<Resolve<T>, {
     optional: false
     readonly: false
 }> {

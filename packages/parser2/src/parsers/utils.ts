@@ -1,4 +1,4 @@
-import { Parser } from "./Parser.js";
+import { ValueParser } from "./Parser.js";
 
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
