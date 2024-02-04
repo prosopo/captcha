@@ -1,16 +1,13 @@
-import { BaseParser, Parser } from "./Parser.js"
+import { ValueParser } from "./Parser.js"
 
-export class NumberParser extends BaseParser<number> {
+export class NumberParser extends ValueParser<number> {
     parse(value: unknown): number {
-        if (typeof value !== 'number') {
-            throw new Error(`Expected number but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+        if (typeof value !== "number") {
+            throw new Error(`Expected a number but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
         return value
-    }
-
-    override clone(): Parser<number> {
-        return pNumber()
     }
 }
 
 export const pNumber = () => new NumberParser()
+export const num = pNumber
