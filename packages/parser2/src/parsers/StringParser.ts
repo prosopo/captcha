@@ -10,3 +10,4 @@ export class StringParser extends ValueParser<string> {
 }
 
 export const pString = () => new StringParser()
+export const str = pString

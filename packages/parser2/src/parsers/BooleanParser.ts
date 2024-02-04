@@ -11,3 +11,4 @@ export class BooleanParser extends ValueParser<boolean> {
 }
 
 export const pBoolean = () => new BooleanParser()
+export const bool = pBoolean
