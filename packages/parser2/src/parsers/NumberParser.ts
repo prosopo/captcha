@@ -10,3 +10,4 @@ export class NumberParser extends ValueParser<number> {
 }
 
 export const pNumber = () => new NumberParser()
+export const num = pNumber

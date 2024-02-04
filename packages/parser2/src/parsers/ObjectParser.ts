@@ -52,6 +52,7 @@ export class ObjectParser<T> extends FieldParser<Resolve<T>, {
 }
 
 export const pObject = <T extends Schema<any>>(schema: T) => new ObjectParser<Unpack<T>>(schema)
+export const obj = pObject
 
 const a1 = pObject({
     a: pString(),
