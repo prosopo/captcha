@@ -1,3 +1,4 @@
+import { Parser, FieldOptions, SetFieldOptions, IsRequired, IsReadWrite, IsOptional, IsReadonly } from "./Parser.js"
 import { Resolve } from "./utils.js"
 
 const pString: () => Parser<string> = null!
@@ -16,37 +17,6 @@ const rw: <T, F extends FieldOptions>(p: Parser<T, F>) => Parser<T, SetFieldOpti
     readonly: false
 }>> = null!
 
-export type FieldOptions = {
-    optional: boolean // mark the field as optional in an object
-    readonly: boolean // mark the field as readonly in an object
-}
-export type SetFieldOptions<T extends FieldOptions, U extends Partial<FieldOptions>> = Resolve<{
-    optional: undefined extends U["optional"] ? T["optional"] : U["optional"]
-    readonly: undefined extends U["readonly"] ? T["readonly"] : U["readonly"]
-}>
-
-// a parser parses an unknown value into a known value of type T, throwing an error if the value is not of type T
-export class Parser<T, F extends FieldOptions = {
-    optional: false
-    readonly: false
-}> {
-    constructor(private options: F) { }
-
-    parse(value: unknown): T {
-        
-        throw new Error("Method not implemented.")
-    }
-
-    clone(): Parser<T> {
-        throw new Error("Method not implemented.")
-    }
-}
-
-export type IsOptional<T> = T extends Parser<any, infer F> ? F extends { optional: true } ? true : false : never
-export type IsRequired<T> = T extends Parser<any, infer F> ? F extends { optional: false } ? true : false : never
-export type IsReadonly<T> = T extends Parser<any, infer F> ? F extends { readonly: true } ? true : false : never
-export type IsReadWrite<T> = T extends Parser<any, infer F> ? F extends { readonly: false } ? true : false : never
-
 export type Unpack<T extends Schema<any>> = {
     // required + readwrite keys
     [K in keyof T as IsRequired<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]: T[K] extends Parser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
@@ -61,7 +31,7 @@ export type Unpack<T extends Schema<any>> = {
     readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
 }
 
-type Schema<T> = {
+export type Schema<T> = {
     [K in keyof T]: Parser<T[K], any>
 }
 
@@ -75,6 +45,10 @@ export class ObjectParser<T> extends Parser<Resolve<T>, {
             readonly: false
         })
     }
+
+    public override parse(value: unknown): Resolve<T> {
+        throw new Error("Method not implemented.")
+    }    
 }
 
 export const pObject = <T extends Schema<any>>(schema: T) => new ObjectParser<Unpack<T>>(schema)
