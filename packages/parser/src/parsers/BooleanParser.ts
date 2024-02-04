@@ -1,16 +1,14 @@
-import { BaseParser, Parser } from "./Parser.js"
+import { ValueParser } from "./Parser.js"
 
-export class BooleanParser extends BaseParser<boolean> {
+
+export class BooleanParser extends ValueParser<boolean> {
     parse(value: unknown): boolean {
-        if (typeof value !== 'boolean') {
-            throw new Error(`Expected boolean but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+        if (typeof value !== "boolean") {
+            throw new Error(`Expected a boolean but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
         return value
-    }
-
-    override clone(): Parser<boolean> {
-        return pBoolean()
     }
 }
 
 export const pBoolean = () => new BooleanParser()
+export const bool = pBoolean
