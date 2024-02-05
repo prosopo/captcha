@@ -1,5 +1,3 @@
-import { ValueParser } from "./Parser.js";
-
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
@@ -18,10 +16,8 @@ export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) ex
 // thus we have resolved the type into a plain object, no nested types
 export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] };
 
-export class Cloneable<T> {
-    public clone(): T {
-        throw new Error("clone() not implemented");
-    }
+export abstract class Cloneable<T> {
+    public abstract clone(): T
 }
 
 export type Mask<T> = {
@@ -55,4 +51,14 @@ export const values = <T extends object>(obj: T): T[keyof T][] => {
 
 export const entries = <T extends object>(obj: T): [keyof T, T[keyof T]][] => {
     return Object.entries(obj) as [keyof T, T[keyof T]][];
+}
+
+export const map = <T extends object, U>(obj: T, fn: (value: T[keyof T], key: keyof T) => U): {
+    [K in keyof T]: U
+} => {
+    const result: any = {}
+    for (const key of keys(obj)) {
+        result[key] = fn(obj[key], key)
+    }
+    return result
 }

@@ -1,301 +1,77 @@
-import { bool, pBoolean } from "./BooleanParser.js"
-import { num, pNumber } from "./NumberParser.js"
-import { opt } from "./OptionalParser.js"
-import { FieldParser, FieldOptions, SetFieldOptions, IsRequired, IsReadWrite, IsOptional, IsReadonly } from "./Parser.js"
-import { rw } from "./ReadWriteParser.js"
-import { ro } from "./ReadonlyParser.js"
-import { req } from "./RequiredParser.js"
-import { pString, str } from "./StringParser.js"
-import { DeepOmit, DeepPick, Extend, Mask, Resolve, keys } from "./utils.js"
-
-export type Unpack<T extends Schema<any>> = {
-    // required + readwrite keys
-    [K in keyof T as IsRequired<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
-} & {
-    // optional + readwrite keys
-    [K in keyof T as IsOptional<T[K]> extends true ? IsReadWrite<T[K]> extends true ? K : never : never]?: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
-} & {
-    // required + readonly keys
-    readonly [K in keyof T as IsRequired<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
-} & {
-    // optional + readonly keys
-    readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends FieldParser<infer U, any> ? U : T[K] extends Schema<any> ? Unpack<T[K]> : never
-}
+import { OptionalParser } from "./OptionalParser.js";
+import { Parser } from "./Parser.js";
+import { IsOptional, IsReadonly } from "./prop.js";
+import { Resolve, keys, map } from "./utils.js";
+import { get } from "@prosopo/util"
 
 export type Schema<T> = {
-    [K in keyof T]: FieldParser<T[K], any>
+    [K in keyof T]: Parser<T[K]>
 }
 
-export class SchemaHandler<T> {
-    constructor(private schema: Schema<T>) {}
+export class SchemaHandler<T extends Schema<U>, U> {
+    constructor(private _schema: T) {
 
-    public clone(): Schema<T> {
-        const schema: any = {}
-        for (const key in this.schema) {
-            schema[key] = this.schema[key].clone()
-        }
-        return schema
     }
 
-    public extend<U>(schema: Schema<U>): Schema<Extend<T, U>> {
-        const result: any = {}
-        for (const key in this.schema) {
-            result[key] = this.schema[key].clone()
-        }
-        for (const key in schema) {
-            result[key] = schema[key].clone()
-        }
-        return result
-    }
-
-    public pick<U extends Mask<T>>(mask: U): Schema<DeepPick<T, U>> {
-        const result: any = {}
-        for (const key in mask) {
-            const parser = (this.schema as any)[key]
-            if (parser === undefined) {
-                throw new Error(`Parser is undefined, expected valid parser for deep pick`)
-            }
-            result[key] = parser.clone()
-        }
-        return result
-    }
-
-    public omit<U extends Mask<T>>(mask: U): Schema<DeepOmit<T, U>> {
-        const result: any = {}
-        for (const key in this.schema) {
-            if (mask[key] === undefined) {
-                const parser = (this.schema as any)[key]
-                if (parser === undefined) {
-                    throw new Error(`Parser is undefined, expected valid parser for deep omit`)
-                }
-                result[key] = parser.clone()
-            }
-        }
-        return result
-    }
-
-    public partial<U extends Mask<T>>(mask: U): PartialSchema<Schema<T>, U> {
-        const result = {} as any
-        const schema = this.schema
-        // for each key in the mask
-        for (const key of keys(mask)) {
-            const value = mask[key]
-            const parser = (schema as any)[key]
-            // if there's a matching key in the schema
-            if (parser === undefined) {
-                // no matching key, so skip
-                continue
-            }
-            // if the value is object, then it's a submask
-            // recurse into the submask
-            if (typeof value === "object") {
-                if(parser instanceof FieldParser) {
-                    result[key] = parser.partial(value)
-                }
-            } else {
-                // include it in the schema
-                result[key] = opt(parser)
-            }
-        }
-        return result
-    }
-
-    public required<U extends Mask<T>>(mask: U) {
-
+    public get schema(): T {
+        return map(this._schema, (parser) => parser.clone()) as unknown as T
     }
 }
 
-type PartialSchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
-    // keys in T but not in U - left as is
-    [K in keyof T as K extends keyof U ? never : K]: K extends keyof U ? never : T[K];
+export type UnpackSchema<T> = Resolve<{
+    // required + readwrite keys
+    [K in keyof T as IsOptional<T[K]> extends false ? IsReadonly<T[K]> extends false ? K : never : never]: T[K] extends Parser<infer U> ? U : never
 } & {
-    // keys in U and T - changed to optional
-    [K in keyof T as K extends keyof U ? K : never]: K extends keyof U ? T[K] extends FieldParser<infer V, infer F> ? FieldParser<V, SetFieldOptions<F, {
-        optional: true
-    }>> : never : never;
+    // optional + readwrite keys
+    [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
+} & {
+    // required + readonly keys
+    readonly [K in keyof T as IsOptional<T[K]> extends false ? IsReadonly<T[K]> extends true ? K : never : never]: T[K] extends Parser<infer U> ? U : never
+} & {
+    // optional + readonly keys
+    readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
 }>
 
-export class ObjectParser<T> extends FieldParser<Resolve<T>, {
-    optional: false
-    readonly: false
-}> {
-    constructor(private _schema: Schema<T>) {
-        super({
-            optional: false,
-            readonly: false
-        })
-        // clone the schema to avoid external modification
-        this._schema = new SchemaHandler(_schema).clone()
+export class ObjectParser<T, U extends Schema<T>> extends Parser<Resolve<T>> {
+
+    private handler: SchemaHandler<U, T>
+
+    constructor(schema: U) {
+        super()
+        this.handler = new SchemaHandler(schema)
     }
 
-    public get schema(): Schema<T> {
-        // any time the schema is used, clone it. This makes it immutable from internal and external modification, unless using the this._schema property directly
-        // this ensures no accidental modification of the schema whatsoever, as a cloned version is always maintained internally
-        return new SchemaHandler(this._schema).clone()
+    public get schema() {
+        return this.handler.schema
     }
 
     public override parse(value: unknown): Resolve<T> {
         if (typeof value !== "object" || value === null) {
             throw new Error(`Expected an object but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
-        const valueObj = value as Record<string, unknown>
-        const result: any = {}
-        for (const key in this._schema) {
-            const parser = this.schema[key]
-            const fieldValue = valueObj[key]
-            result[key] = parser.parse(fieldValue)
+        const result = {} as any
+        // track the unhandled keys in the value
+        const unhandledKeys = new Set(Object.keys(value))
+        for (const key of keys(this.schema)) {
+            const parser = get(this.schema, key)
+            const val = (value as any)[key]
+            const output = parser.parse(val)
+            if (val !== undefined) {
+                // don't set the value if the value is undefined, as this is the default value returned for a non-existent field on an object
+                // this also makes optional work properly
+                result[key] = output
+            }
+            unhandledKeys.delete(String(key))
         }
-        // TODO handle extra keys, drop/keep?
-        // TODO strict mode, i.e. throw an error if there are extra keys
-        // TODO inplace / clone to new object
-        return result
+        // TODO handle extra keys, allow / deny / drop / keep?
+        // TODO inplace / clone?
+        return result as Resolve<T>
     }
 
-    public pick<U extends Mask<T>>(mask: U) {
-        return new ObjectParser<DeepPick<T, U>>(new SchemaHandler(this.schema).pick(mask))
-    }
-
-    public omit<U extends Mask<T>>(mask: U) {
-        return new ObjectParser<DeepOmit<T, U>>(new SchemaHandler(this.schema).omit(mask))
-    }
-
-    public extend<U>(schema: Schema<U>) {
-        return new ObjectParser<Extend<T, U>>(new SchemaHandler(this.schema).extend(schema))
-    }
-
-    public merge<U>(parser: ObjectParser<U>) {
-        // extend the schema, then wrap it in a new object parser
-        return new ObjectParser<Extend<T, U>>(new SchemaHandler(this.schema).extend(parser.schema))
-    }
-
-    public override clone() {
-        return new ObjectParser(this.schema)
+    public override clone(): ObjectParser<T, U> {
+        return new ObjectParser(this.handler.schema)
     }
 }
 
-export const pObject = <T extends Schema<any>>(schema: T) => new ObjectParser<Unpack<T>>(schema)
+export const pObject = <U extends Schema<any>>(schema: U) => new ObjectParser<UnpackSchema<U>, U>(schema)
 export const obj = pObject
-
-const e1 = obj({
-    a: str(),
-    b: num(),
-    c: bool(),
-    d: obj({
-        e: str(),
-        f: num(),
-    }),
-})
-type e2 = ReturnType<typeof e1.parse>
-const e3 = e1.pick({
-    a: true,
-    d: {
-        e: true,
-    },
-})
-type e4 = ReturnType<typeof e3.parse>
-const e5 = e1.omit({
-    a: true,
-    d: {
-        e: true,
-    },
-})
-type e6 = ReturnType<typeof e5.parse>
-const e7 = e1.extend({
-    g: bool(),
-})
-type e8 = ReturnType<typeof e7.parse>
-console.log(e3.parse({ a: "a", d: { e: "e" } }))
-console.log(e5.parse({ a: "a", b: 1, c: true, d: { f: 2 } }))
-console.log(e7.parse({ a: "a", b: 1, c: true, d: { e: "e", f: 2 }, g: false }))
-
-
-const d1 = new SchemaHandler({
-    a: pString(),
-    b: pNumber(),
-    c: pBoolean(),
-    d: pObject({
-        e: pString(),
-        f: pNumber(),
-    }),
-})
-const d2 = d1.extend({
-    g: pBoolean(),
-})
-const d3 = d1.pick({
-    a: true,
-    d: {
-        e: true,
-    },
-})
-const d4 = d1.omit({
-    a: true,
-    d: {
-        e: true,
-    },
-})
-
-const a1 = pObject({
-    a: pString(),
-    b: pNumber(),
-    c: pBoolean(),
-    d: pObject({
-        e: pString(),
-        f: pNumber(),
-        x1: opt(pString()),
-        x2: req(pString()),
-        x3: ro(pString()),
-        x4: rw(pString()),
-        x5: opt(req(pString())),
-        x6: req(opt(pString())),
-        x7: rw(ro(pString())),
-        x8: ro(rw(pString())),
-        x9: rw(opt(pString())),
-        x10: rw(req(pString())),
-        x11: ro(opt(pString())),
-        x12: ro(req(pString())),
-        x13: req(rw(pString())),
-        x14: opt(rw(pString())),
-        x15: opt(ro(pString())),
-        x16: req(ro(pString())),
-    }),
-    x1: opt(pString()),
-    x2: req(pString()),
-    x3: ro(pString()),
-    x4: rw(pString()),
-    x5: opt(req(pString())),
-    x6: req(opt(pString())),
-    x7: rw(ro(pString())),
-    x8: ro(rw(pString())),
-    x9: rw(opt(pString())),
-    x10: rw(req(pString())),
-    x11: ro(opt(pString())),
-    x12: ro(req(pString())),
-    x13: req(rw(pString())),
-    x14: opt(rw(pString())),
-    x15: opt(ro(pString())),
-    x16: req(ro(pString())),
-})
-type a2 = typeof a1
-type a3 = ReturnType<typeof a1.parse>
-
-type b1 = SetFieldOptions<{
-    optional: true,
-    readonly: false
-}, {
-    readonly: true
-    }>
-type b2 = SetFieldOptions<{
-    optional: false,
-    readonly: true
-}, {
-    optional: true
-    }>
-
-const c1 = obj({
-    a: str(),
-    b: num(),
-    c: bool(),
-})
-type c2 = ReturnType<typeof c1.parse>
-const c3 = c1.parse({ a: "a", b: 1, c: true })
-console.log(c3)

@@ -1,17 +1,22 @@
-import { ChainedFieldParser, FieldOptions, FieldParser, SetFieldOptions } from "./Parser.js"
+import { Parser } from "./Parser.js";
+import { ExtendPropOptions, Prop, PropOptions } from "./prop.js";
 
-
-export class OptionalParser<T, F extends FieldOptions> extends ChainedFieldParser<T | undefined, F, {
+export class OptionalParser<T extends Parser<U> & Prop<P>, U, P extends PropOptions> extends Parser<U | undefined> implements Prop<ExtendPropOptions<P, {
     optional: true
-}> {
-    constructor(parser: FieldParser<T, F>) {
-        super(parser, {
-            ...parser.options,
+}>> {
+    constructor(private parser: T) {
+        super()
+        this.propOptions = {
+            ...this.parser.propOptions,
             optional: true
-        })
+        }
     }
 
-    public override parse(value: unknown): T | undefined {
+    propOptions: ExtendPropOptions<P, {
+        optional: true
+    }>;
+
+    public override parse(value: unknown): U | undefined {
         if (value === undefined) {
             return undefined
         }
@@ -19,9 +24,11 @@ export class OptionalParser<T, F extends FieldOptions> extends ChainedFieldParse
     }
 
     public override clone() {
-        return new OptionalParser(this.parser)
+        return new OptionalParser<T, U, P>(this.parser)
     }
+
+    optional: true = true;
 }
 
-export const pOptional = <T, F extends FieldOptions>(parser: FieldParser<T, F>) => new OptionalParser(parser)
+export const pOptional = <T extends Parser<U> & Prop<P>, U, P extends PropOptions>(parser: T) => new OptionalParser<T, U, P>(parser)
 export const opt = pOptional
