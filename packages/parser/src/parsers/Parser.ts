@@ -7,9 +7,11 @@ export abstract class FieldParser<T, F extends FieldOptions> extends Cloneable<F
     }
 
     public abstract parse(value: unknown): T
+
+    public abstract override clone(): FieldParser<T, F>
 }
 
-
+// a value parser is a simple parser which is not concerned about the attributes of a field because it deals with primitive data types, e.g. number / string, etc.
 export abstract class ValueParser<T> extends FieldParser<T, { optional: false, readonly: false }> {
     constructor() {
         super({ optional: false, readonly: false })

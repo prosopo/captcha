@@ -1,4 +1,4 @@
-import { ValueParser } from "./Parser.js"
+import { FieldParser, ValueParser } from "./Parser.js"
 
 
 export class BooleanParser extends ValueParser<boolean> {
@@ -7,6 +7,10 @@ export class BooleanParser extends ValueParser<boolean> {
             throw new Error(`Expected a boolean but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
         return value
+    }
+
+    public override clone(): BooleanParser {
+        return new BooleanParser()
     }
 }
 

@@ -7,6 +7,10 @@ export class NumberParser extends ValueParser<number> {
         }
         return value
     }
+
+    public override clone(): NumberParser {
+        return new NumberParser()
+    }
 }
 
 export const pNumber = () => new NumberParser()
