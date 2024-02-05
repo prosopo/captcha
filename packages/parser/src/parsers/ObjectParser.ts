@@ -123,7 +123,7 @@ export class ObjectParser<T> extends FieldParser<Resolve<T>, {
         return new ObjectParser<Extend<T, U>>(new SchemaHandler(this.schema).extend(schema))
     }
 
-    public override clone(): FieldParser<Resolve<T>, { optional: false; readonly: false }> {
+    public override clone() {
         return new ObjectParser(this.schema)
     }
 }
