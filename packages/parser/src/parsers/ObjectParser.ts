@@ -6,7 +6,7 @@ import { rw } from "./ReadWriteParser.js"
 import { ro } from "./ReadonlyParser.js"
 import { req } from "./RequiredParser.js"
 import { pString, str } from "./StringParser.js"
-import { DeepOmit, DeepPick, Extend, Mask, Resolve } from "./utils.js"
+import { DeepOmit, DeepPick, Extend, Mask, Resolve, keys } from "./utils.js"
 
 export type Unpack<T extends Schema<any>> = {
     // required + readwrite keys
@@ -73,7 +73,47 @@ export class SchemaHandler<T> {
         }
         return result
     }
+
+    public partial<U extends Mask<T>>(mask: U): PartialSchema<Schema<T>, U> {
+        const result = {} as any
+        const schema = this.schema
+        // for each key in the mask
+        for (const key of keys(mask)) {
+            const value = mask[key]
+            const parser = (schema as any)[key]
+            // if there's a matching key in the schema
+            if (parser === undefined) {
+                // no matching key, so skip
+                continue
+            }
+            // if the value is object, then it's a submask
+            // recurse into the submask
+            if (typeof value === "object") {
+                if(parser instanceof FieldParser) {
+                    result[key] = parser.partial(value)
+                }
+            } else {
+                // include it in the schema
+                result[key] = opt(parser)
+            }
+        }
+        return result
+    }
+
+    public required<U extends Mask<T>>(mask: U) {
+
+    }
 }
+
+type PartialSchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
+    // keys in T but not in U - left as is
+    [K in keyof T as K extends keyof U ? never : K]: K extends keyof U ? never : T[K];
+} & {
+    // keys in U and T - changed to optional
+    [K in keyof T as K extends keyof U ? K : never]: K extends keyof U ? T[K] extends FieldParser<infer V, infer F> ? FieldParser<V, SetFieldOptions<F, {
+        optional: true
+    }>> : never : never;
+}>
 
 export class ObjectParser<T> extends FieldParser<Resolve<T>, {
     optional: false
