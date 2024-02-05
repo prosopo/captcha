@@ -123,6 +123,11 @@ export class ObjectParser<T> extends FieldParser<Resolve<T>, {
         return new ObjectParser<Extend<T, U>>(new SchemaHandler(this.schema).extend(schema))
     }
 
+    public merge<U>(parser: ObjectParser<U>) {
+        // extend the schema, then wrap it in a new object parser
+        return new ObjectParser<Extend<T, U>>(new SchemaHandler(this.schema).extend(parser.schema))
+    }
+
     public override clone() {
         return new ObjectParser(this.schema)
     }
