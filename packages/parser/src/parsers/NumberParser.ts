@@ -1,6 +1,6 @@
-import { ValueParser } from "./Parser.js"
+import { Parser } from "./Parser.js"
 
-export class NumberParser extends ValueParser<number> {
+export class NumberParser extends Parser<number> {
     public override parse(value: unknown): number {
         if (typeof value !== "number") {
             throw new Error(`Expected a number but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
