@@ -1,21 +1,25 @@
-import { FieldOptions, FieldParser, SetFieldOptions } from "./Parser.js"
+import { ChainedFieldParser, FieldOptions, FieldParser, SetFieldOptions } from "./Parser.js"
 
 
-export class OptionalParser<T, F extends FieldOptions> extends FieldParser<T | undefined, SetFieldOptions<F, {
+export class OptionalParser<T, F extends FieldOptions> extends ChainedFieldParser<T | undefined, F, {
     optional: true
-}>> {
-    constructor(private parser: FieldParser<T, F>) {
-        super({
+}> {
+    constructor(parser: FieldParser<T, F>) {
+        super(parser, {
             ...parser.options,
             optional: true
         })
     }
 
-    parse(value: unknown): T | undefined {
+    public override parse(value: unknown): T | undefined {
         if (value === undefined) {
             return undefined
         }
         return this.parser.parse(value)
+    }
+
+    public override clone() {
+        return new OptionalParser(this.parser)
     }
 }
 

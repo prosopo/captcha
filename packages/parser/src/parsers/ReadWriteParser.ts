@@ -1,17 +1,21 @@
-import { FieldOptions, FieldParser, SetFieldOptions } from "./Parser.js"
+import { ChainedFieldParser, FieldOptions, FieldParser, SetFieldOptions } from "./Parser.js"
 
-export class ReadWriteParser<T, F extends FieldOptions> extends FieldParser<T, SetFieldOptions<F, {
+export class ReadWriteParser<T, F extends FieldOptions> extends ChainedFieldParser<T, F, {
     readonly: false
-}>> {
-    constructor(private parser: FieldParser<T, F>) {
-        super({
+}> {
+    constructor(parser: FieldParser<T, F>) {
+        super(parser, {
             ...parser.options,
             readonly: false
         })
     }
 
-    parse(value: unknown): T {
+    public override parse(value: unknown): T {
         return this.parser.parse(value)
+    }
+
+    public override clone() {
+        return new ReadWriteParser(this.parser)
     }
 }
 
