@@ -165,7 +165,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @param {string} userAccount - Dapp User address
      * @param {string} dappAccount - Dapp User address
      */
-    router.get(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
+    router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
         try {
             const { userAccount, dappAccount } = req.body
             console.log(userAccount, dappAccount)
@@ -194,24 +194,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a user's PoW solution as being approved or not
      *
-     * @param {string} blockhash - Dapp User address
      * @param {string} blocknumber - Dapp User address
-     * @param {string} message - Dapp User address
-     * @param {string} signature - Dapp User address
-     * @param {string} difficulty - Dapp User address
+     * @param {string} challenge - Dapp User address
+     * @param {number} difficulty - Dapp User address
      * @param {string} nonce - Dapp User address
      */
-    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
+    router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { blockhash, blocknumber, message, signature, difficulty, nonce } = req.body
-            const verified = await tasks.verifyPowCaptchaSolution(
-                blockhash,
-                blocknumber,
-                message,
-                signature,
-                difficulty,
-                nonce
-            )
+            const { blocknumber, challenge, difficulty, nonce } = req.body
+            const verified = await tasks.verifyPowCaptchaSolution(blocknumber, challenge, difficulty, nonce)
             return res.json({ verified })
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))

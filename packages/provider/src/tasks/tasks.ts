@@ -185,7 +185,7 @@ export class Tasks {
 
         // TODO: Dapps should be associated with origin urls
 
-        const difficulty = 4
+        const difficulty = 5
 
         // Get current blockhash
         const blockHash = await this.contract.api.rpc.chain.getBlockHash()
@@ -200,18 +200,14 @@ export class Tasks {
     /**
      * @description Generates a PoW Captcha for a given user and dapp
      *
-     * @param {string} blockhash - Dapp User address
      * @param {string} blocknumber - Dapp User address
-     * @param {string} message - Dapp User address
-     * @param {string} signature - Dapp User address
+     * @param {string} challenge - Dapp User address
      * @param {string} difficulty - Dapp User address
      * @param {string} nonce - Dapp User address
      */
     async verifyPowCaptchaSolution(
-        blockhash: string,
         blocknumber: number,
-        message: string,
-        signature: string,
+        challenge: string,
         difficulty: number,
         nonce: number
     ): Promise<boolean> {
@@ -223,47 +219,26 @@ export class Tasks {
                 context: {
                     ERROR: 'Blockhash must be from within last 5 blocks',
                     failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blockhash,
+                    blocknumber,
                 },
             })
         }
 
-        const blockHashCheck = await this.contract.api.rpc.chain.getBlockHash(blocknumber)
+        //todo verify signature
 
-        if (blockHashCheck.toString() !== blockhash) {
-            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
-                context: {
-                    ERROR: 'Blockhash does not match blocknumber',
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blockhash,
-                },
-            })
-        }
+        // const signatureVerification = signatureVerify(stringToHex(message), signature, this.contract.pair.address)
 
-        // Verify that blockhash is included in message
-        if (!message.includes(blockhash)) {
-            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
-                context: {
-                    ERROR: 'Blockhash must be included in message',
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blockhash,
-                },
-            })
-        }
+        // if (!signatureVerification.isValid) {
+        //     throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
+        //         context: {
+        //             ERROR: 'Provider signature is invalid for this message',
+        //             failedFuncName: this.verifyPowCaptchaSolution.name,
+        //             signature,
+        //         },
+        //     })
+        // }
 
-        const signatureVerification = signatureVerify(stringToHex(message), signature, this.contract.pair.address)
-
-        if (!signatureVerification.isValid) {
-            throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
-                context: {
-                    ERROR: 'Provider signature is invalid for this message',
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    signature,
-                },
-            })
-        }
-
-        return Array.from(sha256(new TextEncoder().encode(nonce + message)))
+        return Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
             .map((byte) => byte.toString(16).padStart(2, '0'))
             .join('')
             .startsWith('0'.repeat(difficulty))

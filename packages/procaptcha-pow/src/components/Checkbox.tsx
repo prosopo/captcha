@@ -1,5 +1,3 @@
-// /** @jsx jsx */
-// /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'

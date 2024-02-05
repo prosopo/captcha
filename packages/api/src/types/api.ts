@@ -45,7 +45,7 @@ export interface GetCaptchaResponse {
 }
 
 export interface GetPowCaptchaResponse {
-    message: string
+    challenge: string
     difficulty: number
 }
 
@@ -63,8 +63,7 @@ export interface CaptchaSolutionResponse {
 }
 
 export interface PowCaptchaSolutionResponse {
-    status: string
-    solutionApproved: boolean
+    verified: boolean
 }
 
 export interface AccountCreatorConfig {

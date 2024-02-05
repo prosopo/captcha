@@ -107,11 +107,12 @@ export default class ProviderApi extends HttpClientBase {
     ): Promise<PowCaptchaSolutionResponse> {
         const { provider, blockNumber } = randomProvider
         return this.post(ApiPaths.SubmitPowCaptchaSolution, {
-            challenge,
+            blockNumber,
+            challenge: challenge.challenge,
+            difficulty: challenge.difficulty,
             userAccount,
             dappAccount,
             provider,
-            blockNumber,
             nonce,
         })
     }

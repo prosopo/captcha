@@ -12,12 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { PowProcaptcha } from '../../../packages/procaptcha-pow/src/index.js'
+import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
+import { PowProcaptcha } from '@prosopo/procaptcha-pow'
+import { useState } from 'react'
 
 function App() {
+    const [account, setAccount] = useState<string>('')
+    const config = ProsopoClientConfigSchema.parse({
+        userAccountAddress: account,
+        account: {
+            address: process.env.PROSOPO_SITE_KEY || '',
+        },
+        web2: process.env.PROSOPO_WEB2 === 'true',
+        dappName: 'client-example',
+        defaultEnvironment:
+            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+    })
     return (
         <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <PowProcaptcha darkMode="light" />
+            <PowProcaptcha config={config} />
         </div>
     )
 }

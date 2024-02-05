@@ -1,15 +1,14 @@
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ExtensionWeb2 } from '@prosopo/procaptcha'
 import { Keyring } from '@polkadot/keyring'
 import { ProcaptchaClientConfigInput, ProcaptchaClientConfigOutput, ProcaptchaConfigSchema } from '@prosopo/types'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProviderApi } from '../../../api/src/index.js'
+import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { solvePoW } from './SolverService.js'
-import ExtensionWeb2 from '../../../procaptcha/src/api/ExtensionWeb2.js'
 
 type ProcaptchaPowOutput = {
     user: string
@@ -31,9 +30,7 @@ export interface ProcaptchaEvents {
     onClose: () => void
 }
 
-type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
-
-export const Manager = async (configInput: ProcaptchaClientConfigInput, callbacks: ProcaptchaCallbacks) => {
+export const Manager = async (configInput: ProcaptchaClientConfigInput) => {
     const getConfig = () => {
         const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
@@ -99,7 +96,14 @@ export const Manager = async (configInput: ProcaptchaClientConfigInput, callback
         configInput.account.address || ''
     )
 
-    const solution = solvePoW(challenge.message, challenge.difficulty)
+    console.log('challenge', challenge)
+
+    console.log('challenge', challenge.challenge)
+    console.log('challenge', challenge.difficulty)
+
+    const solution = solvePoW(challenge.challenge, challenge.difficulty)
+
+    console.log('solution', solution)
 
     const verifiedSolution = await providerApi.submitPowCaptchaSolution(
         challenge,

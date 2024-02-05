@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-/** @jsxImportSource @emotion/react */
 import { LoadingSpinner } from './LoadingSpinner.js'
+import { Manager } from '../Services/Manager.js'
+import { ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useState } from 'react'
@@ -50,18 +51,30 @@ const logoStyle = css`
     }
 `
 
-type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
+export interface ProcaptchaProps {
+    // the configuration for procaptcha
+    config: ProcaptchaConfigOptional
+    // optional set of callbacks for various captcha events
+    callbacks?: Partial<ProcaptchaCallbacks>
+}
 
-export const PowProcaptcha = (props: PlaceholderProps) => {
+export const PowProcaptcha = (props: ProcaptchaProps) => {
     const [checked, setChecked] = useState(false)
-    const darkMode = props.darkMode
+    const [loading, setLoading] = useState(false)
+    const darkMode = props.config.theme
     const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
     const themeColor = darkMode ? 'light' : 'dark'
     const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
 
-    const handlePowCaptcha = () => {
-        setChecked(true)
-        console.log('PowCaptcha')
+    const handlePowCaptcha = async () => {
+        setLoading(true)
+        Manager(props.config).then((verified) => {
+            if (verified.verified) {
+                console.log('verified')
+                setChecked(true)
+            }
+            setLoading(false)
+        })
     }
 
     return (
@@ -108,13 +121,13 @@ export const PowProcaptcha = (props: PlaceholderProps) => {
                                         }}
                                     >
                                         <div style={{ flex: 1 }}>
-                                            {checked ? (
+                                            {loading ? (
                                                 <LoadingSpinner themeColor={themeColor} />
                                             ) : (
                                                 <Checkbox
-                                                    checked={false}
+                                                    checked={checked}
                                                     onChange={handlePowCaptcha}
-                                                    themeColor={props.darkMode || 'light'}
+                                                    themeColor={props.config.theme || 'light'}
                                                 ></Checkbox>
                                             )}
                                         </div>
