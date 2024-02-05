@@ -7,6 +7,10 @@ export class StringParser extends ValueParser<string> {
         }
         return value
     }
+
+    public override clone(): StringParser {
+        return new StringParser()
+    }
 }
 
 export const pString = () => new StringParser()

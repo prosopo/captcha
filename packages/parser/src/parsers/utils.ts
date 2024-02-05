@@ -23,3 +23,23 @@ export class Cloneable<T> {
         throw new Error("clone() not implemented");
     }
 }
+
+export type Mask<T> = {
+    [K in keyof T]?: T[K] extends object ? Mask<T[K]> : any;
+};
+
+export type DeepPick<T, U extends Mask<T>> = Resolve<{
+    [K in keyof T & keyof U]: U[K] extends object ? DeepPick<T[K], U[K]> : T[K];
+}>
+
+export type DeepOmit<T, U extends Mask<T>> = Resolve<{
+    [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: U[K] extends object ? DeepOmit<T[K], U[K]> : T[K];
+}>
+
+export type Extend<T, U> = Resolve<{
+    // all keys in T except those in U
+    [K in keyof T as K extends keyof U ? never : K]: K extends keyof U ? never : T[K];
+} & {
+    // all keys in U, replacing any duplicate keys in T
+    [K in keyof U]: U[K];
+}>
