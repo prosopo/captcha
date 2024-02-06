@@ -1,5 +1,6 @@
 import { OptionalParser } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Parser } from "./Parser.js";
+import { ReadonlyParser } from "./ReadonlyParser.js";
 import { DeepOmit, DeepPick, Extend, Mask, Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
 
@@ -11,6 +12,10 @@ export type PartialSchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
     [K in keyof T]: K extends keyof U ? U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<PartialSchema<V, U[K]>> : never : OptionalParser<T[K]> : T[K]
 }>
 
+export type ReadonlySchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
+    [K in keyof T]: K extends keyof U ? U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<ReadonlySchema<V, U[K]>> : never : ReadonlyParser<T[K]> : T[K]
+}>
+
 export class SchemaHandler<T extends Schema<any>> {
     constructor(private _schema: T) {
 
@@ -18,6 +23,15 @@ export class SchemaHandler<T extends Schema<any>> {
 
     public get schema(): T {
         return map(this._schema, (parser) => parser.clone()) as unknown as T
+    }
+
+    public readonly<U extends Mask<UnpackSchema<T>>>(mask: U): ReadonlySchema<T, U> {
+        return map(this.schema, (parser, key) => {
+            if (get(mask, key, false) === undefined) {
+                return new ReadonlyParser(parser)
+            }
+            return parser.clone()
+        }) as any
     }
 
     public partial<U extends Mask<UnpackSchema<T>>>(mask: U): PartialSchema<T, U> {
@@ -81,6 +95,8 @@ export type UnpackSchema<T> = Resolve<{
     readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
 }>
 
+export type ExtractSchema<T extends ObjectParser<any>> = T extends ObjectParser<infer U> ? U : never
+
 export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>> {
 
     private handler: SchemaHandler<T>
@@ -135,6 +151,10 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
 
     public partial<U extends Mask<UnpackSchema<T>>>(mask: U) {
         return new ObjectParser(this.handler.partial(mask))
+    }
+
+    public readonly<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(this.handler.readonly(mask))
     }
 }
 
