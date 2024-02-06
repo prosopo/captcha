@@ -33,7 +33,7 @@ export class SchemaHandler<T extends Schema<any>> {
         return map(this._schema, (parser) => parser.clone()) as unknown as T
     }
 
-    public partial(): PartialSchema<T> {
+    public partialShallow(): PartialSchema<T> {
         return map(this.schema, (parser, key) => {
             return new OptionalParser(parser)
         }) as any
@@ -42,13 +42,13 @@ export class SchemaHandler<T extends Schema<any>> {
     public partialDeep(): DeepPartialSchema<T> {
         return map(this.schema, (parser, key) => {
             if (parser instanceof ObjectParser) {
-                return new OptionalParser(parser.partial())
+                return new OptionalParser(parser.partialDeep())
             }
             return new OptionalParser(parser)
         }) as any
     }
 
-    public readonly(): ReadonlySchema<T> {
+    public readonlyShallow(): ReadonlySchema<T> {
         return map(this.schema, (parser, key) => {
             return new ReadonlyParser(parser)
         }) as any
@@ -57,7 +57,7 @@ export class SchemaHandler<T extends Schema<any>> {
     public readonlyDeep(): DeepReadonlySchema<T> {
         return map(this.schema, (parser, key) => {
             if (parser instanceof ObjectParser) {
-                return new ReadonlyParser(parser.readonly())
+                return new ReadonlyParser(parser.readonlyDeep())
             }
             return new ReadonlyParser(parser)
         }) as any
@@ -169,16 +169,16 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
         return new ObjectParser(this.handler.extend(schema))
     }
 
-    public partial() {
-        return new ObjectParser(this.handler.partial())
+    public partialShallow() {
+        return new ObjectParser(this.handler.partialShallow())
     }
 
     public partialDeep() {
         return new ObjectParser(this.handler.partialDeep())
     }
 
-    public readonly() {
-        return new ObjectParser(this.handler.readonly())
+    public readonlyShallow() {
+        return new ObjectParser(this.handler.readonlyShallow())
     }
 
     public readonlyDeep() {
