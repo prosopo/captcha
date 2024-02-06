@@ -1,8 +1,8 @@
 import { bool } from "./BooleanParser.js";
 import { num } from "./NumberParser.js";
-import { SchemaHandler, obj } from "./ObjectParser.js";
+import { ExtractSchema, SchemaHandler, UnpackSchema, obj } from "./ObjectParser.js";
 import { opt } from "./OptionalParser.js";
-import { IsOptional, IsReadonly, Shape } from "./Parser.js";
+import { IsOptional, IsReadonly, Parser, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
 import { str } from "./StringParser.js";
 
@@ -74,6 +74,22 @@ const d5 = d1.partial({
         e: true,
     }
 })
+const d6 = d1.readonly({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type d8 = typeof d5
+type d7 = UnpackSchema<d8>
+type d9 = d8["d"]
+type d11<T> = {
+    // required + readwrite keys
+    [K in keyof T]: T[K] 
+}
+type d12 = d11<d9>
+type d10 = ExtractSchema<d9>
+type d13 = UnpackSchema<d10>
 
 const e1 = obj({
     a: str(),
@@ -109,3 +125,12 @@ const e8 = e1.partial({
     }
 })
 type e9 = ReturnType<typeof e8.parse>
+const e10 = e1.readonly({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e11 = ReturnType<typeof e10.parse>
+const e12 = e10.schema.d
+type e13 = ReturnType<typeof e12.parse>
