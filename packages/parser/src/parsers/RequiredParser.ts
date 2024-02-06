@@ -1,15 +1,8 @@
-import { Parser } from "./Parser.js"
-import { ExtendPropOptions, Prop, PropOptions } from "./prop.js"
+import { NestedParser, OptionalProp, Parser } from "./Parser.js"
 
-export class RequiredParser<T extends Parser<U> & Prop<P>, U, P extends PropOptions> extends Parser<Exclude<U, undefined>> implements Prop<ExtendPropOptions<P, {
-    optional: false
-}>> {
-    constructor(private parser: T) {
+export class RequiredParser<T extends Parser<U>, U> extends Parser<Exclude<U, undefined>> implements NestedParser<T>, OptionalProp<false> {
+    constructor(readonly parser: T) {
         super()
-        this.propOptions = {
-            ...this.parser.propOptions,
-            optional: false
-        }
     }
 
     public override parse(value: unknown): Exclude<U, undefined> {
@@ -20,13 +13,12 @@ export class RequiredParser<T extends Parser<U> & Prop<P>, U, P extends PropOpti
     }
 
     public override clone() {
-        return new RequiredParser<T, U, P>(this.parser)
+        return new RequiredParser<T, U>(this.parser)
     }
 
-    propOptions: ExtendPropOptions<P, {
-        optional: false
-    }>;
+    readonly optional = false
+
 }
 
-export const pRequired = <T extends Parser<U> & Prop<P>, U, P extends PropOptions>(parser: T) => new RequiredParser<T, U, P>(parser)
+export const pRequired = <T extends Parser<U>, U>(parser: T) => new RequiredParser<T, U>(parser)
 export const req = pRequired

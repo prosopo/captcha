@@ -1,30 +1,20 @@
-import { Parser, Shape } from "./Parser.js"
-import { ExtendPropOptions, Prop, PropOptions } from "./prop.js";
+import { NestedParser, Parser, ReadonlyProp, Shape } from "./Parser.js"
 
-export class ReadonlyParser<T extends Parser<U> & Prop<P>, U, P extends PropOptions> extends Parser<U> implements Prop<ExtendPropOptions<P, {
-    readonly: true
-}>> {
-    constructor(private parser: T) {
+export class ReadonlyParser<T extends Parser<U>, U> extends Parser<U> implements NestedParser<T>, ReadonlyProp<true> {
+    constructor(readonly parser: T) {
         super()
-        this.propOptions = {
-            ...this.parser.propOptions,
-            readonly: true
-        }
     }
-
-    propOptions: ExtendPropOptions<P, {
-        readonly: true
-    }>;
 
     public override parse(value: unknown): U {
         return this.parser.parse(value)
     }
 
     public override clone() {
-        return ro<T, U, P>(this.parser)
+        return new ReadonlyParser<T, U>(this.parser)
     }
 
+    readonly readonly = true
 }
 
-export const pReadonly = <T extends Parser<U> & Prop<P>, U, P extends PropOptions>(parser: T) => new ReadonlyParser<T, U, P>(parser)
+export const pReadonly = <T extends Parser<U>, U>(parser: T) => new ReadonlyParser<T, U>(parser)
 export const ro = pReadonly
