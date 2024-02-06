@@ -116,13 +116,20 @@ const e6 = e1.extend({
     g: bool(),
 })
 type e7 = ReturnType<typeof e6.parse>
-const e8 = e1.partial()
+const e8 = e1.partialShallow()
 type e9 = ReturnType<typeof e8.parse>
-const e10 = e1.readonly()
+const e10 = e1.readonlyShallow()
 type e11 = ReturnType<typeof e10.parse>
-const e12 = e1.readonly().partial()
+const e12 = e1.readonlyShallow().partialShallow()
 type e13 = ReturnType<typeof e12.parse>
 const e14 = e1.partialDeep()
 type e15 = ReturnType<typeof e14.parse>
 const e16 = e1.readonlyDeep()
 type e17 = ReturnType<typeof e16.parse>
+const e18 = e1.pick({
+    a: true,
+    d: {
+        e: true,
+    }
+}).readonlyShallow()
+type e19 = ReturnType<typeof e18.parse>
