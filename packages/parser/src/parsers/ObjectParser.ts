@@ -115,6 +115,10 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
     public omit<U extends Mask<UnpackSchema<T>>>(mask: U) {
         return new ObjectParser(new SchemaHandler(this.schema).omit(mask))
     }
+
+    public extend<U>(schema: Schema<U>) {
+        return new ObjectParser(new SchemaHandler(this.schema).extend(schema))
+    }
 }
 
 export const pObject = <T extends Schema<any>>(schema: T) => new ObjectParser<T>(schema)

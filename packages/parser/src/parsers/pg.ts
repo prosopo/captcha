@@ -89,3 +89,7 @@ const e4 = e1.omit({
     }
 })
 type e5 = ReturnType<typeof e4.parse>
+const e6 = e1.extend({
+    g: bool(),
+})
+type e7 = ReturnType<typeof e6.parse>
