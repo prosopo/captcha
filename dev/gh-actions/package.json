@@ -1,6 +1,6 @@
 {
     "name": "gh-actions",
-    "version": "0.2.30",
+    "version": "0.2.31",
     "description": "",
     "private": true,
     "scripts": {
