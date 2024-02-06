@@ -1,6 +1,6 @@
 import { bool } from "./BooleanParser.js";
 import { num } from "./NumberParser.js";
-import { ExtractSchema, SchemaHandler, UnpackSchema, obj } from "./ObjectParser.js";
+import { ExtractSchema, ObjectParser, SchemaHandler, UnpackSchema, obj } from "./ObjectParser.js";
 import { opt } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Parser, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
@@ -68,28 +68,9 @@ const d3 = d1.omit({
 const d4 = d1.extend({
     g: bool(),
 })
-const d5 = d1.partial({
-    a: true,
-    d: {
-        e: true,
-    }
-})
-const d6 = d1.readonly({
-    a: true,
-    d: {
-        e: true,
-    }
-})
-type d8 = typeof d5
-type d7 = UnpackSchema<d8>
-type d9 = d8["d"]
-type d11<T> = {
-    // required + readwrite keys
-    [K in keyof T]: T[K] 
-}
-type d12 = d11<d9>
-type d10 = ExtractSchema<d9>
-type d13 = UnpackSchema<d10>
+const d5 = d1.partial()
+const d6 = d1.readonly()
+
 
 const e1 = obj({
     a: str(),
@@ -118,19 +99,9 @@ const e6 = e1.extend({
     g: bool(),
 })
 type e7 = ReturnType<typeof e6.parse>
-const e8 = e1.partial({
-    a: true,
-    d: {
-        e: true,
-    }
-})
+const e8 = e1.partial()
 type e9 = ReturnType<typeof e8.parse>
-const e10 = e1.readonly({
-    a: true,
-    d: {
-        e: true,
-    }
-})
+const e10 = e1.readonly()
 type e11 = ReturnType<typeof e10.parse>
-const e12 = e10.schema.d
+const e12 = e1.readonly().partial()
 type e13 = ReturnType<typeof e12.parse>
