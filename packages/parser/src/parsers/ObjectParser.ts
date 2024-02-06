@@ -40,13 +40,12 @@ export class SchemaHandler<T extends Schema<any>> {
     }
 
     public partialDeep(): DeepPartialSchema<T> {
-        // return map(this.schema, (parser, key) => {
-        //     if (parser instanceof ObjectParser) {
-        //         return new OptionalParser(parser.partial())
-        //     }
-        //     return new OptionalParser(parser)
-        // }) as any
-        return null!
+        return map(this.schema, (parser, key) => {
+            if (parser instanceof ObjectParser) {
+                return new OptionalParser(parser.partial())
+            }
+            return new OptionalParser(parser)
+        }) as any
     }
 
     public readonly(): ReadonlySchema<T> {
@@ -56,7 +55,12 @@ export class SchemaHandler<T extends Schema<any>> {
     }
 
     public readonlyDeep(): DeepReadonlySchema<T> {
-        return null!
+        return map(this.schema, (parser, key) => {
+            if (parser instanceof ObjectParser) {
+                return new ReadonlyParser(parser.readonly())
+            }
+            return new ReadonlyParser(parser)
+        }) as any
     }
 
     public extend<U>(schema: Schema<U>): Schema<Extend<T, U>> {
