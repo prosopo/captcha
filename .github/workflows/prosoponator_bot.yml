@@ -1,0 +1,84 @@
+name: prosoponator_bot
+
+on: issue_comment
+
+jobs:
+  pr_commented:
+    # This job only runs for pull request comments
+    name: PR comment
+    if: ${{ github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        name: a
+        with:
+          github-token: ${{ secrets.PROSOPONATOR_PAT }}
+          script: |
+            const comment = context.payload.comment.body;
+            // print the payload
+            console.log(JSON.stringify(context.payload, null, 2));
+            // split comment by space
+            const words = comment.split(' ').map(word => word.toLowerCase().trim()).filter(word => word.length > 0);
+            // if first word is '@prosoponator'
+            const bot = 'prosoponator';
+            if (words[0] === '@' + bot) {
+              console.log(bot + ' called');
+              // if the next word is 'approve' then approve the pull request
+                if (words[1] === 'approve' || words[1] === 'accept') {
+                    console.log('reacting');
+                    // react to the comment with a thumbs up
+                    github.rest.reactions.createForIssueComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        comment_id: context.payload.comment.id,
+                        content: '+1'
+                    });
+                    console.log('approving');
+                    // approve the pull request
+                    github.rest.pulls.createReview({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.payload.issue.number,
+                        event: 'APPROVE',
+                        body: 'Approved by @' + context.payload.comment.user.login
+                    });
+                } else if (words[1] === 'disapprove' || words[1] === 'reject') {
+                    console.log('reacting');
+                    // react to the comment with a thumbs down
+                    github.rest.reactions.createForIssueComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        comment_id: context.payload.comment.id,
+                        content: '+1'
+                    });
+                    console.log('disapproving');
+                    // request changes to the pull request
+                    github.rest.pulls.createReview({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.payload.issue.number,
+                        event: 'REQUEST_CHANGES',
+                        body: 'Disapproved by @' + context.payload.comment.user.login
+                    });
+                } else {
+                    console.log('unknown command');
+                    console.log('reacting');
+                    // react with confused
+                    github.rest.reactions.createForIssueComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        comment_id: context.payload.comment.id,
+                        content: 'confused'
+                    });
+                    // quote reply
+                    console.log('replying');
+                    github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.payload.issue.number,
+                        body: '@' + context.payload.comment.user.login + '\n\n> ' + context.payload.comment.body + '\n\nDoes not compute! :robot:'
+                    });
+                }
+            } else {
+                console.log(bot + ' not called')
+            }
