@@ -2,7 +2,7 @@ import { bool } from "./BooleanParser.js";
 import { num } from "./NumberParser.js";
 import { ExtractSchema, ObjectParser, SchemaHandler, UnpackSchema, obj } from "./ObjectParser.js";
 import { opt } from "./OptionalParser.js";
-import { IsOptional, IsReadonly, Parser, Shape } from "./Parser.js";
+import { IsOptional, IsReadonly, NestedParser, Parser, ReadonlyProp, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
 import { str } from "./StringParser.js";
 
@@ -70,7 +70,24 @@ const d4 = d1.extend({
 })
 const d5 = d1.partial()
 const d6 = d1.readonly()
-
+const d7 = d1.partialDeep()
+const d8 = obj(d7)
+type d9 = ReturnType<typeof d8.parse>
+type d10<T> = {
+    [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
+}
+type d11 = typeof d8
+type d12 = ExtractSchema<d11>
+type d13 = d10<d12>
+type d14<T> = {
+    [K in keyof T]: IsOptional<T[K]>
+}
+type d15 = d14<d12>
+type IsRO<T> = T extends NestedParser<infer U> ? true: false
+type d16<T> = {
+    [K in keyof T]: IsRO<T[K]>
+}
+type d17 = d16<d12>
 
 const e1 = obj({
     a: str(),
@@ -105,3 +122,5 @@ const e10 = e1.readonly()
 type e11 = ReturnType<typeof e10.parse>
 const e12 = e1.readonly().partial()
 type e13 = ReturnType<typeof e12.parse>
+const e14 = e1.partialDeep()
+type e15 = ReturnType<typeof e14.parse>

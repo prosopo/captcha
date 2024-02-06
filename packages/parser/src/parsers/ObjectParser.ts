@@ -12,6 +12,10 @@ export type PartialSchema<T extends Schema<any>> = Resolve<{
     [K in keyof T]: OptionalParser<T[K]>
 }>
 
+export type DeepPartialSchema<T extends Schema<any>> = Resolve<{
+    [K in keyof T]: T[K] extends ObjectParser<infer U> ? OptionalParser<ObjectParser<DeepPartialSchema<U>>> : OptionalParser<T[K]>
+}>
+
 export type ReadonlySchema<T extends Schema<any>> = Resolve<{
     [K in keyof T]: ReadonlyParser<T[K]>
 }>
@@ -29,6 +33,16 @@ export class SchemaHandler<T extends Schema<any>> {
         return map(this.schema, (parser, key) => {
             return new OptionalParser(parser)
         }) as any
+    }
+
+    public partialDeep(): DeepPartialSchema<T> {
+        // return map(this.schema, (parser, key) => {
+        //     if (parser instanceof ObjectParser) {
+        //         return new OptionalParser(parser.partial())
+        //     }
+        //     return new OptionalParser(parser)
+        // }) as any
+        return null!
     }
 
     public readonly(): ReadonlySchema<T> {
@@ -145,6 +159,10 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
 
     public partial() {
         return new ObjectParser(this.handler.partial())
+    }
+
+    public partialDeep() {
+        return new ObjectParser(this.handler.partialDeep())
     }
 
     public readonly() {
