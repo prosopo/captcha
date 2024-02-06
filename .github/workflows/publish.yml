@@ -73,12 +73,16 @@ jobs:
                   # use git to look for differences in package.json between the before and after state
                   # before and after git sha's are passed in as env vars by github
                   # we use HEAD instead of after because after generated an error, don't know why!
-                  diff=$(git show --pretty=format: --no-notes ${{ github.event.before }}..${{ github.event.after }} package.json)
-                  echo "diff:\n$diff"
+                  diff=$(git show --pretty=format: --no-notes ${{ github.event.before }}..${{ github.event.after }} -- package.json | cat)
+                  echo "diff:"
+                  echo "$diff"
+                  echo ""
 
                   # grep for the version line
                   version_changes=$(echo "$diff" | grep -e "[-\+]\s*\"version\"")
-                  echo "version_changes:\n$version_changes"
+                  echo "version_changes:"
+                  echo "$version_changes"
+                  echo ""
 
                   # if the version line has changed then we know there's been a version change. Not necessarily bumped up, though!
                   # the next version will be whatever is currently in the package.json file
