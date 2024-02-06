@@ -23,7 +23,7 @@ const a1 = obj({
     x3: ro(opt(bool())),
 })
 type a2 = ReturnType<typeof a1.parse>
-const a3 = a1.parse({ a: "a", b: 1, c: true, d: { e: "e", f: 2 } })
+const a3 = a1.parse({ a: "a", b: 1, c: true, d: { e: "e", f: 2, y2: true }, x2: true })
 console.log(a3)
 
 const b1 = opt(str())
