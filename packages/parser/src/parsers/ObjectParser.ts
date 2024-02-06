@@ -1,19 +1,56 @@
 import { OptionalParser } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Parser } from "./Parser.js";
-import { Resolve, keys, map } from "./utils.js";
+import { DeepOmit, DeepPick, Extend, Mask, Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
 
 export type Schema<T> = {
     [K in keyof T]: Parser<T[K]>
 }
 
-export class SchemaHandler<T extends Schema<U>, U> {
+export class SchemaHandler<T extends Schema<any>> {
     constructor(private _schema: T) {
 
     }
 
     public get schema(): T {
         return map(this._schema, (parser) => parser.clone()) as unknown as T
+    }
+
+    public extend<U>(schema: Schema<U>): Schema<Extend<T, U>> {
+        const result: any = {}
+        for (const key in this.schema) {
+            result[key] = get(this.schema, key).clone()
+        }
+        for (const key in schema) {
+            result[key] = schema[key].clone()
+        }
+        return result
+    }
+
+    public pick<U extends Mask<UnpackSchema<T>>>(mask: U): Schema<DeepPick<UnpackSchema<T>, U>> {
+        const result: any = {}
+        for (const key in mask) {
+            const parser = (this.schema as any)[key]
+            if (parser === undefined) {
+                throw new Error(`Parser is undefined, expected valid parser for deep pick`)
+            }
+            result[key] = parser.clone()
+        }
+        return result
+    }
+
+    public omit<U extends Mask<UnpackSchema<T>>>(mask: U): Schema<DeepOmit<UnpackSchema<T>, U>> {
+        const result: any = {}
+        for (const key in this.schema) {
+            if (get(mask, key, false) === undefined) {
+                const parser = (this.schema as any)[key]
+                if (parser === undefined) {
+                    throw new Error(`Parser is undefined, expected valid parser for deep omit`)
+                }
+                result[key] = parser.clone()
+            }
+        }
+        return result
     }
 }
 
@@ -31,11 +68,11 @@ export type UnpackSchema<T> = Resolve<{
     readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
 }>
 
-export class ObjectParser<T, U extends Schema<T>> extends Parser<Resolve<T>> {
+export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>> {
 
-    private handler: SchemaHandler<U, T>
+    private handler: SchemaHandler<T>
 
-    constructor(schema: U) {
+    constructor(schema: T) {
         super()
         this.handler = new SchemaHandler(schema)
     }
@@ -44,7 +81,7 @@ export class ObjectParser<T, U extends Schema<T>> extends Parser<Resolve<T>> {
         return this.handler.schema
     }
 
-    public override parse(value: unknown): Resolve<T> {
+    public override parse(value: unknown): UnpackSchema<T> {
         if (typeof value !== "object" || value === null) {
             throw new Error(`Expected an object but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
         }
@@ -64,13 +101,21 @@ export class ObjectParser<T, U extends Schema<T>> extends Parser<Resolve<T>> {
         }
         // TODO handle extra keys, allow / deny / drop / keep?
         // TODO inplace / clone?
-        return result as Resolve<T>
+        return result!
     }
 
-    public override clone(): ObjectParser<T, U> {
-        return new ObjectParser(this.handler.schema)
+    public override clone(): ObjectParser<T> {
+        return new ObjectParser<T>(this.handler.schema)
+    }
+
+    public pick<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(new SchemaHandler(this.schema).pick(mask))
+    }
+
+    public omit<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(new SchemaHandler(this.schema).omit(mask))
     }
 }
 
-export const pObject = <U extends Schema<any>>(schema: U) => new ObjectParser<UnpackSchema<U>, U>(schema)
+export const pObject = <T extends Schema<any>>(schema: T) => new ObjectParser<T>(schema)
 export const obj = pObject

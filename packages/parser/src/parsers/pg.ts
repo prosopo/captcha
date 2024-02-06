@@ -1,6 +1,6 @@
 import { bool } from "./BooleanParser.js";
 import { num } from "./NumberParser.js";
-import { obj } from "./ObjectParser.js";
+import { SchemaHandler, obj } from "./ObjectParser.js";
 import { opt } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
@@ -43,3 +43,49 @@ const c5 = opt(str())
 type c6 = IsReadonly<typeof c5>
 const c7 = opt(ro(str()))
 type c8 = IsReadonly<typeof c7>
+
+const d1 = new SchemaHandler({
+    a: str(),
+    b: num(),
+    c: bool(),
+    d: obj({
+        e: str(),
+        f: num(),
+    }),
+})
+const d2 = d1.pick({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+const d3 = d1.omit({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+
+const e1 = obj({
+    a: str(),
+    b: num(),
+    c: bool(),
+    d: obj({
+        e: str(),
+        f: num(),
+    }),
+})
+const e2 = e1.pick({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e3 = ReturnType<typeof e2.parse>
+const e4 = e1.omit({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e5 = ReturnType<typeof e4.parse>
