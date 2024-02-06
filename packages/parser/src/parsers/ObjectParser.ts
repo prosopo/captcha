@@ -8,12 +8,12 @@ export type Schema<T> = {
     [K in keyof T]: Parser<T[K]>
 }
 
-export type PartialSchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
-    [K in keyof T]: K extends keyof U ? U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<PartialSchema<V, U[K]>> : never : OptionalParser<T[K]> : T[K]
+export type PartialSchema<T extends Schema<any>> = Resolve<{
+    [K in keyof T]: OptionalParser<T[K]>
 }>
 
-export type ReadonlySchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
-    [K in keyof T]: K extends keyof U ? U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<ReadonlySchema<V, U[K]>> : never : ReadonlyParser<T[K]> : T[K]
+export type ReadonlySchema<T extends Schema<any>> = Resolve<{
+    [K in keyof T]: ReadonlyParser<T[K]>
 }>
 
 export class SchemaHandler<T extends Schema<any>> {
@@ -25,21 +25,15 @@ export class SchemaHandler<T extends Schema<any>> {
         return map(this._schema, (parser) => parser.clone()) as unknown as T
     }
 
-    public readonly<U extends Mask<UnpackSchema<T>>>(mask: U): ReadonlySchema<T, U> {
+    public partial(): PartialSchema<T> {
         return map(this.schema, (parser, key) => {
-            if (get(mask, key, false) === undefined) {
-                return new ReadonlyParser(parser)
-            }
-            return parser.clone()
+            return new OptionalParser(parser)
         }) as any
     }
 
-    public partial<U extends Mask<UnpackSchema<T>>>(mask: U): PartialSchema<T, U> {
+    public readonly(): ReadonlySchema<T> {
         return map(this.schema, (parser, key) => {
-            if (get(mask, key, false) === undefined) {
-                return new OptionalParser(parser)
-            }
-            return parser.clone()
+            return new ReadonlyParser(parser)
         }) as any
     }
 
@@ -83,7 +77,7 @@ export class SchemaHandler<T extends Schema<any>> {
 
 export type UnpackSchema<T> = Resolve<{
     // required + readwrite keys
-    [K in keyof T as IsOptional<T[K]> extends false ? IsReadonly<T[K]> extends false ? K : never : never]: T[K] extends Parser<infer U> ? U : never
+    [K in keyof T as IsOptional<T[K]> extends false ? IsReadonly<T[K]> extends false ? K : never : never]: T[K] extends ObjectParser<infer V> ? V : T[K] extends Parser<infer U> ? U : never
 } & {
     // optional + readwrite keys
     [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
@@ -149,12 +143,12 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
         return new ObjectParser(this.handler.extend(schema))
     }
 
-    public partial<U extends Mask<UnpackSchema<T>>>(mask: U) {
-        return new ObjectParser(this.handler.partial(mask))
+    public partial() {
+        return new ObjectParser(this.handler.partial())
     }
 
-    public readonly<U extends Mask<UnpackSchema<T>>>(mask: U) {
-        return new ObjectParser(this.handler.readonly(mask))
+    public readonly() {
+        return new ObjectParser(this.handler.readonly())
     }
 }
 
