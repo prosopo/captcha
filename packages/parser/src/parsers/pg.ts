@@ -124,3 +124,5 @@ const e12 = e1.readonly().partial()
 type e13 = ReturnType<typeof e12.parse>
 const e14 = e1.partialDeep()
 type e15 = ReturnType<typeof e14.parse>
+const e16 = e1.readonlyDeep()
+type e17 = ReturnType<typeof e16.parse>
