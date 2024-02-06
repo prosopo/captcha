@@ -93,12 +93,12 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 })
 
-export const PoWCaptchaRecordSchema = new Schema<PowCaptcha>({
+export const PowCaptchaRecordSchema = new Schema<PowCaptcha>({
     challenge: { type: String, required: true },
     checked: { type: Boolean, required: true },
 })
 // Set an index on the captchaId field, ascending
-PoWCaptchaRecordSchema.index({ captchaId: 1 })
+PowCaptchaRecordSchema.index({ captchaId: 1 })
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userAccount: { type: String, required: true },
@@ -294,4 +294,10 @@ export interface Database {
         status: ScheduledTaskStatus,
         result?: ScheduledTaskResult
     ): Promise<void>
+
+    addPowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
+
+    getPowCaptchaRecordByChallenge(challenge: string): Promise<PowCaptcha | null>
+
+    updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
 }

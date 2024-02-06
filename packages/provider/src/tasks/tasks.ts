@@ -242,6 +242,58 @@ export class Tasks {
             .startsWith('0'.repeat(difficulty))
     }
 
+    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
+        const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
+        if (!challengeRecord) {
+            throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
+                context: { failedFuncName: this.serverVerifyPowCaptchaSolution.name, challenge },
+            })
+        }
+
+        if (challengeRecord.checked) {
+            return false
+        }
+
+        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split('___')
+
+        if (dappAccount !== challengeDappAccount) {
+            throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
+                context: {
+                    failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+                    dappAccount,
+                    challengeDappAccount,
+                },
+            })
+        }
+
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        if (!blocknumber) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true)
+
+        return true
+    }
+
     /**
      * Validate and store the text captcha solution(s) from the Dapp User in a web2 environment
      * @param {string} userAccount
