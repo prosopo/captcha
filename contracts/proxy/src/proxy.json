@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0x28d2ea059982703152ce2d6e96c891d37f689700c1af1786c4225e9d28be81f4",
+        "hash": "0x77fcb7c7d01f8474fa6b6199ae850bc2e54be5efe352f684ca27ece77138515d",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -15,7 +15,7 @@
     },
     "contract": {
         "name": "proxy",
-        "version": "0.2.30",
+        "version": "0.2.31",
         "authors": ["Chris Taylor <chris@prosopo.io>", "George Oastler <george@prosopo.io>"]
     },
     "spec": {
