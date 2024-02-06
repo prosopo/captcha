@@ -1,5 +1,5 @@
 import { OptionalParser } from "./OptionalParser.js";
-import { IsOptional, IsReadonly, Parser } from "./Parser.js";
+import { IsOptional, IsReadonly, Parser, Shape } from "./Parser.js";
 import { ReadonlyParser } from "./ReadonlyParser.js";
 import { DeepOmit, DeepPick, Extend, Mask, Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
@@ -89,19 +89,19 @@ export class SchemaHandler<T extends Schema<any>> {
     }
 }
 
-export type UnpackSchema<T> = Resolve<{
-    // required + readwrite keys
-    [K in keyof T as IsOptional<T[K]> extends false ? IsReadonly<T[K]> extends false ? K : never : never]: T[K] extends ObjectParser<infer V> ? V : T[K] extends Parser<infer U> ? U : never
-} & {
-    // optional + readwrite keys
-    [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
-} & {
-    // required + readonly keys
-    readonly [K in keyof T as IsOptional<T[K]> extends false ? IsReadonly<T[K]> extends true ? K : never : never]: T[K] extends Parser<infer U> ? U : never
-} & {
+export type UnpackSchema<T> = Extend<{
+    // normal keys
+    [K in keyof T]: Shape<T[K]>
+}, Extend<{
+    // optional keys
+    [K in keyof T as IsOptional<T[K]> extends true ? K : never]?: Shape<T[K]>
+}, Extend<{
+    // readonly keys
+    readonly [K in keyof T as IsReadonly<T[K]> extends true ? K : never]: Shape<T[K]>
+}, {
     // optional + readonly keys
-    readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
-}>
+    readonly [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends true ? K : never : never]?: Shape<T[K]>
+}>>>
 
 export type ExtractSchema<T extends ObjectParser<any>> = T extends ObjectParser<infer U> ? U : never
 

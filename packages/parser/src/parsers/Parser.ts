@@ -21,7 +21,7 @@ export interface ReadonlyProp<P> {
     readonly readonly: P
 }
 
-export type Shape<T extends Parser<any>> = T extends Parser<infer U> ? U : never
+export type Shape<T> = T extends Parser<infer U> ? U : never
 
 // optional if OptionalProp<P> is present. P determines if the prop is optional or not. If OptionalProp<P> is not present, the prop is not optional. However, if it is a nested parser then we need to look at the inner parser, as that may be optional itself, so recurse.
 export type IsOptional<T> = T extends OptionalProp<infer P> ? P : T extends NestedParser<infer U> ? IsOptional<U> : false
