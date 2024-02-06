@@ -43,3 +43,27 @@ const c5 = opt(str())
 type c6 = IsReadonly<typeof c5>
 const c7 = opt(ro(str()))
 type c8 = IsReadonly<typeof c7>
+
+const e1 = obj({
+    x1: str(),
+    x2: opt(str()),
+    x3: ro(str()),
+    x4: ro(opt(str())),
+    x5: opt(ro(str())),
+    x6: opt(opt(str())),
+    x7: ro(ro(str())),
+    x8: ro(opt(ro(opt(str())))),
+})
+type e2 = ReturnType<typeof e1.parse>
+
+const f1 = obj({
+    a: str(),
+    b: num(),
+    c: bool(),
+    d: obj({
+        e: str(),
+        f: num(),
+        g: bool(),
+    })
+})
+type f2 = ReturnType<typeof f1.parse>
