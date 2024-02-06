@@ -7,6 +7,10 @@ export type Schema<T> = {
     [K in keyof T]: Parser<T[K]>
 }
 
+export type PartialSchema<T extends Schema<any>, U extends Mask<T>> = Resolve<{
+    [K in keyof T]: K extends keyof U ? U[K] extends object ? T[K] extends ObjectParser<infer V> ? ObjectParser<PartialSchema<V, U[K]>> : never : OptionalParser<T[K]> : T[K]
+}>
+
 export class SchemaHandler<T extends Schema<any>> {
     constructor(private _schema: T) {
 
@@ -14,6 +18,15 @@ export class SchemaHandler<T extends Schema<any>> {
 
     public get schema(): T {
         return map(this._schema, (parser) => parser.clone()) as unknown as T
+    }
+
+    public partial<U extends Mask<UnpackSchema<T>>>(mask: U): PartialSchema<T, U> {
+        return map(this.schema, (parser, key) => {
+            if (get(mask, key, false) === undefined) {
+                return new OptionalParser(parser)
+            }
+            return parser.clone()
+        }) as any
     }
 
     public extend<U>(schema: Schema<U>): Schema<Extend<T, U>> {
@@ -109,15 +122,19 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
     }
 
     public pick<U extends Mask<UnpackSchema<T>>>(mask: U) {
-        return new ObjectParser(new SchemaHandler(this.schema).pick(mask))
+        return new ObjectParser(this.handler.pick(mask))
     }
 
     public omit<U extends Mask<UnpackSchema<T>>>(mask: U) {
-        return new ObjectParser(new SchemaHandler(this.schema).omit(mask))
+        return new ObjectParser(this.handler.omit(mask))
     }
 
     public extend<U>(schema: Schema<U>) {
-        return new ObjectParser(new SchemaHandler(this.schema).extend(schema))
+        return new ObjectParser(this.handler.extend(schema))
+    }
+
+    public partial<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(this.handler.partial(mask))
     }
 }
 

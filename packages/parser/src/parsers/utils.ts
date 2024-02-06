@@ -38,7 +38,7 @@ export type Extend<T, U> = Resolve<{
 } & {
     // all keys in U, replacing any duplicate keys in T
     [K in keyof U]: U[K];
-    }>
+}>
 
 
 export const keys = <T extends object>(obj: T): (keyof T)[] => {

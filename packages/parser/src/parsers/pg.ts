@@ -65,6 +65,15 @@ const d3 = d1.omit({
         e: true,
     }
 })
+const d4 = d1.extend({
+    g: bool(),
+})
+const d5 = d1.partial({
+    a: true,
+    d: {
+        e: true,
+    }
+})
 
 const e1 = obj({
     a: str(),
@@ -93,3 +102,10 @@ const e6 = e1.extend({
     g: bool(),
 })
 type e7 = ReturnType<typeof e6.parse>
+const e8 = e1.partial({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e9 = ReturnType<typeof e8.parse>
