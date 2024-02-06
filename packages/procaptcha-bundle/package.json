@@ -25,8 +25,12 @@
         "start": "vite serve --mode development --host",
         "bundle:dev": "vite build --config vite.config.ts --mode development --debug",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
