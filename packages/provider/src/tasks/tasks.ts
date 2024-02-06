@@ -54,6 +54,7 @@ import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -183,18 +184,16 @@ export class Tasks {
         //     })
         // }
 
-        // TODO: Dapps should be associated with origin urls
+        const difficulty = 4
 
-        const difficulty = 5
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
 
-        // Get current blockhash
-        const blockHash = await this.contract.api.rpc.chain.getBlockHash()
         // Use blockhash, userAccount and dappAccount for string for challenge
-        const challenge = `${blockHash}${userAccount}${dappAccount}`
+        const challenge = `${latestBlockNumber}___${userAccount}___${dappAccount}`
+        const signature = u8aToHex(this.contract.pair.sign(stringToHex(challenge)))
 
-        // Sign challenge as provider,
-
-        return { challenge, difficulty }
+        return { challenge, difficulty, signature }
     }
 
     /**
@@ -209,6 +208,7 @@ export class Tasks {
         blocknumber: number,
         challenge: string,
         difficulty: number,
+        signature: string,
         nonce: number
     ): Promise<boolean> {
         const latestHeader = await this.contract.api.rpc.chain.getHeader()
@@ -224,19 +224,17 @@ export class Tasks {
             })
         }
 
-        //todo verify signature
+        const signatureVerification = signatureVerify(stringToHex(challenge), signature, this.contract.pair.address)
 
-        // const signatureVerification = signatureVerify(stringToHex(message), signature, this.contract.pair.address)
-
-        // if (!signatureVerification.isValid) {
-        //     throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
-        //         context: {
-        //             ERROR: 'Provider signature is invalid for this message',
-        //             failedFuncName: this.verifyPowCaptchaSolution.name,
-        //             signature,
-        //         },
-        //     })
-        // }
+        if (!signatureVerification.isValid) {
+            throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
+                context: {
+                    ERROR: 'Provider signature is invalid for this message',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    signature,
+                },
+            })
+        }
 
         return Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
             .map((byte) => byte.toString(16).padStart(2, '0'))

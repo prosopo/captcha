@@ -110,6 +110,7 @@ export default class ProviderApi extends HttpClientBase {
             blockNumber,
             challenge: challenge.challenge,
             difficulty: challenge.difficulty,
+            signature: challenge.signature,
             userAccount,
             dappAccount,
             provider,

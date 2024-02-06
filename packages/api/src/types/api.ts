@@ -47,6 +47,7 @@ export interface GetCaptchaResponse {
 export interface GetPowCaptchaResponse {
     challenge: string
     difficulty: number
+    signature: string
 }
 
 export interface VerificationResponse {

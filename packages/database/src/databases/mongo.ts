@@ -110,6 +110,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     this.tables = {
                         captcha:
                             this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                        powCaptcha:
+                            this.connection.models.PowCaptcha ||
+                            this.connection.model('PowCaptcha', CaptchaRecordSchema),
                         dataset:
                             this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
                         solution:

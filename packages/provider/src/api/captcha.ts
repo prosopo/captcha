@@ -197,12 +197,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @param {string} blocknumber - Dapp User address
      * @param {string} challenge - Dapp User address
      * @param {number} difficulty - Dapp User address
+     * @param {string} signature - Dapp User address
      * @param {string} nonce - Dapp User address
      */
     router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { blocknumber, challenge, difficulty, nonce } = req.body
-            const verified = await tasks.verifyPowCaptchaSolution(blocknumber, challenge, difficulty, nonce)
+            const { blocknumber, challenge, difficulty, signature, nonce } = req.body
+            const verified = await tasks.verifyPowCaptchaSolution(blocknumber, challenge, difficulty, signature, nonce)
             return res.json({ verified })
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))

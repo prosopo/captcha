@@ -20,6 +20,7 @@ import {
     DatasetBase,
     DatasetWithIds,
     Item,
+    PowCaptcha,
 } from '@prosopo/types'
 import { CaptchaStatus, Commit } from '@prosopo/captcha-contract/types-returns'
 import { Connection, Model, Schema } from 'mongoose'
@@ -57,6 +58,7 @@ export interface SolutionRecord extends CaptchaSolution {
 
 export interface Tables {
     captcha: typeof Model<Captcha>
+    powCaptcha: typeof Model<PowCaptcha>
     dataset: typeof Model<DatasetWithIds>
     solution: typeof Model<SolutionRecord>
     usersolution: typeof Model<UserSolutionRecord>
@@ -90,6 +92,13 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 })
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 })
+
+export const PoWCaptchaRecordSchema = new Schema<PowCaptcha>({
+    challenge: { type: String, required: true },
+    checked: { type: Boolean, required: true },
+})
+// Set an index on the captchaId field, ascending
+PoWCaptchaRecordSchema.index({ captchaId: 1 })
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userAccount: { type: String, required: true },
