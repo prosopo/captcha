@@ -1,15 +1,8 @@
-import { Parser } from "./Parser.js";
-import { Prop, PropOptions, ExtendPropOptions } from "./prop.js";
+import { NestedParser, Parser, ReadonlyProp } from "./Parser.js";
 
-export class ReadWriteParser<T extends Parser<U> & Prop<P>, U, P extends PropOptions> extends Parser<U> implements Prop<ExtendPropOptions<P, {
-    readonly: false
-}>> {
-    constructor(private parser: T) {
+export class ReadWriteParser<T extends Parser<U>, U> extends Parser<U> implements NestedParser<T>, ReadonlyProp<false> {
+    constructor(readonly parser: T) {
         super()
-        this.propOptions = {
-            ...this.parser.propOptions,
-            readonly: false
-        }
     }
 
     public override parse(value: unknown): U {
@@ -17,13 +10,11 @@ export class ReadWriteParser<T extends Parser<U> & Prop<P>, U, P extends PropOpt
     }
 
     public override clone() {
-        return new ReadWriteParser<T, U, P>(this.parser)
+        return new ReadWriteParser<T, U>(this.parser)
     }
 
-    propOptions: ExtendPropOptions<P, {
-        readonly: false
-    }>;
+    readonly readonly = false
 }
 
-export const pReadWrite = <T extends Parser<U> & Prop<P>, U, P extends PropOptions>(parser: T) => new ReadWriteParser<T, U, P>(parser)
+export const pReadWrite = <T extends Parser<U>, U>(parser: T) => new ReadWriteParser<T, U>(parser)
 export const rw = pReadWrite

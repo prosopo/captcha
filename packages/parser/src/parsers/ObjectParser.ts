@@ -1,6 +1,5 @@
 import { OptionalParser } from "./OptionalParser.js";
-import { Parser } from "./Parser.js";
-import { IsOptional, IsReadonly } from "./prop.js";
+import { IsOptional, IsReadonly, Parser } from "./Parser.js";
 import { Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
 

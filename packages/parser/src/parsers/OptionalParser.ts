@@ -1,20 +1,9 @@
-import { Parser } from "./Parser.js";
-import { ExtendPropOptions, Prop, PropOptions } from "./prop.js";
+import { NestedParser, OptionalProp, Parser } from "./Parser.js";
 
-export class OptionalParser<T extends Parser<U> & Prop<P>, U, P extends PropOptions> extends Parser<U | undefined> implements Prop<ExtendPropOptions<P, {
-    optional: true
-}>> {
-    constructor(private parser: T) {
+export class OptionalParser<T extends Parser<U>, U> extends Parser<U | undefined> implements NestedParser<T>, OptionalProp<true>  {
+    constructor(readonly parser: T) {
         super()
-        this.propOptions = {
-            ...this.parser.propOptions,
-            optional: true
-        }
     }
-
-    propOptions: ExtendPropOptions<P, {
-        optional: true
-    }>;
 
     public override parse(value: unknown): U | undefined {
         if (value === undefined) {
@@ -24,11 +13,11 @@ export class OptionalParser<T extends Parser<U> & Prop<P>, U, P extends PropOpti
     }
 
     public override clone() {
-        return new OptionalParser<T, U, P>(this.parser)
+        return new OptionalParser<T, U>(this.parser)
     }
 
-    optional: true = true;
+    readonly optional = true
 }
 
-export const pOptional = <T extends Parser<U> & Prop<P>, U, P extends PropOptions>(parser: T) => new OptionalParser<T, U, P>(parser)
+export const pOptional = <T extends Parser<U>, U>(parser: T) => new OptionalParser<T, U>(parser)
 export const opt = pOptional
