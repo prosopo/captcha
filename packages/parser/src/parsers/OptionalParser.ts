@@ -1,6 +1,6 @@
 import { NestedParser, OptionalProp, Parser, Shape } from "./Parser.js";
 
-export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | undefined> implements NestedParser<T>, OptionalProp<true>  {
+export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | undefined> implements OptionalProp<true, T>  {
     constructor(readonly parser: T) {
         super()
     }

@@ -1,6 +1,6 @@
 import { NestedParser, Parser, ReadonlyProp, Shape } from "./Parser.js";
 
-export class ReadWriteParser<T extends Parser<any>> extends Parser<Shape<T>> implements NestedParser<T>, ReadonlyProp<false> {
+export class ReadWriteParser<T extends Parser<any>> extends Parser<Shape<T>> implements ReadonlyProp<false, T> {
     constructor(readonly parser: T) {
         super()
     }
