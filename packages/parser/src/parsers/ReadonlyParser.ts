@@ -16,5 +16,5 @@ export class ReadonlyParser<T extends Parser<U>, U> extends Parser<U> implements
     readonly readonly = true
 }
 
-export const pReadonly = <T extends Parser<U>, U>(parser: T) => new ReadonlyParser<T, U>(parser)
+export const pReadonly = <T extends Parser<any>>(parser: T) => new ReadonlyParser<T, Shape<T>>(parser)
 export const ro = pReadonly
