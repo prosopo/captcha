@@ -8,6 +8,5 @@
         "sourceMap": false
     },
     "include": ["**/*.ts"],
-    "references": [
-    ]
+    "references": []
 }
