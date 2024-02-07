@@ -432,7 +432,7 @@ jobs:
                   docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
 
                   # Run the new image
-                  NEW_CONTAINER_ID=$(docker create prosopo/js_server:0.2.33)
+                  NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
                   
                   # Set the JS location in the container
                   JS_FOLDER="/usr/share/nginx/html/js"
@@ -447,19 +447,19 @@ jobs:
                   docker start $NEW_CONTAINER_ID
                   
                   # Move procaptcha.bundle.js
-                  docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.0.2.33.js
+                  docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
 
                   # Remove existing procaptcha.bundle.js
                   docker exec $NEW_CONTAINER_ID rm -rf $JS_FOLDER/procaptcha.bundle.js
 
-                  # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.js
-                  docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.0.2.33.js $JS_FOLDER/procaptcha.bundle.js
+                  # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
+                  docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
 
                   # Commit the changes to the container
-                  docker commit $NEW_CONTAINER_ID prosopo/js_server:0.2.33
+                  docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
 
                   # Check this new docker image works locally
-                  docker run -p 3080:80 prosopo/js_server:0.2.33
+                  docker run -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
                   
                   # Run the cypress tests against the new bundle
                   npm run -w @prosopo/cypress-shared cypress:open:client-bundle-example:js_server
