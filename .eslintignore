@@ -1,4 +1,6 @@
 **/*bundle*.js
+**/ProcaptchaWidget-*.js
+**/index-*.js
 **/typechain/*
 .yarn
 node_modules

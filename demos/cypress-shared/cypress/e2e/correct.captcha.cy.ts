@@ -27,7 +27,7 @@ describe('Captchas', () => {
 
         if (!solutions) {
             throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
-                context: {datasetWithSolutionHashes},
+                context: { datasetWithSolutionHashes },
             })
         }
         cy.intercept('/dummy').as('dummy')

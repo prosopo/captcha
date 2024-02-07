@@ -68,7 +68,6 @@ describe('Captchas', () => {
         })
     })
 
-
     //
     // it('Solution is rejected when incorrect', () => {
     //     const captchas = await cy.clickIAmHuman().promisify()
