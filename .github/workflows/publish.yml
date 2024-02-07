@@ -422,12 +422,15 @@ jobs:
                   echo "Building Docker image..."
                   CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }})
 
+                  # Set the JS location in the container
+                  JS_FOLDER="/usr/share/nginx/html/js"
+
                   # Copy the bundle to the container and rename it to include the version
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
+                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:$JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
 
                   # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.js
-
+                  docker cp packages/procaptcha-bundle/dist/bundle $CONTAINER_ID:$JS_FOLDER && docker exec -it $CONTAINER_ID /bin/sh -c "mv $JS_FOLDER/bundle/* $JS_FOLDER && rm -rf $JS_FOLDER/bundle"
+                  
                   # Commit the changes to the container
                   docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
 
