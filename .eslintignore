@@ -31,3 +31,11 @@ typings/
 build/
 protocol/target
 .next
+.eslintignore
+.dockerignore
+.gitignore
+.npmignore
+.nvmrc
+diagram.svg
+.env.*
+.prettierignore
