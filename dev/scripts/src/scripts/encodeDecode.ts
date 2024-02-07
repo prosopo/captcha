@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BN, hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
 import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
 
 // https://stackoverflow.com/a/75872362/1178971
 function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
@@ -47,6 +47,15 @@ function consoleTableWithWrapping(data: { [key: string]: string }[], maxColWidth
 function isJSON(arg: string): boolean {
     try {
         JSON.parse(arg)
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+function isBN(arg: string): boolean {
+    try {
+        new BN(`0x${arg}`)
         return true
     } catch (e) {
         return false
@@ -103,6 +112,10 @@ function main() {
         output.push({ name: `u8aToHex`, value: u8aToHex(padded) })
         output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
         output.push({ name: `u8aToString`, value: u8aToString(padded) })
+    }
+
+    if (isBN(arg)) {
+        output.push({ name: `BN`, value: new BN(arg).toString() })
     }
 
     console.log('\nTABLE OUTPUT\n')

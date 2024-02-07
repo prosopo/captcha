@@ -74,7 +74,12 @@ export default async function (
     logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
-    const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
+    let drop: undefined | Drop[]
+    let pure: string[] | undefined
+    if(isProduction) {
+        drop = ['debugger']
+        pure = ['console.log', 'console.warn']
+    }
 
     logger.info('Bundle name', bundleName)
     return {
@@ -93,6 +98,7 @@ export default async function (
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
             drop,
+            pure,
             legalComments: 'none',
         },
         define,
