@@ -1,0 +1,8 @@
+.eslintignore
+.dockerignore
+.gitignore
+.npmignore
+.nvmrc
+diagram.svg
+.env.*
+.prettierignore
