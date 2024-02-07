@@ -449,9 +449,6 @@ jobs:
                   # Move procaptcha.bundle.js
                   docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
 
-                  # Remove existing procaptcha.bundle.js
-                  docker exec $NEW_CONTAINER_ID rm -rf $JS_FOLDER/procaptcha.bundle.js
-
                   # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
                   docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
 
