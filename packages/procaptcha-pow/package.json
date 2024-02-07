@@ -41,6 +41,7 @@
     "@prosopo/api": "^0.2.30",
     "@prosopo/common": "0.2.30",
     "@prosopo/procaptcha": "0.2.30",
+    "@prosopo/procaptcha-pow": "0.2.30",
     "@prosopo/types": "^0.2.30",
     "@prosopo/util": "^0.2.30",
     "noble-hashes": "^0.3.1",

@@ -13,7 +13,8 @@
 // limitations under the License.
 import { LoadingSpinner } from './LoadingSpinner.js'
 import { Manager } from '../Services/Manager.js'
-import { ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { ProcaptchaOutput } from '@prosopo/types'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useState } from 'react'
@@ -50,6 +51,23 @@ const logoStyle = css`
         } /* logoWithoutText */
     }
 `
+
+export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
+
+/**
+ * A list of all events which can occur during the Procaptcha process.
+ */
+export interface ProcaptchaEvents {
+    onError: (error: Error) => void
+    onAccountNotFound: (address: string) => void
+    onHuman: (output: ProcaptchaOutput) => void
+    onExtensionNotFound: () => void
+    onChallengeExpired: () => void
+    onExpired: () => void
+    onFailed: () => void
+    onOpen: () => void
+    onClose: () => void
+}
 
 export interface ProcaptchaProps {
     // the configuration for procaptcha
