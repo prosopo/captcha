@@ -151,6 +151,11 @@ export const PowProcaptcha = (props: ProcaptchaProps) => {
                                         </div>
                                     </div>
                                 </div>
+                                <div style={{ padding: 1 }}>
+                                    <span style={{ color: theme.palette.background.contrastText, paddingLeft: '4px' }}>
+                                        I am a human
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div>

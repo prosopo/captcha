@@ -10,7 +10,7 @@ loadEnv()
 process.env.TS_NODE_PROJECT = path.resolve('./tsconfig.json')
 
 // Package specific config
-const copyTo = '../../demos/client-bundle-example/src'
+const copyTo = ['../../demos/client-bundle-example/src', '../../demos/client-bundle-pow-example/src']
 const bundleName = 'procaptcha'
 const packageName = '@prosopo/procaptcha-bundle'
 const entry = './src/index.tsx'
