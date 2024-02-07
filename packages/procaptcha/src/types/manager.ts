@@ -11,9 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { GetCaptchaResponse } from '@prosopo/api'
+import { GetCaptchaResponse, ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
 /**

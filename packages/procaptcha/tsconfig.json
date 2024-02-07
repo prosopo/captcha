@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "lib": ["es6", "dom"]
     },
-    "include": ["src", "src/**/*.json"],
+    "include": ["src", "src/**/*.json", "../types/src/procaptcha/api.ts"],
     "references": [
         {
             "path": "../../contracts/captcha"

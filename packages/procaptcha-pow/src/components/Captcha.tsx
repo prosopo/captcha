@@ -158,6 +158,7 @@ export const PowProcaptcha = (props: ProcaptchaProps) => {
                                 </div>
                             </div>
                         </div>
+
                         <div>
                             <a
                                 href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"

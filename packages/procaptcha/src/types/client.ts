@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionCommitmentId } from '@prosopo/api'
-import { CaptchaSolutionResponse } from '../types/api.js'
+import { CaptchaSolutionResponse } from '../../../types/src/procaptcha/api.js'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 export type TCaptchaSubmitResult = [CaptchaSolutionResponse, CaptchaSolutionCommitmentId, ContractSubmittableResult?]

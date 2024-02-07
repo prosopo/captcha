@@ -14,7 +14,6 @@
 /** @jsxImportSource @emotion/react */
 import {
     Account,
-    GetCaptchaResponse,
     Manager,
     ProcaptchaCallbacks,
     ProcaptchaConfigOptional,
@@ -23,6 +22,7 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
+import { GetCaptchaResponse } from '@prosopo/types'
 import { LoadingSpinner } from './LoadingSpinner.js'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'

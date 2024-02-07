@@ -19,7 +19,7 @@ import {
     verifyProof,
 } from '@prosopo/datasets'
 import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api.js'
+import { CaptchaSolutionResponse, GetCaptchaResponse } from '../../../types/src/procaptcha/api.js'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
