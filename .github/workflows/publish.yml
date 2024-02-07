@@ -54,6 +54,9 @@ jobs:
                   echo "******************************"
             # checkout the repo
             - uses: actions/checkout@v3
+              with:
+                  # fetch all history + branches
+                  fetch-depth: 0
 
             - name: Dockerhub login
               run: |
@@ -72,7 +75,6 @@ jobs:
 
                   # use git to look for differences in package.json between the before and after state
                   # before and after git sha's are passed in as env vars by github
-                  # we use HEAD instead of after because after generated an error, don't know why!
                   diff=$(git show --pretty=format: --no-notes ${{ github.event.before }}..${{ github.event.after }} -- package.json | cat)
                   echo "diff:"
                   echo "$diff"
