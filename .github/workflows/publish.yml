@@ -430,7 +430,7 @@ jobs:
 
                   # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
                   docker cp packages/procaptcha-bundle/dist/bundle $CONTAINER_ID:$JS_FOLDER && docker exec -it $CONTAINER_ID /bin/sh -c "mv $JS_FOLDER/bundle/* $JS_FOLDER && rm -rf $JS_FOLDER/bundle"
-                  
+
                   # Commit the changes to the container
                   docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
 
