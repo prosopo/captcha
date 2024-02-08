@@ -19,9 +19,9 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
-import { Procaptcha } from '@prosopo/procaptcha-react'
-import { at } from '@prosopo/util'
-import { createRoot } from 'react-dom/client'
+import {Procaptcha} from '@prosopo/procaptcha-react'
+import {at} from '@prosopo/util'
+import {createRoot} from 'react-dom/client'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
@@ -37,13 +37,11 @@ interface ProcaptchaRenderOptions {
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getCurrentScript = () =>
-    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
-        ? document.currentScript
-        : undefined
+const getProcaptchaScript = () =>  document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
 const extractParams = (name: string) => {
-    const script = getCurrentScript()
+
+    const script = getProcaptchaScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
         return {
@@ -210,7 +208,7 @@ if (renderExplicit !== 'explicit') {
 if (onloadUrlCallback) {
     const onloadCallback = getWindowCallback(onloadUrlCallback)
     // Add event listener to the script tag to call the callback function when the script is loaded
-    getCurrentScript()?.addEventListener('load', () => {
+    getProcaptchaScript()?.addEventListener('load', () => {
         ready(onloadCallback)
     })
 }
