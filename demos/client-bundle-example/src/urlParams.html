@@ -3,23 +3,22 @@
     <head>
         <title>Procaptcha demo: Live Test</title>
         <script type="module">
+            async function captchaLoaded() {
+                const render = (await import('./procaptcha.bundle')).render
+                console.log('Captcha loaded')
+                render('procaptcha-container', {
+                    siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
+                    theme: 'dark',
+                    callback: 'onCaptchaVerified',
+                })
+            }
+            window.captchaLoaded = captchaLoaded
 
-        async function captchaLoaded() {
-            const render = (await import('./procaptcha.bundle')).render;
-            console.log('Captcha loaded');
-            render('procaptcha-container', {
-                siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
-                theme: 'dark',
-                callback: 'onCaptchaVerified',
-            });
-        }
-        window.captchaLoaded = captchaLoaded;
-
-        // Define a callback function to be called when the CAPTCHA is verified
-        window.onCaptchaVerified = function (output) {
-            console.log('Captcha verified, output: ' + JSON.stringify(output))
-        }
-    </script>
+            // Define a callback function to be called when the CAPTCHA is verified
+            window.onCaptchaVerified = function (output) {
+                console.log('Captcha verified, output: ' + JSON.stringify(output))
+            }
+        </script>
         <script
             id="procaptchaScript"
             type="module"
@@ -27,7 +26,6 @@
             async
             defer
         ></script>
-
     </head>
     <body>
         <form>

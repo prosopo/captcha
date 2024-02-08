@@ -40,4 +40,3 @@ protocol/target
 .nvmrc
 diagram.svg
 .env.*
-.prettierignore
