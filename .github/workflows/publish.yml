@@ -401,10 +401,10 @@ jobs:
                   docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
 
                   # Check this new docker image works locally
-                  docker run -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+                  docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
 
-                  # Run the cypress tests against the new bundle
-                  npm run -w @prosopo/cypress-shared cypress:open:client-bundle-example:js_server
+                  # Start the bundle demo & run the cypress tests against the new bundle
+                  npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
 
             - name: Github release
               continue-on-error: true
