@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <title>Procaptcha demo: Live Test</title>
-    <script type="module">
+    <head>
+        <title>Procaptcha demo: Live Test</title>
+        <script type="module">
 
         async function captchaLoaded() {
             const render = (await import('./procaptcha.bundle')).render;
@@ -20,18 +20,18 @@
             console.log('Captcha verified, output: ' + JSON.stringify(output))
         }
     </script>
-    <script
+        <script
             id="procaptchaScript"
             type="module"
             src="./procaptcha.bundle.js?onload=captchaLoaded&render=explicit"
             async
             defer
-    ></script>
+        ></script>
 
-</head>
-<body>
-<form>
-    <div id="procaptcha-container"></div>
-</form>
-</body>
+    </head>
+    <body>
+        <form>
+            <div id="procaptcha-container"></div>
+        </form>
+    </body>
 </html>

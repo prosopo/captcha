@@ -19,9 +19,9 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
-import {Procaptcha} from '@prosopo/procaptcha-react'
-import {at} from '@prosopo/util'
-import {createRoot} from 'react-dom/client'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { at } from '@prosopo/util'
+import { createRoot } from 'react-dom/client'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
@@ -37,10 +37,9 @@ interface ProcaptchaRenderOptions {
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getProcaptchaScript = () =>  document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
+const getProcaptchaScript = () => document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
 const extractParams = (name: string) => {
-
     const script = getProcaptchaScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
