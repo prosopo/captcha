@@ -361,6 +361,10 @@ jobs:
             - name: Build docker js_server
               if: steps.check_version_any.outputs.bump == 'true'
               run: |
+                  # Set the JS location in the container
+                  JS_FOLDER="/usr/share/nginx/html/js"
+
+                  # Get the most recent version of the js_server image
                   docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }}
 
                   # Create a temporary container from the latest image
@@ -378,9 +382,6 @@ jobs:
 
                   # Run the new image
                   NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
-
-                  # Set the JS location in the container
-                  JS_FOLDER="/usr/share/nginx/html/js"
 
                   # Copy the legacy files across
                   docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
