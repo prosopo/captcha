@@ -195,6 +195,16 @@ export default function ready(fn: () => void) {
     }
 }
 
+// extend the global Window interface to include the procaptcha object
+declare global {
+    interface Window {
+        procaptcha: { ready: typeof ready; render: typeof render }
+    }
+}
+
+// set the procaptcha attribute on the window
+window.procaptcha = { ready, render }
+
 // onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 // onRenderExplicit takes values of either explicit or implicit
 const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME)
