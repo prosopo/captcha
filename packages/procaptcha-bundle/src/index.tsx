@@ -198,7 +198,7 @@ export default function ready(fn: () => void) {
 // extend the global Window interface to include the procaptcha object
 declare global {
     interface Window {
-        procaptcha: {ready: typeof ready, render: typeof render};
+        procaptcha: { ready: typeof ready; render: typeof render }
     }
 }
 
