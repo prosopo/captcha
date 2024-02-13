@@ -202,49 +202,71 @@ const getArr = (n: number, el: number): Uint8Array => {
 
 const benchNoble =  async (count: number, len: number) => {
     const start = Date.now()
+    let result = 0
     for (let i = 0; i < count; i++) {   
-        sha256(getArr(len, i))
+        const r = sha256(getArr(len, i))
+        result += r[0]
     }
-    return Date.now() - start
+    return {
+        time: Date.now() - start,
+        result
+    }
 }
 
 const benchHashWasm = async (count: number, len: number) => {
     const start = Date.now()
+    let result = 0
     for (let i = 0; i < count; i++) {
         const hex = bufferToHex(getArr(len, i))
-        const result = await hwSha256(hex)
+        const r = await hwSha256(hex)
+        result += r.charCodeAt(0)
     }
-    return Date.now() - start
+    return {
+        time: Date.now() - start,
+        result
+    }
 }
 
 const benchHashWasm2 = async (count: number, len: number) => {
     const start = Date.now()
+    let result = 0
     for (let i = 0; i < count; i++) {   
         const hasher = await createSHA256()
         hasher.update(getArr(len, i))
-        const result = await hasher.digest('binary')
+        const r = await hasher.digest('binary')
+        result += r[0]
     }
-    return Date.now() - start
+    return {
+        time: Date.now() - start,
+        result
+    }
 }
 
 const benchWasm = async (count: number, len: number) => {
     const start = Date.now()
+    let result = 0
     for (let i = 0; i < count; i++) {   
-        wasmRun(getArr(len, i), 3)
+        const r = wasmRun(getArr(len, i), 3)
+        result += r
     }
-    return Date.now() - start
+    return {
+        time: Date.now() - start,
+        result
+    }
 }
 
 const benchWasm2 = async (count: number, len: number) => {
     const start = Date.now()
-    // 4bytes per 32bit int
-    wasmRun2(count, len)
-    return Date.now() - start
+    const result = wasmRun2(count, len)
+    return {
+        time: Date.now() - start,
+        result
+    }
 }
 
 const run = async () => {
-    const count = 1000000
-    const len = 4 * 8
+    const count = 10_000_000
+    const len = 128
     await new Promise((resolve) => setTimeout(resolve, 1000))
     console.log('run')
     await init()
@@ -255,7 +277,7 @@ const run = async () => {
 
     console.log('noble', await benchNoble(count, len))
     console.log('hash-wasm', await benchHashWasm(count, len))
-    console.log('hash-wasm2', await benchHashWasm2(count, len))
+    // console.log('hash-wasm2', await benchHashWasm2(count, len))
 
     // console.log('js small', solvePoW(new Uint8Array([0]), 3))
     // console.log('js', solvePoW(new Uint8Array(new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7]).buffer), 3))
