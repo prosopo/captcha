@@ -2,6 +2,7 @@ import path from 'path'
 import { UserConfig, defineConfig } from 'vite'
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
+import { nodeResolve } from "@rollup/plugin-node-resolve"
 
 export default defineConfig(({ command, mode }) => {
     return {
@@ -13,15 +14,17 @@ export default defineConfig(({ command, mode }) => {
                 // entry: path.resolve(__dirname, 'pkg/wasm.js'),
                 name: 'bundle',
                 fileName: `bundle`,
-                formats: ['es'],
+                // formats: ['es'],
             },
         },
         plugins: [
+            nodeResolve(),
             wasm(),
             topLevelAwait()
         ],
         worker: {
             plugins: [
+                nodeResolve(),
                 wasm(),
                 topLevelAwait()
             ]
