@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "module": "es2020",
+        "moduleResolution": "Bundler",
+        "target": "ES2021",
+    },
+    "include": ["src"],
+}

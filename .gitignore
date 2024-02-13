@@ -141,3 +141,4 @@ vite.config.ts.timestamp*
 **/tests/**/test_results
 
 packages/wasm/target
+**/node_modules
