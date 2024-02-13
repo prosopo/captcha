@@ -10,15 +10,17 @@ pub fn run2(count: usize, arrSize: usize) -> u32 {
     for i in 0..arrSize {
         vec.push(0u8);
     }
+    let mut result: u32 = 0;
     for i in 0..count {
         let mut hasher = Sha256::new();
         for j in 0..arrSize {
             vec[j] = (i + j) as u8;
         }
         hasher.update(vec.clone());
-        let result = hasher.finalize();
+        let r = hasher.finalize();
+        result += r[0] as u32;
     }
-    return 0;
+    return result;
 }
 
 #[wasm_bindgen]
