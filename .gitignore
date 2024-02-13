@@ -139,3 +139,5 @@ vite.config.ts.timestamp*
 
 # ignore test results dir
 **/tests/**/test_results
+
+packages/wasm/target
