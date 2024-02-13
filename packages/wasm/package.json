@@ -15,7 +15,7 @@
         }
     },
     "scripts": {
-        "build": "cd pkg2 && npm run build && cd .. && npx wasm-pack build && npx vite build"
+        "build": "npx wasm-pack build && npx vite build"
     },
     "dependencies": {
         "dotenv": "^16.0.1",

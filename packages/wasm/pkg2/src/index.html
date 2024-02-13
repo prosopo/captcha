@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WASM Greeting</title>
+    <script type="module" src="index.js"></script>
+    <style>
+        * {
+            font-family: "Courier New", monospace;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="input" placeholder="Enter input...">
+    <button id="btn">Run</button>
+    <div id="result"></div>
+    <div id="time"></div>
+
+    <!-- <script type="module">
+        import { run } from './bundle.iife.js';
+        // import * as wasm from './bundle.js';
+
+        document.getElementById("btn").addEventListener("click", onClick);
+
+        async function onClick() {
+            const input = document.getElementById("input").value;
+            const start = Date.now();
+            const result = await run(input);
+            const end = Date.now();
+            document.getElementById("result").innerText = "Result: " + result;
+            document.getElementById("time").innerText = `Time: ${end - start}ms`;
+        }
+    </script> -->
+</body>
