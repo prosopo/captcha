@@ -13,8 +13,7 @@
 // limitations under the License.
 import { LoadingSpinner } from './LoadingSpinner.js'
 import { Manager } from '../Services/Manager.js'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
-import { ProcaptchaOutput } from '@prosopo/types'
+import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useState } from 'react'
@@ -71,7 +70,7 @@ export interface ProcaptchaEvents {
 
 export interface ProcaptchaProps {
     // the configuration for procaptcha
-    config: ProcaptchaConfigOptional
+    config: ProcaptchaClientConfigInput
     // optional set of callbacks for various captcha events
     callbacks?: Partial<ProcaptchaCallbacks>
 }

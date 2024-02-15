@@ -11,20 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account } from '../types/index.js'
+import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { ProcaptchaClientConfigOutput } from '@prosopo/types'
+import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import { getNetwork } from '../modules/Manager.js'
 import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
-import { hexHash } from '@prosopo/common'
 import { picassoCanvas } from '../modules/canvas.js'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
@@ -38,7 +36,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  */
 export default class ExtWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
-        const network = getNetwork(config)
+        const network = this.getNetwork(config)
         const wsProvider = new WsProvider(network.endpoint)
 
         const account = await this.createAccount(wsProvider)
@@ -124,5 +122,15 @@ export default class ExtWeb2 extends Extension {
         // strip out the components that change in incognito mode
         const { screenFrame, ...componentsReduced } = result.components
         return hashComponents(componentsReduced)
+    }
+
+    getNetwork = (config: ProcaptchaClientConfigOutput) => {
+        const network = config.networks[config.defaultNetwork]
+        if (!network) {
+            throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', {
+                context: { error: `No network found for environment ${config.defaultEnvironment}` },
+            })
+        }
+        return network
     }
 }
