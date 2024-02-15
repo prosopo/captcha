@@ -1,31 +1,31 @@
 export type Message2 = {
-    command: 'hash'
+    command: 'hash' | 'report'
 }
 
 export type Event2 = {
     data: Message2
 }
 
-export const exec = async (e: Event2): Promise<void> => {
-    return new Promise<void>(async (resolve, reject) => {
-        // other code can send messages to this worker, so protect against invalid messages
-        if (e.data.command !== 'hash') {
-            console.log(`unknown event: ${JSON.stringify(e)}`)
-            return;
-        }
-        let i = 0;
-        let lastTime = Date.now();
-        while (true) {
-            if (Date.now() - lastTime > 1000) {
-                // report every 1 second
-                self.postMessage(i);
-                lastTime = Date.now();
-                i = 0;
-            }
-            i++;
-        }
-    })
+export type Report2 = {
+    count: number
 }
 
-self.addEventListener('message', 
-exec);
+self.addEventListener('message', (e: Event2) => {
+    if (e.data.command !== 'hash') {
+        throw new Error('unexpected command')
+    }
+    let time = Date.now()
+    let count = 0
+    while (true) {
+        count++
+        const now = Date.now()
+        const interval = now - time
+        if (interval > 1000) {
+            const msg: Report2 = {
+                count,
+            }
+            self.postMessage(msg)
+            time = Date.now()
+        }
+    }
+});
