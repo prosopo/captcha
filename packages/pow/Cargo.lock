@@ -202,7 +202,6 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 name = "wasm"
 version = "0.1.0"
 dependencies = [
- "console_error_panic_hook",
  "sha2",
  "sha256",
  "wasm-bindgen",
