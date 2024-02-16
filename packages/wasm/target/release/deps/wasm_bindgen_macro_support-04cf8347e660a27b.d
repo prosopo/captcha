@@ -1,8 +1,0 @@
-/home/geopro/bench/captcha4/packages/wasm/target/release/deps/wasm_bindgen_macro_support-04cf8347e660a27b.rmeta: /home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/lib.rs /home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/parser.rs
-
-/home/geopro/bench/captcha4/packages/wasm/target/release/deps/libwasm_bindgen_macro_support-04cf8347e660a27b.rlib: /home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/lib.rs /home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/parser.rs
-
-/home/geopro/bench/captcha4/packages/wasm/target/release/deps/wasm_bindgen_macro_support-04cf8347e660a27b.d: /home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/lib.rs /home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/parser.rs
-
-/home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/lib.rs:
-/home/geopro/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-bindgen-macro-support-0.2.91/src/parser.rs:
