@@ -15,7 +15,7 @@
         }
     },
     "scripts": {
-        "build": "npx wasm-pack build && npx vite build"
+        "build": "npx wasm-pack build --target bundler --no-pack --out-dir dist"
     },
     "dependencies": {
         "dotenv": "^16.0.1",
