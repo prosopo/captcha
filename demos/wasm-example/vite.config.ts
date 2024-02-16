@@ -19,17 +19,17 @@ export default defineConfig(({ command, mode }) => {
             },
             minify: false
         },
-        // plugins: [
-        //     nodeResolve(),
-        //     wasm(),
-        //     topLevelAwait()
-        // ],
-        // worker: {
-        //     plugins: [
-        //         nodeResolve(),
-        //         wasm(),
-        //         topLevelAwait()
-        //     ]
-        // }
+        plugins: [
+            nodeResolve(),
+            wasm(),
+            topLevelAwait()
+        ],
+        worker: {
+            plugins: [
+                nodeResolve(),
+                wasm(),
+                topLevelAwait()
+            ]
+        }
     }   
 })

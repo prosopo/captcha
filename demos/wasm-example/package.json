@@ -1,5 +1,5 @@
 {
-    "name": "wasm2",
+    "name": "wasm-example",
     "version": "0.1.0",
     "dependencies": {
         "@noble/hashes": "^1.3.3",
