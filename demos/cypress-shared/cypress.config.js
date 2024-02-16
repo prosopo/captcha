@@ -16,6 +16,9 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import vitePreprocessor from 'cypress-vite'
 export default defineConfig({
     headers: { 'Accept-Encoding': 'gzip, deflate' },
+    env: {
+        default_page: '/',
+    },
     e2e: {
         setupNodeEvents(on, config) {
             on(
