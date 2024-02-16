@@ -358,6 +358,55 @@ jobs:
 
                   NODE_ENV=production npm run bundle:prod
 
+            - name: Build docker js_server
+              if: steps.check_version_any.outputs.bump == 'true'
+              run: |
+                  # Set the JS location in the container
+                  JS_FOLDER="/usr/share/nginx/html/js"
+
+                  # Get the most recent version of the js_server image
+                  docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }}
+
+                  # Create a temporary container from the latest image
+                  echo "Building Docker image..."
+                  OLD_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }})
+
+                  # Remove the old js temp folder
+                  rm -rf ./js_bundles_host_temp
+
+                  # Copy out the old files
+                  docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
+
+                  # Build the new image
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
+
+                  # Run the new image
+                  NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
+
+                  # Copy the legacy files across
+                  docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
+
+                  # Copy the new bundle files to the container into a folder with the version name
+                  docker cp packages/procaptcha-bundle/dist/bundle/. $NEW_CONTAINER_ID:$JS_FOLDER
+
+                  # Start the new container
+                  docker start $NEW_CONTAINER_ID
+
+                  # Move procaptcha.bundle.js
+                  docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
+
+                  # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
+                  docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
+
+                  # Commit the changes to the container
+                  docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                  # Check this new docker image works locally
+                  docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                  # Start the bundle demo & run the cypress tests against the new bundle
+                  npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
+
             - name: Github release
               continue-on-error: true
               id: publish_github
@@ -416,21 +465,6 @@ jobs:
               id: publish_docker_js_server
               if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
-                  docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }}
-
-                  # Create a temporary container from the latest image
-                  echo "Building Docker image..."
-                  CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }})
-
-                  # Copy the bundle to the container and rename it to include the version
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
-
-                  # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.js
-
-                  # Commit the changes to the container
-                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
-
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
                   docker push prosopo/js_server:${{ steps.next_version.outputs.version }}
