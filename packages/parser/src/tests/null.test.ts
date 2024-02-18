@@ -14,7 +14,7 @@ describe("null", () => {
         expect(() => nul().parse(1)).toThrow();
     })
 
-    it("should error on nuling", () => {
+    it("should error on string", () => {
         expect(() => nul().parse("")).toThrow();
     })
 
