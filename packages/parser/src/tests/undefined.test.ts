@@ -14,7 +14,7 @@ describe("undefined", () => {
         expect(() => undef().parse(1)).toThrow();
     })
 
-    it("should error on undefing", () => {
+    it("should error on string", () => {
         expect(() => undef().parse("")).toThrow();
     })
 
