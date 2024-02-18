@@ -1,0 +1,128 @@
+import { describe, expect, test, it } from 'vitest'
+import { undef } from '../parsers/UndefinedParser.js';
+
+describe("undefined", () => {
+    it("should error on true", () => {
+        expect(() => undef().parse(true)).toThrow();
+    });
+    
+    it("should error on false", () => {
+        expect(() => undef().parse(false)).toThrow();
+    });
+
+    it("should error on number", () => {
+        expect(() => undef().parse(1)).toThrow();
+    })
+
+    it("should error on undefing", () => {
+        expect(() => undef().parse("")).toThrow();
+    })
+
+    it("should error on object", () => {
+        expect(() => undef().parse({})).toThrow();
+    })
+
+    it("should error on array", () => {
+        expect(() => undef().parse([])).toThrow();
+    })
+
+    it("should error on null", () => {
+        expect(() => undef().parse(null)).toThrow();
+    })
+
+    it("should parse undefined", () => {
+        expect(undef().parse(undefined)).toBe(undefined);
+    })
+
+    it("should error on NaN", () => {
+        expect(() => undef().parse(NaN)).toThrow();
+    })
+
+    it("should error on Infinity", () => {
+        expect(() => undef().parse(Infinity)).toThrow();
+    })
+
+    it("should error on -Infinity", () => {
+        expect(() => undef().parse(-Infinity)).toThrow();
+    })
+
+    it("should error on function", () => {
+        expect(() => undef().parse(() => {})).toThrow();
+    })
+
+    it("should error on symbol", () => {
+        expect(() => undef().parse(Symbol())).toThrow();
+    })
+
+    it("should error on Date", () => {
+        expect(() => undef().parse(new Date())).toThrow();
+    })
+
+    it("should error on BigInt", () => {
+        expect(() => undef().parse(BigInt(1))).toThrow();
+    })
+
+    it("should error on Map", () => {
+        expect(() => undef().parse(new Map())).toThrow();
+    })
+
+    it("should error on Set", () => {
+        expect(() => undef().parse(new Set())).toThrow();
+    })
+
+    it("should error on WeakMap", () => {
+        expect(() => undef().parse(new WeakMap())).toThrow();
+    })
+
+    it("should error on WeakSet", () => {
+        expect(() => undef().parse(new WeakSet())).toThrow();
+    })
+
+    it("should error on ArrayBuffer", () => {
+        expect(() => undef().parse(new ArrayBuffer(1))).toThrow();
+    })
+
+    it("should error on Int8Array", () => {
+        expect(() => undef().parse(new Int8Array(1))).toThrow();
+    })
+
+    it("should error on Uint8Array", () => {
+        expect(() => undef().parse(new Uint8Array(1))).toThrow();
+    })
+
+    it("should error on Uint8ClampedArray", () => {
+        expect(() => undef().parse(new Uint8ClampedArray(1))).toThrow();
+    })
+
+    it("should error on Int16Array", () => {
+        expect(() => undef().parse(new Int16Array(1))).toThrow();
+    })
+
+    it("should error on Uint16Array", () => {
+        expect(() => undef().parse(new Uint16Array(1))).toThrow();
+    })
+
+    it("should error on Int32Array", () => {
+        expect(() => undef().parse(new Int32Array(1))).toThrow();
+    })
+
+    it("should error on Uint32Array", () => {
+        expect(() => undef().parse(new Uint32Array(1))).toThrow();
+    })
+
+    it("should error on Float32Array", () => {
+        expect(() => undef().parse(new Float32Array(1))).toThrow();
+    })
+
+    it("should error on Float64Array", () => {
+        expect(() => undef().parse(new Float64Array(1))).toThrow();
+    })
+
+    it("should error on BigInt64Array", () => {
+        expect(() => undef().parse(new BigInt64Array(1))).toThrow();
+    })
+
+    it("should error on BigUint64Array", () => {
+        expect(() => undef().parse(new BigUint64Array(1))).toThrow();
+    })
+});
