@@ -6,9 +6,10 @@ import commonjs from 'rollup-plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import sourceMaps from 'rollup-plugin-sourcemaps';
 import workerLoader from 'rollup-plugin-web-worker-loader';
-import pkg from './package.json';
 import copy from 'rollup-plugin-copy';
 import { wasm } from '@rollup/plugin-wasm';
+
+const __dirname = '';
 
 export default {
     input: [path.resolve(__dirname, 'src/index.ts')],
