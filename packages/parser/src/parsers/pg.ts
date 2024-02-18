@@ -68,8 +68,8 @@ const d3 = d1.omit({
 const d4 = d1.extend({
     g: bool(),
 })
-const d5 = d1.partial()
-const d6 = d1.readonly()
+const d5 = d1.partialShallow()
+const d6 = d1.readonlyShallow()
 const d7 = d1.partialDeep()
 const d8 = obj(d7)
 type d9 = ReturnType<typeof d8.parse>
@@ -133,3 +133,31 @@ const e18 = e1.pick({
     }
 }).readonlyShallow()
 type e19 = ReturnType<typeof e18.parse>
+const e20 = e1.pickPartial({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e21 = ReturnType<typeof e20.parse>
+const e22 = e1.pickReadonly({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e23 = ReturnType<typeof e22.parse>
+const e24 = e1.omitPartial({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e25 = ReturnType<typeof e24.parse>
+const e26 = e1.omitReadonly({
+    a: true,
+    d: {
+        e: true,
+    }
+})
+type e27 = ReturnType<typeof e26.parse>

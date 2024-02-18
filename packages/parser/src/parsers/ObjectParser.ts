@@ -1,7 +1,7 @@
 import { OptionalParser } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Parser, Shape } from "./Parser.js";
 import { ReadonlyParser } from "./ReadonlyParser.js";
-import { DeepOmit, DeepPick, Extend, Mask, Resolve, keys, map } from "./utils.js";
+import { DeepOmit, DeepPick, Extend, Mask, Prop, Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
 
 export type Schema<T> = {
@@ -23,6 +23,26 @@ export type DeepReadonlySchema<T extends Schema<any>> = ReadonlySchema<{
 export type ReadonlySchema<T extends Schema<any>> = Resolve<{
     [K in keyof T]: ReadonlyParser<T[K]>
 }>
+
+export type PickPartialSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T & keyof U]: T[K] extends ObjectParser<infer V> ? U[K] extends object ? ObjectParser<PickPartialSchema<V, U[K]>> : OptionalParser<T[K]> : OptionalParser<T[K]>
+}>
+
+export type PickReadonlySchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T & keyof U]: T[K] extends ObjectParser<infer V> ? U[K] extends object ? ObjectParser<PickReadonlySchema<V, U[K]>> : ReadonlyParser<T[K]> : ReadonlyParser<T[K]>
+}>
+
+export type OmitPartialSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: T[K] extends ObjectParser<infer V> ? Prop<U, K> extends object ? ObjectParser<OmitPartialSchema<V, Prop<U, K>>> : never : OptionalParser<T[K]>
+}>
+
+export type OmitReadonlySchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: T[K] extends ObjectParser<infer V> ? Prop<U, K> extends object ? ObjectParser<OmitReadonlySchema<V, Prop<U, K>>> : never : ReadonlyParser<T[K]>
+}>
+
+// export type DeepOmit<T, U extends Mask<T>> = Resolve<{
+//     [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: U[K] extends object ? DeepOmit<T[K], U[K]> : T[K];
+// }>
 
 export class SchemaHandler<T extends Schema<any>> {
     constructor(private _schema: T) {
@@ -48,6 +68,32 @@ export class SchemaHandler<T extends Schema<any>> {
         }) as any
     }
 
+    public pickPartial<U extends Mask<UnpackSchema<T>>>(mask: U): PickPartialSchema<T, U> {
+        const result: any = {}
+        for (const key in mask) {
+            const parser = (this.schema as any)[key]
+            if (parser === undefined) {
+                throw new Error(`Parser is undefined, expected valid parser for deep pick`)
+            }
+            result[key] = new OptionalParser(parser)
+        }
+        return result
+    }
+
+    public omitPartial<U extends Mask<UnpackSchema<T>>>(mask: U): OmitPartialSchema<T, U> {
+        const result: any = {}
+        for (const key in this.schema) {
+            if (get(mask, key, false) === undefined) {
+                const parser = (this.schema as any)[key]
+                if (parser === undefined) {
+                    throw new Error(`Parser is undefined, expected valid parser for deep omit`)
+                }
+                result[key] = new OptionalParser(parser)
+            }
+        }
+        return result
+    }
+
     public readonlyShallow(): ReadonlySchema<T> {
         return map(this.schema, (parser, key) => {
             return new ReadonlyParser(parser)
@@ -61,6 +107,38 @@ export class SchemaHandler<T extends Schema<any>> {
             }
             return new ReadonlyParser(parser)
         }) as any
+    }
+
+    public pickReadonly<U extends Mask<UnpackSchema<T>>>(mask: U): PickReadonlySchema<T, U> {
+        const result: any = {}
+        for (const key in mask) {
+            const parser = (this.schema as any)[key]
+            if (parser === undefined) {
+                throw new Error(`Parser is undefined, expected valid parser for deep pick`)
+            }
+            if (parser instanceof ObjectParser) {
+                result[key] = new ReadonlyParser(parser.readonlyDeep())
+            }
+            result[key] = new ReadonlyParser(parser)
+        }
+        return result
+    }
+
+    public omitReadonly<U extends Mask<UnpackSchema<T>>>(mask: U): OmitReadonlySchema<T, U> {
+        const result: any = {}
+        for (const key in this.schema) {
+            if (get(mask, key, false) === undefined) {
+                const parser = (this.schema as any)[key]
+                if (parser === undefined) {
+                    throw new Error(`Parser is undefined, expected valid parser for deep omit`)
+                }
+                if (parser instanceof ObjectParser) {
+                    result[key] = new ReadonlyParser(parser.readonlyDeep())
+                }
+                result[key] = new ReadonlyParser(parser)
+            }
+        }
+        return result
     }
 
     public extend<U>(schema: Schema<U>): Schema<Extend<T, U>> {
@@ -161,8 +239,24 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
         return new ObjectParser(this.handler.pick(mask))
     }
 
+    public pickPartial<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(this.handler.pickPartial(mask))
+    }
+
+    public pickReadonly<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(this.handler.pickReadonly(mask))
+    }
+
     public omit<U extends Mask<UnpackSchema<T>>>(mask: U) {
         return new ObjectParser(this.handler.omit(mask))
+    }
+
+    public omitPartial<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(this.handler.omitPartial(mask))
+    }
+
+    public omitReadonly<U extends Mask<UnpackSchema<T>>>(mask: U) {
+        return new ObjectParser(this.handler.omitReadonly(mask))
     }
 
     public extend<U>(schema: Schema<U>) {
