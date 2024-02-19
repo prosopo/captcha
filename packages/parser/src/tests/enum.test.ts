@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("enum", () => {
     it("should error on true", () => {
         expect(() => en(['a', 'b', 'c']).parse(true)).toThrow();
@@ -148,5 +156,10 @@ describe("enum", () => {
         expect(() => en(['a', 'b', 'c']).parse(Foo.B)).toThrow();
         expect(() => en(['a', 'b', 'c']).parse(Foo.C)).toThrow();
         expect(() => en(['a', 'b', 'c']).parse(Foo.D)).toThrow();
+    })
+
+    it("should error on instance", () => {
+        expect(() => en(['a', 'b', 'c']).parse(new Bar())).toThrow();
+        expect(() => en(['a', 'b', 'c']).parse(new Baz())).toThrow();
     })
 });

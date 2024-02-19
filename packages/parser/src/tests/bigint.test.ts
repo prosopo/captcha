@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("bigint", () => {
     it("should fail on true", () => {
         expect(() => bi().parse(true)).toThrow();
@@ -138,5 +146,10 @@ describe("bigint", () => {
         expect(() => bi().parse(Foo.B)).toThrow();
         expect(() => bi().parse(Foo.C)).toThrow();
         expect(() => bi().parse(Foo.D)).toThrow();
+    })
+
+    it("should error on instance", () => {
+        expect(() => bi().parse(new Bar())).toThrow();
+        expect(() => bi().parse(new Baz())).toThrow();
     })
 });

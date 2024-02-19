@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("sym", () => {
     it("should error on true", () => {
         expect(() => sym().parse(true)).toThrow();
@@ -139,5 +147,10 @@ describe("sym", () => {
         expect(() => sym().parse(Foo.B)).toThrow();
         expect(() => sym().parse(Foo.C)).toThrow();
         expect(() => sym().parse(Foo.D)).toThrow();
+    })
+
+    it("should error on instance", () => {
+        expect(() => sym().parse(new Bar())).toThrow();
+        expect(() => sym().parse(new Baz())).toThrow();
     })
 });

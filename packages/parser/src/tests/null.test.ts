@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("null", () => {
     it("should error on true", () => {
         expect(() => nul().parse(true)).toThrow();
@@ -138,5 +146,10 @@ describe("null", () => {
         expect(() => nul().parse(Foo.B)).toThrow();
         expect(() => nul().parse(Foo.C)).toThrow();
         expect(() => nul().parse(Foo.D)).toThrow();
+    })
+
+    it("should error on instance", () => {
+        expect(() => nul().parse(new Bar())).toThrow();
+        expect(() => nul().parse(new Baz())).toThrow();
     })
 });
