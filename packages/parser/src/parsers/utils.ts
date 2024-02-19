@@ -16,6 +16,10 @@ export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) ex
 // thus we have resolved the type into a plain object, no nested types
 export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] };
 
+export type Ctor<T> = new (...args: any[]) => T
+
+export type InferTypeFromCtor<T extends Ctor<unknown>> = T extends Ctor<infer U> ? U : never
+
 export abstract class Cloneable<T> {
     public abstract clone(): T
 }
