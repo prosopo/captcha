@@ -134,9 +134,12 @@ describe("string", () => {
     })
 
     it("should error on native enum variant", () => {
-        expect(() => str().parse(Foo.A)).toThrow();
         expect(() => str().parse(Foo.B)).toThrow();
         expect(() => str().parse(Foo.C)).toThrow();
-        expect(() => str().parse(Foo.D)).toThrow();
+    })
+
+    it("should parse native enum variant with string value", () => {
+        expect(str().parse(Foo.A)).toBe("x");
+        expect(str().parse(Foo.D)).toBe("y");
     })
 });

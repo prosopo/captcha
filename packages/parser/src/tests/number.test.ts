@@ -135,8 +135,11 @@ describe("number", () => {
 
     it("should error on native enum variant", () => {
         expect(() => num().parse(Foo.A)).toThrow();
-        expect(() => num().parse(Foo.B)).toThrow();
-        expect(() => num().parse(Foo.C)).toThrow();
         expect(() => num().parse(Foo.D)).toThrow();
+    })
+
+    it("should parse native enum variant with number value", () => {
+        expect(num().parse(Foo.B)).toBe(2);
+        expect(num().parse(Foo.C)).toBe(3);
     })
 });
