@@ -8,7 +8,7 @@ enum Foo {
     D = 'y'
 }
 
-describe("enum", () => {
+describe("native enum", () => {
     it("should error on true", () => {
         expect(() => nen(Foo).parse(true)).toThrow();
     });
