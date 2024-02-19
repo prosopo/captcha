@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { bool } from '../parsers/BooleanParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("boolean", () => {
     it("should parse true", () => {
         expect(bool().parse(true)).toBe(true);
@@ -124,5 +131,12 @@ describe("boolean", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => bool().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => bool().parse(Foo.A)).toThrow();
+        expect(() => bool().parse(Foo.B)).toThrow();
+        expect(() => bool().parse(Foo.C)).toThrow();
+        expect(() => bool().parse(Foo.D)).toThrow();
     })
 });

@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { bi } from '../parsers/BigIntParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("bigint", () => {
     it("should fail on true", () => {
         expect(() => bi().parse(true)).toThrow();
@@ -124,5 +131,12 @@ describe("bigint", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => bi().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => bi().parse(Foo.A)).toThrow();
+        expect(() => bi().parse(Foo.B)).toThrow();
+        expect(() => bi().parse(Foo.C)).toThrow();
+        expect(() => bi().parse(Foo.D)).toThrow();
     })
 });

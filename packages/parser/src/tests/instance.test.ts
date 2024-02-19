@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { inst } from '../parsers/InstanceParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 class Bar {
     
 }
@@ -141,5 +148,12 @@ describe("undefined", () => {
 
     it("should error on instance of another class", () => {
         expect(() => inst(Bar).parse(new Baz())).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => inst(Bar).parse(Foo.A)).toThrow();
+        expect(() => inst(Bar).parse(Foo.B)).toThrow();
+        expect(() => inst(Bar).parse(Foo.C)).toThrow();
+        expect(() => inst(Bar).parse(Foo.D)).toThrow();
     })
 });

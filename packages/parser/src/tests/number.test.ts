@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { num } from '../parsers/NumberParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("number", () => {
     it("should fail on true", () => {
         expect(() => num().parse(true)).toThrow();
@@ -124,5 +131,12 @@ describe("number", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => num().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => num().parse(Foo.A)).toThrow();
+        expect(() => num().parse(Foo.B)).toThrow();
+        expect(() => num().parse(Foo.C)).toThrow();
+        expect(() => num().parse(Foo.D)).toThrow();
     })
 });
