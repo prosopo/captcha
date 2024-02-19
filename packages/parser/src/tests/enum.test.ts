@@ -1,7 +1,7 @@
 import { describe, expect, test, it } from 'vitest'
 import { en } from '../parsers/EnumParser.js';
 
-describe("undefined", () => {
+describe("enum", () => {
     it("should error on true", () => {
         expect(() => en(['a', 'b', 'c']).parse(true)).toThrow();
     });
@@ -128,6 +128,8 @@ describe("undefined", () => {
 
     it("should parse variant", () => {
         expect(en(['a', 'b', 'c']).parse('a')).toBe('a');
+        expect(en(['a', 'b', 'c']).parse('b')).toBe('b');
+        expect(en(['a', 'b', 'c']).parse('c')).toBe('c');
     })
 
     it("should error on invalid variant", () => {
