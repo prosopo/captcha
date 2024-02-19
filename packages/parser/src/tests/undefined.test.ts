@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { undef } from '../parsers/UndefinedParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("undefined", () => {
     it("should error on true", () => {
         expect(() => undef().parse(true)).toThrow();
@@ -124,5 +131,12 @@ describe("undefined", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => undef().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => undef().parse(Foo.A)).toThrow();
+        expect(() => undef().parse(Foo.B)).toThrow();
+        expect(() => undef().parse(Foo.C)).toThrow();
+        expect(() => undef().parse(Foo.D)).toThrow();
     })
 });

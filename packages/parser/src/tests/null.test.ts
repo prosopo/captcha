@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { nul } from '../parsers/NullParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("null", () => {
     it("should error on true", () => {
         expect(() => nul().parse(true)).toThrow();
@@ -124,5 +131,12 @@ describe("null", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => nul().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => nul().parse(Foo.A)).toThrow();
+        expect(() => nul().parse(Foo.B)).toThrow();
+        expect(() => nul().parse(Foo.C)).toThrow();
+        expect(() => nul().parse(Foo.D)).toThrow();
     })
 });

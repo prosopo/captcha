@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { str } from '../parsers/StringParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("string", () => {
     it("should error on true", () => {
         expect(() => str().parse(true)).toThrow();
@@ -124,5 +131,12 @@ describe("string", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => str().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => str().parse(Foo.A)).toThrow();
+        expect(() => str().parse(Foo.B)).toThrow();
+        expect(() => str().parse(Foo.C)).toThrow();
+        expect(() => str().parse(Foo.D)).toThrow();
     })
 });

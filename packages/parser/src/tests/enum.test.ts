@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { en } from '../parsers/EnumParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("enum", () => {
     it("should error on true", () => {
         expect(() => en(['a', 'b', 'c']).parse(true)).toThrow();
@@ -134,5 +141,12 @@ describe("enum", () => {
 
     it("should error on invalid variant", () => {
         expect(() => en(['a', 'b', 'c']).parse('d')).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => en(['a', 'b', 'c']).parse(Foo.A)).toThrow();
+        expect(() => en(['a', 'b', 'c']).parse(Foo.B)).toThrow();
+        expect(() => en(['a', 'b', 'c']).parse(Foo.C)).toThrow();
+        expect(() => en(['a', 'b', 'c']).parse(Foo.D)).toThrow();
     })
 });

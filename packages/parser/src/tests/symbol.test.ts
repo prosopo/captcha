@@ -1,6 +1,13 @@
 import { describe, expect, test, it } from 'vitest'
 import { sym } from '../parsers/SymbolParser.js';
 
+enum Foo {
+    A = 'x',
+    B = 2,
+    C = 3,
+    D = 'y'
+}
+
 describe("sym", () => {
     it("should error on true", () => {
         expect(() => sym().parse(true)).toThrow();
@@ -125,5 +132,12 @@ describe("sym", () => {
 
     it("should error on BigUint64Array", () => {
         expect(() => sym().parse(new BigUint64Array(1))).toThrow();
+    })
+
+    it("should error on native enum variant", () => {
+        expect(() => sym().parse(Foo.A)).toThrow();
+        expect(() => sym().parse(Foo.B)).toThrow();
+        expect(() => sym().parse(Foo.C)).toThrow();
+        expect(() => sym().parse(Foo.D)).toThrow();
     })
 });
