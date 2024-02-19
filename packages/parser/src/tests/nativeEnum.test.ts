@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("native enum", () => {
     it("should error on true", () => {
         expect(() => nen(Foo).parse(true)).toThrow();
@@ -143,5 +151,10 @@ describe("native enum", () => {
     it("should error on invalid variant", () => {
         expect(() => nen(Foo).parse('z')).toThrow();
         expect(() => nen(Foo).parse(0)).toThrow();
+    })
+
+    it("should error on instance", () => {
+        expect(() => nen(Foo).parse(new Bar())).toThrow();
+        expect(() => nen(Foo).parse(new Baz())).toThrow();
     })
 });

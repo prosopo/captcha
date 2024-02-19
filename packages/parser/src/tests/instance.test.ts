@@ -9,11 +9,11 @@ enum Foo {
 }
 
 class Bar {
-    
+    readonly bar = 1;
 }
 
 class Baz {
-
+    readonly baz = 2;
 }
 
 describe("undefined", () => {

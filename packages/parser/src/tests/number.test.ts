@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("number", () => {
     it("should fail on true", () => {
         expect(() => num().parse(true)).toThrow();
@@ -141,5 +149,10 @@ describe("number", () => {
     it("should parse native enum variant with number value", () => {
         expect(num().parse(Foo.B)).toBe(2);
         expect(num().parse(Foo.C)).toBe(3);
+    })
+
+    it("should error on instance", () => {
+        expect(() => num().parse(new Bar())).toThrow();
+        expect(() => num().parse(new Baz())).toThrow();
     })
 });

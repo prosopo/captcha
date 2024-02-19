@@ -8,6 +8,14 @@ enum Foo {
     D = 'y'
 }
 
+class Bar {
+    readonly bar = 1;
+}
+
+class Baz {
+    readonly baz = 2;
+}
+
 describe("boolean", () => {
     it("should parse true", () => {
         expect(bool().parse(true)).toBe(true);
@@ -138,5 +146,10 @@ describe("boolean", () => {
         expect(() => bool().parse(Foo.B)).toThrow();
         expect(() => bool().parse(Foo.C)).toThrow();
         expect(() => bool().parse(Foo.D)).toThrow();
+    })
+
+    it("should error on instance", () => {
+        expect(() => bool().parse(new Bar())).toThrow();
+        expect(() => bool().parse(new Baz())).toThrow();
     })
 });
