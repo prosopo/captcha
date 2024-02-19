@@ -1,5 +1,5 @@
 import { describe, expect, test, it } from 'vitest'
-import { sym } from '../parsers/SymParser.js';
+import { sym } from '../parsers/SymbolParser.js';
 
 describe("sym", () => {
     it("should error on true", () => {
