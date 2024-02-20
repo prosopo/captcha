@@ -1,3 +1,4 @@
+import { inst } from "./InstanceParser.js";
 import { OptionalParser } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Parser, Shape } from "./Parser.js";
 import { ReadonlyParser } from "./ReadonlyParser.js";
@@ -209,12 +210,9 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
     }
 
     public override parse(value: unknown): UnpackSchema<T> {
-        if (typeof value !== "object" || value === null) {
-            throw new Error(`Expected an object but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
-        }
-        const result = {} as any
+        const result = inst(Object).parse(value) as any
         // track the unhandled keys in the value
-        const unhandledKeys = new Set(Object.keys(value))
+        const unhandledKeys = new Set(Object.keys(value as any))
         for (const key of keys(this.schema)) {
             const parser = get(this.schema, key)
             const val = (value as any)[key]

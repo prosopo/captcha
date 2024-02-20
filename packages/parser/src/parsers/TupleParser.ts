@@ -3,6 +3,7 @@ import { Parser, Shape } from "./Parser.js"
 import { bool } from "./BooleanParser.js"
 import { num } from "./NumberParser.js"
 import { str } from "./StringParser.js"
+import { inst } from "./InstanceParser.js"
 
 export type ShapeArray<T> = T extends [infer A, ...infer B] ? [Shape<A>, ...ShapeArray<B>] : []
 
@@ -13,14 +14,7 @@ export class TupleParser<const T extends Parser<any>[]> extends Parser<ShapeArra
     }
 
     public override parse(value: unknown): ShapeArray<T> {
-        if (value === null) {
-            throw new Error(`Expected tuple but got null`)
-        }
-        if (!Array.isArray(value)) {
-            throw new Error(`Expected tuple but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
-        }
-        // value is definitely an array
-        const valueArray = value as unknown[]
+        const valueArray = inst(Array).parse(value)
         if (valueArray.length !== this.parsers.length) {
             throw new Error(`Expected tuple with ${this.parsers.length} elements but got ${valueArray.length} elements`)
         }

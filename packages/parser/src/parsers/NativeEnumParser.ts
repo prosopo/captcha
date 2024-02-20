@@ -1,3 +1,4 @@
+import { inst } from "./InstanceParser.js"
 import { Parser } from "./Parser.js"
 
 // ts enums are a simple mapping from string to number
@@ -40,7 +41,7 @@ export class NativeEnumParser<T> extends Parser<T[keyof T]> {
 
     constructor(readonly nativeEnum: T) {
         super()
-        const nativeEnumObj = this.nativeEnum as object
+        const nativeEnumObj = inst(Object).parse(nativeEnum)
         // iterate over the enum key/value mapping (which is just an obj under the hood)
         const result: T[keyof T][] = []
         for (const [key, enumValue] of Object.entries(nativeEnumObj)) {
