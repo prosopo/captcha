@@ -41,13 +41,10 @@ interface ProcaptchaRenderOptions {
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getCurrentScript = () =>
-    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
-        ? document.currentScript
-        : undefined
+const getProcaptchaScript = () => document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
 const extractParams = (name: string) => {
-    const script = getCurrentScript()
+    const script = getProcaptchaScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
         return {
@@ -213,6 +210,16 @@ export default function ready(fn: () => void) {
     }
 }
 
+// extend the global Window interface to include the procaptcha object
+declare global {
+    interface Window {
+        procaptcha: { ready: typeof ready; render: typeof render }
+    }
+}
+
+// set the procaptcha attribute on the window
+window.procaptcha = { ready, render }
+
 // onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 // onRenderExplicit takes values of either explicit or implicit
 const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME)
@@ -225,7 +232,7 @@ if (renderExplicit !== 'explicit') {
 if (onloadUrlCallback) {
     const onloadCallback = getWindowCallback(onloadUrlCallback)
     // Add event listener to the script tag to call the callback function when the script is loaded
-    getCurrentScript()?.addEventListener('load', () => {
+    getProcaptchaScript()?.addEventListener('load', () => {
         ready(onloadCallback)
     })
 }

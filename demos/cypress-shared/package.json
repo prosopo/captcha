@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/cypress-shared",
-    "version": "0.2.30",
+    "version": "0.2.38",
     "private": true,
     "type": "module",
     "engines": {
@@ -8,8 +8,8 @@
         "npm": ">=9"
     },
     "dependencies": {
-        "@prosopo/types": "0.2.30",
-        "@prosopo/util": "0.2.30"
+        "@prosopo/types": "0.2.38",
+        "@prosopo/util": "0.2.38"
     },
     "devDependencies": {
         "@cypress/xpath": "^2.0.3",
@@ -19,7 +19,7 @@
         "rollup-plugin-node-builtins": "^2.1.2",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "vite": "^4.5.0",
+        "vite": "^4.5.2",
         "vite-plugin-node-polyfills": "^0.16.0"
     },
     "scripts": {
@@ -27,8 +27,12 @@
         "clean": "tsc --build --clean",
         "cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
         "cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
-        "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress open",
-        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://0.0.0.0:9232' cypress run",
+        "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress open",
+        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run",
+        "cypress:open:client-bundle-example:explicit": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/urlParams.html'",
+        "cypress:run:client-bundle-example:explicit": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/urlParams.html' --spec 'cypress/e2e/captcha.cy.ts'",
+        "cypress:open:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/jsBundleTest.html'",
+        "cypress:run:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/jsBundleTest.html' --spec 'cypress/e2e/captcha.cy.ts'",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",

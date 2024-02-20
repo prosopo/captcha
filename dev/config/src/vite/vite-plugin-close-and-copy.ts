@@ -38,7 +38,6 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
                 })
             }
             log.info('Bundle closed')
-            process.exit(0)
         },
     }
 }
