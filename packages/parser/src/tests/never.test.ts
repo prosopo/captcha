@@ -20,6 +20,9 @@ class Baz {
 describe("never", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => never().parse(null)).returns.toMatchTypeOf<never>();
+        const parser = never();
+        const a: never = undefined!
+        const b: ReturnType<typeof parser.parse> = a
     })
 
     it("should error on true", () => {

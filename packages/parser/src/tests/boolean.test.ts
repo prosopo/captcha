@@ -19,6 +19,9 @@ class Baz {
 describe("boolean", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => bool().parse(null)).returns.toMatchTypeOf<boolean>();
+        const parser = bool();
+        const a: boolean = true;
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should parse true", () => {

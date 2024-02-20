@@ -22,6 +22,9 @@ class Baz {
 describe("map", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => map(str(), num()).parse(null)).returns.toMatchTypeOf<Map<string, number>>();
+        const parser = map(str(), num());
+        const a: Map<string, number> = new Map();
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {

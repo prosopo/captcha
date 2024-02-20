@@ -20,6 +20,12 @@ describe("undefined", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => inst(Bar).parse(null)).returns.toMatchTypeOf<Bar>();
         expectTypeOf(() => inst(Baz).parse(null)).returns.toEqualTypeOf<Baz>();
+        const parser = inst(Bar);
+        const a: Bar = new Bar();
+        const b: ReturnType<typeof parser.parse> = a;
+        const parser2 = inst(Baz);
+        const c: Baz = new Baz();
+        const d: ReturnType<typeof parser2.parse> = c;
     })
 
     it("should error on true", () => {

@@ -23,6 +23,9 @@ class Baz {
 describe("set", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => set(str()).parse(null)).returns.toMatchTypeOf<Set<string>>();
+        const parser = set(str());
+        const a: Set<string> = new Set();
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {

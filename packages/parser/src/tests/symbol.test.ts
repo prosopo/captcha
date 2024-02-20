@@ -19,6 +19,9 @@ class Baz {
 describe("sym", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => sym().parse(null)).returns.toMatchTypeOf<Symbol>();
+        const parser = sym();
+        const a: symbol = Symbol();
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {
