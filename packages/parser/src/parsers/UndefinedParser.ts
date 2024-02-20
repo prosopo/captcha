@@ -1,11 +1,10 @@
+import { LiteralParser } from "./LiteralParser.js"
 import { Parser } from "./Parser.js"
 
-export class UndefinedParser extends Parser<undefined> {
-    public override parse(value: unknown): undefined {
-        if (value !== undefined) {
-            throw new Error(`Expected undefined but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
-        }
-        return value
+export class UndefinedParser extends LiteralParser<undefined> {
+
+    constructor() {
+        super(undefined)
     }
 
     public override clone() {
