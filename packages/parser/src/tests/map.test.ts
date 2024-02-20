@@ -80,7 +80,7 @@ describe("map", () => {
         expect(() => map(str(), num()).parse(BigInt(1))).toThrow();
     })
 
-    it("should parse Map", () => {
+    it("should parse populated Map", () => {
         expect(map(str(), num()).parse(new Map([["a", 1], ["b", 2], ["c", 3]]))).toStrictEqual(new Map([["a", 1], ["b", 2], ["c", 3]]));
     })
 
@@ -92,7 +92,7 @@ describe("map", () => {
         expect(() => map(str(), num()).parse(new Map<string, string | number>([["a", "1"], ["b", 2], ["c", 3]]) as any)).toThrow();
     })
 
-    it("should parse empty Map", () => {
+    it("should parse Map", () => {
         expect(map(str(), num()).parse(new Map())).toStrictEqual(new Map());
     })
 
