@@ -3,7 +3,7 @@ import { Resolve } from "./utils.js"
 
 export type IntersectParserArray<T> = T extends [Parser<infer A>, ...infer B] ?  | IntersectParserArray<B> : []
 
-export class AndParser<T extends Parser<any>[]> extends Parser<IntersectParserArray<T>> {
+export class IntersectParser<const T extends Parser<any>[]> extends Parser<IntersectParserArray<T>> {
 
     constructor(readonly parsers: T) {
         super()
@@ -25,11 +25,11 @@ export class AndParser<T extends Parser<any>[]> extends Parser<IntersectParserAr
     }
 
     public override clone() {
-        return new AndParser<T>(this.parsers)
+        return new IntersectParser<T>(this.parsers)
     }
 }
 
-export const pIntersect = <T extends Parser<any>[]>(parsers: T) => new AndParser<T>(parsers)
+export const pIntersect = <const T extends Parser<any>[]>(parsers: T) => new IntersectParser<T>(parsers)
 export const intersect = pIntersect
 export const intersection = pIntersect
 export const pAnd = <T extends Parser<any>, U extends Parser<any>>(a: T, b: U) => pIntersect([a, b])
