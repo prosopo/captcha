@@ -1,7 +1,10 @@
+import { num } from "./NumberParser.js"
 import { Parser } from "./Parser.js"
-import { Resolve } from "./utils.js"
+import { str } from "./StringParser.js"
+import { Resolve, UnionToIntersection } from "./utils.js"
 
-export type IntersectParserArray<T> = T extends [Parser<infer A>, ...infer B] ?  | IntersectParserArray<B> : []
+export type ParserArrayToShapeUnion<T> = T extends [] ? never : T extends [Parser<infer A>, ...infer B] ? A | ParserArrayToShapeUnion<B> : never
+export type IntersectParserArray<T> = UnionToIntersection<ParserArrayToShapeUnion<T>>
 
 export class IntersectParser<const T extends Parser<any>[]> extends Parser<IntersectParserArray<T>> {
 
@@ -10,6 +13,7 @@ export class IntersectParser<const T extends Parser<any>[]> extends Parser<Inter
     }
 
     public override parse(value: unknown): IntersectParserArray<T> {
+        if(this.parsers.length == 0) throw new Error("No parsers provided to intersect, cannot parse value")
         const errors: unknown[] = []
         for (const parser of this.parsers) {
             // should parse in all parsers
