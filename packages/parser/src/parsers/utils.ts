@@ -1,5 +1,5 @@
 
-export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+export type UnionToIntersection<U> = Resolve<(U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? ({} extends I ? never : I) : never>
 
 
 // resolve a typescript type, e.g. if a type is {
