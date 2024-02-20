@@ -11,7 +11,7 @@ export class InstanceParser<T extends Ctor<unknown>> extends Parser<InferTypeFro
             throw new Error(`Expected instance of ${JSON.stringify(this.clas)} but got null`)
         }
         if (!(value instanceof this.clas)) {
-            throw new Error(`Expected instance of ${JSON.stringify(this.clas)} but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+            throw new Error(`Expected instance of ${JSON.stringify(this.clas, null, 2)} but got ${JSON.stringify(value, null, 2)} of type ${JSON.stringify(typeof value, null, 2)}`)
         }
         return value as InferTypeFromCtor<T>
     }

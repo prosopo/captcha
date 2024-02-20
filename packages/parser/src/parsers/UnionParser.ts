@@ -22,7 +22,7 @@ export class UnionParser<const T extends Parser<any>[]> extends Parser<UnionPars
                 errors.push(error)
             }
         }
-        throw new Error(`Expected one of the following types but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}: ${errors.map(error => String(error) ).join("\n")}`)
+        throw new Error(`Expected one of the following types but got ${JSON.stringify(value, null, 2)} of type ${JSON.stringify(typeof value, null, 2)}: ${errors.map(error => String(error) ).join("\n")}`)
     }
 
     public override clone() {
