@@ -19,7 +19,7 @@ class Baz {
     readonly baz = 2;
 }
 
-describe("undefined", () => {
+describe("tuple", () => {
     it("should error on true", () => {
         expect(() => tup([str(), num(), bool()]).parse(true)).toThrow();
     });
