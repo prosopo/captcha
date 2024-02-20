@@ -1,4 +1,4 @@
-import { NestedParser, OptionalProp, Parser, Shape } from "./Parser.js"
+import { NestedParser, OptionalProp, Parser, Shape, optionalMarker } from "./Parser.js"
 
 export class RequiredParser<T extends Parser<any>> extends Parser<Exclude<Shape<T>, undefined>> implements OptionalProp<false, T> {
     constructor(readonly parser: T) {
@@ -16,7 +16,7 @@ export class RequiredParser<T extends Parser<any>> extends Parser<Exclude<Shape<
         return new RequiredParser(this.parser)
     }
 
-    readonly optional = false
+    readonly [optionalMarker] = false
 
 }
 

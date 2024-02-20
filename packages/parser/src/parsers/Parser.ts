@@ -14,11 +14,14 @@ export interface NestedParser<T extends Parser<any>> {
 
 // mark a parser as optional or readonly. This is used to determine if a parser is optional or readonly, and to set the optional or readonly flag on the field of an object when the parser is part of an object parser
 // NOTE: make sure to implement the NestedParser interface for nested parsers to operate properly with optional and readonly props
+// NOTE: we use a symbol to declare the marker field to avoid collisions with other fields named "optional" or "readonly". The collision is unlikely, but would be silent and hard to debug if it happened, thus using a symbol to avoid it
+export const optionalMarker: unique symbol = Symbol("optional")
 export interface OptionalPropMarker<P> {
-    readonly optional: P
+    readonly [optionalMarker]: P
 }
+export const readonlyMarker: unique symbol = Symbol("readonly")
 export interface ReadonlyPropMarker<P> {
-    readonly readonly: P
+    readonly [readonlyMarker]: P
 }
 
 export interface OptionalProp<P, T extends Parser<any>> extends OptionalPropMarker<P>, NestedParser<T> { }
