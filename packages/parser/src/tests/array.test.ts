@@ -17,7 +17,7 @@ class Baz {
     readonly baz = 2;
 }
 
-describe("undefined", () => {
+describe("array", () => {
     it("should error on true", () => {
         expect(() => arr(str()).parse(true)).toThrow();
     });
