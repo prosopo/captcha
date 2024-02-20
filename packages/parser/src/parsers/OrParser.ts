@@ -1,8 +1,11 @@
+import { BooleanParser, bool } from "./BooleanParser.js"
+import { NumberParser, num } from "./NumberParser.js"
 import { Parser } from "./Parser.js"
+import { StringParser, str } from "./StringParser.js"
 
 export type UnionParserArray<T> = T extends [Parser<infer A>, ...infer B] ? A | UnionParserArray<B> : never
 
-export class OrParser<T extends Parser<any>[]> extends Parser<UnionParserArray<T>> {
+export class OrParser<const T extends Parser<any>[]> extends Parser<UnionParserArray<T>> {
 
     constructor(readonly parsers: T) {
         super()
@@ -25,6 +28,6 @@ export class OrParser<T extends Parser<any>[]> extends Parser<UnionParserArray<T
     }
 }
 
-export const pOr = <T extends Parser<any>[]>(parsers: T) => new OrParser<T>(parsers)
+export const pOr = <const T extends Parser<any>[]>(parsers: T) => new OrParser<T>(parsers)
 export const or = pOr
 export const union = pOr
