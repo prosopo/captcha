@@ -8,14 +8,19 @@ export type UnionParserArray<T> = T extends [Parser<infer A>, ...infer B] ? A | 
 
 export class UnionParser<const T extends Parser<any>[]> extends Parser<UnionParserArray<T>> {
 
-    constructor(readonly parsers: T) {
+    constructor(private _parsers: T) {
         super()
+        this._parsers = this.parsers // clone parsers
+    }
+
+    get parsers() {
+        return this._parsers.map(parser => parser.clone()) as T
     }
 
     public override parse(value: unknown): UnionParserArray<T> {
-        if(this.parsers.length == 0) throw new Error("No parsers provided to union, cannot parse value")
+        if(this._parsers.length == 0) throw new Error("No parsers provided to union, cannot parse value")
         const errors: unknown[] = []
-        for (const parser of this.parsers) {
+        for (const parser of this._parsers) {
             try {
                 return parser.parse(value)
             } catch (error) {
@@ -26,7 +31,7 @@ export class UnionParser<const T extends Parser<any>[]> extends Parser<UnionPars
     }
 
     public override clone() {
-        return new UnionParser<T>(this.parsers)
+        return new UnionParser<T>(this._parsers)
     }
 }
 
@@ -46,7 +51,7 @@ export const or = pOr
 //     }
 
 //     public override clone(): Parser<UnionPair<T, U>> {
-//         return new OrPair(this.parser1, this.parser2)
+//         return new OrPair(this._parser1, this._parser2)
 //     }
 // }
 

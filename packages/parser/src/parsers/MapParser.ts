@@ -2,8 +2,18 @@ import { inst } from "./InstanceParser.js"
 import { Parser, Shape } from "./Parser.js"
 
 export class MapParser<T extends Parser<any>, U extends Parser<any>> extends Parser<Map<Shape<T>, Shape<U>>> {
-    constructor(readonly keyParser: T, readonly valueParser: U) {
+    constructor(private _keyParser: T, private _valueParser: U) {
         super()
+        this._keyParser = this.keyParser // clone parser
+        this._valueParser = this.valueParser // clone parser
+    }
+
+    get keyParser() {
+        return this._keyParser.clone() as T
+    }
+
+    get valueParser() {
+        return this._valueParser.clone() as U
     }
 
     public override parse(value: unknown): Map<Shape<T>, Shape<U>> {
@@ -11,13 +21,13 @@ export class MapParser<T extends Parser<any>, U extends Parser<any>> extends Par
         const result = new Map<Shape<T>, Shape<U>>()
         for (const [key, value] of valueMap) {
             // parse every key and value to ensure they are of the correct type
-            result.set(this.keyParser.parse(key), this.valueParser.parse(value))
+            result.set(this._keyParser.parse(key), this._valueParser.parse(value))
         }
         return result
     }
 
     public override clone() {
-        return new MapParser<T, U>(this.keyParser, this.valueParser)
+        return new MapParser<T, U>(this._keyParser, this._valueParser)
     }
 }
 

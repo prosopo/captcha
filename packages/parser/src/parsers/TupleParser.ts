@@ -9,25 +9,30 @@ export type ShapeArray<T> = T extends [infer A, ...infer B] ? [Shape<A>, ...Shap
 
 export class TupleParser<const T extends Parser<any>[]> extends Parser<ShapeArray<T>> {
 
-    constructor(readonly parsers: T) {
+    constructor(private _parsers: T) {
         super()
+        this._parsers = this.parsers // clone parsers
+    }
+
+    get parsers() {
+        return this._parsers.map(parser => parser.clone()) as T
     }
 
     public override parse(value: unknown): ShapeArray<T> {
         const valueArray = inst(Array).parse(value)
-        if (valueArray.length !== this.parsers.length) {
-            throw new Error(`Expected tuple with ${this.parsers.length} elements but got ${valueArray.length} elements`)
+        if (valueArray.length !== this._parsers.length) {
+            throw new Error(`Expected tuple with ${this._parsers.length} elements but got ${valueArray.length} elements`)
         }
         for (let i = 0; i < valueArray.length; i++) {
             // parse each element
-            const parser = at(this.parsers, i)
+            const parser = at(this._parsers, i)
             valueArray[i] = parser.parse(valueArray[i])
         }
         return value as ShapeArray<T>
     }
 
     public override clone() {
-        return new TupleParser<T>(this.parsers)
+        return new TupleParser<T>(this._parsers)
     }
 }
 
