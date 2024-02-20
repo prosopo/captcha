@@ -13,6 +13,7 @@ export class UnionParser<const T extends Parser<any>[]> extends Parser<UnionPars
     }
 
     public override parse(value: unknown): UnionParserArray<T> {
+        if(this.parsers.length == 0) throw new Error("No parsers provided to union, cannot parse value")
         const errors: unknown[] = []
         for (const parser of this.parsers) {
             try {
