@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { undef } from '../parsers/UndefinedParser.js';
 import { never } from '../parsers/NeverParser.js';
 
@@ -18,6 +18,10 @@ class Baz {
 }
 
 describe("never", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => never().parse(null)).returns.toMatchTypeOf<never>();
+    })
+
     it("should error on true", () => {
         expect(() => never().parse(true)).toThrow();
     });

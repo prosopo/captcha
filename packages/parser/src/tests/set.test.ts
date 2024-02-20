@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { undef } from '../parsers/UndefinedParser.js';
 import { num } from '../parsers/NumberParser.js';
 import { str } from '../parsers/StringParser.js';
@@ -21,6 +21,10 @@ class Baz {
 }
 
 describe("set", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => set(str()).parse(null)).returns.toMatchTypeOf<Set<string>>();
+    })
+
     it("should error on true", () => {
         expect(() => set(str()).parse(true)).toThrow();
     });

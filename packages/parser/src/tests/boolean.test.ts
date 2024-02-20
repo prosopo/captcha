@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { bool } from '../parsers/BooleanParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("boolean", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => bool().parse(null)).returns.toMatchTypeOf<boolean>();
+    })
+
     it("should parse true", () => {
         expect(bool().parse(true)).toBe(true);
     });

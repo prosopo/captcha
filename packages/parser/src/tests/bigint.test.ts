@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { bi } from '../parsers/BigIntParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("bigint", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => bi().parse(null)).returns.toMatchTypeOf<bigint>();
+    })
+
     it("should fail on true", () => {
         expect(() => bi().parse(true)).toThrow();
     });

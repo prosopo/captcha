@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { undef } from '../parsers/UndefinedParser.js';
 import { literal } from '../parsers/LiteralParser.js';
 
@@ -18,6 +18,10 @@ class Baz {
 }
 
 describe("literal", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => literal('abc').parse(null)).returns.toMatchTypeOf<'abc'>();
+    })
+
     it("should parse literal", () => {
         expect(literal('abc').parse('abc')).toBe('abc');
     })

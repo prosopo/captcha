@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { str } from '../parsers/StringParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("string", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => str().parse(null)).returns.toMatchTypeOf<string>();
+    })
+
     it("should error on true", () => {
         expect(() => str().parse(true)).toThrow();
     });

@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { dat } from '../parsers/DateParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("date", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => dat().parse(null)).returns.toMatchTypeOf<Date>();
+    })
+
     it("should error on true", () => {
         expect(() => dat().parse(true)).toThrow();
     });

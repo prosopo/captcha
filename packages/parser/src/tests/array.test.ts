@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { arr } from '../parsers/ArrayParser.js';
 import { str } from '../parsers/StringParser.js';
 
@@ -18,6 +18,10 @@ class Baz {
 }
 
 describe("array", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => arr(str()).parse(null)).returns.toMatchTypeOf<string[]>();
+    })
+
     it("should error on true", () => {
         expect(() => arr(str()).parse(true)).toThrow();
     });

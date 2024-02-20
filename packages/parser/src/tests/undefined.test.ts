@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { undef } from '../parsers/UndefinedParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("undefined", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => undef().parse(null)).returns.toMatchTypeOf<undefined>();
+    })
+
     it("should error on true", () => {
         expect(() => undef().parse(true)).toThrow();
     });

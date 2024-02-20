@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { en } from '../parsers/EnumParser.js';
 
 enum Foo {
@@ -17,6 +17,11 @@ class Baz {
 }
 
 describe("enum", () => {
+    it("should parse to correct type", () => {
+        const variants = ['a', 'b', 'c'] as const;
+        expectTypeOf(() => en(variants).parse(null)).returns.toMatchTypeOf<typeof variants[number]>();
+    })
+
     it("should error on true", () => {
         expect(() => en(['a', 'b', 'c']).parse(true)).toThrow();
     });
