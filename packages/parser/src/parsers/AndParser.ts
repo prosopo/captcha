@@ -29,7 +29,8 @@ export class AndParser<T extends Parser<any>[]> extends Parser<IntersectParserAr
     }
 }
 
-export const pAnd = <T extends Parser<any>[]>(parsers: T) => new AndParser<T>(parsers)
+export const pIntersect = <T extends Parser<any>[]>(parsers: T) => new AndParser<T>(parsers)
+export const intersect = pIntersect
+export const intersection = pIntersect
+export const pAnd = <T extends Parser<any>, U extends Parser<any>>(a: T, b: U) => pIntersect([a, b])
 export const and = pAnd
-export const intersection = pAnd
-export const intersect = pAnd
