@@ -1,11 +1,9 @@
 import { Parser } from "./Parser.js"
+import { TypeofParser } from "./TypeofParser.js"
 
-export class StringParser extends Parser<string> {
-    public override parse(value: unknown): string {
-        if (typeof value !== "string") {
-            throw new Error(`Expected a string but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
-        }
-        return value
+export class StringParser extends TypeofParser<string, "string"> {
+    constructor() {
+        super("string")
     }
 
     public override clone() {

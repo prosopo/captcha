@@ -1,12 +1,10 @@
 import { Parser } from "./Parser.js"
+import { TypeofParser } from "./TypeofParser.js"
 
 
-export class BigIntParser extends Parser<bigint> {
-    public override parse(value: unknown): bigint {
-        if (typeof value !== "bigint") {
-            throw new Error(`Expected a bigint but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
-        }
-        return value
+export class BigIntParser extends TypeofParser<bigint, 'bigint'> {
+    constructor() {
+        super("bigint")
     }
 
     public override clone() {

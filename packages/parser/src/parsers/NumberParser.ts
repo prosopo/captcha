@@ -1,11 +1,9 @@
 import { Parser } from "./Parser.js"
+import { TypeofParser } from "./TypeofParser.js"
 
-export class NumberParser extends Parser<number> {
-    public override parse(value: unknown): number {
-        if (typeof value !== "number") {
-            throw new Error(`Expected a number but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
-        }
-        return value
+export class NumberParser extends TypeofParser<number, "number"> {
+    constructor() {
+        super("number")
     }
 
     public override clone() {
