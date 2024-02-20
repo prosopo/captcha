@@ -1,7 +1,7 @@
 import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { bool } from '../parsers/BooleanParser.js';
 import { num } from '../parsers/NumberParser.js';
-import { or, union } from '../parsers/OrParser.js';
+import { or, union } from '../parsers/UnionParser.js';
 import { str } from '../parsers/StringParser.js';
 
 describe("or", () => {
