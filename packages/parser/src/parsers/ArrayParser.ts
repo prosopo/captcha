@@ -3,8 +3,13 @@ import { Parser, Shape } from "./Parser.js"
 
 export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
 
-    constructor(readonly parser: T, readonly length: number = -1) {
+    constructor(private _parser: T, readonly length: number = -1) {
         super()
+        this._parser = this.parser // clone parser
+    }
+
+    get parser() {
+        return this._parser.clone() as T
     }
 
     public override parse(value: unknown): Shape<T>[] {
@@ -18,13 +23,13 @@ export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
         }
         for (let i = 0; i < valueArray.length; i++) {
             // parse each element
-            valueArray[i] = this.parser.parse(valueArray[i])
+            valueArray[i] = this._parser.parse(valueArray[i])
         }
         return value as Shape<T>[]
     }
 
     public override clone() {
-        return new ArrayParser<T>(this.parser)
+        return new ArrayParser<T>(this._parser)
     }
 }
 

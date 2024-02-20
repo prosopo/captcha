@@ -1,16 +1,21 @@
 import { NestedParser, Parser, ReadonlyProp, Shape, optionalMarker, readonlyMarker } from "./Parser.js"
 
 export class ReadonlyParser<T extends Parser<any>> extends Parser<Shape<T>> implements ReadonlyProp<true, T> {
-    constructor(readonly parser: T) {
+    constructor(private _parser: T) {
         super()
+        this._parser = this.parser // clone parser
+    }
+
+    get parser() {
+        return this._parser.clone() as T
     }
 
     public override parse(value: unknown): Shape<T> {
-        return this.parser.parse(value)
+        return this._parser.parse(value)
     }
 
     public override clone() {
-        return new ReadonlyParser(this.parser)
+        return new ReadonlyParser(this._parser)
     }
 
     readonly [readonlyMarker] = true

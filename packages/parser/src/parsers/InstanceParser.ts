@@ -2,7 +2,7 @@ import { Parser } from "./Parser.js"
 import { Ctor, InferTypeFromCtor } from "./utils.js"
 
 export class InstanceParser<T extends Ctor<unknown>> extends Parser<InferTypeFromCtor<T>> {
-    constructor(private clas: T) {
+    constructor(readonly clas: T) {
         super()
     }
 

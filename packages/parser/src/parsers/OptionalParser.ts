@@ -1,19 +1,24 @@
 import { NestedParser, OptionalProp, Parser, Shape, optionalMarker } from "./Parser.js";
 
 export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | undefined> implements OptionalProp<true, T>  {
-    constructor(readonly parser: T) {
+    constructor(private _parser: T) {
         super()
+        this._parser = this.parser // clone parser
+    }
+
+    get parser() {
+        return this._parser.clone() as T
     }
 
     public override parse(value: unknown): Shape<T> | undefined {
         if (value === undefined) {
             return undefined
         }
-        return this.parser.parse(value)
+        return this._parser.parse(value)
     }
 
     public override clone() {
-        return new OptionalParser(this.parser)
+        return new OptionalParser(this._parser)
     }
 
     readonly [optionalMarker] = true
