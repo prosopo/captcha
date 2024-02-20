@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { num } from '../parsers/NumberParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("number", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => num().parse(null)).returns.toMatchTypeOf<number>();
+    })
+
     it("should fail on true", () => {
         expect(() => num().parse(true)).toThrow();
     });

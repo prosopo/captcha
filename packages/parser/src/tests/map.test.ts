@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { undef } from '../parsers/UndefinedParser.js';
 import { num } from '../parsers/NumberParser.js';
 import { str } from '../parsers/StringParser.js';
@@ -20,6 +20,10 @@ class Baz {
 }
 
 describe("map", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => map(str(), num()).parse(null)).returns.toMatchTypeOf<Map<string, number>>();
+    })
+
     it("should error on true", () => {
         expect(() => map(str(), num()).parse(true)).toThrow();
     });

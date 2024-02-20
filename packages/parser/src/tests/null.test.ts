@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { nul } from '../parsers/NullParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("null", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => nul().parse(null)).returns.toMatchTypeOf<null>();
+    })
+
     it("should error on true", () => {
         expect(() => nul().parse(true)).toThrow();
     });

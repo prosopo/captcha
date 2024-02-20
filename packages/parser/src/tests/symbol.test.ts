@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { sym } from '../parsers/SymbolParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("sym", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => sym().parse(null)).returns.toMatchTypeOf<Symbol>();
+    })
+
     it("should error on true", () => {
         expect(() => sym().parse(true)).toThrow();
     });

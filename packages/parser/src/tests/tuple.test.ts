@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { bool } from '../parsers/BooleanParser.js';
 import { num } from '../parsers/NumberParser.js';
 import { str } from '../parsers/StringParser.js';
@@ -20,6 +20,10 @@ class Baz {
 }
 
 describe("tuple", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => tup([str(), num(), bool()]).parse(null)).returns.toMatchTypeOf<[string, number, boolean]>();
+    })
+
     it("should error on true", () => {
         expect(() => tup([str(), num(), bool()]).parse(true)).toThrow();
     });

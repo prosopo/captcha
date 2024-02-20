@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { nen } from '../parsers/NativeEnumParser.js';
 
 enum Foo {
@@ -17,6 +17,10 @@ class Baz {
 }
 
 describe("native enum", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => nen(Foo).parse(null)).returns.toMatchTypeOf<Foo>();
+    })
+
     it("should error on true", () => {
         expect(() => nen(Foo).parse(true)).toThrow();
     });

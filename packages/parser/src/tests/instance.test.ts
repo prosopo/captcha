@@ -1,4 +1,4 @@
-import { describe, expect, test, it } from 'vitest'
+import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { inst } from '../parsers/InstanceParser.js';
 
 enum Foo {
@@ -17,6 +17,11 @@ class Baz {
 }
 
 describe("undefined", () => {
+    it("should parse to correct type", () => {
+        expectTypeOf(() => inst(Bar).parse(null)).returns.toMatchTypeOf<Bar>();
+        expectTypeOf(() => inst(Baz).parse(null)).returns.toEqualTypeOf<Baz>();
+    })
+
     it("should error on true", () => {
         expect(() => inst(Bar).parse(true)).toThrow();
     });
