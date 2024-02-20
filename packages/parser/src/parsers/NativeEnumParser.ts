@@ -71,7 +71,7 @@ export class NativeEnumParser<T> extends Parser<T[keyof T]> {
                 return variant
             }
         }
-        throw new Error(`Expected one of ${JSON.stringify(this.variants)} but got ${JSON.stringify(value)} of type ${typeof value}`)
+        throw new Error(`Expected one of ${JSON.stringify(this.variants, null, 2)} but got ${JSON.stringify(value, null, 2)} of type ${JSON.stringify(typeof value, null, 2)}`)
     }
 
     public override clone() {

@@ -8,7 +8,7 @@ export class TypeofParser<T, U extends string> extends Parser<T> {
 
     public override parse(value: unknown): T {
         if (typeof value !== this.typeName) {
-            throw new Error(`Expected ${this.typeName} but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value)}`)
+            throw new Error(`Expected ${this.typeName} but got ${JSON.stringify(value, null, 2)} of type ${JSON.stringify(typeof value, null, 2)}`)
         }
         return value as T
     }
