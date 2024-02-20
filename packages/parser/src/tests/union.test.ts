@@ -1,4 +1,4 @@
-import { describe, expect, test, it, expectTypeOf } from 'vitest'
+import { describe, expect, test, it, expectTypeOf, assertType } from 'vitest'
 import { bool } from '../parsers/BooleanParser.js';
 import { num } from '../parsers/NumberParser.js';
 import { or, union } from '../parsers/UnionParser.js';
@@ -11,10 +11,20 @@ describe("union", () => {
 
     it("should return type never on no parsers", () => {
         expectTypeOf(() => union([]).parse(null)).returns.toBeNever();
+        const parser = union([]);
+        const a: never = null!
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should return union of types", () => {
-        expectTypeOf(() => union([num(), str(), bool()]).parse(null)).returns.toEqualTypeOf<number | string | boolean>();
+        assertType<(value: unknown) => number | string | boolean>(union([num(), str(), bool()]).parse)
+        const parser = union([num(), str(), bool()]);
+        const a: number = 1
+        const b: ReturnType<typeof parser.parse> = a;
+        const c: string = ""
+        const d: ReturnType<typeof parser.parse> = c;
+        const e: boolean = true
+        const f: ReturnType<typeof parser.parse> = e;
     })
 
     it("should parse number, string, or boolean", () => {

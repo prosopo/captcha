@@ -20,6 +20,13 @@ describe("enum", () => {
     it("should parse to correct type", () => {
         const variants = ['a', 'b', 'c'] as const;
         expectTypeOf(() => en(variants).parse(null)).returns.toMatchTypeOf<typeof variants[number]>();
+        const parser = en(variants);
+        const a: typeof variants[number] = 'a';
+        const b: ReturnType<typeof parser.parse> = a;
+        const c: typeof variants[number] = 'b';
+        const d: ReturnType<typeof parser.parse> = c;
+        const e: typeof variants[number] = 'c';
+        const f: ReturnType<typeof parser.parse> = e;
     })
 
     it("should error on true", () => {

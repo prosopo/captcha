@@ -19,6 +19,9 @@ class Baz {
 describe("null", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => nul().parse(null)).returns.toMatchTypeOf<null>();
+        const parser = nul();
+        const a: null = null;
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {

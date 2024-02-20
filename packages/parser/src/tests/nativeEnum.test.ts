@@ -19,6 +19,15 @@ class Baz {
 describe("native enum", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => nen(Foo).parse(null)).returns.toMatchTypeOf<Foo>();
+        const parser = nen(Foo);
+        const a: Foo = Foo.A;
+        const b: ReturnType<typeof parser.parse> = a;
+        const c: Foo = Foo.B;
+        const d: ReturnType<typeof parser.parse> = c;
+        const e: Foo = Foo.C;
+        const f: ReturnType<typeof parser.parse> = e;
+        const g: Foo = Foo.D;
+        const h: ReturnType<typeof parser.parse> = g;
     })
 
     it("should error on true", () => {

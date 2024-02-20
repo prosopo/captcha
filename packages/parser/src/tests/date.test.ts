@@ -19,6 +19,9 @@ class Baz {
 describe("date", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => dat().parse(null)).returns.toMatchTypeOf<Date>();
+        const parser = dat();
+        const a: Date = new Date();
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {

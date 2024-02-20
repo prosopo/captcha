@@ -19,6 +19,9 @@ class Baz {
 describe("bigint", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => bi().parse(null)).returns.toMatchTypeOf<bigint>();
+        const parser = bi();
+        const a: bigint = 1n;
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should fail on true", () => {

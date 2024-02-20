@@ -20,6 +20,9 @@ class Baz {
 describe("array", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => arr(str()).parse(null)).returns.toMatchTypeOf<string[]>();
+        const parser = arr(str());
+        const a: string[] = [];
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {

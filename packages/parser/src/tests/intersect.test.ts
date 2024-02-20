@@ -1,4 +1,4 @@
-import { describe, expect, test, it, expectTypeOf } from 'vitest'
+import { describe, expect, test, it, expectTypeOf, assertType } from 'vitest'
 import { bool } from '../parsers/BooleanParser.js';
 import { num } from '../parsers/NumberParser.js';
 import { str } from '../parsers/StringParser.js';
@@ -12,20 +12,25 @@ describe("intersect", () => {
 
     it("should return type never on no parsers", () => {
         expectTypeOf(() => intersect([]).parse(null)).returns.toBeNever();
+        const parser = intersect([]);
+        const a: never = null!
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should return never on intersection of primitive types", () => {
         // number & string & boolean = never
-        expectTypeOf(() => intersect([num(), str(), bool()]).parse(null)).returns.toEqualTypeOf<never>();
+        assertType<(value: unknown) => never>(intersect([num(), str(), bool()]).parse)
+        const parser = intersect([num(), str(), bool()]);
+        const a: never = null!
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should return intersection of types", () => {
         // merge objects together
-        expectTypeOf(() => intersect([obj({ a: num() }), obj({ b: str() }), obj({ c: bool() })]).parse(null)).returns.toEqualTypeOf<{
-            a: number;
-            b: string;
-            c: boolean;
-        }>();
+        assertType<(value: unknown) => { a: number; b: string; c: boolean }>(intersect([obj({ a: num() }), obj({ b: str() }), obj({ c: bool() })]).parse);
+        const parser = intersect([obj({ a: num() }), obj({ b: str() }), obj({ c: bool() })]);
+        const a: { a: number; b: string; c: boolean } = { a: 1, b: "", c: true }
+        const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should parse into a single object", () => {

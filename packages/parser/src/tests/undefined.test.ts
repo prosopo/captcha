@@ -19,6 +19,9 @@ class Baz {
 describe("undefined", () => {
     it("should parse to correct type", () => {
         expectTypeOf(() => undef().parse(null)).returns.toMatchTypeOf<undefined>();
+        const parser = undef();
+        const a: undefined = undefined
+        const b: ReturnType<typeof parser.parse> = a
     })
 
     it("should error on true", () => {
