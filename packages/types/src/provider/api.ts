@@ -20,6 +20,7 @@ export enum ApiPaths {
     GetPowCaptchaChallenge = '/v1/prosopo/provider/captcha/pow',
     SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
     SubmitPowCaptchaSolution = '/v1/prosopo/provider/pow/solution',
+    ServerPowCaptchaVerify = '/v1/prosopo/provider/pow/server-verify',
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',

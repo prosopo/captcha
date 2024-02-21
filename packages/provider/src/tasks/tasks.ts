@@ -174,18 +174,8 @@ export class Tasks {
      * @param {string} dappAccount - Dapp User address
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
-        // Verify that the origin matches the url of the dapp
-        // const dapp: Dapp = await wrapQuery(this.contract.query.getDapp, this.contract.query)(dappAccount)
-
-        // if (dapp.status.toString() !== 'Active') {
-        //     // TODO: check Dapp has POW enabled
-        //     throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
-        //         context: { failedFuncName: this.getPowCaptchaChallenge.name, dappAccount },
-        //     })
-        // }
-
+        // TODO: Verify that the origin matches the url of the dapp
         const difficulty = 4
-
         const latestHeader = await this.contract.api.rpc.chain.getHeader()
         const latestBlockNumber = latestHeader.number.toNumber()
 
@@ -236,10 +226,26 @@ export class Tasks {
             })
         }
 
-        return Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
+        const solutionValid = Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
             .map((byte) => byte.toString(16).padStart(2, '0'))
             .join('')
             .startsWith('0'.repeat(difficulty))
+        
+        if (!solutionValid) {
+            throw new ProsopoContractError('API.CAPTCHA_FAILED', {
+                context: {
+                    ERROR: 'Captcha solution is invalid',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    nonce,
+                    challenge,
+                    difficulty,
+                },
+            })
+        }
+
+        await this.db.addPowCaptchaRecord(challenge, false)
+
+        return true
     }
 
     async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
@@ -290,7 +296,6 @@ export class Tasks {
         }
 
         await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true)
-
         return true
     }
 
