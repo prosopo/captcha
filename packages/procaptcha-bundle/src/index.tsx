@@ -19,8 +19,8 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
-import { PowProcaptcha } from '@prosopo/procaptcha-pow'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
@@ -158,7 +158,7 @@ const renderLogic = (
         }
 
         if (renderOptions?.captchaType === 'pow') {
-            createRoot(element).render(<PowProcaptcha config={config} callbacks={callbacks} />)
+            createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
         } else {
             createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
         }

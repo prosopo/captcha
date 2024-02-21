@@ -13,7 +13,7 @@ export default (): ProsopoNetworksSchemaInput => {
             endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT || 'ws://127.0.0.1:9944',
             contract: {
                 name: 'captcha',
-                address: getContractAddress('CONTRACT_NOT_DEPLOYED'),
+                address: getContractAddress('5G9D7bUeopdiQdfM1aaJHmJr2BKMaWHrH5t8TF4nh9WtiDXK'),
             },
             pairType: pairTypeSr25519,
             ss58Format: 42,

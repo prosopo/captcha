@@ -1,5 +1,4 @@
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2 } from '@prosopo/procaptcha'
 import { Keyring } from '@polkadot/keyring'
 import { ProcaptchaClientConfigInput, ProcaptchaClientConfigOutput, ProcaptchaConfigSchema } from '@prosopo/types'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
@@ -9,6 +8,7 @@ import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { solvePoW } from './SolverService.js'
+import ExtensionWeb2 from './ExtensionWeb2.js'
 
 type ProcaptchaPowOutput = {
     user: string
