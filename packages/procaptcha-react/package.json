@@ -20,7 +20,7 @@
     "source": "./src/index.ts",
     "scripts": {
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose tsconfig.json",
+        "build": "npx vite --config vite.config.ts build",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
@@ -47,7 +47,8 @@
     },
     "devDependencies": {
         "tslib": "2.6.2",
-        "typescript": "5.1.6"
+        "typescript": "5.1.6",
+        "vite-plugin-dts": "^3.7.3"
     },
     "repository": {
         "type": "git",
