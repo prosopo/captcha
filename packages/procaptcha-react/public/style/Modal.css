@@ -15,7 +15,7 @@
     margin: auto;
     position: fixed;
     background: white;
-    max-height: 100%;
+    max-height: max-content;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
