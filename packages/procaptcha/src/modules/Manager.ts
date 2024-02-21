@@ -294,7 +294,7 @@ export function Manager(
             const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
 
             console.log('captchaApi', captchaApi)
-            const challenge: GetCaptchaResponse = await   .getCaptchaChallenge()
+            const challenge: GetCaptchaResponse = await   captchaApi.getCaptchaChallenge()
             console.log('challenge', challenge)
             if (challenge.captchas.length <= 0) {
                 throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
