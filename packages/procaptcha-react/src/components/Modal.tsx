@@ -1,4 +1,4 @@
-import './Modal.css'
+import '../style/Modal.css'
 import React, { CSSProperties } from 'react'
 type ModalProps = {
     show: boolean
@@ -10,7 +10,6 @@ const ModalComponent = React.memo((props: ModalProps, nextProps: ModalProps) => 
     console.log('rendering modal with show: ', show)
     const display = show ? 'flex' : 'none'
     const ModalOuterDivCss: CSSProperties = {
-
         display: display,
     }
 

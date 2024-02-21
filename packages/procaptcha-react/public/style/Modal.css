@@ -22,3 +22,12 @@
     z-index: 2147483647;
     transition: all 0.5s;
 }
+/* avoid the captcha modal from disappearing beneath the fold on smaller screens */
+@media only screen and (max-height: 500px) {
+    .modalInner {
+        max-height: 90%;
+    }
+    .modalOuter {
+        max-height: 90%;
+    }
+}
