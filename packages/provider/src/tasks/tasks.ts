@@ -230,7 +230,7 @@ export class Tasks {
             .map((byte) => byte.toString(16).padStart(2, '0'))
             .join('')
             .startsWith('0'.repeat(difficulty))
-        
+
         if (!solutionValid) {
             throw new ProsopoContractError('API.CAPTCHA_FAILED', {
                 context: {
