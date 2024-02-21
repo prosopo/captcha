@@ -8,13 +8,14 @@ type ModalProps = {
 const ModalComponent = React.memo((props: ModalProps, nextProps: ModalProps) => {
     const { show, children } = props
     console.log('rendering modal with show: ', show)
-    const display = show ? 'flex' : 'none'
+    const display = show ? 'block' : 'none'
     const ModalOuterDivCss: CSSProperties = {
         display: display,
     }
 
     return (
         <div className="modalOuter" style={ModalOuterDivCss}>
+            <div className="modalBackground"></div>
             <div className="modalInner">{children}</div>
         </div>
     )

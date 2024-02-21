@@ -1,33 +1,38 @@
 .modalOuter {
-    overflow: auto;
-    width: 100%;
-    max-height: 100%;
     position: fixed;
+    z-index: 1300;
+    inset: 0;
+}
+
+.modalBackground {
+    position: fixed;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    right: 0;
+    bottom: 0;
     top: 0;
     left: 0;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 2147483646;
-    transition: all 0.5s;
+    background-color: rgba(0, 0, 0, 0.5);
+    -webkit-tap-highlight-color: transparent;
+    z-index: -1;
 }
 .modalInner {
-    max-width: 500px;
-    margin: auto;
-    position: fixed;
-    background: white;
-    max-height: max-content;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2147483647;
-    transition: all 0.5s;
-}
-/* avoid the captcha modal from disappearing beneath the fold on smaller screens */
-@media only screen and (max-height: 500px) {
-    .modalInner {
-        max-height: 90%;
-    }
-    .modalOuter {
-        max-height: 90%;
-    }
+    width: 400px;
+    background-color: rgb(255, 255, 255);
+    border: none;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px, rgba(0, 0, 0, 0.14) 0px 24px 38px 3px, rgba(0, 0, 0, 0.12) 0px 9px 46px 8px;
 }
