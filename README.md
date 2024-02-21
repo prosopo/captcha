@@ -79,7 +79,13 @@ id `procaptcha-container` where the widget will be rendered.
 ```html
 <html>
     <head>
-        <script type="module" id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+        <script
+            type="module"
+            id="procaptcha-script"
+            src="https://js.prosopo.io/js/procaptcha.bundle.js"
+            async
+            defer
+        ></script>
     </head>
     <body>
         <div id="procaptcha-container"></div>
