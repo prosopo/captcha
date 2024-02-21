@@ -5,7 +5,6 @@ export default async function () {
     const commonJSconfig = await ViteCommonJSConfig('procaptcha-react', base)
     return {
         ...commonJSconfig,
-        base,
         build: {
             ssr: false,
             ...commonJSconfig.build,
