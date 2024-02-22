@@ -1,4 +1,4 @@
-import pkgJson from './package.json';
+import pkgJson from './package.json' assert { type: 'json' }
 
 export default {
     out: 'docs',
