@@ -57,7 +57,7 @@
         "tsconfig-paths": "^4.2.0",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "vite": "^4.5.2",
+        "vite": "^5.1.4",
         "vite-bundle-visualizer": "^0.10.0",
         "vite-plugin-filter-replace": "^0.1.12",
         "vite-plugin-native": "^0.2.0",

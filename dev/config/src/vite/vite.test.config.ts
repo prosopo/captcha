@@ -17,10 +17,7 @@ export default function () {
         },
         test: {
             watch: false,
-            //reporters: ['basic', 'hanging-process'], https://github.com/vitest-dev/vitest/issues/4415
             include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
-            exclude: ['../../demos/**/*'], // '../!packages/**/*'],
-            singleThread: true,
             watchExclude: [
                 '**/node_modules/**',
                 '**/dist/**',
