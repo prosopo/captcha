@@ -1,5 +1,5 @@
 
-export default {
+module.exports = {
     entryPoints: 'src/app/page.tsx',
-    extends: '../../typedoc.base.config.js',
+    extends: '../typedoc.base.config.js',
 }
