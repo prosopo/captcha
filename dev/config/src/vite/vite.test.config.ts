@@ -29,7 +29,12 @@ export default function () {
             coverage: {
                 enabled: true,
             },
-            useAtomics: true,
+            pool: 'forks',
+            poolOptions: {
+                fork: {
+                    useAtomics: true,
+                }
+            }
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy()],
     })
