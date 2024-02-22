@@ -95,17 +95,19 @@ jobs:
 
             - name: Check typedoc is up-to-date
               run: |
-                # checking for changes in the docs in a little complex as the docs contain the git commit's hash. Therefore, we have to assume that the docs (and only the docs) have been updated in the most recent commit - all other code changes were made in commits before this one
-                # checkout the previous commit (as the most recent commit is for the docs) - this is the commit that the docs were generated from
-                git checkout HEAD~1
-                # generate the docs
+                # the docs contains the short git commit hash from when the docs were generated. This makes it difficult to check if the docs are up-to-date, as regenerating the docs uses the current commit's hash, not the hash from when the docs were generated.
+                # Therefore, we're going to detect the hash from the docs, then regenerate the docs, replace the current commit's hash in the docs with the hash from when the docs were generated, then check if the docs have changed - convoluted, I know.
+
+                # get the current commit's hash
+                CURRENT_COMMIT_HASH=$(git rev-parse --short HEAD)
+                # get the hash from the docs
+                # this finds all html files in the docs, then greps for the commit hash, then takes the first hash, then removes the 'blob/' prefix. The docs put the commit hash in urls with the 'blob/' prefix, e.g. 'github.com/prosopo/captcha/blob/abcd1234/...'
+                DOCS_COMMIT_HASH=$(find docs -type f -name "*.html" -exec grep -oE 'blob/([[:alnum:]]{8})' {} + 2>/dev/null | head -n 1 | cut -d ':' -f 2 | sed 's/blob\///')
+                # now regenerate the docs
                 npm run docs
-                # move the docs to a temporary location
-                mv docs /tmp/
-                # checkout the most recent commit (which should be the commit that the docs were updated in)
-                git checkout HEAD
-                # copy the docs back
-                cp -r /tmp/docs .
+                # replace the current commit's hash in the docs with the hash from when the docs were originally created
+                find docs -type f -name "*.html" -exec sed -i "s/blob\/$CURRENT_COMMIT_HASH/blob\/$DOCS_COMMIT_HASH/g" {} +
                 # check if there are any changes to the docs
                 # if there are changes, then the docs are not up-to-date and the most recent commit did not update the docs and only the docs
                 git diff --exit-code -- docs
+                
