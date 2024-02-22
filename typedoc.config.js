@@ -1,4 +1,4 @@
-import pkgJson from './package.json' assert { type: 'json' };
+import pkgJson from './package.json' assert { type: 'json' }
 
 export default {
     extends: './typedoc.base.config.js',
