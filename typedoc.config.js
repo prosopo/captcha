@@ -1,13 +1,8 @@
-import pkgJson from './package.json' assert { type: 'json' }
 
 export default {
+    extends: './typedoc.base.config.js',
+    // entryPoints: pkgJson.workspaces,
+    entryPoints: ['packages/util', 'packages/server'],
     out: 'docs',
-    entryPoints: pkgJson.workspaces,
     entryPointStrategy: 'packages',
-    includeVersion: true,
-    darkHighlightTheme: 'dark-plus',
-    searchInComments: true,
-    commentStyle: 'all',
-    treatWarningsAsErrors: true,
-    treatValidationWarningsAsErrors: true,
 }
