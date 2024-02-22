@@ -62,8 +62,8 @@
         "vite-plugin-filter-replace": "^0.1.12",
         "vite-plugin-native": "^0.2.0",
         "vite-plugin-no-bundle": "^3.0.0",
-        "vite-plugin-static-copy": "^0.17.0",
-        "vite-tsconfig-paths": "^4.2.0"
+        "vite-plugin-static-copy": "^1.0.1",
+        "vite-tsconfig-paths": "^4.3.1"
     },
     "repository": {
         "type": "git",

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
 import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
+import { PluginOption, Plugin } from 'vite'
 
 export default function () {
     return defineConfig({
@@ -31,6 +32,6 @@ export default function () {
             },
             useAtomics: true,
         },
-        plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy()],
+        plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy() as Plugin],
     })
 }
