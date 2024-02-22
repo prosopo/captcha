@@ -1,5 +1,6 @@
 
 export default {
-    entryPoints: 'src/index.ts',
+    entryPoints: 'src/**/*.{ts, tsx, js, jsx, json}',
+    includes: 'src',
     extends: '../../typedoc.base.config.js',
 }
