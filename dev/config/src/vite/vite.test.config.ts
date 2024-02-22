@@ -29,6 +29,9 @@ export default function () {
             coverage: {
                 enabled: true,
             },
+            typecheck: {
+                enabled: true,
+            },
             pool: 'forks',
             poolOptions: {
                 fork: {
