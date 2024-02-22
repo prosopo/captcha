@@ -1,14 +1,14 @@
-name: provider_image
+name: docs
 
 on:
     pull_request:
         branches: [main]
         paths:
-            - 'docker/**'
-            - 'dev/**'
-            - 'packages/**'
-            - 'contracts/**'
-            - '.github/workflows/provider_image.yml'
+            - '**.ts'
+            - '**.tsx'
+            - '**.js'
+            - '**.jsx'
+            - '.github/workflows/docs.yml'
     workflow_dispatch:
 
 concurrency:
@@ -17,6 +17,7 @@ concurrency:
 
 env:
     CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -60,6 +61,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
+
             # Checkout the repo
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v3
@@ -90,34 +92,20 @@ jobs:
 
             - run: npm install
 
-            # build the packages
-            - name: Build packages
+            - name: Check typedoc is up-to-date
               run: |
-                  cd dev/scripts
-                  npm run build
+                  # the docs contains the short git commit hash from when the docs were generated. This makes it difficult to check if the docs are up-to-date, as regenerating the docs uses the current commit's hash, not the hash from when the docs were generated.
+                  # Therefore, we're going to detect the hash from the docs, then regenerate the docs, replace the current commit's hash in the docs with the hash from when the docs were generated, then check if the docs have changed - convoluted, I know.
 
-            # build the cli production bundle
-            - name: Build cli production bundle
-              run: |
-                  cp ./dev/scripts/env.production ./packages/cli/.env.production
-                  cp ./dev/scripts/env.production ./.env.production
-                  NODE_ENV=production npm run -w @prosopo/cli bundle:prod
-
-            # create the provider image
-            - name: Build provider image
-              run: |
-                  docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:dev
-
-            # Generate a mnemonic for the provider image
-            - name: Generate mnemonic and add to env file
-              run: |
-                  PROSOPO_ROOT_DIR=$(pwd) NODE_ENV=production node dev/scripts/dist/scripts/generateMnemonic.js --env
-
-            # Check that the version command works when running the bundle in the provider image
-            - name: Check provider bundle runs
-              run: |
-                  CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
-                  sleep 10s
-                  docker logs $CONTAINER >& provider.log
-                  echo $(cat provider.log)
-                  grep -oE "Version: \".*\"" provider.log || exit 1
+                  # get the current commit's hash
+                  CURRENT_COMMIT_HASH=$(git rev-parse --short HEAD)
+                  # get the hash from the docs
+                  # this finds all html files in the docs, then greps for the commit hash, then takes the first hash, then removes the 'blob/' prefix. The docs put the commit hash in urls with the 'blob/' prefix, e.g. 'github.com/prosopo/captcha/blob/abcd1234/...'
+                  DOCS_COMMIT_HASH=$(find docs -type f -name "*.html" -exec grep -oE 'blob/([[:alnum:]]{8})' {} + 2>/dev/null | head -n 1 | cut -d ':' -f 2 | sed 's/blob\///')
+                  # now regenerate the docs
+                  npm run docs
+                  # replace the current commit's hash in the docs with the hash from when the docs were originally created
+                  find docs -type f -name "*.html" -exec sed -i "s/blob\/$CURRENT_COMMIT_HASH/blob\/$DOCS_COMMIT_HASH/g" {} +
+                  # check if there are any changes to the docs
+                  # if there are changes, then the docs are not up-to-date and the most recent commit did not update the docs and only the docs
+                  git diff --exit-code -- docs
