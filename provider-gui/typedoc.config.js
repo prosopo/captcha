@@ -1,4 +1,3 @@
-
 module.exports = {
     entryPoints: [
         'app/**/*.ts',
