@@ -19,7 +19,7 @@
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix",
         "cli": "node ./dist/js/cli.js",
-        "test": "NODE_ENV=test vitest --run --coverage"
+        "test": "NODE_ENV=test vitest --run"
     },
     "main": "./dist/index.js",
     "type": "module",
