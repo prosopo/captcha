@@ -9,7 +9,6 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
-import nativePlugin from 'rollup-plugin-natives'
 import path from 'path'
 import replace from 'vite-plugin-filter-replace'
 
@@ -157,26 +156,7 @@ export default async function (
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
 
-                plugins: [
-                    // This plugin copies .node files but doesn't work for nodejs-polars. Leaving it here in case it's
-                    // useful in the future.
-                    nativePlugin({
-                        // Where we want to physically put the extracted .node files
-                        copyTo: outDir,
-
-                        // Path to the same folder, relative to the output bundle js
-                        destDir: '.',
-
-                        // Generate sourcemap
-                        sourcemap: true,
-
-                        // If the target is ESM, so we can't use `require` (and .node is not supported in `import` anyway), we will need to use `createRequire` instead.
-                        targetEsm: true,
-                    }),
-                    css(),
-                    wasm(),
-                    nodeResolve(),
-                ],
+                plugins: [css(), wasm(), nodeResolve()],
             },
         },
         plugins: [
