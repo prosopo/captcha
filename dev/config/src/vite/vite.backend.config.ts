@@ -11,6 +11,7 @@ import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
 import path from 'path'
 import replace from './vite-plugin-filter-replace.js'
+import fs from 'fs'
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
@@ -59,6 +60,7 @@ export default async function (
 
     // Output directory is relative to directory of the package
     const outDir = path.resolve(packageDir, 'dist/bundle')
+    fs.mkdirSync(outDir, { recursive: true })
 
     // Get rid of any dependencies we don't want to bundle
     const { external, internal } = filterDependencies(deps, ['aws', 'webpack', 'vite', 'eslint'])
@@ -156,7 +158,34 @@ export default async function (
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
 
-                plugins: [css(), wasm(), nodeResolve()],
+                plugins: [
+                    // {
+                    //     name: 'copy-nodejs-polars',
+                    //     // 'buildStart': async () => {
+                    //     //     // read the .node file
+                    //     //     const nodeJsNodeFile = path.resolve(
+                    //     //         nodeModulesDir,
+                    //     //         './nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
+                    //     //         )
+                    //     //     const nodeJsNodeFileDest = path.resolve(outDir, 'nodejs-polars.linux-x64-gnu.node')
+                    //     //     logger.info(`Copying ${nodeJsNodeFile} to ${nodeJsNodeFileDest}`)
+                    //     //     const content = fs.readFileSync(nodeJsNodeFile)
+                    //     //     // write the .node file to the output directory
+                    //     //     fs.writeFileSync(nodeJsNodeFileDest, content)
+                    //     // }
+
+                    //     // another way to do it, incomplete!
+                    //     // generateBundle: async (outputOptions, bundle) => {
+                    //     //     // read the .node file
+                    //     //     const nodeJsNodeFile = path.resolve(
+                    //     //         nodeModulesDir,
+                    //     //         './nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
+                    //     //     )
+                    //     //     const content = fs.readFileSync(nodeJsNodeFile)
+                    //     //     bundle['nodejs-polars.linux-x64-gnu.node'] = content
+                    //     // }
+                    // },
+                    css(), wasm(), nodeResolve()],
             },
         },
         plugins: [
