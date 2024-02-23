@@ -9,9 +9,10 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
+import fs from 'fs'
+import nativePlugin from 'vite-plugin-native'
 import path from 'path'
 import replace from './vite-plugin-filter-replace.js'
-import fs from 'fs'
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
@@ -158,37 +159,20 @@ export default async function (
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
 
-                plugins: [
-                    // {
-                    //     name: 'copy-nodejs-polars',
-                    //     // 'buildStart': async () => {
-                    //     //     // read the .node file
-                    //     //     const nodeJsNodeFile = path.resolve(
-                    //     //         nodeModulesDir,
-                    //     //         './nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
-                    //     //         )
-                    //     //     const nodeJsNodeFileDest = path.resolve(outDir, 'nodejs-polars.linux-x64-gnu.node')
-                    //     //     logger.info(`Copying ${nodeJsNodeFile} to ${nodeJsNodeFileDest}`)
-                    //     //     const content = fs.readFileSync(nodeJsNodeFile)
-                    //     //     // write the .node file to the output directory
-                    //     //     fs.writeFileSync(nodeJsNodeFileDest, content)
-                    //     // }
-
-                    //     // another way to do it, incomplete!
-                    //     // generateBundle: async (outputOptions, bundle) => {
-                    //     //     // read the .node file
-                    //     //     const nodeJsNodeFile = path.resolve(
-                    //     //         nodeModulesDir,
-                    //     //         './nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
-                    //     //     )
-                    //     //     const content = fs.readFileSync(nodeJsNodeFile)
-                    //     //     bundle['nodejs-polars.linux-x64-gnu.node'] = content
-                    //     // }
-                    // },
-                    css(), wasm(), nodeResolve()],
+                plugins: [css(), wasm(), nodeResolve()],
             },
         },
         plugins: [
+            // This plugin copies .node files but doesn't work for nodejs-polars. Leaving it here in case it's
+            // useful in the future.
+            // eslint-disable-next-line
+            // @ts-ignore
+            nativePlugin({
+                // Where we want to physically put the extracted .node files
+                outDir: outDir,
+
+                target: 'esm',
+            }),
             // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
             VitePluginFixAbsoluteImports(),
             replace([
