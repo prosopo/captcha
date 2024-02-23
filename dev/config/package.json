@@ -59,7 +59,6 @@
         "typescript": "5.1.6",
         "vite": "^5.1.4",
         "vite-bundle-visualizer": "^1.0.1",
-        "vite-plugin-filter-replace": "^0.1.13",
         "vite-plugin-native": "^0.2.0",
         "vite-plugin-no-bundle": "^3.0.0",
         "vite-plugin-static-copy": "^1.0.1",

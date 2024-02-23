@@ -10,7 +10,7 @@ import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
 import path from 'path'
-import replace from 'vite-plugin-filter-replace'
+import replace from './vite-plugin-filter-replace.js'
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
@@ -162,7 +162,7 @@ export default async function (
         plugins: [
             // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
             VitePluginFixAbsoluteImports(),
-            replace.default([
+            replace([
                 // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
                 // __dirname here
                 {
