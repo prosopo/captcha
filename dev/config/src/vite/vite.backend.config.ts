@@ -159,20 +159,25 @@ export default async function (
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
 
-                plugins: [css(), wasm(), nodeResolve()],
-            },
-        },
-        plugins: [
+                plugins: [
+                    
             // This plugin copies .node files but doesn't work for nodejs-polars. Leaving it here in case it's
             // useful in the future.
             // eslint-disable-next-line
             // @ts-ignore
             nativePlugin({
                 // Where we want to physically put the extracted .node files
-                outDir: outDir,
-
+                destDir: '.',
+                outDir,
+                sourceMap: true,
+                copyTo: outDir,
+                targetEsm: true,
                 target: 'esm',
             }),
+                    css(), wasm(), nodeResolve()],
+            },
+        },
+        plugins: [
             // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
             VitePluginFixAbsoluteImports(),
             replace([
