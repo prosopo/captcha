@@ -1,6 +1,6 @@
-import { AliasOptions, UserConfig } from 'vite'
 import { default as ClosePlugin } from './vite-plugin-close-and-copy.js'
 import { Drop } from 'esbuild'
+import { UserConfig } from 'vite'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
@@ -92,7 +92,10 @@ export default async function (
                 if (id.endsWith('nodejs-polars/bin/native-polars.js')) {
                     // replace all instances of __dirname with the path relative to the output bundle
                     logger.debug(name, 'transform', id)
-                    const newCode = code.replaceAll(`__dirname`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`)
+                    const newCode = code.replaceAll(
+                        `__dirname`,
+                        `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`
+                    )
                     return newCode
                 }
                 // else return the original code (leave code unrelated to nodejs-polars untouched)
@@ -109,7 +112,7 @@ export default async function (
             name,
             resolveId(source: string, importer: string | undefined, options: any) {
                 // return the id if this plugin can resolve the import
-                for(const file of nodeFiles) {
+                for (const file of nodeFiles) {
                     if (path.basename(source) === path.basename(file)) {
                         logger.debug(name, 'resolves', source, 'imported by', importer)
                         return source
@@ -146,7 +149,7 @@ export default async function (
                         // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
                         const newCode = ``
                         return newCode
-                    }    
+                    }
                 }
                 return null
             },
@@ -160,7 +163,7 @@ export default async function (
                     const nodeFile = fs.readFileSync(src)
                     fs.writeFileSync(out, nodeFile)
                 }
-            }
+            },
         }
     }
 
@@ -205,8 +208,7 @@ export default async function (
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
 
-                plugins: [                    
-                    css(), wasm(), nodeResolve(), nodejsPolarsDirnamePlugin(), nodejsPolarsNativeFilePlugin()],
+                plugins: [css(), wasm(), nodeResolve(), nodejsPolarsDirnamePlugin(), nodejsPolarsNativeFilePlugin()],
             },
         },
         plugins: [

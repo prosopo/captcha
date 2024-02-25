@@ -36,8 +36,8 @@ export default function () {
             poolOptions: {
                 fork: {
                     useAtomics: true,
-                }
-            }
+                },
+            },
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy()],
     })
