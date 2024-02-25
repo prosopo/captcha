@@ -155,9 +155,6 @@ export default async function (
             transform(code: string, id: string) {
                 if (id.endsWith('.node')) {
                     console.log('****', 'transform node', id)
-                    // console.log('****', 'code', code)
-                    const newCode = code.replace(id, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
-                    // console.log('****', 'new code', newCode)
                     // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
                     return `
                     // create a custom require function to load .node files
