@@ -114,32 +114,35 @@ export default async function (
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
-    const dirnamePlugin = () => {
+    const nodejsPolarsDirnamePlugin = () => {
         return {
-            name: 'dirname-plugin',
+            name: 'nodejs-polars-dirname-plugin',
             resolveId(source: string, importer: string | undefined, options: any) {
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (source.endsWith('nodejs-polars/bin/native-polars.js')) {
                     console.log('****', 'resolve dirname', source)
+                    // return the source to indicate this plugin can resolve the import
                     return source
                 }
+                // return null if this plugin can't resolve the import
                 return null
             },
             transform(code: string, id: string) {
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (id.endsWith('nodejs-polars/bin/native-polars.js')) {
-                    console.log('****', 'transform dirname', id)
+                    // replace all instances of __dirname with the path relative to the output bundle
                     const newCode = code.replaceAll(`__dirname`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`)
                     return newCode
                 }
+                // else return the original code (leave code unrelated to nodejs-polars untouched)
                 return code
             },
         }
     }
 
-    const customPlugin = () => {
+    const nodejsPolarsNativeFilePlugin = () => {
         return {
-            name: 'custom-plugin',
+            name: 'nodejs-polars-native-file-plugin',
             resolveId(source: string, importer: string | undefined, options: any) {
                 // return the id if this plugin can resolve the import
                 if (source.endsWith('nodejs-polars.linux-x64-gnu.node')) {
@@ -153,9 +156,11 @@ export default async function (
                 return null // otherwise return null indicating that this plugin can't handle the import
             },
             transform(code: string, id: string) {
+                // rewrite the code to import the .node file
                 if (id.endsWith('.node')) {
                     console.log('****', 'transform node', id)
                     // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
+                    // this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
                     return `
                     // create a custom require function to load .node files
                     import { createRequire } from 'module';
@@ -242,7 +247,7 @@ export default async function (
                 },
 
                 plugins: [                    
-                    css(), wasm(), nodeResolve(), dirnamePlugin(), customPlugin()],
+                    css(), wasm(), nodeResolve(), nodejsPolarsDirnamePlugin(), nodejsPolarsNativeFilePlugin()],
             },
         },
         plugins: [
