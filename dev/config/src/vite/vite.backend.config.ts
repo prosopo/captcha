@@ -248,18 +248,6 @@ export default async function (
                 formats: ['es'],
             },
             modulePreload: { polyfill: false },
-            // commonjsOptions: {
-            //     ignore: function (id) {
-            //         // Ignore Executable and Linkable Format (ELF) files from being interpreted as CommonJS. These are
-            //         // .node files that contain assembly code for specific architectures. They are not CommonJS modules.
-            //         // without this, you'll get errors like "RollupError: Unexpected character '\u{7f}'"
-            //         const ig = id.indexOf('nodejs-polars-linux-x64-gnu') > -1
-            //         if (ig) {
-            //             console.log('****', 'ignoring', id)
-            //         }
-            //         return ig
-            //     },
-            // },
             rollupOptions: {
                 treeshake: 'smallest',
                 external: allExternal,
@@ -268,64 +256,13 @@ export default async function (
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
 
-                plugins: [
-                    
-            // This plugin copies .node files but doesn't work for nodejs-polars. Leaving it here in case it's
-            // useful in the future.
-            // eslint-disable-next-line
-            // @ts-ignore
-            // nativePlugin({
-            //     // Where we want to physically put the extracted .node files
-            //     destDir: '.',
-            //     outDir,
-            //     sourceMap: true,
-            //     copyTo: outDir,
-            //     targetEsm: true,
-            //     // target: 'esm',
-            // }),
+                plugins: [                    
                     css(), wasm(), nodeResolve(), dirnamePlugin(), customPlugin()],
             },
         },
         plugins: [
             // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
             VitePluginFixAbsoluteImports(),
-            // @ts-ignore
-            // replace([
-            //     // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
-            //     // __dirname here
-            //     {
-            //         filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
-            //         replace: {
-            //             from: '__dirname',
-            //             to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
-            //         },
-            //     },
-            //     // replace this import
-            //     {
-            //         filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
-            //         replace: {
-            //             from: '__dirname',
-            //             to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
-            //         },
-            //     },
-            //     // replace any references to main process where we are not expecting it
-            //     {
-            //         filter: new RegExp(filterEntry),
-            //         replace: {
-            //             from: 'isMain(import.meta)',
-            //             to: 'false',
-            //         },
-            //     },
-            // ]),
-            // We need the .node files to be available to the bundle
-            // viteStaticCopy({
-            //     targets: [
-            //         {
-            //             src: nodeJsNodeFileToCopy,
-            //             dest: outDir,
-            //         },
-            //     ],
-            // }),
             // plugin to close the bundle after build if not in serve mode
             command !== 'serve' ? ClosePlugin() : undefined,
         ],
