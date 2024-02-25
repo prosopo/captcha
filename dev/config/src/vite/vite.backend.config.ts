@@ -142,9 +142,7 @@ export default async function (
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (id.endsWith('nodejs-polars/bin/native-polars.js')) {
                     console.log('****', 'transform dirname', id)
-                    // console.log('****', 'code', code)
                     const newCode = code.replaceAll(`__dirname`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`)
-                    // console.log('****', 'new code', newCode)
                     return newCode
                 }
                 return code
@@ -155,10 +153,6 @@ export default async function (
     const customPlugin = () => {
         return {
             name: 'custom-plugin',
-            // renderChunk(code: string) {
-            //     return code.replace(`"nodejs-polars.linux-x64-gnu.node"`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
-            // },
-            // require("./nodejs-polars.linux-x64-gnu.node")
             resolveId(source: string, importer: string | undefined, options: any) {
                 // return the id if this plugin can resolve the import
                 if (source.endsWith('nodejs-polars.linux-x64-gnu.node')) {
@@ -172,25 +166,6 @@ export default async function (
                 return null // otherwise return null indicating that this plugin can't handle the import
             },
             transform(code: string, id: string) {
-                // if (id === './nodejs-polars.linux-x64-gnu.node') {
-                //     console.log('****', 'id', id)
-                //     console.log('****', 'code', code)
-                //     // code = code.replace(`"nodejs-polars.linux-x64-gnu.node"`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
-                //     // console.log('****', 'new code', code)
-
-                //     // read the .node file
-                //     const nodeFile = fs.readFileSync(nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node')
-                //     // convert the binary file to a base64 string
-                //     const base64 = Buffer.from(nodeFile).toString('base64')
-                //     // return a js snippet which creates a new buffer from the base64 string
-                //     const newCode = `export default Buffer.from('${base64}', 'base64')`
-                //     console.log('****', 'new code', newCode)
-                //     return {
-                //         code: newCode,
-                //         map: null
-                //     }
-                // }
-
                 if (id.endsWith('.node')) {
                     console.log('****', 'transform node', id)
                     // console.log('****', 'code', code)
@@ -209,37 +184,6 @@ export default async function (
                     `
                 }
                 return code
-
-
-                // if (id.endsWith('nodejs-polars.linux-x64-gnu.node')) {
-                //     console.log('****', 'transform', id, code)
-                //     // replace code with new code which imports the .node file
-                //     const newCode = `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`
-                //     console.log('****', 'new code for transform', newCode)
-                //     return newCode
-                // }
-                // if (id.includes('my-super-special-module')) {
-                //     console.log('****', 'transform custom module', id)
-                //     return `
-                //     import addon from './nodejs-polars.linux-x64-gnu.node'
-
-                //     export default addon
-                //     `
-                // }
-                // if (id.endsWith('.node')) {
-                //     console.log('****', 'transform node', id)
-                //     // sanitise the id to make it a valid variable name
-                //     const parts = id.split('/')
-                //     const last = parts[parts.length - 1]!
-                //     const uuid = `${snakeCaseToCamelCase(last.replace(/\./g, '_'))}`
-                //     console.log('****', 'uuid', uuid)
-                //     return `
-                //     import ${uuid} from 'my-super-special-module'
-
-                //     export default ${uuid}
-                //     `
-                // }
-                // return code
             },
             load(id: string) {
                 if (id.includes('my-super-special-module')) {
@@ -251,14 +195,6 @@ export default async function (
                 }
                 if (id === './nodejs-polars.linux-x64-gnu.node' || id === 'nodejs-polars.linux-x64-gnu.node') {
                     console.log('****', 'load', id)
-                    // read the .node file
-                    // const nodeFile = fs.readFileSync(nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node')
-                    // // convert the binary file to a base64 string
-                    // const base64 = Buffer.from(nodeFile).toString('base64')
-                    // // return a js snippet which creates a new buffer from the base64 string
-                    // const newCode = `export default Buffer.from('${base64}', 'base64')`
-                    // return newCode
-
                     // replace code with new code which imports the .node file
                     const newCode = `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`
                     return newCode
@@ -272,21 +208,6 @@ export default async function (
                 console.log('****', 'copying', target, 'to', out)
                 const nodeFile = fs.readFileSync(target)
                 fs.writeFileSync(out, nodeFile)
-                // console.log('****', 'custom bundle')
-                // for(const fileName of Object.keys(bundleObj)) {
-                //     // const bundle = { ...bundleObj[fileName] }
-                //     const bundle = bundleObj[fileName]
-                //     const mods = bundle.modules
-                //     for (const modName of Object.keys(mods)) {
-                //         if (modName.includes('nodejs-polars.linux-x64-gnu')) {
-                //             console.log('****', 'modName', modName)
-                //             console.log('****', 'mod', mods[modName])
-                //             // console.log('****', 'code', mods[modName].code)
-                //             // mods[modName].code = mods[modName].code.replace(`"nodejs-polars.linux-x64-gnu.node"`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
-                //             // console.log('****', 'new code', mods[modName].code)
-                //         }
-                //     }
-                // }
             }
         }
     }
