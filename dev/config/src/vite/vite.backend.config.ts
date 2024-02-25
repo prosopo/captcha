@@ -34,7 +34,6 @@ export default async function (
 
     // Output directory is relative to directory of the package
     const outDir = path.resolve(packageDir, 'dist/bundle')
-    fs.mkdirSync(outDir, { recursive: true })
 
     // Get rid of any dependencies we don't want to bundle
     const { external, internal } = filterDependencies(deps, ['aws', 'webpack', 'vite', 'eslint'])
