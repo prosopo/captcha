@@ -12,9 +12,24 @@ import css from 'rollup-plugin-import-css'
 import fs from 'fs'
 import nativePlugin from 'vite-plugin-native'
 import path from 'path'
-import replace from './vite-plugin-filter-replace.js'
+import sub from '@rollup/plugin-replace'
+import replace from 'vite-plugin-filter-replace'
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
+
+
+// https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
+
+/**
+ * 
+import { createRequire } from 'module'; 
+const customRequire = createRequire(import.meta.url)
+console.log('addon', customRequire('./ghi/abc.js'))
+console.log('addon', customRequire('./nodejs-polars.linux-x64-gnu.node'))
+console.log('addon', customRequire('./nodejs-polars.linux-x64-gnu.node').version())
+// console.log('nativePolars', (await import(nativePolars.default)).version())
+ */
 
 const nodeJsPolarsDeps = [
     'nodejs-polars.android-arm64.node',
@@ -39,6 +54,10 @@ const aliasOptions: AliasOptions = [
         replacement: 'nodejs-polars.linux-x64-gnu.node',
     })),
 ]
+
+const snakeCaseToCamelCase = (str: string) => {
+    return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
+}
 
 export default async function (
     packageName: string,
@@ -108,6 +127,170 @@ export default async function (
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
+    const dirnamePlugin = () => {
+        return {
+            name: 'dirname-plugin',
+            resolveId(source: string, importer: string | undefined, options: any) {
+                // aim for the node_modules/nodejs-polars/bin/native-polars.js file
+                if (source.endsWith('nodejs-polars/bin/native-polars.js')) {
+                    console.log('****', 'resolve dirname', source)
+                    return source
+                }
+                return null
+            },
+            transform(code: string, id: string) {
+                // aim for the node_modules/nodejs-polars/bin/native-polars.js file
+                if (id.endsWith('nodejs-polars/bin/native-polars.js')) {
+                    console.log('****', 'transform dirname', id)
+                    // console.log('****', 'code', code)
+                    const newCode = code.replaceAll(`__dirname`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`)
+                    // console.log('****', 'new code', newCode)
+                    return newCode
+                }
+                return code
+            },
+        }
+    }
+
+    const customPlugin = () => {
+        return {
+            name: 'custom-plugin',
+            // renderChunk(code: string) {
+            //     return code.replace(`"nodejs-polars.linux-x64-gnu.node"`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
+            // },
+            // require("./nodejs-polars.linux-x64-gnu.node")
+            resolveId(source: string, importer: string | undefined, options: any) {
+                // return the id if this plugin can resolve the import
+                if (source.endsWith('nodejs-polars.linux-x64-gnu.node')) {
+                    console.log('****', 'handle import of polars', source, 'from', importer)
+                    return source
+                }
+                if (source.includes('my-super-special-module')) {
+                    console.log('****', 'resolve custom module', source)
+                    return source
+                }
+                return null // otherwise return null indicating that this plugin can't handle the import
+            },
+            transform(code: string, id: string) {
+                // if (id === './nodejs-polars.linux-x64-gnu.node') {
+                //     console.log('****', 'id', id)
+                //     console.log('****', 'code', code)
+                //     // code = code.replace(`"nodejs-polars.linux-x64-gnu.node"`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
+                //     // console.log('****', 'new code', code)
+
+                //     // read the .node file
+                //     const nodeFile = fs.readFileSync(nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node')
+                //     // convert the binary file to a base64 string
+                //     const base64 = Buffer.from(nodeFile).toString('base64')
+                //     // return a js snippet which creates a new buffer from the base64 string
+                //     const newCode = `export default Buffer.from('${base64}', 'base64')`
+                //     console.log('****', 'new code', newCode)
+                //     return {
+                //         code: newCode,
+                //         map: null
+                //     }
+                // }
+
+                if (id.endsWith('.node')) {
+                    console.log('****', 'transform node', id)
+                    // console.log('****', 'code', code)
+                    const newCode = code.replace(id, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
+                    // console.log('****', 'new code', newCode)
+                    return `
+                    // create a custom require function to load .node files
+                    import { createRequire } from 'module';
+                    const customRequire = createRequire(import.meta.url)
+
+                    // load the .node file expecting it to be in the same directory as the output bundle
+                    const content = customRequire('./nodejs-polars.linux-x64-gnu.node')
+
+                    // export the content straight back out again
+                    export default content
+                    `
+                }
+                return code
+
+
+                // if (id.endsWith('nodejs-polars.linux-x64-gnu.node')) {
+                //     console.log('****', 'transform', id, code)
+                //     // replace code with new code which imports the .node file
+                //     const newCode = `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`
+                //     console.log('****', 'new code for transform', newCode)
+                //     return newCode
+                // }
+                // if (id.includes('my-super-special-module')) {
+                //     console.log('****', 'transform custom module', id)
+                //     return `
+                //     import addon from './nodejs-polars.linux-x64-gnu.node'
+
+                //     export default addon
+                //     `
+                // }
+                // if (id.endsWith('.node')) {
+                //     console.log('****', 'transform node', id)
+                //     // sanitise the id to make it a valid variable name
+                //     const parts = id.split('/')
+                //     const last = parts[parts.length - 1]!
+                //     const uuid = `${snakeCaseToCamelCase(last.replace(/\./g, '_'))}`
+                //     console.log('****', 'uuid', uuid)
+                //     return `
+                //     import ${uuid} from 'my-super-special-module'
+
+                //     export default ${uuid}
+                //     `
+                // }
+                // return code
+            },
+            load(id: string) {
+                if (id.includes('my-super-special-module')) {
+                    console.log('****', 'load custom module', id)
+                    return ''
+                }
+                if (id.endsWith('.node')) {
+                    console.log('****', 'load node', id)
+                }
+                if (id === './nodejs-polars.linux-x64-gnu.node' || id === 'nodejs-polars.linux-x64-gnu.node') {
+                    console.log('****', 'load', id)
+                    // read the .node file
+                    // const nodeFile = fs.readFileSync(nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node')
+                    // // convert the binary file to a base64 string
+                    // const base64 = Buffer.from(nodeFile).toString('base64')
+                    // // return a js snippet which creates a new buffer from the base64 string
+                    // const newCode = `export default Buffer.from('${base64}', 'base64')`
+                    // return newCode
+
+                    // replace code with new code which imports the .node file
+                    const newCode = `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`
+                    return newCode
+                }
+                return null
+            },
+            generateBundle(options: any, bundleObj: any) {
+                // copy the .node file to the output directory
+                const out = outDir + '/nodejs-polars.linux-x64-gnu.node'
+                const target = nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
+                console.log('****', 'copying', target, 'to', out)
+                const nodeFile = fs.readFileSync(target)
+                fs.writeFileSync(out, nodeFile)
+                // console.log('****', 'custom bundle')
+                // for(const fileName of Object.keys(bundleObj)) {
+                //     // const bundle = { ...bundleObj[fileName] }
+                //     const bundle = bundleObj[fileName]
+                //     const mods = bundle.modules
+                //     for (const modName of Object.keys(mods)) {
+                //         if (modName.includes('nodejs-polars.linux-x64-gnu')) {
+                //             console.log('****', 'modName', modName)
+                //             console.log('****', 'mod', mods[modName])
+                //             // console.log('****', 'code', mods[modName].code)
+                //             // mods[modName].code = mods[modName].code.replace(`"nodejs-polars.linux-x64-gnu.node"`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
+                //             // console.log('****', 'new code', mods[modName].code)
+                //         }
+                //     }
+                // }
+            }
+        }
+    }
+
     return {
         resolve: {
             alias: aliasOptions,
@@ -133,7 +316,7 @@ export default async function (
         define,
         build: {
             outDir,
-            minify: isProduction,
+            minify: false,
             ssr: true,
             target: 'node18',
 
@@ -144,13 +327,18 @@ export default async function (
                 formats: ['es'],
             },
             modulePreload: { polyfill: false },
-            commonjsOptions: {
-                ignore: function (id) {
-                    // Ignore Executable and Linkable Format (ELF) files from being interpreted as CommonJS. These are
-                    // .node files that contain WebAssembly code. They are not CommonJS modules.
-                    return id.indexOf('nodejs-polars-linux-x64-gnu') > -1
-                },
-            },
+            // commonjsOptions: {
+            //     ignore: function (id) {
+            //         // Ignore Executable and Linkable Format (ELF) files from being interpreted as CommonJS. These are
+            //         // .node files that contain assembly code for specific architectures. They are not CommonJS modules.
+            //         // without this, you'll get errors like "RollupError: Unexpected character '\u{7f}'"
+            //         const ig = id.indexOf('nodejs-polars-linux-x64-gnu') > -1
+            //         if (ig) {
+            //             console.log('****', 'ignoring', id)
+            //         }
+            //         return ig
+            //     },
+            // },
             rollupOptions: {
                 treeshake: 'smallest',
                 external: allExternal,
@@ -165,57 +353,58 @@ export default async function (
             // useful in the future.
             // eslint-disable-next-line
             // @ts-ignore
-            nativePlugin({
-                // Where we want to physically put the extracted .node files
-                destDir: '.',
-                outDir,
-                sourceMap: true,
-                copyTo: outDir,
-                targetEsm: true,
-                target: 'esm',
-            }),
-                    css(), wasm(), nodeResolve()],
+            // nativePlugin({
+            //     // Where we want to physically put the extracted .node files
+            //     destDir: '.',
+            //     outDir,
+            //     sourceMap: true,
+            //     copyTo: outDir,
+            //     targetEsm: true,
+            //     // target: 'esm',
+            // }),
+                    css(), wasm(), nodeResolve(), dirnamePlugin(), customPlugin()],
             },
         },
         plugins: [
             // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
             VitePluginFixAbsoluteImports(),
-            replace([
-                // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
-                // __dirname here
-                {
-                    filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
-                    replace: {
-                        from: '__dirname',
-                        to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
-                    },
-                },
-                // replace this import
-                {
-                    filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
-                    replace: {
-                        from: '__dirname',
-                        to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
-                    },
-                },
-                // replace any references to main process where we are not expecting it
-                {
-                    filter: new RegExp(filterEntry),
-                    replace: {
-                        from: 'isMain(import.meta)',
-                        to: 'false',
-                    },
-                },
-            ]),
+            // @ts-ignore
+            // replace([
+            //     // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
+            //     // __dirname here
+            //     {
+            //         filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
+            //         replace: {
+            //             from: '__dirname',
+            //             to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
+            //         },
+            //     },
+            //     // replace this import
+            //     {
+            //         filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
+            //         replace: {
+            //             from: '__dirname',
+            //             to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
+            //         },
+            //     },
+            //     // replace any references to main process where we are not expecting it
+            //     {
+            //         filter: new RegExp(filterEntry),
+            //         replace: {
+            //             from: 'isMain(import.meta)',
+            //             to: 'false',
+            //         },
+            //     },
+            // ]),
             // We need the .node files to be available to the bundle
-            viteStaticCopy({
-                targets: [
-                    {
-                        src: nodeJsNodeFileToCopy,
-                        dest: outDir,
-                    },
-                ],
-            }),
+            // viteStaticCopy({
+            //     targets: [
+            //         {
+            //             src: nodeJsNodeFileToCopy,
+            //             dest: outDir,
+            //         },
+            //     ],
+            // }),
             // plugin to close the bundle after build if not in serve mode
             command !== 'serve' ? ClosePlugin() : undefined,
         ],
