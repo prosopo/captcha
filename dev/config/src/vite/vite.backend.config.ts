@@ -115,12 +115,13 @@ export default async function (
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
 
     const nodejsPolarsDirnamePlugin = () => {
+        const name = 'nodejs-polars-dirname-plugin'
         return {
-            name: 'nodejs-polars-dirname-plugin',
+            name,
             resolveId(source: string, importer: string | undefined, options: any) {
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (source.endsWith('nodejs-polars/bin/native-polars.js')) {
-                    console.log('****', 'resolve dirname', source)
+                    console.log(name, 'resolves', source, 'imported by', importer)
                     // return the source to indicate this plugin can resolve the import
                     return source
                 }
@@ -131,6 +132,7 @@ export default async function (
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (id.endsWith('nodejs-polars/bin/native-polars.js')) {
                     // replace all instances of __dirname with the path relative to the output bundle
+                    console.log(name, 'transform', id)
                     const newCode = code.replaceAll(`__dirname`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`)
                     return newCode
                 }
@@ -141,12 +143,13 @@ export default async function (
     }
 
     const nodejsPolarsNativeFilePlugin = () => {
+        const name = 'nodejs-polars-native-file-plugin'
         return {
-            name: 'nodejs-polars-native-file-plugin',
+            name,
             resolveId(source: string, importer: string | undefined, options: any) {
                 // return the id if this plugin can resolve the import
                 if (source.endsWith('nodejs-polars.linux-x64-gnu.node')) {
-                    console.log('****', 'handle import of polars', source, 'from', importer)
+                    console.log(name, 'resolves', source, 'imported by', importer)
                     return source
                 }
                 return null // otherwise return null indicating that this plugin can't handle the import
@@ -154,7 +157,7 @@ export default async function (
             transform(code: string, id: string) {
                 // rewrite the code to import the .node file
                 if (id.endsWith('.node')) {
-                    console.log('****', 'transform node', id)
+                    console.log(name, 'transform', id)
                     // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
                     // this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
                     return `
@@ -173,7 +176,7 @@ export default async function (
             },
             load(id: string) {
                 if (id === './nodejs-polars.linux-x64-gnu.node' || id === 'nodejs-polars.linux-x64-gnu.node') {
-                    console.log('****', 'load', id)
+                    console.log(name, 'load', id)
                     // replace code with new code which imports the .node file
                     const newCode = `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`
                     return newCode
@@ -184,7 +187,7 @@ export default async function (
                 // copy the .node file to the output directory
                 const out = outDir + '/nodejs-polars.linux-x64-gnu.node'
                 const target = nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
-                console.log('****', 'copying', target, 'to', out)
+                console.log(name, 'copy', out, 'to', target)
                 const nodeFile = fs.readFileSync(target)
                 fs.writeFileSync(out, nodeFile)
             }
