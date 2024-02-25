@@ -177,8 +177,8 @@ export default async function (
             load(id: string) {
                 if (id === './nodejs-polars.linux-x64-gnu.node' || id === 'nodejs-polars.linux-x64-gnu.node') {
                     console.log(name, 'load', id)
-                    // replace code with new code which imports the .node file
-                    const newCode = `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`
+                    // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
+                    const newCode = ``
                     return newCode
                 }
                 return null
