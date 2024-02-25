@@ -5,16 +5,11 @@ import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
 import fs from 'fs'
-import nativePlugin from 'vite-plugin-native'
 import path from 'path'
-import sub from '@rollup/plugin-replace'
-import replace from 'vite-plugin-filter-replace'
-import { v4 as uuidv4 } from 'uuid';
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
@@ -41,10 +36,6 @@ const aliasOptions: AliasOptions = [
         replacement: 'nodejs-polars.linux-x64-gnu.node',
     })),
 ]
-
-const snakeCaseToCamelCase = (str: string) => {
-    return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
-}
 
 export default async function (
     packageName: string,
@@ -104,13 +95,6 @@ export default async function (
     logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`)
 
     const entryAbsolute = path.resolve(packageDir, entry)
-
-    const packageNameShort = packageName.replace('@prosopo/', '')
-
-    const filterEntry = `^${baseDir}/packages/(?!${packageNameShort}/src/${entry.replace(
-        './src/',
-        ''
-    )}$)(?!.*/node_modules/.*$).*$`
 
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
