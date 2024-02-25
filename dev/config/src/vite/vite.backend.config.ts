@@ -63,6 +63,7 @@ export default async function (
 
     // Assuming node_modules are at the root of the workspace
     const baseDir = path.resolve(optionalBaseDir)
+    console.log('baseDir', baseDir)
     const nodeModulesDir = path.resolve(baseDir, 'node_modules')
 
     // Output directory is relative to directory of the package
@@ -144,52 +145,63 @@ export default async function (
 
     const nodejsPolarsNativeFilePlugin = () => {
         const name = 'nodejs-polars-native-file-plugin'
+        // a list of the node files to be handled. Starts from root dir
+        const nodeFiles = [nodeJsNodeFileToCopy]
         return {
             name,
             resolveId(source: string, importer: string | undefined, options: any) {
                 // return the id if this plugin can resolve the import
-                if (source.endsWith('nodejs-polars.linux-x64-gnu.node')) {
-                    console.log(name, 'resolves', source, 'imported by', importer)
-                    return source
+                for(const file of nodeFiles) {
+                    if (path.basename(source) === path.basename(file)) {
+                        console.log(name, 'resolves', source, 'imported by', importer)
+                        return source
+                    }
                 }
                 return null // otherwise return null indicating that this plugin can't handle the import
             },
             transform(code: string, id: string) {
-                // rewrite the code to import the .node file
-                if (id.endsWith('.node')) {
-                    console.log(name, 'transform', id)
-                    // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
-                    // this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
-                    return `
-                    // create a custom require function to load .node files
-                    import { createRequire } from 'module';
-                    const customRequire = createRequire(import.meta.url)
-
-                    // load the .node file expecting it to be in the same directory as the output bundle
-                    const content = customRequire('./nodejs-polars.linux-x64-gnu.node')
-
-                    // export the content straight back out again
-                    export default content
-                    `
+                for (const file of nodeFiles) {
+                    // rewrite the code to import the .node file
+                    if (path.basename(id) === path.basename(file)) {
+                        console.log(name, 'transform', id)
+                        // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
+                        // this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
+                        return `
+                        // create a custom require function to load .node files
+                        import { createRequire } from 'module';
+                        const customRequire = createRequire(import.meta.url)
+    
+                        // load the .node file expecting it to be in the same directory as the output bundle
+                        const content = customRequire('./nodejs-polars.linux-x64-gnu.node')
+    
+                        // export the content straight back out again
+                        export default content
+                        `
+                    }
                 }
                 return code
             },
             load(id: string) {
-                if (id === './nodejs-polars.linux-x64-gnu.node' || id === 'nodejs-polars.linux-x64-gnu.node') {
-                    console.log(name, 'load', id)
-                    // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
-                    const newCode = ``
-                    return newCode
+                for (const file of nodeFiles) {
+                    if (path.basename(id) === path.basename(file)) {
+                        console.log(name, 'load', id)
+                        // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
+                        const newCode = ``
+                        return newCode
+                    }    
                 }
                 return null
             },
             generateBundle(options: any, bundleObj: any) {
-                // copy the .node file to the output directory
-                const out = outDir + '/nodejs-polars.linux-x64-gnu.node'
-                const target = nodeModulesDir + '/nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
-                console.log(name, 'copy', out, 'to', target)
-                const nodeFile = fs.readFileSync(target)
-                fs.writeFileSync(out, nodeFile)
+                for (const fileAbs of nodeFiles) {
+                    const file = path.basename(fileAbs)
+                    // copy the .node file to the output directory
+                    const out = `${outDir}/${file}`
+                    const src = `${fileAbs}`
+                    console.log(name, 'copy', src, 'to', out)
+                    const nodeFile = fs.readFileSync(src)
+                    fs.writeFileSync(out, nodeFile)
+                }
             }
         }
     }
