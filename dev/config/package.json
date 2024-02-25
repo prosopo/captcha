@@ -55,16 +55,12 @@
         "regenerator-runtime": "^0.14.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-import-css": "^3.5.0",
-        "rollup-plugin-replace": "^2.2.0",
         "tsconfig-paths": "^4.2.0",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vite": "^5.1.4",
         "vite-bundle-visualizer": "^1.0.1",
-        "vite-plugin-filter-replace": "^0.1.13",
-        "vite-plugin-native": "^0.2.0",
         "vite-plugin-no-bundle": "^3.0.0",
-        "vite-plugin-static-copy": "^1.0.1",
         "vite-tsconfig-paths": "^4.3.1"
     },
     "repository": {
