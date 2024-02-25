@@ -30,7 +30,6 @@ export default async function (
 
     // Assuming node_modules are at the root of the workspace
     const baseDir = path.resolve(optionalBaseDir)
-    console.log('baseDir', baseDir)
     const nodeModulesDir = path.resolve(baseDir, 'node_modules')
 
     // Output directory is relative to directory of the package
@@ -82,7 +81,7 @@ export default async function (
             resolveId(source: string, importer: string | undefined, options: any) {
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (source.endsWith('nodejs-polars/bin/native-polars.js')) {
-                    console.log(name, 'resolves', source, 'imported by', importer)
+                    logger.debug(name, 'resolves', source, 'imported by', importer)
                     // return the source to indicate this plugin can resolve the import
                     return source
                 }
@@ -93,7 +92,7 @@ export default async function (
                 // aim for the node_modules/nodejs-polars/bin/native-polars.js file
                 if (id.endsWith('nodejs-polars/bin/native-polars.js')) {
                     // replace all instances of __dirname with the path relative to the output bundle
-                    console.log(name, 'transform', id)
+                    logger.debug(name, 'transform', id)
                     const newCode = code.replaceAll(`__dirname`, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`)
                     return newCode
                 }
@@ -113,7 +112,7 @@ export default async function (
                 // return the id if this plugin can resolve the import
                 for(const file of nodeFiles) {
                     if (path.basename(source) === path.basename(file)) {
-                        console.log(name, 'resolves', source, 'imported by', importer)
+                        logger.debug(name, 'resolves', source, 'imported by', importer)
                         return source
                     }
                 }
@@ -123,7 +122,7 @@ export default async function (
                 for (const file of nodeFiles) {
                     // rewrite the code to import the .node file
                     if (path.basename(id) === path.basename(file)) {
-                        console.log(name, 'transform', id)
+                        logger.debug(name, 'transform', id)
                         // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
                         // this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
                         return `
@@ -144,7 +143,7 @@ export default async function (
             load(id: string) {
                 for (const file of nodeFiles) {
                     if (path.basename(id) === path.basename(file)) {
-                        console.log(name, 'load', id)
+                        logger.debug(name, 'load', id)
                         // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
                         const newCode = ``
                         return newCode
@@ -158,7 +157,7 @@ export default async function (
                     // copy the .node file to the output directory
                     const out = `${outDir}/${file}`
                     const src = `${fileAbs}`
-                    console.log(name, 'copy', src, 'to', out)
+                    logger.debug(name, 'copy', src, 'to', out)
                     const nodeFile = fs.readFileSync(src)
                     fs.writeFileSync(out, nodeFile)
                 }
