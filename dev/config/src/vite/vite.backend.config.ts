@@ -18,19 +18,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
-
-// https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
-
-/**
- * 
-import { createRequire } from 'module'; 
-const customRequire = createRequire(import.meta.url)
-console.log('addon', customRequire('./ghi/abc.js'))
-console.log('addon', customRequire('./nodejs-polars.linux-x64-gnu.node'))
-console.log('addon', customRequire('./nodejs-polars.linux-x64-gnu.node').version())
-// console.log('nativePolars', (await import(nativePolars.default)).version())
- */
-
 const nodeJsPolarsDeps = [
     'nodejs-polars.android-arm64.node',
     'nodejs-polars.android-arm-eabi.node',
@@ -171,6 +158,7 @@ export default async function (
                     // console.log('****', 'code', code)
                     const newCode = code.replace(id, `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/') + "/nodejs-polars.linux-x64-gnu.node"`)
                     // console.log('****', 'new code', newCode)
+                    // https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
                     return `
                     // create a custom require function to load .node files
                     import { createRequire } from 'module';
