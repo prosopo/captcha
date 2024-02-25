@@ -149,10 +149,6 @@ export default async function (
                     console.log('****', 'handle import of polars', source, 'from', importer)
                     return source
                 }
-                if (source.includes('my-super-special-module')) {
-                    console.log('****', 'resolve custom module', source)
-                    return source
-                }
                 return null // otherwise return null indicating that this plugin can't handle the import
             },
             transform(code: string, id: string) {
@@ -176,13 +172,6 @@ export default async function (
                 return code
             },
             load(id: string) {
-                if (id.includes('my-super-special-module')) {
-                    console.log('****', 'load custom module', id)
-                    return ''
-                }
-                if (id.endsWith('.node')) {
-                    console.log('****', 'load node', id)
-                }
                 if (id === './nodejs-polars.linux-x64-gnu.node' || id === 'nodejs-polars.linux-x64-gnu.node') {
                     console.log('****', 'load', id)
                     // replace code with new code which imports the .node file
