@@ -189,7 +189,7 @@ export default async function (
         define,
         build: {
             outDir,
-            minify: false,
+            minify: isProduction,
             ssr: true,
             target: 'node18',
 
