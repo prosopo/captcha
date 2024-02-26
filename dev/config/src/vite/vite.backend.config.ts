@@ -153,13 +153,15 @@ export default async function (
                 }
                 return null
             },
-            buildEnd() {
+            generateBundle() {
+                console.log('BUILD END')
                 for (const fileAbs of nodeFiles) {
                     const file = path.basename(fileAbs)
                     // copy the .node file to the output directory
                     const out = `${outDir}/${file}`
                     const src = `${fileAbs}`
                     logger.debug(name, 'copy', src, 'to', out)
+                    console.log(name, 'copy', src, 'to', out)
                     const nodeFile = fs.readFileSync(src)
                     fs.writeFileSync(out, nodeFile)
                 }
