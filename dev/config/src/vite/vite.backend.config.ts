@@ -163,6 +163,8 @@ export default async function (
                     logger.debug(name, 'copy', src, 'to', out)
                     console.log(name, 'copy', src, 'to', out)
                     const nodeFile = fs.readFileSync(src)
+                    // create the parent dir of the out file
+                    fs.mkdirSync(path.dirname(out), { recursive: true })
                     fs.writeFileSync(out, nodeFile)
                 }
                 fs.writeFileSync(`${outDir}/hello`, 'abc')
