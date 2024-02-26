@@ -153,7 +153,7 @@ export default async function (
                 }
                 return null
             },
-            generateBundle(options: any, bundleObj: any) {
+            buildEnd() {
                 for (const fileAbs of nodeFiles) {
                     const file = path.basename(fileAbs)
                     // copy the .node file to the output directory
@@ -192,7 +192,6 @@ export default async function (
             minify: isProduction,
             ssr: true,
             target: 'node18',
-
             lib: {
                 entry: entryAbsolute,
                 name: bundleName,
