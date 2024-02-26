@@ -148,18 +148,24 @@ export default async function (
                         logger.debug(name, 'load', id)
                         // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
                         const newCode = ``
-                        // copy the node file to the output directory
-                        // copy the .node file to the output directory
-                        const out = `${outDir}/${path.basename(file)}`
-                        const src = `${file}`
-                        logger.debug(name, 'copy', src, 'to', out)
-                        console.log(name, 'copy', src, 'to', out)
-                        const nodeFile = fs.readFileSync(src)
-                        fs.writeFileSync(out, nodeFile)
                         return newCode
                     }
                 }
                 return null
+            },
+            generateBundle(_: any, bundle: any) {
+                console.log('BUILD END')
+                for (const fileAbs of nodeFiles) {
+                    const file = path.basename(fileAbs)
+                    // copy the .node file to the output directory
+                    const out = `${outDir}/${file}`
+                    const src = `${fileAbs}`
+                    logger.debug(name, 'copy', src, 'to', out)
+                    console.log(name, 'copy', src, 'to', out)
+                    const nodeFile = fs.readFileSync(src)
+                    fs.writeFileSync(out, nodeFile)
+                }
+                fs.writeFileSync(`${outDir}/hello`, 'abc')
             },
         }
     }
