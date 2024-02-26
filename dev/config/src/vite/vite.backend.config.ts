@@ -5,12 +5,12 @@ import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+import { nodejsPolarsDirnamePlugin } from './NodejsPolarsDirnamePlugin.js'
+import { nodejsPolarsNativeFilePlugin } from './NodejsPolarsNativeFilePlugin.js'
 import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
 import path from 'path'
-import { nodejsPolarsNativeFilePlugin } from './NodejsPolarsNativeFilePlugin.js'
-import { nodejsPolarsDirnamePlugin } from './NodejsPolarsDirnamePlugin.js'
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
@@ -116,7 +116,13 @@ export default async function (
                 output: {
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
-                plugins: [css(), wasm(), nodeResolve(), nodejsPolarsDirnamePlugin(logger), nodejsPolarsNativeFilePlugin(logger, nodeFiles, outDir)],
+                plugins: [
+                    css(),
+                    wasm(),
+                    nodeResolve(),
+                    nodejsPolarsDirnamePlugin(logger),
+                    nodejsPolarsNativeFilePlugin(logger, nodeFiles, outDir),
+                ],
             },
         },
         plugins: [
