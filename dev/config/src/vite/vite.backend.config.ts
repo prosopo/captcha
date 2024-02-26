@@ -153,8 +153,7 @@ export default async function (
                 }
                 return null
             },
-            generateBundle(_: any, bundle: any) {
-                console.log('BUILD END')
+            generateBundle(options: any, bundle: any) {
                 for (const fileAbs of nodeFiles) {
                     const file = path.basename(fileAbs)
                     // copy the .node file to the output directory
@@ -163,7 +162,6 @@ export default async function (
                     logger.debug(name, 'copy', src, 'to', out)
                     console.log(name, 'copy', src, 'to', out)
                     const nodeFile = fs.readFileSync(src)
-                    // create the parent dir of the out file
                     fs.mkdirSync(path.dirname(out), { recursive: true })
                     fs.writeFileSync(out, nodeFile)
                 }
