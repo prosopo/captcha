@@ -30,10 +30,10 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
-        "@polkadot/keyring": "12.6.1",
-        "@polkadot/types": "10.11.1",
-        "@polkadot/util": "12.6.1",
-        "@polkadot/util-crypto": "12.6.1",
+        "@polkadot/keyring": "12.6.2",
+        "@polkadot/types": "10.11.2",
+        "@polkadot/util": "12.6.2",
+        "@polkadot/util-crypto": "12.6.2",
         "@prosopo/captcha-contract": "0.2.41",
         "@prosopo/common": "0.2.41",
         "@prosopo/contract": "0.2.41",

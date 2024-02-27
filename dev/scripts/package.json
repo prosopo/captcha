@@ -26,10 +26,10 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@iarna/toml": "^2.2.5",
-        "@polkadot/api": "10.11.1",
-        "@polkadot/api-contract": "10.11.1",
-        "@polkadot/types": "10.11.1",
-        "@polkadot/util-crypto": "12.6.1",
+        "@polkadot/api": "10.11.2",
+        "@polkadot/api-contract": "10.11.2",
+        "@polkadot/types": "10.11.2",
+        "@polkadot/util-crypto": "12.6.2",
         "@prosopo/api": "0.2.41",
         "@prosopo/cli": "0.2.41",
         "@prosopo/common": "0.2.41",
@@ -59,7 +59,7 @@
         "yargs-parser": "^21.0.1"
     },
     "overrides": {
-        "@polkadot/keyring": "12.6.1"
+        "@polkadot/keyring": "12.6.2"
     },
     "devDependencies": {
         "@esm-bundle/chai": "^4.3.4-fix.0",
