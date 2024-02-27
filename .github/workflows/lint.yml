@@ -86,5 +86,4 @@ jobs:
 
             - run: npm install -g npm@8.9
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
             - run: npm run lint
