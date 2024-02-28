@@ -23,11 +23,11 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
-import { picassoCanvas } from '../modules/canvas.js'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 import Extension from './Extension.js'
 import Signer from '@polkadot/extension-base/page/Signer'
+import { picassoCanvas } from '@prosopo/util'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
