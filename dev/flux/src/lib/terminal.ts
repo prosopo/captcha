@@ -16,11 +16,9 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName: s
         const selectedIp = nodeAPIURL.toString()
         const url = selectedIp.split(':')[0]
         if (!url) throw new Error('No url')
-        const urlPort = selectedIp.split(':')[1] || 16127
-        const zelidauth = nodeSignature
-        const socketUrl = `https://${url.replace(/\./g, '-')}-${urlPort}.node.api.runonflux.io`
+        const urlPort = nodeAPIURL.port || 16127
+        const socketUrl = `https://${nodeAPIURL.hostname.replace(/\./g, '-')}-${urlPort}.node.api.runonflux.io`
 
-        console.log(socketUrl)
         const socket = io(socketUrl)
         socket.on('connect', () => {
             console.log('connected')
