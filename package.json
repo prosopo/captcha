@@ -61,7 +61,8 @@
         "lint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js 2>/dev/null && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js 2>/dev/null || true",
-        "postinstall": "npm run removePolkadotJSWarnings"
+        "postinstall": "npm run removePolkadotJSWarnings",
+        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\""
     },
     "private": true,
     "engines": {
@@ -103,6 +104,10 @@
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "2.6.2",
+        "typedoc": "^0.25.8",
+        "typedoc-plugin-mdn-links": "^3.1.16",
+        "typedoc-plugin-missing-exports": "^2.2.0",
+        "typedoc-plugin-zod": "^1.1.2",
         "typescript": "5.1.6"
     },
     "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
