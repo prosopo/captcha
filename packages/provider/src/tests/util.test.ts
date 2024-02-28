@@ -56,13 +56,13 @@ describe('UTIL FUNCTIONS', async () => {
             throw new ProsopoEnvError(e as Error)
         }
         // insert a task into the database
-        await env.db?.storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
+        await env.getDb().storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
         if (!env.db) {
             throw new Error('Database not initialized')
         }
         let result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.db)
         expect(result).to.equal(true)
-        await env.db?.storeScheduledTaskStatus(
+        await env.getDb().storeScheduledTaskStatus(
             '0x01',
             ScheduledTaskNames.BatchCommitment,
             ScheduledTaskStatus.Completed
