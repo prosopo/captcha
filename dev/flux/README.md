@@ -46,9 +46,11 @@ npm run cli auth -- --app <app_name>
 }
 ```
 
-### Redeploy
+### Get Dapp Details
 
 #### Get Dapps
+
+Use this command to get a list of all the dapps that are running on the network.
 
 ```bash
 # get all dapps
@@ -57,12 +59,18 @@ npm run cli getDapps
 
 #### Get Dapp
 
+Use this command to get the IP addresses of the nodes that are running the app.
+
 ```bash
 # get details of a specific dapp
 npm run cli getDapp -- --app <app_name>
 ```
 
+### Redeploy
+
 #### Soft redeploy
+
+Restart the app on all nodes that are running the app.
 
 ```bash
 # redeploy the app
@@ -74,6 +82,8 @@ npm run cli redeploy -- --app <app_name>
 ```
 
 #### Hard redeploy
+
+Remove the container and restart the app on all nodes that are running the app.
 
 ```bash
 # hard redeploy the app

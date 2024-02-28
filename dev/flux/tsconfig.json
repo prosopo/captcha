@@ -8,13 +8,13 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-          "path": "../../packages/cli"
+            "path": "../../packages/cli"
         },
         {
             "path": "../../packages/common"
         },
         {
             "path": "../../packages/util"
-        },
+        }
     ]
 }
