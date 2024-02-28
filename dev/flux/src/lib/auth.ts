@@ -130,15 +130,15 @@ export const getNodeAPIURL = (nodeUIURL: string) => {
     return new URL(`http://${url.hostname}:${16187}`)
 }
 
-const getIndividualFluxAppDetails = async (
+export const getIndividualFluxAppDetails = async (
     dappName: string,
     zelId: string,
     signature: string,
     loginPhrase: string
 ): Promise<DappDataResponse> => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?dapp=${dappName}&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
+    console.log(apiUrl)
     const response = await fetch(apiUrl)
-    console.log(response)
     return await errorHandler(response)
 }
 
