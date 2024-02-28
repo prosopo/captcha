@@ -80,7 +80,6 @@
     "overrides": {
         "foo": "1.0.0"
     },
-
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
