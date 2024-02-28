@@ -121,7 +121,9 @@ const getLoginPhrase = async (url?: URL): Promise<string> => {
 }
 
 export const getNodeAPIURL = (nodeUIURL: string) => {
-    console.log('nodeUIURL', nodeUIURL)
+    if (!nodeUIURL.startsWith('http')) {
+        nodeUIURL = `http://${nodeUIURL}`
+    }
     const url = new URL(nodeUIURL)
     if (url.port) {
         const portLogin = Number(url.port) + 1
@@ -137,7 +139,6 @@ export const getIndividualFluxAppDetails = async (
     loginPhrase: string
 ): Promise<DappDataResponse> => {
     const apiUrl = `https://jetpackbridge.runonflux.io/api/v1/dapps.php?dapp=${dappName}&zelid=${zelId}&signature=${signature}&loginPhrase=${loginPhrase}`
-    console.log(apiUrl)
     const response = await fetch(apiUrl)
     return await errorHandler(response)
 }
