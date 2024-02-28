@@ -14,6 +14,8 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
+    Features,
+    FeaturesEnum,
     NetworkNamesSchema,
     ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
@@ -24,12 +26,10 @@ import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
-const features = ['image', 'pow'] as const
-
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
-    captchaType?: (typeof features)[number]
+    captchaType?: Features
     callback?: string
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
@@ -177,6 +177,7 @@ const implicitRender = () => {
             console.error('No siteKey found')
             return
         }
+        const features = Object.values(FeaturesEnum)
         const captchaType =
             features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
             ('image' as const)
