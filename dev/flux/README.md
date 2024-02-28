@@ -6,6 +6,8 @@ This package contains the scripts for interacting with the Flux network.
 
 ### Authentication
 
+Use to generate the authentication for a Flux node for a specific app.
+
 ```bash
 # authenticate with the network for a specific app
 flux auth --app <app_name>

@@ -1,5 +1,5 @@
 import { LogLevel, getLogger } from '@prosopo/common'
-import { commandAuth, commandDeploy } from './commands/index.js'
+import { commandAuth, commandDeploy, commandGetDapps } from './commands/index.js'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
@@ -10,6 +10,7 @@ export default async function processArgs(args: string[]) {
         .usage('Usage: $0 [global options] <command> [options]')
         .command(commandAuth({ logger }))
         .command(commandDeploy({ logger }))
+        .command(commandGetDapps({ logger }))
         .parse()
 }
 
