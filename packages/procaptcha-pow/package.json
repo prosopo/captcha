@@ -37,11 +37,13 @@
     "@emotion/styled": "^11.11.0",
     "@noble/hashes": "^1.3.3",
     "@polkadot/extension-inject": "0.46.6",
+    "@prosopo/account": "^0.2.39",
     "@prosopo/api": "^0.2.39",
     "@prosopo/common": "0.2.39",
     "@prosopo/procaptcha": "0.2.39",
     "@prosopo/types": "^0.2.39",
     "@prosopo/util": "^0.2.39",
+    "@prosopo/web-components": "^0.2.39",
     "react": "^18.2.0"
   },
   "devDependencies": {

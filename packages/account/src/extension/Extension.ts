@@ -16,7 +16,7 @@ import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 /**
  * Class to interface with accounts.
  */
-export default abstract class Extension {
+export abstract class Extension {
     /**
      * Find an account given an address.
      * @returns the account

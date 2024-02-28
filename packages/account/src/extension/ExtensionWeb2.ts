@@ -13,6 +13,7 @@
 // limitations under the License.
 import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { Extension } from './Extension.js'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
@@ -26,7 +27,6 @@ import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
-import Extension from './Extension.js'
 import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
@@ -34,7 +34,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 /**
  * Class for interfacing with web3 accounts.
  */
-export default class ExtWeb2 extends Extension {
+export class ExtensionWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
         const network = this.getNetwork(config)
         const wsProvider = new WsProvider(network.endpoint)

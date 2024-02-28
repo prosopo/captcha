@@ -13,7 +13,7 @@
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
 import { Account, GetCaptchaResponse } from '@prosopo/types'
-import { LoadingSpinner } from './LoadingSpinner.js'
+import { Checkbox, LoadingSpinner, darkTheme, lightTheme } from '@prosopo/web-components'
 import {
     Manager,
     ProcaptchaCallbacks,
@@ -24,10 +24,8 @@ import {
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
 import { css } from '@emotion/react'
-import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-import Checkbox from './Checkbox.js'
 import Collector from './collector.js'
 import Modal from './Modal.js'
 

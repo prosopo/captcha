@@ -1,4 +1,4 @@
-import { ProcaptchaPlaceholder } from './CaptchaPlaceholder.js'
+import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { Suspense, lazy } from 'react'
 
 const ProcaptchaWidget = lazy(async () => import('./Captcha.js'))

@@ -31,7 +31,7 @@ const baseStyle: CSSProperties = {
     borderWidth: '1px',
 }
 
-const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked }: CheckboxProps) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked }: CheckboxProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const checkboxStyleBase: CSSProperties = {
         ...baseStyle,

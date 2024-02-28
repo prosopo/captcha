@@ -13,7 +13,7 @@
 // limitations under the License.
 import { CaptchaResponseCaptcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
-import { darkTheme, lightTheme } from './theme.js'
+import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
 export interface CaptchaWidgetProps {

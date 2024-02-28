@@ -11,13 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LoadingSpinner } from './LoadingSpinner.js'
+import { Checkbox, LoadingSpinner, darkTheme, lightTheme } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { css } from '@emotion/react'
-import { darkTheme, lightTheme } from './theme.js'
 import { useMemo, useState } from 'react'
-import Checkbox from './Checkbox.js'
 
 const logoStyle = css`
     align-items: center;
