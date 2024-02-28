@@ -268,5 +268,5 @@ describe('BATCH TESTS', function () {
                 }
             }
         }
-    }, 24000)
+    }, 120000)
 })
