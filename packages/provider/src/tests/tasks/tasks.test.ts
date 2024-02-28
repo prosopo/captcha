@@ -95,7 +95,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             .unwrap()
             .unwrap()
         //await sleep(132000)
-        const solvedCaptchas = await env.db!.getRandomSolvedCaptchasFromSingleDataset(
+        const solvedCaptchas = await env.getDb().getRandomSolvedCaptchasFromSingleDataset(
             providerDetails.datasetId.toString(),
             2
         )
@@ -119,7 +119,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
 
         const blockNumber = (await getBlockNumber(env.getApi())).toNumber()
 
-        if ('storeDappUserPending' in env.db!) {
+        if ('storeDappUserPending' in env.getDb()) {
             await env.db.storeDappUserPending(
                 hexHash(accountAddress(dappUserAccount)),
                 requestHash,
@@ -737,14 +737,14 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
 
         const requestHash = computePendingRequestHash(captchaIds, accountAddress(dappUserAccount), pendingRequestSalt)
 
-        await env.db!.storeDappUserPending(
+        await env.getDb().storeDappUserPending(
             hexHash(accountAddress(dappUserAccount)),
             requestHash,
             pendingRequestSalt,
             99999999999999,
             blockNumber
         )
-        const pendingRecord = await env.db!.getDappUserPending(requestHash)
+        const pendingRecord = await env.getDb().getDappUserPending(requestHash)
         const valid = await tasks.validateDappUserSolutionRequestIsPending(
             requestHash,
             pendingRecord,
