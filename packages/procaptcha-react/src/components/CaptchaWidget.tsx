@@ -80,6 +80,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                         display: 'block', // removes whitespace below imgs
                                         objectFit: 'contain', // contain the entire image in the img tag
                                         aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
+                                        height: 'auto', // make the img tag responsive to its container
                                     }}
                                     src={item.data}
                                     alt={`Captcha image ${index + 1}`}
