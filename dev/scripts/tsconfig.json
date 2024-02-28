@@ -50,6 +50,9 @@
             "path": "../../packages/procaptcha-react"
         },
         {
+            "path": "../../packages/procaptcha-pow"
+        },
+        {
             "path": "../../protocol/dev"
         },
         {
