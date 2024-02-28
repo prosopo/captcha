@@ -1,6 +1,6 @@
-# Prosopo Flux Package (@prosopo/flux)
+# @prosopo/flux
 
-This package contains the scripts for interacting with the Flux network.
+This package contains a Command Line Interface (CLI) for interacting with the Flux network.
 
 ## CLI Usage
 
