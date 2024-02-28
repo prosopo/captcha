@@ -6,12 +6,7 @@
         "lib": ["es6", "dom"],
         "jsxImportSource": "@emotion/react"
     },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "../account/src/extension/Extension.ts",
-        "../account/src/extension/ExtensionWeb2.ts"
-    ],
+    "include": ["src", "src/**/*.json"],
 
     "references": [
         {
