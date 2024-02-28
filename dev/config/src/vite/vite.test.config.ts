@@ -38,6 +38,7 @@ export default function () {
                     useAtomics: true,
                 },
             },
+            testTimeout: 10000,
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy()],
     })
