@@ -92,7 +92,6 @@ jobs:
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             # build all packages in workspace
             - run: npm run build:all

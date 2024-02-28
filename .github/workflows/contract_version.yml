@@ -88,7 +88,6 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             - name: Check contract version matches provider version
               run: |
