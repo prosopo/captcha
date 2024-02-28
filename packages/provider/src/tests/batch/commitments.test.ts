@@ -100,8 +100,8 @@ describe('BATCH TESTS', function () {
         // Remove any existing commitments and solutions from the db
         // FIXME - deleting these can mess with other tests since they're all running asynchronously. The database
         //    instance *should* be separate for this batch file but issues have been seen in the past...
-        await env.db.getTables().commitment.deleteMany({})
-        await env.db.getTables().usersolution.deleteMany({})
+        await env.getDb().getTables().commitment.deleteMany({})
+        await env.getDb().getTables().usersolution.deleteMany({})
 
         // Get account nonce
         const startNonce = await contractApi.api.call.accountNonceApi.accountNonce(accountAddress(providerAccount))
@@ -111,7 +111,7 @@ describe('BATCH TESTS', function () {
         const batcher = new BatchCommitmentsTask(
             env.config.batchCommit,
             await env.getContractApi(),
-            env.db,
+            env.getDb(),
             BigInt(startNonce.toNumber()),
             env.logger
         )
@@ -208,7 +208,7 @@ describe('BATCH TESTS', function () {
             //                     '0x68b0425027636a9130fae67b6cad16a3686e0ce4afd7bc01ecc2504558cbde23',
             //                     '0x38ed96eeb240c2c3b5dbb7d29fad276317b5a6bb30094ddf0b845585503dd830', ...
 
-            const batcherResult = await env.db.getLastScheduledTaskStatus(ScheduledTaskNames.BatchCommitment)
+            const batcherResult = await env.getDb().getLastScheduledTaskStatus(ScheduledTaskNames.BatchCommitment)
             console.log('batcherResult', batcherResult)
             if (
                 !batcherResult ||
@@ -225,7 +225,7 @@ describe('BATCH TESTS', function () {
                 )
 
                 // Try to get unbatched commitments after batching
-                const commitmentsFromDbAfter = await env.db.getUnbatchedDappUserCommitments()
+                const commitmentsFromDbAfter = await env.getDb().getUnbatchedDappUserCommitments()
 
                 // Check that the number of batched commitments is equal to the number of commitments that were
                 // processed by the batcher
