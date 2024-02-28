@@ -52,7 +52,7 @@ describe('CONTRACT HELPERS', function () {
     })
 
     afterEach(async ({ env }): Promise<void> => {
-        if (env && 'db' in env) await env.db?.close()
+        if (env && 'db' in env) await env.getDb().close()
     })
 
     test('Properly encodes `Hash` arguments when passed unhashed', async function ({ env }) {

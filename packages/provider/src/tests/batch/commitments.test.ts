@@ -83,7 +83,7 @@ describe('BATCH TESTS', function () {
     })
 
     afterEach(async ({ env }): Promise<void> => {
-        if (env && 'db' in env) await env.db?.close()
+        if (env && 'db' in env) await env.getDb().close()
     })
 
     const commitmentCount = 50

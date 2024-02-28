@@ -76,7 +76,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     })
 
     afterEach(async (context): Promise<void> => {
-        if (context.env && 'db' in context.env) await context.env.db?.close()
+        if (context.env && 'db' in context.env) await context.env.getDb().close()
     })
 
     /** Gets some static solved captchas and constructions captcha solutions from them
@@ -783,7 +783,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             )
 
             expect(captchas.length).to.equal(solvedCaptchaCount + unsolvedCaptchaCount)
-            const pendingRequest = env.db?.getDappUserPending(requestHash)
+            const pendingRequest = env.getDb().getDappUserPending(requestHash)
 
             expect(pendingRequest).to.not.be.null
         } catch (err) {
