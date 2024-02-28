@@ -10,7 +10,7 @@ Use to generate the authentication for a Flux node for a specific app.
 
 ```bash
 # authenticate with the network for a specific app
-flux auth --app <app_name>
+npm run cli auth --app <app_name>
 {
   nodeAPIURL: URL {
     href: 'http://x.x.x.x:16127/',
@@ -33,11 +33,18 @@ flux auth --app <app_name>
 
 ### Redeploy
 
+#### Get Dapps
+
+```bash
+# get all dapps
+npm run cli getDapps
+```
+
 #### Soft redeploy
 
 ```bash
 # redeploy the app
-flux redeploy --app <app_name>
+npm run cli redeploy --app <app_name>
 ...
 ℹ apiUrl: http://x.x.x.x:16127/id/verifylogin                                                                                                                                   deploy.js 15:00:42
 ℹ { status: 'success',                                                                                                                                                                deploy.js 15:00:42
@@ -48,7 +55,7 @@ flux redeploy --app <app_name>
 
 ```bash
 # hard redeploy the app
-flux redeploy --app <app_name> --hard
+npm run cli redeploy --app <app_name> --hard
 ...
 ℹ apiUrl: http://x.x.x.x:16127/id/verifylogin                                                                                                                                   deploy.js 15:00:42
 ℹ { status: 'success',                                                                                                                                                                deploy.js 15:00:42
