@@ -36,6 +36,7 @@ the app you are working with and login with the login phrase and signature.
 npm run cli auth -- --app <app_name>
 {
   nodeAPIURL: URL {
+    # You can now visit this (using port 16126) to login with the login phrase and signature
     href: 'http://x.x.x.x:16127/',
     origin: 'http://x.x.x.x:16127',
     ...
