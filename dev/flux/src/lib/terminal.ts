@@ -4,6 +4,11 @@ import { io } from 'socket.io-client'
 import { loadEnv } from '@prosopo/cli'
 loadEnv()
 
+const getSockerURL = (nodeAPIURL: URL) => {
+    const urlPort = nodeAPIURL.port || 16127
+    return `https://${nodeAPIURL.hostname.replace(/\./g, '-')}-${urlPort}.node.api.runonflux.io`
+}
+
 export async function main(publicKey: string, privateKey: Uint8Array, appName: string, ip?: string) {
     let running = true
     try {
@@ -16,8 +21,7 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName: s
         const selectedIp = nodeAPIURL.toString()
         const url = selectedIp.split(':')[0]
         if (!url) throw new Error('No url')
-        const urlPort = nodeAPIURL.port || 16127
-        const socketUrl = `https://${nodeAPIURL.hostname.replace(/\./g, '-')}-${urlPort}.node.api.runonflux.io`
+        const socketUrl = getSockerURL(nodeAPIURL)
 
         const socket = io(socketUrl)
         socket.on('connect', () => {
