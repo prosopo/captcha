@@ -9,7 +9,7 @@ This package contains a Command Line Interface (CLI) for interacting with the Fl
 #### Authenticate with Flux Main Site only
 
 Use to generate the authentication for a Flux node for a specific app.This allows you to go straight
-to [https://runonflux.io/](https://runonflux.io/) and login with the login phrase and signature.
+to the [RunOnFlux Login](https://cloud.runonflux.io/login.html) and login with the login phrase and signature.
 
 ```bash
 # authenticate with the network for a specific app
