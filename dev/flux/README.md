@@ -33,7 +33,7 @@ the app you are working with and login with the login phrase and signature.
 
 ```bash
 # authenticate with the network for a specific app
-npm run cli auth --app <app_name>
+npm run cli auth -- --app <app_name>
 {
   nodeAPIURL: URL {
     href: 'http://x.x.x.x:16127/',
@@ -54,11 +54,18 @@ npm run cli auth --app <app_name>
 npm run cli getDapps
 ```
 
+#### Get Dapp
+
+```bash
+# get details of a specific dapp
+npm run cli getDapp -- --app <app_name>
+```
+
 #### Soft redeploy
 
 ```bash
 # redeploy the app
-npm run cli redeploy --app <app_name>
+npm run cli redeploy -- --app <app_name>
 ...
 ℹ apiUrl: http://x.x.x.x:16127/id/verifylogin                                                                                                                                   deploy.js 15:00:42
 ℹ { status: 'success',                                                                                                                                                                deploy.js 15:00:42
@@ -69,7 +76,7 @@ npm run cli redeploy --app <app_name>
 
 ```bash
 # hard redeploy the app
-npm run cli redeploy --app <app_name> --hard
+npm run cli redeploy -- --app <app_name> --hard
 ...
 ℹ apiUrl: http://x.x.x.x:16127/id/verifylogin                                                                                                                                   deploy.js 15:00:42
 ℹ { status: 'success',                                                                                                                                                                deploy.js 15:00:42
