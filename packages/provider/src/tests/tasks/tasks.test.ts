@@ -120,7 +120,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const blockNumber = (await getBlockNumber(env.getApi())).toNumber()
 
         if ('storeDappUserPending' in env.getDb()) {
-            await env.db.storeDappUserPending(
+            await env.getDb().storeDappUserPending(
                 hexHash(accountAddress(dappUserAccount)),
                 requestHash,
                 pendingRequestSalt,
