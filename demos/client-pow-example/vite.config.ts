@@ -55,6 +55,6 @@ export default defineConfig(function ({ command, mode }) {
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
-        server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230 },
+        server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9234 },
     }
 })
