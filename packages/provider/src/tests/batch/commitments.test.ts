@@ -101,8 +101,8 @@ describe('BATCH TESTS', function () {
             // Remove any existing commitments and solutions from the db
             // FIXME - deleting these can mess with other tests since they're all running asynchronously. The database
             //    instance *should* be separate for this batch file but issues have been seen in the past...
-            await env.db.tables?.commitment.deleteMany({})
-            await env.db.tables?.usersolution.deleteMany({})
+            await env.db.getTables().commitment.deleteMany({})
+            await env.db.getTables().usersolution.deleteMany({})
 
             // Get account nonce
             const startNonce = await contractApi.api.call.accountNonceApi.accountNonce(accountAddress(providerAccount))

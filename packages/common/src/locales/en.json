@@ -71,7 +71,7 @@
         "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
         "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions",
         "DUPLICATE_IMAGE": "duplicate image detected",
-        "MERKLE_ERROR": "Error creating merkle tree"
+        "MERKLE_ERROR": "Error creating merkle tree",
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
@@ -91,6 +91,8 @@
         "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
         "SOLUTION_APPROVE_FAILED": "Failed to approve solution",
         "SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+        "TABLES_UNDEFINED": "Tables undefined",
+        "CONNECTION_UNDEFINED": "Connection undefined",
         "COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
     },
     "CAPTCHA": {

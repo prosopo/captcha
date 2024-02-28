@@ -87,6 +87,26 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         return this
     }
 
+    getTables(): Tables {
+        if (!this.tables) {
+            throw new ProsopoDBError('DATABASE.TABLES_UNDEFINED', {
+                context: { failedFuncName: this.getTables.name },
+                logger: this.logger,
+            })
+        }
+        return this.tables
+    }
+
+    getConnection(): mongoose.Connection {
+        if (!this.connection) {
+            throw new ProsopoDBError('DATABASE.CONNECTION_UNDEFINED', {
+                context: { failedFuncName: this.getConnection.name },
+                logger: this.logger,
+            })
+        }
+        return this.connection
+    }
+
     /**
      * @description Connect to the database and set the various tables
      */
