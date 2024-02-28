@@ -7,6 +7,7 @@ import qs from 'qs'
 
 loadEnv()
 const log = getLogger(`Info`, `auth.js`)
+const FLUX_URL = 'https://api.runonflux.io/'
 
 interface ResponseLoginPhrase {
     status: string
@@ -96,7 +97,7 @@ interface Transaction {
 }
 
 export const verifyLogin = async (zelid: string, signature: string, loginPhrase: string, url?: URL) => {
-    const apiUrl = new URL(`${url || 'https://api.runonflux.io/'}id/verifylogin`).toString()
+    const apiUrl = new URL(`${url || FLUX_URL}id/verifylogin`).toString()
     const data = qs.stringify({
         zelid,
         signature,
@@ -113,7 +114,7 @@ export const verifyLogin = async (zelid: string, signature: string, loginPhrase:
 }
 
 const getLoginPhrase = async (url?: URL): Promise<string> => {
-    const apiURL = new URL(`${url || 'https://api.runonflux.io/'}id/loginphrase`)
+    const apiURL = new URL(`${url || FLUX_URL}id/loginphrase`)
     log.info('Calling:', apiURL.href)
     const response = await fetch(apiURL.toString())
     return (await errorHandler<ResponseLoginPhrase>(response)).data
@@ -183,9 +184,8 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName?: 
     }
 
     if (!nodeUIURL) {
-        throw new ProsopoError('DEVELOPER.GENERAL', {
-            context: { error: 'Failed to get node UI URL', appName, publicKey, signature, loginPhrase },
-        })
+        // assume we only want authentication with main Flux API
+        return { nodeAPIURL: new URL(FLUX_URL), nodeLoginPhrase: loginPhrase, nodeSignature: signature }
     }
 
     // Get the admin API URL as it is different from the UI URL

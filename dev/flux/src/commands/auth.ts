@@ -5,7 +5,7 @@ import { getPrivateKey, getPublicKey } from './process.env.js'
 import { main } from '../lib/auth.js'
 
 const fluxAuthArgs = z.object({
-    app: z.string(),
+    app: z.string().optional(),
     ip: z.string().optional(),
 })
 
@@ -19,7 +19,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
             yargs
                 .option('app', {
                     type: 'string' as const,
-                    demandOption: true,
+                    demandOption: false,
                     desc: 'Name of the app to authenticate with',
                 } as const)
                 .option('ip', {

@@ -6,7 +6,30 @@ This package contains the scripts for interacting with the Flux network.
 
 ### Authentication
 
-Use to generate the authentication for a Flux node for a specific app.
+#### Authenticate with Flux Main Site only
+
+Use to generate the authentication for a Flux node for a specific app.This allows you to go straight
+to [https://runonflux.io/](https://runonflux.io/) and login with the login phrase and signature.
+
+```bash
+# authenticate with the network for a specific app
+npm run cli auth
+{
+  nodeAPIURL: URL {
+    href: 'https://api.runonflux.io/',
+    origin: 'https://api.runonflux.io',
+    ...
+  },
+  nodeLoginPhrase: 'asdlkadalkdalskdasldkadlkadlkaldkasdlk',
+  nodeSignature: 'lkjasdlajsdlkajdlkajdlaskjdlaskjdlaskjdaslkd/9I='
+}
+
+```
+
+#### Authenticate with a Node and an App
+
+Use to generate the authentication for a Flux node for a specific app. This allows you to go straight to the node for
+the app you are working with and login with the login phrase and signature.
 
 ```bash
 # authenticate with the network for a specific app
@@ -15,16 +38,7 @@ npm run cli auth --app <app_name>
   nodeAPIURL: URL {
     href: 'http://x.x.x.x:16127/',
     origin: 'http://x.x.x.x:16127',
-    protocol: 'http:',
-    username: '',
-    password: '',
-    host: 'x.x.x.x:16127',
-    hostname: 'x.x.x.x',
-    port: '16127',
-    pathname: '/',
-    search: '',
-    searchParams: URLSearchParams {},
-    hash: ''
+    ...
   },
   nodeLoginPhrase: 'asdlkadalkdalskdasldkadlkadlkaldkasdlk',
   nodeSignature: 'lkjasdlajsdlkajdlkajdlaskjdlaskjdlaskjdaslkd/9I='
