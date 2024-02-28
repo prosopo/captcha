@@ -89,7 +89,7 @@ describe('BATCH TESTS', function () {
     const commitmentCount = 50
 
     test(`Batches ~${commitmentCount} commitments on-chain`, async ({ env }) => {
-        if (env.db) {
+        
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
             await env.changeSigner(
@@ -267,6 +267,5 @@ describe('BATCH TESTS', function () {
                     }
                 }
             }
-        }
     }, 120000)
 })
