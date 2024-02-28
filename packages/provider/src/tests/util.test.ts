@@ -59,15 +59,15 @@ describe('UTIL FUNCTIONS', async () => {
         await env
             .getDb()
             .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
-        if (!env.db) {
+        if (env.db === undefined) {
             throw new Error('Database not initialized')
         }
-        let result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.db)
+        let result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(true)
         await env
             .getDb()
             .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
-        result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.db)
+        result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(false)
     })
 })
