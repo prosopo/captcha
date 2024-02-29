@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
-import { PowProcaptcha } from '@prosopo/procaptcha-pow'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { useState } from 'react'
 
 function App() {
@@ -32,7 +32,7 @@ function App() {
     })
     return (
         <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <PowProcaptcha config={config} />
+            <ProcaptchaPow config={config} />
         </div>
     )
 }
