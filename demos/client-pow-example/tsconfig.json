@@ -8,7 +8,7 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../packages/procaptcha-react"
+            "path": "../../packages/procaptcha-pow"
         },
         {
             "path": "../../packages/cli"
