@@ -1,8 +1,9 @@
-// // 42["exec","zelid=15gSe8HrNhVrWph6CTPtpb6nXESqPtgCCe&signature=IO6RAyW26bHKngWgPIUn3wfZO5u9ViLeAADPkdXFDHKbJCRE%2BIrrkNiokkc4uYYV1dzhbGhGgSb%2FXn31I5vb%2BoY%3D&loginPhrase=1709117874375gctifb2qnezsi76hb4gnaucqxknhss3pnokxqrsk1ki","emailTriggerSignupApi_emailTriggerServer","/bin/bash",""]
+import { LogLevel, getLogger } from '@prosopo/common'
 import { main as authMain, verifyLogin } from './auth.js'
 import { io } from 'socket.io-client'
 import { loadEnv } from '@prosopo/cli'
 loadEnv()
+const logger = getLogger(LogLevel.enum.info, 'flux.lib.terminal')
 
 const getSockerURL = (nodeAPIURL: URL) => {
     const urlPort = nodeAPIURL.port || 16127
@@ -27,6 +28,12 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName: s
         socket.on('connect', () => {
             logger.info('connected')
             logger.info(socket.id)
+        })
+        socket.on('message', (message) => {
+            socket.emit('message', {
+                message,
+                id: socket.id,
+            })
         })
         socket.on('connect_error', (err) => {
             logger.info(`connect_error due to ${err.message}`)
