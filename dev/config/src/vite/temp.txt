@@ -1,0 +1,3 @@
+dist/bundle/procaptcha.bundle.js              0.10 kB │ gzip:   0.10 kB
+dist/bundle/index-6b4ef7bd.js               344.48 kB │ gzip:  87.10 kB
+dist/bundle/ProcaptchaWidget-7aae0f9d.js  1,290.62 kB │ gzip: 349.10 kB
