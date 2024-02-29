@@ -1,9 +1,10 @@
-import { ProsopoEnvError } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { errorHandler } from '../errorHandler.js'
 import { getAuth, verifyLogin } from './auth.js'
 import { getURLProtocol } from '@prosopo/util'
 
 const nodeAPIURL = new URL('https://jetpackbridge.runonflux.io/')
+const logger = getLogger(LogLevel.enum.info, 'flux.lib.getDapps')
 
 export const main = async (publicKey: string, privateKey: Uint8Array) => {
     try {
@@ -11,7 +12,7 @@ export const main = async (publicKey: string, privateKey: Uint8Array) => {
 
         // Login to the node
         await verifyLogin(publicKey, signature, loginPhrase)
-        console.log(nodeAPIURL)
+        logger.info(nodeAPIURL)
         return getDappDetails(nodeAPIURL, publicKey, signature, loginPhrase)
     } catch (e) {
         console.error(e)

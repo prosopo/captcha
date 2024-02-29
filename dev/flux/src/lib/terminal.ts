@@ -25,18 +25,18 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName: s
 
         const socket = io(socketUrl)
         socket.on('connect', () => {
-            console.log('connected')
-            console.log(socket.id)
+            logger.info('connected')
+            logger.info(socket.id)
         })
         socket.on('connect_error', (err) => {
-            console.log(`connect_error due to ${err.message}`)
+            logger.info(`connect_error due to ${err.message}`)
         })
         socket.on('disconnect', () => {
-            console.log('disconnected')
+            logger.info('disconnected')
             running = false
         })
         socket.on('error', (e) => {
-            console.log('error', e)
+            logger.info('error', e)
             running = false
         })
         while (running) {

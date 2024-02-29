@@ -82,9 +82,9 @@ if (isMain(import.meta.url)) {
     sign(message, keypair)
         .then((sig) => {
             const hexSig = u8aToHex(sig)
-            console.log(`Hex Signature   : ${hexSig}`)
-            console.log(`Public Key: ${publicKey}`)
-            console.log(`Base64 Signature: ${base64Encode(hexSig)}`)
+            logger.info(`Hex Signature   : ${hexSig}`)
+            logger.info(`Public Key: ${publicKey}`)
+            logger.info(`Base64 Signature: ${base64Encode(hexSig)}`)
             process.exit()
         })
         .catch((error) => {

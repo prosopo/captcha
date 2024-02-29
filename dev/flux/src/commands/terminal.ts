@@ -33,7 +33,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 const publicKey = getPublicKey()
                 const parsedArgs = fluxAuthArgs.parse(argv)
                 const result = await main(publicKey, privateKey, parsedArgs.app, parsedArgs.ip)
-                console.log(result)
+                logger.info(result)
             } catch (err) {
                 logger.error(err)
             }
