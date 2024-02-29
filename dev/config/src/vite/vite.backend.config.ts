@@ -1,6 +1,8 @@
 import { AliasOptions, UserConfig } from 'vite'
 import { default as ClosePlugin } from './vite-plugin-close-and-copy.js'
 import { Drop } from 'esbuild'
+import { Plugin } from 'vite'
+import { PluginBuild } from 'esbuild'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
@@ -9,9 +11,152 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
+import fs from 'fs/promises'
 import nativePlugin from 'rollup-plugin-natives'
 import path from 'path'
-import replace from 'vite-plugin-filter-replace'
+
+type ReplaceFn = (source: string, path: string) => string
+type ReplacePair = { from: RegExp | string | string[]; to: string | number }
+
+interface Replacement {
+    /**
+     * for debugging purpose
+     */
+    id?: string | number
+    filter: RegExp | string | string[]
+    replace: ReplacePair | ReplaceFn | Array<ReplacePair | ReplaceFn>
+}
+
+type Options = Pick<Plugin, 'enforce' | 'apply'>
+
+function escape(str: string): string {
+    return str.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')
+}
+
+function parseReplacements(
+    replacements: Replacement[]
+): Array<Omit<Replacement, 'replace' | 'filter'> & { filter: RegExp; replace: ReplaceFn[] }> {
+    if (!replacements || !replacements.length) return []
+
+    // TODO:
+    // re-group replacements to ensure filter is unique
+
+    return replacements.reduce((entries: any[], replacement) => {
+        const filter =
+            replacement.filter instanceof RegExp
+                ? replacement.filter
+                : new RegExp(
+                      `(${[]
+                          .concat(replacement.filter as any)
+                          .filter((i) => i)
+                          .map((i: string) => escape(i.trim().replace(/\\+/g, '/')))
+                          .join('|')})`
+                  )
+        let { replace = [] } = replacement
+
+        if (!filter) return entries
+        if (typeof replace === 'function' || !Array.isArray(replace)) {
+            replace = [replace]
+        }
+
+        replace = replace.reduce((entries: ReplaceFn[], rp) => {
+            if (typeof rp === 'function') return entries.concat(rp)
+
+            const { from, to } = rp
+
+            if (from === undefined || to === undefined) return entries
+
+            return entries.concat((source) =>
+                source.replace(
+                    from instanceof RegExp
+                        ? from
+                        : new RegExp(
+                              `(${[]
+                                  .concat(from as any)
+                                  .map(escape)
+                                  .join('|')})`,
+                              'g'
+                          ),
+                    String(to)
+                )
+            )
+        }, [])
+
+        if (!replace.length) return entries
+
+        return entries.concat({ ...replacement, filter, replace })
+    }, [])
+}
+
+export function replace(replacements: Replacement[] = [], options?: Options): Plugin {
+    const resolvedReplacements = parseReplacements(replacements)
+    let isServe = true
+
+    if (!resolvedReplacements.length) return {} as any
+
+    function replace(code: string, id: string): string {
+        return resolvedReplacements.reduce((code, rp) => {
+            if (!rp.filter.test(id)) {
+                return code
+            }
+            return rp.replace.reduce((text, replace) => replace(text, id), code)
+        }, code)
+    }
+
+    return {
+        name: 'vite-plugin-filter-replace',
+        enforce: options?.enforce,
+        apply: options?.apply,
+        config: (config: any, env: any) => {
+            isServe = env.command === 'serve'
+
+            if (!isServe) return
+
+            if (!config.optimizeDeps) {
+                config.optimizeDeps = {}
+            }
+            if (!config.optimizeDeps.esbuildOptions) {
+                config.optimizeDeps.esbuildOptions = {}
+            }
+            if (!config.optimizeDeps.esbuildOptions.plugins) {
+                config.optimizeDeps.esbuildOptions.plugins = []
+            }
+
+            config.optimizeDeps.esbuildOptions.plugins.unshift(
+                ...resolvedReplacements.map((option) => {
+                    return {
+                        name: 'vite-plugin-filter-replace' + (option.id ? `:${option.id}` : ''),
+                        setup(build: PluginBuild) {
+                            build.onLoad({ filter: option.filter, namespace: 'file' }, async ({ path }) => {
+                                const source = await fs.readFile(path, 'utf8')
+
+                                return {
+                                    loader: 'default',
+                                    contents: option.replace.reduce((text, replace) => replace(text, path), source),
+                                }
+                            })
+                        },
+                    }
+                })
+            )
+
+            return config
+        },
+        renderChunk(code: any, chunk: any) {
+            if (isServe) return null
+            return replace(code, chunk.fileName)
+        },
+        transform(code: any, id: any) {
+            return replace(code, id)
+        },
+        async handleHotUpdate(ctx: any) {
+            const defaultRead = ctx.read
+            ctx.read = async function () {
+                return replace(await defaultRead(), ctx.file)
+            }
+        },
+    }
+}
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
@@ -143,7 +288,7 @@ export default async function (
             },
             modulePreload: { polyfill: false },
             commonjsOptions: {
-                ignore: function (id) {
+                ignore: function (id: any) {
                     // Ignore Executable and Linkable Format (ELF) files from being interpreted as CommonJS. These are
                     // .node files that contain WebAssembly code. They are not CommonJS modules.
                     return id.indexOf('nodejs-polars-linux-x64-gnu') > -1
