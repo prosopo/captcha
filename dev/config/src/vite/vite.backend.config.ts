@@ -184,7 +184,7 @@ export default async function (
             VitePluginFixAbsoluteImports(),
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            replace.default([
+            replace([
                 // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
                 // __dirname here
                 {
