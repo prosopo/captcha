@@ -8,5 +8,15 @@
     },
     "include": ["src", "src/**/*.json"],
 
-    "references": []
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../util"
+        }
+    ]
 }
