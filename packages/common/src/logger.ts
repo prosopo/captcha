@@ -41,7 +41,7 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = createConsola({}).withTag(scope)
+    const logger = createConsola({ formatOptions: { colors: true, date: true } }).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
