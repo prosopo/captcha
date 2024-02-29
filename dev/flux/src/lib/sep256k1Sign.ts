@@ -1,6 +1,6 @@
 import { BN_BE_256_OPTS } from '@polkadot/util-crypto/bn'
 import { Keypair } from '@polkadot/util-crypto/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { base58Decode, base64Encode, cryptoWaitReady, sha256AsU8a } from '@polkadot/util-crypto'
 import { bnToU8a, hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
@@ -10,6 +10,7 @@ import { secp256k1 } from '@noble/curves/secp256k1'
 import varuint from 'varuint-bitcoin'
 
 loadEnv()
+const logger = getLogger(LogLevel.enum.info, 'flux.lib.sep256k1Sign')
 const MESSAGE_MAGIC = '\u0018Bitcoin Signed Message:\n'
 
 function hash256(buffer: Buffer) {
