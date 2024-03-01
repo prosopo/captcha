@@ -17,27 +17,39 @@ export default function () {
         },
         test: {
             watch: false,
-            include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
-            watchExclude: [
-                '**/node_modules/**',
-                '**/dist/**',
-                '**/demos/**',
-                '../../packages/*/dist/**',
-                '../../packages/datasets-fs/src/tests/data/**',
-            ],
+            // include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
+            // watchExclude: [
+            //     '**/node_modules/**',
+            //     '**/dist/**',
+            //     '**/demos/**',
+            //     '../../packages/*/dist/**',
+            //     '../../packages/datasets-fs/src/tests/data/**',
+            // ],
             logHeapUsage: true,
-            coverage: {
-                enabled: true,
-            },
+            // coverage: {
+            //     enabled: true,
+            // },
             typecheck: {
                 enabled: true,
             },
             pool: 'forks',
-            poolOptions: {
-                fork: {
-                    useAtomics: true,
-                },
-            },
+            // poolOptions: {
+            //     threads: {
+            //         singleThread: true,
+            //     },
+            //     forks: {
+            //         singleFork: true,
+            //     }
+            // },
+            // poolOptions: {
+            //     fork: {
+            //         useAtomics: true,
+            //         memoryLimit: 4096,
+            //     },
+            //     threads: {
+            //         useAtomics: true,
+            //     },
+            // },
             testTimeout: 10000,
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true }), VitePluginCloseAndCopy()],
