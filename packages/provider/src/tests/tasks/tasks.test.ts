@@ -164,7 +164,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         )
         console.log(JSON.stringify(result.error, null, 4))
         expect(result?.error).to.be.undefined
-    }, 120000)
+    })
 
     test('Provider update', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providers)
@@ -184,7 +184,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             throw new ProsopoContractError(new Error(dispatchError))
         }
         expect(result?.isError).to.be.false
-    }, 120000)
+    })
 
     test('Provider add dataset', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStake)
@@ -192,7 +192,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(env, providerAccount)
 
         await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(datasetWithIndexSolutions)))
-    }, 120000)
+    })
 
     test('Provider add dataset with too few captchas will fail', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStake)
