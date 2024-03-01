@@ -17,7 +17,7 @@
         "JSON_LOAD_FAILED": "Failed to load JSON file",
         "CREATE_JSON_FILE_FAILED": "Failed to create JSON file",
         "ASSERT_ERROR": "AssertionError",
-        "GENERATE_CPATCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
+        "GENERATE_CAPTCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
         "MNEMONIC_UNDEFINED": "Mnemonic Undefined. Please set the mnemonic in environment variables",
         "NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
