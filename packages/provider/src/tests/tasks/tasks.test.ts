@@ -62,21 +62,21 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        context.env = new MockEnvironment(getTestConfig(), alicePair)
+        const env = new MockEnvironment(getTestConfig(), alicePair)
         try {
-            await context.env.isReady()
+            await env.isReady()
         } catch (e) {
             throw new ProsopoEnvError(e as Error)
         }
+        context.env = env
         const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
             context.env.getContractInterface().query.getProviderStakeThreshold,
             context.env.getContractInterface().query
         )()
         context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
-    })
-
-    afterEach(async (context): Promise<void> => {
-        if (context.env && 'db' in context.env) await context.env.getDb().close()
+        return () => {
+            env.db?.close()
+        }
     })
 
     /** Gets some static solved captchas and constructions captcha solutions from them

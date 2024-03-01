@@ -20,8 +20,6 @@ import { getPairAsync } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 
 describe('UTIL FUNCTIONS', async () => {
-    let env: MockEnvironment
-
     test('does not modify an already encoded address', () => {
         expect(encodeStringAddress('5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL')).to.equal(
             '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL'
@@ -49,7 +47,7 @@ describe('UTIL FUNCTIONS', async () => {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        env = new MockEnvironment(getTestConfig(), alicePair)
+        const env = new MockEnvironment(getTestConfig(), alicePair)
         try {
             await env.isReady()
         } catch (e) {
@@ -69,5 +67,6 @@ describe('UTIL FUNCTIONS', async () => {
             .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
         result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(false)
+        env.db.close()
     })
 })

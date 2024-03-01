@@ -69,21 +69,21 @@ describe('BATCH TESTS', function () {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        context.env = new MockEnvironment(getTestConfig(), alicePair)
+        const env = new MockEnvironment(getTestConfig(), alicePair)
         try {
-            await context.env.isReady()
+            await env.isReady()
         } catch (e) {
             throw new ProsopoEnvError(e as Error)
         }
+        context.env = env
         const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
-            context.env.getContractInterface().query.getProviderStakeThreshold,
-            context.env.getContractInterface().query
+            env.getContractInterface().query.getProviderStakeThreshold,
+            env.getContractInterface().query
         )()
         context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
-    })
-
-    afterEach(async ({ env }): Promise<void> => {
-        if (env && 'db' in env) await env.getDb().close()
+        return () => {
+            env.db?.close()
+        }
     })
 
     const commitmentCount = 50
