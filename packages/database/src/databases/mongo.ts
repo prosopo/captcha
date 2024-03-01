@@ -175,16 +175,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /** Close connection to the database */
     async close(): Promise<void> {
         this.logger.debug(`Closing connection to ${this.url}`)
-        // eslint-disable-next-line no-async-promise-executor
-        await new Promise<void>(async (resolve, reject): Promise<void> => {
-            this.connection?
-                .close()
-                .then(() => {
-                    this.logger.debug(`Connection to ${this.url} closed`)
-                    resolve()
-                })
-                .catch(reject)
-        })
+        await this.connection?.close()
     }
 
     /**
