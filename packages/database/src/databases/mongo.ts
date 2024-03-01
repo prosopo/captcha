@@ -120,22 +120,19 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
         this.tables = {
             captcha:
-                this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                mongoose.model('Captcha', CaptchaRecordSchema),
             dataset:
-                this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
+                mongoose.model('Dataset', DatasetRecordSchema),
             solution:
-                this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
+                mongoose.model('Solution', SolutionRecordSchema),
             commitment:
-                this.connection.models.UserCommitment ||
-                this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+                mongoose.model('UserCommitment', UserCommitmentRecordSchema),
             usersolution:
-                this.connection.models.UserSolution ||
-                this.connection.model('UserSolution', UserSolutionRecordSchema),
+                mongoose.model('UserSolution', UserSolutionRecordSchema),
             pending:
-                this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
+                mongoose.model('Pending', PendingRecordSchema),
             scheduler:
-                this.connection.models.Scheduler ||
-                this.connection.model('Scheduler', ScheduledTaskRecordSchema),
+                mongoose.model('Scheduler', ScheduledTaskRecordSchema),
         }
     }
 
