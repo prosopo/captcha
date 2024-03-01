@@ -113,11 +113,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     async connect(): Promise<void> {
         this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
         
-        this.connection = mongoose.createConnection(this.url, {
+        // don't await this, mongoose will sort out the connection creation in the background
+        mongoose.connect(this.url, {
             dbName: this.dbname,
             serverApi: ServerApiVersion.v1,
         })
 
+        // populate tables
         this.tables = {
             captcha:
                 mongoose.model('Captcha', CaptchaRecordSchema),
