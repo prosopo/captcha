@@ -161,6 +161,10 @@ export class Environment implements ProsopoEnvironment {
             // make sure contract address is valid before trying to load contract interface
             if (isAddress(this.contractAddress)) {
                 this.contractInterface = await this.getContractApi()
+            } else {
+                // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
+                // just console logging for the time being!
+                console.warn('invalid contract address: ' + this.contractAddress)
             }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
