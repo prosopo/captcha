@@ -23,9 +23,9 @@ export default function () {
                 '../../packages/datasets-fs/src/tests/data/**',
             ],
             logHeapUsage: true,
-            coverage: {
-                enabled: true,
-            },
+            // coverage: { // this causes out of memory errors / crashing :(
+            //     enabled: true,
+            // },
             typecheck: {
                 enabled: true,
             },
