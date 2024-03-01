@@ -7,7 +7,8 @@ import path from 'path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', async () => {
-        try {
+        return new Promise<void>(async (resolve, reject) => {
+
             // get file location
             const dir = getCurrentFileDirectory(import.meta.url)
 
@@ -26,34 +27,17 @@ describe('reloading api', () => {
                 onData(data, rootDir, appended).then((result) => {
                     appended = result.appended
                     const kill = result.kill
-                    console.log('onData ran, appended', appended, 'kill', kill)
+                    // console.log('onData ran, appended', appended, 'kill', kill)
                     if (kill) {
                         child.kill()
                         expect(appended).toBe(true)
-                        remainOpen = false
+                        resolve()
                     }
                 })
             )
 
-            child.stdout.on('error', (e) => {
-                console.log('error', e)
-                process.exit(1)
-            })
-
-            let remainOpen = true
-
-            child.stdout.on('close', (result: any) => {
-                console.log('closed', result)
-                remainOpen = true // change
-            })
-
-            while (remainOpen) {
-                await new Promise((resolve) => setTimeout(resolve, 1000))
-            }
-        } catch (e) {
-            console.log('error', e)
-            process.exit(1)
-        }
+            child.stdout.on('error', reject)
+        })
     }, 120000)
 })
 
