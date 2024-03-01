@@ -21,6 +21,7 @@ export class MongoMemoryDatabase extends MongoDatabase {
 
     override async init(url: string, dbname: string, logger: Logger, authSource?: string): Promise<this> {
         this.mongod = await MongoMemoryServer.create()
+        this.running = true
         const mongoMemoryURL = this.mongod.getUri()
         await super.init(mongoMemoryURL, dbname, logger, authSource)
         return this
