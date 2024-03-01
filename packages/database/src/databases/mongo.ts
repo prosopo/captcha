@@ -113,28 +113,62 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     async connect(): Promise<void> {
         this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
         
-        // don't await this, mongoose will sort out the connection creation in the background
-        mongoose.connect(this.url, {
-            dbName: this.dbname,
-            serverApi: ServerApiVersion.v1,
+        this.connection = await new Promise((resolve, reject) => {
+            const connection = mongoose.createConnection(this.url, {
+                dbName: this.dbname,
+                serverApi: ServerApiVersion.v1,
+            })
+
+            connection.on('open', () => {
+                this.logger.info(`Database connection to ${this.url} opened`)
+                resolve(connection)
+            })
+
+            connection.on('error', (err) => {
+                this.logger.error(`Database error: ${err}`)
+                reject(err)
+            })
+
+            connection.on('connected', () => {
+                this.logger.info(`Database connected to ${this.url}`)
+            })
+
+            connection.on('disconnected', () => {
+                this.logger.info(`Database disconnected from ${this.url}`)
+            })
+
+            connection.on('reconnected', () => {
+                this.logger.info(`Database reconnected to ${this.url}`)
+            })
+
+            connection.on('reconnectFailed', () => {
+                this.logger.error(`Database reconnect failed to ${this.url}`)
+            })
+
+            connection.on('close', () => {
+                this.logger.info(`Database connection to ${this.url} closed`)   
+            })
+
+            connection.on('fullsetup', () => {
+                this.logger.info(`Database connection to ${this.url} is fully setup`)
+            })
         })
 
-        // populate tables
         this.tables = {
             captcha:
-                mongoose.model('Captcha', CaptchaRecordSchema),
+                this.connection.model('Captcha', CaptchaRecordSchema),
             dataset:
-                mongoose.model('Dataset', DatasetRecordSchema),
+                this.connection.model('Dataset', DatasetRecordSchema),
             solution:
-                mongoose.model('Solution', SolutionRecordSchema),
+                this.connection.model('Solution', SolutionRecordSchema),
             commitment:
-                mongoose.model('UserCommitment', UserCommitmentRecordSchema),
+                this.connection.model('UserCommitment', UserCommitmentRecordSchema),
             usersolution:
-                mongoose.model('UserSolution', UserSolutionRecordSchema),
+                this.connection.model('UserSolution', UserSolutionRecordSchema),
             pending:
-                mongoose.model('Pending', PendingRecordSchema),
+                this.connection.model('Pending', PendingRecordSchema),
             scheduler:
-                mongoose.model('Scheduler', ScheduledTaskRecordSchema),
+                this.connection.model('Scheduler', ScheduledTaskRecordSchema),
         }
     }
 
