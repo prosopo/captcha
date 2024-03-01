@@ -30,7 +30,7 @@ import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTa
 import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { ViteTestContext } from '@prosopo/env'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, assert } from 'vitest'
 import { at, get } from '@prosopo/util'
 import { createType } from '@polkadot/types/create'
 import { datasetWithIndexSolutions } from '@prosopo/datasets'
@@ -642,9 +642,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const providerTasks = await getSignedTasks(env, providerAccount)
 
         // All of the captchaIds present in the solutions should be in the database
-        expect(async function () {
+        try {
             await providerTasks.validateReceivedCaptchasAgainstStoredCaptchas(captchaSolutions)
-        }).to.not.throw()
+        } catch (e) {
+            assert.fail('Should not throw')
+        }
     })
 
     test('Builds the tree and gets the commitment', async ({ env }): Promise<void> => {
@@ -778,7 +780,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             )
 
             expect(captchas.length).to.equal(solvedCaptchaCount + unsolvedCaptchaCount)
-            const pendingRequest = env.getDb().getDappUserPending(requestHash)
+            const pendingRequest = await env.getDb().getDappUserPending(requestHash)
 
             expect(pendingRequest).to.not.be.null
         } catch (err) {
