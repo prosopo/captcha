@@ -43,14 +43,6 @@ import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex, stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 
-function delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-export async function sleep(timeout: number) {
-    await delay(timeout)
-}
-
 const PROVIDER_PAYEE = Payee.dapp
 declare module 'vitest' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
