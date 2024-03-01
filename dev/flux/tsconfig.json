@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["dom", "dom.iterable", "esnext"]
+    },
+    "include": ["src", "src/**/*.json"],
+    "references": [
+        {
+            "path": "../../packages/cli"
+        },
+        {
+            "path": "../../packages/common"
+        },
+        {
+            "path": "../../packages/util"
+        }
+    ]
+}

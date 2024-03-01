@@ -499,7 +499,7 @@ jobs:
               run: |
                   if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
                     echo "Redeploying flux docker js_server."
-                    npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
+                    npx tsx ./dev/flux/dist/index.js deploy --app ProcaptchaJavascriptServer
                   else
                     echo "Skipping flux redeploy."
                     exit 1
