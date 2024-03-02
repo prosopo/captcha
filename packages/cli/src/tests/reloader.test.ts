@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 
 describe('reloading api', () => {
-    test('api reloads after changing .env file', async () => {
+    test('api reloads after changing .env file', () => {
 
         // get file location
         const dir = getCurrentFileDirectory(import.meta.url)
