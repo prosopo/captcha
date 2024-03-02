@@ -13,6 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util/bn'
+import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import {
     CaptchaMerkleTree,
     computeCaptchaSolutionHash,
@@ -28,8 +31,10 @@ import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
 import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@prosopo/typechain-types'
+import { ScheduledTaskNames } from '@prosopo/types'
+import { UserCommitmentRecord } from '@prosopo/types-database'
 import { ViteTestContext } from '@prosopo/env'
-import { afterEach, beforeEach, describe, expect, test, assert } from 'vitest'
+import { assert, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
 import { createType } from '@polkadot/types/create'
 import { datasetWithIndexSolutions } from '@prosopo/datasets'
@@ -39,14 +44,9 @@ import { getUser } from '../getUser.js'
 import { parseBlockNumber } from '../../index.js'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
+import { sleep } from '@prosopo/util'
 import { stringToHex, stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
-import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util/bn'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BatchCommitmentsTask } from '../../batch/commitments.js'
-import { ScheduledTaskNames } from '@prosopo/types'
-import { UserCommitmentRecord } from '@prosopo/types-database'
-import { sleep } from '@prosopo/util'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
@@ -282,8 +282,6 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             }
         }
     }, 120000)
-
-
 
     /** Gets some static solved captchas and constructions captcha solutions from them
      *  Computes the request hash for these captchas and the dappUser and then stores the request hash in the mock db

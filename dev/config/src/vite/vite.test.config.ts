@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
+import { getRootDir } from '../projectInfo.js'
 import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
 import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
-import { getRootDir } from '../projectInfo.js'
 
 export default function () {
     return defineConfig({
