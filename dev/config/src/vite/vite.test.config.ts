@@ -17,12 +17,8 @@ export default function () {
         },
         test: {
             watch: false,
-            include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
-            watchExclude: [
-                '**/node_modules/**',
-                '**/dist/**',
-                '../../packages/datasets-fs/src/tests/data/**',
-            ],
+            include: ['**/*.test.ts'],
+            watchExclude: ['**/node_modules/**', '**/dist/**', '../../packages/datasets-fs/src/tests/data/**'],
             logHeapUsage: true,
             // coverage: { // this causes out of memory errors / crashing :(
             //     enabled: true,
