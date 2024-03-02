@@ -21,7 +21,7 @@ describe('reloading api', () => {
             await promisify(fs.writeFile)(envPath, newEnvContent)
         }
 
-        return new Promise<void>(async (resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             console.log('rootDir', rootDir)
 
             // run API
