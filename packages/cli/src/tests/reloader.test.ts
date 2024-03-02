@@ -7,7 +7,6 @@ import path from 'path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
-
         // get file location
         const dir = getCurrentFileDirectory(import.meta.url)
 
@@ -45,10 +44,12 @@ describe('reloading api', () => {
             )
 
             child.stdout.on('error', reject)
-        }).then(restoreEnv).catch(error => {
-            restoreEnv()
-            throw error
         })
+            .then(restoreEnv)
+            .catch((error) => {
+                restoreEnv()
+                throw error
+            })
     }, 120000)
 })
 
