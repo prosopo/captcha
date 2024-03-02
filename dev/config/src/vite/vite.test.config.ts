@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
 import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
+import { getRootDir } from '../projectInfo.js'
 
 export default function () {
     return defineConfig({
@@ -16,8 +17,9 @@ export default function () {
             },
         },
         test: {
+            root: getRootDir(),
+            include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
             watch: false,
-            include: ['**/*.test.ts'],
             watchExclude: ['**/node_modules/**', '**/dist/**', '../../packages/datasets-fs/src/tests/data/**'],
             logHeapUsage: true,
             // coverage: { // this causes out of memory errors / crashing :(
