@@ -30,7 +30,7 @@ import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTa
 import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { ViteTestContext } from '@prosopo/env'
-import { afterEach, beforeEach, describe, expect, test, assert } from 'vitest'
+import { assert, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
 import { createType } from '@polkadot/types/create'
 import { datasetWithIndexSolutions } from '@prosopo/datasets'

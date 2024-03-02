@@ -17,7 +17,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export class MongoMemoryDatabase extends MongoDatabase {
     private mongod: MongoMemoryServer | undefined
-    private running: boolean = false
+    private running = false
 
     override async init(url: string, dbname: string, logger: Logger, authSource?: string): Promise<this> {
         this.mongod = await MongoMemoryServer.create()

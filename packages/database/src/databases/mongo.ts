@@ -112,7 +112,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async connect(): Promise<void> {
         this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
-        
+
         this.connection = await new Promise((resolve, reject) => {
             const connection = mongoose.createConnection(this.url, {
                 dbName: this.dbname,
@@ -146,7 +146,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             })
 
             connection.on('close', () => {
-                this.logger.info(`Database connection to ${this.url} closed`)   
+                this.logger.info(`Database connection to ${this.url} closed`)
             })
 
             connection.on('fullsetup', () => {
@@ -155,20 +155,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         })
 
         this.tables = {
-            captcha:
-                this.connection.model('Captcha', CaptchaRecordSchema),
-            dataset:
-                this.connection.model('Dataset', DatasetRecordSchema),
-            solution:
-                this.connection.model('Solution', SolutionRecordSchema),
-            commitment:
-                this.connection.model('UserCommitment', UserCommitmentRecordSchema),
-            usersolution:
-                this.connection.model('UserSolution', UserSolutionRecordSchema),
-            pending:
-                this.connection.model('Pending', PendingRecordSchema),
-            scheduler:
-                this.connection.model('Scheduler', ScheduledTaskRecordSchema),
+            captcha: this.connection.model('Captcha', CaptchaRecordSchema),
+            dataset: this.connection.model('Dataset', DatasetRecordSchema),
+            solution: this.connection.model('Solution', SolutionRecordSchema),
+            commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+            usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
+            pending: this.connection.model('Pending', PendingRecordSchema),
+            scheduler: this.connection.model('Scheduler', ScheduledTaskRecordSchema),
         }
     }
 
