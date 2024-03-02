@@ -17,6 +17,7 @@ export default function () {
         },
         test: {
             watch: false,
+            include: ['../../packages/*/src/**/*.test.ts', '../../contracts/*/src/**/*.test.ts'],
             watchExclude: [
                 '**/node_modules/**',
                 '**/dist/**',
