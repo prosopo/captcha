@@ -22,9 +22,10 @@ export default function () {
             watch: false,
             watchExclude: ['**/node_modules/**', '**/dist/**', '../../packages/datasets-fs/src/tests/data/**'],
             logHeapUsage: true,
-            // coverage: { // this causes out of memory errors / crashing :(
-            //     enabled: true,
-            // },
+            coverage: {
+                enabled: true,
+                include: ['packages/*/src/**'],
+            },
             typecheck: {
                 enabled: true,
             },
