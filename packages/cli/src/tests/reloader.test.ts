@@ -7,13 +7,21 @@ import path from 'path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', async () => {
+
+        // get file location
+        const dir = getCurrentFileDirectory(import.meta.url)
+
+        // get root directory of this package
+        const rootDir = dir.split('/').slice(0, -2).join('/')
+
+        const restoreEnv = async () => {
+            const envPath = path.resolve(`${rootDir}/.env.test`)
+            const envContent = await promisify(fs.readFile)(envPath, 'utf8')
+            const newEnvContent = envContent.replace('\nTEST=TEST', '')
+            await promisify(fs.writeFile)(envPath, newEnvContent)
+        }
+
         return new Promise<void>(async (resolve, reject) => {
-
-            // get file location
-            const dir = getCurrentFileDirectory(import.meta.url)
-
-            // get root directory of this package
-            const rootDir = dir.split('/').slice(0, -2).join('/')
             console.log('rootDir', rootDir)
 
             // run API
@@ -37,6 +45,9 @@ describe('reloading api', () => {
             )
 
             child.stdout.on('error', reject)
+        }).then(restoreEnv).catch(error => {
+            restoreEnv()
+            throw error
         })
     }, 120000)
 })
