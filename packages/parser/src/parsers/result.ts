@@ -41,12 +41,19 @@ export class Result<T, U = Error> {
         return this.error === undefined ? defaultError : this.error
     }
 
-    public unwrapOrElse(fn: (error: U) => T): T {
-        return this.error === undefined ? this.value : fn(this.error)
+    public unwrapOrElse(fn: () => T): T {
+        return this.error === undefined ? this.value : fn()
     }
 
-    public unwrapErrorOrElse(fn: (value: T) => U): U {
-        return this.error === undefined ? fn(this.value) : this.error
+    public unwrapOrError(fn: () => U): T {
+        if (this.error !== undefined) {
+            return this.value
+        }
+        throw fn()
+    }
+
+    public unwrapErrorOrElse(fn: () => U): U {
+        return this.error === undefined ? fn() : this.error
     }
 
     public toString(): string {
