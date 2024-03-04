@@ -1,5 +1,3 @@
-/** @jsx jsx */
-/** @jsxImportSource @emotion/react */
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo } from 'react'
 import styled from '@emotion/styled'

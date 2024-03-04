@@ -8,6 +8,9 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
+            "path": "../../packages/account"
+        },
+        {
             "path": "../../packages/api"
         },
         {
@@ -50,6 +53,9 @@
             "path": "../../packages/procaptcha-react"
         },
         {
+            "path": "../../packages/procaptcha-pow"
+        },
+        {
             "path": "../../protocol/dev"
         },
         {
@@ -66,6 +72,9 @@
         },
         {
             "path": "../../packages/types-env"
+        },
+        {
+            "path": "../../packages/web-components"
         },
         {
             "path": "../../demos/client-example-server"
