@@ -1,6 +1,6 @@
 import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
 
-const COLLECTOR_LIMIT = 1000
+const COLLECTOR_LIMIT = 10000
 
 type SetStateAction<T> = T | ((prevState: T) => T)
 type SetStateEvent<T> = (setValueFunc: SetStateAction<T[]>) => void
