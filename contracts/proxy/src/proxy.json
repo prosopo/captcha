@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0x45b75353379f9c02b45583f086d1b6186d9bda1dac4a567ed756cbd79de2cf62",
+        "hash": "0x84e4819370416fa4461dcb132c1d5677c21394ebda33c618c9405398e91da7a7",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -15,7 +15,7 @@
     },
     "contract": {
         "name": "proxy",
-        "version": "0.2.17",
+        "version": "0.2.41",
         "authors": ["Chris Taylor <chris@prosopo.io>", "George Oastler <george@prosopo.io>"]
     },
     "spec": {
@@ -357,6 +357,10 @@
                             {
                                 "index": 30,
                                 "name": "NotAuthor"
+                            },
+                            {
+                                "index": 31,
+                                "name": "Math"
                             }
                         ]
                     }

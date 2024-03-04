@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-react",
-    "version": "0.2.17",
+    "version": "0.2.41",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -22,8 +22,12 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
@@ -31,21 +35,20 @@
     "dependencies": {
         "@emotion/react": "^11.11.1",
         "@emotion/styled": "^11.11.0",
-        "@mui/icons-material": "^5.14.3",
-        "@mui/material": "^5.14.5",
         "@polkadot/extension-dapp": "0.46.6",
         "@polkadot/extension-inject": "0.46.6",
-        "@polkadot/types": "10.11.1",
-        "@prosopo/common": "0.2.17",
-        "@prosopo/procaptcha": "0.2.17",
-        "i18next": "^21.9.2",
+        "@prosopo/api": "0.2.41",
+        "@prosopo/common": "0.2.41",
+        "@prosopo/procaptcha": "0.2.41",
+        "@prosopo/types": "0.2.41",
+        "@prosopo/util": "0.2.41",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "zod": "^3.22.3"
+        "react-dom": "^18.2.0"
     },
     "devDependencies": {
         "tslib": "2.6.2",
-        "typescript": "5.1.6"
+        "typescript": "5.1.6",
+        "vite-plugin-dts": "^3.7.3"
     },
     "repository": {
         "type": "git",

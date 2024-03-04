@@ -1,6 +1,9 @@
 import { GlobalStateProvider } from '../contexts/GlobalContext'
+import { Roboto } from 'next/font/google'
 import TopBar from '../components/Topbar'
 import type { Metadata } from 'next'
+
+const roboto = Roboto({ weight: '400', subsets: ['latin'] })
 
 export const metadata: Metadata = {
     title: 'Provider GUI',
@@ -10,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            <body>
+            <body className={roboto.className}>
                 <GlobalStateProvider>
                     <>
                         <TopBar />

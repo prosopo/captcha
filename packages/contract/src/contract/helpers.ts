@@ -29,8 +29,7 @@ import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
 import { Bytes } from '@polkadot/types-codec/extended'
 import { Compact } from '@polkadot/types-codec/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Logger, capitaliseFirstLetter } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers.js'
+import { Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
 import { Registry } from '@polkadot/types-codec/types/registry'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { isHex, isU8a } from '@polkadot/util/is'
@@ -93,7 +92,9 @@ export function handleContractCallOutcomeErrors(response: ContractCallOutcome, c
         if (out.isOk) {
             const responseOk = out.asOk
             if (responseOk.isErr) {
-                throw new ProsopoContractError(responseOk.toPrimitive().err.toString(), contractMethodName, {})
+                throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+                    context: { error: responseOk.toPrimitive().err.toString(), contractMethodName },
+                })
             }
         }
     }
@@ -105,7 +106,9 @@ export function handleContractCallOutcomeErrors(response: ContractCallOutcome, c
 export function stringToHexPadded(data: string): string {
     const maxLength = 64
     if (data.length > maxLength) {
-        throw new Error(`stringToHexPadded: string length ${data.length} exceeds ${maxLength}`)
+        throw new ProsopoContractError('CONTRACT.INVALID_DATA_FORMAT', {
+            context: { error: `stringToHexPadded: string length ${data.length} exceeds ${maxLength}` },
+        })
     }
 
     const hexString = stringToHex(data).replace('0x', '')
@@ -158,7 +161,7 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
             // swallow
         }
     }
-    return new ProsopoContractError(message)
+    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message } })
 }
 
 // 4_999_999_999_999
@@ -184,11 +187,11 @@ export function getOptions(
               proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),
           })
         : isMutating
-          ? (api.registry.createType('WeightV2', {
-                proofSize: new BN(1_000_000),
-                refTime: MAX_CALL_WEIGHT,
-            }) as WeightV2)
-          : undefined
+        ? (api.registry.createType('WeightV2', {
+              proofSize: new BN(1_000_000),
+              refTime: MAX_CALL_WEIGHT,
+          }) as WeightV2)
+        : undefined
 
     return {
         gasLimit: _gasLimit,
@@ -196,8 +199,8 @@ export function getOptions(
             ? storageDeposit.isCharge
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                  ? storageDeposit.asRefund
-                  : null
+                ? storageDeposit.asRefund
+                : null
             : null,
         value: value || BN_ZERO,
     } as ContractOptions

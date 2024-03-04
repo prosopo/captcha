@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel } from '@prosopo/common'
 import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { boolean } from 'zod'
 import { input } from 'zod'
@@ -24,6 +23,8 @@ import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
+
+const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 
 export const DatabaseTypes = zEnum(['mongo', 'mongoMemory'])
 
@@ -144,6 +145,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
         challengeValidLength: number().positive().optional(),
+        devOnlyWatchEvents: boolean().optional(),
     })
 )
 
@@ -166,6 +168,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
             maxBatchExtrinsicPercentage: 59,
         }),
         server: ProsopoImageServerConfigSchema,
+        mongoAtlasUri: string().optional(),
     })
 )
 

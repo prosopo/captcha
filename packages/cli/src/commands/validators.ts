@@ -29,13 +29,13 @@ export const validatePayee = (argv: ArgumentsCamelCase) => {
 
         return { payee }
     } catch (error) {
-        throw new ProsopoEnvError(error as Error, 'CLI.PARAMETER_ERROR', {}, [argv.payee])
+        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', { context: { payee: [argv.payee], error } })
     }
 }
 
 export const validateValue = (argv: ArgumentsCamelCase) => {
     if (typeof argv.value !== 'number') {
-        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', validateValue.name, {}, argv.value)
+        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', { context: { value: [argv.value] } })
     }
     const value: Compact<u128> = argv.value as unknown as Compact<u128>
     return { value }
@@ -43,7 +43,9 @@ export const validateValue = (argv: ArgumentsCamelCase) => {
 
 export const validateFee = (argv: ArgumentsCamelCase) => {
     if (typeof argv.fee !== 'number') {
-        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', validateValue.name, {}, argv.fee)
+        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', {
+            context: { name: validateValue.name, fee: argv.fee },
+        })
     }
     const fee: Compact<u128> = argv.fee as unknown as Compact<u128>
     return { fee }
@@ -54,7 +56,9 @@ export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
         const result = parser.parseString(argv.schedule as string)
 
         if (argv.schedule in result.errors) {
-            throw new ProsopoEnvError('CLI.PARAMETER_ERROR', validateScheduleExpression.name, {}, [argv.schedule])
+            throw new ProsopoEnvError('CLI.PARAMETER_ERROR', {
+                context: { payee: [argv.shedule], failedFuncName: validateScheduleExpression.name },
+            })
         }
 
         return { schedule: argv.schedule as string }

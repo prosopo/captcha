@@ -30,7 +30,7 @@ declare global {
     }
 }
 
-export const checkboxClass = '.PrivateSwitchBase-input'
+export const checkboxClass = '[type="checkbox"]'
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
     cy.get(checkboxClass, { timeout: 12000 }).first().click()
@@ -89,7 +89,8 @@ function getSelectors(captcha: Captcha) {
                     selectors = captcha.items
                         .filter((item) => solution.includes(item.hash))
                         // create a query selector for each image that is a solution
-                        .map((item) => `img[src="${item.data}"]`)
+                        // drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
+                        .map((item) => `img[src="${item.data.replace(/^http(s)*:\/\//, '//')}"]`)
                 } else {
                     console.log('Unsolved captcha or captcha with zero solutions')
                 }
@@ -103,7 +104,6 @@ function getSelectors(captcha: Captcha) {
 function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLElement>> {
     return cy.captchaImages().then(() => {
         cy.getSelectors(captcha).then((selectors: string[]) => {
-            ///throw new Error(selectors.join(', '))
             console.log('captchaId', captcha.captchaId, 'selectors', selectors)
             // Click the correct images
             return cy.get(selectors.join(', ')).then((elements) => {

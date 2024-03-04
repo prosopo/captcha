@@ -21,9 +21,8 @@ import {
 import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api.js'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoApiError } from '../api/handlers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
@@ -59,10 +58,20 @@ export class ProsopoCaptchaApi {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
+            // convert https/http to match page
+            captchaChallenge.captchas.forEach((captcha) => {
+                captcha.captcha.items.forEach((item) => {
+                    if (item.data) {
+                        // drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
+                        // https://stackoverflow.com/a/18320348/7215926
+                        item.data = item.data.replace(/^http(s)*:\/\//, '//')
+                    }
+                })
+            })
+
             return captchaChallenge
-        } catch (e) {
-            // TODO fix/improve error handling
-            throw new ProsopoEnvError(e as Error)
+        } catch (error) {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
     }
 
@@ -112,7 +121,9 @@ export class ProsopoCaptchaApi {
 
         if (this.web2) {
             if (!signer || !signer.signRaw) {
-                throw new Error('Signer is not defined, cannot sign message to prove account ownership')
+                throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
+                    context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
+                })
             }
             // sign the request hash to prove account ownership
             const signed = await signer.signRaw({
@@ -133,9 +144,8 @@ export class ProsopoCaptchaApi {
                 salt,
                 signature
             )
-        } catch (err) {
-            // TODO fix/improve error handling
-            throw new ProsopoApiError(err as Response)
+        } catch (error) {
+            throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
 
         return [result, commitmentId, tx]

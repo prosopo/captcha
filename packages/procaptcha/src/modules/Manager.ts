@@ -26,11 +26,19 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
+    StoredEvents,
 } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
+import {
+    ProsopoApiError,
+    ProsopoContractError,
+    ProsopoDatasetError,
+    ProsopoEnvError,
+    ProsopoError,
+    trimProviderUrl,
+} from '@prosopo/common'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
@@ -77,7 +85,9 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
     if (!network) {
-        throw new Error(`No network found for environment ${config.defaultEnvironment}`)
+        throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', {
+            context: { error: `No network found for environment ${config.defaultEnvironment}` },
+        })
     }
     return network
 }
@@ -104,12 +114,14 @@ export function Manager(
             onError: alertError,
             onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
                 console.log('onHuman event triggered', output)
+                updateState({ sendData: !state.sendData })
             },
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
             onFailed: () => {
                 alert('Captcha challenge failed. Please try again')
+                updateState({ sendData: !state.sendData })
             },
             onExpired: () => {
                 alert('Completed challenge has expired, please try again')
@@ -119,6 +131,7 @@ export function Manager(
             },
             onOpen: () => {
                 console.log('onOpen event triggered')
+                updateState({ sendData: !state.sendData })
             },
             onClose: () => {
                 console.log('onClose event triggered')
@@ -236,6 +249,7 @@ export function Manager(
                 // so contact the provider to check if this is the case
                 try {
                     const verifyDappUserResponse = await providerApi.verifyDappUser(
+                        getDappAccount(),
                         account.account.address,
                         undefined,
                         configOptional.challengeValidLength
@@ -283,7 +297,7 @@ export function Manager(
             const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
             console.log('challenge', challenge)
             if (challenge.captchas.length <= 0) {
-                throw new Error('No captchas returned from provider')
+                throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
             }
 
             // setup timeout
@@ -316,7 +330,9 @@ export function Manager(
             clearTimeout()
 
             if (!state.challenge) {
-                throw new Error('cannot submit, no challenge found')
+                throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
+                    context: { error: 'Cannot submit, no Captcha found in state' },
+                })
             }
 
             // hide the modal, no further input required from user
@@ -342,7 +358,9 @@ export function Manager(
 
             const first = at(challenge.captchas, 0)
             if (!first.captcha.datasetId) {
-                throw new Error('No datasetId set for challenge')
+                throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_ID', {
+                    context: { error: 'No datasetId set for challenge' },
+                })
             }
 
             const captchaApi = getCaptchaApi()
@@ -402,10 +420,14 @@ export function Manager(
      */
     const select = (hash: string) => {
         if (!state.challenge) {
-            throw new Error('cannot select, no challenge found')
+            throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
+                context: { error: 'Cannot select, no Captcha found in state' },
+            })
         }
         if (state.index >= state.challenge.captchas.length || state.index < 0) {
-            throw new Error('cannot select, round index out of range')
+            throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
+                context: { error: 'Cannot select, index is out of range for this Captcha' },
+            })
         }
         const index = state.index
         const solutions = state.solutions
@@ -427,10 +449,14 @@ export function Manager(
      */
     const nextRound = () => {
         if (!state.challenge) {
-            throw new Error('cannot proceed to next round, no challenge found')
+            throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
+                context: { error: 'Cannot select, no Captcha found in state' },
+            })
         }
         if (state.index + 1 >= state.challenge.captchas.length) {
-            throw new Error('cannot proceed to next round, already at last round')
+            throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
+                context: { error: 'Cannot select, index is out of range for this Captcha' },
+            })
         }
         console.log('proceeding to next round')
         updateState({ index: state.index + 1 })
@@ -496,7 +522,7 @@ export function Manager(
 
     const getCaptchaApi = () => {
         if (!state.captchaApi) {
-            throw new Error('Captcha api not set')
+            throw new ProsopoApiError('API.UNKNOWN', { context: { error: 'Captcha api not set', state } })
         }
         return state.captchaApi
     }
@@ -508,7 +534,9 @@ export function Manager(
         const config = getConfig()
         // check if account has been provided in config (doesn't matter in web2 mode)
         if (!config.web2 && !config.userAccountAddress) {
-            throw new Error('Account address has not been set for web3 mode')
+            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', {
+                context: { error: 'Account address has not been set for web3 mode' },
+            })
         }
 
         // check if account exists in extension
@@ -525,7 +553,7 @@ export function Manager(
 
     const getAccount = () => {
         if (!state.account) {
-            throw new Error('Account not loaded')
+            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', { context: { error: 'Account not loaded' } })
         }
         const account: Account = state.account
         return account
@@ -542,7 +570,7 @@ export function Manager(
 
     const getBlockNumber = () => {
         if (!state.blockNumber) {
-            throw new Error('Account not loaded')
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
         }
         const blockNumber: number = state.blockNumber
         return blockNumber
@@ -568,11 +596,21 @@ export function Manager(
         )
     }
 
+    const exportData = async (events: StoredEvents) => {
+        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
+        if (!providerUrl) {
+            return
+        }
+        const providerApi = await loadProviderApi(providerUrl)
+        await providerApi.submitUserEvents(events, getAccount().account.address)
+    }
+
     return {
         start,
         cancel,
         submit,
         select,
         nextRound,
+        exportData,
     }
 }
