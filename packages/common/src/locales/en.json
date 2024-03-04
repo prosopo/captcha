@@ -92,6 +92,8 @@
         "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
         "SOLUTION_APPROVE_FAILED": "Failed to approve solution",
         "SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+        "TABLES_UNDEFINED": "Tables undefined",
+        "CONNECTION_UNDEFINED": "Connection undefined",
         "COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
     },
     "CAPTCHA": {

@@ -31,6 +31,10 @@ export const getPackagesDir = () => {
     return `${getRootDir()}/packages`
 }
 
+export const getNodeModulesDir = () => {
+    return `${getRootDir()}/node_modules`
+}
+
 export const getConfigPkgDir = () => {
     return `${getDevDir()}/config`
 }

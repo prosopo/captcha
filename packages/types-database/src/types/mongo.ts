@@ -211,6 +211,10 @@ export interface Database {
     connection?: Connection
     logger: Logger
 
+    getTables(): Tables
+
+    getConnection(): Connection
+
     connect(): Promise<void>
 
     close(): Promise<void>

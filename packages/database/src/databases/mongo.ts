@@ -32,7 +32,6 @@ import {
     Database,
     DatasetRecordSchema,
     PendingRecordSchema,
-    PowCaptchaRecordSchema,
     ScheduledTaskRecord,
     ScheduledTaskRecordSchema,
     ScheduledTaskSchema,
@@ -89,92 +88,88 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         return this
     }
 
+    getTables(): Tables {
+        if (!this.tables) {
+            throw new ProsopoDBError('DATABASE.TABLES_UNDEFINED', {
+                context: { failedFuncName: this.getTables.name },
+                logger: this.logger,
+            })
+        }
+        return this.tables
+    }
+
+    getConnection(): mongoose.Connection {
+        if (!this.connection) {
+            throw new ProsopoDBError('DATABASE.CONNECTION_UNDEFINED', {
+                context: { failedFuncName: this.getConnection.name },
+                logger: this.logger,
+            })
+        }
+        return this.connection
+    }
+
     /**
      * @description Connect to the database and set the various tables
      */
     async connect(): Promise<void> {
-        const MAX_RETRIES = 3
-        const RETRY_INTERVAL_MS = 1000
+        this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
 
-        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                // Return if already connected
-                if (this.connection) {
-                    return
-                }
-                await new Promise((resolve, reject) => {
-                    this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
-                    this.connection = mongoose.createConnection(this.url, {
-                        dbName: this.dbname,
-                        serverApi: ServerApiVersion.v1,
-                    })
+        this.connection = await new Promise((resolve, reject) => {
+            const connection = mongoose.createConnection(this.url, {
+                dbName: this.dbname,
+                serverApi: ServerApiVersion.v1,
+            })
 
-                    this.tables = {
-                        captcha:
-                            this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
-                        powCaptcha:
-                            this.connection.models.PowCaptcha ||
-                            this.connection.model('PowCaptcha', PowCaptchaRecordSchema),
-                        dataset:
-                            this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
-                        solution:
-                            this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
-                        commitment:
-                            this.connection.models.UserCommitment ||
-                            this.connection.model('UserCommitment', UserCommitmentRecordSchema),
-                        usersolution:
-                            this.connection.models.UserSolution ||
-                            this.connection.model('UserSolution', UserSolutionRecordSchema),
-                        pending:
-                            this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
-                        scheduler:
-                            this.connection.models.Scheduler ||
-                            this.connection.model('Scheduler', ScheduledTaskRecordSchema),
-                    }
+            connection.on('open', () => {
+                this.logger.info(`Database connection to ${this.url} opened`)
+                resolve(connection)
+            })
 
-                    this.connection.once('open', resolve).on('error', (e) => {
-                        // Only reject on the last attempt, otherwise handle the retry logic
-                        if (attempt === MAX_RETRIES) {
-                            reject(
-                                new ProsopoDBError('DATABASE.CONNECT_ERROR', {
-                                    context: { url: this.url, error: e, attempt },
-                                    logger: this.logger,
-                                })
-                            )
-                        } else {
-                            // Remove the error listener to avoid accumulated listeners on retries
-                            this.connection?.removeAllListeners('error')
-                        }
-                    })
-                })
+            connection.on('error', (err) => {
+                this.logger.error(`Database error: ${err}`)
+                reject(err)
+            })
 
-                return
-            } catch (e) {
-                // If this wasn't the last attempt, log the retry and wait for the retry interval
-                if (attempt < MAX_RETRIES) {
-                    this.logger.info(`Attempt ${attempt} failed, retrying in ${RETRY_INTERVAL_MS / 1000} seconds...`)
-                    await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS))
-                } else {
-                    // If this was the last attempt, throw the error
-                    throw e
-                }
-            }
+            connection.on('connected', () => {
+                this.logger.info(`Database connected to ${this.url}`)
+            })
+
+            connection.on('disconnected', () => {
+                this.logger.info(`Database disconnected from ${this.url}`)
+            })
+
+            connection.on('reconnected', () => {
+                this.logger.info(`Database reconnected to ${this.url}`)
+            })
+
+            connection.on('reconnectFailed', () => {
+                this.logger.error(`Database reconnect failed to ${this.url}`)
+            })
+
+            connection.on('close', () => {
+                this.logger.info(`Database connection to ${this.url} closed`)
+            })
+
+            connection.on('fullsetup', () => {
+                this.logger.info(`Database connection to ${this.url} is fully setup`)
+            })
+        })
+
+        this.tables = {
+            captcha: this.connection.model('Captcha', CaptchaRecordSchema),
+            dataset: this.connection.model('Dataset', DatasetRecordSchema),
+            solution: this.connection.model('Solution', SolutionRecordSchema),
+            commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+            usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
+            pending: this.connection.model('Pending', PendingRecordSchema),
+            scheduler: this.connection.model('Scheduler', ScheduledTaskRecordSchema),
         }
     }
 
     /** Close connection to the database */
     async close(): Promise<void> {
         this.logger.debug(`Closing connection to ${this.url}`)
-        // eslint-disable-next-line no-async-promise-executor
-        await new Promise<void>(async (resolve, reject): Promise<void> => {
-            mongoose.connection
-                .close()
-                .then(() => {
-                    this.logger.debug(`Connection to ${this.url} closed`)
-                    resolve()
-                })
-                .catch(reject)
-        })
+        await this.connection?.close()
     }
 
     /**
