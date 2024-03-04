@@ -18,8 +18,7 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api.js'
+import { CaptchaSolution, CaptchaSolutionResponse, CaptchaWithProof, GetCaptchaResponse } from '@prosopo/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'

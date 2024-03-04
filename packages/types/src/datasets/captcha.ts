@@ -70,6 +70,11 @@ export interface Captcha extends CaptchaWithoutId {
     datasetContentId?: string
 }
 
+export interface PowCaptcha {
+    challenge: string
+    checked: boolean
+}
+
 export interface CaptchaSolution {
     captchaId: string
     captchaContentId: string
@@ -80,6 +85,12 @@ export interface CaptchaSolution {
 export interface CaptchaWithProof {
     captcha: Captcha
     proof: string[][]
+}
+
+export interface PoWCaptcha {
+    challenge: string
+    difficulty: number
+    signature: string
 }
 
 export type CaptchaConfig = {
