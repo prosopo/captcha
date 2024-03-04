@@ -1,5 +1,3 @@
-
-
 export type AtOptions = {
     optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
     noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)

@@ -14,36 +14,36 @@
 import { describe, expect, test } from 'vitest'
 import { permutations } from '../permutations.js'
 
-    describe('permutations', () => {
-        test('handles empty array', () => {
-            expect([...permutations([])]).to.deep.equal([])
-        })
-
-        test('handles empty array with empty set', () => {
-            expect([...permutations([], { includeEmpty: true })]).to.deep.equal([[]])
-        })
-
-        test('permutes correctly using same size bins', () => {
-            expect([...permutations([2, 2, 2])]).to.deep.equal([
-                [0, 0, 0],
-                [0, 0, 1],
-                [0, 1, 0],
-                [0, 1, 1],
-                [1, 0, 0],
-                [1, 0, 1],
-                [1, 1, 0],
-                [1, 1, 1],
-            ])
-        })
-
-        test('permutes correctly using different size bins', () => {
-            expect([...permutations([1, 2, 3])]).to.deep.equal([
-                [0, 0, 0],
-                [0, 0, 1],
-                [0, 0, 2],
-                [0, 1, 0],
-                [0, 1, 1],
-                [0, 1, 2],
-            ])
-        })
+describe('permutations', () => {
+    test('handles empty array', () => {
+        expect([...permutations([])]).to.deep.equal([])
     })
+
+    test('handles empty array with empty set', () => {
+        expect([...permutations([], { includeEmpty: true })]).to.deep.equal([[]])
+    })
+
+    test('permutes correctly using same size bins', () => {
+        expect([...permutations([2, 2, 2])]).to.deep.equal([
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            [0, 1, 1],
+            [1, 0, 0],
+            [1, 0, 1],
+            [1, 1, 0],
+            [1, 1, 1],
+        ])
+    })
+
+    test('permutes correctly using different size bins', () => {
+        expect([...permutations([1, 2, 3])]).to.deep.equal([
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 0, 2],
+            [0, 1, 0],
+            [0, 1, 1],
+            [0, 1, 2],
+        ])
+    })
+})

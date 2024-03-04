@@ -1,4 +1,3 @@
-
 export type MergeOptions = {
     atomicArrays?: boolean
 }

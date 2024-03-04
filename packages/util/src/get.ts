@@ -1,4 +1,3 @@
-
 export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
 export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
 export function get<T>(obj: unknown, key: string | number | symbol, required?: true): Exclude<T, undefined>
