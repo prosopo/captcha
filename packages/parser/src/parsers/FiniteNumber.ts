@@ -1,0 +1,22 @@
+import { NumberParser, num } from "./NumberParser.js"
+import { Parser } from "./Parser.js"
+import { TypeofParser } from "./TypeofParser.js"
+
+export class FiniteNumber extends Parser<number> {
+
+    public override parse(value: unknown): number {
+        const v = num().parse(value)
+        if (!Number.isFinite(v)) {
+            throw new Error(`Expected a finite number, but got ${v}`)
+        }
+        return v
+    }
+
+    public override clone() {
+        return new FiniteNumber()
+    }
+}
+
+export const pFiniteNumber = () => new FiniteNumber()
+export const finiteNumber = pFiniteNumber
+export const finiteNum = pFiniteNumber
