@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/datasets",
-    "version": "0.2.17",
+    "version": "0.2.41",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
@@ -12,8 +12,12 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
         "cli": "node ./dist/cli.js"
     },
     "main": "./dist/index.js",
@@ -43,12 +47,12 @@
     },
     "dependencies": {
         "@polkadot/util": "^12.3.2",
-        "@prosopo/common": "0.2.17",
-        "@prosopo/types": "0.2.17",
-        "vitest": "^0.34.6"
+        "@prosopo/common": "0.2.41",
+        "@prosopo/types": "0.2.41",
+        "vitest": "^1.3.1"
     },
     "devDependencies": {
-        "@prosopo/config": "0.2.17",
+        "@prosopo/config": "0.2.41",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

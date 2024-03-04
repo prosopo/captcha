@@ -44,6 +44,7 @@ export default async function (
         'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
         'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
         'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
+        'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
         'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
@@ -73,7 +74,12 @@ export default async function (
     logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
-    const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
+    let drop: undefined | Drop[]
+    let pure: string[] | undefined
+    if (isProduction) {
+        drop = ['debugger']
+        pure = ['console.log', 'console.warn']
+    }
 
     logger.info('Bundle name', bundleName)
     return {
@@ -92,6 +98,7 @@ export default async function (
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
             drop,
+            pure,
             legalComments: 'none',
         },
         define,
@@ -106,9 +113,8 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                // sets the bundle to an Instantly Invoked Function Expression (IIFE)
                 fileName: `${bundleName}.bundle.js`,
-                formats: ['iife'],
+                formats: ['es'],
             },
             modulePreload: { polyfill: true },
             commonjsOptions: {

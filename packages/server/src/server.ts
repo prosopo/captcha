@@ -78,8 +78,8 @@ export class ProsopoServer {
             this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
             await this.getSigner()
             await this.getContractApi()
-        } catch (err) {
-            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
+        } catch (error) {
+            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error } })
         }
     }
 
@@ -91,8 +91,10 @@ export class ProsopoServer {
             await this.api.isReadyOrError
             try {
                 this.pair = this.keyring.addPair(this.pair)
-            } catch (err) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+            } catch (error) {
+                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                    context: { failedFuncName: this.getSigner.name, error },
+                })
             }
         }
     }
@@ -135,7 +137,7 @@ export class ProsopoServer {
         console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
         if (providerUrlTrimmed) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(user, commitmentId, maxVerifiedTime)
+            const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
         } else {
             // Check the time since the last correct captcha is less than the maxVerifiedTime

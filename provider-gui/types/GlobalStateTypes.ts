@@ -1,8 +1,8 @@
-import { Actions, Dataset, Environment, Summary } from './ProviderProfileTypes'
+import { Actions, Dataset, Environment, ProviderSummary } from './ProviderProfileTypes'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
 export interface GlobalState {
-    profile: { environment?: Environment; actions?: Actions; dataset?: Dataset; summary?: Summary }
+    profile: { environment?: Environment; actions?: Actions; dataset?: Dataset; summary?: ProviderSummary }
     accounts: InjectedAccountWithMeta[]
     currentAccount: string
 }

@@ -15,13 +15,14 @@ import {
     ApiParams,
     EnvironmentTypesSchema,
     NetworkNamesSchema,
+    ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
@@ -34,20 +35,12 @@ interface ProcaptchaRenderOptions {
     'error-callback'?: string
 }
 
-type ProcaptchaUrlParams = {
-    onloadUrlCallback: string | undefined
-    renderExplicit: string | undefined
-}
-
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getCurrentScript = () =>
-    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
-        ? document.currentScript
-        : undefined
+const getProcaptchaScript = () => document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
-const extractParams = (name: string): ProcaptchaUrlParams => {
-    const script = getCurrentScript()
+const extractParams = (name: string) => {
+    const script = getProcaptchaScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
         return {
@@ -58,7 +51,7 @@ const extractParams = (name: string): ProcaptchaUrlParams => {
     return { onloadUrlCallback: undefined, renderExplicit: undefined }
 }
 
-const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
+const getConfig = (siteKey?: string) => {
     if (!siteKey) {
         siteKey = process.env.PROSOPO_SITE_KEY || ''
     }
@@ -74,6 +67,7 @@ const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
             address: siteKey,
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        mongoAtlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 
@@ -108,7 +102,7 @@ const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
 
 const renderLogic = (
     elements: Element[],
-    config: ProcaptchaConfigOptional,
+    config: ProcaptchaClientConfigInput,
     renderOptions?: ProcaptchaRenderOptions
 ) => {
     elements.forEach((element) => {
@@ -201,6 +195,16 @@ export default function ready(fn: () => void) {
     }
 }
 
+// extend the global Window interface to include the procaptcha object
+declare global {
+    interface Window {
+        procaptcha: { ready: typeof ready; render: typeof render }
+    }
+}
+
+// set the procaptcha attribute on the window
+window.procaptcha = { ready, render }
+
 // onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 // onRenderExplicit takes values of either explicit or implicit
 const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME)
@@ -213,7 +217,7 @@ if (renderExplicit !== 'explicit') {
 if (onloadUrlCallback) {
     const onloadCallback = getWindowCallback(onloadUrlCallback)
     // Add event listener to the script tag to call the callback function when the script is loaded
-    getCurrentScript()?.addEventListener('load', () => {
+    getProcaptchaScript()?.addEventListener('load', () => {
         ready(onloadCallback)
     })
 }

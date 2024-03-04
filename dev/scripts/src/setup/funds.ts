@@ -47,10 +47,12 @@ export async function sendFunds(
         data: { free: previousFree },
     } = await env.getContractInterface().api.query.system.account(pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
-        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, undefined, {
-            mnemonic,
-            previousFree: previousFree.toString(),
-            amount: amount.toString(),
+        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
+            context: {
+                mnemonic,
+                previousFree: previousFree.toString(),
+                amount: amount.toString(),
+            },
         })
     }
 
@@ -69,9 +71,9 @@ export async function sendFunds(
         'UNIT'
     )
     // eslint-disable-next-line no-async-promise-executor
-    const result: Promise<ISubmittableResult> = new Promise(async (resolve, reject) => {
+    const result = new Promise<ISubmittableResult>(async (resolve, reject) => {
         const unsub = await api.tx.balances
-            .transfer(address, amount)
+            .transferAllowDeath(address, amount)
             .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
                 if (result.status.isInBlock || result.status.isFinalized) {
                     result.events
@@ -99,7 +101,7 @@ export async function sendFunds(
             env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
         })
         .catch((e) => {
-            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', undefined, undefined, { e })
+            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error: e } })
         })
 }
 

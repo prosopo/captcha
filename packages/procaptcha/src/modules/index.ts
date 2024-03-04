@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from './Manager.js'
 export * from './ProsopoCaptchaApi.js'
+export * from './collector.js'

@@ -28,13 +28,13 @@ export default async function (name: string, tsConfigPath: string, entry?: strin
                 root: 'src',
                 copy: '**/*.css',
             }),
-            tsconfigPaths({ projects: [path.resolve('./tsconfig.cjs.json')] }),
+            tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
             VitePluginCloseAndCopy(),
         ],
         build: {
             emptyOutDir: true,
             ssr: true,
-            target: 'node16',
+            target: 'node18',
             outDir: 'dist/cjs',
             lib: {
                 name,

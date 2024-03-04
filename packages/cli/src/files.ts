@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoCliError } from '@prosopo/common'
 import { Readable } from 'stream'
 import fs, { WriteStream, createWriteStream } from 'fs'
 
 export function loadJSONFile(filePath: string) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
-    } catch (err) {
-        throw new ProsopoEnvError(err as Error, 'GENERAL.JSON_LOAD_FAILED', {}, filePath)
+    } catch (error) {
+        throw new ProsopoCliError('GENERAL.JSON_LOAD_FAILED', { context: { error, filePath } })
     }
 }
 

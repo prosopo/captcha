@@ -70,12 +70,9 @@ export class Environment implements ProsopoEnvironment {
                 this.logger.error(err)
             })
         } else {
-            throw new ProsopoEnvError(
-                'CONFIG.UNKNOWN_ENVIRONMENT',
-                this.constructor.name,
-                {},
-                this.config.defaultEnvironment
-            )
+            throw new ProsopoEnvError('CONFIG.UNKNOWN_ENVIRONMENT', {
+                context: { constructor: this.constructor.name, environment: this.config.defaultEnvironment },
+            })
         }
     }
 
@@ -84,8 +81,10 @@ export class Environment implements ProsopoEnvironment {
             await this.getApi().isReadyOrError
             try {
                 this.pair = this.keyring.addPair(this.pair)
-            } catch (err) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+            } catch (error) {
+                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                    context: { failedFuncName: this.getSigner.name, error },
+                })
             }
         }
     }
@@ -102,6 +101,27 @@ export class Environment implements ProsopoEnvironment {
             throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
         }
         return this.api
+    }
+
+    getDb(): Database {
+        if (this.db === undefined) {
+            throw new ProsopoEnvError(new Error('db not setup! Please call isReady() first'))
+        }
+        return this.db
+    }
+
+    getAssetsResolver(): AssetsResolver {
+        if (this.assetsResolver === undefined) {
+            throw new ProsopoEnvError(new Error('assetsResolver not setup! Please call isReady() first'))
+        }
+        return this.assetsResolver
+    }
+
+    getPair(): KeyringPair {
+        if (this.pair === undefined) {
+            throw new ProsopoEnvError(new Error('pair not setup! Please call isReady() first'))
+        }
+        return this.pair
     }
 
     async changeSigner(pair: KeyringPair): Promise<void> {
@@ -141,6 +161,10 @@ export class Environment implements ProsopoEnvironment {
             // make sure contract address is valid before trying to load contract interface
             if (isAddress(this.contractAddress)) {
                 this.contractInterface = await this.getContractApi()
+            } else {
+                // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
+                // just console logging for the time being!
+                console.warn('invalid contract address: ' + this.contractAddress)
             }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
@@ -153,9 +177,7 @@ export class Environment implements ProsopoEnvironment {
                 this.logger.info(`Connected to db`)
             }
         } catch (err) {
-            this.logger.error(err)
-            // TODO fix / improve error handling
-            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
+            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error: err }, logger: this.logger })
         }
     }
 
@@ -173,18 +195,17 @@ export class Environment implements ProsopoEnvironment {
                     )
                 }
             }
-        } catch (err) {
-            // TODO fix/improve error handling
-            throw new ProsopoEnvError(
-                err as Error,
-                'DATABASE.DATABASE_IMPORT_FAILED',
-                {},
-                this.config.database
-                    ? this.config.database[this.defaultEnvironment]
-                        ? this.config.database[this.defaultEnvironment]?.type
-                        : undefined
-                    : undefined
-            )
+        } catch (error) {
+            throw new ProsopoEnvError('DATABASE.DATABASE_IMPORT_FAILED', {
+                context: {
+                    error,
+                    environment: this.config.database
+                        ? this.config.database[this.defaultEnvironment]
+                            ? this.config.database[this.defaultEnvironment]?.type
+                            : undefined
+                        : undefined,
+                },
+            })
         }
     }
 }
