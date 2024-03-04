@@ -159,4 +159,8 @@ describe("boolean", () => {
         expect(() => bool().parse(new Bar())).toThrow();
         expect(() => bool().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(bool().parse(/./)).toEqual(/./);
+    })
 });

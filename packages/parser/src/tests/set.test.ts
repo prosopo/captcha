@@ -171,4 +171,8 @@ describe("set", () => {
         expect(() => set(str()).parse(new Bar())).toThrow();
         expect(() => set(str()).parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(set(str()).parse(/./)).toEqual(/./);
+    })
 });

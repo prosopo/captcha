@@ -159,4 +159,8 @@ describe("undefined", () => {
         expect(() => undef().parse(new Bar())).toThrow();
         expect(() => undef().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(undef().parse(/./)).toEqual(/./);
+    })
 });

@@ -174,4 +174,8 @@ describe("enum", () => {
         expect(() => en(['a', 'b', 'c']).parse(new Bar())).toThrow();
         expect(() => en(['a', 'b', 'c']).parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(en(['a', 'b', 'c']).parse(/./)).toEqual(/./);
+    })
 });

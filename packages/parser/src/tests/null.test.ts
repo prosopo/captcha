@@ -159,4 +159,8 @@ describe("null", () => {
         expect(() => nul().parse(new Bar())).toThrow();
         expect(() => nul().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(nul().parse(/./)).toEqual(/./);
+    })
 });

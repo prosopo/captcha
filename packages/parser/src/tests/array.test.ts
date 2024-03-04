@@ -164,4 +164,8 @@ describe("array", () => {
         expect(() => arr(str()).parse(new Bar())).toThrow();
         expect(() => arr(str()).parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(arr(str()).parse(/./)).toEqual(/./);
+    })
 });

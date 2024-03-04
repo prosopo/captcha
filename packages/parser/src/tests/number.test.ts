@@ -162,4 +162,8 @@ describe("number", () => {
         expect(() => num().parse(new Bar())).toThrow();
         expect(() => num().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(num().parse(/./)).toEqual(/./);
+    })
 });

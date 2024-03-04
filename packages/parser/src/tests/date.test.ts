@@ -160,4 +160,8 @@ describe("date", () => {
         expect(() => dat().parse(new Bar())).toThrow();
         expect(() => dat().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(dat().parse(/./)).toEqual(/./);
+    })
 });

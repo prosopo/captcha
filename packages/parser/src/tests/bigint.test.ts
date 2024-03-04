@@ -159,4 +159,8 @@ describe("bigint", () => {
         expect(() => bi().parse(new Bar())).toThrow();
         expect(() => bi().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(bi().parse(/./)).toEqual(/./);
+    })
 });
