@@ -81,7 +81,7 @@ jobs:
                   echo ""
 
                   # grep for the version line
-                  version_changes=$(echo "$diff" | grep -e "[-\+]\s*\"version\"")
+                  version_changes=$(echo "$diff" | grep -e "[-\+]\s*\"version\"" || true)
                   echo "version_changes:"
                   echo "$version_changes"
                   echo ""
