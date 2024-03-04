@@ -32,6 +32,7 @@ import {
     Database,
     DatasetRecordSchema,
     PendingRecordSchema,
+    PowCaptchaRecordSchema,
     ScheduledTaskRecord,
     ScheduledTaskRecordSchema,
     ScheduledTaskSchema,
@@ -157,6 +158,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
         this.tables = {
             captcha: this.connection.model('Captcha', CaptchaRecordSchema),
+            powCaptcha: this.connection.model('PowCaptcha', PowCaptchaRecordSchema),
             dataset: this.connection.model('Dataset', DatasetRecordSchema),
             solution: this.connection.model('Solution', SolutionRecordSchema),
             commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
