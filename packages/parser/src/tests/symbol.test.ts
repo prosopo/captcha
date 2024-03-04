@@ -160,4 +160,8 @@ describe("sym", () => {
         expect(() => sym().parse(new Bar())).toThrow();
         expect(() => sym().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(sym().parse(/./)).toEqual(/./);
+    })
 });

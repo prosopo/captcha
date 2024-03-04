@@ -168,4 +168,8 @@ describe("literal", () => {
         expect(() => literal('abc').parse(new Bar())).toThrow();
         expect(() => literal('abc').parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(literal('abc').parse(/./)).toEqual(/./);
+    })
 });

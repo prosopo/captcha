@@ -39,4 +39,8 @@ describe("union", () => {
         expect(() => union([num(), str(), bool()]).parse(null)).toThrow();
         expect(() => union([num(), str(), bool()]).parse([])).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(union([num(), str(), bool()]).parse(/./)).toEqual(/./);
+    })
 });

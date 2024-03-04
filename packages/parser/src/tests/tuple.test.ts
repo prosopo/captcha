@@ -178,4 +178,8 @@ describe("tuple", () => {
         expect(() => tup([str(), num(), bool()]).parse(new Bar())).toThrow();
         expect(() => tup([str(), num(), bool()]).parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(tup([str(), num(), bool()]).parse(/./)).toEqual(/./);
+    })
 });

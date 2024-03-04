@@ -160,4 +160,8 @@ describe("never", () => {
         expect(() => never().parse(new Bar())).toThrow();
         expect(() => never().parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(never().parse(/./)).toEqual(/./);
+    })
 });

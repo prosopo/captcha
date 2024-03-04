@@ -170,4 +170,8 @@ describe("native enum", () => {
         expect(() => nen(Foo).parse(new Bar())).toThrow();
         expect(() => nen(Foo).parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(nen(Foo).parse(/./)).toEqual(/./);
+    })
 });

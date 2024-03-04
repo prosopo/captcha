@@ -174,4 +174,8 @@ describe("map", () => {
         expect(() => map(str(), num()).parse(new Bar())).toThrow();
         expect(() => map(str(), num()).parse(new Baz())).toThrow();
     })
+
+    it("should error on regex", () => {
+        expect(map(str(), num()).parse(/./)).toEqual(/./);
+    })
 });
