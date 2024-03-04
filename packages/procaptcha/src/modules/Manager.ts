@@ -131,7 +131,6 @@ export function Manager(
             },
             onOpen: () => {
                 console.log('onOpen event triggered')
-                updateState({ sendData: !state.sendData })
             },
             onClose: () => {
                 console.log('onClose event triggered')

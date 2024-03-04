@@ -70,7 +70,7 @@ export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
         networks: ProsopoNetworksSchema.default(networks),
         database: DatabaseConfigSchema.optional(),
         devOnlyWatchEvents: boolean().optional(),
-    }),
+    })
 )
 export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworksSchema>
 export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworksSchema>

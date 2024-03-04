@@ -39,10 +39,9 @@ const logKeyboardEvent = (event: globalThis.KeyboardEvent, setKeyboardEvent: Set
 
 const logTouchEvent = (event: globalThis.TouchEvent, setTouchEvent: SetTouchEvent) => {
     for (const touch of Array.from(event.touches)) {
-        storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent);
+        storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent)
     }
 }
-
 
 export const startCollector = (
     setStoredMouseEvents: SetMouseEvent,
