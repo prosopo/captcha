@@ -299,7 +299,7 @@ export interface Database {
         result?: ScheduledTaskResult
     ): Promise<void>
 
-    addPowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
+    storePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
 
     getPowCaptchaRecordByChallenge(challenge: string): Promise<PowCaptcha | null>
 

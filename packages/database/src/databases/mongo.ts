@@ -453,10 +453,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {boolean} checked Indicates if the captcha has been checked.
      * @returns {Promise<void>} A promise that resolves when the record is added.
      */
-    async addPowCaptchaRecord(challenge: string, checked: boolean): Promise<void> {
+    async storePowCaptchaRecord(challenge: string, checked: boolean): Promise<void> {
         if (!this.tables) {
             throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED', {
-                context: { failedFuncName: this.addPowCaptchaRecord.name },
+                context: { failedFuncName: this.storePowCaptchaRecord.name },
                 logger: this.logger,
             })
         }

@@ -243,7 +243,7 @@ export class Tasks {
             })
         }
 
-        await this.db.addPowCaptchaRecord(challenge, false)
+        await this.db.storePowCaptchaRecord(challenge, false)
 
         return true
     }
