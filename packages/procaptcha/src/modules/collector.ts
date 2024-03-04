@@ -38,15 +38,11 @@ const logKeyboardEvent = (event: globalThis.KeyboardEvent, setKeyboardEvent: Set
 }
 
 const logTouchEvent = (event: globalThis.TouchEvent, setTouchEvent: SetTouchEvent) => {
-    // Iterate over the TouchList (map doesn't work on TouchList)
-    for (let i = 0; i < event.touches.length; i++) {
-        const touch = event.touches[i]
-        if (!touch) {
-            continue
-        }
-        storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent)
+    for (const touch of Array.from(event.touches)) {
+        storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent);
     }
 }
+
 
 export const startCollector = (
     setStoredMouseEvents: SetMouseEvent,
