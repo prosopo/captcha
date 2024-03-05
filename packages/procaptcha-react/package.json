@@ -42,6 +42,7 @@
         "@prosopo/procaptcha": "0.2.41",
         "@prosopo/types": "0.2.41",
         "@prosopo/util": "0.2.41",
+        "@prosopo/web-components": "^0.2.41",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     },

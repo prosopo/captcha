@@ -18,7 +18,7 @@
 //   export default value;
 // }
 
-import { Captcha, MerkleProof } from '@prosopo/types'
+import { Captcha, MerkleProof } from '../index.js'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string
