@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { LogLevel, getLogger } from '@prosopo/common'
 import { commandAuth, commandDeploy, commandGetDapp, commandGetDapps, commandTerminal } from './commands/index.js'
 import { hideBin } from 'yargs/helpers'

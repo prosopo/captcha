@@ -78,6 +78,9 @@
         "demos/*",
         "provider-gui"
     ],
+    "dependencies": {
+        "@prosopo/flux": "0.2.41"
+    },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",

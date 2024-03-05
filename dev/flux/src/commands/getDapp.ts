@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import { FLUX_URL, getAuth, getIndividualFluxAppDetails } from '../lib/auth.js'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { getAuth, getIndividualFluxAppDetails } from '../lib/auth.js'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 const fluxGetDappArgs = z.object({
     app: z.string(),
@@ -22,7 +22,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
             try {
                 const privateKey = getPrivateKey()
                 const publicKey = getPublicKey()
-                const { signature, loginPhrase } = await getAuth(privateKey)
+                const { signature, loginPhrase } = await getAuth(privateKey, FLUX_URL)
                 const parsedArgs = fluxGetDappArgs.parse(argv)
                 const dapp = await getIndividualFluxAppDetails(parsedArgs.app, publicKey, signature, loginPhrase)
                 logger.info(JSON.stringify(dapp, null, 2))

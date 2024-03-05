@@ -7,7 +7,7 @@ import qs from 'qs'
 
 loadEnv()
 const log = getLogger(`Info`, `auth.js`)
-const FLUX_URL = 'https://api.runonflux.io/'
+export const FLUX_URL = new URL('https://api.runonflux.io/')
 
 interface ResponseLoginPhrase {
     status: string
@@ -113,17 +113,14 @@ export const verifyLogin = async (zelid: string, signature: string, loginPhrase:
     return await errorHandler(response)
 }
 
-const getLoginPhrase = async (url?: URL): Promise<string> => {
-    const apiURL = new URL(`${url || FLUX_URL}id/loginphrase`)
+const getLoginPhrase = async (url: URL): Promise<string> => {
+    const apiURL = new URL(`id/loginphrase`, url)
     log.info('Calling:', apiURL.href)
     const response = await fetch(apiURL.toString())
     return (await errorHandler<ResponseLoginPhrase>(response)).data
 }
 
-export const getNodeAPIURL = (nodeUIURL: string) => {
-    if (!nodeUIURL.startsWith('http')) {
-        nodeUIURL = `http://${nodeUIURL}`
-    }
+export const getNodeAPIURL = (nodeUIURL: URL) => {
     const url = new URL(nodeUIURL)
     if (url.port) {
         const portLogin = Number(url.port) + 1
@@ -149,9 +146,9 @@ const getFluxOSURLs = async (dappName: string, zelId: string, signature: string,
     return Object.values(data.nodes).map((node) => node.fluxos)
 }
 
-export const getAuth = async (secretKey: Uint8Array) => {
+export const getAuth = async (secretKey: Uint8Array, url: URL) => {
     // Get Flux login phrase
-    const loginPhrase = await getLoginPhrase()
+    const loginPhrase = await getLoginPhrase(url)
     log.info('Login Phrase:', loginPhrase)
 
     const signature = base64Encode(await sign(loginPhrase, { secretKey }))
@@ -172,12 +169,14 @@ const getNode = async (appName: string, zelId: string, signature: string, loginP
         })
     }
     log.info('Node:', node)
-    return node
+    // http as node is an IP address
+    return new URL(`http://${node}`)
 }
 
 export async function main(publicKey: string, privateKey: Uint8Array, appName?: string, ip?: string) {
-    let nodeUIURL = ip
-    const { signature, loginPhrase } = await getAuth(privateKey)
+    let nodeUIURL = ip ? new URL(ip) : FLUX_URL
+
+    const { signature, loginPhrase } = await getAuth(privateKey, nodeUIURL)
 
     if (appName) {
         // Get a Flux node if one has not been supplied
@@ -200,5 +199,5 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName?: 
     const nodeSignature = base64Encode(await sign(nodeLoginPhrase, { secretKey: privateKey }))
     log.info('Node Signature:', nodeSignature)
 
-    return { nodeAPIURL, nodeLoginPhrase, nodeSignature }
+    return { nodeUIURL, nodeAPIURL, nodeLoginPhrase, nodeSignature }
 }

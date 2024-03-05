@@ -20,12 +20,12 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 .option('app', {
                     type: 'string' as const,
                     demandOption: false,
-                    desc: 'Name of the app to authenticate with',
+                    desc: 'Name of the app to authenticate with. Authentication is done with api.runonflux.io by default.',
                 } as const)
                 .option('ip', {
                     type: 'string' as const,
                     demandOption: false,
-                    desc: 'IP address of Flux machine to authenticate with',
+                    desc: 'IP address of Flux node to authenticate with',
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
@@ -33,7 +33,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 const publicKey = getPublicKey()
                 const parsedArgs = fluxAuthArgs.parse(argv)
                 const result = await main(publicKey, privateKey, parsedArgs.app, parsedArgs.ip)
-                logger.info(result)
+                logger.info({ publicKey, ...result })
             } catch (err) {
                 logger.error(err)
             }

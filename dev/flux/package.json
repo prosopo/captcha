@@ -3,6 +3,9 @@
     "version": "0.2.41",
     "description": "Tools for managing Flux deployment",
     "main": "dist/index.js",
+    "bin": {
+        "flux": "dist/index.js"
+    },
     "type": "module",
     "engines": {
         "node": ">=18",
