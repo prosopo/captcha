@@ -66,7 +66,7 @@ Use this command to get a list of all your dapps that are running on the network
 npx flux getDapps
 ```
 
-## Get Dapp
+### Get Dapp
 
 #### Full Details
 
@@ -114,7 +114,7 @@ npx flux redeploy --app <app_name> --hard
   data: { message: '<app_name> queried for global hard redeploy' } }
 ```
 
-## Logs
+### Logs
 
 #### Get Logs
 
