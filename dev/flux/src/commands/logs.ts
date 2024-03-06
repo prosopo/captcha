@@ -2,10 +2,10 @@ import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { getPrivateKey, getPublicKey } from './process.env.js'
-import { main } from '../lib/auth.js'
+import { main } from '../lib/logs.js'
 
 const fluxAuthArgs = z.object({
-    app: z.string().optional(),
+    app: z.string(),
     ip: z.string().optional(),
 })
 
@@ -13,8 +13,8 @@ export default (cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.auth')
 
     return {
-        command: 'auth',
-        describe: 'Authenticate with a Flux Node',
+        command: 'logs',
+        describe: 'Output the last `n` lines of logs from a Flux Node',
         builder: (yargs: Argv) =>
             yargs
                 .option('app', {
@@ -34,13 +34,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 const publicKey = getPublicKey()
                 const parsedArgs = fluxAuthArgs.parse(argv)
                 const result = await main(publicKey, privateKey, parsedArgs.app, parsedArgs.ip)
-                logger.info({
-                    publicKey,
-                    nodeUIURL: result.nodeUIURL.href,
-                    nodeAPIURL: result.nodeAPIURL.href,
-                    nodeLoginPhrase: result.nodeLoginPhrase,
-                    nodeSignature: result.nodeSignature,
-                })
+                logger.info(result)
             } catch (err) {
                 logger.error(err)
             }

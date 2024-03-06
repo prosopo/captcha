@@ -186,7 +186,12 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName?: 
 
     if (!appName) {
         // assume we only want authentication with main Flux API
-        return { nodeAPIURL: new URL(FLUX_URL), nodeLoginPhrase: loginPhrase, nodeSignature: signature }
+        return {
+            nodeUIURL: FLUX_URL,
+            nodeAPIURL: new URL(FLUX_URL),
+            nodeLoginPhrase: loginPhrase,
+            nodeSignature: signature,
+        }
     }
 
     // Get the admin API URL as it is different from the UI URL
