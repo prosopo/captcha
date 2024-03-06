@@ -179,11 +179,12 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName?: 
     const { signature, loginPhrase } = await getAuth(privateKey, nodeUIURL)
 
     if (appName) {
+        console.log('appName', appName)
         // Get a Flux node if one has not been supplied
         nodeUIURL = await getNode(appName, publicKey, signature, loginPhrase)
     }
 
-    if (!nodeUIURL) {
+    if (!appName) {
         // assume we only want authentication with main Flux API
         return { nodeAPIURL: new URL(FLUX_URL), nodeLoginPhrase: loginPhrase, nodeSignature: signature }
     }
