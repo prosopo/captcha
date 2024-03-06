@@ -63,7 +63,7 @@
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js",
         "postinstall": "npm run removePolkadotJSWarnings",
-        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && npx prettier '.*.*' '*.*' docs --no-error-on-unmatched-pattern --check --ignore-path .eslintignore || true"
+        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && npx prettier '.*.*' '*.*' docs --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --write || true"
     },
     "private": true,
     "engines": {
