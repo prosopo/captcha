@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
+import { CaptchaResponseCaptcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
-import { darkTheme, lightTheme } from './theme.js'
+import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
 export interface CaptchaWidgetProps {

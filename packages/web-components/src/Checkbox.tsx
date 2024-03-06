@@ -1,5 +1,3 @@
-// /** @jsx jsx */
-// /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
 import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
@@ -33,7 +31,7 @@ const baseStyle: CSSProperties = {
     borderWidth: '1px',
 }
 
-const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked }: CheckboxProps) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked }: CheckboxProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const checkboxStyleBase: CSSProperties = {
         ...baseStyle,

@@ -11,8 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account } from '../types/index.js'
-import { ProcaptchaClientConfigOutput } from '@prosopo/types'
+import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 
 /**
  * Class to interface with accounts.

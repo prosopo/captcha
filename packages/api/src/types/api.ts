@@ -44,6 +44,12 @@ export interface GetCaptchaResponse {
     requestHash: string
 }
 
+export interface GetPowCaptchaResponse {
+    challenge: string
+    difficulty: number
+    signature: string
+}
+
 export interface VerificationResponse {
     status: string
     solutionApproved: boolean
@@ -55,6 +61,10 @@ export interface CaptchaSolutionResponse {
     status: string
     partialFee: string
     solutionApproved: boolean
+}
+
+export interface PowCaptchaSolutionResponse {
+    verified: boolean
 }
 
 export interface AccountCreatorConfig {

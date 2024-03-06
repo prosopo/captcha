@@ -13,23 +13,23 @@
 // limitations under the License.
 import {
     Account,
-    ProcaptchaCallbacks,
-    ProcaptchaConfigOptional,
-    ProcaptchaEvents,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-} from '../types/manager.js'
-import { AccountNotFoundError } from '../api/errors.js'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import {
     CaptchaSolution,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
     StoredEvents,
 } from '@prosopo/types'
+import { AccountNotFoundError } from '../api/errors.js'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
+import {
+    ProcaptchaCallbacks,
+    ProcaptchaConfigOptional,
+    ProcaptchaEvents,
+    ProcaptchaState,
+    ProcaptchaStateUpdateFn,
+} from '../types/manager.js'
 import {
     ProsopoApiError,
     ProsopoContractError,
@@ -53,7 +53,7 @@ import ExtensionWeb3 from '../api/ExtensionWeb3.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
-export const defaultState = (): Partial<ProcaptchaState> => {
+const defaultState = (): Partial<ProcaptchaState> => {
     return {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
@@ -82,7 +82,7 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
     return updateCurrentState
 }
 
-export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
+const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
     if (!network) {
         throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', {

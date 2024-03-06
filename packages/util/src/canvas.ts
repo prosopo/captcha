@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoError } from '@prosopo/common'
 import { at } from '@prosopo/util'
 
 function x64Add(m: number[], n: number[]) {
@@ -430,6 +429,6 @@ export function picassoCanvas(
         }
         return x64hash128(canvasElt.toDataURL(), seed)
     } catch (error) {
-        throw new ProsopoError('WIDGET.CANVAS', { context: { error } })
+        throw new Error(`Error with Captcha canvas. context: ${JSON.stringify(error)}`)
     }
 }
