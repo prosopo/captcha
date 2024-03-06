@@ -37,10 +37,7 @@ try {
 }
 
 export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, atlasUri: string) => {
-    await mongoose
-        .connect(atlasUri)
-        .then(() => console.log('Connected to MongoDB Atlas'))
-        .catch((err) => console.error('Error connecting to MongoDB:', err))
+    await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
 
     const captchaEventData = {
         ...events,
