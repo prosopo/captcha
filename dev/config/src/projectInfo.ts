@@ -31,6 +31,10 @@ export const getPackagesDir = () => {
     return `${getRootDir()}/packages`
 }
 
+export const getNodeModulesDir = () => {
+    return `${getRootDir()}/node_modules`
+}
+
 export const getConfigPkgDir = () => {
     return `${getDevDir()}/config`
 }
@@ -65,6 +69,10 @@ export const getDappExampleDir = () => {
 
 export const getCommonPkgDir = () => {
     return `${getPackagesDir()}/common`
+}
+
+export const getAccountPkgDir = () => {
+    return `${getPackagesDir()}/account`
 }
 
 export const getApiPkgDir = () => {
@@ -111,6 +119,10 @@ export const getProcaptchaBundlePkgDir = () => {
     return `${getPackagesDir()}/procaptcha-bundle`
 }
 
+export const getProcaptchaPoWPkgDir = () => {
+    return `${getPackagesDir()}/procaptcha-pow`
+}
+
 export const getProviderPkgDir = () => {
     return `${getPackagesDir()}/provider`
 }
@@ -129,6 +141,10 @@ export const getTypesEnvPkgDir = () => {
 
 export const getTypesPkgDir = () => {
     return `${getPackagesDir()}/types`
+}
+
+export const getWebComponentsPkgDir = () => {
+    return `${getPackagesDir()}/web-components`
 }
 
 export const getContractsDir = () => {
