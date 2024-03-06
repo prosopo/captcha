@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "dotenv": "^16.0.1",
-        "vite": "^4.5.2"
+        "vite": "^5.1.4"
     },
     "version": "0.2.41",
     "devDependencies": {

@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '../provider/index.js'
+import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { number, object, string, infer as zInfer } from 'zod'
+
+/**
+ * House the account and associated extension.
+ */
+export interface Account {
+    account: InjectedAccount
+    extension: InjectedExtension
+}
 
 export const ProcaptchaOutputSchema = object({
     [ApiParams.commitmentId]: string().optional(),

@@ -11,7 +11,7 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest run --config ./src/vite.config.ts",
+        "test": "npx vitest run --config ./src/vite.config.ts",
         "deploy": "node dist/deploy/protocol.js",
         "cli": "node dist/cli/index.js",
         "setup": "node dist/cli/index.js setup",
@@ -66,6 +66,6 @@
         "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "vitest": "^0.34.2"
+        "vitest": "^1.3.1"
     }
 }
