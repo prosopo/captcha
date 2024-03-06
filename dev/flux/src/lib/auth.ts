@@ -2,6 +2,7 @@ import { ProsopoError, getLogger } from '@prosopo/common'
 import { base64Encode } from '@polkadot/util-crypto'
 import { errorHandler } from '../errorHandler.js'
 import { loadEnv } from '@prosopo/cli'
+import { prefixIPAddress } from './url.js'
 import { sign } from './sep256k1Sign.js'
 import qs from 'qs'
 
@@ -170,11 +171,11 @@ const getNode = async (appName: string, zelId: string, signature: string, loginP
     }
     log.info('Node:', node)
     // http as node is an IP address
-    return new URL(`http://${node}`)
+    return prefixIPAddress(node)
 }
 
 export async function main(publicKey: string, privateKey: Uint8Array, appName?: string, ip?: string) {
-    let nodeUIURL = ip ? new URL(ip) : FLUX_URL
+    let nodeUIURL = ip ? prefixIPAddress(ip) : FLUX_URL
 
     const { signature, loginPhrase } = await getAuth(privateKey, nodeUIURL)
 

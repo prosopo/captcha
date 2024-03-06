@@ -12,3 +12,7 @@ export const getZelIdAuthHeader = (zelid: string, signature: string, loginPhrase
         loginPhrase,
     })
 }
+
+export const prefixIPAddress = (ip: string) => {
+    return new URL(`http://${ip.replace(/http(s)*:\/\//g, '')}`)
+}
