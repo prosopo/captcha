@@ -40,7 +40,13 @@ export const exec = (
     })
 
     if (pipe || pipe === undefined) {
+        // https://github.com/microsoft/TypeScript/issues/44605
+        // Building a second time fixes this issue
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         prc.stdout.pipe(process.stdout)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         prc.stderr.pipe(process.stderr)
     }
     stdin.pipe(prc.stdin)
