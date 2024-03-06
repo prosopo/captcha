@@ -104,8 +104,6 @@ jobs:
                   DOCS_COMMIT_HASH=$(find docs -type f -name "*.html" -exec grep -oE 'blob/([[:alnum:]]{8})' {} + 2>/dev/null | head -n 1 | cut -d ':' -f 2 | sed 's/blob\///')
                   # now regenerate the docs
                   npm run docs
-                  # lint
-                  npm run lint:fix:workspace
                   # replace the current commit's hash in the docs with the hash from when the docs were originally created
                   find docs -type f -name "*.html" -exec sed -i "s/blob\/$CURRENT_COMMIT_HASH/blob\/$DOCS_COMMIT_HASH/g" {} +
                   # check if there are any changes to the docs
