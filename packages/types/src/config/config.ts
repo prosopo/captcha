@@ -116,7 +116,7 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
-        serverUrl: string().url(),
+        serverUrl: string().url().optional(),
     })
 )
 
