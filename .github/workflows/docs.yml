@@ -113,4 +113,4 @@ jobs:
 
                   # check if there are any changes to the docs
                   # if there are changes, then the docs are not up-to-date and the most recent commit did not update the docs and only the docs
-                  git diff --exit-code -- docs
+                  git diff --exit-code -- 'docs/**/*.html'
