@@ -51,7 +51,7 @@ npx flux auth --app <app_name>
 Use to generate the authentication for a Flux node for a specific app on a specific node.
 
 ```bash
-# authenticate with the network for a specific app
+# authenticate with the network for a specific app at a specific ip
 npx flux auth --app <app_name> --ip <node_ip=x.x.x.x:port>
 ```
 
@@ -82,7 +82,7 @@ npx flux getDapp --app <app_name>
 Use this command to get the IP addresses of the nodes that are running the app.
 
 ```bash
-# get details of a specific dapp
+# get details of a specific dapp and show only the nodes
 npx flux getDapp --app <app_name> --nodes
 ```
 
@@ -147,6 +147,6 @@ npx flux getLogs --app <app_name>
 Use this command to get the logs of the app from a specific node.
 
 ```bash
-# get logs of a specific dapp
+# get logs of a specific dapp at a specific ip
 npx flux getLogs --app <app_name> --ip <node_ip=x.x.x.x:port>
 ```
