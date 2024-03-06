@@ -5,7 +5,7 @@ import { NetworkNames, ProcaptchaClientConfigOutput, ProsopoBasicConfigOutput } 
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
-import { getConfig } from './config'
+import { getGuiConfig } from '@prosopo/config'
 import { hexToString } from '@polkadot/util'
 
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
@@ -40,10 +40,10 @@ export const contractOverview = async (
     contractAddress?: string
 ) => {
     console.log(contractAddress)
-    const config = getConfig('development', network)
+    const config = getGuiConfig('development', network)
     const contract = contractAddress
         ? { address: contractAddress, name: 'Captcha' }
-        : getConfig('development', network).networks[network].contract
+        : getGuiConfig('development', network).networks[network].contract
 
     if (contracts.map((c) => c.contractAddress).includes(contract.address)) {
         throw new Error(
