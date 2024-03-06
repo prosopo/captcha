@@ -59,7 +59,7 @@ npx flux auth --app <app_name> --ip <node_ip=x.x.x.x:port>
 
 #### Get Dapps
 
-Use this command to get a list of all the dapps that are running on the network.
+Use this command to get a list of all your dapps that are running on the network.
 
 ```bash
 # get all dapps
