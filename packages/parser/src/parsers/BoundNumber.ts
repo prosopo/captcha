@@ -4,7 +4,7 @@ import { Parser } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 
-export class BoundedNumber extends Parser<number> {
+export class BoundNumber extends Parser<number> {
 
     constructor(public min: number = Number.MIN_SAFE_INTEGER, public max: number = Number.MAX_SAFE_INTEGER) {
         super()
@@ -19,10 +19,10 @@ export class BoundedNumber extends Parser<number> {
     }
 
     public override clone() {
-        return new BoundedNumber()
+        return new BoundNumber()
     }
 }
 
-export const pBoundNumber = (...args: ConstructorParameters<Ctor<BoundedNumber>>) => new BoundedNumber(...args)
+export const pBoundNumber = (...args: ConstructorParameters<Ctor<BoundNumber>>) => new BoundNumber(...args)
 export const boundNumber = pBoundNumber
 export const boundNum = pBoundNumber
