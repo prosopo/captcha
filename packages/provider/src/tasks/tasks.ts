@@ -24,6 +24,7 @@ import {
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
+    PoWCaptcha,
     ProsopoConfigOutput,
     ProviderDetails,
     ProviderRegistered,
@@ -41,7 +42,7 @@ import {
 import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
@@ -49,9 +50,11 @@ import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { saveCaptchaEvent } from '@prosopo/database'
+import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -162,6 +165,138 @@ export class Tasks {
         throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
             context: { failedFuncName: this.getCaptchaWithProof.name, datasetId, solved, size },
         })
+    }
+
+    /**
+     * @description Generates a PoW Captcha for a given user and dapp
+     *
+     * @param {string} userAccount - Dapp User address
+     * @param {string} dappAccount - Dapp User address
+     */
+    async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
+        // TODO: Verify that the origin matches the url of the dapp
+        const difficulty = 4
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        // Use blockhash, userAccount and dappAccount for string for challenge
+        const challenge = `${latestBlockNumber}___${userAccount}___${dappAccount}`
+        const signature = u8aToHex(this.contract.pair.sign(stringToHex(challenge)))
+
+        return { challenge, difficulty, signature }
+    }
+
+    /**
+     * @description Generates a PoW Captcha for a given user and dapp
+     *
+     * @param {string} blocknumber - Dapp User address
+     * @param {string} challenge - Dapp User address
+     * @param {string} difficulty - Dapp User address
+     * @param {string} nonce - Dapp User address
+     */
+    async verifyPowCaptchaSolution(
+        blocknumber: number,
+        challenge: string,
+        difficulty: number,
+        signature: string,
+        nonce: number
+    ): Promise<boolean> {
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        if (latestBlockNumber > blocknumber - 5) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        const signatureVerification = signatureVerify(stringToHex(challenge), signature, this.contract.pair.address)
+
+        if (!signatureVerification.isValid) {
+            throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
+                context: {
+                    ERROR: 'Provider signature is invalid for this message',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    signature,
+                },
+            })
+        }
+
+        const solutionValid = Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join('')
+            .startsWith('0'.repeat(difficulty))
+
+        if (!solutionValid) {
+            throw new ProsopoContractError('API.CAPTCHA_FAILED', {
+                context: {
+                    ERROR: 'Captcha solution is invalid',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    nonce,
+                    challenge,
+                    difficulty,
+                },
+            })
+        }
+
+        await this.db.storePowCaptchaRecord(challenge, false)
+
+        return true
+    }
+
+    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
+        const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
+        if (!challengeRecord) {
+            throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
+                context: { failedFuncName: this.serverVerifyPowCaptchaSolution.name, challenge },
+            })
+        }
+
+        if (challengeRecord.checked) {
+            return false
+        }
+
+        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split('___')
+
+        if (dappAccount !== challengeDappAccount) {
+            throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
+                context: {
+                    failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+                    dappAccount,
+                    challengeDappAccount,
+                },
+            })
+        }
+
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        if (!blocknumber) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true)
+        return true
     }
 
     /**

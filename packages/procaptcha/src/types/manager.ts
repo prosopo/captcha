@@ -11,18 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { GetCaptchaResponse } from '@prosopo/api'
-import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
+import { Account, GetCaptchaResponse, ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
-/**
- * House the account and associated extension.
- */
-export interface Account {
-    account: InjectedAccount
-    extension: InjectedExtension
-}
 
 /**
  * The config to be passed to procaptcha. Some fields can be optional, e.g.
