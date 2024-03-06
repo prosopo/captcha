@@ -11,7 +11,7 @@ export const flatten = (obj: object, prefix = ''): Record<string, unknown> => {
         if (value instanceof Object) {
             Object.assign(flattenedObj, flatten(value, prefix + '.' + key))
         } else {
-            flattenedObj[prefix + '.' + key] = value
+            flattenedObj[prefix + ((prefix === '') ? '' : '.') + key] = value
         }
     }
     return flattenedObj
