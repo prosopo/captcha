@@ -22,6 +22,8 @@ import {
 import {
     CaptchaSolutionResponse,
     GetCaptchaResponse,
+    GetPowCaptchaResponse,
+    PowCaptchaSolutionResponse,
     ProviderRegistered,
     VerificationResponse,
 } from '../types/index.js'
@@ -44,8 +46,7 @@ export default class ProviderApi extends HttpClientBase {
     }
 
     public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
-        const { provider } = randomProvider
-        const { blockNumber } = randomProvider
+        const { provider, blockNumber } = randomProvider
         const dappAccount = this.account
         const url = `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
             .toString()
@@ -91,6 +92,30 @@ export default class ProviderApi extends HttpClientBase {
             payload['maxVerifiedTime'] = maxVerifiedTime
         }
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+    }
+
+    public getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse> {
+        return this.post(ApiPaths.GetPowCaptchaChallenge, { userAccount, dappAccount })
+    }
+
+    public submitPowCaptchaSolution(
+        challenge: GetPowCaptchaResponse,
+        userAccount: AccountId,
+        dappAccount: AccountId,
+        randomProvider: RandomProvider,
+        nonce: number
+    ): Promise<PowCaptchaSolutionResponse> {
+        const { provider, blockNumber } = randomProvider
+        return this.post(ApiPaths.SubmitPowCaptchaSolution, {
+            blockNumber,
+            challenge: challenge.challenge,
+            difficulty: challenge.difficulty,
+            signature: challenge.signature,
+            userAccount,
+            dappAccount,
+            provider,
+            nonce,
+        })
     }
 
     public submitUserEvents(events: StoredEvents, accountId: AccountId) {

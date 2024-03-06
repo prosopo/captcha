@@ -6,13 +6,21 @@ import fs from 'fs'
 import path from 'path'
 
 describe('reloading api', () => {
-    test('api reloads after changing .env file', async () => {
-        try {
-            // get file location
-            const dir = getCurrentFileDirectory(import.meta.url)
+    test('api reloads after changing .env file', () => {
+        // get file location
+        const dir = getCurrentFileDirectory(import.meta.url)
 
-            // get root directory of this package
-            const rootDir = dir.split('/').slice(0, -2).join('/')
+        // get root directory of this package
+        const rootDir = dir.split('/').slice(0, -2).join('/')
+
+        const restoreEnv = async () => {
+            const envPath = path.resolve(`${rootDir}/.env.test`)
+            const envContent = await promisify(fs.readFile)(envPath, 'utf8')
+            const newEnvContent = envContent.replace('\nTEST=TEST', '')
+            await promisify(fs.writeFile)(envPath, newEnvContent)
+        }
+
+        return new Promise<void>((resolve, reject) => {
             console.log('rootDir', rootDir)
 
             // run API
@@ -26,34 +34,22 @@ describe('reloading api', () => {
                 onData(data, rootDir, appended).then((result) => {
                     appended = result.appended
                     const kill = result.kill
-                    console.log('onData ran, appended', appended, 'kill', kill)
+                    // console.log('onData ran, appended', appended, 'kill', kill)
                     if (kill) {
                         child.kill()
                         expect(appended).toBe(true)
-                        remainOpen = false
+                        resolve()
                     }
                 })
             )
 
-            child.stdout.on('error', (e) => {
-                console.log('error', e)
-                process.exit(1)
+            child.stdout.on('error', reject)
+        })
+            .then(restoreEnv)
+            .catch((error) => {
+                restoreEnv()
+                throw error
             })
-
-            let remainOpen = true
-
-            child.stdout.on('close', (result: any) => {
-                console.log('closed', result)
-                remainOpen = true // change
-            })
-
-            while (remainOpen) {
-                await new Promise((resolve) => setTimeout(resolve, 1000))
-            }
-        } catch (e) {
-            console.log('error', e)
-            process.exit(1)
-        }
     }, 120000)
 })
 

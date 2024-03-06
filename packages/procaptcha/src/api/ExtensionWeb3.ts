@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account } from '../types/index.js'
+import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { AccountNotFoundError, ExtensionNotFoundError } from './errors.js'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { web3Enable } from '@polkadot/extension-dapp'
 import Extension from './Extension.js'
 
