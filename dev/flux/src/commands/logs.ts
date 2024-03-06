@@ -1,6 +1,7 @@
 import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import { consoleTableWithWrapping } from '@prosopo/util'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 import { main } from '../lib/logs.js'
 
@@ -34,7 +35,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 const publicKey = getPublicKey()
                 const parsedArgs = fluxAuthArgs.parse(argv)
                 const result = await main(publicKey, privateKey, parsedArgs.app, parsedArgs.ip)
-                logger.info(result)
+                consoleTableWithWrapping(result)
             } catch (err) {
                 logger.error(err)
             }

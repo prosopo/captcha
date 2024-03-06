@@ -1,8 +1,8 @@
 import { ProsopoError, getLogger } from '@prosopo/common'
 import { base64Encode } from '@polkadot/util-crypto'
 import { errorHandler } from '../errorHandler.js'
+import { getNodeAPIURL, prefixIPAddress } from './url.js'
 import { loadEnv } from '@prosopo/cli'
-import { prefixIPAddress } from './url.js'
 import { sign } from './sep256k1Sign.js'
 import qs from 'qs'
 
@@ -121,15 +121,6 @@ const getLoginPhrase = async (url: URL): Promise<string> => {
     return (await errorHandler<ResponseLoginPhrase>(response)).data
 }
 
-export const getNodeAPIURL = (nodeUIURL: URL) => {
-    const url = new URL(nodeUIURL)
-    if (url.port) {
-        const portLogin = Number(url.port) + 1
-        return new URL(`http://${url.hostname}:${portLogin}`)
-    }
-    return new URL(`http://${url.hostname}:${16187}`)
-}
-
 export const getIndividualFluxAppDetails = async (
     dappName: string,
     zelId: string,
@@ -177,26 +168,27 @@ const getNode = async (appName: string, zelId: string, signature: string, loginP
 export async function main(publicKey: string, privateKey: Uint8Array, appName?: string, ip?: string) {
     let nodeUIURL = ip ? prefixIPAddress(ip) : FLUX_URL
 
-    const { signature, loginPhrase } = await getAuth(privateKey, nodeUIURL)
+    if (!ip) {
+        //if a flux ip has not been supplied we will first authenticate with the main flux api
+        const { signature, loginPhrase } = await getAuth(privateKey, nodeUIURL)
 
-    if (appName) {
-        console.log('appName', appName)
-        // Get a Flux node if one has not been supplied
-        nodeUIURL = await getNode(appName, publicKey, signature, loginPhrase)
-    }
-
-    if (!appName) {
-        // assume we only want authentication with main Flux API
-        return {
-            nodeUIURL: FLUX_URL,
-            nodeAPIURL: new URL(FLUX_URL),
-            nodeLoginPhrase: loginPhrase,
-            nodeSignature: signature,
+        if (appName) {
+            // if an app name has been specified then we are expecting to authenticate with a specific flux node
+            // Get a Flux node if one has not been supplied
+            nodeUIURL = await getNode(appName, publicKey, signature, loginPhrase)
+        } else {
+            // assume we only want authentication with main Flux API
+            return {
+                nodeUIURL: FLUX_URL,
+                nodeAPIURL: new URL(FLUX_URL),
+                nodeLoginPhrase: loginPhrase,
+                nodeSignature: signature,
+            }
         }
     }
 
-    // Get the admin API URL as it is different from the UI URL
-    const nodeAPIURL = getNodeAPIURL(nodeUIURL)
+    // Get the admin API URL as it is different from the UI URL. This function should only be called once.
+    const nodeAPIURL = getNodeAPIURL(nodeUIURL.href)
 
     // Get a login token from the node
     const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL)
