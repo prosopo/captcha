@@ -109,6 +109,9 @@ jobs:
                   # replace the current commit's hash in the docs with the hash from when the docs were originally created
                   find docs -type f -name "*.html" -exec sed -i "s/blob\/$CURRENT_COMMIT_HASH/blob\/$DOCS_COMMIT_HASH/g" {} +
 
+                  # re-lint after changing docs
+                  npm run docs:lint
+
                   # check if there are any changes to the docs
                   # if there are changes, then the docs are not up-to-date and the most recent commit did not update the docs and only the docs
                   git diff --exit-code -- 'docs/**/*.html'
