@@ -1,4 +1,4 @@
-import { darkTheme, lightTheme } from './theme.js'
+import { darkTheme, lightTheme } from '@prosopo/web-components'
 import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
 import addDataAttr from '../util/index.js'
 
