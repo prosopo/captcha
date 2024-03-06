@@ -14,18 +14,22 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
+    Features,
+    FeaturesEnum,
     NetworkNamesSchema,
     ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
+    captchaType?: Features
     callback?: string
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
@@ -154,7 +158,11 @@ const renderLogic = (
             config.challengeValidLength = parseInt(challengeValidLengthAttribute)
         }
 
-        createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+        if (renderOptions?.captchaType === 'pow') {
+            createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
+        } else {
+            createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+        }
     })
 }
 
@@ -165,17 +173,23 @@ const implicitRender = () => {
 
     // Set siteKey from renderOptions or from the first element's data-sitekey attribute
     if (elements.length) {
-        const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
-        const config = getConfig(siteKey)
+        const siteKey = at(elements, 0).getAttribute('data-sitekey')
+        if (!siteKey) {
+            console.error('No siteKey found')
+            return
+        }
+        const features = Object.values(FeaturesEnum)
+        const captchaType =
+            features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
+            ('image' as const)
 
-        renderLogic(elements, config)
+        renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }
 }
 
 // Explicit render for targeting specific elements
 export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
     const siteKey = renderOptions.siteKey
-    const config = getConfig(siteKey)
     const element = document.getElementById(elementId)
 
     if (!element) {
@@ -183,7 +197,7 @@ export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions
         return
     }
 
-    renderLogic([element], config, renderOptions)
+    renderLogic([element], getConfig(siteKey), renderOptions)
 }
 
 export default function ready(fn: () => void) {

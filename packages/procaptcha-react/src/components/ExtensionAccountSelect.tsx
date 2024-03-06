@@ -63,5 +63,3 @@ export const ExtensionAccountSelect = ({
         </select>
     )
 }
-
-export default ExtensionAccountSelect

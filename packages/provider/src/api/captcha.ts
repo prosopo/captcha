@@ -160,6 +160,97 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     })
 
     /**
+     * Verifies a user's solution as being approved or not
+     *
+     * @param {string} dappAccount - Dapp User id
+     * @param {string} challenge - The captcha solution to look up
+     */
+    router.get(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
+        try {
+            const { challenge, dappAccount } = req.body
+
+            const approved = await tasks.serverVerifyPowCaptchaSolution(dappAccount, challenge)
+
+            return res.json({
+                status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
+                solutionApproved: approved,
+            })
+        } catch (err) {
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+        }
+    })
+
+    /**
+     * Supplies a PoW challenge to a Dapp User
+     *
+     * @param {string} userAccount - Dapp User address
+     * @param {string} dappAccount - Dapp User address
+     */
+    router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
+        try {
+            const { userAccount, dappAccount } = req.body
+            console.log(userAccount, dappAccount)
+            // Assert that the user and dapp accounts are strings
+            if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
+                throw new ProsopoApiError('API.BAD_REQUEST', {
+                    context: { errorCode: 400, error: 'userAccount and dappAccount must be strings' },
+                })
+            }
+            const origin = req.headers.origin
+
+            if (!origin) {
+                throw new ProsopoApiError('API.BAD_REQUEST', {
+                    context: { errorCode: 400, error: 'origin header not found' },
+                })
+            }
+
+            const challenge = await tasks.getPowCaptchaChallenge(userAccount, dappAccount, origin)
+            return res.json(challenge)
+        } catch (err) {
+            console.log(err)
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+        }
+    })
+
+    /**
+     * Verifies a user's PoW solution as being approved or not
+     *
+     * @param {string} blocknumber - Dapp User address
+     * @param {string} challenge - Dapp User address
+     * @param {number} difficulty - Dapp User address
+     * @param {string} signature - Dapp User address
+     * @param {string} nonce - Dapp User address
+     */
+    router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
+        try {
+            const { blocknumber, challenge, difficulty, signature, nonce } = req.body
+            const verified = await tasks.verifyPowCaptchaSolution(blocknumber, challenge, difficulty, signature, nonce)
+            return res.json({ verified })
+        } catch (err) {
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+        }
+    })
+
+    /**
+     * Verifies a user's PoW solution as being approved or not
+     *
+     * @param {string} blocknumber - Dapp User address
+     * @param {string} challenge - Dapp User address
+     * @param {number} difficulty - Dapp User address
+     * @param {string} signature - Dapp User address
+     * @param {string} nonce - Dapp User address
+     */
+    router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
+        try {
+            const { blocknumber, challenge, difficulty, signature, nonce } = req.body
+            const verified = await tasks.verifyPowCaptchaSolution(blocknumber, challenge, difficulty, signature, nonce)
+            return res.json({ verified })
+        } catch (err) {
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+        }
+    })
+
+    /**
      * Receives user events, store to database
      *
      * @param {StoredEvents}
