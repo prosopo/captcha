@@ -8,11 +8,11 @@ import { Resize } from '../commands/resize.js'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 import { blake2b } from '@noble/hashes/blake2b'
 import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from './utils.js'
+import { getRootDir, getTestResultsDir } from '@prosopo/config'
 import { u8aToHex } from '@polkadot/util/u8a'
 import fs from 'fs'
-import sharp from 'sharp'
 import path from 'path'
-import { getRootDir, getTestResultsDir } from '@prosopo/config'
+import sharp from 'sharp'
 
 describe('dataset commands', () => {
     const pkgDir = path.relative(getRootDir(), __dirname)
