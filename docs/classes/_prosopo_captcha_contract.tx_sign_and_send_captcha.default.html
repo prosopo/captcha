@@ -12,6 +12,166 @@
         <script async src="../assets/icons.js" id="tsd-icons-script"></script>
         <script async src="../assets/search.js" id="tsd-search-script"></script>
         <script async src="../assets/navigation.js" id="tsd-nav-script"></script>
+        <style>
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --md-sys-color-primary: #f6be46;
+                    --md-sys-color-on-primary: #412d00;
+                    --md-sys-color-primary-container: #5d4200;
+                    --md-sys-color-on-primary-container: #ffdea3;
+                    --md-sys-color-secondary: #d9c4a0;
+                    --md-sys-color-on-secondary: #3b2f15;
+                    --md-sys-color-secondary-container: #53452a;
+                    --md-sys-color-on-secondary-container: #f6e0bb;
+                    --md-sys-color-tertiary: #b2cfa8;
+                    --md-sys-color-on-tertiary: #1e361a;
+                    --md-sys-color-tertiary-container: #344d2f;
+                    --md-sys-color-on-tertiary-container: #cdebc2;
+                    --md-sys-color-error: #ffb4ab;
+                    --md-sys-color-on-error: #690005;
+                    --md-sys-color-error-container: #93000a;
+                    --md-sys-color-on-error-container: #ffb4ab;
+                    --md-sys-color-background: #1e1b16;
+                    --md-sys-color-on-background: #e9e1d9;
+                    --md-sys-color-surface: #1e1b16;
+                    --md-sys-color-on-surface: #e9e1d9;
+                    --md-sys-color-surface-variant: #4e4639;
+                    --md-sys-color-on-surface-variant: #d1c5b4;
+                    --md-sys-color-outline: #9a8f80;
+                    --md-sys-color-outline-variant: #4e4639;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #e9e1d9;
+                    --md-sys-color-inverse-on-surface: #34302a;
+                    --md-sys-color-inverse-primary: #7a5900;
+                    --md-sys-color-surface-dim: #16130e;
+                    --md-sys-color-surface-bright: #3d3933;
+                    --md-sys-color-surface-container-lowest: #110e09;
+                    --md-sys-color-surface-container-low: #1e1b16;
+                    --md-sys-color-surface-container: #221f1a;
+                    --md-sys-color-surface-container-high: #2d2924;
+                    --md-sys-color-surface-container-highest: #38342e;
+                }
+            }
+            :root[data-theme='dark'] {
+                --md-sys-color-primary: #f6be46;
+                --md-sys-color-on-primary: #412d00;
+                --md-sys-color-primary-container: #5d4200;
+                --md-sys-color-on-primary-container: #ffdea3;
+                --md-sys-color-secondary: #d9c4a0;
+                --md-sys-color-on-secondary: #3b2f15;
+                --md-sys-color-secondary-container: #53452a;
+                --md-sys-color-on-secondary-container: #f6e0bb;
+                --md-sys-color-tertiary: #b2cfa8;
+                --md-sys-color-on-tertiary: #1e361a;
+                --md-sys-color-tertiary-container: #344d2f;
+                --md-sys-color-on-tertiary-container: #cdebc2;
+                --md-sys-color-error: #ffb4ab;
+                --md-sys-color-on-error: #690005;
+                --md-sys-color-error-container: #93000a;
+                --md-sys-color-on-error-container: #ffb4ab;
+                --md-sys-color-background: #1e1b16;
+                --md-sys-color-on-background: #e9e1d9;
+                --md-sys-color-surface: #1e1b16;
+                --md-sys-color-on-surface: #e9e1d9;
+                --md-sys-color-surface-variant: #4e4639;
+                --md-sys-color-on-surface-variant: #d1c5b4;
+                --md-sys-color-outline: #9a8f80;
+                --md-sys-color-outline-variant: #4e4639;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #e9e1d9;
+                --md-sys-color-inverse-on-surface: #34302a;
+                --md-sys-color-inverse-primary: #7a5900;
+                --md-sys-color-surface-dim: #16130e;
+                --md-sys-color-surface-bright: #3d3933;
+                --md-sys-color-surface-container-lowest: #110e09;
+                --md-sys-color-surface-container-low: #1e1b16;
+                --md-sys-color-surface-container: #221f1a;
+                --md-sys-color-surface-container-high: #2d2924;
+                --md-sys-color-surface-container-highest: #38342e;
+            }
+
+            @media (prefers-color-scheme: light) {
+                :root {
+                    --md-sys-color-primary: #7a5900;
+                    --md-sys-color-on-primary: #ffffff;
+                    --md-sys-color-primary-container: #ffdea3;
+                    --md-sys-color-on-primary-container: #261900;
+                    --md-sys-color-secondary: #6c5c3f;
+                    --md-sys-color-on-secondary: #ffffff;
+                    --md-sys-color-secondary-container: #f6e0bb;
+                    --md-sys-color-on-secondary-container: #251a04;
+                    --md-sys-color-tertiary: #4b6545;
+                    --md-sys-color-on-tertiary: #ffffff;
+                    --md-sys-color-tertiary-container: #cdebc2;
+                    --md-sys-color-on-tertiary-container: #092007;
+                    --md-sys-color-error: #ba1a1a;
+                    --md-sys-color-on-error: #ffffff;
+                    --md-sys-color-error-container: #ffdad6;
+                    --md-sys-color-on-error-container: #410002;
+                    --md-sys-color-background: #fffbff;
+                    --md-sys-color-on-background: #1e1b16;
+                    --md-sys-color-surface: #fffbff;
+                    --md-sys-color-on-surface: #1e1b16;
+                    --md-sys-color-surface-variant: #ede1cf;
+                    --md-sys-color-on-surface-variant: #4e4639;
+                    --md-sys-color-outline: #7f7667;
+                    --md-sys-color-outline-variant: #d1c5b4;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #34302a;
+                    --md-sys-color-inverse-on-surface: #f8efe7;
+                    --md-sys-color-inverse-primary: #f6be46;
+                    --md-sys-color-surface-dim: #e1d9d0;
+                    --md-sys-color-surface-bright: #fff8f2;
+                    --md-sys-color-surface-container-lowest: #ffffff;
+                    --md-sys-color-surface-container-low: #fbf2e9;
+                    --md-sys-color-surface-container: #f5ede4;
+                    --md-sys-color-surface-container-high: #efe7de;
+                    --md-sys-color-surface-container-highest: #e9e1d9;
+                }
+            }
+            :root[data-theme='light'] {
+                --md-sys-color-primary: #7a5900;
+                --md-sys-color-on-primary: #ffffff;
+                --md-sys-color-primary-container: #ffdea3;
+                --md-sys-color-on-primary-container: #261900;
+                --md-sys-color-secondary: #6c5c3f;
+                --md-sys-color-on-secondary: #ffffff;
+                --md-sys-color-secondary-container: #f6e0bb;
+                --md-sys-color-on-secondary-container: #251a04;
+                --md-sys-color-tertiary: #4b6545;
+                --md-sys-color-on-tertiary: #ffffff;
+                --md-sys-color-tertiary-container: #cdebc2;
+                --md-sys-color-on-tertiary-container: #092007;
+                --md-sys-color-error: #ba1a1a;
+                --md-sys-color-on-error: #ffffff;
+                --md-sys-color-error-container: #ffdad6;
+                --md-sys-color-on-error-container: #410002;
+                --md-sys-color-background: #fffbff;
+                --md-sys-color-on-background: #1e1b16;
+                --md-sys-color-surface: #fffbff;
+                --md-sys-color-on-surface: #1e1b16;
+                --md-sys-color-surface-variant: #ede1cf;
+                --md-sys-color-on-surface-variant: #4e4639;
+                --md-sys-color-outline: #7f7667;
+                --md-sys-color-outline-variant: #d1c5b4;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #34302a;
+                --md-sys-color-inverse-on-surface: #f8efe7;
+                --md-sys-color-inverse-primary: #f6be46;
+                --md-sys-color-surface-dim: #e1d9d0;
+                --md-sys-color-surface-bright: #fff8f2;
+                --md-sys-color-surface-container-lowest: #ffffff;
+                --md-sys-color-surface-container-low: #fbf2e9;
+                --md-sys-color-surface-container: #f5ede4;
+                --md-sys-color-surface-container-high: #efe7de;
+                --md-sys-color-surface-container-highest: #e9e1d9;
+            }
+        </style>
+        <link rel="stylesheet" href="../assets/material-style.css" />
     </head>
     <body>
         <script>
@@ -65,7 +225,7 @@
                         <li>
                             Defined in
                             <a
-                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L16"
+                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L16"
                                 >tx-sign-and-send/captcha.ts:16</a
                             >
                         </li>
@@ -490,7 +650,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L21"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L21"
                                                 >tx-sign-and-send/captcha.ts:21</a
                                             >
                                         </li>
@@ -520,7 +680,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L19"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L19"
                                         >tx-sign-and-send/captcha.ts:19</a
                                     >
                                 </li>
@@ -545,7 +705,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L18"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L18"
                                         >tx-sign-and-send/captcha.ts:18</a
                                     >
                                 </li>
@@ -570,7 +730,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L17"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L17"
                                         >tx-sign-and-send/captcha.ts:17</a
                                     >
                                 </li>
@@ -653,7 +813,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L522"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L522"
                                                 >tx-sign-and-send/captcha.ts:522</a
                                             >
                                         </li>
@@ -735,7 +895,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L503"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L503"
                                                 >tx-sign-and-send/captcha.ts:503</a
                                             >
                                         </li>
@@ -814,7 +974,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L484"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L484"
                                                 >tx-sign-and-send/captcha.ts:484</a
                                             >
                                         </li>
@@ -908,7 +1068,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L599"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L599"
                                                 >tx-sign-and-send/captcha.ts:599</a
                                             >
                                         </li>
@@ -994,7 +1154,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L622"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L622"
                                                 >tx-sign-and-send/captcha.ts:622</a
                                             >
                                         </li>
@@ -1084,7 +1244,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L435"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L435"
                                                 >tx-sign-and-send/captcha.ts:435</a
                                             >
                                         </li>
@@ -1185,7 +1345,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L460"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L460"
                                                 >tx-sign-and-send/captcha.ts:460</a
                                             >
                                         </li>
@@ -1253,7 +1413,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L49"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L49"
                                                 >tx-sign-and-send/captcha.ts:49</a
                                             >
                                         </li>
@@ -1324,7 +1484,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L740"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L740"
                                                 >tx-sign-and-send/captcha.ts:740</a
                                             >
                                         </li>
@@ -1392,7 +1552,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L193"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L193"
                                                 >tx-sign-and-send/captcha.ts:193</a
                                             >
                                         </li>
@@ -1471,7 +1631,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L660"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L660"
                                                 >tx-sign-and-send/captcha.ts:660</a
                                             >
                                         </li>
@@ -1550,7 +1710,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L415"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L415"
                                                 >tx-sign-and-send/captcha.ts:415</a
                                             >
                                         </li>
@@ -1618,7 +1778,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L85"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L85"
                                                 >tx-sign-and-send/captcha.ts:85</a
                                             >
                                         </li>
@@ -1689,7 +1849,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L139"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L139"
                                                 >tx-sign-and-send/captcha.ts:139</a
                                             >
                                         </li>
@@ -1760,7 +1920,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L31"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L31"
                                                 >tx-sign-and-send/captcha.ts:31</a
                                             >
                                         </li>
@@ -1831,7 +1991,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L157"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L157"
                                                 >tx-sign-and-send/captcha.ts:157</a
                                             >
                                         </li>
@@ -1903,7 +2063,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L247"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L247"
                                                 >tx-sign-and-send/captcha.ts:247</a
                                             >
                                         </li>
@@ -1975,7 +2135,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L211"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L211"
                                                 >tx-sign-and-send/captcha.ts:211</a
                                             >
                                         </li>
@@ -2047,7 +2207,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L229"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L229"
                                                 >tx-sign-and-send/captcha.ts:229</a
                                             >
                                         </li>
@@ -2119,7 +2279,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L175"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L175"
                                                 >tx-sign-and-send/captcha.ts:175</a
                                             >
                                         </li>
@@ -2187,7 +2347,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L67"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L67"
                                                 >tx-sign-and-send/captcha.ts:67</a
                                             >
                                         </li>
@@ -2266,7 +2426,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L354"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L354"
                                                 >tx-sign-and-send/captcha.ts:354</a
                                             >
                                         </li>
@@ -2338,7 +2498,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L121"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L121"
                                                 >tx-sign-and-send/captcha.ts:121</a
                                             >
                                         </li>
@@ -2432,7 +2592,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L718"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L718"
                                                 >tx-sign-and-send/captcha.ts:718</a
                                             >
                                         </li>
@@ -2535,7 +2695,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L761"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L761"
                                                 >tx-sign-and-send/captcha.ts:761</a
                                             >
                                         </li>
@@ -2603,7 +2763,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L103"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L103"
                                                 >tx-sign-and-send/captcha.ts:103</a
                                             >
                                         </li>
@@ -2682,7 +2842,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L641"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L641"
                                                 >tx-sign-and-send/captcha.ts:641</a
                                             >
                                         </li>
@@ -2764,7 +2924,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L541"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L541"
                                                 >tx-sign-and-send/captcha.ts:541</a
                                             >
                                         </li>
@@ -2847,7 +3007,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L679"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L679"
                                                 >tx-sign-and-send/captcha.ts:679</a
                                             >
                                         </li>
@@ -2929,7 +3089,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L698"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L698"
                                                 >tx-sign-and-send/captcha.ts:698</a
                                             >
                                         </li>
@@ -3011,7 +3171,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L560"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L560"
                                                 >tx-sign-and-send/captcha.ts:560</a
                                             >
                                         </li>
@@ -3093,7 +3253,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L579"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L579"
                                                 >tx-sign-and-send/captcha.ts:579</a
                                             >
                                         </li>
@@ -3164,7 +3324,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L317"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L317"
                                                 >tx-sign-and-send/captcha.ts:317</a
                                             >
                                         </li>
@@ -3235,7 +3395,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L335"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L335"
                                                 >tx-sign-and-send/captcha.ts:335</a
                                             >
                                         </li>
@@ -3303,7 +3463,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L372"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L372"
                                                 >tx-sign-and-send/captcha.ts:372</a
                                             >
                                         </li>
@@ -3409,7 +3569,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L268"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L268"
                                                 >tx-sign-and-send/captcha.ts:268</a
                                             >
                                         </li>
@@ -3502,7 +3662,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L392"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L392"
                                                 >tx-sign-and-send/captcha.ts:392</a
                                             >
                                         </li>
@@ -3608,7 +3768,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L294"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L294"
                                                 >tx-sign-and-send/captcha.ts:294</a
                                             >
                                         </li>
@@ -3690,7 +3850,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L822"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L822"
                                                 >tx-sign-and-send/captcha.ts:822</a
                                             >
                                         </li>
@@ -3758,7 +3918,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L784"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L784"
                                                 >tx-sign-and-send/captcha.ts:784</a
                                             >
                                         </li>
@@ -3837,7 +3997,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/tx-sign-and-send/captcha.ts#L803"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/tx-sign-and-send/captcha.ts#L803"
                                                 >tx-sign-and-send/captcha.ts:803</a
                                             >
                                         </li>
@@ -4183,5 +4343,19 @@
             </div>
         </div>
         <div class="overlay"></div>
+        <script>
+            try {
+                const generateLinkElement = document.querySelector('.tsd-generator a')
+                const link = document.createElement('a')
+                Object.assign(link, {
+                    href: 'https://github.com/dmnsgn/typedoc-material-theme',
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    innerText: 'typedoc-material-theme.',
+                })
+                generateLinkElement.insertAdjacentElement('afterend', link)
+                generateLinkElement.insertAdjacentText('afterend', ' with ')
+            } catch (error) {}
+        </script>
     </body>
 </html>

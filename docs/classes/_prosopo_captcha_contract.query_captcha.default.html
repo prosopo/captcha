@@ -12,6 +12,166 @@
         <script async src="../assets/icons.js" id="tsd-icons-script"></script>
         <script async src="../assets/search.js" id="tsd-search-script"></script>
         <script async src="../assets/navigation.js" id="tsd-nav-script"></script>
+        <style>
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --md-sys-color-primary: #f6be46;
+                    --md-sys-color-on-primary: #412d00;
+                    --md-sys-color-primary-container: #5d4200;
+                    --md-sys-color-on-primary-container: #ffdea3;
+                    --md-sys-color-secondary: #d9c4a0;
+                    --md-sys-color-on-secondary: #3b2f15;
+                    --md-sys-color-secondary-container: #53452a;
+                    --md-sys-color-on-secondary-container: #f6e0bb;
+                    --md-sys-color-tertiary: #b2cfa8;
+                    --md-sys-color-on-tertiary: #1e361a;
+                    --md-sys-color-tertiary-container: #344d2f;
+                    --md-sys-color-on-tertiary-container: #cdebc2;
+                    --md-sys-color-error: #ffb4ab;
+                    --md-sys-color-on-error: #690005;
+                    --md-sys-color-error-container: #93000a;
+                    --md-sys-color-on-error-container: #ffb4ab;
+                    --md-sys-color-background: #1e1b16;
+                    --md-sys-color-on-background: #e9e1d9;
+                    --md-sys-color-surface: #1e1b16;
+                    --md-sys-color-on-surface: #e9e1d9;
+                    --md-sys-color-surface-variant: #4e4639;
+                    --md-sys-color-on-surface-variant: #d1c5b4;
+                    --md-sys-color-outline: #9a8f80;
+                    --md-sys-color-outline-variant: #4e4639;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #e9e1d9;
+                    --md-sys-color-inverse-on-surface: #34302a;
+                    --md-sys-color-inverse-primary: #7a5900;
+                    --md-sys-color-surface-dim: #16130e;
+                    --md-sys-color-surface-bright: #3d3933;
+                    --md-sys-color-surface-container-lowest: #110e09;
+                    --md-sys-color-surface-container-low: #1e1b16;
+                    --md-sys-color-surface-container: #221f1a;
+                    --md-sys-color-surface-container-high: #2d2924;
+                    --md-sys-color-surface-container-highest: #38342e;
+                }
+            }
+            :root[data-theme='dark'] {
+                --md-sys-color-primary: #f6be46;
+                --md-sys-color-on-primary: #412d00;
+                --md-sys-color-primary-container: #5d4200;
+                --md-sys-color-on-primary-container: #ffdea3;
+                --md-sys-color-secondary: #d9c4a0;
+                --md-sys-color-on-secondary: #3b2f15;
+                --md-sys-color-secondary-container: #53452a;
+                --md-sys-color-on-secondary-container: #f6e0bb;
+                --md-sys-color-tertiary: #b2cfa8;
+                --md-sys-color-on-tertiary: #1e361a;
+                --md-sys-color-tertiary-container: #344d2f;
+                --md-sys-color-on-tertiary-container: #cdebc2;
+                --md-sys-color-error: #ffb4ab;
+                --md-sys-color-on-error: #690005;
+                --md-sys-color-error-container: #93000a;
+                --md-sys-color-on-error-container: #ffb4ab;
+                --md-sys-color-background: #1e1b16;
+                --md-sys-color-on-background: #e9e1d9;
+                --md-sys-color-surface: #1e1b16;
+                --md-sys-color-on-surface: #e9e1d9;
+                --md-sys-color-surface-variant: #4e4639;
+                --md-sys-color-on-surface-variant: #d1c5b4;
+                --md-sys-color-outline: #9a8f80;
+                --md-sys-color-outline-variant: #4e4639;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #e9e1d9;
+                --md-sys-color-inverse-on-surface: #34302a;
+                --md-sys-color-inverse-primary: #7a5900;
+                --md-sys-color-surface-dim: #16130e;
+                --md-sys-color-surface-bright: #3d3933;
+                --md-sys-color-surface-container-lowest: #110e09;
+                --md-sys-color-surface-container-low: #1e1b16;
+                --md-sys-color-surface-container: #221f1a;
+                --md-sys-color-surface-container-high: #2d2924;
+                --md-sys-color-surface-container-highest: #38342e;
+            }
+
+            @media (prefers-color-scheme: light) {
+                :root {
+                    --md-sys-color-primary: #7a5900;
+                    --md-sys-color-on-primary: #ffffff;
+                    --md-sys-color-primary-container: #ffdea3;
+                    --md-sys-color-on-primary-container: #261900;
+                    --md-sys-color-secondary: #6c5c3f;
+                    --md-sys-color-on-secondary: #ffffff;
+                    --md-sys-color-secondary-container: #f6e0bb;
+                    --md-sys-color-on-secondary-container: #251a04;
+                    --md-sys-color-tertiary: #4b6545;
+                    --md-sys-color-on-tertiary: #ffffff;
+                    --md-sys-color-tertiary-container: #cdebc2;
+                    --md-sys-color-on-tertiary-container: #092007;
+                    --md-sys-color-error: #ba1a1a;
+                    --md-sys-color-on-error: #ffffff;
+                    --md-sys-color-error-container: #ffdad6;
+                    --md-sys-color-on-error-container: #410002;
+                    --md-sys-color-background: #fffbff;
+                    --md-sys-color-on-background: #1e1b16;
+                    --md-sys-color-surface: #fffbff;
+                    --md-sys-color-on-surface: #1e1b16;
+                    --md-sys-color-surface-variant: #ede1cf;
+                    --md-sys-color-on-surface-variant: #4e4639;
+                    --md-sys-color-outline: #7f7667;
+                    --md-sys-color-outline-variant: #d1c5b4;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #34302a;
+                    --md-sys-color-inverse-on-surface: #f8efe7;
+                    --md-sys-color-inverse-primary: #f6be46;
+                    --md-sys-color-surface-dim: #e1d9d0;
+                    --md-sys-color-surface-bright: #fff8f2;
+                    --md-sys-color-surface-container-lowest: #ffffff;
+                    --md-sys-color-surface-container-low: #fbf2e9;
+                    --md-sys-color-surface-container: #f5ede4;
+                    --md-sys-color-surface-container-high: #efe7de;
+                    --md-sys-color-surface-container-highest: #e9e1d9;
+                }
+            }
+            :root[data-theme='light'] {
+                --md-sys-color-primary: #7a5900;
+                --md-sys-color-on-primary: #ffffff;
+                --md-sys-color-primary-container: #ffdea3;
+                --md-sys-color-on-primary-container: #261900;
+                --md-sys-color-secondary: #6c5c3f;
+                --md-sys-color-on-secondary: #ffffff;
+                --md-sys-color-secondary-container: #f6e0bb;
+                --md-sys-color-on-secondary-container: #251a04;
+                --md-sys-color-tertiary: #4b6545;
+                --md-sys-color-on-tertiary: #ffffff;
+                --md-sys-color-tertiary-container: #cdebc2;
+                --md-sys-color-on-tertiary-container: #092007;
+                --md-sys-color-error: #ba1a1a;
+                --md-sys-color-on-error: #ffffff;
+                --md-sys-color-error-container: #ffdad6;
+                --md-sys-color-on-error-container: #410002;
+                --md-sys-color-background: #fffbff;
+                --md-sys-color-on-background: #1e1b16;
+                --md-sys-color-surface: #fffbff;
+                --md-sys-color-on-surface: #1e1b16;
+                --md-sys-color-surface-variant: #ede1cf;
+                --md-sys-color-on-surface-variant: #4e4639;
+                --md-sys-color-outline: #7f7667;
+                --md-sys-color-outline-variant: #d1c5b4;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #34302a;
+                --md-sys-color-inverse-on-surface: #f8efe7;
+                --md-sys-color-inverse-primary: #f6be46;
+                --md-sys-color-surface-dim: #e1d9d0;
+                --md-sys-color-surface-bright: #fff8f2;
+                --md-sys-color-surface-container-lowest: #ffffff;
+                --md-sys-color-surface-container-low: #fbf2e9;
+                --md-sys-color-surface-container: #f5ede4;
+                --md-sys-color-surface-container-high: #efe7de;
+                --md-sys-color-surface-container-highest: #e9e1d9;
+            }
+        </style>
+        <link rel="stylesheet" href="../assets/material-style.css" />
     </head>
     <body>
         <script>
@@ -61,7 +221,7 @@
                         <li>
                             Defined in
                             <a
-                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L17"
+                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L17"
                                 >query/captcha.ts:17</a
                             >
                         </li>
@@ -486,7 +646,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L22"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L22"
                                                 >query/captcha.ts:22</a
                                             >
                                         </li>
@@ -516,7 +676,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L19"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L19"
                                         >query/captcha.ts:19</a
                                     >
                                 </li>
@@ -540,7 +700,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L20"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L20"
                                         >query/captcha.ts:20</a
                                     >
                                 </li>
@@ -565,7 +725,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L18"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L18"
                                         >query/captcha.ts:18</a
                                     >
                                 </li>
@@ -685,7 +845,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L573"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L573"
                                                 >query/captcha.ts:573</a
                                             >
                                         </li>
@@ -804,7 +964,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L550"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L550"
                                                 >query/captcha.ts:550</a
                                             >
                                         </li>
@@ -920,7 +1080,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L527"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L527"
                                                 >query/captcha.ts:527</a
                                             >
                                         </li>
@@ -1052,7 +1212,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L668"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L668"
                                                 >query/captcha.ts:668</a
                                             >
                                         </li>
@@ -1182,7 +1342,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L692"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L692"
                                                 >query/captcha.ts:692</a
                                             >
                                         </li>
@@ -1309,7 +1469,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L476"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L476"
                                                 >query/captcha.ts:476</a
                                             >
                                         </li>
@@ -1447,7 +1607,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L502"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L502"
                                                 >query/captcha.ts:502</a
                                             >
                                         </li>
@@ -1543,7 +1703,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L52"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L52"
                                                 >query/captcha.ts:52</a
                                             >
                                         </li>
@@ -1659,7 +1819,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L833"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L833"
                                                 >query/captcha.ts:833</a
                                             >
                                         </li>
@@ -1749,7 +1909,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L210"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L210"
                                                 >query/captcha.ts:210</a
                                             >
                                         </li>
@@ -1872,7 +2032,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L740"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L740"
                                                 >query/captcha.ts:740</a
                                             >
                                         </li>
@@ -1995,7 +2155,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L452"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L452"
                                                 >query/captcha.ts:452</a
                                             >
                                         </li>
@@ -2092,7 +2252,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L90"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L90"
                                                 >query/captcha.ts:90</a
                                             >
                                         </li>
@@ -2185,7 +2345,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L153"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L153"
                                                 >query/captcha.ts:153</a
                                             >
                                         </li>
@@ -2279,7 +2439,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L33"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L33"
                                                 >query/captcha.ts:33</a
                                             >
                                         </li>
@@ -2372,7 +2532,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L172"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L172"
                                                 >query/captcha.ts:172</a
                                             >
                                         </li>
@@ -2466,7 +2626,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L267"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L267"
                                                 >query/captcha.ts:267</a
                                             >
                                         </li>
@@ -2560,7 +2720,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L229"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L229"
                                                 >query/captcha.ts:229</a
                                             >
                                         </li>
@@ -2654,7 +2814,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L248"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L248"
                                                 >query/captcha.ts:248</a
                                             >
                                         </li>
@@ -2748,7 +2908,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L191"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L191"
                                                 >query/captcha.ts:191</a
                                             >
                                         </li>
@@ -2845,7 +3005,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L71"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L71"
                                                 >query/captcha.ts:71</a
                                             >
                                         </li>
@@ -2968,7 +3128,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L383"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L383"
                                                 >query/captcha.ts:383</a
                                             >
                                         </li>
@@ -3062,7 +3222,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L132"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L132"
                                                 >query/captcha.ts:132</a
                                             >
                                         </li>
@@ -3200,7 +3360,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L810"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L810"
                                                 >query/captcha.ts:810</a
                                             >
                                         </li>
@@ -3325,7 +3485,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L859"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L859"
                                                 >query/captcha.ts:859</a
                                             >
                                         </li>
@@ -3422,7 +3582,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L111"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L111"
                                                 >query/captcha.ts:111</a
                                             >
                                         </li>
@@ -3545,7 +3705,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L717"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L717"
                                                 >query/captcha.ts:717</a
                                             >
                                         </li>
@@ -3671,7 +3831,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L596"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L596"
                                                 >query/captcha.ts:596</a
                                             >
                                         </li>
@@ -3799,7 +3959,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L763"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L763"
                                                 >query/captcha.ts:763</a
                                             >
                                         </li>
@@ -3926,7 +4086,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L786"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L786"
                                                 >query/captcha.ts:786</a
                                             >
                                         </li>
@@ -4045,7 +4205,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L621"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L621"
                                                 >query/captcha.ts:621</a
                                             >
                                         </li>
@@ -4164,7 +4324,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L644"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L644"
                                                 >query/captcha.ts:644</a
                                             >
                                         </li>
@@ -4272,7 +4432,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L340"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L340"
                                                 >query/captcha.ts:340</a
                                             >
                                         </li>
@@ -4380,7 +4540,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L361"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L361"
                                                 >query/captcha.ts:361</a
                                             >
                                         </li>
@@ -4485,7 +4645,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L405"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L405"
                                                 >query/captcha.ts:405</a
                                             >
                                         </li>
@@ -4628,7 +4788,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L289"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L289"
                                                 >query/captcha.ts:289</a
                                             >
                                         </li>
@@ -4758,7 +4918,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L428"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L428"
                                                 >query/captcha.ts:428</a
                                             >
                                         </li>
@@ -4901,7 +5061,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L316"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L316"
                                                 >query/captcha.ts:316</a
                                             >
                                         </li>
@@ -5020,7 +5180,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L928"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L928"
                                                 >query/captcha.ts:928</a
                                             >
                                         </li>
@@ -5125,7 +5285,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L883"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L883"
                                                 >query/captcha.ts:883</a
                                             >
                                         </li>
@@ -5241,7 +5401,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/contracts/captcha/src/query/captcha.ts#L905"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/contracts/captcha/src/query/captcha.ts#L905"
                                                 >query/captcha.ts:905</a
                                             >
                                         </li>
@@ -5587,5 +5747,19 @@
             </div>
         </div>
         <div class="overlay"></div>
+        <script>
+            try {
+                const generateLinkElement = document.querySelector('.tsd-generator a')
+                const link = document.createElement('a')
+                Object.assign(link, {
+                    href: 'https://github.com/dmnsgn/typedoc-material-theme',
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    innerText: 'typedoc-material-theme.',
+                })
+                generateLinkElement.insertAdjacentElement('afterend', link)
+                generateLinkElement.insertAdjacentText('afterend', ' with ')
+            } catch (error) {}
+        </script>
     </body>
 </html>
