@@ -1,6 +1,7 @@
 export default {
     includeVersion: true,
     darkHighlightTheme: 'material-theme-darker',
+    lightHighlightTheme: 'material-theme-default',
     searchInComments: true,
     excludeExternals: true,
     commentStyle: 'all',
