@@ -1,0 +1,364 @@
+{
+    "items": [
+        {
+            "hash": "0x60f6c465ccba37c21cd32897819f22433fb803d86e27b5f999592c622459f4b03c3902b245cfb73143e40f22e70c6fb72cd8edd739a8e3a7a3dadb921df91f7a",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x60f6c465ccba37c21cd32897819f22433fb803d86e27b5f999592c622459f4b03c3902b245cfb73143e40f22e70c6fb72cd8edd739a8e3a7a3dadb921df91f7a.jpg",
+            "type": "image",
+            "label": "bird"
+        },
+        {
+            "hash": "0x1add03cfcef8f311ed8e8818b437cb478e99e2b2c84785ef84968fea9897550bae75e8780e62ae3ab310db1acd1b1843982ba42721bf1ecf0e73b0303437a4fb",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x1add03cfcef8f311ed8e8818b437cb478e99e2b2c84785ef84968fea9897550bae75e8780e62ae3ab310db1acd1b1843982ba42721bf1ecf0e73b0303437a4fb.jpg",
+            "type": "image",
+            "label": "bird"
+        },
+        {
+            "hash": "0x06a2207996fe973ec0fa8d2240bdf0b5584304d1be3673e3411e3ff67f2a3ba77ac8a785d81fec0460586794e51fabc635cd57e2f00bd73ffaa3481a64342b16",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x06a2207996fe973ec0fa8d2240bdf0b5584304d1be3673e3411e3ff67f2a3ba77ac8a785d81fec0460586794e51fabc635cd57e2f00bd73ffaa3481a64342b16.jpg",
+            "type": "image",
+            "label": "bird"
+        },
+        {
+            "hash": "0xbd6eaf6c62deee668a360916a9c0004a0a5cf6029133eac88e3bdbef885219827601d6f4d3790e48453aee070e60300d02b635cdfc93a89c94fafc45d1a23aaf",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xbd6eaf6c62deee668a360916a9c0004a0a5cf6029133eac88e3bdbef885219827601d6f4d3790e48453aee070e60300d02b635cdfc93a89c94fafc45d1a23aaf.jpg",
+            "type": "image",
+            "label": "bird"
+        },
+        {
+            "hash": "0xc3430b924e1f694a1f8d7fd4b388d8c9ac365f76d5fc1744767dbefa5440ff659b685286719466934aca95bd0efb9a3a912ab6da3a81a50330483ba3f0bd55da",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xc3430b924e1f694a1f8d7fd4b388d8c9ac365f76d5fc1744767dbefa5440ff659b685286719466934aca95bd0efb9a3a912ab6da3a81a50330483ba3f0bd55da.jpg",
+            "type": "image",
+            "label": "bird"
+        },
+        {
+            "hash": "0x0d7468ab4b4a4870206f9416f02fab49bd6a677cbfad72d02fefdb5a5a766b15c45d5e9bce4375eef9e0714c2085f16efd6c092bc6a6433b2bd619b59ca29823",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x0d7468ab4b4a4870206f9416f02fab49bd6a677cbfad72d02fefdb5a5a766b15c45d5e9bce4375eef9e0714c2085f16efd6c092bc6a6433b2bd619b59ca29823.jpg",
+            "type": "image",
+            "label": "bird"
+        },
+        {
+            "hash": "0xc12c676169d555a630651bd36eb749783ca2d5129b41ed9ec1209420746490bf1f4e89962eab129b42dcc7fb75282f4e517ec113b9f30e6e3a893006e7ceb67a",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xc12c676169d555a630651bd36eb749783ca2d5129b41ed9ec1209420746490bf1f4e89962eab129b42dcc7fb75282f4e517ec113b9f30e6e3a893006e7ceb67a.jpg",
+            "type": "image",
+            "label": "bus"
+        },
+        {
+            "hash": "0x5a218844c12a7c906f51c5af383a829ff28040233ed7934becbd027439df79d5e0f8680729ee10285c3284c8a7df7cfaf2cd58816f0e21b4532c2ccb404373f9",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x5a218844c12a7c906f51c5af383a829ff28040233ed7934becbd027439df79d5e0f8680729ee10285c3284c8a7df7cfaf2cd58816f0e21b4532c2ccb404373f9.jpg",
+            "type": "image",
+            "label": "bus"
+        },
+        {
+            "hash": "0xd61e514e02b5d1663a64c37eaacaf8397a16dc1bf5252fc6310bec1a3ee5546852c355256d2a643e266b08d2e4c5c8d76203fc16dfbf2868dbebfeade9129682",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xd61e514e02b5d1663a64c37eaacaf8397a16dc1bf5252fc6310bec1a3ee5546852c355256d2a643e266b08d2e4c5c8d76203fc16dfbf2868dbebfeade9129682.jpg",
+            "type": "image",
+            "label": "bus"
+        },
+        {
+            "hash": "0x4510598058f4b49882bc776829d4a3bdf3276d50747e1584d1951878a4c334f8e634cb123d5c182d53a55433bfaa8aef1fdd25ea20bfec0ea562b1702b0972c3",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x4510598058f4b49882bc776829d4a3bdf3276d50747e1584d1951878a4c334f8e634cb123d5c182d53a55433bfaa8aef1fdd25ea20bfec0ea562b1702b0972c3.jpg",
+            "type": "image",
+            "label": "bus"
+        },
+        {
+            "hash": "0x691df7397fafa1c467a89db39661fca6b600d555cc6a68440e5b8d25ed82b297fcd77ef49a40e40167bba0cac2ea6461528afab3cf281bbf100efcd4af8d93f7",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x691df7397fafa1c467a89db39661fca6b600d555cc6a68440e5b8d25ed82b297fcd77ef49a40e40167bba0cac2ea6461528afab3cf281bbf100efcd4af8d93f7.jpg",
+            "type": "image",
+            "label": "bus"
+        },
+        {
+            "hash": "0x83bc94cc99396dadea7827e807a4ab36b0d6154da8ffc38893698f7e087b1f4c0503840e279b8a1a6a96cc61361a6da29b72f32bacdaf14519f8efc2834163bc",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x83bc94cc99396dadea7827e807a4ab36b0d6154da8ffc38893698f7e087b1f4c0503840e279b8a1a6a96cc61361a6da29b72f32bacdaf14519f8efc2834163bc.jpg",
+            "type": "image",
+            "label": "bus"
+        },
+        {
+            "hash": "0x87653d64440b11c09d789f2f13852e8b1084ee20bcfe18e940a54413e9a0d6250f450240ba371a53ae636ede003c5a937d53221dc7186851c8d320488f58cd2b",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x87653d64440b11c09d789f2f13852e8b1084ee20bcfe18e940a54413e9a0d6250f450240ba371a53ae636ede003c5a937d53221dc7186851c8d320488f58cd2b.jpg",
+            "type": "image",
+            "label": "car"
+        },
+        {
+            "hash": "0x8bea972ae6ab196204e13ea6e470bba31c29296fcffed204ee4f5ae2868288c618f784cbec648d4aa4930cce9f4c90d747a8fe38642cc25d118ce2755216fdfb",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x8bea972ae6ab196204e13ea6e470bba31c29296fcffed204ee4f5ae2868288c618f784cbec648d4aa4930cce9f4c90d747a8fe38642cc25d118ce2755216fdfb.jpg",
+            "type": "image",
+            "label": "car"
+        },
+        {
+            "hash": "0x4cc2960f5039f8778cafafe3c911f082b8460fb3c0b9124ca30addf0ba82374d7214b35484111d7482142fad614eb6c94f5fcbf4e17127dff97ebda1225d4e1c",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x4cc2960f5039f8778cafafe3c911f082b8460fb3c0b9124ca30addf0ba82374d7214b35484111d7482142fad614eb6c94f5fcbf4e17127dff97ebda1225d4e1c.jpg",
+            "type": "image",
+            "label": "car"
+        },
+        {
+            "hash": "0x32e77cca2c8f235bb30482e9b33bf9f00e18ba4d6356330b5c02d736688efd4e894950fc3fdd3def828284b3df9f21c62cbca81a71345068c4540ee334153b66",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x32e77cca2c8f235bb30482e9b33bf9f00e18ba4d6356330b5c02d736688efd4e894950fc3fdd3def828284b3df9f21c62cbca81a71345068c4540ee334153b66.jpg",
+            "type": "image",
+            "label": "car"
+        },
+        {
+            "hash": "0x6495581992b5bff4c4507ba941650ee8e9754b11c7b85856972d124c03bdf371dba86d797ffa44bf9cc8ac0bde2fb310cc2799a786484bb89b51b60aff05b647",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x6495581992b5bff4c4507ba941650ee8e9754b11c7b85856972d124c03bdf371dba86d797ffa44bf9cc8ac0bde2fb310cc2799a786484bb89b51b60aff05b647.jpg",
+            "type": "image",
+            "label": "car"
+        },
+        {
+            "hash": "0x04412e617469fdd30059f9f2d77b3ee8d4d47ae9b31dd835bf5c72e1f03e617fb4cd45c43b3941415ad7a0a52579721aff179fdad282692f4f8ba7a4ceac3f2b",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x04412e617469fdd30059f9f2d77b3ee8d4d47ae9b31dd835bf5c72e1f03e617fb4cd45c43b3941415ad7a0a52579721aff179fdad282692f4f8ba7a4ceac3f2b.jpg",
+            "type": "image",
+            "label": "car"
+        },
+        {
+            "hash": "0xf74a7822da8bcca082c1c9bf9653555f6924e6a7bef0b523f7d681b34e2d3f06d0ede639a0703462b75df77c241f8ebb4673c55d619faacad749f208c8d44190",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xf74a7822da8bcca082c1c9bf9653555f6924e6a7bef0b523f7d681b34e2d3f06d0ede639a0703462b75df77c241f8ebb4673c55d619faacad749f208c8d44190.jpg",
+            "type": "image",
+            "label": "cat"
+        },
+        {
+            "hash": "0x3aa3d1167d1a59a3fd98fc625673f1eb44e40077a761deb5284db866d0971309a0f266b0c1d73ac309e0f8b630232d19d84ff2761999880477c3eaf2c9c88ac7",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x3aa3d1167d1a59a3fd98fc625673f1eb44e40077a761deb5284db866d0971309a0f266b0c1d73ac309e0f8b630232d19d84ff2761999880477c3eaf2c9c88ac7.jpg",
+            "type": "image",
+            "label": "cat"
+        },
+        {
+            "hash": "0x470b8e46d24caad83799983764b9ad3b01899fd203571dd51d53e9043312fb8a4073a79cde621492c44e5e8767bc301edae65c7234056eaa3948332c929af4d3",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x470b8e46d24caad83799983764b9ad3b01899fd203571dd51d53e9043312fb8a4073a79cde621492c44e5e8767bc301edae65c7234056eaa3948332c929af4d3.jpg",
+            "type": "image",
+            "label": "cat"
+        },
+        {
+            "hash": "0x01680c6900f9f5d1b637e9ee6a47e39bd5febfa8c05e97411bf296e08f1084123c2ddb3c811c36e5daa860390b9f90c6136a0b852a6984867e12e82357dae101",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x01680c6900f9f5d1b637e9ee6a47e39bd5febfa8c05e97411bf296e08f1084123c2ddb3c811c36e5daa860390b9f90c6136a0b852a6984867e12e82357dae101.jpg",
+            "type": "image",
+            "label": "cat"
+        },
+        {
+            "hash": "0x5e1ec6b5e8ef81f4235281fb9ef14168b459c7b6dc649056fc550fd3ce81d9c42d591464d1c38af59316cffb8a32d12551bc789ff76c8cdd4aa270df5d250ffb",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x5e1ec6b5e8ef81f4235281fb9ef14168b459c7b6dc649056fc550fd3ce81d9c42d591464d1c38af59316cffb8a32d12551bc789ff76c8cdd4aa270df5d250ffb.jpg",
+            "type": "image",
+            "label": "cat"
+        },
+        {
+            "hash": "0xa405b623dbacae064fcbbac84a9a810134600834e9874979d8c827a7a5571814ca1d044864b6fab738af32d791cb4fd2cb27688fd4c8d75d590135c4672e96c1",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xa405b623dbacae064fcbbac84a9a810134600834e9874979d8c827a7a5571814ca1d044864b6fab738af32d791cb4fd2cb27688fd4c8d75d590135c4672e96c1.jpg",
+            "type": "image",
+            "label": "cat"
+        },
+        {
+            "hash": "0x20ec0a1b333b3c769e3238f26137a93634e7ac3223c6e2d13c7fc331aa1488dbcc7ba4ef25ed79ca0b72c78896a86c73b94715f59768b61e343cfd691e4d594f",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x20ec0a1b333b3c769e3238f26137a93634e7ac3223c6e2d13c7fc331aa1488dbcc7ba4ef25ed79ca0b72c78896a86c73b94715f59768b61e343cfd691e4d594f.jpg",
+            "type": "image",
+            "label": "deer"
+        },
+        {
+            "hash": "0x88c899a4314ada0e7d4695005990f5ad970efa8a2d197421f9060d5cebf33ae0e61246c9947da902e778bc41c03802676652583eecb7c6b3720a01a35fa81fd1",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x88c899a4314ada0e7d4695005990f5ad970efa8a2d197421f9060d5cebf33ae0e61246c9947da902e778bc41c03802676652583eecb7c6b3720a01a35fa81fd1.jpg",
+            "type": "image",
+            "label": "deer"
+        },
+        {
+            "hash": "0xcf5891a2103b464fa91c3f175dd7c42b235568549a680174df69d61be7b677d14aeaefb2389f6a4be952d2d2d035f90011ce97bffb3f4e20c7a9236b8b880f6d",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xcf5891a2103b464fa91c3f175dd7c42b235568549a680174df69d61be7b677d14aeaefb2389f6a4be952d2d2d035f90011ce97bffb3f4e20c7a9236b8b880f6d.jpg",
+            "type": "image",
+            "label": "deer"
+        },
+        {
+            "hash": "0x371825e60f5132764056973240b261b6e750b8fcc2440d7651a0798c611d551939c48b51bb1c58d2bbe6cac5c76122a329b38234d1047b4e502fac8de12bcb87",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x371825e60f5132764056973240b261b6e750b8fcc2440d7651a0798c611d551939c48b51bb1c58d2bbe6cac5c76122a329b38234d1047b4e502fac8de12bcb87.jpg",
+            "type": "image",
+            "label": "deer"
+        },
+        {
+            "hash": "0x919e0adb11eec9a9e8aefbf91e6547c9952032539ea3cc1fb524ca7e803486082f0b673fcf2f633be2f46d3863b4af3e78bc52b0ca9fcc32d5180bf33c8da0c8",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x919e0adb11eec9a9e8aefbf91e6547c9952032539ea3cc1fb524ca7e803486082f0b673fcf2f633be2f46d3863b4af3e78bc52b0ca9fcc32d5180bf33c8da0c8.jpg",
+            "type": "image",
+            "label": "deer"
+        },
+        {
+            "hash": "0x42bdd353f77090d619e06fce1ac874811437082d3617d3e361249e4eb01c1e458f7c2f0c916e7437b8269d862acb3deac930af7895903843bded8aea2796cee4",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x42bdd353f77090d619e06fce1ac874811437082d3617d3e361249e4eb01c1e458f7c2f0c916e7437b8269d862acb3deac930af7895903843bded8aea2796cee4.jpg",
+            "type": "image",
+            "label": "deer"
+        },
+        {
+            "hash": "0x72a8e4393cf2abe8a1ded5d7b94f75bc2d87343b9893f03e67ee11a6e08c5ed112d69b71cecaf38350d8761560870c982bd0d56a4cd9c6572b20f316f4b59e4e",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x72a8e4393cf2abe8a1ded5d7b94f75bc2d87343b9893f03e67ee11a6e08c5ed112d69b71cecaf38350d8761560870c982bd0d56a4cd9c6572b20f316f4b59e4e.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0x34c24373be3774a7ce601560f74d70839365f2a72fbe9acf6400e8e72fd859df66d80111d777ec686ad742170be3865102571062710b28a6dee0b9eec5d7b16c",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x34c24373be3774a7ce601560f74d70839365f2a72fbe9acf6400e8e72fd859df66d80111d777ec686ad742170be3865102571062710b28a6dee0b9eec5d7b16c.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0xe283a7fa1c6b8de22c3cfeedf50a7a75cc4dae628e25222e2f65b9e6f2768a3db17c882c6841841ad9d9d55a02721f94fa4ad06d5797641a4992ce30ff2ac483",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xe283a7fa1c6b8de22c3cfeedf50a7a75cc4dae628e25222e2f65b9e6f2768a3db17c882c6841841ad9d9d55a02721f94fa4ad06d5797641a4992ce30ff2ac483.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0xfb9b2be2b9fcf6294b29dc18df21714a6d23d6a78d4c574747630d21727f72a7b2b4ae5666ebae4409cb7a85308f11d8dc186aa26709b0c53e41530f4a57ba6d",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xfb9b2be2b9fcf6294b29dc18df21714a6d23d6a78d4c574747630d21727f72a7b2b4ae5666ebae4409cb7a85308f11d8dc186aa26709b0c53e41530f4a57ba6d.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0xf9478fa2283203a1ac62fcb044532520b9286e66f42489b5519381b4ecbfca939c9de07a4a0e4fb7315c3eb4656ab6dee6951e6f7b2a45d32b649af06ef93120",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xf9478fa2283203a1ac62fcb044532520b9286e66f42489b5519381b4ecbfca939c9de07a4a0e4fb7315c3eb4656ab6dee6951e6f7b2a45d32b649af06ef93120.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0xf466148cbfd860870b834045825ae7f7b0994645b0a08ab246c0fe5d2051c2c0d9b48156d1a5bbf7621075ee98116b0514c38d7ff2886bd4882e10e1aa18b7f1",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xf466148cbfd860870b834045825ae7f7b0994645b0a08ab246c0fe5d2051c2c0d9b48156d1a5bbf7621075ee98116b0514c38d7ff2886bd4882e10e1aa18b7f1.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0x9d19edc89ca1bbfebfa9f8dd54dc260e3b13e9ec150060f10e6ed3532229125b97ea7914b6079e7880eaeae6b8617428faaa4ce89f587c3394cb80472692bd70",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x9d19edc89ca1bbfebfa9f8dd54dc260e3b13e9ec150060f10e6ed3532229125b97ea7914b6079e7880eaeae6b8617428faaa4ce89f587c3394cb80472692bd70.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0x5125f70be96446963faa123a96e3b5e453e0ea3d66cc73fb075afa032ad81ead2b439b8be8837c2f7bc194aed87a62766efecbe510bfa41e2933c5f4687df123",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x5125f70be96446963faa123a96e3b5e453e0ea3d66cc73fb075afa032ad81ead2b439b8be8837c2f7bc194aed87a62766efecbe510bfa41e2933c5f4687df123.jpg",
+            "type": "image",
+            "label": "dog"
+        },
+        {
+            "hash": "0x31e0b42acfd68689b7812972d2cebf28ee599cc4b6bcbc7dd402ebbdd65b630f3a70cd7698a359a6b2ae07b4b7f6ffff9b2cb6700eb3c4c5af3d97b8cd52b849",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x31e0b42acfd68689b7812972d2cebf28ee599cc4b6bcbc7dd402ebbdd65b630f3a70cd7698a359a6b2ae07b4b7f6ffff9b2cb6700eb3c4c5af3d97b8cd52b849.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0x278e5c8fcc91573e8476b01b7912739427f5779d0168da3a4fa1831247d32045b784ca0fc961a360fb096d85904c3c6936118eee2b60ca504a7f08e422c6d468",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x278e5c8fcc91573e8476b01b7912739427f5779d0168da3a4fa1831247d32045b784ca0fc961a360fb096d85904c3c6936118eee2b60ca504a7f08e422c6d468.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0xe9181527efc3994dc5cac1d2eb49a03040ac544355d665ab1e2802cbda8b4911e912b3949ba95d441b93017444b106e3c76a7d51d961c5d2d117a24f0056d308",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xe9181527efc3994dc5cac1d2eb49a03040ac544355d665ab1e2802cbda8b4911e912b3949ba95d441b93017444b106e3c76a7d51d961c5d2d117a24f0056d308.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0x681d594021ec03f34798bfd7cfdf351b2f5fce87490b7b353b265d415532c5e0b7751c04f44a5c1d92f112628068cfe185af1452046534f5adfbd75e39785927",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x681d594021ec03f34798bfd7cfdf351b2f5fce87490b7b353b265d415532c5e0b7751c04f44a5c1d92f112628068cfe185af1452046534f5adfbd75e39785927.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0x858ae20f81f795c960a5cadd84f3dd8e1e6798fc719545f3a10001def3cc89b5c23cd00149a6eb6a2062e10b5b882030c7c0b14ec7c1ea7e1f66114b9081466e",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x858ae20f81f795c960a5cadd84f3dd8e1e6798fc719545f3a10001def3cc89b5c23cd00149a6eb6a2062e10b5b882030c7c0b14ec7c1ea7e1f66114b9081466e.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0x794962f855ab553b9b269af817d22a9f3aace428b5637f27ea6fe7763ce9cbfe976f7725fa24a922401689c2df3f911f61f0d45d6a3e8e6bdd05a3aaae89200a",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x794962f855ab553b9b269af817d22a9f3aace428b5637f27ea6fe7763ce9cbfe976f7725fa24a922401689c2df3f911f61f0d45d6a3e8e6bdd05a3aaae89200a.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0x0458b3119fe75beee322385ae298e5b69935c25c7b1e5953aca86898de74beab2d724af5f9b0a88f66e6588af8a7c53124b77b4eda7274aebeaf12751c880788",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x0458b3119fe75beee322385ae298e5b69935c25c7b1e5953aca86898de74beab2d724af5f9b0a88f66e6588af8a7c53124b77b4eda7274aebeaf12751c880788.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0x396231a7e0ac7343c672d8a1d69ca5e89a773b9e771f2261866d44197e77018667b42ac01c1343e0f89cf7ae13994b12e607a4620e41989888e438589b2906fb",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x396231a7e0ac7343c672d8a1d69ca5e89a773b9e771f2261866d44197e77018667b42ac01c1343e0f89cf7ae13994b12e607a4620e41989888e438589b2906fb.jpg",
+            "type": "image",
+            "label": "horse"
+        },
+        {
+            "hash": "0xfd1a4cf1ad872575484cc637f17d63469f49ffab5cd9a083c06d7c2d3428f896c5cb22f74861150681abf2f460c2085731f0815a6912b9b0ef05d9debe6d003f",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xfd1a4cf1ad872575484cc637f17d63469f49ffab5cd9a083c06d7c2d3428f896c5cb22f74861150681abf2f460c2085731f0815a6912b9b0ef05d9debe6d003f.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0x501790094221636cee420f49ad92a21cd298c9e8dc752795908d64ab8b6109ccb4b0ab9090651820f120f8bd8eadb2c03b9298fe2ebfe77468a92ca6163efa71",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x501790094221636cee420f49ad92a21cd298c9e8dc752795908d64ab8b6109ccb4b0ab9090651820f120f8bd8eadb2c03b9298fe2ebfe77468a92ca6163efa71.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0xecab925a55fe3f68afff97e6ce6b752044c8aa8022b737829eced12e32dae9bfb761c27fed3ce05a6226154cd39e92d3256e1b9d3d928173918e09aad8b99f4f",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xecab925a55fe3f68afff97e6ce6b752044c8aa8022b737829eced12e32dae9bfb761c27fed3ce05a6226154cd39e92d3256e1b9d3d928173918e09aad8b99f4f.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0xed72d39933893c3a176e8360d38f79faef02e59b583e114f0b5a9f3043e6fb24fb6399e8550b51a5e1d9ef8cde7a02a7373739b0b488aacac74a86a8e03a34a3",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xed72d39933893c3a176e8360d38f79faef02e59b583e114f0b5a9f3043e6fb24fb6399e8550b51a5e1d9ef8cde7a02a7373739b0b488aacac74a86a8e03a34a3.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0x2de20d716e37f702edb17834ac8205b5b11ad43620f0dd079ed680c710f9ac0b65ecf6bb85d85aa9a82a3adf6f0795fe842e7e6a289034ed1c29027af9366da3",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x2de20d716e37f702edb17834ac8205b5b11ad43620f0dd079ed680c710f9ac0b65ecf6bb85d85aa9a82a3adf6f0795fe842e7e6a289034ed1c29027af9366da3.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0x8a2fd874ef10dc79a07e8fb0a42d7d08bb9e68b4836857b7afe018e660dd1077787fff678908442f7cd31001c3d5c0c94195cac8e4eb5ce649370d40447d9ccf",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x8a2fd874ef10dc79a07e8fb0a42d7d08bb9e68b4836857b7afe018e660dd1077787fff678908442f7cd31001c3d5c0c94195cac8e4eb5ce649370d40447d9ccf.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0x389e0af93f52e4b02b954d1bf86dc7731f9c39dd4ab17d30f80a3bed28c7c5638beb4de36d87346c7552f281315540beba0ca471b92790a53c0c1247acad75fc",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x389e0af93f52e4b02b954d1bf86dc7731f9c39dd4ab17d30f80a3bed28c7c5638beb4de36d87346c7552f281315540beba0ca471b92790a53c0c1247acad75fc.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0x5ad8988769dd7d7307cf6fbb4c5c3f984e3889d9f19c472b21993144cb1be82a676f990fea505b6d2e39a0eca6755e9a7a814031afc463db1ca0eab6d9f43f55",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x5ad8988769dd7d7307cf6fbb4c5c3f984e3889d9f19c472b21993144cb1be82a676f990fea505b6d2e39a0eca6755e9a7a814031afc463db1ca0eab6d9f43f55.jpg",
+            "type": "image",
+            "label": "plane"
+        },
+        {
+            "hash": "0x8be0ed444b03c2b3adcf7e4ac1d57f455218a47a245306288eb8de3c7a2932e807c1e9017182f8a14d1ac1334f5be8bba2566e8abe9b4344c6aaf70458bfc5f0",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x8be0ed444b03c2b3adcf7e4ac1d57f455218a47a245306288eb8de3c7a2932e807c1e9017182f8a14d1ac1334f5be8bba2566e8abe9b4344c6aaf70458bfc5f0.jpg",
+            "type": "image",
+            "label": "train"
+        },
+        {
+            "hash": "0xf13790ced2ffe16aac747b0353857b507ec75eb808f2c078d90cd94b8d427a14bb09d0e55222b2a59db7d484c59a30b65085d1a125b710b01943fdda7a6edb29",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0xf13790ced2ffe16aac747b0353857b507ec75eb808f2c078d90cd94b8d427a14bb09d0e55222b2a59db7d484c59a30b65085d1a125b710b01943fdda7a6edb29.jpg",
+            "type": "image",
+            "label": "train"
+        },
+        {
+            "hash": "0x18d689383fb43c9eef7f528ca9b649d6872eae41a8f75b5d94230ab193327043e0c8e7ae9842f6cba1a42639ce208b3196f939977ca8bdd132b4868df31a8acf",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x18d689383fb43c9eef7f528ca9b649d6872eae41a8f75b5d94230ab193327043e0c8e7ae9842f6cba1a42639ce208b3196f939977ca8bdd132b4868df31a8acf.jpg",
+            "type": "image",
+            "label": "train"
+        },
+        {
+            "hash": "0x69f288a46b55d93dc63446a6a3684a6d475d7310d3453bb0efe8527ca3817ab5ae39b1f2c93515978af24350994a4a8f459dc8d957b0dccadc1cec83554444eb",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x69f288a46b55d93dc63446a6a3684a6d475d7310d3453bb0efe8527ca3817ab5ae39b1f2c93515978af24350994a4a8f459dc8d957b0dccadc1cec83554444eb.jpg",
+            "type": "image",
+            "label": "train"
+        },
+        {
+            "hash": "0x6e3d9732a6ac04e4413fd4ce6eec5decbb89f0a7cc8c8e6ff42a2b405f81f9b6b041b7f69cb3e6f5e320b5697568b1d125031ce0ad65af55e043391c4218f52e",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x6e3d9732a6ac04e4413fd4ce6eec5decbb89f0a7cc8c8e6ff42a2b405f81f9b6b041b7f69cb3e6f5e320b5697568b1d125031ce0ad65af55e043391c4218f52e.jpg",
+            "type": "image",
+            "label": "train"
+        },
+        {
+            "hash": "0x164dd4eed64e467403a33db444b1d0dfaf97f537dcecffbc733d7e2aadf4c393e4bb631edb20e0e0a6a2905e3d0870267c86927ac3c6b8d07a82f1a5e002f650",
+            "data": "/home/geopro/bench/captcha4/packages/datasets-fs/src/tests/test_results/flat_resized/images/0x164dd4eed64e467403a33db444b1d0dfaf97f537dcecffbc733d7e2aadf4c393e4bb631edb20e0e0a6a2905e3d0870267c86927ac3c6b8d07a82f1a5e002f650.jpg",
+            "type": "image",
+            "label": "train"
+        }
+    ]
+}
