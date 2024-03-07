@@ -20,7 +20,7 @@ export default function () {
             root: getRootDir(),
             include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
             watch: false,
-            watchExclude: ['**/node_modules/**', '**/dist/**', '../../packages/datasets-fs/src/__tests__/data/**'],
+            watchExclude: ['**/node_modules/**', '**/dist/**'],
             logHeapUsage: true,
             coverage: {
                 enabled: true,
