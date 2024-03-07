@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="IE=edge" />
-        <title>MockEnvironment | Documentation - v0.3.1</title>
-        <meta name="description" content="Documentation for Documentation" />
+        <title>MockEnvironment | Prosopo Captcha - v0.3.1</title>
+        <meta name="description" content="Documentation for Prosopo Captcha" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="../assets/style.css" />
         <link rel="stylesheet" href="../assets/highlight.css" />
@@ -28,12 +28,14 @@
                                 <use href="../assets/icons.svg#icon-search"></use></svg></label
                         ><input type="text" id="tsd-search-field" aria-label="Search" />
                     </div>
-                    <div class="field"><div id="tsd-toolbar-links"></div></div>
+                    <div class="field">
+                        <div id="tsd-toolbar-links"><a href="https://prosopo.io">Prosopo</a></div>
+                    </div>
                     <ul class="results">
                         <li class="state loading">Preparing search index...</li>
                         <li class="state failure">The search index is not available</li>
                     </ul>
-                    <a href="../index.html" class="title">Documentation - v0.3.1</a>
+                    <a href="../index.html" class="title">Prosopo Captcha - v0.3.1</a>
                 </div>
                 <div class="table-cell" id="tsd-widgets">
                     <a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"
@@ -47,7 +49,7 @@
             <div class="col-content">
                 <div class="tsd-page-title">
                     <ul class="tsd-breadcrumb">
-                        <li><a href="../index.html">Documentation</a></li>
+                        <li><a href="../index.html">Prosopo Captcha</a></li>
                         <li><a href="../modules/_prosopo_env.html">@prosopo/env</a></li>
                         <li><a href="../modules/_prosopo_env.mockenv.html">mockenv</a></li>
                         <li><a href="_prosopo_env.mockenv.MockEnvironment.html">MockEnvironment</a></li>
@@ -77,8 +79,8 @@
                     <ul>
                         <li>
                             Defined in
-                            <a href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/mockenv.ts#L17"
-                                >mockenv.ts:17</a
+                            <a href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/mockenv.ts#L17"
+                                >packages/env/src/mockenv.ts:17</a
                             >
                         </li>
                     </ul>
@@ -172,14 +174,14 @@
                                             ><span>db</span></a
                                         >
                                         <a
-                                            href="_prosopo_env.mockenv.MockEnvironment.html#defaultEnvironment"
+                                            href="_prosopo_env.mockenv.MockEnvironment.html#defaultEnvironment-1"
                                             class="tsd-index-link tsd-is-inherited"
                                             ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                                 <use href="../assets/icons.svg#icon-1024"></use></svg
                                             ><span>default<wbr />Environment</span></a
                                         >
                                         <a
-                                            href="_prosopo_env.mockenv.MockEnvironment.html#defaultNetwork"
+                                            href="_prosopo_env.mockenv.MockEnvironment.html#defaultNetwork-1"
                                             class="tsd-index-link tsd-is-inherited"
                                             ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                                 <use href="../assets/icons.svg#icon-1024"></use></svg
@@ -339,8 +341,356 @@
                                         <li>
                                             <span
                                                 ><span class="tsd-kind-parameter">config</span>:
-                                                <span class="tsd-signature-type">ProsopoBasicConfigOutput</span></span
+                                                <span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">account</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">address</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">password</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">secret</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-signature-symbol">}</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">database</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><a
+                                                    href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype"
+                                                    class="tsd-signature-type external"
+                                                    target="_blank"
+                                                    >Partial</a
+                                                ><span class="tsd-signature-symbol">&lt;</span
+                                                ><a
+                                                    href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                                    class="tsd-signature-type external"
+                                                    target="_blank"
+                                                    >Record</a
+                                                ><span class="tsd-signature-symbol">&lt;</span
+                                                ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;staging&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;production&quot;</span
+                                                ><span class="tsd-signature-symbol">, </span
+                                                ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">authSource</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">dbname</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">endpoint</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">type</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-signature-symbol">}</span
+                                                ><span class="tsd-signature-symbol">&gt;</span
+                                                ><span class="tsd-signature-symbol">&gt;</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">defaultEnvironment</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;staging&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;production&quot;</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">defaultNetwork</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;shiden&quot;</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">logLevel</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">&quot;error&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;trace&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;debug&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;info&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;warn&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;fatal&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;log&quot;</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">networks</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><a
+                                                    href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                                    class="tsd-signature-type external"
+                                                    target="_blank"
+                                                    >Record</a
+                                                ><span class="tsd-signature-symbol">&lt;</span
+                                                ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;shiden&quot;</span
+                                                ><span class="tsd-signature-symbol">, </span
+                                                ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">contract</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-symbol">{ </span><br /><span
+                                                    >            </span
+                                                ><span class="tsd-kind-property">address</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span
+                                                    >            </span
+                                                ><span class="tsd-kind-property">name</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-signature-symbol">}</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">endpoint</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">pairType</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">&quot;sr25519&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;ed25519&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;ecdsa&quot;</span
+                                                ><span class="tsd-signature-symbol"> | </span
+                                                ><span class="tsd-signature-type">&quot;ethereum&quot;</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                                ><span class="tsd-kind-property">ss58Format</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                                ><span class="tsd-signature-symbol">}</span
+                                                ><span class="tsd-signature-symbol">&gt;</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span
+                                                    class="tsd-signature-symbol"
+                                                    >}</span
+                                                ></span
                                             >
+                                            <ul class="tsd-parameters">
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">account</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-symbol">{ </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">address</span
+                                                        ><span class="tsd-signature-symbol">?: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">password</span
+                                                        ><span class="tsd-signature-symbol">?: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">secret</span
+                                                        ><span class="tsd-signature-symbol">?: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            class="tsd-signature-symbol"
+                                                            >}</span
+                                                        >
+                                                    </h5>
+                                                    <ul class="tsd-parameters">
+                                                        <li class="tsd-parameter">
+                                                            <h5>
+                                                                <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                                <span class="tsd-kind-property">address</span
+                                                                ><span class="tsd-signature-symbol">?: </span
+                                                                ><span class="tsd-signature-type">string</span>
+                                                            </h5>
+                                                        </li>
+                                                        <li class="tsd-parameter">
+                                                            <h5>
+                                                                <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                                <span class="tsd-kind-property">password</span
+                                                                ><span class="tsd-signature-symbol">?: </span
+                                                                ><span class="tsd-signature-type">string</span>
+                                                            </h5>
+                                                        </li>
+                                                        <li class="tsd-parameter">
+                                                            <h5>
+                                                                <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                                <span class="tsd-kind-property">secret</span
+                                                                ><span class="tsd-signature-symbol">?: </span
+                                                                ><span class="tsd-signature-type">string</span>
+                                                            </h5>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                        <span class="tsd-kind-property">database</span
+                                                        ><span class="tsd-signature-symbol">?: </span
+                                                        ><a
+                                                            href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype"
+                                                            class="tsd-signature-type external"
+                                                            target="_blank"
+                                                            >Partial</a
+                                                        ><span class="tsd-signature-symbol">&lt;</span
+                                                        ><a
+                                                            href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                                            class="tsd-signature-type external"
+                                                            target="_blank"
+                                                            >Record</a
+                                                        ><span class="tsd-signature-symbol">&lt;</span
+                                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;staging&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;production&quot;</span
+                                                        ><span class="tsd-signature-symbol">, </span
+                                                        ><span class="tsd-signature-symbol">{ </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">authSource</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">dbname</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">endpoint</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">type</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            class="tsd-signature-symbol"
+                                                            >}</span
+                                                        ><span class="tsd-signature-symbol">&gt;</span
+                                                        ><span class="tsd-signature-symbol">&gt;</span>
+                                                    </h5>
+                                                </li>
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">default<wbr />Environment</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;staging&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;production&quot;</span>
+                                                    </h5>
+                                                </li>
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">default<wbr />Network</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;shiden&quot;</span>
+                                                    </h5>
+                                                </li>
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">log<wbr />Level</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">&quot;error&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;trace&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;debug&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;info&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;warn&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;fatal&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;log&quot;</span>
+                                                    </h5>
+                                                </li>
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">networks</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><a
+                                                            href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                                            class="tsd-signature-type external"
+                                                            target="_blank"
+                                                            >Record</a
+                                                        ><span class="tsd-signature-symbol">&lt;</span
+                                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;shiden&quot;</span
+                                                        ><span class="tsd-signature-symbol">, </span
+                                                        ><span class="tsd-signature-symbol">{ </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">contract</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-symbol">{ </span><br /><span
+                                                            >        </span
+                                                        ><span class="tsd-kind-property">address</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >        </span
+                                                        ><span class="tsd-kind-property">name</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-signature-symbol">}</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">endpoint</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">string</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">pairType</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">&quot;sr25519&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;ed25519&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;ecdsa&quot;</span
+                                                        ><span class="tsd-signature-symbol"> | </span
+                                                        ><span class="tsd-signature-type">&quot;ethereum&quot;</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            >    </span
+                                                        ><span class="tsd-kind-property">ss58Format</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">number</span
+                                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                                            class="tsd-signature-symbol"
+                                                            >}</span
+                                                        ><span class="tsd-signature-symbol">&gt;</span>
+                                                    </h5>
+                                                </li>
+                                            </ul>
                                         </li>
                                         <li>
                                             <span
@@ -371,8 +721,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L46"
-                                                >env.ts:46</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L46"
+                                                >packages/env/src/env.ts:46</a
                                             >
                                         </li>
                                     </ul>
@@ -393,7 +743,11 @@
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">abi</span><span class="tsd-signature-symbol">:</span>
-                            <span class="tsd-signature-type">ContractAbi</span>
+                            <a
+                                href="../types/_prosopo_env.env._internal_.ContractAbi.html"
+                                class="tsd-signature-type tsd-kind-type-alias"
+                                >ContractAbi</a
+                            >
                         </div>
                         <aside class="tsd-sources">
                             <p>
@@ -407,8 +761,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L38"
-                                        >env.ts:38</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L38"
+                                        >packages/env/src/env.ts:38</a
                                     >
                                 </li>
                             </ul>
@@ -440,8 +794,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L44"
-                                        >env.ts:44</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L44"
+                                        >packages/env/src/env.ts:44</a
                                     >
                                 </li>
                             </ul>
@@ -457,7 +811,14 @@
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">assets<wbr />Resolver</span
-                            ><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span>
+                            ><span class="tsd-signature-symbol">:</span>
+                            <span class="tsd-signature-type">undefined</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><a
+                                href="../interfaces/_prosopo_env.env._internal_.AssetsResolver.html"
+                                class="tsd-signature-type tsd-kind-interface"
+                                >AssetsResolver</a
+                            >
                         </div>
                         <aside class="tsd-sources">
                             <p>
@@ -471,8 +832,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L40"
-                                        >env.ts:40</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L40"
+                                        >packages/env/src/env.ts:40</a
                                     >
                                 </li>
                             </ul>
@@ -488,7 +849,562 @@
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">config</span><span class="tsd-signature-symbol">:</span>
-                            <span class="tsd-signature-type">ProsopoConfigOutput</span>
+                            <span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                            ><span class="tsd-kind-property">account</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                            ><span class="tsd-kind-property">address</span><span class="tsd-signature-symbol">?: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>        </span><span class="tsd-kind-property">password</span
+                            ><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">secret</span><span class="tsd-signature-symbol">?: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>    </span><span class="tsd-signature-symbol">}</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">batchCommit</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>        </span><span class="tsd-kind-property">interval</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">maxBatchExtrinsicPercentage</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>    </span><span class="tsd-kind-property">captchaSolutions</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>        </span><span class="tsd-kind-property">captchaBlockRecency</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">requiredNumberOfSolutions</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">solutionWinningPercentage</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>    </span><span class="tsd-kind-property">captchas</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>        </span><span class="tsd-kind-property">solved</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>            </span><span class="tsd-kind-property">count</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>        </span><span class="tsd-kind-property">unsolved</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>            </span><span class="tsd-kind-property">count</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>    </span><span class="tsd-signature-symbol">}</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">database</span><span class="tsd-signature-symbol">?: </span
+                            ><a
+                                href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype"
+                                class="tsd-signature-type external"
+                                target="_blank"
+                                >Partial</a
+                            ><span class="tsd-signature-symbol">&lt;</span
+                            ><a
+                                href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                class="tsd-signature-type external"
+                                target="_blank"
+                                >Record</a
+                            ><span class="tsd-signature-symbol">&lt;</span
+                            ><span class="tsd-signature-type">&quot;development&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;staging&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;production&quot;</span
+                            ><span class="tsd-signature-symbol">, </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>        </span><span class="tsd-kind-property">authSource</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">dbname</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>        </span><span class="tsd-kind-property">endpoint</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>    </span><span class="tsd-signature-symbol">}</span
+                            ><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">defaultEnvironment</span
+                            ><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">&quot;development&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;staging&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;production&quot;</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">defaultNetwork</span
+                            ><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">&quot;development&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;shiden&quot;</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">logLevel</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">&quot;error&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;trace&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;debug&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;info&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;warn&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;fatal&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;log&quot;</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">mongoAtlasUri</span
+                            ><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">networks</span><span class="tsd-signature-symbol">: </span
+                            ><a
+                                href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                class="tsd-signature-type external"
+                                target="_blank"
+                                >Record</a
+                            ><span class="tsd-signature-symbol">&lt;</span
+                            ><span class="tsd-signature-type">&quot;development&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;shiden&quot;</span
+                            ><span class="tsd-signature-symbol">, </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>        </span><span class="tsd-kind-property">contract</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span
+                            ><br /><span>            </span><span class="tsd-kind-property">address</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>            </span
+                            ><span class="tsd-kind-property">name</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>        </span><span class="tsd-signature-symbol">}</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">endpoint</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>        </span><span class="tsd-kind-property">pairType</span
+                            ><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">&quot;sr25519&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;ed25519&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;ecdsa&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;ethereum&quot;</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                            ><span class="tsd-kind-property">ss58Format</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-kind-property">server</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                            ><span class="tsd-kind-property">baseURL</span><span class="tsd-signature-symbol">: </span
+                            ><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span>        </span><span class="tsd-kind-property">port</span
+                            ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span
+                            ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                            ><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span
+                            ><br /><span class="tsd-signature-symbol">}</span>
+                        </div>
+                        <div class="tsd-type-declaration">
+                            <h4>Type declaration</h4>
+                            <ul class="tsd-parameters">
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">account</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">address</span
+                                        ><span class="tsd-signature-symbol">?: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">password</span
+                                        ><span class="tsd-signature-symbol">?: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">secret</span
+                                        ><span class="tsd-signature-symbol">?: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        >
+                                    </h5>
+                                    <ul class="tsd-parameters">
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                <span class="tsd-kind-property">address</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><span class="tsd-signature-type">string</span>
+                                            </h5>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                <span class="tsd-kind-property">password</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><span class="tsd-signature-type">string</span>
+                                            </h5>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <code class="tsd-tag ts-flagOptional">Optional</code>
+                                                <span class="tsd-kind-property">secret</span
+                                                ><span class="tsd-signature-symbol">?: </span
+                                                ><span class="tsd-signature-type">string</span>
+                                            </h5>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">batch<wbr />Commit</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">interval</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">maxBatchExtrinsicPercentage</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        >
+                                    </h5>
+                                    <ul class="tsd-parameters">
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property">interval</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span>
+                                            </h5>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property"
+                                                    >max<wbr />Batch<wbr />Extrinsic<wbr />Percentage</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span>
+                                            </h5>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">captcha<wbr />Solutions</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">captchaBlockRecency</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">requiredNumberOfSolutions</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">solutionWinningPercentage</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        >
+                                    </h5>
+                                    <ul class="tsd-parameters">
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property">captcha<wbr />Block<wbr />Recency</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span>
+                                            </h5>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property"
+                                                    >required<wbr />Number<wbr />Of<wbr />Solutions</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span>
+                                            </h5>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property"
+                                                    >solution<wbr />Winning<wbr />Percentage</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span>
+                                            </h5>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">captchas</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">solved</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                                        ><span class="tsd-kind-property">count</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-signature-symbol">}</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">unsolved</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                                        ><span class="tsd-kind-property">count</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-signature-symbol">}</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        >
+                                    </h5>
+                                    <ul class="tsd-parameters">
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property">solved</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">count</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span
+                                                    class="tsd-signature-symbol"
+                                                    >}</span
+                                                >
+                                            </h5>
+                                            <ul class="tsd-parameters">
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">count</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">number</span>
+                                                    </h5>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property">unsolved</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                                ><span class="tsd-kind-property">count</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span
+                                                ><span class="tsd-signature-symbol">; </span><br /><span
+                                                    class="tsd-signature-symbol"
+                                                    >}</span
+                                                >
+                                            </h5>
+                                            <ul class="tsd-parameters">
+                                                <li class="tsd-parameter">
+                                                    <h5>
+                                                        <span class="tsd-kind-property">count</span
+                                                        ><span class="tsd-signature-symbol">: </span
+                                                        ><span class="tsd-signature-type">number</span>
+                                                    </h5>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <code class="tsd-tag ts-flagOptional">Optional</code>
+                                        <span class="tsd-kind-property">database</span
+                                        ><span class="tsd-signature-symbol">?: </span
+                                        ><a
+                                            href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype"
+                                            class="tsd-signature-type external"
+                                            target="_blank"
+                                            >Partial</a
+                                        ><span class="tsd-signature-symbol">&lt;</span
+                                        ><a
+                                            href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                            class="tsd-signature-type external"
+                                            target="_blank"
+                                            >Record</a
+                                        ><span class="tsd-signature-symbol">&lt;</span
+                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;staging&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;production&quot;</span
+                                        ><span class="tsd-signature-symbol">, </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">authSource</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">dbname</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">endpoint</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">type</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        ><span class="tsd-signature-symbol">&gt;</span
+                                        ><span class="tsd-signature-symbol">&gt;</span>
+                                    </h5>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">default<wbr />Environment</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;staging&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;production&quot;</span>
+                                    </h5>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">default<wbr />Network</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;shiden&quot;</span>
+                                    </h5>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">log<wbr />Level</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">&quot;error&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;trace&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;debug&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;info&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;warn&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;fatal&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;log&quot;</span>
+                                    </h5>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <code class="tsd-tag ts-flagOptional">Optional</code>
+                                        <span class="tsd-kind-property">mongo<wbr />Atlas<wbr />Uri</span
+                                        ><span class="tsd-signature-symbol">?: </span
+                                        ><span class="tsd-signature-type">string</span>
+                                    </h5>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">networks</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><a
+                                            href="https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type"
+                                            class="tsd-signature-type external"
+                                            target="_blank"
+                                            >Record</a
+                                        ><span class="tsd-signature-symbol">&lt;</span
+                                        ><span class="tsd-signature-type">&quot;development&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;shiden&quot;</span
+                                        ><span class="tsd-signature-symbol">, </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">contract</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>        </span
+                                        ><span class="tsd-kind-property">address</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>        </span
+                                        ><span class="tsd-kind-property">name</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-signature-symbol">}</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">endpoint</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">pairType</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">&quot;sr25519&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;ed25519&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;ecdsa&quot;</span
+                                        ><span class="tsd-signature-symbol"> | </span
+                                        ><span class="tsd-signature-type">&quot;ethereum&quot;</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">ss58Format</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        ><span class="tsd-signature-symbol">&gt;</span>
+                                    </h5>
+                                </li>
+                                <li class="tsd-parameter">
+                                    <h5>
+                                        <span class="tsd-kind-property">server</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-symbol">{ </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">baseURL</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">string</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                                        ><span class="tsd-kind-property">port</span
+                                        ><span class="tsd-signature-symbol">: </span
+                                        ><span class="tsd-signature-type">number</span
+                                        ><span class="tsd-signature-symbol">; </span><br /><span
+                                            class="tsd-signature-symbol"
+                                            >}</span
+                                        >
+                                    </h5>
+                                    <ul class="tsd-parameters">
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property">baseURL</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">string</span>
+                                            </h5>
+                                        </li>
+                                        <li class="tsd-parameter">
+                                            <h5>
+                                                <span class="tsd-kind-property">port</span
+                                                ><span class="tsd-signature-symbol">: </span
+                                                ><span class="tsd-signature-type">number</span>
+                                            </h5>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </div>
                         <aside class="tsd-sources">
                             <p>
@@ -502,8 +1418,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/provider.ts#L18"
-                                        >provider.ts:18</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/provider.ts#L18"
+                                        >packages/env/src/provider.ts:18</a
                                     >
                                 </li>
                             </ul>
@@ -533,8 +1449,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L34"
-                                        >env.ts:34</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L34"
+                                        >packages/env/src/env.ts:34</a
                                     >
                                 </li>
                             </ul>
@@ -550,7 +1466,14 @@
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">contract<wbr />Interface</span
-                            ><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span>
+                            ><span class="tsd-signature-symbol">:</span>
+                            <span class="tsd-signature-type">undefined</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><a
+                                href="_prosopo_env.env._internal_.ProsopoCaptchaContract.html"
+                                class="tsd-signature-type tsd-kind-class"
+                                >ProsopoCaptchaContract</a
+                            >
                         </div>
                         <aside class="tsd-sources">
                             <p>
@@ -564,8 +1487,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L33"
-                                        >env.ts:33</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L33"
+                                        >packages/env/src/env.ts:33</a
                                     >
                                 </li>
                             </ul>
@@ -595,8 +1518,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L37"
-                                        >env.ts:37</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L37"
+                                        >packages/env/src/env.ts:37</a
                                     >
                                 </li>
                             </ul>
@@ -612,7 +1535,13 @@
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">db</span><span class="tsd-signature-symbol">:</span>
-                            <span class="tsd-signature-type">any</span>
+                            <span class="tsd-signature-type">undefined</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><a
+                                href="../interfaces/_prosopo_env.env._internal_.Database.html"
+                                class="tsd-signature-type tsd-kind-interface"
+                                >Database</a
+                            >
                         </div>
                         <aside class="tsd-sources">
                             <p>
@@ -626,31 +1555,35 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L32"
-                                        >env.ts:32</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L32"
+                                        >packages/env/src/env.ts:32</a
                                     >
                                 </li>
                             </ul>
                         </aside>
                     </section>
                     <section class="tsd-panel tsd-member tsd-is-inherited">
-                        <a id="defaultEnvironment" class="tsd-anchor"></a>
+                        <a id="defaultEnvironment-1" class="tsd-anchor"></a>
                         <h3 class="tsd-anchor-link">
                             <span>default<wbr />Environment</span
-                            ><a href="#defaultEnvironment" aria-label="Permalink" class="tsd-anchor-icon"
+                            ><a href="#defaultEnvironment-1" aria-label="Permalink" class="tsd-anchor-icon"
                                 ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
                             ></a>
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">default<wbr />Environment</span
                             ><span class="tsd-signature-symbol">:</span>
-                            <span class="tsd-signature-type">EnvironmentTypes</span>
+                            <span class="tsd-signature-type">&quot;development&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;staging&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;production&quot;</span>
                         </div>
                         <aside class="tsd-sources">
                             <p>
                                 Inherited from
                                 <a href="_prosopo_env.provider.ProviderEnvironment.html">ProviderEnvironment</a>.<a
-                                    href="_prosopo_env.provider.ProviderEnvironment.html#defaultEnvironment"
+                                    href="_prosopo_env.provider.ProviderEnvironment.html#defaultEnvironment-1"
                                     >defaultEnvironment</a
                                 >
                             </p>
@@ -658,31 +1591,35 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L35"
-                                        >env.ts:35</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L35"
+                                        >packages/env/src/env.ts:35</a
                                     >
                                 </li>
                             </ul>
                         </aside>
                     </section>
                     <section class="tsd-panel tsd-member tsd-is-inherited">
-                        <a id="defaultNetwork" class="tsd-anchor"></a>
+                        <a id="defaultNetwork-1" class="tsd-anchor"></a>
                         <h3 class="tsd-anchor-link">
                             <span>default<wbr />Network</span
-                            ><a href="#defaultNetwork" aria-label="Permalink" class="tsd-anchor-icon"
+                            ><a href="#defaultNetwork-1" aria-label="Permalink" class="tsd-anchor-icon"
                                 ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
                             ></a>
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">default<wbr />Network</span
                             ><span class="tsd-signature-symbol">:</span>
-                            <span class="tsd-signature-type">NetworkNames</span>
+                            <span class="tsd-signature-type">&quot;development&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;rococo&quot;</span
+                            ><span class="tsd-signature-symbol"> | </span
+                            ><span class="tsd-signature-type">&quot;shiden&quot;</span>
                         </div>
                         <aside class="tsd-sources">
                             <p>
                                 Inherited from
                                 <a href="_prosopo_env.provider.ProviderEnvironment.html">ProviderEnvironment</a>.<a
-                                    href="_prosopo_env.provider.ProviderEnvironment.html#defaultNetwork"
+                                    href="_prosopo_env.provider.ProviderEnvironment.html#defaultNetwork-1"
                                     >defaultNetwork</a
                                 >
                             </p>
@@ -690,8 +1627,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L36"
-                                        >env.ts:36</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L36"
+                                        >packages/env/src/env.ts:36</a
                                     >
                                 </li>
                             </ul>
@@ -721,8 +1658,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L42"
-                                        >env.ts:42</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L42"
+                                        >packages/env/src/env.ts:42</a
                                     >
                                 </li>
                             </ul>
@@ -738,7 +1675,11 @@
                         </h3>
                         <div class="tsd-signature">
                             <span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">:</span>
-                            <span class="tsd-signature-type">Logger</span>
+                            <a
+                                href="../types/_prosopo_env.env._internal_.Logger.html"
+                                class="tsd-signature-type tsd-kind-type-alias"
+                                >Logger</a
+                            >
                         </div>
                         <aside class="tsd-sources">
                             <p>
@@ -752,8 +1693,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L39"
-                                        >env.ts:39</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L39"
+                                        >packages/env/src/env.ts:39</a
                                     >
                                 </li>
                             </ul>
@@ -785,8 +1726,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L43"
-                                        >env.ts:43</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L43"
+                                        >packages/env/src/env.ts:43</a
                                     >
                                 </li>
                             </ul>
@@ -817,8 +1758,8 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L41"
-                                        >env.ts:41</a
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L41"
+                                        >packages/env/src/env.ts:41</a
                                     >
                                 </li>
                             </ul>
@@ -888,8 +1829,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L127"
-                                                >env.ts:127</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L127"
+                                                >packages/env/src/env.ts:127</a
                                             >
                                         </li>
                                     </ul>
@@ -939,8 +1880,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/mockenv.ts#L18"
-                                                >mockenv.ts:18</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/mockenv.ts#L18"
+                                                >packages/env/src/mockenv.ts:18</a
                                             >
                                         </li>
                                     </ul>
@@ -981,8 +1922,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L99"
-                                                >env.ts:99</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L99"
+                                                >packages/env/src/env.ts:99</a
                                             >
                                         </li>
                                     </ul>
@@ -1004,7 +1945,10 @@
                                 ><span class="tsd-kind-call-signature">get<wbr />Assets<wbr />Resolver</span
                                 ><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span
                                 ><span class="tsd-signature-symbol">: </span
-                                ><span class="tsd-signature-type">AssetsResolver</span
+                                ><a
+                                    href="../interfaces/_prosopo_env.env._internal_.AssetsResolver.html"
+                                    class="tsd-signature-type tsd-kind-interface"
+                                    >AssetsResolver</a
                                 ><a
                                     href="#getAssetsResolver.getAssetsResolver-1"
                                     aria-label="Permalink"
@@ -1014,7 +1958,12 @@
                             </li>
                             <li class="tsd-description">
                                 <h4 class="tsd-returns-title">
-                                    Returns <span class="tsd-signature-type">AssetsResolver</span>
+                                    Returns
+                                    <a
+                                        href="../interfaces/_prosopo_env.env._internal_.AssetsResolver.html"
+                                        class="tsd-signature-type tsd-kind-interface"
+                                        >AssetsResolver</a
+                                    >
                                 </h4>
                                 <aside class="tsd-sources">
                                     <p>
@@ -1028,8 +1977,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L113"
-                                                >env.ts:113</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L113"
+                                                >packages/env/src/env.ts:113</a
                                             >
                                         </li>
                                     </ul>
@@ -1057,7 +2006,10 @@
                                     target="_blank"
                                     >Promise</a
                                 ><span class="tsd-signature-symbol">&lt;</span
-                                ><span class="tsd-signature-type">ProsopoCaptchaContract</span
+                                ><a
+                                    href="_prosopo_env.env._internal_.ProsopoCaptchaContract.html"
+                                    class="tsd-signature-type tsd-kind-class"
+                                    >ProsopoCaptchaContract</a
                                 ><span class="tsd-signature-symbol">&gt;</span
                                 ><a
                                     href="#getContractApi.getContractApi-1"
@@ -1075,7 +2027,10 @@
                                         target="_blank"
                                         >Promise</a
                                     ><span class="tsd-signature-symbol">&lt;</span
-                                    ><span class="tsd-signature-type">ProsopoCaptchaContract</span
+                                    ><a
+                                        href="_prosopo_env.env._internal_.ProsopoCaptchaContract.html"
+                                        class="tsd-signature-type tsd-kind-class"
+                                        >ProsopoCaptchaContract</a
                                     ><span class="tsd-signature-symbol">&gt;</span>
                                 </h4>
                                 <aside class="tsd-sources">
@@ -1090,8 +2045,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L134"
-                                                >env.ts:134</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L134"
+                                                >packages/env/src/env.ts:134</a
                                             >
                                         </li>
                                     </ul>
@@ -1113,7 +2068,10 @@
                                 ><span class="tsd-kind-call-signature">get<wbr />Contract<wbr />Interface</span
                                 ><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span
                                 ><span class="tsd-signature-symbol">: </span
-                                ><span class="tsd-signature-type">ProsopoCaptchaContract</span
+                                ><a
+                                    href="_prosopo_env.env._internal_.ProsopoCaptchaContract.html"
+                                    class="tsd-signature-type tsd-kind-class"
+                                    >ProsopoCaptchaContract</a
                                 ><a
                                     href="#getContractInterface.getContractInterface-1"
                                     aria-label="Permalink"
@@ -1123,7 +2081,12 @@
                             </li>
                             <li class="tsd-description">
                                 <h4 class="tsd-returns-title">
-                                    Returns <span class="tsd-signature-type">ProsopoCaptchaContract</span>
+                                    Returns
+                                    <a
+                                        href="_prosopo_env.env._internal_.ProsopoCaptchaContract.html"
+                                        class="tsd-signature-type tsd-kind-class"
+                                        >ProsopoCaptchaContract</a
+                                    >
                                 </h4>
                                 <aside class="tsd-sources">
                                     <p>
@@ -1137,8 +2100,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L92"
-                                                >env.ts:92</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L92"
+                                                >packages/env/src/env.ts:92</a
                                             >
                                         </li>
                                     </ul>
@@ -1160,14 +2123,22 @@
                                 ><span class="tsd-kind-call-signature">get<wbr />Db</span
                                 ><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span
                                 ><span class="tsd-signature-symbol">: </span
-                                ><span class="tsd-signature-type">Database</span
+                                ><a
+                                    href="../interfaces/_prosopo_env.env._internal_.Database.html"
+                                    class="tsd-signature-type tsd-kind-interface"
+                                    >Database</a
                                 ><a href="#getDb.getDb-1" aria-label="Permalink" class="tsd-anchor-icon"
                                     ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
                                 ></a>
                             </li>
                             <li class="tsd-description">
                                 <h4 class="tsd-returns-title">
-                                    Returns <span class="tsd-signature-type">Database</span>
+                                    Returns
+                                    <a
+                                        href="../interfaces/_prosopo_env.env._internal_.Database.html"
+                                        class="tsd-signature-type tsd-kind-interface"
+                                        >Database</a
+                                    >
                                 </h4>
                                 <aside class="tsd-sources">
                                     <p>
@@ -1179,8 +2150,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L106"
-                                                >env.ts:106</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L106"
+                                                >packages/env/src/env.ts:106</a
                                             >
                                         </li>
                                     </ul>
@@ -1221,8 +2192,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L120"
-                                                >env.ts:120</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L120"
+                                                >packages/env/src/env.ts:120</a
                                             >
                                         </li>
                                     </ul>
@@ -1280,8 +2251,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L79"
-                                                >env.ts:79</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L79"
+                                                >packages/env/src/env.ts:79</a
                                             >
                                         </li>
                                     </ul>
@@ -1342,8 +2313,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L184"
-                                                >env.ts:184</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L184"
+                                                >packages/env/src/env.ts:184</a
                                             >
                                         </li>
                                     </ul>
@@ -1399,8 +2370,8 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/env/src/env.ts#L152"
-                                                >env.ts:152</a
+                                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/env/src/env.ts#L152"
+                                                >packages/env/src/env.ts:152</a
                                             >
                                         </li>
                                     </ul>
@@ -1582,11 +2553,11 @@
                                 ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                     <use href="../assets/icons.svg#icon-1024"></use></svg
                                 ><span>db</span></a
-                            ><a href="#defaultEnvironment" class="tsd-is-inherited"
+                            ><a href="#defaultEnvironment-1" class="tsd-is-inherited"
                                 ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                     <use href="../assets/icons.svg#icon-1024"></use></svg
                                 ><span>default<wbr />Environment</span></a
-                            ><a href="#defaultNetwork" class="tsd-is-inherited"
+                            ><a href="#defaultNetwork-1" class="tsd-is-inherited"
                                 ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                     <use href="../assets/icons.svg#icon-1024"></use></svg
                                 ><span>default<wbr />Network</span></a
@@ -1659,7 +2630,7 @@
                         <a href="../index.html"
                             ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                 <use href="../assets/icons.svg#icon-1"></use></svg
-                            ><span>Documentation - v0.3.1</span></a
+                            ><span>Prosopo Captcha - v0.3.1</span></a
                         >
                         <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base="..">
                             <li>Loading...</li>
@@ -1667,9 +2638,6 @@
                     </nav>
                 </div>
             </div>
-        </div>
-        <div class="tsd-generator">
-            <p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
         </div>
         <div class="overlay"></div>
     </body>
