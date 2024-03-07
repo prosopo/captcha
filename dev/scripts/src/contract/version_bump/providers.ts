@@ -1,1 +1,1 @@
-// Gets a list of all providers in Mongo
+// Takes a list of providers, registers them in the new contract using their details
