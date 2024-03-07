@@ -12,6 +12,166 @@
         <script async src="../assets/icons.js" id="tsd-icons-script"></script>
         <script async src="../assets/search.js" id="tsd-search-script"></script>
         <script async src="../assets/navigation.js" id="tsd-nav-script"></script>
+        <style>
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --md-sys-color-primary: #f6be46;
+                    --md-sys-color-on-primary: #412d00;
+                    --md-sys-color-primary-container: #5d4200;
+                    --md-sys-color-on-primary-container: #ffdea3;
+                    --md-sys-color-secondary: #d9c4a0;
+                    --md-sys-color-on-secondary: #3b2f15;
+                    --md-sys-color-secondary-container: #53452a;
+                    --md-sys-color-on-secondary-container: #f6e0bb;
+                    --md-sys-color-tertiary: #b2cfa8;
+                    --md-sys-color-on-tertiary: #1e361a;
+                    --md-sys-color-tertiary-container: #344d2f;
+                    --md-sys-color-on-tertiary-container: #cdebc2;
+                    --md-sys-color-error: #ffb4ab;
+                    --md-sys-color-on-error: #690005;
+                    --md-sys-color-error-container: #93000a;
+                    --md-sys-color-on-error-container: #ffb4ab;
+                    --md-sys-color-background: #1e1b16;
+                    --md-sys-color-on-background: #e9e1d9;
+                    --md-sys-color-surface: #1e1b16;
+                    --md-sys-color-on-surface: #e9e1d9;
+                    --md-sys-color-surface-variant: #4e4639;
+                    --md-sys-color-on-surface-variant: #d1c5b4;
+                    --md-sys-color-outline: #9a8f80;
+                    --md-sys-color-outline-variant: #4e4639;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #e9e1d9;
+                    --md-sys-color-inverse-on-surface: #34302a;
+                    --md-sys-color-inverse-primary: #7a5900;
+                    --md-sys-color-surface-dim: #16130e;
+                    --md-sys-color-surface-bright: #3d3933;
+                    --md-sys-color-surface-container-lowest: #110e09;
+                    --md-sys-color-surface-container-low: #1e1b16;
+                    --md-sys-color-surface-container: #221f1a;
+                    --md-sys-color-surface-container-high: #2d2924;
+                    --md-sys-color-surface-container-highest: #38342e;
+                }
+            }
+            :root[data-theme='dark'] {
+                --md-sys-color-primary: #f6be46;
+                --md-sys-color-on-primary: #412d00;
+                --md-sys-color-primary-container: #5d4200;
+                --md-sys-color-on-primary-container: #ffdea3;
+                --md-sys-color-secondary: #d9c4a0;
+                --md-sys-color-on-secondary: #3b2f15;
+                --md-sys-color-secondary-container: #53452a;
+                --md-sys-color-on-secondary-container: #f6e0bb;
+                --md-sys-color-tertiary: #b2cfa8;
+                --md-sys-color-on-tertiary: #1e361a;
+                --md-sys-color-tertiary-container: #344d2f;
+                --md-sys-color-on-tertiary-container: #cdebc2;
+                --md-sys-color-error: #ffb4ab;
+                --md-sys-color-on-error: #690005;
+                --md-sys-color-error-container: #93000a;
+                --md-sys-color-on-error-container: #ffb4ab;
+                --md-sys-color-background: #1e1b16;
+                --md-sys-color-on-background: #e9e1d9;
+                --md-sys-color-surface: #1e1b16;
+                --md-sys-color-on-surface: #e9e1d9;
+                --md-sys-color-surface-variant: #4e4639;
+                --md-sys-color-on-surface-variant: #d1c5b4;
+                --md-sys-color-outline: #9a8f80;
+                --md-sys-color-outline-variant: #4e4639;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #e9e1d9;
+                --md-sys-color-inverse-on-surface: #34302a;
+                --md-sys-color-inverse-primary: #7a5900;
+                --md-sys-color-surface-dim: #16130e;
+                --md-sys-color-surface-bright: #3d3933;
+                --md-sys-color-surface-container-lowest: #110e09;
+                --md-sys-color-surface-container-low: #1e1b16;
+                --md-sys-color-surface-container: #221f1a;
+                --md-sys-color-surface-container-high: #2d2924;
+                --md-sys-color-surface-container-highest: #38342e;
+            }
+
+            @media (prefers-color-scheme: light) {
+                :root {
+                    --md-sys-color-primary: #7a5900;
+                    --md-sys-color-on-primary: #ffffff;
+                    --md-sys-color-primary-container: #ffdea3;
+                    --md-sys-color-on-primary-container: #261900;
+                    --md-sys-color-secondary: #6c5c3f;
+                    --md-sys-color-on-secondary: #ffffff;
+                    --md-sys-color-secondary-container: #f6e0bb;
+                    --md-sys-color-on-secondary-container: #251a04;
+                    --md-sys-color-tertiary: #4b6545;
+                    --md-sys-color-on-tertiary: #ffffff;
+                    --md-sys-color-tertiary-container: #cdebc2;
+                    --md-sys-color-on-tertiary-container: #092007;
+                    --md-sys-color-error: #ba1a1a;
+                    --md-sys-color-on-error: #ffffff;
+                    --md-sys-color-error-container: #ffdad6;
+                    --md-sys-color-on-error-container: #410002;
+                    --md-sys-color-background: #fffbff;
+                    --md-sys-color-on-background: #1e1b16;
+                    --md-sys-color-surface: #fffbff;
+                    --md-sys-color-on-surface: #1e1b16;
+                    --md-sys-color-surface-variant: #ede1cf;
+                    --md-sys-color-on-surface-variant: #4e4639;
+                    --md-sys-color-outline: #7f7667;
+                    --md-sys-color-outline-variant: #d1c5b4;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #34302a;
+                    --md-sys-color-inverse-on-surface: #f8efe7;
+                    --md-sys-color-inverse-primary: #f6be46;
+                    --md-sys-color-surface-dim: #e1d9d0;
+                    --md-sys-color-surface-bright: #fff8f2;
+                    --md-sys-color-surface-container-lowest: #ffffff;
+                    --md-sys-color-surface-container-low: #fbf2e9;
+                    --md-sys-color-surface-container: #f5ede4;
+                    --md-sys-color-surface-container-high: #efe7de;
+                    --md-sys-color-surface-container-highest: #e9e1d9;
+                }
+            }
+            :root[data-theme='light'] {
+                --md-sys-color-primary: #7a5900;
+                --md-sys-color-on-primary: #ffffff;
+                --md-sys-color-primary-container: #ffdea3;
+                --md-sys-color-on-primary-container: #261900;
+                --md-sys-color-secondary: #6c5c3f;
+                --md-sys-color-on-secondary: #ffffff;
+                --md-sys-color-secondary-container: #f6e0bb;
+                --md-sys-color-on-secondary-container: #251a04;
+                --md-sys-color-tertiary: #4b6545;
+                --md-sys-color-on-tertiary: #ffffff;
+                --md-sys-color-tertiary-container: #cdebc2;
+                --md-sys-color-on-tertiary-container: #092007;
+                --md-sys-color-error: #ba1a1a;
+                --md-sys-color-on-error: #ffffff;
+                --md-sys-color-error-container: #ffdad6;
+                --md-sys-color-on-error-container: #410002;
+                --md-sys-color-background: #fffbff;
+                --md-sys-color-on-background: #1e1b16;
+                --md-sys-color-surface: #fffbff;
+                --md-sys-color-on-surface: #1e1b16;
+                --md-sys-color-surface-variant: #ede1cf;
+                --md-sys-color-on-surface-variant: #4e4639;
+                --md-sys-color-outline: #7f7667;
+                --md-sys-color-outline-variant: #d1c5b4;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #34302a;
+                --md-sys-color-inverse-on-surface: #f8efe7;
+                --md-sys-color-inverse-primary: #f6be46;
+                --md-sys-color-surface-dim: #e1d9d0;
+                --md-sys-color-surface-bright: #fff8f2;
+                --md-sys-color-surface-container-lowest: #ffffff;
+                --md-sys-color-surface-container-low: #fbf2e9;
+                --md-sys-color-surface-container: #f5ede4;
+                --md-sys-color-surface-container-high: #efe7de;
+                --md-sys-color-surface-container-highest: #e9e1d9;
+            }
+        </style>
+        <link rel="stylesheet" href="../assets/material-style.css" />
     </head>
     <body>
         <script>
@@ -121,7 +281,7 @@
                         <li>
                             Defined in
                             <a
-                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L22"
+                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L22"
                                 >packages/datasets-fs/src/commands/generate.ts:22</a
                             >
                         </li>
@@ -597,7 +757,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/utils/output.ts#L15"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/utils/output.ts#L15"
                                         >packages/datasets-fs/src/utils/output.ts:15</a
                                     >
                                 </li>
@@ -673,7 +833,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L90"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L90"
                                         >packages/datasets-fs/src/commands/generate.ts:90</a
                                     >
                                 </li>
@@ -750,7 +910,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L85"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L85"
                                         >packages/datasets-fs/src/commands/generate.ts:85</a
                                     >
                                 </li>
@@ -775,7 +935,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L88"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L88"
                                         >packages/datasets-fs/src/commands/generate.ts:88</a
                                     >
                                 </li>
@@ -800,7 +960,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L87"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L87"
                                         >packages/datasets-fs/src/commands/generate.ts:87</a
                                     >
                                 </li>
@@ -825,7 +985,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L92"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L92"
                                         >packages/datasets-fs/src/commands/generate.ts:92</a
                                     >
                                 </li>
@@ -850,7 +1010,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L91"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L91"
                                         >packages/datasets-fs/src/commands/generate.ts:91</a
                                     >
                                 </li>
@@ -918,7 +1078,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L86"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L86"
                                         >packages/datasets-fs/src/commands/generate.ts:86</a
                                     >
                                 </li>
@@ -943,7 +1103,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L89"
+                                        href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L89"
                                         >packages/datasets-fs/src/commands/generate.ts:89</a
                                     >
                                 </li>
@@ -1219,7 +1379,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L67"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L67"
                                                 >packages/datasets-fs/src/commands/generate.ts:67</a
                                             >
                                         </li>
@@ -1419,7 +1579,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L137"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L137"
                                                 >packages/datasets-fs/src/commands/generate.ts:137</a
                                             >
                                         </li>
@@ -1503,7 +1663,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/cli/cliCommand.ts#L37"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/cli/cliCommand.ts#L37"
                                                 >packages/datasets-fs/src/cli/cliCommand.ts:37</a
                                             >
                                         </li>
@@ -1560,7 +1720,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/utils/output.ts#L21"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/utils/output.ts#L21"
                                                 >packages/datasets-fs/src/utils/output.ts:21</a
                                             >
                                         </li>
@@ -1609,7 +1769,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/cli/cliCommand.ts#L45"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/cli/cliCommand.ts#L45"
                                                 >packages/datasets-fs/src/cli/cliCommand.ts:45</a
                                             >
                                         </li>
@@ -1658,7 +1818,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/utils/output.ts#L24"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/utils/output.ts#L24"
                                                 >packages/datasets-fs/src/utils/output.ts:24</a
                                             >
                                         </li>
@@ -2029,7 +2189,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L23"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L23"
                                                 >packages/datasets-fs/src/commands/generate.ts:23</a
                                             >
                                         </li>
@@ -2200,7 +2360,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L94"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L94"
                                                 >packages/datasets-fs/src/commands/generate.ts:94</a
                                             >
                                         </li>
@@ -2371,7 +2531,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/commands/generate.ts#L122"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/commands/generate.ts#L122"
                                                 >packages/datasets-fs/src/commands/generate.ts:122</a
                                             >
                                         </li>
@@ -2416,7 +2576,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/utils/output.ts#L17"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/utils/output.ts#L17"
                                                 >packages/datasets-fs/src/utils/output.ts:17</a
                                             >
                                         </li>
@@ -2507,7 +2667,7 @@
                                         <li>
                                             Defined in
                                             <a
-                                                href="https://github.com/prosopo/captcha/blob/0742d0956/packages/datasets-fs/src/cli/cliCommand.ts#L19"
+                                                href="https://github.com/prosopo/captcha/blob/3c1358c70/packages/datasets-fs/src/cli/cliCommand.ts#L19"
                                                 >packages/datasets-fs/src/cli/cliCommand.ts:19</a
                                             >
                                         </li>
@@ -2765,5 +2925,19 @@
             </div>
         </div>
         <div class="overlay"></div>
+        <script>
+            try {
+                const generateLinkElement = document.querySelector('.tsd-generator a')
+                const link = document.createElement('a')
+                Object.assign(link, {
+                    href: 'https://github.com/dmnsgn/typedoc-material-theme',
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    innerText: 'typedoc-material-theme.',
+                })
+                generateLinkElement.insertAdjacentElement('afterend', link)
+                generateLinkElement.insertAdjacentText('afterend', ' with ')
+            } catch (error) {}
+        </script>
     </body>
 </html>

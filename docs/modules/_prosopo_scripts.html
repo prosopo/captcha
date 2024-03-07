@@ -12,6 +12,166 @@
         <script async src="../assets/icons.js" id="tsd-icons-script"></script>
         <script async src="../assets/search.js" id="tsd-search-script"></script>
         <script async src="../assets/navigation.js" id="tsd-nav-script"></script>
+        <style>
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --md-sys-color-primary: #f6be46;
+                    --md-sys-color-on-primary: #412d00;
+                    --md-sys-color-primary-container: #5d4200;
+                    --md-sys-color-on-primary-container: #ffdea3;
+                    --md-sys-color-secondary: #d9c4a0;
+                    --md-sys-color-on-secondary: #3b2f15;
+                    --md-sys-color-secondary-container: #53452a;
+                    --md-sys-color-on-secondary-container: #f6e0bb;
+                    --md-sys-color-tertiary: #b2cfa8;
+                    --md-sys-color-on-tertiary: #1e361a;
+                    --md-sys-color-tertiary-container: #344d2f;
+                    --md-sys-color-on-tertiary-container: #cdebc2;
+                    --md-sys-color-error: #ffb4ab;
+                    --md-sys-color-on-error: #690005;
+                    --md-sys-color-error-container: #93000a;
+                    --md-sys-color-on-error-container: #ffb4ab;
+                    --md-sys-color-background: #1e1b16;
+                    --md-sys-color-on-background: #e9e1d9;
+                    --md-sys-color-surface: #1e1b16;
+                    --md-sys-color-on-surface: #e9e1d9;
+                    --md-sys-color-surface-variant: #4e4639;
+                    --md-sys-color-on-surface-variant: #d1c5b4;
+                    --md-sys-color-outline: #9a8f80;
+                    --md-sys-color-outline-variant: #4e4639;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #e9e1d9;
+                    --md-sys-color-inverse-on-surface: #34302a;
+                    --md-sys-color-inverse-primary: #7a5900;
+                    --md-sys-color-surface-dim: #16130e;
+                    --md-sys-color-surface-bright: #3d3933;
+                    --md-sys-color-surface-container-lowest: #110e09;
+                    --md-sys-color-surface-container-low: #1e1b16;
+                    --md-sys-color-surface-container: #221f1a;
+                    --md-sys-color-surface-container-high: #2d2924;
+                    --md-sys-color-surface-container-highest: #38342e;
+                }
+            }
+            :root[data-theme='dark'] {
+                --md-sys-color-primary: #f6be46;
+                --md-sys-color-on-primary: #412d00;
+                --md-sys-color-primary-container: #5d4200;
+                --md-sys-color-on-primary-container: #ffdea3;
+                --md-sys-color-secondary: #d9c4a0;
+                --md-sys-color-on-secondary: #3b2f15;
+                --md-sys-color-secondary-container: #53452a;
+                --md-sys-color-on-secondary-container: #f6e0bb;
+                --md-sys-color-tertiary: #b2cfa8;
+                --md-sys-color-on-tertiary: #1e361a;
+                --md-sys-color-tertiary-container: #344d2f;
+                --md-sys-color-on-tertiary-container: #cdebc2;
+                --md-sys-color-error: #ffb4ab;
+                --md-sys-color-on-error: #690005;
+                --md-sys-color-error-container: #93000a;
+                --md-sys-color-on-error-container: #ffb4ab;
+                --md-sys-color-background: #1e1b16;
+                --md-sys-color-on-background: #e9e1d9;
+                --md-sys-color-surface: #1e1b16;
+                --md-sys-color-on-surface: #e9e1d9;
+                --md-sys-color-surface-variant: #4e4639;
+                --md-sys-color-on-surface-variant: #d1c5b4;
+                --md-sys-color-outline: #9a8f80;
+                --md-sys-color-outline-variant: #4e4639;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #e9e1d9;
+                --md-sys-color-inverse-on-surface: #34302a;
+                --md-sys-color-inverse-primary: #7a5900;
+                --md-sys-color-surface-dim: #16130e;
+                --md-sys-color-surface-bright: #3d3933;
+                --md-sys-color-surface-container-lowest: #110e09;
+                --md-sys-color-surface-container-low: #1e1b16;
+                --md-sys-color-surface-container: #221f1a;
+                --md-sys-color-surface-container-high: #2d2924;
+                --md-sys-color-surface-container-highest: #38342e;
+            }
+
+            @media (prefers-color-scheme: light) {
+                :root {
+                    --md-sys-color-primary: #7a5900;
+                    --md-sys-color-on-primary: #ffffff;
+                    --md-sys-color-primary-container: #ffdea3;
+                    --md-sys-color-on-primary-container: #261900;
+                    --md-sys-color-secondary: #6c5c3f;
+                    --md-sys-color-on-secondary: #ffffff;
+                    --md-sys-color-secondary-container: #f6e0bb;
+                    --md-sys-color-on-secondary-container: #251a04;
+                    --md-sys-color-tertiary: #4b6545;
+                    --md-sys-color-on-tertiary: #ffffff;
+                    --md-sys-color-tertiary-container: #cdebc2;
+                    --md-sys-color-on-tertiary-container: #092007;
+                    --md-sys-color-error: #ba1a1a;
+                    --md-sys-color-on-error: #ffffff;
+                    --md-sys-color-error-container: #ffdad6;
+                    --md-sys-color-on-error-container: #410002;
+                    --md-sys-color-background: #fffbff;
+                    --md-sys-color-on-background: #1e1b16;
+                    --md-sys-color-surface: #fffbff;
+                    --md-sys-color-on-surface: #1e1b16;
+                    --md-sys-color-surface-variant: #ede1cf;
+                    --md-sys-color-on-surface-variant: #4e4639;
+                    --md-sys-color-outline: #7f7667;
+                    --md-sys-color-outline-variant: #d1c5b4;
+                    --md-sys-color-shadow: #000000;
+                    --md-sys-color-scrim: #000000;
+                    --md-sys-color-inverse-surface: #34302a;
+                    --md-sys-color-inverse-on-surface: #f8efe7;
+                    --md-sys-color-inverse-primary: #f6be46;
+                    --md-sys-color-surface-dim: #e1d9d0;
+                    --md-sys-color-surface-bright: #fff8f2;
+                    --md-sys-color-surface-container-lowest: #ffffff;
+                    --md-sys-color-surface-container-low: #fbf2e9;
+                    --md-sys-color-surface-container: #f5ede4;
+                    --md-sys-color-surface-container-high: #efe7de;
+                    --md-sys-color-surface-container-highest: #e9e1d9;
+                }
+            }
+            :root[data-theme='light'] {
+                --md-sys-color-primary: #7a5900;
+                --md-sys-color-on-primary: #ffffff;
+                --md-sys-color-primary-container: #ffdea3;
+                --md-sys-color-on-primary-container: #261900;
+                --md-sys-color-secondary: #6c5c3f;
+                --md-sys-color-on-secondary: #ffffff;
+                --md-sys-color-secondary-container: #f6e0bb;
+                --md-sys-color-on-secondary-container: #251a04;
+                --md-sys-color-tertiary: #4b6545;
+                --md-sys-color-on-tertiary: #ffffff;
+                --md-sys-color-tertiary-container: #cdebc2;
+                --md-sys-color-on-tertiary-container: #092007;
+                --md-sys-color-error: #ba1a1a;
+                --md-sys-color-on-error: #ffffff;
+                --md-sys-color-error-container: #ffdad6;
+                --md-sys-color-on-error-container: #410002;
+                --md-sys-color-background: #fffbff;
+                --md-sys-color-on-background: #1e1b16;
+                --md-sys-color-surface: #fffbff;
+                --md-sys-color-on-surface: #1e1b16;
+                --md-sys-color-surface-variant: #ede1cf;
+                --md-sys-color-on-surface-variant: #4e4639;
+                --md-sys-color-outline: #7f7667;
+                --md-sys-color-outline-variant: #d1c5b4;
+                --md-sys-color-shadow: #000000;
+                --md-sys-color-scrim: #000000;
+                --md-sys-color-inverse-surface: #34302a;
+                --md-sys-color-inverse-on-surface: #f8efe7;
+                --md-sys-color-inverse-primary: #f6be46;
+                --md-sys-color-surface-dim: #e1d9d0;
+                --md-sys-color-surface-bright: #fff8f2;
+                --md-sys-color-surface-container-lowest: #ffffff;
+                --md-sys-color-surface-container-low: #fbf2e9;
+                --md-sys-color-surface-container: #f5ede4;
+                --md-sys-color-surface-container-high: #efe7de;
+                --md-sys-color-surface-container-highest: #e9e1d9;
+            }
+        </style>
+        <link rel="stylesheet" href="../assets/material-style.css" />
     </head>
     <body>
         <script>
@@ -72,20 +232,20 @@
                     <h2><a href="#md:dev-setup">Dev Setup</a></h2>
                     <a id="md:quickstart" class="tsd-anchor"></a>
                     <h3><a href="#md:quickstart">Quickstart</a></h3>
-                    <pre><code class="language-bash"><span class="hl-20">git</span><span class="hl-6"> </span><span class="hl-12">clone</span><span class="hl-6"> </span><span class="hl-12">https://github.com/prosopo/captcha</span><br/><span class="hl-10">cd</span><span class="hl-6"> </span><span class="hl-12">captcha</span><br/><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">i</span><br/><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">bd</span><span class="hl-6"> </span><span class="hl-12">dev</span><br/><span class="hl-20">docker</span><span class="hl-6"> </span><span class="hl-12">compose</span><span class="hl-6"> </span><span class="hl-5">--file</span><span class="hl-6"> </span><span class="hl-12">docker/docker-compose.development.yml</span><span class="hl-6"> </span><span class="hl-12">up</span><span class="hl-6"> </span><span class="hl-5">-d</span><br/><span class="hl-20">cp</span><span class="hl-6"> </span><span class="hl-12">./dev/env.development</span><span class="hl-6"> </span><span class="hl-12">./dev/.env.development</span><br/><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">setup:all</span>
+                    <pre><code class="language-bash"><span class="hl-8">git</span><span class="hl-5"> </span><span class="hl-9">clone</span><span class="hl-5"> </span><span class="hl-9">https://github.com/prosopo/captcha</span><br/><span class="hl-8">cd</span><span class="hl-5"> </span><span class="hl-9">captcha</span><br/><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">i</span><br/><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">bd</span><span class="hl-5"> </span><span class="hl-9">dev</span><br/><span class="hl-8">docker</span><span class="hl-5"> </span><span class="hl-9">compose</span><span class="hl-5"> </span><span class="hl-10">--file</span><span class="hl-5"> </span><span class="hl-9">docker/docker-compose.development.yml</span><span class="hl-5"> </span><span class="hl-9">up</span><span class="hl-5"> </span><span class="hl-10">-d</span><br/><span class="hl-8">cp</span><span class="hl-5"> </span><span class="hl-9">./dev/env.development</span><span class="hl-5"> </span><span class="hl-9">./dev/.env.development</span><br/><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">setup:all</span>
 </code><button>Copy</button></pre>
                     <p>In different terminals run</p>
                     <a id="md:terminal-1" class="tsd-anchor"></a>
                     <h4><a href="#md:terminal-1">Terminal 1</a></h4>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">start:server</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">start:server</span>
 </code><button>Copy</button></pre>
                     <a id="md:terminal-2" class="tsd-anchor"></a>
                     <h4><a href="#md:terminal-2">Terminal 2</a></h4>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">start:provider</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">start:provider</span>
 </code><button>Copy</button></pre>
                     <a id="md:terminal-3" class="tsd-anchor"></a>
                     <h4><a href="#md:terminal-3">Terminal 3</a></h4>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">start:demo</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">start:demo</span>
 </code><button>Copy</button></pre>
                     <p>Go to <a href="http://localhost:3001">http://localhost:3001</a> in your browser.</p>
                     <a id="md:in-depth" class="tsd-anchor"></a>
@@ -96,7 +256,7 @@
                         Setup your integration containers by running the following command from the root of the
                         <a href="https://github.com/prosopo/scripts">scripts</a> repository.
                     </p>
-                    <pre><code class="language-bash"><span class="hl-20">docker</span><span class="hl-6"> </span><span class="hl-12">compose</span><span class="hl-6"> </span><span class="hl-5">--file</span><span class="hl-6"> </span><span class="hl-12">./docker/docker-compose.development.yml</span><span class="hl-6"> </span><span class="hl-12">up</span><span class="hl-6"> </span><span class="hl-5">-d</span>
+                    <pre><code class="language-bash"><span class="hl-8">docker</span><span class="hl-5"> </span><span class="hl-9">compose</span><span class="hl-5"> </span><span class="hl-10">--file</span><span class="hl-5"> </span><span class="hl-9">./docker/docker-compose.development.yml</span><span class="hl-5"> </span><span class="hl-9">up</span><span class="hl-5"> </span><span class="hl-10">-d</span>
 </code><button>Copy</button></pre>
                     <p>This does the following:</p>
                     <ol>
@@ -139,12 +299,12 @@
                         Install the node modules by running the following command from the root of the captcha
                         workspace.
                     </p>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">i</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">i</span>
 </code><button>Copy</button></pre>
                     <a id="md:build-all-packages" class="tsd-anchor"></a>
                     <h4><a href="#md:build-all-packages">Build all packages</a></h4>
                     <p>Build all packages by running the following command from the root of the captcha workspace.</p>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">bd</span><span class="hl-6"> </span><span class="hl-12">dev</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">bd</span><span class="hl-5"> </span><span class="hl-9">dev</span>
 </code><button>Copy</button></pre>
                     <a id="md:deploy-contracts-optional" class="tsd-anchor"></a>
                     <h4><a href="#md:deploy-contracts-optional">Deploy contracts (Optional)</a></h4>
@@ -153,7 +313,7 @@
                         command from the root of the captcha workspace. Any .env files will be updated with the new
                         contract addresses.
                     </p>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">deploy_protocol</span><br/><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">deploy_dapp</span><br/><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">setup</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">deploy_protocol</span><br/><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">deploy_dapp</span><br/><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">setup</span>
 </code><button>Copy</button></pre>
                     <a id="md:env-file" class="tsd-anchor"></a>
                     <h5><a href="#md:env-file">Env file</a></h5>
@@ -170,7 +330,7 @@
                         root of the captcha workspace to register a Provider and a Dapp in the Protocol contract and
                         start the Provider API.
                     </p>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">setup</span><span class="hl-6"> </span><span class="hl-7">&amp;&amp;</span><span class="hl-6"> </span><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">start</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">setup</span><span class="hl-5"> &amp;&amp; </span><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">start</span>
 </code><button>Copy</button></pre>
                     <p>
                         <strong>Protocol</strong> and <strong>Dapp</strong> contracts <strong>must</strong> exist on the
@@ -181,7 +341,7 @@
                     <a id="md:run-tests" class="tsd-anchor"></a>
                     <h3><a href="#md:run-tests">Run tests</a></h3>
                     <p>Run all the tests using the following command from the root of the captcha workspace.</p>
-                    <pre><code class="language-bash"><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">test</span>
+                    <pre><code class="language-bash"><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">test</span>
 </code><button>Copy</button></pre>
                     <a id="md:workflow-testing" class="tsd-anchor"></a>
                     <h3><a href="#md:workflow-testing">Workflow testing</a></h3>
@@ -193,7 +353,7 @@
                         scripts repository. Copy the template env.development file to <code>.env.test</code> in the dev
                         package so that the correct contract addresses are used.
                     </p>
-                    <pre><code class="language-bash"><span class="hl-20">docker</span><span class="hl-6"> </span><span class="hl-12">compose</span><span class="hl-6"> </span><span class="hl-5">--file</span><span class="hl-6"> </span><span class="hl-12">./docker/docker-compose.development.yml</span><span class="hl-6"> </span><span class="hl-12">down</span><br/><span class="hl-20">docker</span><span class="hl-6"> </span><span class="hl-12">compose</span><span class="hl-6"> </span><span class="hl-5">--file</span><span class="hl-6"> </span><span class="hl-12">./docker/docker-compose.test.yml</span><span class="hl-6"> </span><span class="hl-12">up</span><span class="hl-6"> </span><span class="hl-5">-d</span><br/><span class="hl-20">cp</span><span class="hl-6"> </span><span class="hl-12">dev/env.development</span><span class="hl-6"> </span><span class="hl-12">dev/.env.test</span><br/><span class="hl-9">NODE_ENV</span><span class="hl-7">=</span><span class="hl-12">test</span><span class="hl-6"> </span><span class="hl-20">npm</span><span class="hl-6"> </span><span class="hl-12">run</span><span class="hl-6"> </span><span class="hl-12">test</span>
+                    <pre><code class="language-bash"><span class="hl-8">docker</span><span class="hl-5"> </span><span class="hl-9">compose</span><span class="hl-5"> </span><span class="hl-10">--file</span><span class="hl-5"> </span><span class="hl-9">./docker/docker-compose.development.yml</span><span class="hl-5"> </span><span class="hl-9">down</span><br/><span class="hl-8">docker</span><span class="hl-5"> </span><span class="hl-9">compose</span><span class="hl-5"> </span><span class="hl-10">--file</span><span class="hl-5"> </span><span class="hl-9">./docker/docker-compose.test.yml</span><span class="hl-5"> </span><span class="hl-9">up</span><span class="hl-5"> </span><span class="hl-10">-d</span><br/><span class="hl-8">cp</span><span class="hl-5"> </span><span class="hl-9">dev/env.development</span><span class="hl-5"> </span><span class="hl-9">dev/.env.test</span><br/><span class="hl-7">NODE_ENV</span><span class="hl-5">=</span><span class="hl-9">test</span><span class="hl-5"> </span><span class="hl-8">npm</span><span class="hl-5"> </span><span class="hl-9">run</span><span class="hl-5"> </span><span class="hl-9">test</span>
 </code><button>Copy</button></pre>
                 </section>
                 <section class="tsd-panel-group tsd-index-group">
@@ -629,5 +789,19 @@
             </div>
         </div>
         <div class="overlay"></div>
+        <script>
+            try {
+                const generateLinkElement = document.querySelector('.tsd-generator a')
+                const link = document.createElement('a')
+                Object.assign(link, {
+                    href: 'https://github.com/dmnsgn/typedoc-material-theme',
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    innerText: 'typedoc-material-theme.',
+                })
+                generateLinkElement.insertAdjacentElement('afterend', link)
+                generateLinkElement.insertAdjacentText('afterend', ' with ')
+            } catch (error) {}
+        </script>
     </body>
 </html>

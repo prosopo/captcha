@@ -1,7 +1,6 @@
 export default {
     includeVersion: true,
-    darkHighlightTheme: 'material-theme-darker',
-    lightHighlightTheme: 'material-theme-default',
+    plugin: ["typedoc-material-theme", "typedoc-plugin-missing-exports", "typedoc-plugin-mdn-links", "typedoc-plugin-zod"],
     searchInComments: true,
     excludeExternals: true,
     commentStyle: 'all',
