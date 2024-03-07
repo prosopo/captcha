@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="IE=edge" />
-        <title>SolutionRecord | Documentation - v0.3.1</title>
-        <meta name="description" content="Documentation for Documentation" />
+        <title>SolutionRecord | Prosopo Captcha - v0.3.1</title>
+        <meta name="description" content="Documentation for Prosopo Captcha" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="../assets/style.css" />
         <link rel="stylesheet" href="../assets/highlight.css" />
@@ -28,12 +28,14 @@
                                 <use href="../assets/icons.svg#icon-search"></use></svg></label
                         ><input type="text" id="tsd-search-field" aria-label="Search" />
                     </div>
-                    <div class="field"><div id="tsd-toolbar-links"></div></div>
+                    <div class="field">
+                        <div id="tsd-toolbar-links"><a href="https://prosopo.io">Prosopo</a></div>
+                    </div>
                     <ul class="results">
                         <li class="state loading">Preparing search index...</li>
                         <li class="state failure">The search index is not available</li>
                     </ul>
-                    <a href="../index.html" class="title">Documentation - v0.3.1</a>
+                    <a href="../index.html" class="title">Prosopo Captcha - v0.3.1</a>
                 </div>
                 <div class="table-cell" id="tsd-widgets">
                     <a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"
@@ -47,7 +49,7 @@
             <div class="col-content">
                 <div class="tsd-page-title">
                     <ul class="tsd-breadcrumb">
-                        <li><a href="../index.html">Documentation</a></li>
+                        <li><a href="../index.html">Prosopo Captcha</a></li>
                         <li><a href="../modules/_prosopo_types_database.html">@prosopo/types-database</a></li>
                         <li><a href="../modules/_prosopo_types_database.types_mongo.html">types/mongo</a></li>
                         <li><a href="_prosopo_types_database.types_mongo.SolutionRecord.html">SolutionRecord</a></li>
@@ -60,6 +62,18 @@
                     ><br /><span>    </span
                     ><a
                         class="tsd-kind-property"
+                        href="_prosopo_types_database.types_mongo.SolutionRecord.html#captchaContentId"
+                        >captchaContentId</a
+                    ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                    ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                    ><a
+                        class="tsd-kind-property"
+                        href="_prosopo_types_database.types_mongo.SolutionRecord.html#captchaId"
+                        >captchaId</a
+                    ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                    ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                    ><a
+                        class="tsd-kind-property"
                         href="_prosopo_types_database.types_mongo.SolutionRecord.html#datasetContentId"
                         >datasetContentId</a
                     ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
@@ -69,7 +83,20 @@
                         href="_prosopo_types_database.types_mongo.SolutionRecord.html#datasetId"
                         >datasetId</a
                     ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
-                    ><span class="tsd-signature-symbol">; </span><br /><span class="tsd-signature-symbol">}</span>
+                    ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                    ><a class="tsd-kind-property" href="_prosopo_types_database.types_mongo.SolutionRecord.html#salt"
+                        >salt</a
+                    ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                    ><span class="tsd-signature-symbol">; </span><br /><span>    </span
+                    ><a
+                        class="tsd-kind-property"
+                        href="_prosopo_types_database.types_mongo.SolutionRecord.html#solution"
+                        >solution</a
+                    ><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span
+                    ><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br /><span
+                        class="tsd-signature-symbol"
+                        >}</span
+                    >
                 </div>
                 <section class="tsd-panel tsd-hierarchy">
                     <h4>
@@ -82,9 +109,9 @@
                     <ul class="tsd-hierarchy">
                         <li>
                             <a
-                                href="../variables/_prosopo_scripts.vite_config.default.html"
-                                class="tsd-signature-type tsd-kind-variable"
-                                >default</a
+                                href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html"
+                                class="tsd-signature-type tsd-kind-interface"
+                                >CaptchaSolution</a
                             >
                             <ul class="tsd-hierarchy">
                                 <li><span class="target">SolutionRecord</span></li>
@@ -97,7 +124,7 @@
                         <li>
                             Defined in
                             <a
-                                href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/types-database/src/types/mongo.ts#L54"
+                                href="https://github.com/prosopo/captcha/blob/a78ca709/packages/types-database/src/types/mongo.ts#L54"
                                 >packages/types-database/src/types/mongo.ts:54</a
                             >
                         </li>
@@ -124,6 +151,20 @@
                                     <h3 class="tsd-index-heading">Properties</h3>
                                     <div class="tsd-index-list">
                                         <a
+                                            href="_prosopo_types_database.types_mongo.SolutionRecord.html#captchaContentId"
+                                            class="tsd-index-link tsd-is-inherited"
+                                            ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                                <use href="../assets/icons.svg#icon-1024"></use></svg
+                                            ><span>captcha<wbr />Content<wbr />Id</span></a
+                                        >
+                                        <a
+                                            href="_prosopo_types_database.types_mongo.SolutionRecord.html#captchaId"
+                                            class="tsd-index-link tsd-is-inherited"
+                                            ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                                <use href="../assets/icons.svg#icon-1024"></use></svg
+                                            ><span>captcha<wbr />Id</span></a
+                                        >
+                                        <a
                                             href="_prosopo_types_database.types_mongo.SolutionRecord.html#datasetContentId"
                                             class="tsd-index-link"
                                             ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
@@ -137,6 +178,20 @@
                                                 <use href="../assets/icons.svg#icon-1024"></use></svg
                                             ><span>dataset<wbr />Id</span></a
                                         >
+                                        <a
+                                            href="_prosopo_types_database.types_mongo.SolutionRecord.html#salt"
+                                            class="tsd-index-link tsd-is-inherited"
+                                            ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                                <use href="../assets/icons.svg#icon-1024"></use></svg
+                                            ><span>salt</span></a
+                                        >
+                                        <a
+                                            href="_prosopo_types_database.types_mongo.SolutionRecord.html#solution"
+                                            class="tsd-index-link tsd-is-inherited"
+                                            ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                                <use href="../assets/icons.svg#icon-1024"></use></svg
+                                            ><span>solution</span></a
+                                        >
                                     </div>
                                 </section>
                             </div>
@@ -145,6 +200,60 @@
                 </section>
                 <section class="tsd-panel-group tsd-member-group">
                     <h2>Properties</h2>
+                    <section class="tsd-panel tsd-member tsd-is-inherited">
+                        <a id="captchaContentId" class="tsd-anchor"></a>
+                        <h3 class="tsd-anchor-link">
+                            <span>captcha<wbr />Content<wbr />Id</span
+                            ><a href="#captchaContentId" aria-label="Permalink" class="tsd-anchor-icon"
+                                ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
+                            ></a>
+                        </h3>
+                        <div class="tsd-signature">
+                            <span class="tsd-kind-property">captcha<wbr />Content<wbr />Id</span
+                            ><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span>
+                        </div>
+                        <aside class="tsd-sources">
+                            <p>
+                                Inherited from
+                                <a href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html"
+                                    >CaptchaSolution</a
+                                >.<a
+                                    href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html#captchaContentId"
+                                    >captchaContentId</a
+                                >
+                            </p>
+                            <ul>
+                                <li>Defined in packages/types/dist/datasets/captcha.d.ts:58</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section class="tsd-panel tsd-member tsd-is-inherited">
+                        <a id="captchaId" class="tsd-anchor"></a>
+                        <h3 class="tsd-anchor-link">
+                            <span>captcha<wbr />Id</span
+                            ><a href="#captchaId" aria-label="Permalink" class="tsd-anchor-icon"
+                                ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
+                            ></a>
+                        </h3>
+                        <div class="tsd-signature">
+                            <span class="tsd-kind-property">captcha<wbr />Id</span
+                            ><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span>
+                        </div>
+                        <aside class="tsd-sources">
+                            <p>
+                                Inherited from
+                                <a href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html"
+                                    >CaptchaSolution</a
+                                >.<a
+                                    href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html#captchaId"
+                                    >captchaId</a
+                                >
+                            </p>
+                            <ul>
+                                <li>Defined in packages/types/dist/datasets/captcha.d.ts:57</li>
+                            </ul>
+                        </aside>
+                    </section>
                     <section class="tsd-panel tsd-member">
                         <a id="datasetContentId" class="tsd-anchor"></a>
                         <h3 class="tsd-anchor-link">
@@ -162,7 +271,7 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/types-database/src/types/mongo.ts#L56"
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/types-database/src/types/mongo.ts#L56"
                                         >packages/types-database/src/types/mongo.ts:56</a
                                     >
                                 </li>
@@ -186,10 +295,62 @@
                                 <li>
                                     Defined in
                                     <a
-                                        href="https://github.com/prosopo/captcha/blob/b7bf1f99/packages/types-database/src/types/mongo.ts#L55"
+                                        href="https://github.com/prosopo/captcha/blob/a78ca709/packages/types-database/src/types/mongo.ts#L55"
                                         >packages/types-database/src/types/mongo.ts:55</a
                                     >
                                 </li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section class="tsd-panel tsd-member tsd-is-inherited">
+                        <a id="salt" class="tsd-anchor"></a>
+                        <h3 class="tsd-anchor-link">
+                            <span>salt</span
+                            ><a href="#salt" aria-label="Permalink" class="tsd-anchor-icon"
+                                ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
+                            ></a>
+                        </h3>
+                        <div class="tsd-signature">
+                            <span class="tsd-kind-property">salt</span><span class="tsd-signature-symbol">:</span>
+                            <span class="tsd-signature-type">string</span>
+                        </div>
+                        <aside class="tsd-sources">
+                            <p>
+                                Inherited from
+                                <a href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html"
+                                    >CaptchaSolution</a
+                                >.<a href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html#salt"
+                                    >salt</a
+                                >
+                            </p>
+                            <ul>
+                                <li>Defined in packages/types/dist/datasets/captcha.d.ts:59</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section class="tsd-panel tsd-member tsd-is-inherited">
+                        <a id="solution" class="tsd-anchor"></a>
+                        <h3 class="tsd-anchor-link">
+                            <span>solution</span
+                            ><a href="#solution" aria-label="Permalink" class="tsd-anchor-icon"
+                                ><svg viewBox="0 0 24 24"><use href="../assets/icons.svg#icon-anchor"></use></svg
+                            ></a>
+                        </h3>
+                        <div class="tsd-signature">
+                            <span class="tsd-kind-property">solution</span><span class="tsd-signature-symbol">:</span>
+                            <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>
+                        </div>
+                        <aside class="tsd-sources">
+                            <p>
+                                Inherited from
+                                <a href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html"
+                                    >CaptchaSolution</a
+                                >.<a href="_prosopo_types_database.types_mongo._internal_.CaptchaSolution.html#solution"
+                                    >solution</a
+                                >
+                            </p>
+                            <ul>
+                                <li>Defined in packages/types/dist/datasets/captcha.d.ts:60</li>
                             </ul>
                         </aside>
                     </section>
@@ -331,7 +492,15 @@
                             </h3>
                         </summary>
                         <div class="tsd-accordion-details">
-                            <a href="#datasetContentId" class=""
+                            <a href="#captchaContentId" class="tsd-is-inherited"
+                                ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                    <use href="../assets/icons.svg#icon-1024"></use></svg
+                                ><span>captcha<wbr />Content<wbr />Id</span></a
+                            ><a href="#captchaId" class="tsd-is-inherited"
+                                ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                    <use href="../assets/icons.svg#icon-1024"></use></svg
+                                ><span>captcha<wbr />Id</span></a
+                            ><a href="#datasetContentId" class=""
                                 ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                     <use href="../assets/icons.svg#icon-1024"></use></svg
                                 ><span>dataset<wbr />Content<wbr />Id</span></a
@@ -339,6 +508,14 @@
                                 ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                     <use href="../assets/icons.svg#icon-1024"></use></svg
                                 ><span>dataset<wbr />Id</span></a
+                            ><a href="#salt" class="tsd-is-inherited"
+                                ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                    <use href="../assets/icons.svg#icon-1024"></use></svg
+                                ><span>salt</span></a
+                            ><a href="#solution" class="tsd-is-inherited"
+                                ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
+                                    <use href="../assets/icons.svg#icon-1024"></use></svg
+                                ><span>solution</span></a
                             >
                         </div>
                     </details>
@@ -348,7 +525,7 @@
                         <a href="../index.html"
                             ><svg class="tsd-kind-icon" viewBox="0 0 24 24">
                                 <use href="../assets/icons.svg#icon-1"></use></svg
-                            ><span>Documentation - v0.3.1</span></a
+                            ><span>Prosopo Captcha - v0.3.1</span></a
                         >
                         <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base="..">
                             <li>Loading...</li>
@@ -356,9 +533,6 @@
                     </nav>
                 </div>
             </div>
-        </div>
-        <div class="tsd-generator">
-            <p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
         </div>
         <div class="overlay"></div>
     </body>
