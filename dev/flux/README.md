@@ -150,3 +150,12 @@ Use this command to get the logs of the app from a specific node.
 # get logs of a specific dapp at a specific ip
 npx flux getLogs --app <app_name> --ip <node_ip=x.x.x.x:port>
 ```
+
+#### Save the logs to a file
+
+Use this command to get the logs of the app from a specific node.
+
+```bash
+# get logs of a specific dapp and save them to a file. The log format will be `host | log` with the logs separated by a newline
+npx flux getLogs --app <app_name> --file <file_name>
+```
