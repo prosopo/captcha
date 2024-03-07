@@ -11,6 +11,14 @@ export const getRootDir = () => {
     return new URL('../../..', import.meta.url).pathname.slice(0, -1)
 }
 
+export const getCacheDir = () => {
+    return `${getRootDir()}/.cache`
+}
+
+export const getTestResultsDir = () => {
+    return `${getCacheDir()}/test-results`
+}
+
 export const getDevDir = () => {
     return `${getRootDir()}/dev`
 }
