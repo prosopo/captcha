@@ -12,7 +12,7 @@ export default {
     pretty: true,
     hideGenerator: true,
     navigationLinks: {
-        'Prosopo': 'https://prosopo.io'
+        Prosopo: 'https://prosopo.io',
     },
-    sort: ['alphabetical']
+    sort: ['alphabetical'],
 }
