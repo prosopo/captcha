@@ -7,4 +7,6 @@ export default {
     skipErrorChecking: true, // skips errors from package dependency resolution. TODO remove this and get dependencies working
     // treatWarningsAsErrors: true, // TODO enable these when dependency resolution is fixed
     // treatValidationWarningsAsErrors: true, // TODO enable these when dependency resolution is fixed
+    exclude: ['**/*.test.ts', '**/*.spec.ts', '**/*.e2e.ts', '**/__tests__/**/*'],
+    cleanOutputDir: true,
 }
