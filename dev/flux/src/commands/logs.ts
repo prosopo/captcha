@@ -23,7 +23,6 @@ const writeLogs = (file: string, result: { url: string; logs: string }[]) => {
     // write logs as individual lines to a file
     fs.appendFileSync(filePath, `host, log\n`)
     Object.values(result).map(({ url, logs }) => {
-        console.log(logs.split('\\n'))
         const paddedURL = url.padEnd(32, ' ')
         logs.split('\\n').map((log) => fs.appendFileSync(filePath, `${paddedURL}, ${log}\n`))
     })
