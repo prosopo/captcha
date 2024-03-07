@@ -5,4 +5,5 @@ export default {
     entryPoints: pkgJson.workspaces,
     out: 'docs',
     entryPointStrategy: 'packages',
+    name: 'Prosopo Captcha',
 }

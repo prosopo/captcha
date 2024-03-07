@@ -9,4 +9,10 @@ export default {
     // treatValidationWarningsAsErrors: true, // TODO enable these when dependency resolution is fixed
     exclude: ['**/*.test.ts', '**/*.spec.ts', '**/*.e2e.ts', '**/__tests__/**/*'],
     cleanOutputDir: true,
+    pretty: true,
+    hideGenerator: true,
+    navigationLinks: {
+        'Prosopo': 'https://prosopo.io'
+    },
+    sort: ['alphabetical']
 }
