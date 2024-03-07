@@ -64,7 +64,7 @@
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
         "docs": "typedoc --cleanOutputDir 2>&1 | grep -v \"Serialized project contained a reflection\" && npm run docs:lint",
-        "docs:lint": "npx prettier docs --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --write || true"
+        "docs:lint": "npx prettier docs --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --write || true && npx prettier docs --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --write || true"
     },
     "private": true,
     "engines": {
