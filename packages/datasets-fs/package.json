@@ -33,6 +33,7 @@
     "dependencies": {
         "@polkadot/util": "12.6.1",
         "@prosopo/common": "0.3.1",
+        "@prosopo/config": "0.3.1",
         "@prosopo/types": "0.3.1",
         "@prosopo/util": "0.3.1",
         "bcrypt": "^5.1.0",
