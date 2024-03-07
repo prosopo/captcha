@@ -1,6 +1,11 @@
 export default {
     includeVersion: true,
-    plugin: ["typedoc-material-theme", "typedoc-plugin-missing-exports", "typedoc-plugin-mdn-links", "typedoc-plugin-zod"],
+    plugin: [
+        'typedoc-material-theme',
+        'typedoc-plugin-missing-exports',
+        'typedoc-plugin-mdn-links',
+        'typedoc-plugin-zod',
+    ],
     searchInComments: true,
     excludeExternals: true,
     commentStyle: 'all',
