@@ -161,3 +161,22 @@ const e26 = e1.omitReadonly({
     }
 })
 type e27 = ReturnType<typeof e26.parse>
+
+
+
+const f1 = obj({
+    a: str(),
+    b: num(),
+    c: bool(),
+    d: obj({
+        e: str(),
+        f: num(),
+    }),
+})
+
+const [ok, result] = f1.tryParse({})
+if (ok) {
+    const value = result
+} else {
+    const error = result
+}
