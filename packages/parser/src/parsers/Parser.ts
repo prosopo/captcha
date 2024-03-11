@@ -3,12 +3,12 @@ import { ReadonlyParser } from "./ReadonlyParser.js"
 import { Result, failible } from "./result.js"
 import { Cloneable, Resolve } from "./utils.js"
 
-export type ParseOptions = {
+export type Options = {
 
 }
 
 // simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
-export abstract class Parser<T, U extends ParseOptions = ParseOptions> extends Cloneable<Parser<T, U>> {
+export abstract class Parser<T, U extends Options = Options> extends Cloneable<Parser<T, U>> {
     public constructor(public options: U = {} as U) {
         super()
     }
