@@ -20,159 +20,161 @@ class Baz {
     readonly baz = 2;
 }
 
+const p = () => set(str());
+
 describe("set", () => {
     it("should parse to correct type", () => {
-        expectTypeOf(() => set(str()).parse(null)).returns.toMatchTypeOf<Set<string>>();
-        const parser = set(str());
+        expectTypeOf(() => stringify(value, null, 2).parse(null)).returns.toMatchTypeOf<Set<string>>();
+        const parser = stringify(value, null, 2);
         const a: Set<string> = new Set();
         const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {
-        expect(() => set(str()).parse(true)).toThrow();
+        expect(() => stringify(value, null, 2).parse(true)).toThrow();
     });
     
     it("should error on false", () => {
-        expect(() => set(str()).parse(false)).toThrow();
+        expect(() => stringify(value, null, 2).parse(false)).toThrow();
     });
 
     it("should error on number", () => {
-        expect(() => set(str()).parse(1)).toThrow();
+        expect(() => stringify(value, null, 2).parse(1)).toThrow();
     })
 
     it("should error on string", () => {
-        expect(() => set(str()).parse("")).toThrow();
+        expect(() => stringify(value, null, 2).parse("")).toThrow();
     })
 
     it("should error on object", () => {
-        expect(() => set(str()).parse({})).toThrow();
+        expect(() => stringify(value, null, 2).parse({})).toThrow();
     })
 
     it("should error on array", () => {
-        expect(() => set(str()).parse([])).toThrow();
+        expect(() => stringify(value, null, 2).parse([])).toThrow();
     })
 
     it("should error on null", () => {
-        expect(() => set(str()).parse(null)).toThrow();
+        expect(() => stringify(value, null, 2).parse(null)).toThrow();
     })
 
     it("should error on undefined", () => {
-        expect(() => set(str()).parse(undefined)).toThrow();
+        expect(() => stringify(value, null, 2).parse(undefined)).toThrow();
     })
 
     it("should error on NaN", () => {
-        expect(() => set(str()).parse(NaN)).toThrow();
+        expect(() => stringify(value, null, 2).parse(NaN)).toThrow();
     })
 
     it("should error on Infinity", () => {
-        expect(() => set(str()).parse(Infinity)).toThrow();
+        expect(() => stringify(value, null, 2).parse(Infinity)).toThrow();
     })
 
     it("should error on -Infinity", () => {
-        expect(() => set(str()).parse(-Infinity)).toThrow();
+        expect(() => stringify(value, null, 2).parse(-Infinity)).toThrow();
     })
 
     it("should error on function", () => {
-        expect(() => set(str()).parse(() => {})).toThrow();
+        expect(() => stringify(value, null, 2).parse(() => {})).toThrow();
     })
 
     it("should error on symbol", () => {
-        expect(() => set(str()).parse(Symbol())).toThrow();
+        expect(() => stringify(value, null, 2).parse(Symbol())).toThrow();
     })
 
     it("should error on Date", () => {
-        expect(() => set(str()).parse(new Date())).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Date())).toThrow();
     })
 
     it("should error on BigInt", () => {
-        expect(() => set(str()).parse(BigInt(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(BigInt(1))).toThrow();
     })
 
     it("should error on Map", () => {
-        expect(() => set(str()).parse(new Map())).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Map())).toThrow();
     })
 
     it("should parse Set", () => {
-        expect(set(str()).parse(new Set())).toStrictEqual(new Set());
+        expect(stringify(value, null, 2).parse(new Set())).toStrictEqual(new Set());
     })
 
     it("should parse populated Set", () => {
-        expect(set(str()).parse(new Set(["a", "b", "c"]))).toStrictEqual(new Set(["a", "b", "c"]));
+        expect(stringify(value, null, 2).parse(new Set(["a", "b", "c"]))).toStrictEqual(new Set(["a", "b", "c"]));
     })
 
     it("should error on Set with invalid element type", () => {
-        expect(() => set(str()).parse(new Set([1, "b", "c"]))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Set([1, "b", "c"]))).toThrow();
     })
 
     it("should error on WeakMap", () => {
-        expect(() => set(str()).parse(new WeakMap())).toThrow();
+        expect(() => stringify(value, null, 2).parse(new WeakMap())).toThrow();
     })
 
     it("should error on WeakSet", () => {
-        expect(() => set(str()).parse(new WeakSet())).toThrow();
+        expect(() => stringify(value, null, 2).parse(new WeakSet())).toThrow();
     })
 
     it("should error on ArrayBuffer", () => {
-        expect(() => set(str()).parse(new ArrayBuffer(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new ArrayBuffer(1))).toThrow();
     })
 
     it("should error on Int8Array", () => {
-        expect(() => set(str()).parse(new Int8Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Int8Array(1))).toThrow();
     })
 
     it("should error on Uint8Array", () => {
-        expect(() => set(str()).parse(new Uint8Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Uint8Array(1))).toThrow();
     })
 
     it("should error on Uint8ClampedArray", () => {
-        expect(() => set(str()).parse(new Uint8ClampedArray(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Uint8ClampedArray(1))).toThrow();
     })
 
     it("should error on Int16Array", () => {
-        expect(() => set(str()).parse(new Int16Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Int16Array(1))).toThrow();
     })
 
     it("should error on Uint16Array", () => {
-        expect(() => set(str()).parse(new Uint16Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Uint16Array(1))).toThrow();
     })
 
     it("should error on Int32Array", () => {
-        expect(() => set(str()).parse(new Int32Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Int32Array(1))).toThrow();
     })
 
     it("should error on Uint32Array", () => {
-        expect(() => set(str()).parse(new Uint32Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Uint32Array(1))).toThrow();
     })
 
     it("should error on Float32Array", () => {
-        expect(() => set(str()).parse(new Float32Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Float32Array(1))).toThrow();
     })
 
     it("should error on Float64Array", () => {
-        expect(() => set(str()).parse(new Float64Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Float64Array(1))).toThrow();
     })
 
     it("should error on BigInt64Array", () => {
-        expect(() => set(str()).parse(new BigInt64Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new BigInt64Array(1))).toThrow();
     })
 
     it("should error on BigUint64Array", () => {
-        expect(() => set(str()).parse(new BigUint64Array(1))).toThrow();
+        expect(() => stringify(value, null, 2).parse(new BigUint64Array(1))).toThrow();
     })
 
     it("should error on native enum variant", () => {
-        expect(() => set(str()).parse(Foo.A)).toThrow();
-        expect(() => set(str()).parse(Foo.B)).toThrow();
-        expect(() => set(str()).parse(Foo.C)).toThrow();
-        expect(() => set(str()).parse(Foo.D)).toThrow();
+        expect(() => stringify(value, null, 2).parse(Foo.A)).toThrow();
+        expect(() => stringify(value, null, 2).parse(Foo.B)).toThrow();
+        expect(() => stringify(value, null, 2).parse(Foo.C)).toThrow();
+        expect(() => stringify(value, null, 2).parse(Foo.D)).toThrow();
     })
 
     it("should error on instance", () => {
-        expect(() => set(str()).parse(new Bar())).toThrow();
-        expect(() => set(str()).parse(new Baz())).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Bar())).toThrow();
+        expect(() => stringify(value, null, 2).parse(new Baz())).toThrow();
     })
 
     it("should error on regex", () => {
-        expect(() => set(str()).parse(/./)).toThrow();
+        expect(() => stringify(value, null, 2).parse(/./)).toThrow();
     })
 });

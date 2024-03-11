@@ -18,26 +18,28 @@ class Baz {
     readonly baz = 2;
 }
 
+const p = any
+
 describe("unknown", () => {
     it("should parse to correct type", () => {
-        expectTypeOf(() => any().parse(null)).returns.toMatchTypeOf<any>();
-        const parser = any();
+        expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<any>();
+        const parser = p();
         const a: any = undefined
         const b: ReturnType<typeof parser.parse> = a
     })
 
     it("should pass-through", () => {
-        expect(any().parse(1)).toBe(1);
-        expect(any().parse("")).toBe("");
-        expect(any().parse({})).toEqual({});
-        expect(any().parse([])).toEqual([]);
-        expect(any().parse(null)).toBe(null);
-        expect(any().parse(undefined)).toBe(undefined);
-        expect(any().parse(NaN)).toBe(NaN);
+        expect(p().parse(1)).toBe(1);
+        expect(p().parse("")).toBe("");
+        expect(p().parse({})).toEqual({});
+        expect(p().parse([])).toEqual([]);
+        expect(p().parse(null)).toBe(null);
+        expect(p().parse(undefined)).toBe(undefined);
+        expect(p().parse(NaN)).toBe(NaN);
     })
 
     it("should allow any field lookup on an object", () => {
-        const a = any().parse({ a: 1, b: 2, c: 3 });
+        const a = p().parse({ a: 1, b: 2, c: 3 });
         expect(a.a).toBe(1);
         expect(a.b).toBe(2);
         expect(a.c).toBe(3);
