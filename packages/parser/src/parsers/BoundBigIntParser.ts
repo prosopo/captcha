@@ -28,3 +28,4 @@ export class BoundBigInt extends Parser<bigint> {
 
 export const pBoundBigInt = (...args: ConstructorParameters<Ctor<BoundBigInt>>) => new BoundBigInt(...args)
 export const boundBigInt = pBoundBigInt
+export const boundBi = pBoundBigInt
