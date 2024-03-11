@@ -1,4 +1,4 @@
-name: Fetch Most Recent Release File
+name: fetch_release
 
 on:
     pull_request:
