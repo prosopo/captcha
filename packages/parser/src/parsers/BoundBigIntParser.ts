@@ -7,15 +7,22 @@ import { Ctor } from "./utils.js"
 
 export class BoundBigInt extends Parser<bigint> {
 
-    constructor(public min: bigint = 0n, public max: bigint = 0n) {
+    constructor(public min?: bigint, public max?: bigint) {
         super()
     }
 
     public override parse(value: unknown): bigint {
         console.log('BoundBigInt.parse', value, this.min, this.max)
         const v = bi().parse(value)
-        if (v < this.min || v > this.max) {
-            throw new Error(`Expected a number between ${this.min} and ${this.max}, but got ${v}`)
+        if (this.min !== undefined) {
+            if (v < this.min) {
+                throw new Error(`Expected a bigint greater than or equal to ${this.min}, but got ${v}`)
+            }
+        }
+        if (this.max !== undefined) {
+            if (v > this.max) {
+                throw new Error(`Expected a bigint less than or equal to ${this.max}, but got ${v}`)
+            }
         }
         return v
     }
