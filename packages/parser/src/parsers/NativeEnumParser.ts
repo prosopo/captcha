@@ -1,5 +1,6 @@
 import { inst } from "./InstanceParser.js"
 import { Parser } from "./Parser.js"
+import { stringify } from "./utils.js"
 
 // ts enums are a simple mapping from string to number
 // they also have a reverse mapping from number to string IFF the enum values are not specified
@@ -71,7 +72,7 @@ export class NativeEnumParser<T> extends Parser<T[keyof T]> {
                 return variant
             }
         }
-        throw new Error(`Expected one of ${JSON.stringify(this.variants, null, 2)} but got ${JSON.stringify(value, null, 2)} of type ${JSON.stringify(typeof value, null, 2)}`)
+        throw new Error(`Expected one of ${JSON.stringify(this.variants, null, 2)} but got ${stringify(value)} of type ${JSON.stringify(typeof value, null, 2)}`)
     }
 
     public override clone() {

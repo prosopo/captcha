@@ -1,4 +1,5 @@
 import { Parser } from "./Parser.js"
+import { stringify, throwParseError } from "./utils.js"
 
 export class TypeofParser<T, U extends string> extends Parser<T> {
 
@@ -8,7 +9,7 @@ export class TypeofParser<T, U extends string> extends Parser<T> {
 
     public override parse(value: unknown): T {
         if (typeof value !== this.typeName) {
-            throw new Error(`Expected ${this.typeName} but got ${JSON.stringify(value, null, 2)} of type ${JSON.stringify(typeof value, null, 2)}`)
+            throw new Error(`Expected ${this.typeName} but got ${stringify(value)} of type ${stringify(typeof value)}`)
         }
         return value as T
     }

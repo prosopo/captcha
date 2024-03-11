@@ -1,4 +1,5 @@
 import { Parser } from "./Parser.js"
+import { stringify } from "./utils.js"
 
 export type Variant<T extends readonly any[]> = T extends readonly [infer A, ...infer B] ? A | Variant<B> : never
 
@@ -14,7 +15,7 @@ export class EnumParser<const T extends readonly any[]> extends Parser<Variant<T
                 return variant
             }
         }
-        throw new Error(`Expected one of ${JSON.stringify(this.variants, null, 2)} but got ${JSON.stringify(value)} of type ${JSON.stringify(typeof value, null, 2)}`)
+        throw new Error(`Expected one of ${JSON.stringify(this.variants, null, 2)} but got ${stringify(value)} of type ${JSON.stringify(typeof value, null, 2)}`)
     }
 
     public override clone() {
