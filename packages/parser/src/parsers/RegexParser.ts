@@ -15,3 +15,5 @@ export class RegexParser extends InstanceParser<Ctor<RegExp>> {
 
 export const pRegex = () => new RegexParser()
 export const regex = pRegex
+export const re = pRegex
+export const regexp = pRegex

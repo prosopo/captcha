@@ -27,3 +27,4 @@ export class RequiredParser<T extends Parser<any>> extends Parser<Exclude<Shape<
 
 export const pRequired = <T extends Parser<any>>(parser: T) => new RequiredParser<T>(parser)
 export const req = pRequired
+export const required = pRequired

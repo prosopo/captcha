@@ -14,3 +14,4 @@ export class BooleanParser extends TypeofParser<boolean, "boolean"> {
 
 export const pBoolean = () => new BooleanParser()
 export const bool = pBoolean
+export const boolean = pBoolean

@@ -23,3 +23,4 @@ export class ReadonlyParser<T extends Parser<any>> extends Parser<Shape<T>> impl
 
 export const pReadonly = <T extends Parser<any>>(parser: T) => new ReadonlyParser<T>(parser)
 export const ro = pReadonly
+export const readonly = pReadonly

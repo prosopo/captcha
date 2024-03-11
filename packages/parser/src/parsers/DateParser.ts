@@ -14,3 +14,4 @@ export class DateParser extends InstanceParser<Ctor<Date>> {
 
 export const pDate = () => new DateParser()
 export const dat = pDate
+export const date = pDate

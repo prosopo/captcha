@@ -21,3 +21,4 @@ export class TypeofParser<T, U extends string> extends Parser<T> {
 
 export const pTypeof = <T, U extends string>(typeName: U) => new TypeofParser<T, U>(typeName)
 export const ofType = pTypeof
+export const typeOf = pTypeof

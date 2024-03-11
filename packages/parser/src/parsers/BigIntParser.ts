@@ -14,3 +14,4 @@ export class BigIntParser extends TypeofParser<bigint, 'bigint'> {
 
 export const pBigint = () => new BigIntParser()
 export const bi = pBigint
+export const bigint = pBigint

@@ -13,3 +13,4 @@ export class StringParser extends TypeofParser<string, "string"> {
 
 export const pString = () => new StringParser()
 export const str = pString
+export const string = pString
