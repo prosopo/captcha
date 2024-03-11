@@ -8,7 +8,7 @@ export type ParseOptions = {
 }
 
 // simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
-export abstract class Parser<T, U extends ParseOptions = ParseOptions> extends Cloneable<Parser<T>> {
+export abstract class Parser<T, U extends ParseOptions = ParseOptions> extends Cloneable<Parser<T, U>> {
     public constructor(public options: U = {} as U) {
         super()
     }

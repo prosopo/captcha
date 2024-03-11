@@ -8,7 +8,11 @@ export class VoidParser extends Parser<void> {
 
     public override parse(value: unknown): void {
         // void === null or void === undefined
-        or(undef(), nul()).tryParse(value).unwrapOrError(() => new Error(`Expected undefined or null, but got ${JSON.stringify(value, null, 2)} of type ${typeof JSON.stringify(value, null, 2)}`))
+        const [ok, result] = or(undef(), nul()).tryParse(value)
+        if (!ok) {
+            throw new Error(`Expected void but got ${JSON.stringify(value, null, 2)}`)
+        }
+        // void === null or void === undefined
     }
 
     public override clone() {

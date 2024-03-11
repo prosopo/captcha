@@ -3,12 +3,14 @@ import { str } from '../parsers/StringParser.js'
 
 describe("parser", () => {
     it("should try to parse successfully", () => {
-        str().tryParse("hello").unwrap()
-        expect(() => str().tryParse(1).unwrap()).toThrow()
+        const [ok, result] = str().tryParse("hello")
+        expect(ok).toBe(true)
+        expect(result).toBe("hello")
     })
 
     it("should try to parse unsuccessfully", () => {
-        expect(() => str().tryParse(1).unwrap()).toThrow()
-        str().tryParse(1).unwrapError()
+        const [ok, result] = str().tryParse(123)
+        expect(ok).toBe(false)
+        expect(result).toBeInstanceOf(Error)
     })
 })
