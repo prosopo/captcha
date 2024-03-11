@@ -3,6 +3,7 @@ import { nul } from "./NullParser.js"
 import { Parser } from "./Parser.js"
 import { undef } from "./UndefinedParser.js"
 import { or } from "./UnionParser.js"
+import { stringify } from "./utils.js"
 
 export class VoidParser extends Parser<void> {
 
@@ -10,7 +11,7 @@ export class VoidParser extends Parser<void> {
         // void === null or void === undefined
         const [ok, result] = or(undef(), nul()).tryParse(value)
         if (!ok) {
-            throw new Error(`Expected void but got ${JSON.stringify(value, null, 2)}`)
+            throw new Error(`Expected void but got ${stringify(value)}`)
         }
         return;
     }

@@ -68,3 +68,10 @@ export const map = <T extends object, U>(obj: T, fn: (value: T[keyof T], key: ke
     }
     return result
 }
+
+export const stringify = (value: unknown): string => {
+    return JSON.stringify(value, (key, value) => {
+        // convert bigints to strings, JSON cannot handle them natively
+        typeof value === 'bigint' ? value.toString() : value
+    }, 2)
+}
