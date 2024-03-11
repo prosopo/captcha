@@ -4,6 +4,6 @@ import { NumberParser, num } from "./NumberParser.js"
 import { Parser } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
-const max = BigInt(Math.pow(2, 128) - 1)
+const max = BigInt(2) ** BigInt(128) - BigInt(1)
 export const pU128 = () => boundBi(0, max)
 export const u128 = pU128

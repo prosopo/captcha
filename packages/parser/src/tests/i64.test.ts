@@ -39,9 +39,9 @@ describe("i64", () => {
     })
 
     it("should parse to correct type", () => {
-        expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<number>();
+        expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<bigint>();
         const parser = p();
-        const a: number = 1;
+        const a: bigint = 1n;
         const b: ReturnType<typeof parser.parse> = a;
     })
 
@@ -53,8 +53,8 @@ describe("i64", () => {
         expect(() => p().parse(false)).toThrow();
     });
 
-    it("should parse number", () => {
-        expect(p().parse(1)).toBe(1);
+    it("should error on number", () => {
+        expect(() => p().parse(1)).toThrow();
     })
 
     it("should error on string", () => {
@@ -101,8 +101,8 @@ describe("i64", () => {
         expect(() => p().parse(new Date())).toThrow();
     })
 
-    it("should error on BigInt", () => {
-        expect(() => p().parse(BigInt(1))).toThrow();
+    it("should parse BigInt", () => {
+        expect(p().parse(BigInt(1))).toBe(1n);
     })
 
     it("should error on Map", () => {
@@ -174,9 +174,9 @@ describe("i64", () => {
         expect(() => p().parse(Foo.D)).toThrow();
     })
 
-    it("should parse native enum variant with number value", () => {
-        expect(p().parse(Foo.B)).toBe(2);
-        expect(p().parse(Foo.C)).toBe(3);
+    it("should error on native enum variant with number value", () => {
+        expect(() => p().parse(Foo.B)).toThrow();
+        expect(() => p().parse(Foo.C)).toThrow();
     })
 
     it("should error on instance", () => {

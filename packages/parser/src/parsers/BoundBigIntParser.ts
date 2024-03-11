@@ -5,15 +5,14 @@ import { Parser } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 
-const maxBi = BigInt(Math.pow(2, 64))
-
 export class BoundBigInt extends Parser<bigint> {
 
-    constructor(public min: bigint = 0n, public max: bigint = maxBi) {
+    constructor(public min: bigint = 0n, public max: bigint = 0n) {
         super()
     }
 
     public override parse(value: unknown): bigint {
+        console.log('BoundBigInt.parse', value, this.min, this.max)
         const v = bi().parse(value)
         if (v < this.min || v > this.max) {
             throw new Error(`Expected a number between ${this.min} and ${this.max}, but got ${v}`)

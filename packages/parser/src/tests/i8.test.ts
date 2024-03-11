@@ -19,8 +19,6 @@ class Baz {
 }
 
 const p = i8
-const min = -128;
-const max = 127;
 
 describe("i8", () => {
     it("should error on < -128", () => {
