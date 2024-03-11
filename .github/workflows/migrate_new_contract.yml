@@ -10,7 +10,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Fetch the latest release and list assets
-              uses: actions/github-script@v6
+              uses: actions/github-script@v7
               with:
                   script: |
                       const { data } = await github.rest.releases.getLatest({
