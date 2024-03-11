@@ -169,6 +169,6 @@ describe("finite number", () => {
     })
 
     it("should error on regex", () => {
-        expect(p().parse(/./)).toEqual(/./);
+        expect(() => p().parse(/./)).toThrow();
     })
 });

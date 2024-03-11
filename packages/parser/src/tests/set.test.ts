@@ -173,6 +173,6 @@ describe("set", () => {
     })
 
     it("should error on regex", () => {
-        expect(set(str()).parse(/./)).toEqual(/./);
+        expect(() => set(str()).parse(/./)).toThrow();
     })
 });

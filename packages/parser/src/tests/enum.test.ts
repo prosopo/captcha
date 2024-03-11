@@ -176,6 +176,6 @@ describe("enum", () => {
     })
 
     it("should error on regex", () => {
-        expect(en(['a', 'b', 'c']).parse(/./)).toEqual(/./);
+        expect(() => en(['a', 'b', 'c']).parse(/./)).toThrow();
     })
 });

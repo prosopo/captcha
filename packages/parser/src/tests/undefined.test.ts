@@ -161,6 +161,6 @@ describe("undefined", () => {
     })
 
     it("should error on regex", () => {
-        expect(undef().parse(/./)).toEqual(/./);
+        expect(() => undef().parse(/./)).toThrow();
     })
 });

@@ -20,8 +20,8 @@ class Baz {
 }
 
 const p = i16
-const min = -Math.pow(2, 16);
-const max = Math.pow(2, 16) - 1;
+const min = -Math.pow(2, 16) / 2;
+const max = Math.pow(2, 16) / 2 - 1;
 
 describe("i16", () => {
     it(`should error on < ${min}`, () => {
@@ -76,16 +76,16 @@ describe("i16", () => {
         expect(() => p().parse(undefined)).toThrow();
     })
 
-    it("should parse NaN", () => {
-        expect(p().parse(NaN)).toBe(NaN);
+    it("should error on NaN", () => {
+        expect(() => p().parse(NaN)).toThrow();
     })
 
-    it("should parse Infinity", () => {
-        expect(p().parse(Infinity)).toBe(Infinity);
+    it("should error on Infinity", () => {
+        expect(() => p().parse(Infinity)).toThrow();
     })
 
-    it("should parse -Infinity", () => {
-        expect(p().parse(-Infinity)).toBe(-Infinity);
+    it("should error on -Infinity", () => {
+        expect(() => p().parse(-Infinity)).toThrow();
     })
 
     it("should error on function", () => {
@@ -184,6 +184,6 @@ describe("i16", () => {
     })
 
     it("should error on regex", () => {
-        expect(p().parse(/./)).toEqual(/./);
+        expect(() => p().parse(/./)).toThrow();
     })
 });

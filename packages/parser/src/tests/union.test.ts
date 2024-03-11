@@ -41,6 +41,6 @@ describe("union", () => {
     })
 
     it("should error on regex", () => {
-        expect(union([num(), str(), bool()]).parse(/./)).toEqual(/./);
+        expect(() => union([num(), str(), bool()]).parse(/./)).toThrow();
     })
 });

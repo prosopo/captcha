@@ -74,16 +74,16 @@ describe("u16", () => {
         expect(() => p().parse(undefined)).toThrow();
     })
 
-    it("should parse NaN", () => {
-        expect(p().parse(NaN)).toBe(NaN);
+    it("should error on NaN", () => {
+        expect(() => p().parse(NaN)).toThrow();
     })
 
-    it("should parse Infinity", () => {
-        expect(p().parse(Infinity)).toBe(Infinity);
+    it("should error on Infinity", () => {
+        expect(() => p().parse(Infinity)).toThrow();
     })
 
-    it("should parse -Infinity", () => {
-        expect(p().parse(-Infinity)).toBe(-Infinity);
+    it("should error on -Infinity", () => {
+        expect(() => p().parse(-Infinity)).toThrow();
     })
 
     it("should error on function", () => {
@@ -182,6 +182,6 @@ describe("u16", () => {
     })
 
     it("should error on regex", () => {
-        expect(p().parse(/./)).toEqual(/./);
+        expect(() => p().parse(/./)).toThrow();
     })
 });

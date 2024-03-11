@@ -162,6 +162,6 @@ describe("sym", () => {
     })
 
     it("should error on regex", () => {
-        expect(sym().parse(/./)).toEqual(/./);
+        expect(() => sym().parse(/./)).toThrow();
     })
 });

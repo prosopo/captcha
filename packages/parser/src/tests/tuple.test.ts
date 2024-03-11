@@ -180,6 +180,6 @@ describe("tuple", () => {
     })
 
     it("should error on regex", () => {
-        expect(tup([str(), num(), bool()]).parse(/./)).toEqual(/./);
+        expect(() => tup([str(), num(), bool()]).parse(/./)).toThrow();
     })
 });

@@ -172,6 +172,6 @@ describe("native enum", () => {
     })
 
     it("should error on regex", () => {
-        expect(nen(Foo).parse(/./)).toEqual(/./);
+        expect(() => nen(Foo).parse(/./)).toThrow();
     })
 });

@@ -34,8 +34,8 @@ describe("i64", () => {
     })
 
     it(`should parse ${min} - ${max}`, () => {
-        expect(p().parse(min)).toBe(min);
-        expect(p().parse(max)).toBe(max);
+        expect(p().parse(min).toString()).toBe(min.toString());
+        expect(p().parse(max).toString()).toBe(max.toString());
     })
 
     it("should parse to correct type", () => {
@@ -53,8 +53,8 @@ describe("i64", () => {
         expect(() => p().parse(false)).toThrow();
     });
 
-    it("should error on number", () => {
-        expect(() => p().parse(1)).toThrow();
+    it("should parse number", () => {
+        expect(p().parse(1)).toBe(1);
     })
 
     it("should error on string", () => {
@@ -77,16 +77,16 @@ describe("i64", () => {
         expect(() => p().parse(undefined)).toThrow();
     })
 
-    it("should parse NaN", () => {
-        expect(p().parse(NaN)).toBe(NaN);
+    it("should error on NaN", () => {
+        expect(() => p().parse(NaN)).toThrow();
     })
 
-    it("should parse Infinity", () => {
-        expect(p().parse(Infinity)).toBe(Infinity);
+    it("should error on Infinity", () => {
+        expect(() => p().parse(Infinity)).toThrow();
     })
 
-    it("should parse -Infinity", () => {
-        expect(p().parse(-Infinity)).toBe(-Infinity);
+    it("should error on -Infinity", () => {
+        expect(() => p().parse(-Infinity)).toThrow();
     })
 
     it("should error on function", () => {
@@ -101,8 +101,8 @@ describe("i64", () => {
         expect(() => p().parse(new Date())).toThrow();
     })
 
-    it("should parse BigInt", () => {
-        expect(p().parse(BigInt(1))).toBe(1);
+    it("should error on BigInt", () => {
+        expect(() => p().parse(BigInt(1))).toThrow();
     })
 
     it("should error on Map", () => {
@@ -185,6 +185,6 @@ describe("i64", () => {
     })
 
     it("should error on regex", () => {
-        expect(p().parse(/./)).toEqual(/./);
+        expect(() => p().parse(/.*/)).toThrow();
     })
 });

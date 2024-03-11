@@ -170,6 +170,6 @@ describe("literal", () => {
     })
 
     it("should error on regex", () => {
-        expect(literal('abc').parse(/./)).toEqual(/./);
+        expect(() => literal('abc').parse(/abc/)).toThrow();
     })
 });
