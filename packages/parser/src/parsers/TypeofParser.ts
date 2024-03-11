@@ -1,5 +1,5 @@
 import { Parser } from "./Parser.js"
-import { stringify, throwParseError } from "./utils.js"
+import { stringify } from "./utils.js"
 
 export class TypeofParser<T, U extends string> extends Parser<T> {
 
