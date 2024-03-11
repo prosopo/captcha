@@ -1,12 +1,8 @@
-name: fetch_release
-
+name: migrate_new_contract
 on:
     pull_request:
         branches:
             - 'main'
-        paths:
-            - 'contract/**'
-            - '.github/workflows/migrate_new_contract.yml'
     workflow_dispatch:
 
 jobs:
