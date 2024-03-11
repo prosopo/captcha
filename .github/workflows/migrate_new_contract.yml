@@ -9,8 +9,7 @@ jobs:
     get-latest-release:
         runs-on: ubuntu-latest
         steps:
-            - name: Fetch the latest release
-              id: latest_release
+            - name: Fetch the latest release and list assets
               uses: actions/github-script@v6
               with:
                   script: |
@@ -18,11 +17,7 @@ jobs:
                         owner: context.repo.owner,
                         repo: context.repo.repo
                       });
-                      return data;
-
-            - name: List assets of the latest release
-              run: |
-                  echo "Assets in the latest release:"
-                  for asset in ${{ steps.latest_release.outputs.result.assets }}; do
-                    echo "- ${{ asset }}"
-                  done
+                      console.log("Assets in the latest release:");
+                      data.assets.forEach(asset => {
+                        console.log(`- ${asset.name}`);
+                      });
