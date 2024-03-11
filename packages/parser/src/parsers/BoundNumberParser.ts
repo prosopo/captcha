@@ -1,4 +1,4 @@
-import { finiteNum } from "./FiniteNumber.js"
+import { finiteNum } from "./FiniteNumberParser.js"
 import { NumberParser, num } from "./NumberParser.js"
 import { Parser } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"

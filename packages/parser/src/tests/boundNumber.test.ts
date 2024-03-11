@@ -1,8 +1,8 @@
 import { describe, expect, test, it, expectTypeOf } from 'vitest'
 import { num } from '../parsers/NumberParser.js';
 import { u8 } from '../parsers/U8Parser.js';
-import { finiteNum } from '../parsers/FiniteNumber.js';
-import { boundNum } from '../parsers/BoundNumber.js';
+import { finiteNum } from '../parsers/FiniteNumberParser.js';
+import { boundNum } from '../parsers/BoundNumberParser.js';
 
 enum Foo {
     A = 'x',
