@@ -1,13 +1,17 @@
-import { OptionalParser } from "./OptionalParser.js"
+import { OptionalParser, opt } from "./OptionalParser.js"
 import { ReadonlyParser } from "./ReadonlyParser.js"
 import { Result, failible } from "./result.js"
 import { Cloneable, Resolve } from "./utils.js"
 
+export type ParseOptions = {
+
+}
+
 // simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
-export abstract class Parser<T> extends Cloneable<Parser<T>> {
-    public abstract parse(value: unknown): T
-    public tryParse(value: unknown): Result<T> {
-        return failible(() => this.parse(value))
+export abstract class Parser<T, U extends ParseOptions = ParseOptions> extends Cloneable<Parser<T>> {
+    public abstract parse(value: unknown, options?: U): T
+    public tryParse(value: unknown, options?: U): Result<T> {
+        return failible(() => this.parse(value, options))
     }
 }
 
