@@ -161,6 +161,6 @@ describe("bigint", () => {
     })
 
     it("should error on regex", () => {
-        expect(bi().parse(/./)).toEqual(/./);
+        expect(() => bi().parse(/./)).toThrow();
     })
 });

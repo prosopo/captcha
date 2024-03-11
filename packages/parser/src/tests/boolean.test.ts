@@ -161,6 +161,6 @@ describe("boolean", () => {
     })
 
     it("should error on regex", () => {
-        expect(bool().parse(/./)).toEqual(/./);
+        expect(() => bool().parse(/./)).toThrow();
     })
 });

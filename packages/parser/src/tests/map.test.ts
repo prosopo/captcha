@@ -176,6 +176,6 @@ describe("map", () => {
     })
 
     it("should error on regex", () => {
-        expect(map(str(), num()).parse(/./)).toEqual(/./);
+        expect(() => map(str(), num()).parse(/.*/)).toThrow();
     })
 });

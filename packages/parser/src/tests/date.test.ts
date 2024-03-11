@@ -162,6 +162,6 @@ describe("date", () => {
     })
 
     it("should error on regex", () => {
-        expect(dat().parse(/./)).toEqual(/./);
+        expect(() => dat().parse(/./)).toThrow();
     })
 });

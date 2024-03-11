@@ -162,6 +162,6 @@ describe("void", () => {
     })
 
     it("should error on regex", () => {
-        expect(voi().parse(/./)).toEqual(/./);
+        expect(() => voi().parse(/./)).toThrow();
     })
 });

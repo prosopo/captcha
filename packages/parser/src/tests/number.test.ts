@@ -164,6 +164,6 @@ describe("number", () => {
     })
 
     it("should error on regex", () => {
-        expect(num().parse(/./)).toEqual(/./);
+        expect(() => num().parse(/./)).toThrow();
     })
 });

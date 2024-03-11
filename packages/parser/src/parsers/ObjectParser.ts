@@ -200,7 +200,9 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
 
     private handler: SchemaHandler<T>
 
-    constructor(schema: T) {
+    constructor(schema: T, public options?: {
+        clone?: boolean, // whether to clone the object when parsing. Default = false
+    }) {
         super()
         this.handler = new SchemaHandler(schema)
     }

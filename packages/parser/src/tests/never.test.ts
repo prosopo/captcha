@@ -162,6 +162,6 @@ describe("never", () => {
     })
 
     it("should error on regex", () => {
-        expect(never().parse(/./)).toEqual(/./);
+        expect(() => never().parse(/./)).toThrow();
     })
 });

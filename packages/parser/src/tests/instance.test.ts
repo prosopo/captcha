@@ -169,6 +169,6 @@ describe("undefined", () => {
     })
 
     it("should error on regex", () => {
-        expect(inst(Bar).parse(/./)).toEqual(/./);
+        expect(() => inst(Bar).parse(/./)).toThrow();
     })
 });

@@ -161,6 +161,6 @@ describe("null", () => {
     })
 
     it("should error on regex", () => {
-        expect(nul().parse(/./)).toEqual(/./);
+        expect(() => nul().parse(/./)).toThrow();
     })
 });
