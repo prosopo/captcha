@@ -12,7 +12,6 @@ export class BoundBigInt extends Parser<bigint> {
     }
 
     public override parse(value: unknown): bigint {
-        console.log('BoundBigInt.parse', value, this.min, this.max)
         const v = bi().parse(value)
         if (this.min !== undefined) {
             if (v < this.min) {
