@@ -3,25 +3,29 @@ import { Parser } from "./Parser.js"
 import { Ctor } from "./utils.js"
 
 export class DefaultParser<T> extends Parser<T> {
-    constructor(public defaultFn: () => T) {
+    constructor(private _parser: Parser<T>, public defaultFn: () => T) {
         super()
+        this._parser = this._parser.clone()
+    }
+
+    get parser() {
+        return this._parser.clone()
     }
 
     public override parse(value: unknown): T {
-        // call fn to get default value if value is undefined
+        // call fn to get default value if value is missing
         if (value === undefined) {
             return this.defaultFn()
         }
-        // else leave value as-is
-        return value as T
+        return this._parser.parse(value)
     }
 
     public override clone() {
-        return new DefaultParser<T>(this.defaultFn)
+        return new DefaultParser<T>(this.parser, this.defaultFn)
     }
 }
 
-export const pDefault = <T>(defaultFn: () => T) => new DefaultParser<T>(defaultFn)
+export const pDefault = <T>(parser: Parser<T>, defaultFn: () => T) => new DefaultParser<T>(parser, defaultFn)
 export const def = pDefault
 export const defaultTo = pDefault
 export const defaulted = pDefault
