@@ -9,15 +9,15 @@ export type ParseOptions = {
 
 // simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
 export abstract class Parser<T, U extends ParseOptions = ParseOptions> extends Cloneable<Parser<T>> {
-    public constructor(public defaultOptions: U = {} as U) {
+    public constructor(public options: U = {} as U) {
         super()
     }
 
-    public abstract parse(value: unknown, options?: U): T
+    public abstract parse(value: unknown): T
     
-    public tryParse(value: unknown, options?: U): [true, T] | [false, unknown] {
+    public tryParse(value: unknown): [true, T] | [false, unknown] {
         try {
-            return [true, this.parse(value, options)]
+            return [true, this.parse(value)]
         } catch (e) {
             return [false, e]
         }
