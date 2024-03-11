@@ -1,0 +1,29 @@
+name: Fetch Most Recent Release File
+
+on:
+    pull_request:
+        branches:
+            - 'main'
+    workflow_dispatch:
+
+jobs:
+    get-latest-release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Fetch the latest release
+              id: latest_release
+              uses: actions/github-script@v6
+              with:
+                  script: |
+                      const { data } = await github.rest.releases.getLatest({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo
+                      });
+                      return data;
+
+            - name: List assets of the latest release
+              run: |
+                  echo "Assets in the latest release:"
+                  for asset in ${{ steps.latest_release.outputs.result.assets }}; do
+                    echo "- ${{ asset.name }}"
+                  done
