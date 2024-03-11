@@ -4,6 +4,6 @@ import { Parser } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 const min = -Math.pow(2, 32) + (Math.pow(2, 32) / 2)
-const max = Math.pow(2, 32) - (Math.pow(2, 32) / 2)
+const max = Math.pow(2, 32) - (Math.pow(2, 32) / 2) - 1
 export const pI32 = () => boundNum(min, max)
 export const i32 = pI32
