@@ -19,163 +19,165 @@ class Baz {
     readonly baz = 2;
 }
 
+const p = () => map(str(), num());
+
 describe("map", () => {
     it("should parse to correct type", () => {
-        expectTypeOf(() => map(str(), num()).parse(null)).returns.toMatchTypeOf<Map<string, number>>();
-        const parser = map(str(), num());
+        expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Map<string, number>>();
+        const parser = p();
         const a: Map<string, number> = new Map();
         const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should error on true", () => {
-        expect(() => map(str(), num()).parse(true)).toThrow();
+        expect(() => p().parse(true)).toThrow();
     });
     
     it("should error on false", () => {
-        expect(() => map(str(), num()).parse(false)).toThrow();
+        expect(() => p().parse(false)).toThrow();
     });
 
     it("should error on number", () => {
-        expect(() => map(str(), num()).parse(1)).toThrow();
+        expect(() => p().parse(1)).toThrow();
     })
 
     it("should error on string", () => {
-        expect(() => map(str(), num()).parse("")).toThrow();
+        expect(() => p().parse("")).toThrow();
     })
 
     it("should error on object", () => {
-        expect(() => map(str(), num()).parse({})).toThrow();
+        expect(() => p().parse({})).toThrow();
     })
 
     it("should error on array", () => {
-        expect(() => map(str(), num()).parse([])).toThrow();
+        expect(() => p().parse([])).toThrow();
     })
 
     it("should error on null", () => {
-        expect(() => map(str(), num()).parse(null)).toThrow();
+        expect(() => p().parse(null)).toThrow();
     })
 
     it("should error on undefined", () => {
-        expect(() => map(str(), num()).parse(undefined)).toThrow();
+        expect(() => p().parse(undefined)).toThrow();
     })
 
     it("should error on NaN", () => {
-        expect(() => map(str(), num()).parse(NaN)).toThrow();
+        expect(() => p().parse(NaN)).toThrow();
     })
 
     it("should error on Infinity", () => {
-        expect(() => map(str(), num()).parse(Infinity)).toThrow();
+        expect(() => p().parse(Infinity)).toThrow();
     })
 
     it("should error on -Infinity", () => {
-        expect(() => map(str(), num()).parse(-Infinity)).toThrow();
+        expect(() => p().parse(-Infinity)).toThrow();
     })
 
     it("should error on function", () => {
-        expect(() => map(str(), num()).parse(() => {})).toThrow();
+        expect(() => p().parse(() => {})).toThrow();
     })
 
     it("should error on symbol", () => {
-        expect(() => map(str(), num()).parse(Symbol())).toThrow();
+        expect(() => p().parse(Symbol())).toThrow();
     })
 
     it("should error on Date", () => {
-        expect(() => map(str(), num()).parse(new Date())).toThrow();
+        expect(() => p().parse(new Date())).toThrow();
     })
 
     it("should error on BigInt", () => {
-        expect(() => map(str(), num()).parse(BigInt(1))).toThrow();
+        expect(() => p().parse(BigInt(1))).toThrow();
     })
 
     it("should parse populated Map", () => {
-        expect(map(str(), num()).parse(new Map([["a", 1], ["b", 2], ["c", 3]]))).toStrictEqual(new Map([["a", 1], ["b", 2], ["c", 3]]));
+        expect(p().parse(new Map([["a", 1], ["b", 2], ["c", 3]]))).toStrictEqual(new Map([["a", 1], ["b", 2], ["c", 3]]));
     })
 
     it("should error on Map with invalid key type", () => {
-        expect(() => map(str(), num()).parse(new Map<string | number, number>([[1, 1], ["b", 2], ["c", 3]]) as any)).toThrow();
+        expect(() => p().parse(new Map<string | number, number>([[1, 1], ["b", 2], ["c", 3]]) as any)).toThrow();
     })
 
     it("should error on Map with invalid value type", () => {
-        expect(() => map(str(), num()).parse(new Map<string, string | number>([["a", "1"], ["b", 2], ["c", 3]]) as any)).toThrow();
+        expect(() => p().parse(new Map<string, string | number>([["a", "1"], ["b", 2], ["c", 3]]) as any)).toThrow();
     })
 
     it("should parse Map", () => {
-        expect(map(str(), num()).parse(new Map())).toStrictEqual(new Map());
+        expect(p().parse(new Map())).toStrictEqual(new Map());
     })
 
     it("should error on Set", () => {
-        expect(() => map(str(), num()).parse(new Set())).toThrow();
+        expect(() => p().parse(new Set())).toThrow();
     })
 
     it("should error on WeakMap", () => {
-        expect(() => map(str(), num()).parse(new WeakMap())).toThrow();
+        expect(() => p().parse(new WeakMap())).toThrow();
     })
 
     it("should error on WeakSet", () => {
-        expect(() => map(str(), num()).parse(new WeakSet())).toThrow();
+        expect(() => p().parse(new WeakSet())).toThrow();
     })
 
     it("should error on ArrayBuffer", () => {
-        expect(() => map(str(), num()).parse(new ArrayBuffer(1))).toThrow();
+        expect(() => p().parse(new ArrayBuffer(1))).toThrow();
     })
 
     it("should error on Int8Array", () => {
-        expect(() => map(str(), num()).parse(new Int8Array(1))).toThrow();
+        expect(() => p().parse(new Int8Array(1))).toThrow();
     })
 
     it("should error on Uint8Array", () => {
-        expect(() => map(str(), num()).parse(new Uint8Array(1))).toThrow();
+        expect(() => p().parse(new Uint8Array(1))).toThrow();
     })
 
     it("should error on Uint8ClampedArray", () => {
-        expect(() => map(str(), num()).parse(new Uint8ClampedArray(1))).toThrow();
+        expect(() => p().parse(new Uint8ClampedArray(1))).toThrow();
     })
 
     it("should error on Int16Array", () => {
-        expect(() => map(str(), num()).parse(new Int16Array(1))).toThrow();
+        expect(() => p().parse(new Int16Array(1))).toThrow();
     })
 
     it("should error on Uint16Array", () => {
-        expect(() => map(str(), num()).parse(new Uint16Array(1))).toThrow();
+        expect(() => p().parse(new Uint16Array(1))).toThrow();
     })
 
     it("should error on Int32Array", () => {
-        expect(() => map(str(), num()).parse(new Int32Array(1))).toThrow();
+        expect(() => p().parse(new Int32Array(1))).toThrow();
     })
 
     it("should error on Uint32Array", () => {
-        expect(() => map(str(), num()).parse(new Uint32Array(1))).toThrow();
+        expect(() => p().parse(new Uint32Array(1))).toThrow();
     })
 
     it("should error on Float32Array", () => {
-        expect(() => map(str(), num()).parse(new Float32Array(1))).toThrow();
+        expect(() => p().parse(new Float32Array(1))).toThrow();
     })
 
     it("should error on Float64Array", () => {
-        expect(() => map(str(), num()).parse(new Float64Array(1))).toThrow();
+        expect(() => p().parse(new Float64Array(1))).toThrow();
     })
 
     it("should error on BigInt64Array", () => {
-        expect(() => map(str(), num()).parse(new BigInt64Array(1))).toThrow();
+        expect(() => p().parse(new BigInt64Array(1))).toThrow();
     })
 
     it("should error on BigUint64Array", () => {
-        expect(() => map(str(), num()).parse(new BigUint64Array(1))).toThrow();
+        expect(() => p().parse(new BigUint64Array(1))).toThrow();
     })
 
     it("should error on native enum variant", () => {
-        expect(() => map(str(), num()).parse(Foo.A)).toThrow();
-        expect(() => map(str(), num()).parse(Foo.B)).toThrow();
-        expect(() => map(str(), num()).parse(Foo.C)).toThrow();
-        expect(() => map(str(), num()).parse(Foo.D)).toThrow();
+        expect(() => p().parse(Foo.A)).toThrow();
+        expect(() => p().parse(Foo.B)).toThrow();
+        expect(() => p().parse(Foo.C)).toThrow();
+        expect(() => p().parse(Foo.D)).toThrow();
     })
 
     it("should error on instance", () => {
-        expect(() => map(str(), num()).parse(new Bar())).toThrow();
-        expect(() => map(str(), num()).parse(new Baz())).toThrow();
+        expect(() => p().parse(new Bar())).toThrow();
+        expect(() => p().parse(new Baz())).toThrow();
     })
 
     it("should error on regex", () => {
-        expect(() => map(str(), num()).parse(/.*/)).toThrow();
+        expect(() => p().parse(/.*/)).toThrow();
     })
 });

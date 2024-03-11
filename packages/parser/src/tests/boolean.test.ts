@@ -16,151 +16,153 @@ class Baz {
     readonly baz = 2;
 }
 
+const p = bool;
+
 describe("boolean", () => {
     it("should parse to correct type", () => {
-        expectTypeOf(() => bool().parse(null)).returns.toMatchTypeOf<boolean>();
-        const parser = bool();
+        expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<boolean>();
+        const parser = p();
         const a: boolean = true;
         const b: ReturnType<typeof parser.parse> = a;
     })
 
     it("should parse true", () => {
-        expect(bool().parse(true)).toBe(true);
+        expect(p().parse(true)).toBe(true);
     });
     
     it("should parse false", () => {
-        expect(bool().parse(false)).toBe(false);
+        expect(p().parse(false)).toBe(false);
     });
 
     it("should error on number", () => {
-        expect(() => bool().parse(1)).toThrow();
+        expect(() => p().parse(1)).toThrow();
     })
 
     it("should error on string", () => {
-        expect(() => bool().parse("")).toThrow();
+        expect(() => p().parse("")).toThrow();
     })
 
     it("should error on object", () => {
-        expect(() => bool().parse({})).toThrow();
+        expect(() => p().parse({})).toThrow();
     })
 
     it("should error on array", () => {
-        expect(() => bool().parse([])).toThrow();
+        expect(() => p().parse([])).toThrow();
     })
 
     it("should error on null", () => {
-        expect(() => bool().parse(null)).toThrow();
+        expect(() => p().parse(null)).toThrow();
     })
 
     it("should error on undefined", () => {
-        expect(() => bool().parse(undefined)).toThrow();
+        expect(() => p().parse(undefined)).toThrow();
     })
 
     it("should error on NaN", () => {
-        expect(() => bool().parse(NaN)).toThrow();
+        expect(() => p().parse(NaN)).toThrow();
     })
 
     it("should error on Infinity", () => {
-        expect(() => bool().parse(Infinity)).toThrow();
+        expect(() => p().parse(Infinity)).toThrow();
     })
 
     it("should error on -Infinity", () => {
-        expect(() => bool().parse(-Infinity)).toThrow();
+        expect(() => p().parse(-Infinity)).toThrow();
     })
 
     it("should error on function", () => {
-        expect(() => bool().parse(() => {})).toThrow();
+        expect(() => p().parse(() => {})).toThrow();
     })
 
     it("should error on symbol", () => {
-        expect(() => bool().parse(Symbol())).toThrow();
+        expect(() => p().parse(Symbol())).toThrow();
     })
 
     it("should error on Date", () => {
-        expect(() => bool().parse(new Date())).toThrow();
+        expect(() => p().parse(new Date())).toThrow();
     })
 
     it("should error on BigInt", () => {
-        expect(() => bool().parse(BigInt(1))).toThrow();
+        expect(() => p().parse(BigInt(1))).toThrow();
     })
 
     it("should error on Map", () => {
-        expect(() => bool().parse(new Map())).toThrow();
+        expect(() => p().parse(new Map())).toThrow();
     })
 
     it("should error on Set", () => {
-        expect(() => bool().parse(new Set())).toThrow();
+        expect(() => p().parse(new Set())).toThrow();
     })
 
     it("should error on WeakMap", () => {
-        expect(() => bool().parse(new WeakMap())).toThrow();
+        expect(() => p().parse(new WeakMap())).toThrow();
     })
 
     it("should error on WeakSet", () => {
-        expect(() => bool().parse(new WeakSet())).toThrow();
+        expect(() => p().parse(new WeakSet())).toThrow();
     })
 
     it("should error on ArrayBuffer", () => {
-        expect(() => bool().parse(new ArrayBuffer(1))).toThrow();
+        expect(() => p().parse(new ArrayBuffer(1))).toThrow();
     })
 
     it("should error on Int8Array", () => {
-        expect(() => bool().parse(new Int8Array(1))).toThrow();
+        expect(() => p().parse(new Int8Array(1))).toThrow();
     })
 
     it("should error on Uint8Array", () => {
-        expect(() => bool().parse(new Uint8Array(1))).toThrow();
+        expect(() => p().parse(new Uint8Array(1))).toThrow();
     })
 
     it("should error on Uint8ClampedArray", () => {
-        expect(() => bool().parse(new Uint8ClampedArray(1))).toThrow();
+        expect(() => p().parse(new Uint8ClampedArray(1))).toThrow();
     })
 
     it("should error on Int16Array", () => {
-        expect(() => bool().parse(new Int16Array(1))).toThrow();
+        expect(() => p().parse(new Int16Array(1))).toThrow();
     })
 
     it("should error on Uint16Array", () => {
-        expect(() => bool().parse(new Uint16Array(1))).toThrow();
+        expect(() => p().parse(new Uint16Array(1))).toThrow();
     })
 
     it("should error on Int32Array", () => {
-        expect(() => bool().parse(new Int32Array(1))).toThrow();
+        expect(() => p().parse(new Int32Array(1))).toThrow();
     })
 
     it("should error on Uint32Array", () => {
-        expect(() => bool().parse(new Uint32Array(1))).toThrow();
+        expect(() => p().parse(new Uint32Array(1))).toThrow();
     })
 
     it("should error on Float32Array", () => {
-        expect(() => bool().parse(new Float32Array(1))).toThrow();
+        expect(() => p().parse(new Float32Array(1))).toThrow();
     })
 
     it("should error on Float64Array", () => {
-        expect(() => bool().parse(new Float64Array(1))).toThrow();
+        expect(() => p().parse(new Float64Array(1))).toThrow();
     })
 
     it("should error on BigInt64Array", () => {
-        expect(() => bool().parse(new BigInt64Array(1))).toThrow();
+        expect(() => p().parse(new BigInt64Array(1))).toThrow();
     })
 
     it("should error on BigUint64Array", () => {
-        expect(() => bool().parse(new BigUint64Array(1))).toThrow();
+        expect(() => p().parse(new BigUint64Array(1))).toThrow();
     })
 
     it("should error on native enum variant", () => {
-        expect(() => bool().parse(Foo.A)).toThrow();
-        expect(() => bool().parse(Foo.B)).toThrow();
-        expect(() => bool().parse(Foo.C)).toThrow();
-        expect(() => bool().parse(Foo.D)).toThrow();
+        expect(() => p().parse(Foo.A)).toThrow();
+        expect(() => p().parse(Foo.B)).toThrow();
+        expect(() => p().parse(Foo.C)).toThrow();
+        expect(() => p().parse(Foo.D)).toThrow();
     })
 
     it("should error on instance", () => {
-        expect(() => bool().parse(new Bar())).toThrow();
-        expect(() => bool().parse(new Baz())).toThrow();
+        expect(() => p().parse(new Bar())).toThrow();
+        expect(() => p().parse(new Baz())).toThrow();
     })
 
     it("should error on regex", () => {
-        expect(() => bool().parse(/./)).toThrow();
+        expect(() => p().parse(/./)).toThrow();
     })
 });
