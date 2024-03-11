@@ -282,3 +282,4 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
 
 export const pObject = <T extends Schema<any>>(schema: T) => new ObjectParser<T>(schema)
 export const obj = pObject
+export const object = pObject

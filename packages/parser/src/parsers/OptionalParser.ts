@@ -26,3 +26,4 @@ export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | und
 
 export const pOptional = <T extends Parser<any>>(parser: T) => new OptionalParser<T>(parser)
 export const opt = pOptional
+export const optional = pOptional

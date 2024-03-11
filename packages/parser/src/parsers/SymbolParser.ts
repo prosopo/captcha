@@ -13,3 +13,4 @@ export class SymbolParser extends TypeofParser<Symbol, "symbol"> {
 
 export const pSymbol = () => new SymbolParser()
 export const sym = pSymbol
+export const symbol = pSymbol

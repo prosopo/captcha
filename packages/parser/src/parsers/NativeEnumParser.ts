@@ -82,3 +82,4 @@ export class NativeEnumParser<T> extends Parser<T[keyof T]> {
 
 export const pNativeEnum = <T>(variants: T) => new NativeEnumParser<T>(variants)
 export const nen = pNativeEnum
+export const natEnum = pNativeEnum

@@ -23,3 +23,4 @@ export class ReadWriteParser<T extends Parser<any>> extends Parser<Shape<T>> imp
 
 export const pReadWrite = <T extends Parser<any>>(parser: T) => new ReadWriteParser<T>(parser)
 export const rw = pReadWrite
+export const readwrite = pReadWrite
