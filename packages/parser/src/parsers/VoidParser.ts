@@ -12,7 +12,7 @@ export class VoidParser extends Parser<void> {
         if (!ok) {
             throw new Error(`Expected void but got ${JSON.stringify(value, null, 2)}`)
         }
-        // void === null or void === undefined
+        return;
     }
 
     public override clone() {
