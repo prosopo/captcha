@@ -6,18 +6,24 @@ on:
     workflow_dispatch:
 
 jobs:
-    get-latest-release:
+    process-abis:
         runs-on: ubuntu-latest
         steps:
-            - name: Fetch the latest release and list assets
-              uses: actions/github-script@v7
+            # Checkout the repo at the state before the current push
+            - name: Checkout at previous commit
+              uses: actions/checkout@v3
               with:
-                  script: |
-                      const { data } = await github.rest.releases.getLatest({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo
-                      });
-                      console.log("Assets in the latest release:");
-                      data.assets.forEach(asset => {
-                        console.log(`- ${asset.name}`);
-                      });
+                  ref: ${{ github.event.before }}
+
+            # Save the old ABI
+            - name: Save old ABI
+              run: cp contracts/captcha/src/captcha.json dev/scripts/src/dist/contract/versionBump/oldContract.json
+
+            # Checkout back to the current commit
+            - name: Checkout at current commit
+              uses: actions/checkout@v3
+
+            # Now you have access to both ABIs and can use them as needed
+            - name: Use the ABIs
+              run: |
+                  node
