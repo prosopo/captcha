@@ -134,8 +134,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
             #logo-with-text {
                 display: none;
             }
-
-            background-color: green;
         }
         @container (min-width: 244px) and (max-width: 339px) {
             #logo-without-text {
@@ -145,8 +143,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
             #logo-with-text {
                 display: none;
             }
-
-            background-color: red;
         }
         @container (min-width: 340px) {
             #logo-without-text {
@@ -156,8 +152,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
             #logo-with-text {
                 display: inherit;
             }
-
-            background-color: purple;
         }
     `
 
