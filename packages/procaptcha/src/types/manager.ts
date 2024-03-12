@@ -11,15 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, GetCaptchaResponse, ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
+import { Account, GetCaptchaResponse, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
-
-/**
- * The config to be passed to procaptcha. Some fields can be optional, e.g.
- * userAccountAddress and web2, depending on the mode of Procaptcha (web2 or web3).
- */
-export type ProcaptchaConfigOptional = ProcaptchaClientConfigInput
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha

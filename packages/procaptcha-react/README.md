@@ -91,7 +91,7 @@ various Procaptcha events. The following config demonstrates the `PROSOPO_SITE_K
 environment variables.
 
 ```tsx
-const config: ProcaptchaConfigOptional = {
+const config: ProcaptchaClientConfigInput = {
     account: {
         address: process.env.PROSOPO_SITE_KEY || undefined,
     },

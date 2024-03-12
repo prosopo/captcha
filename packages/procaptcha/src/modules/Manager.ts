@@ -23,13 +23,7 @@ import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
-import {
-    ProcaptchaCallbacks,
-    ProcaptchaConfigOptional,
-    ProcaptchaEvents,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-} from '../types/manager.js'
+import { ProcaptchaCallbacks, ProcaptchaEvents, ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
 import {
     ProsopoApiError,
     ProsopoContractError,
@@ -96,7 +90,7 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
 export function Manager(
-    configOptional: ProcaptchaConfigOptional,
+    configOptional: ProcaptchaClientConfigInput,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
