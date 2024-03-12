@@ -1,20 +1,21 @@
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
-import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
+import React, { ButtonHTMLAttributes, CSSProperties, useId, useMemo, useState } from 'react'
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'
     checked: boolean
     onChange: () => void
+    labelText: string
 }
 
 const checkboxBefore = css`{
-  &:before {
-    content: '""';
-    position: absolute;
-    height: 100%;
-    width: 100%;
-  }
+    &:before {
+        content: '""';
+        position: absolute;
+        height: 100%;
+        width: 100%;
+    }
 }`
 
 const baseStyle: CSSProperties = {
@@ -31,7 +32,7 @@ const baseStyle: CSSProperties = {
     borderWidth: '1px',
 }
 
-export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked }: CheckboxProps) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked, labelText }: CheckboxProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const checkboxStyleBase: CSSProperties = {
         ...baseStyle,
@@ -45,21 +46,39 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
             ...checkboxStyleBase,
             borderColor: hover ? theme.palette.background.contrastText : theme.palette.grey[400],
             appearance: checked ? 'auto' : 'none',
+            flex: 1,
         }
     }, [hover, theme, checked])
-
+    const id = useId()
     return (
-        <input
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            css={checkboxBefore}
-            type={'checkbox'}
-            aria-live={'assertive'}
-            aria-haspopup={'true'}
-            onChange={onChange}
-            checked={checked}
-            style={checkboxStyle}
-        />
+        <span style={{ display: 'inline-flex' }}>
+            <input
+                name={id}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                css={checkboxBefore}
+                type={'checkbox'}
+                aria-live={'assertive'}
+                aria-haspopup={'true'}
+                onChange={onChange}
+                checked={checked}
+                style={checkboxStyle}
+            />
+            <label
+                css={{
+                    color: theme.palette.background.contrastText,
+                    position: 'relative',
+                    display: 'flex',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    top: '4px',
+                    paddingLeft: '15px',
+                }}
+                htmlFor={id}
+            >
+                {labelText}
+            </label>
+        </span>
     )
 }
 export default Checkbox
