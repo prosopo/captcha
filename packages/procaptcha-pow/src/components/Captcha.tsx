@@ -19,6 +19,7 @@ import {
     WidthBasedStylesDiv,
     darkTheme,
     lightTheme,
+    widgetURL,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
@@ -174,7 +175,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <a
-                                        href="https://prosopo.io/?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox#features"
+                                        href={widgetURL}
                                         target="_blank"
                                         aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
                                     >
