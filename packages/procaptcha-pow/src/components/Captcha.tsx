@@ -26,50 +26,7 @@ import {
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
-import { css } from '@emotion/react'
 import { useMemo, useState } from 'react'
-
-const logoStyle = css`
-    align-items: center;
-    justify-content: flex-end;
-    display: flex;
-    padding: 8px;
-    container-type: inline-size;
-
-    //@media (max-width: 245px) {
-    //    &:nth-of-type(1),
-    //    &:nth-of-type(2) {
-    //        display: none;
-    //    } /* Both logos hidden */
-    //}
-    //
-    //@media (min-width: 245px) and (max-width: 400px) {
-    //    &:nth-of-type(1) {
-    //        display: flex;
-    //    } /* logoWithText */
-    //    &:nth-of-type(2) {
-    //        display: none;
-    //    } /* logoWithoutText */
-    //}
-    //
-    //@media (min-width: 401px) {
-    //    &:nth-of-type(1) {
-    //        display: none;
-    //    } /* logoWithText */
-    //    &:nth-of-type(2) {
-    //        display: flex;
-    //    } /* logoWithoutText */
-    //}
-
-    @container (inline-size: < 401px) {
-        &:nth-of-type(1) {
-            display: flex;
-        } /* logoWithText */
-        &:nth-of-type(2) {
-            display: none;
-        } /* logoWithoutText */
-    }
-`
 
 export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
 
