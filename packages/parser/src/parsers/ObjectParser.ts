@@ -55,7 +55,7 @@ export class SchemaHandler<T extends Schema<any>> {
     }
 
     public get name(): string {
-        return `{\n${keys(this.schema).map(key => `${String(key)}: ${get(this.schema, key).name}`).join(",\n")}\n}`
+        return `{\n\t${keys(this.schema).map(key => `${String(key)}: ${get(this.schema, key).name}`).join(",\n\t")}\n}`
     }
 
     public partialShallow(): PartialSchema<T> {

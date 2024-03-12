@@ -27,9 +27,9 @@ const p = () => obj({
     c: bool(),
 });
 
-describe("void", () => {
+describe("object", () => {
     it("should have correct typename", () => {
-        expect(p().name).toBe("void")
+        expect(p().name).toBe("{\n\ta: string,\n\tb: number,\n\tc: boolean\n}")
     })
 
     it("should parse to correct type", () => {
