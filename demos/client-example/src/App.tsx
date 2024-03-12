@@ -202,28 +202,32 @@ function App() {
                                     />
                                 </FormControl>
 
-                                <Procaptcha
-                                    config={config}
-                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                                />
-
-                                <Box sx={{ p: 1 }}>
-                                    <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={onActionHandler}
-                                            disabled={!procaptchaOutput}
-                                        >
-                                            {isLogin ? 'Login' : 'Sign up'}
-                                        </Button>
-                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                            <Box>
-                                                <Typography>- or -</Typography>
+                                <FormControl sx={{ m: 1 }}>
+                                    <Procaptcha
+                                        config={config}
+                                        callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
+                                    />
+                                </FormControl>
+                                <div> </div>
+                                <FormControl>
+                                    <Box sx={{ p: 1 }}>
+                                        <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={onActionHandler}
+                                                disabled={!procaptchaOutput}
+                                            >
+                                                {isLogin ? 'Login' : 'Sign up'}
+                                            </Button>
+                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                <Box>
+                                                    <Typography>- or -</Typography>
+                                                </Box>
                                             </Box>
-                                        </Box>
-                                        <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
-                                    </Stack>
-                                </Box>
+                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                        </Stack>
+                                    </Box>
+                                </FormControl>
                             </FormGroup>
                         </form>
                     </Box>

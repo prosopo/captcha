@@ -117,7 +117,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const callbacks = props.callbacks || {}
     const [state, updateState] = useProcaptcha()
     const manager = Manager(config, state, updateState, callbacks)
-    const styleWidth = { maxWidth: '400px', minWidth: '200px', margin: '8px' }
+    const styleSize = { maxWidth: '400px', minWidth: '200px' }
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
 
@@ -126,6 +126,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     `
 
     const WidthBasedStylesDiv = styled.div`
+        max-width: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        height: 80px;
         @container (max-width: 243px) {
             #logo-without-text {
                 display: none;
@@ -156,97 +160,101 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     `
 
     return (
-        <ContainerDiv>
-            <WidthBasedStylesDiv>
-                <Modal show={state.showModal}>
-                    {state.challenge ? (
-                        <CaptchaComponent
-                            challenge={state.challenge}
-                            index={state.index}
-                            solutions={state.solutions}
-                            onSubmit={manager.submit}
-                            onCancel={manager.cancel}
-                            onClick={manager.select}
-                            onNext={manager.nextRound}
-                            themeColor={config.theme ?? 'light'}
-                        />
-                    ) : (
-                        <div>No challenge set.</div>
-                    )}
-                </Modal>
-                <div style={styleWidth} data-cy={'button-human'}>
-                    {' '}
-                    <div
-                        style={{
-                            padding: '8px',
-                            border: '1px solid',
-                            backgroundColor: theme.palette.background.default,
-                            borderColor: theme.palette.grey[300],
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                            justifyContent: 'space-evenly',
-                        }}
-                    >
-                        <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                            <div
-                                style={{
-                                    alignItems: 'center',
-                                    flex: 1,
-                                }}
-                            >
+        <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+            <ContainerDiv>
+                <WidthBasedStylesDiv>
+                    <Modal show={state.showModal}>
+                        {state.challenge ? (
+                            <CaptchaComponent
+                                challenge={state.challenge}
+                                index={state.index}
+                                solutions={state.solutions}
+                                onSubmit={manager.submit}
+                                onCancel={manager.cancel}
+                                onClick={manager.select}
+                                onNext={manager.nextRound}
+                                themeColor={config.theme ?? 'light'}
+                            />
+                        ) : (
+                            <div>No challenge set.</div>
+                        )}
+                    </Modal>
+                    <div style={styleSize} data-cy={'button-human'}>
+                        {' '}
+                        <div
+                            style={{
+                                padding: '2px',
+                                border: '1px solid',
+                                backgroundColor: theme.palette.background.default,
+                                borderColor: theme.palette.grey[300],
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                flexWrap: 'wrap',
+                                justifyContent: 'space-between',
+                                minHeight: '80px',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                 <div
                                     style={{
-                                        display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexDirection: 'column',
-                                        verticalAlign: 'middle',
+                                        flex: 1,
                                     }}
                                 >
                                     <div
                                         style={{
-                                            display: !state.loading ? 'flex' : 'none',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexDirection: 'column',
+                                            verticalAlign: 'middle',
                                         }}
                                     >
-                                        <Checkbox
-                                            themeColor={themeColor}
-                                            onChange={manager.start}
-                                            checked={state.isHuman}
-                                            labelText="I am human"
-                                        />
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: state.loading ? 'flex' : 'none',
-                                        }}
-                                    >
-                                        <div style={{ display: 'inline-flex' }}>
-                                            <LoadingSpinner themeColor={themeColor} />
+                                        <div
+                                            style={{
+                                                display: !state.loading ? 'flex' : 'none',
+                                            }}
+                                        >
+                                            <Checkbox
+                                                themeColor={themeColor}
+                                                onChange={manager.start}
+                                                checked={state.isHuman}
+                                                labelText="I am human"
+                                            />
+                                        </div>
+                                        <div
+                                            style={{
+                                                display: state.loading ? 'flex' : 'none',
+                                            }}
+                                        >
+                                            <div style={{ display: 'inline-flex' }}>
+                                                <LoadingSpinner themeColor={themeColor} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                            <a
-                                href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"
-                                target="_blank"
-                                aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
-                            >
-                                <div style={{ flex: 1 }}>
-                                    <Logo themeColor={themeColor}></Logo>
-                                </div>
-                            </a>
+                            <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                                <a
+                                    href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"
+                                    target="_blank"
+                                    aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
+                                >
+                                    <div style={{ flex: 1 }}>
+                                        <Logo themeColor={themeColor}></Logo>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </WidthBasedStylesDiv>
-            {config.devOnlyWatchEvents && (
-                <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
-            )}
-        </ContainerDiv>
+                </WidthBasedStylesDiv>
+                {config.devOnlyWatchEvents && (
+                    <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
+                )}
+            </ContainerDiv>
+        </div>
     )
 }
 

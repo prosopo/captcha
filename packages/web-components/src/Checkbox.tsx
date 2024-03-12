@@ -19,8 +19,8 @@ const checkboxBefore = css`{
 }`
 
 const baseStyle: CSSProperties = {
-    width: '2.2em',
-    height: '2.2em',
+    width: '28px',
+    height: '28px',
     top: 'auto',
     left: 'auto',
     opacity: '1',
@@ -47,6 +47,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
             borderColor: hover ? theme.palette.background.contrastText : theme.palette.grey[400],
             appearance: checked ? 'auto' : 'none',
             flex: 1,
+            margin: '0 15px',
         }
     }, [hover, theme, checked])
     const id = useId()
@@ -72,7 +73,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
                     cursor: 'pointer',
                     userSelect: 'none',
                     top: '4px',
-                    paddingLeft: '15px',
                 }}
                 htmlFor={id}
             >
