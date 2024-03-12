@@ -162,17 +162,26 @@ const loadContract = async (
     return new ProsopoCaptchaContract(api, oldContract, contractAddress, 'prosopo', 0, pair)
 }
 
-const oldContractAddress = '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u'
-const providersJson = 'providers.json'
-const oldContractAbiPath = 'captcha.json'
+const run = async () => {
+    const oldContractAddress = '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u'
+    const providersJson = 'providers.json'
+    const oldContractAbiPath = 'captcha.json'
 
-const config = defaultConfig()
-const network = config.networks[config.defaultNetwork]
-const provider = new WsProvider(network.endpoint)
-console.log('provider', provider.endpoint)
-// THIS SILENTLY KILLS THE PROCESS AND I HAVE NO IDEA WHY --
-const api = ApiPromise.create({ provider, initWasm: false })
+    const config = defaultConfig()
+    const network = config.networks[config.defaultNetwork]
+    const provider = new WsProvider(network.endpoint)
+    console.log('provider', provider.endpoint);
+    // THIS SILENTLY KILLS THE PROCESS AND I HAVE NO IDEA WHY --
+    console.log("here")
+    const api = await ApiPromise.create({provider})
+    console.log("here2")
+    //await TransferProviders(providersJson, oldContractAddress, oldContractAbiPath)
 
-await TransferProviders(providersJson, oldContractAddress, oldContractAbiPath)
+    console.log('how far did we get?')
 
-console.log('how far did we get?')
+}
+
+run().then(() => process.exit(0)).catch((error) => {
+    console.error(error)
+    process.exit(-1)
+})
