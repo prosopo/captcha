@@ -15,7 +15,7 @@ import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow, ProcaptchaProps } from '@prosopo/procaptcha-pow'
 import { load } from '@fingerprintjs/botd'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
     // Use state to manage which component to render
