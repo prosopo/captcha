@@ -24,7 +24,7 @@ const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
     useEffect(() => {
         const detectBot = async () => {
             const botd = await load()
-            const result = await botd.detect()
+            const result = botd.detect()
             if (result.bot) {
                 setComponentToRender(<Procaptcha config={config} callbacks={callbacks} />)
             } else {
