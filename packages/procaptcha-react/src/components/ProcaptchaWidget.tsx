@@ -18,8 +18,8 @@ import {
     ContainerDiv,
     LoadingSpinner,
     WidgetConstants,
+    WidgetDimensions,
     WidgetInnerHeight,
-    WidgetOuterHeight,
     WidgetText,
     WidthBasedStylesDiv,
     darkTheme,
@@ -127,7 +127,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const callbacks = props.callbacks || {}
     const [state, updateState] = useProcaptcha()
     const manager = Manager(config, state, updateState, callbacks)
-    const styleSize = { maxWidth: '400px', minWidth: '200px', height: `${WidgetOuterHeight}px` }
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
 
@@ -152,7 +151,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                 </Modal>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div style={styleSize} data-cy={'button-human'}>
+                        <div style={WidgetDimensions} data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{

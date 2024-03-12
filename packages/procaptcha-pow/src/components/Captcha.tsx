@@ -17,6 +17,7 @@ import {
     LoadingSpinner,
     Logo,
     WidgetConstants,
+    WidgetDimensions,
     WidgetInnerHeight,
     WidgetText,
     WidthBasedStylesDiv,
@@ -98,7 +99,6 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const [checked, setChecked] = useState(false)
     const [loading, setLoading] = useState(false)
     const darkMode = props.config.theme
-    const styleWidth = { maxWidth: '400px', minWidth: '200px', height: `${WidgetInnerHeight}px` }
     const themeColor = darkMode ? 'light' : 'dark'
     const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
 
@@ -118,7 +118,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div style={styleWidth} data-cy={'button-human'}>
+                        <div style={WidgetDimensions} data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
