@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, GetCaptchaResponse, ProcaptchaOutput } from '@prosopo/types'
+import { Account, GetCaptchaResponse, ProcaptchaEvents } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
 
@@ -43,27 +43,6 @@ export interface ProcaptchaState {
  * variables.
  */
 export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void
-
-/**
- * A set of callbacks called by Procaptcha on certain events. These are optional
- * as the client can decide which events they wish to listen for.
- */
-export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
-
-/**
- * A list of all events which can occur during the Procaptcha process.
- */
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onAccountNotFound: (address: string) => void
-    onHuman: (output: ProcaptchaOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
 
 export type TProcaptchaEventNames = keyof ProcaptchaEvents
 

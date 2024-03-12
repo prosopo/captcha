@@ -14,16 +14,18 @@
 import {
     Account,
     CaptchaSolution,
+    ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
+    ProcaptchaEvents,
     StoredEvents,
 } from '@prosopo/types'
 import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
-import { ProcaptchaCallbacks, ProcaptchaEvents, ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
+import { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
 import {
     ProsopoApiError,
     ProsopoContractError,

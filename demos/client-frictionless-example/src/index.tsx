@@ -11,18 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CssBaseline } from '@mui/material'
+import App from './App.js'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 
-import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaPlaceholder } from '@prosopo/web-components'
-import { Suspense, lazy } from 'react'
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
-const ProcaptchaWidget = lazy(async () => import('./ProcaptchaWidget.js'))
-type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>
-
-const Procaptcha = (props: ProcaptchaProps) => (
-    <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
-        <ProcaptchaWidget config={props.config} callbacks={props.callbacks}></ProcaptchaWidget>
-    </Suspense>
+root.render(
+    <React.Fragment>
+        <CssBaseline />
+        <App />
+    </React.Fragment>
 )
-
-export default Procaptcha

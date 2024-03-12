@@ -8,19 +8,13 @@
     "include": ["src", "src/**/*.json", "src/index.html"],
     "references": [
         {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../procaptcha"
-        },
-        {
             "path": "../procaptcha-react"
         },
         {
             "path": "../procaptcha-pow"
         },
         {
-            "path": "../util"
+            "path": "../web-components"
         }
     ]
 }
