@@ -208,7 +208,6 @@ function App() {
                                         callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
                                     />
                                 </FormControl>
-                                <div> </div>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>
                                         <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
