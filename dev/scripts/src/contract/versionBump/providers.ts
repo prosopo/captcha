@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import * as path from 'path'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ContractAbi } from '@prosopo/types'
 import { KeyringPair$Json } from '@polkadot/keyring/types'
@@ -145,11 +144,18 @@ const loadContract = async (
     const network = config.networks[config.defaultNetwork]
     console.log('network', network)
 
+    const provider = new WsProvider(network.endpoint)
+    console.log('provider', provider.endpoint)
     // THIS SILENTLY KILLS THE PROCESS AND I HAVE NO IDEA WHY --
-    const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint) }).catch((err) => {
-        console.error(err)
-        throw new Error('Error creating API')
-    })
+    const api = await ApiPromise.create({ provider, initWasm: false })
+        .then((api) => {
+            console.log(api.type, 'aisudnflaisdhbnfliasuhbfilnb')
+            return api
+        })
+        .catch((err) => {
+            console.error(err)
+            throw new Error('Error creating API')
+        })
 
     const oldContract = JSON.parse(fs.readFileSync(contractAbiJSON, 'utf-8')) as ContractAbi
     console.log('oldContract', oldContract)
@@ -160,4 +166,13 @@ const oldContractAddress = '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u'
 const providersJson = 'providers.json'
 const oldContractAbiPath = 'captcha.json'
 
+const config = defaultConfig()
+const network = config.networks[config.defaultNetwork]
+const provider = new WsProvider(network.endpoint)
+console.log('provider', provider.endpoint)
+// THIS SILENTLY KILLS THE PROCESS AND I HAVE NO IDEA WHY --
+const api = ApiPromise.create({ provider, initWasm: false })
+
 await TransferProviders(providersJson, oldContractAddress, oldContractAbiPath)
+
+console.log('how far did we get?')
