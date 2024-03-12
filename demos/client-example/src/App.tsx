@@ -16,8 +16,8 @@ import {
     ApiParams,
     EnvironmentTypes,
     EnvironmentTypesSchema,
+    ProcaptchaConfigSchema,
     ProcaptchaOutput,
-    ProsopoClientConfigSchema,
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
@@ -40,7 +40,7 @@ function App() {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const config = ProsopoClientConfigSchema.parse({
+    const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
         account: {
             address: process.env.PROSOPO_SITE_KEY || '',
@@ -49,8 +49,9 @@ function App() {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        serverUrl: process.env.PROSOPO_SERVER_URL,
+        mongoAtlasUri: process.env._DEV_ONLY_ATLAS_URI,
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 
     const label = isLogin ? 'Login' : 'Sign up'
