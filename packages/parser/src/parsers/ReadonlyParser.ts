@@ -18,6 +18,10 @@ export class ReadonlyParser<T extends Parser<any>> extends Parser<Shape<T>> impl
         return new ReadonlyParser(this._parser)
     }
 
+    public override get name(): string {
+        return this._parser.name
+    }
+
     readonly [readonlyMarker] = true
 }
 

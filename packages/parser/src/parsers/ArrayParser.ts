@@ -31,6 +31,10 @@ export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
     public override clone() {
         return new ArrayParser<T>(this._parser)
     }
+
+    public override get name(): string {
+        return `${this._parser.name}[]`
+    }
 }
 
 export const pArray = <T extends Parser<any>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)

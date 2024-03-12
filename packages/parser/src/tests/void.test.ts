@@ -20,6 +20,10 @@ class Baz {
 const p = voi;
 
 describe("void", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("void")
+    })
+
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<void>();
         const parser = p();

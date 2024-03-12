@@ -54,6 +54,10 @@ export class SchemaHandler<T extends Schema<any>> {
         return map(this._schema, (parser) => parser.clone()) as unknown as T
     }
 
+    public get name(): string {
+        return `{\n${keys(this.schema).map(key => `${String(key)}: ${get(this.schema, key).name}`).join(",\n")}\n}`
+    }
+
     public partialShallow(): PartialSchema<T> {
         return map(this.schema, (parser, key) => {
             return new OptionalParser(parser)
@@ -209,6 +213,10 @@ export class ObjectParser<T extends Schema<any>> extends Parser<UnpackSchema<T>>
 
     public get schema() {
         return this.handler.schema
+    }
+
+    public override get name(): string {
+        return this.handler.name
     }
 
     public override parse(value: unknown): UnpackSchema<T> {

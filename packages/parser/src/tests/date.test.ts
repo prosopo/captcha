@@ -19,6 +19,10 @@ class Baz {
 const p = dat;
 
 describe("date", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`Date`)
+    })
+
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Date>();
         const parser = p();

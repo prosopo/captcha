@@ -19,6 +19,10 @@ class Baz {
 const p = num
 
 describe("number", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`number`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<number>();
         const parser = p();

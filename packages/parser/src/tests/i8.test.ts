@@ -21,6 +21,10 @@ class Baz {
 const p = i8
 
 describe("i8", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`i8`)
+    })
+    
     it("should error on < -128", () => {
         expect(() => p().parse(-129)).toThrow();
     })

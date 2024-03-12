@@ -21,6 +21,10 @@ class Baz {
 const p = any
 
 describe("unknown", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`any`)
+    })
+
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<any>();
         const parser = p();

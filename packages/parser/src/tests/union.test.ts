@@ -5,6 +5,10 @@ import { or, union } from '../parsers/UnionParser.js';
 import { str } from '../parsers/StringParser.js';
 
 describe("union", () => {
+    it("should have correct typename", () => {
+        expect(union([num(), str(), bool()]).name).toBe(`(${num().name} | ${str().name} | ${bool().name})`)
+    })
+
     it("should error on no parsers", () => {
         expect(() => union([]).parse(null)).toThrow();
     })

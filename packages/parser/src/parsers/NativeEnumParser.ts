@@ -78,6 +78,10 @@ export class NativeEnumParser<T> extends Parser<T[keyof T]> {
     public override clone() {
         return new NativeEnumParser<T>(this.nativeEnum)
     }
+
+    public override get name(): string {
+        return `${this.variants.map(v => String(v)).join(" | ")}`
+    }
 }
 
 export const pNativeEnum = <T>(variants: T) => new NativeEnumParser<T>(variants)

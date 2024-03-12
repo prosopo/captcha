@@ -20,6 +20,10 @@ class Baz {
 const p = regex;
 
 describe("regex", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`RegExp`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<RegExp>();
         const parser = p();

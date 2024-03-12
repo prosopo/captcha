@@ -33,6 +33,10 @@ export class UnionParser<const T extends Parser<any>[]> extends Parser<UnionPars
     public override clone() {
         return new UnionParser<T>(this._parsers)
     }
+
+    public override get name(): string {
+        return `(${this._parsers.map(parser => parser.name).join(" | ")})`
+    }
 }
 
 export const pUnion = <const T extends Parser<any>[]>(parsers: T) => new UnionParser<T>(parsers)

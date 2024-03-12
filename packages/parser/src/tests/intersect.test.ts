@@ -6,6 +6,10 @@ import { intersect } from '../parsers/IntersectParser.js';
 import { obj } from '../parsers/ObjectParser.js';
 
 describe("intersect", () => {
+    it("should have correct typename", () => {
+        expect(intersect([obj({ a: num() }), obj({ b: str() }), obj({ c: bool() })]).name).toBe(`${obj({ a: num() }).name} & ${obj({ b: str() }).name} & ${obj({ c: bool() }).name}`)
+    })
+    
     it("should error on no parsers", () => {
         expect(() => intersect([]).parse(null)).toThrow();
     })

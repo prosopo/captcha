@@ -21,6 +21,9 @@ class Baz {
 const p = finiteNum
 
 describe("finite number", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`number(finite)`)
+    })
 
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<number>();

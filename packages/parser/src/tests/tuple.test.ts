@@ -22,6 +22,10 @@ class Baz {
 const p = () => tup([str(), num(), bool()]);
 
 describe("tuple", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`[${str().name}, ${num().name}, ${bool().name}]`)
+    })
+    
     it("should parse to correct type", () => {
         const parser = p();
         const a: [string, number, boolean] = ["", 1, true]

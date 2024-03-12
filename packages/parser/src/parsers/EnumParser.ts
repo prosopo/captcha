@@ -21,6 +21,10 @@ export class EnumParser<const T extends readonly any[]> extends Parser<Variant<T
     public override clone() {
         return new EnumParser<T>(this.variants)
     }
+
+    public override get name(): string {
+        return `${this.variants.map(v => String(v)).join(" | ")}`
+    }
 }
 
 export const pEnum = <T extends readonly any[]>(variants: T) => new EnumParser<T>(variants)

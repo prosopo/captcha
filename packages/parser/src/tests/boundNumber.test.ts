@@ -22,7 +22,10 @@ class Baz {
 const p = () => boundNum(1, 10)
 
 describe("bound number", () => {
-
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`number(1<=x<=10)`)
+    })
+    
     it("should parse 1-10", () => {
         for (let i = 1; i <= 10; i++) {
             expect(p().parse(i)).toBe(i);

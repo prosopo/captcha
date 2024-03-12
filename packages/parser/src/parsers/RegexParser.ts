@@ -11,6 +11,10 @@ export class RegexParser extends InstanceParser<Ctor<RegExp>> {
     public override clone() {
         return new RegexParser()
     }
+
+    public override get name(): string {
+        return "RegExp"
+    }
 }
 
 export const pRegex = () => new RegexParser()

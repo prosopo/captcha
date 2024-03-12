@@ -18,6 +18,10 @@ class Baz {
 }
 
 describe("unknown", () => {
+    it("should have correct typename", () => {
+        expect(unknown().name).toBe("unknown")
+    })
+
     it("should parse to correct type", () => {
         expectTypeOf(() => unknown().parse(null)).returns.toMatchTypeOf<unknown>();
         const parser = unknown();

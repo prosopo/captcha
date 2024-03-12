@@ -6,6 +6,10 @@ import { TypeofParser } from "./TypeofParser.js"
 import { Ctor, InferTypeFromCtor } from "./utils.js"
 
 export class I32ArrayParser extends InstanceParser<Ctor<Int32Array>> {
+
+    public override get name(): string {
+        return "i32[]"
+    }
 }
 
 export const pI32Array = () => new I32ArrayParser(Int32Array)

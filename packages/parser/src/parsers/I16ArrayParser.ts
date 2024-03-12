@@ -6,6 +6,10 @@ import { TypeofParser } from "./TypeofParser.js"
 import { Ctor, InferTypeFromCtor } from "./utils.js"
 
 export class I16ArrayParser extends InstanceParser<Ctor<Int16Array>> {
+
+    public override get name(): string {
+        return "i16[]"
+    }
 }
 
 export const pI16Array = () => new I16ArrayParser(Int16Array)

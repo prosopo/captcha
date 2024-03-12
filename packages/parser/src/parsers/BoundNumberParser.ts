@@ -28,6 +28,20 @@ export class BoundNumber extends Parser<number> {
     public override clone() {
         return new BoundNumber()
     }
+
+    public override get name(): string {
+        if (this.min === undefined) {
+            if (this.max === undefined) {
+                return "number"
+            }
+            return `number(<=${this.max})`
+        } else {
+            if (this.max === undefined) {
+                return `number(>=${this.min})`
+            }
+            return `number(${this.min}<=x<=${this.max})`
+        }
+    }
 }
 
 export const pBoundNumber = (...args: ConstructorParameters<Ctor<BoundNumber>>) => new BoundNumber(...args)

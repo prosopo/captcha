@@ -23,6 +23,10 @@ const p = u32
 const max = 2 ** 32 - 1;
 
 describe("u32", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("u32")
+    })
+    
     it("should error on < 0", () => {
         expect(() => p().parse(-1)).toThrow();
     })
