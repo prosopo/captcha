@@ -38,7 +38,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
         ...baseStyle,
         border: `1px solid ${theme.palette.background.contrastText}`,
     }
-
+    console.log('theme', theme)
     const [hover, setHover] = useState(false)
 
     const checkboxStyle: CSSProperties = useMemo(() => {

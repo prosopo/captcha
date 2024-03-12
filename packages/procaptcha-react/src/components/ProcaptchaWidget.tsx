@@ -13,7 +13,14 @@
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
 import { Account, GetCaptchaResponse } from '@prosopo/types'
-import { Checkbox, LoadingSpinner, darkTheme, lightTheme } from '@prosopo/web-components'
+import {
+    Checkbox,
+    ContainerDiv,
+    LoadingSpinner,
+    WidthBasedStylesDiv,
+    darkTheme,
+    lightTheme,
+} from '@prosopo/web-components'
 import { Logo } from '@prosopo/web-components'
 import {
     Manager,
@@ -28,7 +35,6 @@ import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
 import Collector from './collector.js'
 import Modal from './Modal.js'
-import styled from '@emotion/styled'
 
 /**
  * The props for the Procaptcha component.
@@ -121,139 +127,103 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
 
-    const ContainerDiv = styled.div`
-        container-type: inline-size;
-    `
-
-    const WidthBasedStylesDiv = styled.div`
-        max-width: 100%;
-        max-height: 100%;
-        overflow: hidden;
-        height: 80px;
-        @container (max-width: 243px) {
-            #logo-without-text {
-                display: none;
-            }
-
-            #logo-with-text {
-                display: none;
-            }
-        }
-        @container (min-width: 244px) and (max-width: 339px) {
-            #logo-without-text {
-                display: inherit;
-            }
-
-            #logo-with-text {
-                display: none;
-            }
-        }
-        @container (min-width: 340px) {
-            #logo-without-text {
-                display: none;
-            }
-
-            #logo-with-text {
-                display: inherit;
-            }
-        }
-    `
-
     return (
-        <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-            <ContainerDiv>
-                <WidthBasedStylesDiv>
-                    <Modal show={state.showModal}>
-                        {state.challenge ? (
-                            <CaptchaComponent
-                                challenge={state.challenge}
-                                index={state.index}
-                                solutions={state.solutions}
-                                onSubmit={manager.submit}
-                                onCancel={manager.cancel}
-                                onClick={manager.select}
-                                onNext={manager.nextRound}
-                                themeColor={config.theme ?? 'light'}
-                            />
-                        ) : (
-                            <div>No challenge set.</div>
-                        )}
-                    </Modal>
-                    <div style={styleSize} data-cy={'button-human'}>
-                        {' '}
-                        <div
-                            style={{
-                                padding: '2px',
-                                border: '1px solid',
-                                backgroundColor: theme.palette.background.default,
-                                borderColor: theme.palette.grey[300],
-                                borderRadius: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                                justifyContent: 'space-between',
-                                minHeight: '80px',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                <div
-                                    style={{
-                                        alignItems: 'center',
-                                        flex: 1,
-                                    }}
-                                >
+        <div>
+            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+                <ContainerDiv>
+                    <WidthBasedStylesDiv>
+                        <Modal show={state.showModal}>
+                            {state.challenge ? (
+                                <CaptchaComponent
+                                    challenge={state.challenge}
+                                    index={state.index}
+                                    solutions={state.solutions}
+                                    onSubmit={manager.submit}
+                                    onCancel={manager.cancel}
+                                    onClick={manager.select}
+                                    onNext={manager.nextRound}
+                                    themeColor={config.theme ?? 'light'}
+                                />
+                            ) : (
+                                <div>No challenge set.</div>
+                            )}
+                        </Modal>
+                        <div style={styleSize} data-cy={'button-human'}>
+                            {' '}
+                            <div
+                                style={{
+                                    padding: '2px',
+                                    border: '1px solid',
+                                    backgroundColor: theme.palette.background.default,
+                                    borderColor: theme.palette.grey[300],
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'space-between',
+                                    minHeight: '80px',
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <div
                                         style={{
-                                            display: 'flex',
                                             alignItems: 'center',
-                                            justifyContent: 'center',
-                                            flexDirection: 'column',
-                                            verticalAlign: 'middle',
+                                            flex: 1,
                                         }}
                                     >
                                         <div
                                             style={{
-                                                display: !state.loading ? 'flex' : 'none',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexDirection: 'column',
+                                                verticalAlign: 'middle',
                                             }}
                                         >
-                                            <Checkbox
-                                                themeColor={themeColor}
-                                                onChange={manager.start}
-                                                checked={state.isHuman}
-                                                labelText="I am human"
-                                            />
-                                        </div>
-                                        <div
-                                            style={{
-                                                display: state.loading ? 'flex' : 'none',
-                                            }}
-                                        >
-                                            <div style={{ display: 'inline-flex' }}>
-                                                <LoadingSpinner themeColor={themeColor} />
+                                            <div
+                                                style={{
+                                                    display: !state.loading ? 'flex' : 'none',
+                                                }}
+                                            >
+                                                <Checkbox
+                                                    themeColor={themeColor}
+                                                    onChange={manager.start}
+                                                    checked={state.isHuman}
+                                                    labelText="I am human"
+                                                />
+                                            </div>
+                                            <div
+                                                style={{
+                                                    display: state.loading ? 'flex' : 'none',
+                                                }}
+                                            >
+                                                <div style={{ display: 'inline-flex' }}>
+                                                    <LoadingSpinner themeColor={themeColor} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                <a
-                                    href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"
-                                    target="_blank"
-                                    aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
-                                >
-                                    <div style={{ flex: 1 }}>
-                                        <Logo themeColor={themeColor}></Logo>
-                                    </div>
-                                </a>
+                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                                    <a
+                                        href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"
+                                        target="_blank"
+                                        aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
+                                    >
+                                        <div style={{ flex: 1 }}>
+                                            <Logo themeColor={themeColor}></Logo>
+                                        </div>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </WidthBasedStylesDiv>
-                {config.devOnlyWatchEvents && (
-                    <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
-                )}
-            </ContainerDiv>
+                    </WidthBasedStylesDiv>
+                    {config.devOnlyWatchEvents && (
+                        <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
+                    )}
+                </ContainerDiv>
+            </div>
         </div>
     )
 }
