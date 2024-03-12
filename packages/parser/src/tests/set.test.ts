@@ -23,6 +23,10 @@ class Baz {
 const p = () => set(str());
 
 describe("set", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`Set<${str().name}>`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Set<string>>();
         const parser = p();

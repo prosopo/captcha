@@ -24,6 +24,10 @@ const p = u256
 const max = BigInt(2) ** BigInt(256) - BigInt(1);
 
 describe("u256", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("u256")
+    })
+
     it("should error on < 0", () => {
         expect(() => p().parse(-1)).toThrow();
     })

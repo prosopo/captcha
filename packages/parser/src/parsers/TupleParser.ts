@@ -34,6 +34,10 @@ export class TupleParser<const T extends Parser<any>[]> extends Parser<ShapeArra
     public override clone() {
         return new TupleParser<T>(this._parsers)
     }
+
+    public override get name(): string {
+        return `[${this._parsers.map(parser => parser.name).join(", ")}]`
+    }
 }
 
 export const pTuple = <const T extends Parser<any>[]>(parsers: T) => new TupleParser<T>(parsers)

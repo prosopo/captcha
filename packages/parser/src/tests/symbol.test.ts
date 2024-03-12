@@ -19,6 +19,10 @@ class Baz {
 const p = sym;
 
 describe("sym", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("symbol")
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Symbol>();
         const parser = p();

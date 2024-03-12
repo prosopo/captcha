@@ -25,6 +25,10 @@ const min = -Math.pow(2, 32) / 2;
 const max = Math.pow(2, 32) / 2 - 1;
 
 describe("i32", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`i32`)
+    })
+    
     it(`should error on < ${min}`, () => {
         expect(() => p().parse(min - 1)).toThrow();
     })

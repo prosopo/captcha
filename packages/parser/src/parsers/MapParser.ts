@@ -29,6 +29,10 @@ export class MapParser<T extends Parser<any>, U extends Parser<any>> extends Par
     public override clone() {
         return new MapParser<T, U>(this._keyParser, this._valueParser)
     }
+
+    public override get name(): string {
+        return `Map<${this._keyParser.name}, ${this._valueParser.name}>`
+    }
 }
 
 export const pMap = <T extends Parser<any>, U extends Parser<any>>(keyParser: T, valueParser: U) => new MapParser<T, U>(keyParser, valueParser)

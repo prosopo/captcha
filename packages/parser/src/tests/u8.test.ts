@@ -20,6 +20,10 @@ class Baz {
 const p = u8
 
 describe("u8", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("u8")
+    })
+    
     it("should error on < 0", () => {
         expect(() => p().parse(-1)).toThrow();
     })

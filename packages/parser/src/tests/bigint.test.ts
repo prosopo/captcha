@@ -19,6 +19,10 @@ class Baz {
 const p = bi;
 
 describe("bigint", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`bigint`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<bigint>();
         const parser = p();

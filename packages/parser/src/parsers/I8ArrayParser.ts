@@ -6,6 +6,10 @@ import { TypeofParser } from "./TypeofParser.js"
 import { Ctor, InferTypeFromCtor } from "./utils.js"
 
 export class I8ArrayParser extends InstanceParser<Ctor<Int8Array>> {
+
+    public override get name(): string {
+        return "i8[]"
+    }
 }
 
 export const pI8Array = () => new I8ArrayParser(Int8Array)

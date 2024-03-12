@@ -17,6 +17,10 @@ export class TypeofParser<T, U extends string> extends Parser<T> {
     public override clone() {
         return new TypeofParser<T, U>(this.typeName)
     }
+
+    public override get name() {
+        return this.typeName
+    }
 }
 
 export const pTypeof = <T, U extends string>(typeName: U) => new TypeofParser<T, U>(typeName)

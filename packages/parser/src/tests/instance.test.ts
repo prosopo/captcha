@@ -18,7 +18,11 @@ class Baz {
 
 const p = () => inst(Bar);
 
-describe("undefined", () => {
+describe("instance", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`Bar`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Bar>();
         expectTypeOf(() => inst(Baz).parse(null)).returns.toEqualTypeOf<Baz>();

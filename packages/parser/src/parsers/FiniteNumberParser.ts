@@ -15,6 +15,10 @@ export class FiniteNumber extends Parser<number> {
     public override clone() {
         return new FiniteNumber()
     }
+
+    public override get name(): string {
+        return `number(finite)`
+    }
 }
 
 export const pFiniteNumber = () => new FiniteNumber()

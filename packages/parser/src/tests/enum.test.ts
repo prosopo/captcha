@@ -19,6 +19,10 @@ class Baz {
 const p = () => en(['a', 'b', 'c'])
 
 describe("enum", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`${['a', 'b', 'c'].join(' | ')}`)
+    })
+    
     it("should parse to correct type", () => {
         const variants = ['a', 'b', 'c'] as const;
         expectTypeOf(() => en(variants).parse(null)).returns.toMatchTypeOf<typeof variants[number]>();

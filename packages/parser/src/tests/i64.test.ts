@@ -25,6 +25,10 @@ const min = (BigInt(2) ** BigInt(64)) / 2n - (BigInt(2) ** BigInt(64))
 const max = (BigInt(2) ** BigInt(64)) / 2n - 1n
 
 describe("i64", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`i64`)
+    })
+    
     it(`should error on < ${min}`, () => {
         expect(() => p().parse(min - 1n)).toThrow();
     })

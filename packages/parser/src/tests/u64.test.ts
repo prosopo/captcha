@@ -23,6 +23,10 @@ const p = u64
 const max = BigInt(2) ** BigInt(64) - BigInt(1);
 
 describe("u64", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("u64")
+    })
+    
     it("should error on < 0", () => {
         expect(() => p().parse(-1)).toThrow();
     })

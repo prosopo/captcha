@@ -29,6 +29,20 @@ export class BoundBigInt extends Parser<bigint> {
     public override clone() {
         return new BoundBigInt()
     }
+
+    public override get name(): string {
+        if (this.min === undefined) {
+            if (this.max === undefined) {
+                return `bigint`
+            }
+            return `bigint(<=${this.max})`
+        } else {
+            if (this.max === undefined) {
+                return `bigint(>=${this.min})`
+            }
+            return `bigint(${this.min}-${this.max})`
+        }
+    }
 }
 
 export const pBoundBigInt = (...args: ConstructorParameters<Ctor<BoundBigInt>>) => new BoundBigInt(...args)

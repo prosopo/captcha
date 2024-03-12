@@ -22,6 +22,10 @@ const p = u16
 const max = 2 ** 16 - 1;
 
 describe("u16", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("u16")
+    })
+    
     it("should error on < 0", () => {
         expect(() => p().parse(-1)).toThrow();
     })

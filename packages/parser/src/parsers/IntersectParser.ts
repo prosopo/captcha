@@ -36,6 +36,10 @@ export class IntersectParser<const T extends Parser<any>[]> extends Parser<Inter
     public override clone() {
         return new IntersectParser<T>(this._parsers)
     }
+
+    public override get name(): string {
+        return this._parsers.map(parser => parser.name).join(" & ")
+    }
 }
 
 export const pIntersect = <const T extends Parser<any>[]>(parsers: T) => new IntersectParser<T>(parsers)

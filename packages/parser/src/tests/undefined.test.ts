@@ -19,6 +19,10 @@ class Baz {
 const p = undef;
 
 describe("undefined", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("undefined")
+    })
+
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<undefined>();
         const parser = p();

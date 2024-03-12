@@ -23,6 +23,10 @@ const p = u128
 const max = BigInt(2) ** BigInt(128) - BigInt(1);
 
 describe("u128", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe("u128")
+    })
+
     it("should error on < 0", () => {
         expect(() => p().parse(-1)).toThrow();
     })

@@ -19,6 +19,10 @@ class Baz {
 const p = () => nen(Foo);
 
 describe("native enum", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`${p().variants.join(" | ")}`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Foo>();
         const parser = p();

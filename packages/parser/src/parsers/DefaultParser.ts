@@ -23,6 +23,10 @@ export class DefaultParser<T> extends Parser<T> {
     public override clone() {
         return new DefaultParser<T>(this.parser, this.defaultFn)
     }
+
+    public override get name(): string {
+        return `${this.parser.name} = ${this.defaultFn()}`
+    }
 }
 
 export const pDefault = <T>(parser: Parser<T>, defaultFn: () => T) => new DefaultParser<T>(parser, defaultFn)

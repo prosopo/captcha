@@ -16,6 +16,10 @@ export class LiteralParser<const T> extends Parser<T> {
     public override clone() {
         return new LiteralParser<T>(this.value)
     }
+
+    public override get name(): string {
+        return `${String(this.value)}`
+    }
 }
 
 export const pLiteral = <const T>(value: T) => new LiteralParser<T>(value)

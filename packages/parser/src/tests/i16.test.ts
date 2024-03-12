@@ -24,6 +24,10 @@ const min = -Math.pow(2, 16) / 2;
 const max = Math.pow(2, 16) / 2 - 1;
 
 describe("i16", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`i16`)
+    })
+    
     it(`should error on < ${min}`, () => {
         expect(() => p().parse(min - 1)).toThrow();
     })

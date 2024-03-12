@@ -24,6 +24,10 @@ export class SetParser<T extends Parser<any>> extends Parser<Set<Shape<T>>> {
     public override clone() {
         return new SetParser<T>(this._parser)
     }
+
+    public override get name(): string {
+        return `Set<${this._parser.name}>`
+    }
 }
 
 export const pSet = <T extends Parser<any>>(parser: T) => new SetParser(parser)

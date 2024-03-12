@@ -21,6 +21,10 @@ export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | und
         return new OptionalParser(this._parser)
     }
 
+    public override get name(): string {
+        return this._parser.name
+    }
+
     readonly [optionalMarker] = true
 }
 

@@ -5,6 +5,10 @@ import { or, union } from '../parsers/UnionParser.js';
 import { str } from '../parsers/StringParser.js';
 
 describe("or", () => {
+    it("should have correct typename", () => {
+        expect(or(str(), num()).name).toBe(`(${str().name} | ${num().name})`)
+    })
+    
     it("should return union of types", () => {
         assertType<(value: unknown) => string | number>(or(num(), str()).parse);
         const parser = or(num(), str());

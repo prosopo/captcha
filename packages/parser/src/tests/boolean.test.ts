@@ -19,6 +19,10 @@ class Baz {
 const p = bool;
 
 describe("boolean", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`boolean`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<boolean>();
         const parser = p();

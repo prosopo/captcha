@@ -1,7 +1,7 @@
 import { OptionalParser, opt } from "./OptionalParser.js"
 import { ReadonlyParser } from "./ReadonlyParser.js"
 import { Result, failible } from "./result.js"
-import { Cloneable, Resolve } from "./utils.js"
+import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 
 // simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
 export abstract class Parser<T> extends Cloneable<Parser<T>> {
@@ -13,6 +13,13 @@ export abstract class Parser<T> extends Cloneable<Parser<T>> {
         } catch (e) {
             return [false, e]
         }
+    }
+
+    public get name(): string {
+        const name = this.constructor.name
+        const typeName = removeSuffix(name, "Parser")
+        const typeNameCamel = toCamelCase(typeName)
+        return typeNameCamel
     }
 }
 

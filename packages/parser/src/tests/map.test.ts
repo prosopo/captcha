@@ -22,6 +22,10 @@ class Baz {
 const p = () => map(str(), num());
 
 describe("map", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`Map<${str().name}, ${num().name}>`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<Map<string, number>>();
         const parser = p();

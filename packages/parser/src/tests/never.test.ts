@@ -20,6 +20,10 @@ class Baz {
 const p = never;
 
 describe("never", () => {
+    it("should have correct typename", () => {
+        expect(p().name).toBe(`never`)
+    })
+    
     it("should parse to correct type", () => {
         expectTypeOf(() => p().parse(null)).returns.toMatchTypeOf<never>();
         const parser = p();

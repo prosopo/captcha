@@ -14,6 +14,10 @@ export class AnyParser extends Parser<any> {
     public override clone() {
         return new AnyParser()
     }
+
+    public override get name(): string {
+        return `any`
+    }
 }
 
 export const pAny = () => new AnyParser()
