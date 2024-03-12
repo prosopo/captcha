@@ -19,6 +19,7 @@ import {
     WidthBasedStylesDiv,
     darkTheme,
     lightTheme,
+    widgetText,
     widgetURL,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
@@ -174,11 +175,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 </div>
 
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a
-                                        href={widgetURL}
-                                        target="_blank"
-                                        aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
-                                    >
+                                    <a href={widgetURL} target="_blank" aria-label={widgetText}>
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor}></Logo>
                                         </div>
