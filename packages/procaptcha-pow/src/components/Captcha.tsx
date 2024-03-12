@@ -16,11 +16,12 @@ import {
     ContainerDiv,
     LoadingSpinner,
     Logo,
+    WidgetConstants,
+    WidgetInnerHeight,
+    WidgetText,
     WidthBasedStylesDiv,
     darkTheme,
     lightTheme,
-    widgetText,
-    widgetURL,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
@@ -97,7 +98,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const [checked, setChecked] = useState(false)
     const [loading, setLoading] = useState(false)
     const darkMode = props.config.theme
-    const styleWidth = { maxWidth: '400px', minWidth: '200px' }
+    const styleWidth = { maxWidth: '400px', minWidth: '200px', height: `${WidgetInnerHeight}px` }
     const themeColor = darkMode ? 'light' : 'dark'
     const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
 
@@ -130,7 +131,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                     justifyContent: 'space-between',
-                                    minHeight: '80px',
+                                    minHeight: `${WidgetInnerHeight}px`,
                                     overflow: 'hidden',
                                 }}
                             >
@@ -175,7 +176,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 </div>
 
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={widgetURL} target="_blank" aria-label={widgetText}>
+                                    <a href={WidgetConstants} target="_blank" aria-label={WidgetText}>
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor}></Logo>
                                         </div>

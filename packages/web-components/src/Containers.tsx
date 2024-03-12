@@ -1,3 +1,4 @@
+import { WidgetOuterHeight } from './WidgetConstants.js'
 import styled from '@emotion/styled'
 
 export const ContainerDiv = styled.div`
@@ -8,7 +9,7 @@ export const WidthBasedStylesDiv = styled.div`
     max-width: 100%;
     max-height: 100%;
     overflow: hidden;
-    height: 80px;
+    height: ${WidgetOuterHeight}px;
     @container (max-width: 243px) {
         #logo-without-text {
             display: none;

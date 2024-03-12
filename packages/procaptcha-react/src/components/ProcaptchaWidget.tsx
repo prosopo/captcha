@@ -17,11 +17,13 @@ import {
     Checkbox,
     ContainerDiv,
     LoadingSpinner,
+    WidgetConstants,
+    WidgetInnerHeight,
+    WidgetOuterHeight,
+    WidgetText,
     WidthBasedStylesDiv,
     darkTheme,
     lightTheme,
-    widgetText,
-    widgetURL,
 } from '@prosopo/web-components'
 import { Logo } from '@prosopo/web-components'
 import {
@@ -125,31 +127,31 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const callbacks = props.callbacks || {}
     const [state, updateState] = useProcaptcha()
     const manager = Manager(config, state, updateState, callbacks)
-    const styleSize = { maxWidth: '400px', minWidth: '200px' }
+    const styleSize = { maxWidth: '400px', minWidth: '200px', height: `${WidgetOuterHeight}px` }
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
 
     return (
         <div>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+                <Modal show={state.showModal}>
+                    {state.challenge ? (
+                        <CaptchaComponent
+                            challenge={state.challenge}
+                            index={state.index}
+                            solutions={state.solutions}
+                            onSubmit={manager.submit}
+                            onCancel={manager.cancel}
+                            onClick={manager.select}
+                            onNext={manager.nextRound}
+                            themeColor={config.theme ?? 'light'}
+                        />
+                    ) : (
+                        <div>No challenge set.</div>
+                    )}
+                </Modal>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <Modal show={state.showModal}>
-                            {state.challenge ? (
-                                <CaptchaComponent
-                                    challenge={state.challenge}
-                                    index={state.index}
-                                    solutions={state.solutions}
-                                    onSubmit={manager.submit}
-                                    onCancel={manager.cancel}
-                                    onClick={manager.select}
-                                    onNext={manager.nextRound}
-                                    themeColor={config.theme ?? 'light'}
-                                />
-                            ) : (
-                                <div>No challenge set.</div>
-                            )}
-                        </Modal>
                         <div style={styleSize} data-cy={'button-human'}>
                             {' '}
                             <div
@@ -158,12 +160,12 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     border: '1px solid',
                                     backgroundColor: theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
-                                    borderRadius: '4px',
+                                    borderRadius: '8px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                     justifyContent: 'space-between',
-                                    minHeight: '80px',
+                                    minHeight: `${WidgetInnerHeight}px`,
                                     overflow: 'hidden',
                                 }}
                             >
@@ -208,7 +210,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={widgetURL} target="_blank" aria-label={widgetText}>
+                                    <a href={WidgetConstants} target="_blank" aria-label={WidgetText}>
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor}></Logo>
                                         </div>
