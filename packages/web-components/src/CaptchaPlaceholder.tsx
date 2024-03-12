@@ -23,7 +23,7 @@ type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
 
 export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
     const darkMode = props.darkMode
-    const themeColor = darkMode ? 'light' : 'dark'
+    const themeColor = props.darkMode === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
     return (
         <div>
