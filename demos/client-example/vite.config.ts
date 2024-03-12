@@ -29,7 +29,6 @@ export default defineConfig(function ({ command, mode }) {
         'process.env.PROSOPO_WEB2': JSON.stringify(process.env.PROSOPO_WEB2),
         'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
         'process.env.PROSOPO_PORT': JSON.stringify(process.env.PROSOPO_PORT),
-        'process.env._DEV_ONLY_ATLAS_URI': JSON.stringify(process.env._DEV_ONLY_ATLAS_URI),
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
     }
     logger.debug('define', JSON.stringify(define))

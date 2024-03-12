@@ -597,12 +597,19 @@ export function Manager(
     }
 
     const exportData = async (events: StoredEvents) => {
-        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
-        if (!providerUrl) {
-            return
+        let providerUrl = storage.getProviderUrl()
+        if (!providerUrl && state.captchaApi?.provider.provider.url) {
+            providerUrl = trimProviderUrl(state.captchaApi?.provider.provider.url.toString())
         }
-        const providerApi = await loadProviderApi(providerUrl)
-        await providerApi.submitUserEvents(events, getAccount().account.address)
+        console.log('providerUrl', providerUrl)
+        if (providerUrl) {
+            console.log('providerUrl', providerUrl)
+            if (!providerUrl) {
+                return
+            }
+            const providerApi = await loadProviderApi(providerUrl)
+            await providerApi.submitUserEvents(events, getAccount().account.address)
+        }
     }
 
     return {

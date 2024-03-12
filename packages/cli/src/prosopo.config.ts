@@ -79,5 +79,6 @@ export default function getConfig(
         captchaSolutions: captchaSolutionsConfig,
         batchCommit: batchCommitConfig,
         captchas: captchaServeConfig,
+        mongoAtlasUri: process.env._DEV_ONLY_ATLAS_URI,
     } as ProsopoConfigInput)
 }

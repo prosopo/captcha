@@ -20,6 +20,11 @@ process.env.TS_NODE_PROJECT = path.resolve('./tsconfig.json')
 export default defineConfig(async ({ command, mode }) => {
     const backendConfig = await ViteBackendConfig(packageName, packageVersion, bundleName, dir, entry, command, mode)
     return defineConfig({
+        define: {
+            ...backendConfig.define,
+            'process.env._DEV_ONLY_ATLAS_URI': JSON.stringify(process.env._DEV_ONLY_ATLAS_URI),
+            'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
+        },
         ...backendConfig,
     })
 })

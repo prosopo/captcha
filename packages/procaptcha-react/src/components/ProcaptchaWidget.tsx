@@ -129,7 +129,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const manager = Manager(config, state, updateState, callbacks)
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
-
+    console.log('config', config)
     return (
         <div>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>

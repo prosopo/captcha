@@ -714,6 +714,7 @@ export class Tasks {
         if (!this.config.mongoAtlasUri) {
             return
         }
+        this.logger.info('Saving captcha event')
         await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
     }
 }
