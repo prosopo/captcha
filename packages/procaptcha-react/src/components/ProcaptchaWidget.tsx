@@ -207,7 +207,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <a
-                                        href="https://www.prosopo.io/#features?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox"
+                                        href="https://prosopo.io/?ref=accounts.prosopo.io&amp;utm_campaign=widget&amp;utm_medium=checkbox#features"
                                         target="_blank"
                                         aria-label="Visit prosopo.io to learn more about the service and its accessibility options."
                                     >
