@@ -28,7 +28,7 @@
         "cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
         "cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
         "cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress open",
-        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run",
+        "cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --spec 'cypress/e2e/captcha.cy.ts,cypress/e2e/correct.captcha.cy.ts'",
         "cypress:open:client-bundle-example:explicit": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/urlParams.html'",
         "cypress:run:client-bundle-example:explicit": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/urlParams.html' --spec 'cypress/e2e/captcha.cy.ts'",
         "cypress:open:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/jsBundleTest.html'",
