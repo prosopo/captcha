@@ -48,7 +48,6 @@ export type TProcaptchaEventNames = keyof ProcaptchaEvents
 
 export const ProcapchaEventNames: TProcaptchaEventNames[] = [
     'onError',
-    'onAccountNotFound',
     'onHuman',
     'onExtensionNotFound',
     'onChallengeExpired',

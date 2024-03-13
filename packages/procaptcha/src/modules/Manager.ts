@@ -21,8 +21,8 @@ import {
     ProcaptchaEvents,
     StoredEvents,
 } from '@prosopo/types'
-import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
 import { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
@@ -44,8 +44,6 @@ import { at } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util/string'
-import ExtensionWeb2 from '../api/ExtensionWeb2.js'
-import ExtensionWeb3 from '../api/ExtensionWeb3.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -99,14 +97,13 @@ export function Manager(
 ) {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
 
-    const alertError = (error: Error) => {
+    const alertError = (error: ProsopoError) => {
         console.log(error)
         alert(error.message)
     }
 
     const events: ProcaptchaEvents = Object.assign(
         {
-            onAccountNotFound: alertError,
             onError: alertError,
             onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
                 console.log('onHuman event triggered', output)
@@ -138,11 +135,7 @@ export function Manager(
 
     const dispatchErrorEvent = (err: unknown) => {
         const error = err instanceof Error ? err : new Error(String(err))
-        if (error instanceof AccountNotFoundError) {
-            events.onAccountNotFound(error.message)
-        } else {
-            events.onError(error)
-        }
+        events.onError(error)
     }
 
     // get the state update mechanism
