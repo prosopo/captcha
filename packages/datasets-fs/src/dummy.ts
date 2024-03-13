@@ -1,7 +1,7 @@
 // generate some dummy data for testing the generate fns
 
-import { CaptchaItemTypes, type Item, type LabelledItem } from '@prosopo/types'
 import fs from 'node:fs'
+import { CaptchaItemTypes, type Item, type LabelledItem } from '@prosopo/types'
 
 const nLabels = 4
 const nLabelledImages = 100
@@ -30,6 +30,9 @@ for (let i = 0; i < nUnlabelledImages; i++) {
 
 fs.writeFileSync('labelled.json', JSON.stringify(labelledImages))
 fs.writeFileSync('unlabelled.json', JSON.stringify(unlabelledImages))
-fs.writeFileSync('labels.json', JSON.stringify(Array.from(Array(nLabels).keys()).map((x) => x.toString())))
+fs.writeFileSync(
+    'labels.json',
+    JSON.stringify(Array.from(Array(nLabels).keys()).map((x) => x.toString()))
+)
 
 process.exit(0)

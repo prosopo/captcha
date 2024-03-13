@@ -1,3 +1,6 @@
+import { readFile, writeFile } from 'node:fs'
+import path from 'node:path'
+import { at, get } from '@prosopo/util'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +16,6 @@
 // limitations under the License.
 import type { Account } from '../accounts.js'
 import { IDatabasePopulatorMethods } from './DatabasePopulator.js'
-import { at, get } from '@prosopo/util'
-import { readFile, writeFile } from 'node:fs'
-import path from 'node:path'
 
 export enum AccountKey {
     providers = 'providers',
@@ -43,7 +43,10 @@ export interface IDatabaseAccounts {
 const keys = Object.keys(new IDatabasePopulatorMethods())
 
 function getPath(type: 'import' | 'export') {
-    return path.resolve(__dirname, `../../../../${type === 'import' ? '' : '.'}database_accounts.json`)
+    return path.resolve(
+        __dirname,
+        `../../../../${type === 'import' ? '' : '.'}database_accounts.json`
+    )
 }
 
 export async function exportDatabaseAccounts(database: IDatabaseAccounts) {
@@ -101,19 +104,30 @@ class DatabaseAccounts implements IDatabaseAccounts {
             [key: string]: Account[]
         } = this as any
         return new Promise((resolve) => {
-            readFile(getPath('import'), { encoding: 'utf-8' }, (err, stringData) => {
-                if (err) {
-                    console.log(err)
-                } else {
-                    console.log(`Imported accounts from ${getPath('import')}`)
-                    const data = JSON.parse(stringData)
-                    keys.forEach((key) => {
-                        self[`_registered${key.replace(/^./, at(key, 0).toUpperCase())}`] = get(data, key)
-                    })
-                }
+            readFile(
+                getPath('import'),
+                { encoding: 'utf-8' },
+                (err, stringData) => {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log(
+                            `Imported accounts from ${getPath('import')}`
+                        )
+                        const data = JSON.parse(stringData)
+                        keys.forEach((key) => {
+                            self[
+                                `_registered${key.replace(
+                                    /^./,
+                                    at(key, 0).toUpperCase()
+                                )}`
+                            ] = get(data, key)
+                        })
+                    }
 
-                resolve(null)
-            })
+                    resolve(null)
+                }
+            )
         })
     }
 }

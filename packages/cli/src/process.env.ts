@@ -19,7 +19,10 @@ export function getSs58Format(): number {
 }
 
 export function getPairType(): KeypairType {
-    return (process.env.PROSOPO_PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
+    return (
+        (process.env.PROSOPO_PAIR_TYPE as KeypairType) ||
+        ('sr25519' as KeypairType)
+    )
 }
 
 export function getSecret(who?: string): string | undefined {

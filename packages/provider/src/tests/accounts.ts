@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
-import type { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { getPairAsync } from '@prosopo/contract'
+import type { IDappAccount, IProviderAccount } from '@prosopo/types'
 import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
-import { getPairAsync } from '@prosopo/contract'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
@@ -26,7 +26,11 @@ export const accountContract = (account: Account): string => {
     }
     throw new Error(`Account ${account[1]} does not have a contract`)
 }
-export type Account = [mnemonic: string, address: string, contractAddress?: string]
+export type Account = [
+    mnemonic: string,
+    address: string,
+    contractAddress?: string,
+]
 
 export const PROVIDER: IProviderAccount = {
     url: 'http://localhost:9229',
@@ -44,8 +48,15 @@ export const DAPP: IDappAccount = {
     fundAmount: new BN(1000000000000000),
 }
 
-export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
-    const pair = await getPairAsync(env.config.networks[env.config.defaultNetwork], accountMnemonic(account), '')
+export async function getSignedTasks(
+    env: ProviderEnvironment,
+    account: Account
+): Promise<Tasks> {
+    const pair = await getPairAsync(
+        env.config.networks[env.config.defaultNetwork],
+        accountMnemonic(account),
+        ''
+    )
     await env.changeSigner(pair)
     return new Tasks(env)
 }

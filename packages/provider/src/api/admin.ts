@@ -1,12 +1,12 @@
-import * as z from 'zod'
-import { AdminApiPaths } from '@prosopo/types'
-import { BatchCommitmentsTask, Tasks } from '../index.js'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
+import { wrapQuery } from '@prosopo/contract'
+import { AdminApiPaths } from '@prosopo/types'
 import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Router } from 'express'
+import * as z from 'zod'
+import { BatchCommitmentsTask, Tasks } from '../index.js'
 import { authMiddleware } from './authMiddleware.js'
-import { wrapQuery } from '@prosopo/contract'
 
 // Setting batch commit interval to 0 for API calls
 const apiBatchCommitConfig = {
@@ -61,7 +61,9 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
         try {
             const address = env.pair?.address
             if (!address) {
-                throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', { context: { error: 'No address' } })
+                throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', {
+                    context: { error: 'No address' },
+                })
             }
             await tasks.contract.tx.providerDeregister()
         } catch (err) {
@@ -81,15 +83,21 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
                     address: z.string(),
                 })
                 .parse(req.body)
-            const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
+            const provider = (
+                await tasks.contract.query.getProvider(address, {})
+            ).value
+                .unwrap()
+                .unwrap()
             if (provider && (url || fee || payee || value)) {
-                const urlConverted = url ? Array.from(new UrlConverter().encode(url.toString())) : provider.url
-                await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
-                    urlConverted,
-                    fee || provider.fee,
-                    payee || provider.payee,
-                    { value: value || 0 }
-                )
+                const urlConverted = url
+                    ? Array.from(new UrlConverter().encode(url.toString()))
+                    : provider.url
+                await wrapQuery(
+                    tasks.contract.query.providerUpdate,
+                    tasks.contract.query
+                )(urlConverted, fee || provider.fee, payee || provider.payee, {
+                    value: value || 0,
+                })
                 const result = await tasks.contract.tx.providerUpdate(
                     urlConverted,
                     fee || provider.fee,

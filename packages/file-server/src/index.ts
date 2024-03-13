@@ -1,11 +1,11 @@
 import { dirname } from 'node:path'
+import stream from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { isMain } from '@prosopo/util'
 import dotenv from 'dotenv'
 import express, { type Request, type Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
-import stream from 'node:stream'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

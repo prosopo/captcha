@@ -1,3 +1,5 @@
+import type { ProsopoServer } from '@prosopo/server'
+import express from 'express'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Connection } from 'mongoose'
-import type { ProsopoServer } from '@prosopo/server'
 import { isAuth, login, signup } from '../controllers/auth.js'
-import express from 'express'
 
 const router = express.Router()
 
-function getRoutes(mongoose: Connection, prosopoServer: ProsopoServer): express.Router {
+function getRoutes(
+    mongoose: Connection,
+    prosopoServer: ProsopoServer
+): express.Router {
     router.post('/login', login.bind(null, mongoose, prosopoServer))
 
     router.post('/signup', signup.bind(null, mongoose, prosopoServer))

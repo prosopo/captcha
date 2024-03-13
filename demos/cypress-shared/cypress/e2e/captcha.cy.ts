@@ -13,11 +13,11 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import '@cypress/xpath'
-import type { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import type { Captcha } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { checkboxClass } from '../support/commands.js'
-import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 describe('Captchas', () => {
     beforeEach(() => {
@@ -27,9 +27,12 @@ describe('Captchas', () => {
         }))
 
         if (!solutions) {
-            throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
-                context: { datasetWithSolutionHashes },
-            })
+            throw new ProsopoDatasetError(
+                'DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED',
+                {
+                    context: { datasetWithSolutionHashes },
+                }
+            )
         }
         cy.intercept('/dummy').as('dummy')
 
@@ -51,8 +54,14 @@ describe('Captchas', () => {
         cy.clickIAmHuman().then((captchas: Captcha[]) => {
             cy.wait(2000)
             cy.captchaImages().then(() => {
-                console.log("captchas in 'Number of displayed captchas equals number received in response'", captchas)
-                cy.get('@captchaImages').should('have.length', at(captchas, 0).items.length)
+                console.log(
+                    "captchas in 'Number of displayed captchas equals number received in response'",
+                    captchas
+                )
+                cy.get('@captchaImages').should(
+                    'have.length',
+                    at(captchas, 0).items.length
+                )
             })
         })
     })
@@ -63,7 +72,11 @@ describe('Captchas', () => {
             cy.wait(2000)
             cy.captchaImages().then(() => {
                 cy.get('@captchaImages').first().click()
-                cy.get('@captchaImages').first().siblings().first().should('have.css', 'opacity', '1')
+                cy.get('@captchaImages')
+                    .first()
+                    .siblings()
+                    .first()
+                    .should('have.css', 'opacity', '1')
             })
         })
     })

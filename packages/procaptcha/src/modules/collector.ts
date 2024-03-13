@@ -1,11 +1,17 @@
-import type { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
+import type {
+    ProsopoKeyboardEvent,
+    ProsopoMouseEvent,
+    ProsopoTouchEvent,
+} from '@prosopo/types'
 
 const COLLECTOR_LIMIT = 10000
 
 type SetStateAction<T> = T | ((prevState: T) => T)
 type SetStateEvent<T> = (setValueFunc: SetStateAction<T[]>) => void
 type SetMouseEvent = (setValueFunc: SetStateAction<ProsopoMouseEvent[]>) => void
-type SetKeyboardEvent = (setValueFunc: SetStateAction<ProsopoKeyboardEvent[]>) => void
+type SetKeyboardEvent = (
+    setValueFunc: SetStateAction<ProsopoKeyboardEvent[]>
+) => void
 type SetTouchEvent = (setValueFunc: SetStateAction<ProsopoTouchEvent[]>) => void
 
 const storeLog = <T>(event: T, setEvents: SetStateEvent<T>) => {
@@ -18,7 +24,10 @@ const storeLog = <T>(event: T, setEvents: SetStateEvent<T>) => {
     })
 }
 
-const logMouseEvent = (event: globalThis.MouseEvent, setMouseEvent: SetMouseEvent) => {
+const logMouseEvent = (
+    event: globalThis.MouseEvent,
+    setMouseEvent: SetMouseEvent
+) => {
     const storedEvent: ProsopoMouseEvent = {
         x: event.x,
         y: event.y,
@@ -27,7 +36,10 @@ const logMouseEvent = (event: globalThis.MouseEvent, setMouseEvent: SetMouseEven
     storeLog(storedEvent, setMouseEvent)
 }
 
-const logKeyboardEvent = (event: globalThis.KeyboardEvent, setKeyboardEvent: SetKeyboardEvent) => {
+const logKeyboardEvent = (
+    event: globalThis.KeyboardEvent,
+    setKeyboardEvent: SetKeyboardEvent
+) => {
     const storedEvent: ProsopoKeyboardEvent = {
         key: event.key,
         timestamp: event.timeStamp,
@@ -37,9 +49,15 @@ const logKeyboardEvent = (event: globalThis.KeyboardEvent, setKeyboardEvent: Set
     storeLog(storedEvent, setKeyboardEvent)
 }
 
-const logTouchEvent = (event: globalThis.TouchEvent, setTouchEvent: SetTouchEvent) => {
+const logTouchEvent = (
+    event: globalThis.TouchEvent,
+    setTouchEvent: SetTouchEvent
+) => {
     for (const touch of Array.from(event.touches)) {
-        storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent)
+        storeLog(
+            { x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp },
+            setTouchEvent
+        )
     }
 }
 
@@ -52,17 +70,31 @@ export const startCollector = (
     const form = findContainingForm(rootElement)
     if (form) {
         // Add listeners to mouse
-        form.addEventListener('mousemove', (e) => logMouseEvent(e, setStoredMouseEvents))
+        form.addEventListener('mousemove', (e) =>
+            logMouseEvent(e, setStoredMouseEvents)
+        )
 
         // Add listeners to keyboard
-        form.addEventListener('keydown', (e) => logKeyboardEvent(e, setStoredKeyboardEvents))
-        form.addEventListener('keyup', (e) => logKeyboardEvent(e, setStoredKeyboardEvents))
+        form.addEventListener('keydown', (e) =>
+            logKeyboardEvent(e, setStoredKeyboardEvents)
+        )
+        form.addEventListener('keyup', (e) =>
+            logKeyboardEvent(e, setStoredKeyboardEvents)
+        )
 
         // Add listeners to touch
-        form.addEventListener('touchstart', (e) => logTouchEvent(e, setStoredTouchEvents))
-        form.addEventListener('touchend', (e) => logTouchEvent(e, setStoredTouchEvents))
-        form.addEventListener('touchcancel', (e) => logTouchEvent(e, setStoredTouchEvents))
-        form.addEventListener('touchmove', (e) => logTouchEvent(e, setStoredTouchEvents))
+        form.addEventListener('touchstart', (e) =>
+            logTouchEvent(e, setStoredTouchEvents)
+        )
+        form.addEventListener('touchend', (e) =>
+            logTouchEvent(e, setStoredTouchEvents)
+        )
+        form.addEventListener('touchcancel', (e) =>
+            logTouchEvent(e, setStoredTouchEvents)
+        )
+        form.addEventListener('touchmove', (e) =>
+            logTouchEvent(e, setStoredTouchEvents)
+        )
     }
 }
 

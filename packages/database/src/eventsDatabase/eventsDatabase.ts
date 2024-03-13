@@ -1,5 +1,5 @@
-import type { StoredEventRecord, StoredEvents } from '@prosopo/types'
 import { getLoggerDefault } from '@prosopo/common'
+import type { StoredEventRecord, StoredEvents } from '@prosopo/types'
 import mongoose, { type Model } from 'mongoose'
 const logger = getLoggerDefault()
 const MAX_RETRIES = 3
@@ -36,8 +36,14 @@ try {
     CaptchaEvent = mongoose.model('CaptchaEvent', captchaEventSchema)
 }
 
-export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, atlasUri: string) => {
-    await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
+export const saveCaptchaEvent = async (
+    events: StoredEvents,
+    accountId: string,
+    atlasUri: string
+) => {
+    await mongoose
+        .connect(atlasUri)
+        .then(() => console.log('Connected to MongoDB Atlas'))
 
     const captchaEventData = {
         ...events,

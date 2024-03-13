@@ -39,12 +39,12 @@ export function calcInterval(api: ApiPromise): BN {
                   // Check against threshold to determine value validity
                   (api.consts.timestamp?.minimumPeriod.gte(THRESHOLD)
                       ? // Default minimum period config
-                        api.consts.timestamp.minimumPeriod.mul(BN_TWO)
+                          api.consts.timestamp.minimumPeriod.mul(BN_TWO)
                       : api.query.parachainSystem
-                      ? // default guess for a parachain
-                        DEFAULT_TIME.mul(BN_TWO)
-                      : // default guess for others
-                        DEFAULT_TIME)
+                          ? // default guess for a parachain
+                              DEFAULT_TIME.mul(BN_TWO)
+                          : // default guess for others
+                              DEFAULT_TIME)
             : DEFAULT_TIME
     )
 }

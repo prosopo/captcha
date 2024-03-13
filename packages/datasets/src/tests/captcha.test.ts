@@ -1,3 +1,4 @@
+import path from 'node:path'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +23,9 @@ import {
     type Item,
     type MerkleProof,
 } from '@prosopo/types'
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import { at, get } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import {
     compareCaptchaSolutions,
     computeCaptchaHash,
@@ -37,7 +38,6 @@ import {
     sortAndComputeHashes,
     verifyProof,
 } from '../captcha/index.js'
-import path from 'node:path'
 
 describe('CAPTCHA FUNCTIONS', async () => {
     let MOCK_ITEMS: Item[]
@@ -48,7 +48,10 @@ describe('CAPTCHA FUNCTIONS', async () => {
         MOCK_ITEMS = await Promise.all(
             new Array(9).fill(0).map((_, i) =>
                 computeItemHash({
-                    data: path.join('http://localhost', `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`),
+                    data: path.join(
+                        'http://localhost',
+                        `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`
+                    ),
                     type: CaptchaItemTypes.Text,
                     hash: '',
                 })
@@ -107,7 +110,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
             format: CaptchaTypes.SelectAll,
             captchas: [
                 {
-                    captchaId: '0xbd9cab1f7aa219ee1b2afb4a0df4649cceaf028549ca3959a4adcb8fa7e5b60b',
+                    captchaId:
+                        '0xbd9cab1f7aa219ee1b2afb4a0df4649cceaf028549ca3959a4adcb8fa7e5b60b',
                     captchaContentId: '0x01',
                     solution: [],
                     salt: '0x01010101010101010101010101010101',
@@ -115,7 +119,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
                     items: ITEMS,
                 },
                 {
-                    captchaId: '0xf1e9b2d9d6ca3a3740c29934768451b6790d38a8595a4b0fa5d5c3cf244b5dfa',
+                    captchaId:
+                        '0xf1e9b2d9d6ca3a3740c29934768451b6790d38a8595a4b0fa5d5c3cf244b5dfa',
                     captchaContentId: '0x01',
                     salt: '0x02020202020202020202020202020202',
                     target: 'train',
@@ -126,13 +131,15 @@ describe('CAPTCHA FUNCTIONS', async () => {
 
         RECEIVED = [
             {
-                captchaId: '0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8',
+                captchaId:
+                    '0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8',
                 captchaContentId: '0x01',
                 solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
                 salt: '0x01010101010101010101010101010101',
             },
             {
-                captchaId: '0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0',
+                captchaId:
+                    '0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0',
                 captchaContentId: '0x01',
                 solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
                 salt: '0x02020202020202020202020202020202',
@@ -141,7 +148,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
 
         STORED = [
             {
-                captchaId: '0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8',
+                captchaId:
+                    '0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8',
                 captchaContentId: '0x01',
                 salt: '0x01010101010101010101010101010101',
                 items: MOCK_ITEMS,
@@ -149,7 +157,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
                 solved: true,
             },
             {
-                captchaId: '0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0',
+                captchaId:
+                    '0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0',
                 captchaContentId: '0x01',
                 salt: '0x02020202020202020202020202020202',
                 items: MOCK_ITEMS,
@@ -161,7 +170,9 @@ describe('CAPTCHA FUNCTIONS', async () => {
 
     test('Parses a captcha dataset correctly', () => {
         expect(() => {
-            parseCaptchaDataset(JSON.parse(JSON.stringify({ ...DATASET })) as JSON)
+            parseCaptchaDataset(
+                JSON.parse(JSON.stringify({ ...DATASET })) as JSON
+            )
         }).to.not.throw()
     })
 
@@ -173,15 +184,24 @@ describe('CAPTCHA FUNCTIONS', async () => {
                     ({
                         ...captcha,
                         items: await Promise.all(
-                            captcha.items.map(async (item): Promise<HashedItem> => await computeItemHash(item))
+                            captcha.items.map(
+                                async (item): Promise<HashedItem> =>
+                                    await computeItemHash(item)
+                            )
                         ),
                     }) as Captcha
             )
         )
 
-        const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, true, true, false))
-        expect(at(captchaHashes, 0)).to.equal(get(at(dataset.captchas, 0), 'captchaId', false) ?? '')
-        expect(captchaHashes[1]).to.equal(get(at(dataset.captchas, 1), 'captchaId', false) ?? '')
+        const captchaHashes = dataset.captchas.map((captcha) =>
+            computeCaptchaHash(captcha, true, true, false)
+        )
+        expect(at(captchaHashes, 0)).to.equal(
+            get(at(dataset.captchas, 0), 'captchaId', false) ?? ''
+        )
+        expect(captchaHashes[1]).to.equal(
+            get(at(dataset.captchas, 1), 'captchaId', false) ?? ''
+        )
         expect(at(captchaHashes, 0)).to.not.equal(at(captchaHashes, 1))
     })
 
@@ -190,7 +210,9 @@ describe('CAPTCHA FUNCTIONS', async () => {
             '[{ "captchaId": "1", "captchaContentId": "1", "solution": ["0x1", "0x2", "0x3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }, { "captchaId": "2", "captchaContentId": "2", "solution": ["0x1", "0x2", "0x3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }]'
         ) as CaptchaSolution[]
 
-        expect(parseAndSortCaptchaSolutions(captchaSolutions).length).to.equal(2)
+        expect(parseAndSortCaptchaSolutions(captchaSolutions).length).to.equal(
+            2
+        )
     })
 
     test('Invalid Captcha solutions are not successfully parsed', () => {
@@ -227,20 +249,27 @@ describe('CAPTCHA FUNCTIONS', async () => {
             items: MOCK_ITEMS,
         }
 
-        expect(computeCaptchaHash(captchaEmptyArraySolution, true, true, true)).to.not.equal(
+        expect(
+            computeCaptchaHash(captchaEmptyArraySolution, true, true, true)
+        ).to.not.equal(
             computeCaptchaHash(captchaUndefinedSolution, true, true, true)
         )
     })
 
     test('Captcha solutions are correctly sorted and computed', () => {
         const idsAndHashes = sortAndComputeHashes(RECEIVED, STORED)
-        expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true
+        expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId))
+            .to.be.true
     })
 
     test('Captcha solutions are correctly sorted and computed - non matching order', () => {
-        const idsAndHashes = sortAndComputeHashes(RECEIVED, [at(STORED, 1), at(STORED, 0)])
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, [
+            at(STORED, 1),
+            at(STORED, 0),
+        ])
 
-        expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true
+        expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId))
+            .to.be.true
     })
 
     test('Matching captcha solutions are correctly compared, returning true', () => {
@@ -251,7 +280,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
         const stored = [
             {
                 ...at(STORED, 0),
-                captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
+                captchaId:
+                    '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
             },
             at(STORED, 1),
         ]
@@ -262,7 +292,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
     test('Mismatched length captcha solutions returns false', () => {
         const received = [
             {
-                captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
+                captchaId:
+                    '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
                 captchaContentId: '',
                 solution: matchItemsToSolutions([1, 2, 3], MOCK_ITEMS),
                 salt: '',
@@ -271,7 +302,8 @@ describe('CAPTCHA FUNCTIONS', async () => {
         ]
         const stored = [
             {
-                captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
+                captchaId:
+                    '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
                 captchaContentId: '',
                 salt: '0x01010101010101010101010101010101',
                 items: [],
@@ -287,13 +319,15 @@ describe('CAPTCHA FUNCTIONS', async () => {
     test('Captchas with mismatching solution lengths are marked as incorrect', () => {
         const noSolutions = [
             {
-                captchaId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
+                captchaId:
+                    '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
                 captchaContentId: '',
                 solution: [],
                 salt: '',
             },
             {
-                captchaId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
+                captchaId:
+                    '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
                 captchaContentId: '',
                 solution: [],
                 salt: '',
@@ -302,9 +336,11 @@ describe('CAPTCHA FUNCTIONS', async () => {
         const solutions = [
             {
                 // created using [ 2, 5, 7 ] as solution
-                captchaId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
+                captchaId:
+                    '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
                 captchaContentId: '',
-                datasetId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
+                datasetId:
+                    '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
                 index: 13,
                 items: [],
                 salt: '0x010101010101010101010101010101',
@@ -312,9 +348,11 @@ describe('CAPTCHA FUNCTIONS', async () => {
                 solved: true,
             },
             {
-                captchaId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
+                captchaId:
+                    '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
                 captchaContentId: '',
-                datasetId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
+                datasetId:
+                    '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
                 index: 3,
                 items: [],
                 salt: '0x050505050505050505050505050505',
@@ -327,7 +365,9 @@ describe('CAPTCHA FUNCTIONS', async () => {
 
     test('Pending request hash is calculated properly', () => {
         const hash = computePendingRequestHash(['1', '2', '3'], '0x01', '0x02')
-        expect(hash).to.equal('0x0c85e41f84c1b6b29ee2f7eae88512caa28fa82c3389fad3b875fd06dcab9da5')
+        expect(hash).to.equal(
+            '0x0c85e41f84c1b6b29ee2f7eae88512caa28fa82c3389fad3b875fd06dcab9da5'
+        )
     })
 
     test('Computes a captcha solution hash correctly', () => {
@@ -337,7 +377,9 @@ describe('CAPTCHA FUNCTIONS', async () => {
             solution: matchItemsToSolutions([1, 2], MOCK_ITEMS),
         } as CaptchaSolution
         const hash = computeCaptchaSolutionHash(captchaSolution)
-        expect(hash).to.be.equal('0x5d53f59e5a6a67e260f084e9b12cf9fa85c4a2cc42372edb14c063176ae0ccf1')
+        expect(hash).to.be.equal(
+            '0x5d53f59e5a6a67e260f084e9b12cf9fa85c4a2cc42372edb14c063176ae0ccf1'
+        )
     })
 
     test('Verifies a valid merkle proof', () => {
@@ -362,9 +404,12 @@ describe('CAPTCHA FUNCTIONS', async () => {
                 '0xa2224c0acf395506f8bbc2635e03abb2ea4b239c3bf93c95379b4823764e0494',
                 '0x2add79b6e2c7253a98d751df9df8fae644c3ff761fe4684b836a4338804e017b',
             ],
-            ['0xeee6c87e8ad5cd1fc05ea0d8874067d87918f1b141fdabd12352ad59b779cc80'],
+            [
+                '0xeee6c87e8ad5cd1fc05ea0d8874067d87918f1b141fdabd12352ad59b779cc80',
+            ],
         ]
-        const leaf = '0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734'
+        const leaf =
+            '0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734'
         const verification = verifyProof(leaf, proof as MerkleProof)
         expect(verification).to.be.true
     })
@@ -392,13 +437,15 @@ describe('CAPTCHA FUNCTIONS', async () => {
             ],
             ['INVALID'],
         ]
-        const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
+        const leaf =
+            '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
         const verification = verifyProof(leaf, proof as MerkleProof)
         expect(verification).to.be.false
     })
     test('Fails to verify junk data', () => {
         const proof = 'junk'
-        const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
+        const leaf =
+            '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
         const verification = verifyProof(leaf, [[proof]])
         expect(verification).to.be.false
     })
@@ -406,10 +453,16 @@ describe('CAPTCHA FUNCTIONS', async () => {
         const emptyArraySolution: number[] = []
         expect(getSolutionValueToHash(emptyArraySolution)).to.deep.equal([])
         const hashSolutions = ['0x3', '0x2', '0x1']
-        expect(getSolutionValueToHash(hashSolutions)).to.deep.equal(['0x1', '0x2', '0x3'])
+        expect(getSolutionValueToHash(hashSolutions)).to.deep.equal([
+            '0x1',
+            '0x2',
+            '0x3',
+        ])
         const numberSolutions = [3, 2, 1]
         expect(getSolutionValueToHash(numberSolutions)).to.deep.equal([1, 2, 3])
         const undefinedSolution = undefined
-        expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([NO_SOLUTION_VALUE])
+        expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([
+            NO_SOLUTION_VALUE,
+        ])
     })
 })

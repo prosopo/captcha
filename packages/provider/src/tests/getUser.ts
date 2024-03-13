@@ -1,3 +1,5 @@
+import { ProsopoEnvError } from '@prosopo/common'
+import type { ProviderEnvironment } from '@prosopo/env'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +15,28 @@
 // limitations under the License.
 // Create a user of specified type using the databasePopulator
 import type { Account } from './accounts.js'
-import { AccountKey, type IDatabaseAccounts } from './dataUtils/DatabaseAccounts.js'
-import { DappAbiJSON, DappWasm } from './dataUtils/dapp-example-contract/loadFiles.js'
-import { ProsopoEnvError } from '@prosopo/common'
-import type { ProviderEnvironment } from '@prosopo/env'
-import { populateDatabase, userFundMapDefault } from './dataUtils/populateDatabase.js'
+import {
+    AccountKey,
+    type IDatabaseAccounts,
+} from './dataUtils/DatabaseAccounts.js'
+import {
+    DappAbiJSON,
+    DappWasm,
+} from './dataUtils/dapp-example-contract/loadFiles.js'
+import {
+    populateDatabase,
+    userFundMapDefault,
+} from './dataUtils/populateDatabase.js'
 
-export async function getUser(env: ProviderEnvironment, accountType: AccountKey, fund = true): Promise<Account> {
-    const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
+export async function getUser(
+    env: ProviderEnvironment,
+    accountType: AccountKey,
+    fund = true
+): Promise<Account> {
+    const accountConfig = Object.assign(
+        {},
+        ...Object.keys(AccountKey).map((item) => ({ [item]: 0 }))
+    )
     accountConfig[accountType] = 1
     const dappWasm = await DappWasm()
     const dappAbiJSON = await DappAbiJSON()
@@ -35,7 +51,9 @@ export async function getUser(env: ProviderEnvironment, accountType: AccountKey,
     )
     const account = databaseAccounts[accountType].pop()
     if (account === undefined) {
-        throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
+        throw new ProsopoEnvError(
+            new Error(`${accountType} not created by databasePopulator`)
+        )
     }
     return account
 }

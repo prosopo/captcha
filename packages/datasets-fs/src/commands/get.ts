@@ -1,9 +1,9 @@
-import * as z from 'zod'
-import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
+import fs from 'node:fs'
 import { get } from '@prosopo/util'
 import { lodash } from '@prosopo/util/lodash'
 import cliProgress from 'cli-progress'
-import fs from 'node:fs'
+import * as z from 'zod'
+import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
 
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
@@ -23,7 +23,10 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 
     public override async _run(args: Args) {
         await super._run(args)
-        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+        const bar = new cliProgress.SingleBar(
+            {},
+            cliProgress.Presets.shades_classic
+        )
 
         const list: string[] = []
         const traverse = async (data: any) => {
@@ -58,7 +61,9 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
                 try {
                     const response = await fetch(url)
                     if (!response.ok) {
-                        this.logger.error(`GET ${url} ${response.status} ${response.statusText}`)
+                        this.logger.error(
+                            `GET ${url} ${response.status} ${response.statusText}`
+                        )
                     } else {
                         this.logger.log(`GET ${url} OK`)
                     }

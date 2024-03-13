@@ -4,15 +4,42 @@
             "salt": "0x01",
             "solution": [0, 7],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_4.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_15", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_94.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_95.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_20.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_79.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_85.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_90.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_4.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_15",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_94.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_95.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_20.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_79.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_85.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_90.png",
+                    "type": "image"
+                }
             ],
             "target": "plane"
         },
@@ -20,15 +47,42 @@
             "salt": "0x02",
             "solution": [4, 6, 8],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_4.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_15", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_94.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_95.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_20.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_79.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_85.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_90.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_4.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_15",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_94.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_95.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_20.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_79.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_85.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_90.png",
+                    "type": "image"
+                }
             ],
             "target": "dog"
         },
@@ -36,30 +90,84 @@
             "salt": "0x03",
             "solution": [2, 3, 5],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_4.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_15", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_94.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_95.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_20.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_79.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_85.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_90.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_4.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_15",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_94.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_95.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_20.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_79.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_85.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_90.png",
+                    "type": "image"
+                }
             ],
             "target": "horse"
         },
         {
             "salt": "0x04",
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_4.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_15", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_94.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_95.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_20.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_79.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_85.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_90.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_4.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_15",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_94.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_95.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_20.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_79.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_85.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_90.png",
+                    "type": "image"
+                }
             ],
             "target": "bird"
         }

@@ -1,9 +1,9 @@
-import { LogLevel, getLogger } from '@prosopo/common'
 import { handleErrors } from '@prosopo/cli'
+import { LogLevel, getLogger } from '@prosopo/common'
 import { i18nMiddleware } from '@prosopo/common'
-import { prosopoRouter } from './api.js'
 import cors from 'cors'
 import express from 'express'
+import { prosopoRouter } from './api.js'
 const logger = getLogger(LogLevel.enum.info, 'prosopo:provider-mock:start.ts')
 
 async function startApi() {

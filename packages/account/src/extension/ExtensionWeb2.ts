@@ -1,3 +1,17 @@
+import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import Signer from '@polkadot/extension-base/page/Signer'
+import type { InjectedAccount } from '@polkadot/extension-inject/types'
+import type { InjectedExtension } from '@polkadot/extension-inject/types'
+import { Keyring } from '@polkadot/keyring'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
+import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
+import type { KeypairType } from '@polkadot/util-crypto/types'
+import { stringToU8a } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util/u8a'
+import { ProsopoEnvError, hexHash } from '@prosopo/common'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +26,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { Extension } from './Extension.js'
-import type { InjectedAccount } from '@polkadot/extension-inject/types'
-import type { InjectedExtension } from '@polkadot/extension-inject/types'
-import type { KeypairType } from '@polkadot/util-crypto/types'
-import { Keyring } from '@polkadot/keyring'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoEnvError, hexHash } from '@prosopo/common'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
-import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
-import { stringToU8a } from '@polkadot/util/string'
-import { u8aToHex } from '@polkadot/util/u8a'
-import Signer from '@polkadot/extension-base/page/Signer'
+import { Extension } from './Extension.js'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
@@ -35,7 +35,9 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  * Class for interfacing with web3 accounts.
  */
 export class ExtensionWeb2 extends Extension {
-    public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
+    public async getAccount(
+        config: ProcaptchaClientConfigOutput
+    ): Promise<Account> {
         const network = this.getNetwork(config)
         const wsProvider = new WsProvider(network.endpoint)
 
@@ -48,7 +50,9 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createExtension(account: AccountWithKeyPair): Promise<InjectedExtension> {
+    private async createExtension(
+        account: AccountWithKeyPair
+    ): Promise<InjectedExtension> {
         const signer = new Signer(async () => {
             return
         })
@@ -81,7 +85,9 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createAccount(wsProvider: WsProvider): Promise<AccountWithKeyPair> {
+    private async createAccount(
+        wsProvider: WsProvider
+    ): Promise<AccountWithKeyPair> {
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
@@ -93,18 +99,34 @@ export class ExtensionWeb2 extends Extension {
         }
 
         const browserEntropy = await this.getFingerprint()
-        const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
-        const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
+        const canvasEntropy = picassoCanvas(
+            params.numberOfRounds,
+            params.seed,
+            params
+        )
+        const entropy = hexHash(
+            [canvasEntropy, browserEntropy].join(''),
+            128
+        ).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
-        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false })
+        const api = await ApiPromise.create({
+            provider: wsProvider,
+            initWasm: false,
+        })
         const type: KeypairType = 'ed25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+        const keyring = new Keyring({
+            type,
+            ss58Format: api.registry.chainSS58,
+        })
         const keypair = keyring.addFromMnemonic(mnemonic)
         const address =
             keypair.address.length === 42
                 ? keypair.address
-                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
+                : encodeAddress(
+                      decodeAddress(keypair.address),
+                      api.registry.chainSS58
+                  )
         return {
             address,
             type,
@@ -128,7 +150,9 @@ export class ExtensionWeb2 extends Extension {
         const network = config.networks[config.defaultNetwork]
         if (!network) {
             throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', {
-                context: { error: `No network found for environment ${config.defaultEnvironment}` },
+                context: {
+                    error: `No network found for environment ${config.defaultEnvironment}`,
+                },
             })
         }
         return network

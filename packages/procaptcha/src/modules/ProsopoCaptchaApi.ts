@@ -1,3 +1,10 @@
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { Signer } from '@polkadot/api/types'
+import { stringToHex } from '@polkadot/util/string'
+import type { ProviderApi } from '@prosopo/api'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
+import type { ProsopoCaptchaContract } from '@prosopo/contract'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,16 +25,14 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import type { CaptchaSolution, CaptchaSolutionResponse, CaptchaWithProof, GetCaptchaResponse } from '@prosopo/types'
-import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import type { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
-import type { ProviderApi } from '@prosopo/api'
-import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import type { Signer } from '@polkadot/api/types'
-import type { TCaptchaSubmitResult } from '../types/client.js'
+import type {
+    CaptchaSolution,
+    CaptchaSolutionResponse,
+    CaptchaWithProof,
+    GetCaptchaResponse,
+} from '@prosopo/types'
 import { at } from '@prosopo/util'
-import { stringToHex } from '@polkadot/util/string'
+import type { TCaptchaSubmitResult } from '../types/client.js'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -55,7 +60,10 @@ export class ProsopoCaptchaApi {
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
         try {
-            const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
+            const captchaChallenge = await this.providerApi.getCaptchaChallenge(
+                this.userAccount,
+                this.provider
+            )
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             // convert https/http to match page
             captchaChallenge.captchas.forEach((captcha) => {
@@ -70,11 +78,16 @@ export class ProsopoCaptchaApi {
 
             return captchaChallenge
         } catch (error) {
-            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
+            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', {
+                context: { error },
+            })
         }
     }
 
-    public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
+    public verifyCaptchaChallengeContent(
+        provider: RandomProvider,
+        captchaChallenge: GetCaptchaResponse
+    ): void {
         // TODO make sure root is equal to root on the provider
         const first = at(captchaChallenge.captchas, 0)
         const proofLength = first.proof.length
@@ -91,7 +104,12 @@ export class ProsopoCaptchaApi {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
 
-            if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
+            if (
+                !verifyProof(
+                    captchaWithProof.captcha.captchaContentId,
+                    captchaWithProof.proof
+                )
+            ) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
         }
@@ -108,7 +126,9 @@ export class ProsopoCaptchaApi {
     ): Promise<TCaptchaSubmitResult> {
         const tree = new CaptchaMerkleTree()
 
-        const captchasHashed = solutions.map((captcha) => computeCaptchaSolutionHash(captcha))
+        const captchasHashed = solutions.map((captcha) =>
+            computeCaptchaSolutionHash(captcha)
+        )
 
         tree.build(captchasHashed)
         const commitmentId = tree.root?.hash
@@ -121,7 +141,9 @@ export class ProsopoCaptchaApi {
         if (this.web2) {
             if (!signer || !signer.signRaw) {
                 throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
-                    context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
+                    context: {
+                        error: 'Signer is not defined, cannot sign message to prove account ownership',
+                    },
                 })
             }
             // sign the request hash to prove account ownership
@@ -144,7 +166,9 @@ export class ProsopoCaptchaApi {
                 signature
             )
         } catch (error) {
-            throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
+            throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', {
+                context: { error },
+            })
         }
 
         return [result, commitmentId, tx]
@@ -157,14 +181,21 @@ export class ProsopoCaptchaApi {
  * @param {CaptchaWithProof} captchaWithProof
  * @returns {boolean}
  */
-async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<boolean> {
+async function verifyCaptchaData(
+    captchaWithProof: CaptchaWithProof
+): Promise<boolean> {
     const captcha = captchaWithProof.captcha
     const proof = captchaWithProof.proof
     // Check that all the item hashes are equal to the provided item hashes in the captcha
     if (
-        !(await Promise.all(captcha.items.map(async (item) => (await computeItemHash(item)).hash === item.hash))).every(
-            (hash) => hash === true
-        )
+        !(
+            await Promise.all(
+                captcha.items.map(
+                    async (item) =>
+                        (await computeItemHash(item)).hash === item.hash
+                )
+            )
+        ).every((hash) => hash === true)
     ) {
         return false
     }

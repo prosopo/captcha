@@ -1,17 +1,22 @@
-import * as z from 'zod'
-import type { ArgumentsCamelCase, Argv } from 'yargs'
-import { DappPayee } from '@prosopo/captcha-contract/types-returns'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import { DappPayee } from '@prosopo/captcha-contract/types-returns'
 import { LogLevel, type Logger, getLogger } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
+import { wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { get } from '@prosopo/util'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import * as z from 'zod'
 import { validateContract, validatePayee } from './validators.js'
-import { wrapQuery } from '@prosopo/contract'
 
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_register')
+export default (
+    pair: KeyringPair,
+    config: ProsopoConfigOutput,
+    cmdArgs?: { logger?: Logger }
+) => {
+    const logger =
+        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_register')
 
     return {
         command: 'dapp_register',
@@ -33,15 +38,22 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappRegister> = [
+                const dappRegisterArgs: Parameters<
+                    typeof tasks.contract.query.dappRegister
+                > = [
                     z.string().parse(argv.contract),
                     get(DappPayee, z.string().parse(argv.payee)),
                     {
                         value: 0,
                     },
                 ]
-                await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(...dappRegisterArgs)
-                const result = await tasks.contract.tx.dappRegister(...dappRegisterArgs)
+                await wrapQuery(
+                    tasks.contract.query.dappRegister,
+                    tasks.contract.query
+                )(...dappRegisterArgs)
+                const result = await tasks.contract.tx.dappRegister(
+                    ...dappRegisterArgs
+                )
 
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {

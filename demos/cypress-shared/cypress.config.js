@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { defineConfig } from 'cypress'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import vitePreprocessor from 'cypress-vite'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 export default defineConfig({
     headers: { 'Accept-Encoding': 'gzip, deflate' },
     env: {

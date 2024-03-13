@@ -1,3 +1,4 @@
+import path from 'node:path'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +16,17 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { hexToU8a } from '@polkadot/util/hex'
 import { isWasm } from '@polkadot/util/is'
 import fse from 'fs-extra'
-import path from 'node:path'
 
 // TODO use the .contract file instead of the .json and .wasm files. Polkadot-JS apps is also erroring out when using
 //   the .wasm and .json files. The .contract file works but I don't know why.
 
 export async function DappAbiJSON(): Promise<Abi> {
     try {
-        const json = JSON.parse(await fse.readFile(path.resolve(__dirname, 'dapp.contract'), { encoding: 'utf8' }))
+        const json = JSON.parse(
+            await fse.readFile(path.resolve(__dirname, 'dapp.contract'), {
+                encoding: 'utf8',
+            })
+        )
         return new Abi(json)
     } catch (e) {
         console.error(`Error loading dapp.json: ${e}`)
@@ -31,11 +35,13 @@ export async function DappAbiJSON(): Promise<Abi> {
 }
 
 export async function DappWasm(): Promise<Uint8Array> {
-    const wasm: `0x${string}` = `0x${fse.readFileSync(path.resolve(__dirname, './dapp.wasm')).toString('hex')}`
+    const wasm: `0x${string}` = `0x${fse
+        .readFileSync(path.resolve(__dirname, './dapp.wasm'))
+        .toString('hex')}`
     const wasmBytes = hexToU8a(wasm)
     if (isWasm(wasmBytes)) {
         return wasmBytes
     }
-        console.error(`Error loading dapp.wasm: ${wasm.slice(0, 10)}...`)
-        process.exit(1)
+    console.error(`Error loading dapp.wasm: ${wasm.slice(0, 10)}...`)
+    process.exit(1)
 }

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +15,33 @@
 /** @jsxImportSource @emotion/react */
 import { ContainerDiv, WidthBasedStylesDiv } from './Containers.js'
 import { LoadingSpinner } from './LoadingSpinner.js'
-import { WIDGET_DIMENSIONS, WIDGET_INNER_HEIGHT, WIDGET_URL, WIDGET_URL_TEXT } from './WidgetConstants.js'
-import { darkTheme, lightTheme } from './theme.js'
-import { useMemo } from 'react'
 import Logo from './Logo.js'
+import {
+    WIDGET_DIMENSIONS,
+    WIDGET_INNER_HEIGHT,
+    WIDGET_URL,
+    WIDGET_URL_TEXT,
+} from './WidgetConstants.js'
+import { darkTheme, lightTheme } from './theme.js'
 
 type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
 
 export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
     const darkMode = props.darkMode
     const themeColor = props.darkMode === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
+    const theme = useMemo(
+        () => (darkMode === 'light' ? lightTheme : darkTheme),
+        [darkMode]
+    )
     return (
         <div>
-            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+            <div
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    overflowX: 'auto',
+                }}
+            >
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
                         <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
@@ -36,7 +50,8 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                 style={{
                                     padding: '2px',
                                     border: '1px solid',
-                                    backgroundColor: theme.palette.background.default,
+                                    backgroundColor:
+                                        theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
                                     borderRadius: '8px',
                                     display: 'flex',
@@ -47,7 +62,12 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                     overflow: 'hidden',
                                 }}
                             >
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <div
                                         style={{
                                             alignItems: 'center',
@@ -68,15 +88,31 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                                     display: 'flex',
                                                 }}
                                             >
-                                                <div style={{ display: 'inline-flex' }}>
-                                                    <LoadingSpinner themeColor={themeColor} />
+                                                <div
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                    }}
+                                                >
+                                                    <LoadingSpinner
+                                                        themeColor={themeColor}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
+                                <div
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
+                                    <a
+                                        href={WIDGET_URL}
+                                        target='_blank'
+                                        aria-label={WIDGET_URL_TEXT}
+                                        rel='noreferrer'
+                                    >
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor} />
                                         </div>

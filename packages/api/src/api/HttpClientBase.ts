@@ -20,11 +20,18 @@ export class HttpClientBase {
         this.baseURL = baseURL + prefix
     }
 
-    protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+    protected async fetch<T>(
+        input: RequestInfo,
+        init?: RequestInit
+    ): Promise<T> {
         try {
             const response = await fetch(this.baseURL + input, init)
             if (!response.ok) {
-                throw new HttpError(response.status, response.statusText, response.url)
+                throw new HttpError(
+                    response.status,
+                    response.statusText,
+                    response.url
+                )
             }
             return this.responseHandler<T>(response)
         } catch (error) {
@@ -32,8 +39,15 @@ export class HttpClientBase {
         }
     }
 
-    protected async post<T, U>(input: RequestInfo, body: U, init?: RequestInit): Promise<T> {
-        const headers = { 'Content-Type': 'application/json', ...(init?.headers || {}) }
+    protected async post<T, U>(
+        input: RequestInfo,
+        body: U,
+        init?: RequestInit
+    ): Promise<T> {
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(init?.headers || {}),
+        }
         try {
             const response = await fetch(this.baseURL + input, {
                 method: 'POST',
@@ -42,7 +56,11 @@ export class HttpClientBase {
                 ...init,
             })
             if (!response.ok) {
-                throw new HttpError(response.status, response.statusText, response.url)
+                throw new HttpError(
+                    response.status,
+                    response.statusText,
+                    response.url
+                )
             }
             return this.responseHandler<T>(response)
         } catch (error) {

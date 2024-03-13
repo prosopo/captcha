@@ -1,14 +1,16 @@
-import * as z from 'zod'
-import type { ArgumentsCamelCase } from 'yargs'
 import type { Compact } from '@polkadot/types-codec/base'
-import { PayeeSchema } from '@prosopo/types'
+import type { u128 } from '@polkadot/types-codec/primitive'
 import { ProsopoEnvError } from '@prosopo/common'
 import { encodeStringAddress } from '@prosopo/provider'
+import { PayeeSchema } from '@prosopo/types'
 import { lodash } from '@prosopo/util/lodash'
-import type { u128 } from '@polkadot/types-codec/primitive'
 import parser from 'cron-parser'
+import type { ArgumentsCamelCase } from 'yargs'
+import * as z from 'zod'
 
-export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
+export const validateAddress = (
+    argv: ArgumentsCamelCase
+): { address: string } => {
     const address = encodeStringAddress(argv.address as string)
 
     return { address }
@@ -29,13 +31,17 @@ export const validatePayee = (argv: ArgumentsCamelCase) => {
 
         return { payee }
     } catch (error) {
-        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', { context: { payee: [argv.payee], error } })
+        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', {
+            context: { payee: [argv.payee], error },
+        })
     }
 }
 
 export const validateValue = (argv: ArgumentsCamelCase) => {
     if (typeof argv.value !== 'number') {
-        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', { context: { value: [argv.value] } })
+        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', {
+            context: { value: [argv.value] },
+        })
     }
     const value: Compact<u128> = argv.value as unknown as Compact<u128>
     return { value }
@@ -57,11 +63,14 @@ export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
 
         if (argv.schedule in result.errors) {
             throw new ProsopoEnvError('CLI.PARAMETER_ERROR', {
-                context: { payee: [argv.shedule], failedFuncName: validateScheduleExpression.name },
+                context: {
+                    payee: [argv.shedule],
+                    failedFuncName: validateScheduleExpression.name,
+                },
             })
         }
 
         return { schedule: argv.schedule as string }
     }
-        return { schedule: null }
+    return { schedule: null }
 }

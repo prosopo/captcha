@@ -1,6 +1,10 @@
-import { ViteCommonJSConfig } from '@prosopo/config'
 import path from 'node:path'
+import { ViteCommonJSConfig } from '@prosopo/config'
 
 export default function () {
-    return ViteCommonJSConfig('procaptcha-bundle', path.resolve('./tsconfig.cjs.json'), 'src/index.tsx')
+    return ViteCommonJSConfig(
+        'procaptcha-bundle',
+        path.resolve('./tsconfig.cjs.json'),
+        'src/index.tsx'
+    )
 }

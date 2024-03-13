@@ -1,3 +1,7 @@
+import { blake2b } from '@noble/hashes/blake2b'
+import { u8aToHex } from '@polkadot/util'
+import { randomAsHex } from '@polkadot/util-crypto'
+import type { ProsopoServer } from '@prosopo/server'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +16,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '@prosopo/types'
-import type { Connection } from 'mongoose'
-import type { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
-import type { ProsopoServer } from '@prosopo/server'
-import type { UserInterface } from '../models/user.js'
 import { at } from '@prosopo/util'
-import { blake2b } from '@noble/hashes/blake2b'
-import { randomAsHex } from '@polkadot/util-crypto'
-import { u8aToHex } from '@polkadot/util'
-import { z } from 'zod'
+import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import type { Connection } from 'mongoose'
+import { z } from 'zod'
+import type { UserInterface } from '../models/user.js'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -54,7 +54,11 @@ const signup = async (
             return res.status(409).json({ message: 'email already exists' })
         }
 
-        if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+        if (
+            await prosopoServer.isVerified(
+                payload[ApiParams.procaptchaResponse]
+            )
+        ) {
             // salt
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
@@ -71,19 +75,30 @@ const signup = async (
                     })
                     .catch((err) => {
                         console.log(err)
-                        res.status(502).json({ message: 'error while creating the user' })
+                        res.status(502).json({
+                            message: 'error while creating the user',
+                        })
                     })
             }
         } else {
-            res.status(401).json({ message: 'user has not completed a captcha' })
+            res.status(401).json({
+                message: 'user has not completed a captcha',
+            })
         }
     } catch (err) {
         console.error('error', err)
-        res.status(500).json({ message: (err as Error).message || 'internal server error' })
+        res.status(500).json({
+            message: (err as Error).message || 'internal server error',
+        })
     }
 }
 
-const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response) => {
+const login = async (
+    mongoose: Connection,
+    prosopoServer: ProsopoServer,
+    req: Request,
+    res: Response
+) => {
     const User = mongoose.model<UserInterface>('User')
     await prosopoServer.isReady()
     // checks if email exists
@@ -95,24 +110,39 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
                 res.status(404).json({ message: 'user not found' })
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
-                if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+                if (
+                    await prosopoServer.isVerified(
+                        payload[ApiParams.procaptchaResponse]
+                    )
+                ) {
                     // password hash
                     // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
-                    const passwordHash = hashPassword(`${req.body.password}${dbUser.salt}`)
+                    const passwordHash = hashPassword(
+                        `${req.body.password}${dbUser.salt}`
+                    )
                     if (passwordHash !== dbUser.password) {
                         // password doesnt match
                         res.status(401).json({ message: 'invalid credentials' })
                     } else {
                         // password match
-                        const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
-                        res.status(200).json({ message: 'user logged in', token: token })
+                        const token = jwt.sign(
+                            { email: req.body.email },
+                            'secret',
+                            { expiresIn: '1h' }
+                        )
+                        res.status(200).json({
+                            message: 'user logged in',
+                            token: token,
+                        })
                     }
                 }
             }
         })
         .catch((err) => {
             console.error('error', err)
-            res.status(500).json({ message: err.message || 'internal server error' })
+            res.status(500).json({
+                message: err.message || 'internal server error',
+            })
         })
 }
 
@@ -127,7 +157,9 @@ const isAuth = (req: Request, res: Response) => {
     try {
         decodedToken = jwt.verify(token, 'secret')
     } catch (err) {
-        res.status(500).json({ message: (err as Error).message || 'could not decode the token' })
+        res.status(500).json({
+            message: (err as Error).message || 'could not decode the token',
+        })
     }
 
     if (!decodedToken) {

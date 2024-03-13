@@ -1,9 +1,9 @@
 import * as path from 'node:path'
-import { VitePluginCloseAndCopy } from '@prosopo/config'
-import { defineConfig } from 'vite'
-import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
+import { getLogger } from '@prosopo/common'
+import { VitePluginCloseAndCopy } from '@prosopo/config'
 import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 const logger = getLogger('Info', 'vite.config.js')
 const dir = path.resolve('.')
 loadEnv(dir)
@@ -21,13 +21,23 @@ export default defineConfig(({ command, mode }) => {
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(mode),
-        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
-        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(
+            process.env.PROSOPO_SUBSTRATE_ENDPOINT
+        ),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(
+            process.env.PROSOPO_DEFAULT_ENVIRONMENT
+        ),
         // only needed if bundling with a site key
-        'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
-        'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
+        'process.env.PROSOPO_SITE_KEY': JSON.stringify(
+            process.env.PROSOPO_SITE_KEY
+        ),
+        'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(
+            process.env.PROSOPO_CONTRACT_ADDRESS
+        ),
         'process.env.PROSOPO_WEB2': JSON.stringify(process.env.PROSOPO_WEB2),
-        'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
+        'process.env.PROSOPO_SERVER_URL': JSON.stringify(
+            process.env.PROSOPO_SERVER_URL
+        ),
         'process.env.PROSOPO_PORT': JSON.stringify(process.env.PROSOPO_PORT),
     }
     logger.debug('define', JSON.stringify(define))
@@ -41,11 +51,21 @@ export default defineConfig(({ command, mode }) => {
             include: ['prop-types'],
         },
         esbuild: {
-            target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
+            target: [
+                'es2020',
+                'chrome60',
+                'edge18',
+                'firefox60',
+                'node12',
+                'safari11',
+            ],
         },
         build: {
             modulePreload: { polyfill: true },
-            lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' },
+            lib: {
+                entry: path.resolve(__dirname, './index.html'),
+                name: 'client_example',
+            },
         },
         plugins: [
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -55,6 +75,10 @@ export default defineConfig(({ command, mode }) => {
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
-        server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9234 },
+        server: {
+            port: process.env.PROSOPO_PORT
+                ? Number(process.env.PROSOPO_PORT)
+                : 9234,
+        },
     }
 })

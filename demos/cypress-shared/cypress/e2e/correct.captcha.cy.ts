@@ -13,10 +13,10 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import '@cypress/xpath'
-import type { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
-import { checkboxClass } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import type { Captcha } from '@prosopo/types'
+import { checkboxClass } from '../support/commands.js'
 
 describe('Captchas', () => {
     beforeEach(() => {
@@ -26,9 +26,12 @@ describe('Captchas', () => {
         }))
 
         if (!solutions) {
-            throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
-                context: { datasetWithSolutionHashes },
-            })
+            throw new ProsopoDatasetError(
+                'DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED',
+                {
+                    context: { datasetWithSolutionHashes },
+                }
+            )
         }
         cy.intercept('/dummy').as('dummy')
 

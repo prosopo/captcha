@@ -1,9 +1,9 @@
-import { describe, expect, test } from 'vitest'
-import { getCurrentFileDirectory } from '@prosopo/util'
-import { promisify } from 'node:util'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { promisify } from 'node:util'
+import { getCurrentFileDirectory } from '@prosopo/util'
+import { describe, expect, test } from 'vitest'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
@@ -53,7 +53,11 @@ describe('reloading api', () => {
     }, 120000)
 })
 
-const onData = async (data: any, rootDir: string, appended: boolean): Promise<{ appended: boolean; kill: boolean }> => {
+const onData = async (
+    data: any,
+    rootDir: string,
+    appended: boolean
+): Promise<{ appended: boolean; kill: boolean }> => {
     console.log(`stdout:\n${data}`)
     await new Promise((resolve) => setTimeout(resolve, 500))
 

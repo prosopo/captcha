@@ -57,7 +57,10 @@ describe('URL converter', () => {
         test(`encodes/decodes random url ${i + 1}`, () => {
             const len = Math.random() * 100 + 1 // url lengths between 1-100
             const symbols = converter.getSymbols()
-            const url = Array.from({ length: len }, () => symbols[Math.round(Math.random() * symbols.length)]).join('') // random url chars
+            const url = Array.from(
+                { length: len },
+                () => symbols[Math.round(Math.random() * symbols.length)]
+            ).join('') // random url chars
             const bytes = converter.encode(url)
             const decodedUrl = converter.decode(bytes)
             expect(decodedUrl).to.eql(url, bytes.toString())

@@ -1,3 +1,4 @@
+import type { KeyringPair } from '@polkadot/keyring/types'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { BN } from '@polkadot/util/bn'
-import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Payee } from '@prosopo/captcha-contract/types-arguments'
 
 export interface IUserAccount {

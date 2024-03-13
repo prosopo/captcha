@@ -1,3 +1,5 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
-import path from 'node:path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info, 'env')
+const logger = getLogger(
+    process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
+    'env'
+)
 
 export function getEnv() {
     if (process.env.NODE_ENV) {
@@ -27,7 +30,11 @@ export function getEnv() {
     return 'development'
 }
 
-export function loadEnv(rootDir?: string, filename?: string, filePath?: string): string {
+export function loadEnv(
+    rootDir?: string,
+    filename?: string,
+    filePath?: string
+): string {
     const envPath = getEnvFile(path.resolve(rootDir || '.'), filename, filePath)
     const args = { path: envPath }
     logger.info(`Loading env from ${envPath}`)
@@ -35,7 +42,11 @@ export function loadEnv(rootDir?: string, filename?: string, filePath?: string):
     return envPath
 }
 
-export function getEnvFile(rootDir?: string, filename = '.env', filepath = path.join(__dirname, '../..')) {
+export function getEnvFile(
+    rootDir?: string,
+    filename = '.env',
+    filepath = path.join(__dirname, '../..')
+) {
     const env = getEnv()
     return path.join(rootDir || filepath, `${filename}.${env}`)
 }

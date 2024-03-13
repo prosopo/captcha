@@ -19,7 +19,11 @@ import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
 import type { ProsopoClientConfigInput } from '@prosopo/types'
 
 const getWeb2 = (): boolean | undefined => {
-    return process.env.PROSOPO_WEB2 === 'true' ? true : process.env.PROSOPO_WEB2 === 'false' ? false : undefined
+    return process.env.PROSOPO_WEB2 === 'true'
+        ? true
+        : process.env.PROSOPO_WEB2 === 'false'
+          ? false
+          : undefined
 }
 
 const config: ProsopoClientConfigInput = {

@@ -1,13 +1,24 @@
-import type { ArgumentsCamelCase, Argv } from 'yargs'
-import { CalculateSolutionsTask } from '@prosopo/provider'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
+import {
+    LogLevel,
+    type Logger,
+    ProsopoEnvError,
+    getLogger,
+} from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
+import { CalculateSolutionsTask } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { validateScheduleExpression } from './validators.js'
 
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.calculate_captcha_solutions')
+export default (
+    pair: KeyringPair,
+    config: ProsopoConfigOutput,
+    cmdArgs?: { logger?: Logger }
+) => {
+    const logger =
+        cmdArgs?.logger ||
+        getLogger(LogLevel.enum.info, 'cli.calculate_captcha_solutions')
 
     return {
         command: 'calculate_captcha_solutions',
@@ -25,9 +36,9 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
             if (argv.schedule) {
                 throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
             }
-                const calculateSolutionsTask = new CalculateSolutionsTask(env)
-                const result = await calculateSolutionsTask.run()
-                logger.info(`Updated ${result} captcha solutions`)
+            const calculateSolutionsTask = new CalculateSolutionsTask(env)
+            const result = await calculateSolutionsTask.run()
+            logger.info(`Updated ${result} captcha solutions`)
         },
         middlewares: [validateScheduleExpression],
     }

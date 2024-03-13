@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { anew } from '../asyncConstructor.js'
-import { describe, expect, test } from 'vitest'
 
 describe('asyncConstructor', () => {
     test('constructs async', async () => {
@@ -43,7 +43,6 @@ describe('asyncConstructor', () => {
 
     test('constructs async with no args', async () => {
         class Abc {
-
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             async ctor() {}
         }

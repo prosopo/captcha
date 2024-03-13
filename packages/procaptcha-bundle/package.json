@@ -32,9 +32,7 @@
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
-    "browserslist": [
-        "> 0.5%, last 2 versions, not dead"
-    ],
+    "browserslist": ["> 0.5%, last 2 versions, not dead"],
     "dependencies": {
         "@prosopo/procaptcha-frictionless": "0.3.1",
         "@prosopo/procaptcha-pow": "0.3.1",

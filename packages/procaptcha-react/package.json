@@ -29,9 +29,7 @@
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
-    "browserslist": [
-        "> 0.5%, last 2 versions, not dead"
-    ],
+    "browserslist": ["> 0.5%, last 2 versions, not dead"],
     "dependencies": {
         "@emotion/react": "^11.11.4",
         "@emotion/styled": "^11.11.0",

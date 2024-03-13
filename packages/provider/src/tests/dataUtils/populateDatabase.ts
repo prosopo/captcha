@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Abi } from '@polkadot/api-contract/Abi'
-import { AccountKey, type IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
-import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { type Logger, ProsopoDBError } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { get } from '@prosopo/util'
 import { promiseQueue } from '../../util.js'
-import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
+import {
+    AccountKey,
+    type IDatabaseAccounts,
+    exportDatabaseAccounts,
+} from './DatabaseAccounts.js'
+import DatabasePopulator, {
+    IDatabasePopulatorMethodNames,
+} from './DatabasePopulator.js'
+import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
@@ -45,10 +51,13 @@ const userPopulatorMethodMap: {
     [key in AccountKey]: IDatabasePopulatorMethodNames
 } = {
     [AccountKey.providers]: IDatabasePopulatorMethodNames.registerProvider,
-    [AccountKey.providersWithStake]: IDatabasePopulatorMethodNames.registerProviderWithStake,
-    [AccountKey.providersWithStakeAndDataset]: IDatabasePopulatorMethodNames.registerProviderWithStakeAndDataset,
+    [AccountKey.providersWithStake]:
+        IDatabasePopulatorMethodNames.registerProviderWithStake,
+    [AccountKey.providersWithStakeAndDataset]:
+        IDatabasePopulatorMethodNames.registerProviderWithStakeAndDataset,
     [AccountKey.dapps]: IDatabasePopulatorMethodNames.registerDapp,
-    [AccountKey.dappsWithStake]: IDatabasePopulatorMethodNames.registerDappWithStake,
+    [AccountKey.dappsWithStake]:
+        IDatabasePopulatorMethodNames.registerDappWithStake,
     [AccountKey.dappUsers]: IDatabasePopulatorMethodNames.registerDappUser,
 }
 
@@ -73,7 +82,9 @@ async function populateStep(
     logger.debug(text)
 
     const dummyArray = new Array(userCount).fill(userCount)
-    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key](fund)))
+    const promise = await promiseQueue(
+        dummyArray.map(() => () => databasePopulator[key](fund))
+    )
     const time = Date.now() - startDate
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
@@ -99,19 +110,21 @@ export async function populateDatabase(
     const databasePopulator = new DatabasePopulator(env, dappAbi, dappWasm)
     await databasePopulator.isReady()
 
-    const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
-        if (userCount > 0) {
-            env.logger.debug(`Fund ${userType}`, get(fundMap, userType))
-            await populateStep(
-                databasePopulator,
-                get(userPopulatorMethodMap, userType),
-                get(fundMap, userType),
-                `Running ${userType}...`,
-                userCount,
-                env.logger
-            )
+    const userPromises = Object.entries(userCounts).map(
+        async ([userType, userCount]) => {
+            if (userCount > 0) {
+                env.logger.debug(`Fund ${userType}`, get(fundMap, userType))
+                await populateStep(
+                    databasePopulator,
+                    get(userPopulatorMethodMap, userType),
+                    get(fundMap, userType),
+                    `Running ${userType}...`,
+                    userCount,
+                    env.logger
+                )
+            }
         }
-    })
+    )
     try {
         await Promise.all(userPromises)
     } catch (error) {
@@ -127,7 +140,10 @@ export async function populateDatabase(
     return databasePopulator
 }
 
-export default async function run(pair: KeyringPair, config: ProsopoConfigOutput) {
+export default async function run(
+    pair: KeyringPair,
+    config: ProsopoConfigOutput
+) {
     const dappAbiMetadata = await DappAbiJSON()
     const dappWasm = await DappWasm()
 

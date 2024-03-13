@@ -1,7 +1,7 @@
-import { assert, describe, test } from 'vitest'
 import { exec } from 'node:child_process'
-import { getCurrentFileDirectory } from '@prosopo/util'
 import { promisify } from 'node:util'
+import { getCurrentFileDirectory } from '@prosopo/util'
+import { assert, describe, test } from 'vitest'
 const execPromise = promisify(exec)
 
 describe('provider bundle', () => {

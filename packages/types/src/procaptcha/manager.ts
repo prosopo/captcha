@@ -1,3 +1,8 @@
+import type {
+    InjectedAccount,
+    InjectedExtension,
+} from '@polkadot/extension-inject/types'
+import { number, object, string, type infer as zInfer } from 'zod'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +17,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '../provider/index.js'
-import type { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { number, object, string, type infer as zInfer } from 'zod'
 
 /**
  * House the account and associated extension.

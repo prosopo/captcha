@@ -156,7 +156,9 @@
                         }
                     }
                 ],
-                "docs": [" Calls the `Prosopo` contract to check if `accountid` is human"],
+                "docs": [
+                    " Calls the `Prosopo` contract to check if `accountid` is human"
+                ],
                 "label": "is_human",
                 "mutates": false,
                 "payable": false,

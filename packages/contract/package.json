@@ -21,9 +21,7 @@
     },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "files": [
-        "dist"
-    ],
+    "files": ["dist"],
     "exports": {
         ".": {
             "import": "./dist/index.js",
@@ -38,12 +36,8 @@
     },
     "typesVersions": {
         "*": {
-            "types": [
-                "dist/types"
-            ],
-            "captcha": [
-                "dist/captcha"
-            ]
+            "types": ["dist/types"],
+            "captcha": ["dist/captcha"]
         }
     },
     "dependencies": {

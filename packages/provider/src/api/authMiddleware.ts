@@ -1,9 +1,9 @@
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { NextFunction, Request, Response } from 'express'
+import { hexToU8a, isHex } from '@polkadot/util'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
 import type { ProviderEnvironment } from '@prosopo/types-env'
+import type { NextFunction, Request, Response } from 'express'
 import type { Tasks } from '../index.js'
-import { hexToU8a, isHex } from '@polkadot/util'
 
 export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -36,8 +36,14 @@ const extractHeaders = (req: Request) => {
         })
     }
 
-    if (Array.isArray(signature) || Array.isArray(blocknumber) || !isHex(signature)) {
-        throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', { context: { error: 'Invalid header format' } })
+    if (
+        Array.isArray(signature) ||
+        Array.isArray(blocknumber) ||
+        !isHex(signature)
+    ) {
+        throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', {
+            context: { error: 'Invalid header format' },
+        })
     }
 
     return { signature, blocknumber }
@@ -54,8 +60,7 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
     const currentBlockNumber = await tasks.getCurrentBlockNumber()
 
     if (
-        Number.
-        isNaN(parsedBlockNumber) ||
+        Number.isNaN(parsedBlockNumber) ||
         parsedBlockNumber < currentBlockNumber - 500 ||
         parsedBlockNumber > currentBlockNumber
     ) {
@@ -67,10 +72,16 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
     }
 }
 
-const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
+const verifySignature = (
+    signature: string,
+    blockNumber: string,
+    pair: KeyringPair
+) => {
     const u8Sig = hexToU8a(signature)
 
     if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {
-        throw new ProsopoApiError('GENERAL.INVALID_SIGNATURE', { context: { error: 'Signature verification failed' } })
+        throw new ProsopoApiError('GENERAL.INVALID_SIGNATURE', {
+            context: { error: 'Signature verification failed' },
+        })
     }
 }

@@ -1,8 +1,8 @@
-import LogoWithText from './LogoWithText.js'
-import LogoWithoutText from './LogoWithoutText.js'
+import styled from '@emotion/styled'
 import type React from 'react'
 import type { ButtonHTMLAttributes } from 'react'
-import styled from '@emotion/styled'
+import LogoWithText from './LogoWithText.js'
+import LogoWithoutText from './LogoWithoutText.js'
 
 interface LogoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'

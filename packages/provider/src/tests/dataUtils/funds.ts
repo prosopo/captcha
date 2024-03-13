@@ -13,14 +13,21 @@
 // limitations under the License.
 // TODO merge this with duplicate file in dev package
 import type { AnyNumber } from '@polkadot/types-codec/types'
-import { BN } from '@polkadot/util/bn'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import { BN } from '@polkadot/util/bn'
 import { ProsopoEnvError } from '@prosopo/common'
+import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 import type { ProsopoEnvironment } from '@prosopo/types-env'
 import { at } from '@prosopo/util'
-import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 
-const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
+const devMnemonics = [
+    '//Alice',
+    '//Bob',
+    '//Charlie',
+    '//Dave',
+    '//Eve',
+    '//Ferdie',
+]
 let current = -1
 const MAX_ACCOUNT_FUND = 10000 // 10000 UNIT
 
@@ -48,7 +55,11 @@ export async function sendFunds(
     } = await env.getContractInterface().api.query.system.account(pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
         throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
-            context: { mnemonic, previousFree: previousFree.toString(), amount: amount.toString() },
+            context: {
+                mnemonic,
+                previousFree: previousFree.toString(),
+                amount: amount.toString(),
+            },
         })
     }
 
@@ -73,7 +84,10 @@ export async function sendFunds(
             .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
                 if (result.status.isInBlock || result.status.isFinalized) {
                     result.events
-                        .filter(({ event: { section } }: any): boolean => section === 'system')
+                        .filter(
+                            ({ event: { section } }: any): boolean =>
+                                section === 'system'
+                        )
                         .forEach((event): void => {
                             const {
                                 event: { method },
@@ -81,7 +95,9 @@ export async function sendFunds(
 
                             if (method === 'ExtrinsicFailed') {
                                 unsub()
-                                reject(dispatchErrorHandler(api.registry, event))
+                                reject(
+                                    dispatchErrorHandler(api.registry, event)
+                                )
                             }
                         })
                     unsub()
@@ -94,10 +110,18 @@ export async function sendFunds(
     })
     await result
         .then((result: ISubmittableResult) => {
-            env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
+            env.logger.debug(
+                who,
+                'sent amount',
+                unitAmount,
+                'UNIT at tx hash ',
+                result.status.asInBlock.toHex()
+            )
         })
         .catch((error) => {
-            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error } })
+            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', {
+                context: { error },
+            })
         })
 }
 
@@ -109,7 +133,11 @@ export async function sendFunds(
  * @param providerStakeDefault
  * @param stakeMultiplier
  */
-export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN, stakeMultiplier?: number): BN {
+export function getStakeAmount(
+    env: ProsopoEnvironment,
+    providerStakeDefault: BN,
+    stakeMultiplier?: number
+): BN {
     const unit = oneUnit(env.getApi())
 
     // We want to give each provider 100 * the required stake or 1 UNIT, whichever is greater, so that gas fees can be
@@ -121,13 +149,24 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 
     // We don't want to stake any more than MAX_ACCOUNT_FUND * existentialDeposit UNIT per provider as the test account
     // funds will be depleted too quickly
-    const maxStake = env.getApi().consts.balances.existentialDeposit.toBn().muln(MAX_ACCOUNT_FUND)
+    const maxStake = env
+        .getApi()
+        .consts.balances.existentialDeposit.toBn()
+        .muln(MAX_ACCOUNT_FUND)
 
     if (stake100.lt(maxStake)) {
-        env.logger.debug('Setting stake amount to', stake100.div(unit).toNumber(), 'UNIT')
+        env.logger.debug(
+            'Setting stake amount to',
+            stake100.div(unit).toNumber(),
+            'UNIT'
+        )
         return stake100
     }
-    env.logger.debug('Setting stake amount to', maxStake.div(unit).toNumber(), 'UNIT')
+    env.logger.debug(
+        'Setting stake amount to',
+        maxStake.div(unit).toNumber(),
+        'UNIT'
+    )
     return maxStake
 }
 
@@ -143,7 +182,14 @@ export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
     let sendAmount = new BN(stakeAmount).muln(2)
 
     // Should result in each account receiving a minimum of existentialDeposit
-    sendAmount = BN.max(sendAmount, env.getApi().consts.balances.existentialDeposit.muln(10000))
-    env.logger.debug('Setting send amount to', sendAmount.div(unit).toNumber(), 'UNIT')
+    sendAmount = BN.max(
+        sendAmount,
+        env.getApi().consts.balances.existentialDeposit.muln(10000)
+    )
+    env.logger.debug(
+        'Setting send amount to',
+        sendAmount.div(unit).toNumber(),
+        'UNIT'
+    )
     return sendAmount
 }

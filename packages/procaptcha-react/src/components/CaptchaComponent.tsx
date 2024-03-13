@@ -1,3 +1,10 @@
+import type { GetCaptchaResponse } from '@prosopo/api'
+import { useTranslation } from '@prosopo/common'
+import { at } from '@prosopo/util'
+import { darkTheme, lightTheme } from '@prosopo/web-components'
+import { Suspense, useMemo } from 'react'
+import addDataAttr from '../util/index.js'
+import Button from './Button.js'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaWidget } from './CaptchaWidget.js'
-import type { GetCaptchaResponse } from '@prosopo/api'
-import { Suspense, useMemo } from 'react'
-import { at } from '@prosopo/util'
-import { darkTheme, lightTheme } from '@prosopo/web-components'
-import { useTranslation } from '@prosopo/common'
-import Button from './Button.js'
-import addDataAttr from '../util/index.js'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
@@ -44,7 +44,10 @@ const CaptchaComponent = ({
     const { t } = useTranslation()
     const captcha = challenge.captchas ? at(challenge.captchas, index) : null
     const solution = solutions ? at(solutions, index) : []
-    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
+    const theme = useMemo(
+        () => (themeColor === 'light' ? lightTheme : darkTheme),
+        [themeColor]
+    )
 
     return (
         <Suspense fallback={<div>Loading...</div>}>
@@ -135,15 +138,23 @@ const CaptchaComponent = ({
                     >
                         <Button
                             themeColor={themeColor}
-                            buttonType="cancel"
+                            buttonType='cancel'
                             onClick={onCancel}
                             text={t('WIDGET.CANCEL')}
                         />
                         <Button
                             themeColor={themeColor}
-                            buttonType="next"
-                            text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                            onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
+                            buttonType='next'
+                            text={
+                                index < challenge.captchas.length - 1
+                                    ? t('WIDGET.NEXT')
+                                    : t('WIDGET.SUBMIT')
+                            }
+                            onClick={
+                                index < challenge.captchas.length - 1
+                                    ? onNext
+                                    : onSubmit
+                            }
                         />
                     </div>
                 </div>

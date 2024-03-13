@@ -37,12 +37,8 @@
     },
     "typesVersions": {
         "*": {
-            "types": [
-                "dist/types"
-            ],
-            "captcha": [
-                "dist/captcha"
-            ]
+            "types": ["dist/types"],
+            "captcha": ["dist/captcha"]
         }
     },
     "dependencies": {
