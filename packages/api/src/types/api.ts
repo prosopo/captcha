@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Captcha, MerkleProof } from '@prosopo/types'
+import type { Captcha, MerkleProof } from '@prosopo/types'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string

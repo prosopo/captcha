@@ -1,8 +1,8 @@
-import { ArgumentsCamelCase, Argv } from 'yargs'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { CalculateSolutionsTask } from '@prosopo/provider'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { validateScheduleExpression } from './validators.js'
 
@@ -24,11 +24,10 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
             await env.isReady()
             if (argv.schedule) {
                 throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
-            } else {
+            }
                 const calculateSolutionsTask = new CalculateSolutionsTask(env)
                 const result = await calculateSolutionsTask.run()
                 logger.info(`Updated ${result} captcha solutions`)
-            }
         },
         middlewares: [validateScheduleExpression],
     }

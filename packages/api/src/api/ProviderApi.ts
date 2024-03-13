@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId, StoredEvents } from '@prosopo/types'
+import type { AccountId, StoredEvents } from '@prosopo/types'
 import {
     ApiPaths,
-    CaptchaSolution,
+    type CaptchaSolution,
     CaptchaSolutionBody,
-    CaptchaSolutionBodyType,
-    VerifySolutionBodyType,
+    type CaptchaSolutionBodyType,
+    type VerifySolutionBodyType,
 } from '@prosopo/types'
-import {
+import type {
     CaptchaSolutionResponse,
     GetCaptchaResponse,
     GetPowCaptchaResponse,
@@ -27,8 +27,8 @@ import {
     ProviderRegistered,
     VerificationResponse,
 } from '../types/index.js'
-import { NetworkConfig } from '@prosopo/types'
-import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import type { NetworkConfig } from '@prosopo/types'
+import type { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase {
@@ -86,10 +86,10 @@ export default class ProviderApi extends HttpClientBase {
             maxVerifiedTime?: number
         } = { dapp: dapp, user: userAccount }
         if (commitmentId) {
-            payload['commitmentId'] = commitmentId
+            payload.commitmentId = commitmentId
         }
         if (maxVerifiedTime) {
-            payload['maxVerifiedTime'] = maxVerifiedTime
+            payload.maxVerifiedTime = maxVerifiedTime
         }
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }

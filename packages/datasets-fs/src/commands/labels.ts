@@ -1,9 +1,9 @@
-import * as z from 'zod'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
+import type * as z from 'zod'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { LabelledDataSchema, type LabelledItem } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema

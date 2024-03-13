@@ -1,11 +1,11 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { isMain } from '@prosopo/util'
 import dotenv from 'dotenv'
-import express, { Request, Response } from 'express'
+import express, { type Request, type Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
-import stream from 'stream'
+import stream from 'node:stream'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -25,7 +25,7 @@ const toInt = (value: string | number | undefined) => {
     if (value === undefined) {
         return undefined
     }
-    return parseInt(value)
+    return Number.parseInt(value)
 }
 
 const getEnv = () => {

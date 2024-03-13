@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { DecodedEvent } from '@polkadot/api-contract/types'
-import { SubmittableResult } from '@polkadot/api/submittable'
+import type { DecodedEvent } from '@polkadot/api-contract/types'
+import type { SubmittableResult } from '@polkadot/api/submittable'
 
 export interface TransactionResponse {
     from: string

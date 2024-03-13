@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // TODO merge this with duplicate file in dev package
-import { AnyNumber } from '@polkadot/types-codec/types'
+import type { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util/bn'
-import { ISubmittableResult } from '@polkadot/types/types'
+import type { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import type { ProsopoEnvironment } from '@prosopo/types-env'
 import { at } from '@prosopo/util'
 import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 

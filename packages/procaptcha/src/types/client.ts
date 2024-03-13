@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaSolutionCommitmentId } from '@prosopo/api'
-import { CaptchaSolutionResponse } from '@prosopo/types'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { CaptchaSolutionCommitmentId } from '@prosopo/api'
+import type { CaptchaSolutionResponse } from '@prosopo/types'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 export type TCaptchaSubmitResult = [CaptchaSolutionResponse, CaptchaSolutionCommitmentId, ContractSubmittableResult?]

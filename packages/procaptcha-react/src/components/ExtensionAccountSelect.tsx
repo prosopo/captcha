@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { useEffect, useState } from 'react'
 import { useTranslation } from '@prosopo/common'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'

@@ -1,4 +1,4 @@
-import { ZodEnum, ZodTypeAny, record } from 'zod'
+import { type ZodEnum, type ZodTypeAny, record } from 'zod'
 
 export const enumMap = <T extends [string, ...string[]], U extends ZodTypeAny>(enumeration: ZodEnum<T>, obj: U) => {
     const validateKeysInEnum = <I>(

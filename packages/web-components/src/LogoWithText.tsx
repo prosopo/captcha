@@ -1,4 +1,5 @@
-import React, { ButtonHTMLAttributes, useMemo } from 'react'
+import type React from 'react'
+import { type ButtonHTMLAttributes, useMemo } from 'react'
 
 interface LogoWithoutTextProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'

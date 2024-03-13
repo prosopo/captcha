@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DefaultNamespace, Namespace, TFuncReturn } from 'react-i18next'
-import { TranslationKey } from './utils.js'
+import type { DefaultNamespace, Namespace, TFuncReturn } from 'react-i18next'
+import type { TranslationKey } from './utils.js'
 
 declare module 'i18next' {
     interface TFunction<N extends Namespace = DefaultNamespace, TKPrefix = undefined> {

@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvError } from '@prosopo/common'
 
 export function getSs58Format(): number {
-    return parseInt(process.env.SS58_FORMAT || '') || 42
+    return Number.parseInt(process.env.SS58_FORMAT || '') || 42
 }
 
 export function getPairType(): KeypairType {

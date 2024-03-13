@@ -1,8 +1,8 @@
-import { ArgumentsCamelCase, Argv } from 'yargs'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { BatchCommitmentsTask } from '@prosopo/provider'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { validateScheduleExpression } from './validators.js'
 
@@ -23,7 +23,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
             await env.isReady()
             if (argv.schedule) {
                 throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
-            } else {
+            }
                 if (env.db) {
                     const batchCommitter = new BatchCommitmentsTask(
                         env.config.batchCommit,
@@ -37,7 +37,6 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 } else {
                     logger.error('No database configured')
                 }
-            }
         },
         middlewares: [validateScheduleExpression],
     }

@@ -14,14 +14,14 @@
 
 import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { boolean } from 'zod'
-import { input } from 'zod'
+import type { input } from 'zod'
 import { literal } from 'zod'
 import { number } from 'zod'
 import { object } from 'zod'
-import { output } from 'zod'
+import type { output } from 'zod'
 import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
-import { infer as zInfer } from 'zod'
+import type { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])

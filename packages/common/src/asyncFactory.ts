@@ -19,7 +19,7 @@ export abstract class AsyncFactory {
     }
 
     public static async create(...args: any[]) {
-        return await Object.create(this.prototype).init(...args)
+        return await Object.create(AsyncFactory.prototype).init(...args)
     }
 
     public abstract init(...args: any[]): Promise<this>

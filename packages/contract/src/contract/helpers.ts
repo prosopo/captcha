@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import {
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
+import type {
     AccountId,
     BlockNumber,
     DispatchError,
@@ -22,16 +22,16 @@ import {
     StorageDeposit,
     WeightV2,
 } from '@polkadot/types/interfaces'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { ApiBase } from '@polkadot/api/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { AnyJson } from '@polkadot/types/types/codec'
+import type { ApiBase } from '@polkadot/api/types'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
-import { Bytes } from '@polkadot/types-codec/extended'
-import { Compact } from '@polkadot/types-codec/base'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
-import { Registry } from '@polkadot/types-codec/types/registry'
-import { SubmittableResult } from '@polkadot/api/submittable'
+import type { Bytes } from '@polkadot/types-codec/extended'
+import type { Compact } from '@polkadot/types-codec/base'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { type Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
+import type { Registry } from '@polkadot/types-codec/types/registry'
+import type { SubmittableResult } from '@polkadot/api/submittable'
 import { isHex, isU8a } from '@polkadot/util/is'
 import { stringToHex } from '@polkadot/util/string'
 
@@ -54,15 +54,12 @@ export function getEventsFromMethodName(
     contractMethodName: string
 ): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
-    if (response && response.contractEvents) {
+    if (response?.contractEvents) {
         return (
-            response &&
-            response.contractEvents &&
-            response.contractEvents.filter((x) => x.event.identifier === eventName)
+            response?.contractEvents?.filter((x) => x.event.identifier === eventName)
         )
-    } else {
-        return []
     }
+        return []
 }
 
 /** Encodes arguments, padding and converting to hex if necessary
@@ -120,16 +117,16 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
     return records
         .filter(
             ({ event }) =>
-                function () {
+                () => {
                     const data = event.toPrimitive().data
-                    if (data instanceof Array) {
+                    if (Array.isArray(data)) {
                         return false
                     }
                     if (!(data instanceof Object)) {
                         return false
                     }
                     return (
-                        event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
+                        event.toPrimitive().section === 'contracts' && data.contracts === contractAddress.toString()
                     )
                 }
         )

@@ -19,7 +19,7 @@
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util/bn'
 
 export const A_DAY = new BN(24 * 60 * 60 * 1000)

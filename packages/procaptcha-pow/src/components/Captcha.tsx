@@ -25,7 +25,7 @@ import {
     lightTheme,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
-import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
+import type { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { useMemo, useState } from 'react'
 
 export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
@@ -123,7 +123,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                             onChange={handlePowCaptcha}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
-                                                        ></Checkbox>
+                                                        />
                                                     )}
                                                 </div>
                                             </div>
@@ -132,9 +132,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 </div>
 
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} />
                                         </div>
                                     </a>
                                 </div>

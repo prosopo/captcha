@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoError } from './error.js'
-import { TFunction } from 'i18next'
+import type { TFunction } from 'i18next'
 import { hexToString } from '@polkadot/util/hex'
 import translationEn from './locales/en.json' assert { type: 'json' }
 

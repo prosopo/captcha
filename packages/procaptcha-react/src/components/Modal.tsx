@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react'
+import React, { type CSSProperties } from 'react'
 type ModalProps = {
     show: boolean
     children: React.ReactNode
@@ -40,7 +40,7 @@ const ModalComponent = React.memo((props: ModalProps, nextProps: ModalProps) => 
 
     return (
         <div className="modalOuter" style={ModalOuterDivCss}>
-            <div className="modalBackground" style={ModalBackgroundCSS}></div>
+            <div className="modalBackground" style={ModalBackgroundCSS} />
             <div className="modalInner" style={ModalInnerDivCSS}>
                 {children}
             </div>

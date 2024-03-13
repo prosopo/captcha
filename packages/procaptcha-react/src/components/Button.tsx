@@ -1,5 +1,6 @@
 import { darkTheme, lightTheme } from '@prosopo/web-components'
-import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
+import type React from 'react'
+import { type ButtonHTMLAttributes, type CSSProperties, useMemo, useState } from 'react'
 import addDataAttr from '../util/index.js'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -52,12 +53,11 @@ const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }
                 ...baseStyle,
                 backgroundColor: hover ? theme.palette.grey[600] : 'transparent',
             }
-        } else {
+        }
             return {
                 ...baseStyle,
                 backgroundColor: hover ? theme.palette.primary.main : theme.palette.background.default,
             }
-        }
     }, [buttonType, hover, theme])
 
     return (

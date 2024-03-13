@@ -14,10 +14,10 @@
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import {
     ApiParams,
-    EnvironmentTypes,
+    type EnvironmentTypes,
     EnvironmentTypesSchema,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
+    type ProcaptchaOutput,
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
@@ -136,9 +136,8 @@ function App() {
     const getMessage = () => {
         if (isError) {
             return <Alert severity="error">{message}</Alert>
-        } else {
-            return <Alert severity="success">{message}</Alert>
         }
+            return <Alert severity="success">{message}</Alert>
     }
 
     const onError = (error: Error) => {

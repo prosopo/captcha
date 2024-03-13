@@ -1,5 +1,5 @@
 import { enumMap } from './enumMap.js'
-import { literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
+import { literal, number, object, string, union, enum as zEnum, type infer as zInfer } from 'zod'
 export const NetworkNamesSchema = zEnum(['development', 'rococo', 'shiden'])
 
 export type NetworkNames = zInfer<typeof NetworkNamesSchema>

@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
+import type { Abi } from '@polkadot/api-contract/Abi'
+import { AccountKey, type IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger, ProsopoDBError } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type Logger, ProsopoDBError } from '@prosopo/common'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { get } from '@prosopo/util'
 import { promiseQueue } from '../../util.js'

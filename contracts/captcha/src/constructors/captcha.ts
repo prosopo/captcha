@@ -1,6 +1,6 @@
 import { CodePromise } from '@polkadot/api-contract'
 import { ContractFile } from '../contract-info/captcha.js'
-import { SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@prosopo/typechain-types'
+import { type SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@prosopo/typechain-types'
 import type { ApiPromise } from '@polkadot/api'
 import type { ConstructorOptions } from '@prosopo/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'

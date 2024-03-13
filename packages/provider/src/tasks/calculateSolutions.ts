@@ -13,7 +13,7 @@
 // limitations under the License.
 import { CaptchaStates } from '@prosopo/types'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { ScheduledTaskNames } from '@prosopo/types'
 import { Tasks } from './tasks.js'
 import { calculateNewSolutions, checkIfTaskIsRunning, updateSolutions } from '../util.js'
@@ -65,7 +65,7 @@ export class CalculateSolutionsTask extends Tasks {
                         )
                         try {
                             // TODO polars doesn't have the captchaId field in the type
-                            const captchaIdsToUpdate = [...(solutionsToUpdate as any)['captchaId'].values()]
+                            const captchaIdsToUpdate = [...(solutionsToUpdate as any).captchaId.values()]
                             const commitmentIds = solutions
                                 .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                                 .map((s) => s.commitmentId)
@@ -85,10 +85,9 @@ export class CalculateSolutionsTask extends Tasks {
                         }
                     }
                     return 0
-                } else {
-                    this.logger.info(`There are no CAPTCHA challenges that require their solutions to be updated`)
-                    return 0
                 }
+                    this.logger.info('There are no CAPTCHA challenges that require their solutions to be updated')
+                    return 0
             }
             return 0
         } catch (error) {

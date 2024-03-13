@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
-import { ProcaptchaPow, ProcaptchaProps } from '@prosopo/procaptcha-pow'
+import { ProcaptchaPow, type ProcaptchaProps } from '@prosopo/procaptcha-pow'
 import { load } from '@fingerprintjs/botd'
 import { useEffect, useState } from 'react'
 
