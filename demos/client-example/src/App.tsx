@@ -16,8 +16,8 @@ import {
     ApiParams,
     EnvironmentTypes,
     EnvironmentTypesSchema,
+    ProcaptchaConfigSchema,
     ProcaptchaOutput,
-    ProsopoClientConfigSchema,
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
@@ -39,7 +39,7 @@ function App() {
     const [isLogin, setIsLogin] = useState(true)
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
-    const config = ProsopoClientConfigSchema.parse({
+    const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
         account: {
             address: process.env.PROSOPO_SITE_KEY || '',
@@ -51,7 +51,8 @@ function App() {
         serverUrl: process.env.PROSOPO_SERVER_URL
             ? `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT || 9228}`
             : 'http://localhost:9228',
-        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 
     const label = isLogin ? 'Login' : 'Sign up'
@@ -145,10 +146,6 @@ function App() {
         alert(error.message)
     }
 
-    const onAccountNotFound = (address: string) => {
-        alert(`Account ${address} not found`)
-    }
-
     const onExpired = () => {
         alert('Challenge has expired')
     }
@@ -203,28 +200,28 @@ function App() {
                                     />
                                 </FormControl>
 
-                                <Procaptcha
-                                    config={config}
-                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                                />
-
-                                <Box sx={{ p: 1 }}>
-                                    <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={onActionHandler}
-                                            disabled={!procaptchaOutput}
-                                        >
-                                            {isLogin ? 'Login' : 'Sign up'}
-                                        </Button>
-                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                            <Box>
-                                                <Typography>- or -</Typography>
+                                <FormControl sx={{ m: 1 }}>
+                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                </FormControl>
+                                <FormControl>
+                                    <Box sx={{ p: 1 }}>
+                                        <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={onActionHandler}
+                                                disabled={!procaptchaOutput}
+                                            >
+                                                {isLogin ? 'Login' : 'Sign up'}
+                                            </Button>
+                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                <Box>
+                                                    <Typography>- or -</Typography>
+                                                </Box>
                                             </Box>
-                                        </Box>
-                                        <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
-                                    </Stack>
-                                </Box>
+                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                        </Stack>
+                                    </Box>
+                                </FormControl>
                             </FormGroup>
                         </form>
                     </Box>

@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["es6", "dom"]
+    },
+    "include": ["src", "src/**/*.json", "src/index.html"],
+    "references": [
+        {
+            "path": "../procaptcha-react"
+        },
+        {
+            "path": "../procaptcha-pow"
+        },
+        {
+            "path": "../web-components"
+        }
+    ]
+}

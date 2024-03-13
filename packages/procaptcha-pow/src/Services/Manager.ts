@@ -20,7 +20,6 @@ type ProcaptchaPowOutput = {
 
 export interface ProcaptchaEvents {
     onError: (error: Error) => void
-    onAccountNotFound: (address: string) => void
     onHuman: (output: ProcaptchaPowOutput) => void
     onExtensionNotFound: () => void
     onChallengeExpired: () => void

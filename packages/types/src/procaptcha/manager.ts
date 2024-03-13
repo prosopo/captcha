@@ -41,3 +41,23 @@ export type ProcaptchaOutput = zInfer<typeof ProcaptchaOutputSchema>
 export const ProcaptchaResponse = object({
     [ApiParams.procaptchaResponse]: ProcaptchaOutputSchema,
 })
+
+/**
+ * A set of callbacks called by Procaptcha on certain events. These are optional
+ * as the client can decide which events they wish to listen for.
+ */
+export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
+
+/**
+ * A list of all events which can occur during the Procaptcha process.
+ */
+export interface ProcaptchaEvents {
+    onError: (error: Error) => void
+    onHuman: (output: ProcaptchaOutput) => void
+    onExtensionNotFound: () => void
+    onChallengeExpired: () => void
+    onExpired: () => void
+    onFailed: () => void
+    onOpen: () => void
+    onClose: () => void
+}

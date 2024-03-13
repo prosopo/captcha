@@ -44,10 +44,9 @@ function getDatasetFilePath() {
 }
 
 function getDefaultProvider(): IProviderAccount {
+    const host = process.env.PROSOPO_PROVIDER_HOST || 'localhost'
     return {
-        url: process.env.PROSOPO_API_PORT
-            ? `http://localhost:${process.env.PROSOPO_API_PORT}`
-            : 'http://localhost:9229',
+        url: process.env.PROSOPO_API_PORT ? `http://${host}:${process.env.PROSOPO_API_PORT}` : `http://${host}:9229`,
         fee: 10,
         payee: Payee.dapp,
         stake: Math.pow(10, 13),
