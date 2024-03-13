@@ -1,8 +1,8 @@
-import { KeyringPair } from '@polkadot/keyring/types'
-import { NextFunction, Request, Response } from 'express'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { NextFunction, Request, Response } from 'express'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { Tasks } from '../index.js'
+import type { ProviderEnvironment } from '@prosopo/types-env'
+import type { Tasks } from '../index.js'
 import { hexToU8a, isHex } from '@polkadot/util'
 
 export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
@@ -50,10 +50,11 @@ const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
 }
 
 const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
-    const parsedBlockNumber = parseInt(blockNumber)
+    const parsedBlockNumber = Number.parseInt(blockNumber)
     const currentBlockNumber = await tasks.getCurrentBlockNumber()
 
     if (
+        Number.
         isNaN(parsedBlockNumber) ||
         parsedBlockNumber < currentBlockNumber - 500 ||
         parsedBlockNumber > currentBlockNumber

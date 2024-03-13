@@ -27,7 +27,7 @@ describe('UTIL FUNCTIONS', async () => {
         )
     })
     test('fails on an invalid address', () => {
-        expect(function () {
+        expect(() => {
             encodeStringAddress('xx')
         }).to.throw()
     })

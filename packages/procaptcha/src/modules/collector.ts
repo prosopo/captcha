@@ -1,4 +1,4 @@
-import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
+import type { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
 
 const COLLECTOR_LIMIT = 10000
 

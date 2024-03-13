@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '@prosopo/types'
-import { Connection } from 'mongoose'
-import { NextFunction, Request, Response } from 'express'
+import type { Connection } from 'mongoose'
+import type { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
-import { ProsopoServer } from '@prosopo/server'
-import { UserInterface } from '../models/user.js'
+import type { ProsopoServer } from '@prosopo/server'
+import type { UserInterface } from '../models/user.js'
 import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
 import { randomAsHex } from '@polkadot/util-crypto'

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { getCurrentFileDirectory } from '@prosopo/util'
-import { promisify } from 'util'
-import { spawn } from 'child_process'
-import fs from 'fs'
-import path from 'path'
+import { promisify } from 'node:util'
+import { spawn } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
@@ -24,7 +24,7 @@ describe('reloading api', () => {
             console.log('rootDir', rootDir)
 
             // run API
-            const child = spawn(`npm`, ['run', 'cli', '--', '--api'], {
+            const child = spawn('npm', ['run', 'cli', '--', '--api'], {
                 cwd: rootDir,
                 env: { ...process.env, NODE_ENV: 'test' },
             })

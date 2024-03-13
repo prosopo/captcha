@@ -14,23 +14,23 @@
 import {
     ApiParams,
     ApiPaths,
-    CaptchaResponseBody,
+    type CaptchaResponseBody,
     CaptchaSolutionBody,
-    CaptchaWithProof,
-    DappUserSolutionResult,
+    type CaptchaWithProof,
+    type DappUserSolutionResult,
     VerifySolutionBody,
 } from '@prosopo/types'
 import { CaptchaRequestBody } from '@prosopo/types'
-import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
+import type { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
 import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
-import { VerificationResponse } from '@prosopo/api'
+import type { VerificationResponse } from '@prosopo/api'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
-import express, { Router } from 'express'
+import express, { type Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

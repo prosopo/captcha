@@ -19,7 +19,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import memoryServerSetup from './utils/database.js'
-import path from 'path'
+import path from 'node:path'
 import routesFactory from './routes/routes.js'
 
 export function loadEnv() {

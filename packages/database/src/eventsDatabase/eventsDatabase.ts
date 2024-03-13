@@ -1,6 +1,6 @@
-import { StoredEventRecord, StoredEvents } from '@prosopo/types'
+import type { StoredEventRecord, StoredEvents } from '@prosopo/types'
 import { getLoggerDefault } from '@prosopo/common'
-import mongoose, { Model } from 'mongoose'
+import mongoose, { type Model } from 'mongoose'
 const logger = getLoggerDefault()
 const MAX_RETRIES = 3
 

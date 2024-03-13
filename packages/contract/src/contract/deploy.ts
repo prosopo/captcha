@@ -11,18 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN, BN_ZERO } from '@polkadot/util/bn'
-import { BlueprintOptions } from '@polkadot/api-contract/types'
+import type { BlueprintOptions } from '@polkadot/api-contract/types'
 import { CodePromise } from '@polkadot/api-contract/promise'
-import { CodeSubmittableResult } from '@polkadot/api-contract/base'
+import type { CodeSubmittableResult } from '@polkadot/api-contract/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ISubmittableResult } from '@polkadot/types/types'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoContractError, getLogger } from '@prosopo/common'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { UseWeight } from '@prosopo/types'
+import type { ISubmittableResult } from '@polkadot/types/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, type Logger, ProsopoContractError, getLogger } from '@prosopo/common'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { UseWeight } from '@prosopo/types'
 import { calcInterval } from './useBlockInterval.js'
 import { dispatchErrorHandler } from './helpers.js'
 import { useWeightImpl } from './useWeight.js'
@@ -116,9 +116,8 @@ export class ContractDeployer {
                     }
                 })
             })
-        } else {
-            throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error } })
         }
+            throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error } })
     }
 }
 
@@ -134,8 +133,8 @@ export async function dryRunDeploy(
     contractAbi: Abi,
     wasm: Uint8Array,
     pair: KeyringPair,
-    params: any[] = [],
-    value = 0,
+    params: any[],
+    value,
     weight: UseWeight,
     constructorIndex = 0,
     salt?: string

@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
-import {
+import type { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
+import type {
     Captcha,
     CaptchaConfig,
     CaptchaSolution,
@@ -39,13 +39,13 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { ContractPromise } from '@polkadot/api-contract/promise'
-import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { SubmittableResult } from '@polkadot/api/submittable'
+import { CaptchaStatus, type Dapp, type Provider, type RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import type { ContractPromise } from '@polkadot/api-contract/promise'
+import type { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { type Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { type ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
+import type { ProviderEnvironment } from '@prosopo/types-env'
+import type { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
@@ -155,7 +155,7 @@ export class Tasks {
                     tree.layers = datasetDetails.contentTree
                     const proof = tree.proof(captcha.captchaContentId)
                     // cannot pass solution to dapp user as they are required to solve the captcha!
-                    delete captcha.solution
+                    captcha.solution = undefined
                     captcha.items = shuffleArray(captcha.items)
                     captchas.push({ captcha, proof })
                 }
@@ -285,7 +285,7 @@ export class Tasks {
             })
         }
 
-        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+        if (latestBlockNumber > Number.parseInt(blocknumber) + 5) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
                     ERROR: 'Blockhash must be from within last 5 blocks',
@@ -547,7 +547,7 @@ export class Tasks {
         blockNo: number,
         depth = this.captchaSolutionConfig.captchaBlockRecency
     ): Promise<boolean> {
-        if (depth == 0) {
+        if (depth === 0) {
             return false
         }
 

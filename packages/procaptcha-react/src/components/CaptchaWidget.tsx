@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaResponseCaptcha } from '@prosopo/types'
+import type { CaptchaResponseCaptcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
@@ -139,7 +139,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                         viewBox="0 0 24 24"
                                         data-testid="CheckIcon"
                                     >
-                                        <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                                        <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                     </svg>
                                 </div>
                             </div>

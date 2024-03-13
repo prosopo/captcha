@@ -1,5 +1,5 @@
-import * as fs from 'fs'
-import * as path from 'path'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { ViteFrontendConfig } from '@prosopo/config'
 import { defineConfig } from 'vite'
 import { loadEnv } from '@prosopo/cli'

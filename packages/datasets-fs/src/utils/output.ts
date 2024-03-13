@@ -1,8 +1,8 @@
 import { CliCommand } from '../cli/cliCommand.js'
 import { ProsopoEnvError, ProsopoError } from '@prosopo/common'
-import { boolean, object, string, infer as zInfer } from 'zod'
+import { boolean, object, string, type infer as zInfer } from 'zod'
 import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const OutputArgsSchema = object({
     output: string(),

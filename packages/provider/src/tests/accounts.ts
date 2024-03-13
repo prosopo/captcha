@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
-import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import type { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
 import { getPairAsync } from '@prosopo/contract'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
-export const accountContract = function (account: Account): string {
+export const accountContract = (account: Account): string => {
     if (account[2]) {
         return account[2]
     }

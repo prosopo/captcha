@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { CaptchaTypes, CaptchaWithoutId, Captchas, CaptchasContainerSchema, Item, RawSolution } from '@prosopo/types'
+import { CaptchaTypes, type CaptchaWithoutId, type Captchas, CaptchasContainerSchema, type Item, type RawSolution } from '@prosopo/types'
 import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { at, get } from '@prosopo/util'
@@ -7,7 +7,7 @@ import { blake2AsHex } from '@polkadot/util-crypto/blake2'
 import { lodash } from '@prosopo/util/lodash'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const ArgsSchema = GenerateArgsSchema.extend({
     minCorrect: z.number().optional(),
@@ -74,7 +74,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
     private setupTarget(i: number) {
         const _ = lodash()
         if (this.targets.length <= 1) {
-            throw new ProsopoDatasetError(new Error(`not enough different labels in labelled data`), {
+            throw new ProsopoDatasetError(new Error('not enough different labels in labelled data'), {
                 translationKey: 'DATASET.NOT_ENOUGH_LABELS',
             })
         }
@@ -91,10 +91,10 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         const nUnlabelled = this.#size - nLabelled
 
         const targetItems = get(this.labelToImages, target)
-        const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
+        const notTargetItems: Item[] = notTargets.flatMap((notTarget) => get(this.labelToImages, notTarget))
 
         if (nUnlabelled > this.unlabelled.length) {
-            throw new ProsopoDatasetError(new Error(`not enough unlabelled data`), {
+            throw new ProsopoDatasetError(new Error('not enough unlabelled data'), {
                 translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
             })
         }
@@ -228,7 +228,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         this.logger.info('verifying data')
         CaptchasContainerSchema.parse(output)
 
-        this.logger.info(`writing data`)
+        this.logger.info('writing data')
         fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
     }

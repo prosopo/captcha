@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DatasetWithIdsAndTree } from '@prosopo/types'
+import type { DatasetWithIdsAndTree } from '@prosopo/types'
 
 export const datasetWithSolutionHashes = {
     datasetId: '0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25',

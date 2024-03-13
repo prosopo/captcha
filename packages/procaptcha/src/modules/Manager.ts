@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Account,
+    type Account,
     ApiParams,
-    CaptchaSolution,
-    ProcaptchaCallbacks,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type CaptchaSolution,
+    type ProcaptchaCallbacks,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaEvents,
-    StoredEvents,
+    type ProcaptchaEvents,
+    type StoredEvents,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
+import { type GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
-import { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
+import type { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
 import {
     ProsopoApiError,
     ProsopoContractError,
@@ -36,9 +36,9 @@ import {
     trimProviderUrl,
 } from '@prosopo/common'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { SignerPayloadRaw } from '@polkadot/types/types'
-import { TCaptchaSubmitResult } from '../types/client.js'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import type { SignerPayloadRaw } from '@polkadot/types/types'
+import type { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at } from '@prosopo/util'
@@ -266,7 +266,7 @@ export function Manager(
                 data: stringToU8a('message'),
                 type: 'bytes',
             }
-            const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
+            const signed = await account.extension?.signer?.signRaw?.(payload as unknown as SignerPayloadRaw)
             console.log('Signature:', signed)
 
             // get a random provider
@@ -274,7 +274,7 @@ export function Manager(
                 contract.query.getRandomActiveProvider,
                 contract.query
             )(account.account.address, getDappAccount())
-            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
+            const blockNumber = Number.parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
@@ -295,7 +295,7 @@ export function Manager(
                 .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
-                console.log('challenge expired after ' + timeMillis + 'ms')
+                console.log(`challenge expired after ${timeMillis}ms`)
                 events.onChallengeExpired()
                 // expired, disallow user's claim to be human
                 updateState({ isHuman: false, showModal: false, loading: false })
@@ -493,7 +493,7 @@ export function Manager(
         console.log('setting valid challenge timeout')
         const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
         const successfullChallengeTimeout = setTimeout(() => {
-            console.log('valid challenge expired after ' + timeMillis + 'ms')
+            console.log(`valid challenge expired after ${timeMillis}ms`)
 
             // Human state expired, disallow user's claim to be human
             updateState({ isHuman: false })

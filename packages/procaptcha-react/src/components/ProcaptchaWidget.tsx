@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
-import { Account, GetCaptchaResponse, ProcaptchaCallbacks, ProcaptchaClientConfigInput } from '@prosopo/types'
+import type { Account, GetCaptchaResponse, ProcaptchaCallbacks, ProcaptchaClientConfigInput } from '@prosopo/types'
 import {
     Checkbox,
     ContainerDiv,
@@ -28,10 +28,10 @@ import {
 import { Logo } from '@prosopo/web-components'
 import {
     Manager,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-    ProsopoCaptchaApi,
-    TCaptchaSubmitResult,
+    type ProcaptchaState,
+    type ProcaptchaStateUpdateFn,
+    type ProsopoCaptchaApi,
+    type TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
@@ -207,9 +207,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} />
                                         </div>
                                     </a>
                                 </div>
@@ -217,7 +217,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                         </div>
                     </WidthBasedStylesDiv>
                     {config.devOnlyWatchEvents && (
-                        <Collector onProcessData={manager.exportData} sendData={state.sendData}></Collector>
+                        <Collector onProcessData={manager.exportData} sendData={state.sendData} />
                     )}
                 </ContainerDiv>
             </div>

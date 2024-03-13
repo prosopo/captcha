@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Captcha,
-    CaptchaSolution,
+    type Captcha,
+    type CaptchaSolution,
     CaptchaSolutionSchema,
-    CaptchaStates,
-    Dataset,
-    DatasetBase,
-    DatasetWithIds,
-    Item,
-    PowCaptcha,
+    type CaptchaStates,
+    type Dataset,
+    type DatasetBase,
+    type DatasetWithIds,
+    type Item,
+    type PowCaptcha,
 } from '@prosopo/types'
-import { CaptchaStatus, Commit } from '@prosopo/captcha-contract/types-returns'
-import { Connection, Model, Schema } from 'mongoose'
-import { DeleteResult } from 'mongodb'
-import { Hash } from '@prosopo/types'
-import { Logger } from '@prosopo/common'
-import { PendingCaptchaRequest } from '@prosopo/types'
-import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
-import { ZodType, any, array, boolean, date, nativeEnum, number, object, string, infer as zInfer } from 'zod'
+import { CaptchaStatus, type Commit } from '@prosopo/captcha-contract/types-returns'
+import { type Connection, type Model, Schema } from 'mongoose'
+import type { DeleteResult } from 'mongodb'
+import type { Hash } from '@prosopo/types'
+import type { Logger } from '@prosopo/common'
+import type { PendingCaptchaRequest } from '@prosopo/types'
+import { ScheduledTaskNames, type ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
+import { type ZodType, any, array, boolean, date, nativeEnum, number, object, string, type infer as zInfer } from 'zod'
 
 export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
     userSignature: number[]

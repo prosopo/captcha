@@ -18,14 +18,14 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import { CaptchaSolution, CaptchaSolutionResponse, CaptchaWithProof, GetCaptchaResponse } from '@prosopo/types'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
+import type { CaptchaSolution, CaptchaSolutionResponse, CaptchaWithProof, GetCaptchaResponse } from '@prosopo/types'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { Signer } from '@polkadot/api/types'
-import { TCaptchaSubmitResult } from '../types/client.js'
+import type { ProviderApi } from '@prosopo/api'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import type { Signer } from '@polkadot/api/types'
+import type { TCaptchaSubmitResult } from '../types/client.js'
 import { at } from '@prosopo/util'
 import { stringToHex } from '@polkadot/util/string'
 
@@ -111,7 +111,7 @@ export class ProsopoCaptchaApi {
         const captchasHashed = solutions.map((captcha) => computeCaptchaSolutionHash(captcha))
 
         tree.build(captchasHashed)
-        const commitmentId = tree.root!.hash
+        const commitmentId = tree.root?.hash
 
         console.log('solveCaptchaChallenge commitmentId', commitmentId)
         const tx: ContractSubmittableResult | undefined = undefined

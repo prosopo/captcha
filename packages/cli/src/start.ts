@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
+import { type ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Server } from 'node:net'
+import type { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { loadEnv } from './env.js'
 import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
-import express, { NextFunction, Request, Response } from 'express'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import getConfig from './prosopo.config.js'
 
 // We need the unused params to make express recognise this function as an error handler
@@ -43,7 +43,7 @@ export const handleErrors = (
 }
 
 function startApi(env: ProviderEnvironment, admin = false): Server {
-    env.logger.info(`Starting Prosopo API`)
+    env.logger.info('Starting Prosopo API')
     const apiApp = express()
     const apiPort = env.config.server.port
 

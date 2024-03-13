@@ -1,11 +1,11 @@
 import * as z from 'zod'
-import { ArgumentsCamelCase } from 'yargs'
-import { Compact } from '@polkadot/types-codec/base'
+import type { ArgumentsCamelCase } from 'yargs'
+import type { Compact } from '@polkadot/types-codec/base'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { encodeStringAddress } from '@prosopo/provider'
 import { lodash } from '@prosopo/util/lodash'
-import { u128 } from '@polkadot/types-codec/primitive'
+import type { u128 } from '@polkadot/types-codec/primitive'
 import parser from 'cron-parser'
 
 export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
@@ -62,7 +62,6 @@ export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
         }
 
         return { schedule: argv.schedule as string }
-    } else {
-        return { schedule: null }
     }
+        return { schedule: null }
 }

@@ -38,7 +38,7 @@ describe('logging', () => {
         expect(() => getLogger('xerbose', 'test')).to.throw()
     })
 
-    test('handles varying casing of string log level', function () {
+    test('handles varying casing of string log level', () => {
         const logger = getLogger('info', 'test')
         const len = Object.keys(LogLevel).reduce((acc, level, i) => {
             return Math.max(acc, level.length)
@@ -53,7 +53,7 @@ describe('logging', () => {
                         levelCased.slice(0, j) + levelCased.slice(j, j + 1).toUpperCase() + levelCased.slice(j + 1)
                     logger.setLogLevel(level)
                     expect(logger.getLogLevel()).to.equal(level)
-                    logger.setLogLevel(i == 0 ? 'info' : 'debug')
+                    logger.setLogLevel(i === 0 ? 'info' : 'debug')
                 }
             }
         }

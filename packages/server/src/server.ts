@@ -14,18 +14,18 @@
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN } from '@polkadot/util'
 import {
-    ContractAbi,
-    NetworkConfig,
+    type ContractAbi,
+    type NetworkConfig,
     NetworkNamesSchema,
-    ProcaptchaOutput,
-    ProsopoServerConfigOutput,
+    type ProcaptchaOutput,
+    type ProsopoServerConfigOutput,
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type LogLevel, type Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
@@ -191,7 +191,7 @@ export class ProsopoServer {
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
-        } else {
+        }
             // Check the time since the last correct captcha is less than the maxVerifiedTime
             const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
             const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
@@ -205,7 +205,6 @@ export class ProsopoServer {
             return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
                 .unwrap()
                 .unwrap()
-        }
     }
 
     public async getContractApi(): Promise<ProsopoCaptchaContract> {

@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 // https://stackoverflow.com/a/76582917
 /**
  * Determines whether a module is the entry point for the running node process.

@@ -80,6 +80,7 @@
         "provider-gui"
     ],
     "devDependencies": {
+        "@biomejs/biome": "1.6.1",
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
         "@html-eslint/parser": "^0.22.0",

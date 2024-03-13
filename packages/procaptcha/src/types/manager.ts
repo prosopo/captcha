@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, GetCaptchaResponse, ProcaptchaEvents } from '@prosopo/types'
-import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
-import { TCaptchaSubmitResult } from './client.js'
+import type { Account, GetCaptchaResponse, ProcaptchaEvents } from '@prosopo/types'
+import type { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
+import type { TCaptchaSubmitResult } from './client.js'
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha
