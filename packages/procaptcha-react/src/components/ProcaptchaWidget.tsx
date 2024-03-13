@@ -17,10 +17,10 @@ import {
     Checkbox,
     ContainerDiv,
     LoadingSpinner,
-    WidgetConstants,
-    WidgetDimensions,
-    WidgetInnerHeight,
-    WidgetText,
+    WIDGET_DIMENSIONS,
+    WIDGET_INNER_HEIGHT,
+    WIDGET_URL,
+    WIDGET_URL_TEXT,
     WidthBasedStylesDiv,
     darkTheme,
     lightTheme,
@@ -127,7 +127,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const manager = Manager(config, state, updateState, callbacks)
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
-    console.log('config', config)
+
     return (
         <div>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
@@ -149,7 +149,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                 </Modal>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div style={WidgetDimensions} data-cy={'button-human'}>
+                        <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
@@ -162,7 +162,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                     justifyContent: 'space-between',
-                                    minHeight: `${WidgetInnerHeight}px`,
+                                    minHeight: `${WIDGET_INNER_HEIGHT}px`,
                                     overflow: 'hidden',
                                 }}
                             >
@@ -207,7 +207,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WidgetConstants} target="_blank" aria-label={WidgetText}>
+                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor}></Logo>
                                         </div>

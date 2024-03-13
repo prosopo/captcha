@@ -14,7 +14,7 @@
 /** @jsxImportSource @emotion/react */
 import { ContainerDiv, WidthBasedStylesDiv } from './Containers.js'
 import { LoadingSpinner } from './LoadingSpinner.js'
-import { WidgetConstants, WidgetDimensions, WidgetInnerHeight, WidgetText } from './WidgetConstants.js'
+import { WIDGET_DIMENSIONS, WIDGET_INNER_HEIGHT, WIDGET_URL, WIDGET_URL_TEXT } from './WidgetConstants.js'
 import { darkTheme, lightTheme } from './theme.js'
 import { useMemo } from 'react'
 import Logo from './Logo.js'
@@ -30,7 +30,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div style={WidgetDimensions} data-cy={'button-human'}>
+                        <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
@@ -43,7 +43,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                     justifyContent: 'space-between',
-                                    minHeight: `${WidgetInnerHeight}px`,
+                                    minHeight: `${WIDGET_INNER_HEIGHT}px`,
                                     overflow: 'hidden',
                                 }}
                             >
@@ -76,7 +76,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WidgetConstants} target="_blank" aria-label={WidgetText}>
+                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor}></Logo>
                                         </div>

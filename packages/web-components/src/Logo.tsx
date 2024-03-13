@@ -2,6 +2,7 @@ import LogoWithText from './LogoWithText.js'
 import LogoWithoutText from './LogoWithoutText.js'
 import React, { ButtonHTMLAttributes } from 'react'
 import styled from '@emotion/styled'
+
 interface LogoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'
 }
@@ -15,7 +16,7 @@ const LogoInnerContainer = styled.div`
     padding: 8px;
 `
 
-export const Logo: React.FC<LogoProps> = ({ themeColor }: LogoProps) => {
+const Logo: React.FC<LogoProps> = ({ themeColor }: LogoProps) => {
     return (
         <LogoContainer>
             <LogoInnerContainer>
