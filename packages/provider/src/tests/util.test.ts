@@ -18,6 +18,7 @@ import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util
 import { describe, expect, test } from 'vitest'
 import { getPairAsync } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
+import { sleep } from '@prosopo/util'
 
 describe('UTIL FUNCTIONS', async () => {
     test('does not modify an already encoded address', () => {
@@ -63,6 +64,7 @@ describe('UTIL FUNCTIONS', async () => {
         await env
             .getDb()
             .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
+        await sleep(1000)
         result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(false)
         await env.getDb().close()
