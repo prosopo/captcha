@@ -103,10 +103,7 @@ const AbiStorageEnumFieldSpec = z.object({
     fields: z.array(z.any()),
 })
 
-export const AbiStorageEnumSpec = z.record(
-    z.number().min(0),
-    AbiStorageEnumFieldSpec
-)
+export const AbiStorageEnumSpec = z.record(z.number().min(0), AbiStorageEnumFieldSpec)
 
 export const AbiTypeSpec = z.object({
     id: z.number(),
@@ -119,10 +116,7 @@ export const AbiTypeSpec = z.object({
                 .optional(),
             variant: z
                 .object({
-                    variants: z.union([
-                        z.array(AbiVariantSpec).optional(),
-                        AbiStorageEnumSpec,
-                    ]),
+                    variants: z.union([z.array(AbiVariantSpec).optional(), AbiStorageEnumSpec]),
                 })
                 .optional(),
             sequence: z

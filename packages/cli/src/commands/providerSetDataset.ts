@@ -7,14 +7,8 @@ import type { ArgumentsCamelCase, Argv } from 'yargs'
 import * as z from 'zod'
 import { loadJSONFile } from '../files.js'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger ||
-        getLogger(LogLevel.enum.info, 'cli.provider_set_data_set')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_set_data_set')
 
     return {
         command: 'provider_set_data_set',

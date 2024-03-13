@@ -280,10 +280,7 @@ export class UrlConverter {
 
     private bitSlice(num: number, startBit: number, lenBit: number) {
         const truncedLeft = this.bitTruncLeft(num, startBit)
-        const truncedLen = this.bitTruncRight(
-            truncedLeft,
-            Math.max(0, this.byteNBits - lenBit - startBit)
-        )
+        const truncedLen = this.bitTruncRight(truncedLeft, Math.max(0, this.byteNBits - lenBit - startBit))
         return truncedLen
     }
 

@@ -1,12 +1,6 @@
 import { css } from '@emotion/react'
 import type React from 'react'
-import {
-    type ButtonHTMLAttributes,
-    type CSSProperties,
-    useId,
-    useMemo,
-    useState,
-} from 'react'
+import { type ButtonHTMLAttributes, type CSSProperties, useId, useMemo, useState } from 'react'
 import { darkTheme, lightTheme } from './theme.js'
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -39,16 +33,8 @@ const baseStyle: CSSProperties = {
     borderWidth: '1px',
 }
 
-export const Checkbox: React.FC<CheckboxProps> = ({
-    themeColor,
-    onChange,
-    checked,
-    labelText,
-}: CheckboxProps) => {
-    const theme = useMemo(
-        () => (themeColor === 'light' ? lightTheme : darkTheme),
-        [themeColor]
-    )
+export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked, labelText }: CheckboxProps) => {
+    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const checkboxStyleBase: CSSProperties = {
         ...baseStyle,
         border: `1px solid ${theme.palette.background.contrastText}`,
@@ -58,9 +44,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
     const checkboxStyle: CSSProperties = useMemo(() => {
         return {
             ...checkboxStyleBase,
-            borderColor: hover
-                ? theme.palette.background.contrastText
-                : theme.palette.grey[400],
+            borderColor: hover ? theme.palette.background.contrastText : theme.palette.grey[400],
             appearance: checked ? 'auto' : 'none',
             flex: 1,
             margin: '0 15px',

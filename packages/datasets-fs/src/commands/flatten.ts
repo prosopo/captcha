@@ -2,20 +2,12 @@ import fs from 'node:fs'
 import { blake2b } from '@noble/hashes/blake2b'
 import { u8aToHex } from '@polkadot/util/u8a'
 import { ProsopoDatasetError } from '@prosopo/common'
-import {
-    CaptchaItemTypes,
-    type Data,
-    DataSchema,
-    type LabelledItem,
-} from '@prosopo/types'
+import { CaptchaItemTypes, type Data, DataSchema, type LabelledItem } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { lodash } from '@prosopo/util/lodash'
 import cliProgress from 'cli-progress'
 import * as z from 'zod'
-import {
-    InputOutputArgsSchema,
-    InputOutputCliCommand,
-} from '../utils/inputOutput.js'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     allowDuplicates: z.boolean().optional(),
@@ -35,12 +27,10 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             input: {
-                description:
-                    'Path to the data directory containing subdirectories for each image classification',
+                description: 'Path to the data directory containing subdirectories for each image classification',
             },
             output: {
-                description:
-                    'Where to put the output file containing the labels and single directory of images',
+                description: 'Where to put the output file containing the labels and single directory of images',
             },
             allowDuplicates: {
                 boolean: true,
@@ -63,18 +53,13 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name)
             .sort()
-        const imagesByLabel: string[][] = labels.map((label) =>
-            fs.readdirSync(`${dataDir}/${label}`)
-        )
+        const imagesByLabel: string[][] = labels.map((label) => fs.readdirSync(`${dataDir}/${label}`))
 
         // create the output directory
         const imageDir = `${outDir}/images`
         fs.mkdirSync(imageDir, { recursive: true })
 
-        const bar = new cliProgress.SingleBar(
-            {},
-            cliProgress.Presets.shades_classic
-        )
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
         // for each label
         const items: LabelledItem[] = []
@@ -105,18 +90,12 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
                         }
                     }
                     if (!args.allowDuplicates) {
-                        throw new ProsopoDatasetError(
-                            'DATASET.DUPLICATE_IMAGE',
-                            {
-                                context: { image: `${label}/${image}` },
-                            }
-                        )
+                        throw new ProsopoDatasetError('DATASET.DUPLICATE_IMAGE', {
+                            context: { image: `${label}/${image}` },
+                        })
                     }
                 }
-                fs.copyFileSync(
-                    `${dataDir}/${label}/${image}`,
-                    `${imageDir}/${name}`
-                )
+                fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
                 const filePath = fs.realpathSync(`${imageDir}/${name}`)
                 // add the image to the map file
                 const entry: LabelledItem = {

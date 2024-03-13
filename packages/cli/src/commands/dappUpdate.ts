@@ -10,13 +10,8 @@ import type { ArgumentsCamelCase, Argv } from 'yargs'
 import * as z from 'zod'
 import { validateContract, validatePayee } from './validators.js'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_update')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_update')
 
     return {
         command: 'dapp_update',
@@ -38,12 +33,8 @@ export default (
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const stakeThreshold = (
-                    await tasks.contract.query.getDappStakeThreshold({})
-                ).value.unwrap()
-                const dappRegisterArgs: Parameters<
-                    typeof tasks.contract.query.dappUpdate
-                > = [
+                const stakeThreshold = (await tasks.contract.query.getDappStakeThreshold({})).value.unwrap()
+                const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappUpdate> = [
                     z.string().parse(argv.contract),
                     get(DappPayee, z.string().parse(argv.payee)),
                     z.string().parse(argv.owner),
@@ -51,13 +42,8 @@ export default (
                         value: stakeThreshold.toNumber(),
                     },
                 ]
-                await wrapQuery(
-                    tasks.contract.query.dappUpdate,
-                    tasks.contract.query
-                )(...dappRegisterArgs)
-                const result = await tasks.contract.tx.dappUpdate(
-                    ...dappRegisterArgs
-                )
+                await wrapQuery(tasks.contract.query.dappUpdate, tasks.contract.query)(...dappRegisterArgs)
+                const result = await tasks.contract.tx.dappUpdate(...dappRegisterArgs)
 
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {

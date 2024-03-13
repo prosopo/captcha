@@ -5,13 +5,8 @@ interface LogoWithoutTextProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'
 }
 
-export const LogoWithoutText: React.FC<LogoWithoutTextProps> = ({
-    themeColor,
-}: LogoWithoutTextProps) => {
-    const fill = useMemo(
-        () => (themeColor === 'light' ? '#1d1d1b' : '#fff'),
-        [themeColor]
-    )
+export const LogoWithoutText: React.FC<LogoWithoutTextProps> = ({ themeColor }: LogoWithoutTextProps) => {
+    const fill = useMemo(() => (themeColor === 'light' ? '#1d1d1b' : '#fff'), [themeColor])
     return (
         <svg
             className='logo'

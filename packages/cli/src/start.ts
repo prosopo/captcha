@@ -17,11 +17,7 @@ import { getPairAsync } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
-import express, {
-    type NextFunction,
-    type Request,
-    type Response,
-} from 'express'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import { loadEnv } from './env.js'
 import { getDB, getSecret } from './process.env.js'
 import getConfig from './prosopo.config.js'
@@ -77,11 +73,7 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
             solved: { count: 2 },
             unsolved: { count: 0 },
         })
-        const pair = await getPairAsync(
-            config.networks[config.defaultNetwork],
-            secret,
-            ''
-        )
+        const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()

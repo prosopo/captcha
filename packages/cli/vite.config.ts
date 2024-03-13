@@ -18,27 +18,15 @@ process.env.TS_NODE_PROJECT = path.resolve('./tsconfig.json')
 
 // Merge with generic backend config
 export default defineConfig(async ({ command, mode }) => {
-    const backendConfig = await ViteBackendConfig(
-        packageName,
-        packageVersion,
-        bundleName,
-        dir,
-        entry,
-        command,
-        mode
-    )
+    const backendConfig = await ViteBackendConfig(packageName, packageVersion, bundleName, dir, entry, command, mode)
     return defineConfig({
         define: {
             ...backendConfig.define,
             ...(process.env.PROSOPO_MONGO_EVENTS_URI && {
-                'process.env.PROSOPO_MONGO_EVENTS_URI': JSON.stringify(
-                    process.env.PROSOPO_MONGO_EVENTS_URI
-                ),
+                'process.env.PROSOPO_MONGO_EVENTS_URI': JSON.stringify(process.env.PROSOPO_MONGO_EVENTS_URI),
             }),
             ...(process.env._DEV_ONLY_WATCH_EVENTS && {
-                'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(
-                    process.env._DEV_ONLY_WATCH_EVENTS
-                ),
+                'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
             }),
         },
         ...backendConfig,

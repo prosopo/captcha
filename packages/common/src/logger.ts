@@ -26,15 +26,7 @@ export type Logger = {
     getLogLevel(): LogLevel
 } & LoggerLevelFns
 
-export const LogLevel = zEnum([
-    'trace',
-    'debug',
-    'info',
-    'warn',
-    'error',
-    'fatal',
-    'log',
-])
+export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 export type LogLevel = zInfer<typeof LogLevel>
 
 // Create a new logger with the given level and scope
@@ -89,9 +81,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
                 default:
                     // this cannot be a ProsopoEnvError. The default logger calls this method, which creates a new ProsopoEnvError, which requires the default logger, which hasn't been constructed yet, leading to ts not being able to find getLoggerDefault() during runtime as it has not completed yet (I think).
                     // Either way, this should never happen in runtime, this error is just an edge case, every log level should be translated properly.
-                    throw new Error(
-                        `Invalid log level translation to consola's log level: ${level}`
-                    )
+                    throw new Error(`Invalid log level translation to consola's log level: ${level}`)
             }
             logger.level = logLevel
             currentLevel = level

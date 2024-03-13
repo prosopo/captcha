@@ -26,11 +26,7 @@ export const accountContract = (account: Account): string => {
     }
     throw new Error(`Account ${account[1]} does not have a contract`)
 }
-export type Account = [
-    mnemonic: string,
-    address: string,
-    contractAddress?: string,
-]
+export type Account = [mnemonic: string, address: string, contractAddress?: string]
 
 export const PROVIDER: IProviderAccount = {
     url: 'http://localhost:9229',
@@ -48,15 +44,8 @@ export const DAPP: IDappAccount = {
     fundAmount: new BN(1000000000000000),
 }
 
-export async function getSignedTasks(
-    env: ProviderEnvironment,
-    account: Account
-): Promise<Tasks> {
-    const pair = await getPairAsync(
-        env.config.networks[env.config.defaultNetwork],
-        accountMnemonic(account),
-        ''
-    )
+export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
+    const pair = await getPairAsync(env.config.networks[env.config.defaultNetwork], accountMnemonic(account), '')
     await env.changeSigner(pair)
     return new Tasks(env)
 }

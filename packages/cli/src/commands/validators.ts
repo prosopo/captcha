@@ -8,9 +8,7 @@ import parser from 'cron-parser'
 import type { ArgumentsCamelCase } from 'yargs'
 import * as z from 'zod'
 
-export const validateAddress = (
-    argv: ArgumentsCamelCase
-): { address: string } => {
+export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
     const address = encodeStringAddress(argv.address as string)
 
     return { address }

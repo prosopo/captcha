@@ -37,8 +37,7 @@ export const ExtensionAccountSelect = ({
         }
     }, [])
 
-    const account: InjectedAccountWithMeta | null =
-        accounts.find((a) => a.address === value) || null
+    const account: InjectedAccountWithMeta | null = accounts.find((a) => a.address === value) || null
 
     return (
         // react select box
@@ -46,8 +45,7 @@ export const ExtensionAccountSelect = ({
             id='select-account'
             onChange={(e) => {
                 const value = e.target.value
-                const account =
-                    accounts.find((a) => a.address === value) || null
+                const account = accounts.find((a) => a.address === value) || null
                 if (account) {
                     console.log('Selected account:', value)
                     onChange(account.address)

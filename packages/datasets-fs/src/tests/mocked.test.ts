@@ -12,13 +12,7 @@ import { GenerateV2 } from '../commands/generateV2.js'
 import { Labels } from '../commands/labels.js'
 import { Relocate } from '../commands/relocate.js'
 import { Resize } from '../commands/resize.js'
-import {
-    captchasEqFs,
-    fsEq,
-    fsWalk,
-    restoreRepoDir,
-    substituteRepoDir,
-} from './utils.js'
+import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from './utils.js'
 
 describe('dataset commands', () => {
     const pkgDir = path.relative(getRootDir(), __dirname)
@@ -85,12 +79,7 @@ describe('dataset commands', () => {
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        if (
-            !captchasEqFs(
-                output,
-                `${__dirname}/data/flat_resized/captchas_v2.json`
-            )
-        ) {
+        if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)) {
             throw new Error('captchas not equal')
         }
 
@@ -109,9 +98,7 @@ describe('dataset commands', () => {
             for (const solution of solutions) {
                 // solution should not be in unlabelled
                 if (unlabelled.includes(solution)) {
-                    throw new Error(
-                        `solution ${solution} is also in unlabelled array`
-                    )
+                    throw new Error(`solution ${solution} is also in unlabelled array`)
                 }
             }
             // check the correct, incorrect, labelled and unlabelled distribution
@@ -120,31 +107,19 @@ describe('dataset commands', () => {
             const nIncorrect = 9 - nCorrect - nUnlabelled
             const nLabelled = nCorrect + nIncorrect
             if (nCorrect < minCorrect) {
-                throw new Error(
-                    `expected at least ${minCorrect} correct but found ${nCorrect}`
-                )
+                throw new Error(`expected at least ${minCorrect} correct but found ${nCorrect}`)
             }
             if (nIncorrect < minIncorrect) {
-                throw new Error(
-                    `expected at least ${minIncorrect} incorrect but found ${nIncorrect}`
-                )
+                throw new Error(`expected at least ${minIncorrect} incorrect but found ${nIncorrect}`)
             }
             if (nLabelled < minLabelled) {
-                throw new Error(
-                    `expected at least ${minLabelled} labelled but found ${nLabelled}`
-                )
+                throw new Error(`expected at least ${minLabelled} labelled but found ${nLabelled}`)
             }
             if (nLabelled > maxLabelled) {
-                throw new Error(
-                    `expected at most ${maxLabelled} labelled but found ${nLabelled}`
-                )
+                throw new Error(`expected at most ${maxLabelled} labelled but found ${nLabelled}`)
             }
             if (nUnlabelled !== 9 - nLabelled) {
-                throw new Error(
-                    `expected ${
-                        9 - nLabelled
-                    } unlabelled but found ${nUnlabelled}`
-                )
+                throw new Error(`expected ${9 - nLabelled} unlabelled but found ${nUnlabelled}`)
             }
         }
     })
@@ -167,12 +142,7 @@ describe('dataset commands', () => {
             allowDuplicates: true,
         })
         // make sure the results are the same as the expected results
-        if (
-            !captchasEqFs(
-                output,
-                `${__dirname}/data/flat_resized/captchas_v1.json`
-            )
-        ) {
+        if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)) {
             throw new Error('captchas not equal')
         }
     })
@@ -197,11 +167,7 @@ describe('dataset commands', () => {
         // check data in resized dir is all 128x128
         for (const pth of fsWalk(output)) {
             // if pth is not img, ignore
-            if (
-                !pth.endsWith('.jpg') &&
-                !pth.endsWith('.jpeg') &&
-                !pth.endsWith('.png')
-            ) {
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.jpeg') && !pth.endsWith('.png')) {
                 continue
             }
             const image = sharp(pth)
@@ -254,11 +220,7 @@ describe('dataset commands', () => {
         let hierCount = 0
         for (const pth of fsWalk(input)) {
             // if pth is not img, ignore
-            if (
-                !pth.endsWith('.jpg') &&
-                !pth.endsWith('.jpeg') &&
-                !pth.endsWith('.png')
-            ) {
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.jpeg') && !pth.endsWith('.png')) {
                 continue
             }
             hierCount++
@@ -307,9 +269,7 @@ describe('dataset commands', () => {
             }
             // file name should be the hash
             if (item.hash !== name.split('.')[0]) {
-                throw new Error(
-                    `expected ${name.split('.')[0]} hash but found ${item.hash}`
-                )
+                throw new Error(`expected ${name.split('.')[0]} hash but found ${item.hash}`)
             }
             // hash should be the hash of the image content
             const hash = u8aToHex(blake2b(content))
@@ -321,11 +281,7 @@ describe('dataset commands', () => {
         // count the number of images in the flat data
         let flatCount = 0
         for (const pth of fsWalk(output)) {
-            if (
-                !pth.endsWith('.jpg') &&
-                !pth.endsWith('.jpeg') &&
-                !pth.endsWith('.png')
-            ) {
+            if (!pth.endsWith('.jpg') && !pth.endsWith('.jpeg') && !pth.endsWith('.png')) {
                 continue
             }
             flatCount++
@@ -333,9 +289,7 @@ describe('dataset commands', () => {
 
         // check same number of images in flat data
         if (hierCount !== flatCount) {
-            throw new Error(
-                `expected ${hierCount} images but found ${flatCount}`
-            )
+            throw new Error(`expected ${hierCount} images but found ${flatCount}`)
         }
     })
 })

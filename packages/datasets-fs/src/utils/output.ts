@@ -11,9 +11,7 @@ export const OutputArgsSchema = object({
 
 export type OutputArgs = zInfer<typeof OutputArgsSchema>
 
-export class OutputCliCommand<
-    T extends typeof OutputArgsSchema,
-> extends CliCommand<T> {
+export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliCommand<T> {
     #outputExists = false
 
     public outputExists() {
@@ -36,8 +34,7 @@ export class OutputCliCommand<
             },
             overwrite: {
                 boolean: true,
-                description:
-                    'Overwrite files in the output path if they already exist',
+                description: 'Overwrite files in the output path if they already exist',
             },
         })
     }
@@ -52,12 +49,9 @@ export class OutputCliCommand<
         // output must not exist, unless overwrite is true
         if (this.outputExists()) {
             if (!args.overwrite) {
-                throw new ProsopoEnvError(
-                    new Error(`output path already exists: ${args.output}`),
-                    {
-                        translationKey: 'FS.FILE_ALREADY_EXISTS',
-                    }
-                )
+                throw new ProsopoEnvError(new Error(`output path already exists: ${args.output}`), {
+                    translationKey: 'FS.FILE_ALREADY_EXISTS',
+                })
             }
         }
     }

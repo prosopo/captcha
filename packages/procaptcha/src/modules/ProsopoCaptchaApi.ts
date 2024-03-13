@@ -25,12 +25,7 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import type {
-    CaptchaSolution,
-    CaptchaSolutionResponse,
-    CaptchaWithProof,
-    GetCaptchaResponse,
-} from '@prosopo/types'
+import type { CaptchaSolution, CaptchaSolutionResponse, CaptchaWithProof, GetCaptchaResponse } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import type { TCaptchaSubmitResult } from '../types/client.js'
 
@@ -60,10 +55,7 @@ export class ProsopoCaptchaApi {
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
         try {
-            const captchaChallenge = await this.providerApi.getCaptchaChallenge(
-                this.userAccount,
-                this.provider
-            )
+            const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             // convert https/http to match page
             captchaChallenge.captchas.forEach((captcha) => {
@@ -84,10 +76,7 @@ export class ProsopoCaptchaApi {
         }
     }
 
-    public verifyCaptchaChallengeContent(
-        provider: RandomProvider,
-        captchaChallenge: GetCaptchaResponse
-    ): void {
+    public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
         const first = at(captchaChallenge.captchas, 0)
         const proofLength = first.proof.length
@@ -104,12 +93,7 @@ export class ProsopoCaptchaApi {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
 
-            if (
-                !verifyProof(
-                    captchaWithProof.captcha.captchaContentId,
-                    captchaWithProof.proof
-                )
-            ) {
+            if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
         }
@@ -126,9 +110,7 @@ export class ProsopoCaptchaApi {
     ): Promise<TCaptchaSubmitResult> {
         const tree = new CaptchaMerkleTree()
 
-        const captchasHashed = solutions.map((captcha) =>
-            computeCaptchaSolutionHash(captcha)
-        )
+        const captchasHashed = solutions.map((captcha) => computeCaptchaSolutionHash(captcha))
 
         tree.build(captchasHashed)
         const commitmentId = tree.root?.hash
@@ -181,21 +163,14 @@ export class ProsopoCaptchaApi {
  * @param {CaptchaWithProof} captchaWithProof
  * @returns {boolean}
  */
-async function verifyCaptchaData(
-    captchaWithProof: CaptchaWithProof
-): Promise<boolean> {
+async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<boolean> {
     const captcha = captchaWithProof.captcha
     const proof = captchaWithProof.proof
     // Check that all the item hashes are equal to the provided item hashes in the captcha
     if (
-        !(
-            await Promise.all(
-                captcha.items.map(
-                    async (item) =>
-                        (await computeItemHash(item)).hash === item.hash
-                )
-            )
-        ).every((hash) => hash === true)
+        !(await Promise.all(captcha.items.map(async (item) => (await computeItemHash(item)).hash === item.hash))).every(
+            (hash) => hash === true
+        )
     ) {
         return false
     }

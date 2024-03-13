@@ -27,15 +27,10 @@ async function main() {
     const envPath = loadEnv()
 
     // quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-    const config: ProsopoConfigOutput = getConfig(
-        undefined,
-        undefined,
-        undefined,
-        {
-            solved: { count: 2 },
-            unsolved: { count: 0 },
-        }
-    )
+    const config: ProsopoConfigOutput = getConfig(undefined, undefined, undefined, {
+        solved: { count: 2 },
+        unsolved: { count: 0 },
+    })
 
     const pair = await getPairAsync(
         config.networks[config.defaultNetwork],

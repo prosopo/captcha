@@ -1,7 +1,4 @@
-import {
-    CaptchaStatus,
-    type Commit,
-} from '@prosopo/captcha-contract/types-returns'
+import { CaptchaStatus, type Commit } from '@prosopo/captcha-contract/types-returns'
 import type { Logger } from '@prosopo/common'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
@@ -29,28 +26,12 @@ import {
 } from '@prosopo/types'
 import type { Hash } from '@prosopo/types'
 import type { PendingCaptchaRequest } from '@prosopo/types'
-import {
-    ScheduledTaskNames,
-    type ScheduledTaskResult,
-    ScheduledTaskStatus,
-} from '@prosopo/types'
+import { ScheduledTaskNames, type ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import type { DeleteResult } from 'mongodb'
 import { type Connection, type Model, Schema } from 'mongoose'
-import {
-    type ZodType,
-    any,
-    array,
-    boolean,
-    date,
-    nativeEnum,
-    number,
-    object,
-    string,
-    type infer as zInfer,
-} from 'zod'
+import { type ZodType, any, array, boolean, date, nativeEnum, number, object, string, type infer as zInfer } from 'zod'
 
-export interface UserCommitmentRecord
-    extends Omit<Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
+export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
     userSignature: number[]
     processed: boolean
     batched: boolean
@@ -179,9 +160,7 @@ export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
     captchas: array(UserSolutionSchema),
 })
 
-export type UserCommitmentWithSolutions = zInfer<
-    typeof UserCommitmentWithSolutionsSchema
->
+export type UserCommitmentWithSolutions = zInfer<typeof UserCommitmentWithSolutionsSchema>
 
 export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     accountId: { type: String, required: true },
@@ -246,11 +225,7 @@ export interface Database {
 
     getDataset(datasetId: string): Promise<DatasetWithIds>
 
-    getRandomCaptcha(
-        solved: boolean,
-        datasetId: Hash | string,
-        size?: number
-    ): Promise<Captcha[] | undefined>
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>
 
@@ -258,14 +233,9 @@ export interface Database {
 
     removeCaptchas(captchaIds: string[]): Promise<void>
 
-    getDatasetDetails(
-        datasetId: Hash | string | Uint8Array
-    ): Promise<DatasetBase>
+    getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>
 
-    storeDappUserSolution(
-        captchas: CaptchaSolution[],
-        commit: UserCommitmentRecord
-    ): Promise<void>
+    storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void>
 
     storeDappUserPending(
         userAccount: string,
@@ -277,51 +247,27 @@ export interface Database {
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 
-    updateDappUserPendingStatus(
-        userAccount: string,
-        requestHash: string,
-        approve: boolean
-    ): Promise<void>
+    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>
 
-    getAllCaptchasByDatasetId(
-        datasetId: string,
-        captchaState?: CaptchaStates
-    ): Promise<Captcha[] | undefined>
+    getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>
 
-    getAllDappUserSolutions(
-        captchaId: string[]
-    ): Promise<UserSolutionRecord[] | undefined>
+    getAllDappUserSolutions(captchaId: string[]): Promise<UserSolutionRecord[] | undefined>
 
-    getDatasetIdWithSolvedCaptchasOfSizeN(
-        solvedCaptchaCount: number
-    ): Promise<string>
+    getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount: number): Promise<string>
 
-    getRandomSolvedCaptchasFromSingleDataset(
-        datasetId: string,
-        size: number
-    ): Promise<CaptchaSolution[]>
+    getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>
 
-    getDappUserSolutionById(
-        commitmentId: string
-    ): Promise<UserSolutionRecord | undefined>
+    getDappUserSolutionById(commitmentId: string): Promise<UserSolutionRecord | undefined>
 
-    getDappUserCommitmentById(
-        commitmentId: string
-    ): Promise<UserCommitmentRecord | undefined>
+    getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord | undefined>
 
-    getDappUserCommitmentByAccount(
-        accountId: string
-    ): Promise<UserCommitmentRecord[]>
+    getDappUserCommitmentByAccount(accountId: string): Promise<UserCommitmentRecord[]>
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeProcessedDappUserSolutions(
-        commitmentIds: Hash[]
-    ): Promise<DeleteResult | undefined>
+    removeProcessedDappUserSolutions(commitmentIds: Hash[]): Promise<DeleteResult | undefined>
 
-    removeProcessedDappUserCommitments(
-        commitmentIds: Hash[]
-    ): Promise<DeleteResult | undefined>
+    removeProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<DeleteResult | undefined>
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
@@ -344,10 +290,7 @@ export interface Database {
         status?: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined>
 
-    getScheduledTaskStatus(
-        taskId: string,
-        status: ScheduledTaskStatus
-    ): Promise<ScheduledTaskRecord | undefined>
+    getScheduledTaskStatus(taskId: string, status: ScheduledTaskStatus): Promise<ScheduledTaskRecord | undefined>
 
     storeScheduledTaskStatus(
         taskId: `0x${string}`,
@@ -358,9 +301,7 @@ export interface Database {
 
     storePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
 
-    getPowCaptchaRecordByChallenge(
-        challenge: string
-    ): Promise<PowCaptcha | null>
+    getPowCaptchaRecordByChallenge(challenge: string): Promise<PowCaptcha | null>
 
     updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
 }

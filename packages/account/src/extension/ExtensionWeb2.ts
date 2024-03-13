@@ -35,9 +35,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  * Class for interfacing with web3 accounts.
  */
 export class ExtensionWeb2 extends Extension {
-    public async getAccount(
-        config: ProcaptchaClientConfigOutput
-    ): Promise<Account> {
+    public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
         const network = this.getNetwork(config)
         const wsProvider = new WsProvider(network.endpoint)
 
@@ -50,9 +48,7 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createExtension(
-        account: AccountWithKeyPair
-    ): Promise<InjectedExtension> {
+    private async createExtension(account: AccountWithKeyPair): Promise<InjectedExtension> {
         const signer = new Signer(async () => {
             return
         })
@@ -85,9 +81,7 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createAccount(
-        wsProvider: WsProvider
-    ): Promise<AccountWithKeyPair> {
+    private async createAccount(wsProvider: WsProvider): Promise<AccountWithKeyPair> {
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
@@ -99,15 +93,8 @@ export class ExtensionWeb2 extends Extension {
         }
 
         const browserEntropy = await this.getFingerprint()
-        const canvasEntropy = picassoCanvas(
-            params.numberOfRounds,
-            params.seed,
-            params
-        )
-        const entropy = hexHash(
-            [canvasEntropy, browserEntropy].join(''),
-            128
-        ).slice(2)
+        const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
+        const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
         const api = await ApiPromise.create({
@@ -123,10 +110,7 @@ export class ExtensionWeb2 extends Extension {
         const address =
             keypair.address.length === 42
                 ? keypair.address
-                : encodeAddress(
-                      decodeAddress(keypair.address),
-                      api.registry.chainSS58
-                  )
+                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
         return {
             address,
             type,

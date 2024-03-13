@@ -1,9 +1,5 @@
 import fs from 'node:fs'
-import {
-    type CaptchasContainer,
-    CaptchasContainerSchema,
-    DataSchema,
-} from '@prosopo/types'
+import { type CaptchasContainer, CaptchasContainerSchema, DataSchema } from '@prosopo/types'
 import { at } from '@prosopo/util'
 
 // recursively list files in a directory
@@ -86,10 +82,7 @@ export const captchasEqFs = (pth1: string, pth2: string) => {
     return captchasEq(data1, data2)
 }
 
-export const captchasEq = (
-    first: CaptchasContainer,
-    second: CaptchasContainer
-) => {
+export const captchasEq = (first: CaptchasContainer, second: CaptchasContainer) => {
     if (first.captchas.length !== second.captchas.length) {
         return false
     }

@@ -18,17 +18,12 @@ import { fileURLToPath } from 'node:url'
  * }
  * ```
  */
-export const isMain = (
-    moduleOrImportMetaUrl: NodeModule | string,
-    binName?: string
-) => {
+export const isMain = (moduleOrImportMetaUrl: NodeModule | string, binName?: string) => {
     if (typeof moduleOrImportMetaUrl === 'string') {
         return (
             process.argv[1] === fileURLToPath(moduleOrImportMetaUrl) ||
             // could be running with npx
-            (binName &&
-                process.argv[1] &&
-                process.argv[1].indexOf(`node_modules/.bin/${binName}`) > -1)
+            (binName && process.argv[1] && process.argv[1].indexOf(`node_modules/.bin/${binName}`) > -1)
         )
     }
 

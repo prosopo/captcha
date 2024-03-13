@@ -2,9 +2,7 @@ import type { Options } from 'yargs'
 import type * as z from 'zod'
 import { CliCommand, type CliCommandAny } from './cliCommand.js'
 
-export abstract class CliCommandComposite<
-    T extends z.ZodTypeAny,
-> extends CliCommand<T> {
+export abstract class CliCommandComposite<T extends z.ZodTypeAny> extends CliCommand<T> {
     #commands: CliCommandAny[] = []
 
     public getCommands() {

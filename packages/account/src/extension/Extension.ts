@@ -23,7 +23,5 @@ export abstract class Extension {
      * @throws if the account is not found
      * @param config
      */
-    public abstract getAccount(
-        config: ProcaptchaClientConfigOutput
-    ): Promise<Account>
+    public abstract getAccount(config: ProcaptchaClientConfigOutput): Promise<Account>
 }

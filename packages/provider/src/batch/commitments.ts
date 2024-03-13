@@ -18,12 +18,7 @@ import { randomAsHex } from '@polkadot/util-crypto/random'
 import { BN } from '@polkadot/util/bn'
 import type { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { type Logger, ProsopoContractError } from '@prosopo/common'
-import {
-    type ProsopoCaptchaContract,
-    batch,
-    encodeStringArgs,
-    oneUnit,
-} from '@prosopo/contract'
+import { type ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import {
     type BatchCommitConfigOutput,
     type ExtrinsicBatch,
@@ -58,10 +53,7 @@ export class BatchCommitmentsTask {
     async run(): Promise<any> {
         // create a task id
         const taskId = randomAsHex(32)
-        const taskRunning = await checkIfTaskIsRunning(
-            ScheduledTaskNames.BatchCommitment,
-            this.db
-        )
+        const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, this.db)
         // taskRunning and intervalExceeded checks separated over multiple lines to avoid race conditions between providers
         if (!taskRunning) {
             const intervalExceeded = await this.batchIntervalExceeded()
@@ -76,19 +68,11 @@ export class BatchCommitmentsTask {
                     //get commitments
                     const commitments = await this.getCommitments()
                     if (commitments.length > 0) {
-                        this.logger.info(
-                            `Found ${commitments.length} commitments to commit`
-                        )
+                        this.logger.info(`Found ${commitments.length} commitments to commit`)
                         // get the extrinsics that are to be batched and an id associated with each one
-                        const { extrinsics, ids: commitmentIds } =
-                            await this.createExtrinsics(commitments)
+                        const { extrinsics, ids: commitmentIds } = await this.createExtrinsics(commitments)
                         // commit and get the Ids of the commitments that were committed on-chain
-                        await batch(
-                            this.contract.contract,
-                            this.contract.pair,
-                            extrinsics,
-                            this.logger
-                        )
+                        await batch(this.contract.contract, this.contract.pair, extrinsics, this.logger)
                         // flag commitments as batched
                         await this.flagBatchedCommitments(commitmentIds)
                         // update last commit time and store the commitmentIds that were batched
@@ -99,12 +83,7 @@ export class BatchCommitmentsTask {
                             {
                                 data: {
                                     commitmentIds: commitments
-                                        .filter(
-                                            (commitment) =>
-                                                commitmentIds.indexOf(
-                                                    commitment.id
-                                                ) > -1
-                                        )
+                                        .filter((commitment) => commitmentIds.indexOf(commitment.id) > -1)
                                         .map((c) => c.id),
                                 },
                             }
@@ -119,9 +98,7 @@ export class BatchCommitmentsTask {
                         ScheduledTaskNames.BatchCommitment,
                         ScheduledTaskStatus.Failed,
                         {
-                            error: JSON.stringify(
-                                e && err.message ? err.message : e
-                            ),
+                            error: JSON.stringify(e && err.message ? err.message : e),
                         }
                     )
                     return err.message
@@ -130,79 +107,52 @@ export class BatchCommitmentsTask {
         }
     }
 
-    async createExtrinsics(
-        commitments: UserCommitmentRecord[]
-    ): Promise<ExtrinsicBatch> {
+    async createExtrinsics(commitments: UserCommitmentRecord[]): Promise<ExtrinsicBatch> {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contract.abi.findMessage(CONTRACT_METHOD_NAME)
         const batchedCommitmentIds: Hash[] = []
         let totalRefTime = new BN(0)
         let totalProofSize = new BN(0)
         let totalFee = new BN(0)
-        const maxBlockWeight =
-            this.contract.api.consts.system.blockWeights.maxBlock
+        const maxBlockWeight = this.contract.api.consts.system.blockWeights.maxBlock
         const commitmentArray: Commit[] = []
         let extrinsic: SubmittableExtrinsic<'promise'> | undefined
         for (const commitment of commitments) {
             const commit = this.convertCommit(commitment)
             commitmentArray.push(commit)
-            const encodedArgs: Uint8Array[] = encodeStringArgs(
-                this.contract.abi,
-                fragment,
-                [commitmentArray]
-            )
+            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, [commitmentArray])
 
             // TODO can we get storage deposit from the provided query method?
             //  https://matrix.to/#/!utTuYglskDvqRRMQta:matrix.org/$tELySFxCORlHCHveOknGJBx-MdVe-SxFN8_BsYvcDmI?via=matrix.org&via=t2bot.io&via=cardinal.ems.host
             //  const response = await this.contract.query.providerCommitMany(commitmentArray)
-            const buildExtrinsicResult =
-                await this.contract.getExtrinsicAndGasEstimates(
-                    'providerCommitMany',
-                    encodedArgs
-                )
+            const buildExtrinsicResult = await this.contract.getExtrinsicAndGasEstimates(
+                'providerCommitMany',
+                encodedArgs
+            )
             extrinsic = buildExtrinsicResult.extrinsic
             const { options, storageDeposit } = buildExtrinsicResult
             let paymentInfo: BN
             try {
-                paymentInfo = (
-                    await extrinsic.paymentInfo(this.contract.pair)
-                ).partialFee.toBn()
-                this.logger.debug(
-                    `${CONTRACT_METHOD_NAME} paymentInfo:`,
-                    paymentInfo.toNumber()
-                )
+                paymentInfo = (await extrinsic.paymentInfo(this.contract.pair)).partialFee.toBn()
+                this.logger.debug(`${CONTRACT_METHOD_NAME} paymentInfo:`, paymentInfo.toNumber())
             } catch (e) {
                 // TODO https://github.com/polkadot-js/api/issues/5504
                 paymentInfo = new BN(0)
             }
             //totalEncodedLength += extrinsic.encodedLength
             totalRefTime = totalRefTime.add(
-                this.contract.api.registry
-                    .createType('WeightV2', options.gasLimit)
-                    .refTime.toBn()
+                this.contract.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
             )
             totalProofSize = totalProofSize.add(
-                this.contract.api.registry
-                    .createType('WeightV2', options.gasLimit)
-                    .proofSize.toBn()
+                this.contract.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
             )
 
-            totalFee = totalFee.add(
-                paymentInfo.add(storageDeposit.asCharge.toBn())
-            )
-            const extrinsicTooHigh = this.extrinsicTooHigh(
-                totalRefTime,
-                totalProofSize,
-                maxBlockWeight
-            )
+            totalFee = totalFee.add(paymentInfo.add(storageDeposit.asCharge.toBn()))
+            const extrinsicTooHigh = this.extrinsicTooHigh(totalRefTime, totalProofSize, maxBlockWeight)
             this.logger.debug(
                 'Free balance',
                 '`',
-                (
-                    await this.contract.api.query.system.account(
-                        this.contract.pair.address
-                    )
-                ).data.free
+                (await this.contract.api.query.system.account(this.contract.pair.address)).data.free
                     .toBn()
                     .div(oneUnit(this.contract.api as ApiPromise))
                     .toString(),
@@ -211,26 +161,18 @@ export class BatchCommitmentsTask {
             )
             this.logger.debug(
                 'Total Fee `',
-                totalFee
-                    .div(oneUnit(this.contract.api as ApiPromise))
-                    .toString(),
+                totalFee.div(oneUnit(this.contract.api as ApiPromise)).toString(),
                 '`',
                 'UNIT'
             )
             const feeTooHigh = totalFee.gt(
-                (
-                    await this.contract.api.query.system.account(
-                        this.contract.pair.address
-                    )
-                ).data.free.toBn()
+                (await this.contract.api.query.system.account(this.contract.pair.address)).data.free.toBn()
             )
 
             // Check if we have a maximum number of transactions that we can successfully submit in a block or if the
             // total fee is more than the provider has left in their account
             if (extrinsicTooHigh || feeTooHigh) {
-                const msg = extrinsicTooHigh
-                    ? 'Max batch extrinsic percentage reached'
-                    : 'Fee too high'
+                const msg = extrinsicTooHigh ? 'Max batch extrinsic percentage reached' : 'Fee too high'
                 this.logger.warn(msg)
                 break
             }
@@ -254,17 +196,9 @@ export class BatchCommitmentsTask {
         }
     }
 
-    extrinsicTooHigh(
-        totalRefTime: BN,
-        totalProofSize: BN,
-        maxBlockWeight: WeightV2
-    ): boolean {
+    extrinsicTooHigh(totalRefTime: BN, totalProofSize: BN, maxBlockWeight: WeightV2): boolean {
         return (
-            totalRefTime
-                .mul(BN_TEN_THOUSAND)
-                .div(maxBlockWeight.refTime.toBn())
-                .toNumber() /
-                100 >
+            totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
             this.batchCommitConfig.maxBatchExtrinsicPercentage
         )
     }
@@ -272,9 +206,7 @@ export class BatchCommitmentsTask {
     async batchIntervalExceeded(): Promise<boolean> {
         //if time since last commit > batchCommitInterval
         const lastTime = await this.db.getLastBatchCommitTime()
-        return (
-            Date.now() - lastTime.getSeconds() > this.batchCommitConfig.interval
-        )
+        return Date.now() - lastTime.getSeconds() > this.batchCommitConfig.interval
     }
 
     async getCommitments(): Promise<UserCommitmentRecord[]> {
@@ -287,14 +219,7 @@ export class BatchCommitmentsTask {
     }
 
     convertCommit(commitment: UserCommitmentRecord): Commit {
-        const {
-            batched,
-            processed,
-            userSignature,
-            requestedAt,
-            completedAt,
-            ...commit
-        } = commitment
+        const { batched, processed, userSignature, requestedAt, completedAt, ...commit } = commitment
 
         return {
             ...commit,

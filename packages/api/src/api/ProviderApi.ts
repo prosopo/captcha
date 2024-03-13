@@ -1,7 +1,4 @@
-import type {
-    Provider,
-    RandomProvider,
-} from '@prosopo/captcha-contract/types-returns'
+import type { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,11 +35,7 @@ export default class ProviderApi extends HttpClientBase {
     private network: NetworkConfig
     private account: AccountId
 
-    constructor(
-        network: NetworkConfig,
-        providerUrl: string,
-        account: AccountId
-    ) {
+    constructor(network: NetworkConfig, providerUrl: string, account: AccountId) {
         if (!providerUrl.startsWith('http')) {
             providerUrl = `https://${providerUrl}`
         }
@@ -52,15 +45,10 @@ export default class ProviderApi extends HttpClientBase {
         this.account = account
     }
 
-    public getCaptchaChallenge(
-        userAccount: AccountId,
-        randomProvider: RandomProvider
-    ): Promise<GetCaptchaResponse> {
+    public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
         const { provider, blockNumber } = randomProvider
         const dappAccount = this.account
-        const url = `${ApiPaths.GetCaptchaChallenge}/${
-            provider.datasetId
-        }/${userAccount}/${dappAccount}/${blockNumber
+        const url = `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
             .toString()
             .replace(/,/g, '')}`
         console.log(url)
@@ -74,15 +62,14 @@ export default class ProviderApi extends HttpClientBase {
         salt: string,
         signature?: string
     ): Promise<CaptchaSolutionResponse> {
-        const captchaSolutionBody: CaptchaSolutionBodyType =
-            CaptchaSolutionBody.parse({
-                captchas,
-                requestHash,
-                user: userAccount,
-                dapp: this.account,
-                salt,
-                signature,
-            })
+        const captchaSolutionBody: CaptchaSolutionBodyType = CaptchaSolutionBody.parse({
+            captchas,
+            requestHash,
+            user: userAccount,
+            dapp: this.account,
+            salt,
+            signature,
+        })
         return this.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
     }
 
@@ -104,16 +91,10 @@ export default class ProviderApi extends HttpClientBase {
         if (maxVerifiedTime) {
             payload.maxVerifiedTime = maxVerifiedTime
         }
-        return this.post(
-            ApiPaths.VerifyCaptchaSolution,
-            payload as VerifySolutionBodyType
-        )
+        return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 
-    public getPowCaptchaChallenge(
-        userAccount: AccountId,
-        dappAccount: AccountId
-    ): Promise<GetPowCaptchaResponse> {
+    public getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse> {
         return this.post(ApiPaths.GetPowCaptchaChallenge, {
             userAccount,
             dappAccount,

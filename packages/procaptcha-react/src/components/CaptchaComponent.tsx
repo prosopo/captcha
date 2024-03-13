@@ -44,10 +44,7 @@ const CaptchaComponent = ({
     const { t } = useTranslation()
     const captcha = challenge.captchas ? at(challenge.captchas, index) : null
     const solution = solutions ? at(solutions, index) : []
-    const theme = useMemo(
-        () => (themeColor === 'light' ? lightTheme : darkTheme),
-        [themeColor]
-    )
+    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
     return (
         <Suspense fallback={<div>Loading...</div>}>
@@ -145,16 +142,8 @@ const CaptchaComponent = ({
                         <Button
                             themeColor={themeColor}
                             buttonType='next'
-                            text={
-                                index < challenge.captchas.length - 1
-                                    ? t('WIDGET.NEXT')
-                                    : t('WIDGET.SUBMIT')
-                            }
-                            onClick={
-                                index < challenge.captchas.length - 1
-                                    ? onNext
-                                    : onSubmit
-                            }
+                            text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                            onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
                         />
                     </div>
                 </div>

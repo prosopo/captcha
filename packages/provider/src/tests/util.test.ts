@@ -18,19 +18,13 @@ import { MockEnvironment } from '@prosopo/env'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { sleep } from '@prosopo/util'
 import { describe, expect, test } from 'vitest'
-import {
-    checkIfTaskIsRunning,
-    encodeStringAddress,
-    shuffleArray,
-} from '../util.js'
+import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util.js'
 
 describe('UTIL FUNCTIONS', async () => {
     test('does not modify an already encoded address', () => {
-        expect(
-            encodeStringAddress(
-                '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL'
-            )
-        ).to.equal('5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL')
+        expect(encodeStringAddress('5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL')).to.equal(
+            '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL'
+        )
     })
     test('fails on an invalid address', () => {
         expect(() => {
@@ -38,16 +32,12 @@ describe('UTIL FUNCTIONS', async () => {
         }).to.throw()
     })
     test('correctly encodes a hex string address', () => {
-        expect(
-            encodeStringAddress(
-                '0x1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c'
-            )
-        ).to.equal('5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL')
+        expect(encodeStringAddress('0x1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c')).to.equal(
+            '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL'
+        )
     })
     test('shuffle function shuffles array', () => {
-        expect(shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9])).to.not.deep.equal([
-            1, 2, 3, 4, 5, 6, 7, 8, 9,
-        ])
+        expect(shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9])).to.not.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
     })
     test('correctly hex hashes a string', () => {
         expect(hexHash('https://localhost:9229')).to.equal(
@@ -67,29 +57,15 @@ describe('UTIL FUNCTIONS', async () => {
         // insert a task into the database
         await env
             .getDb()
-            .storeScheduledTaskStatus(
-                '0x01',
-                ScheduledTaskNames.BatchCommitment,
-                ScheduledTaskStatus.Running
-            )
+            .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
 
-        let result = await checkIfTaskIsRunning(
-            ScheduledTaskNames.BatchCommitment,
-            env.getDb()
-        )
+        let result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(true)
         await env
             .getDb()
-            .storeScheduledTaskStatus(
-                '0x01',
-                ScheduledTaskNames.BatchCommitment,
-                ScheduledTaskStatus.Completed
-            )
+            .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
         await sleep(1000)
-        result = await checkIfTaskIsRunning(
-            ScheduledTaskNames.BatchCommitment,
-            env.getDb()
-        )
+        result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(false)
         await env.getDb().close()
     })

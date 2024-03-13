@@ -40,11 +40,7 @@ export type AwaitedProcessedArgs = {
     $0: string
 }
 
-export function processArgs(
-    args: string[],
-    pair: KeyringPair,
-    config: ProsopoConfigOutput
-) {
+export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfigOutput) {
     const logger = getLogger(LogLevel.enum.info, 'CLI')
     return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')

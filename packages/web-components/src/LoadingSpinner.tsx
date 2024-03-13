@@ -6,13 +6,8 @@ export interface LoadingSpinnerComponentProps {
     themeColor: 'light' | 'dark'
 }
 
-export const LoadingSpinner = ({
-    themeColor,
-}: LoadingSpinnerComponentProps) => {
-    const theme = useMemo(
-        () => (themeColor === 'light' ? lightTheme : darkTheme),
-        [themeColor]
-    )
+export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => {
+    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const StyledDiv = styled.div`
         margin-top: 0;
         margin-left: 15px;

@@ -33,13 +33,7 @@ function getMongoURI(): string {
     const password = process.env.PROSOPO_DATABASE_PASSWORD || ''
     const username = process.env.PROSOPO_DATABASE_USERNAME || ''
     const host = process.env.PROSOPO_DATABASE_HOST || 'localhost'
-    const port = mongoSrv
-        ? ''
-        : `:${
-              process.env.PROSOPO_DATABASE_PORT
-                  ? process.env.PROSOPO_DATABASE_PORT
-                  : 27017
-          }`
+    const port = mongoSrv ? '' : `:${process.env.PROSOPO_DATABASE_PORT ? process.env.PROSOPO_DATABASE_PORT : 27017}`
     const retries = mongoSrv ? '?retryWrites=true&w=majority' : ''
     return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
@@ -53,17 +47,14 @@ export default function getConfig(
     return ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
         defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(
-                  process.env.PROSOPO_DEFAULT_ENVIRONMENT
-              )
+            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
             : EnvironmentTypesSchema.enum.development,
         defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
             ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
             : NetworkNamesSchema.enum.development,
         account: {
             address: process.env.PROSOPO_PROVIDER_ADDRESS || undefined,
-            password:
-                process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD || undefined,
+            password: process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD || undefined,
             secret: getSecret(),
         },
         database: {
@@ -82,9 +73,7 @@ export default function getConfig(
         },
         server: {
             baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
-            port: process.env.PROSOPO_API_PORT
-                ? Number.parseInt(process.env.PROSOPO_API_PORT)
-                : 9229,
+            port: process.env.PROSOPO_API_PORT ? Number.parseInt(process.env.PROSOPO_API_PORT) : 9229,
         },
         networks: networksConfig,
         captchaSolutions: captchaSolutionsConfig,

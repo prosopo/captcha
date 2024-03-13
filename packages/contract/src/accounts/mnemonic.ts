@@ -20,10 +20,7 @@ import type { KeypairType } from '@polkadot/util-crypto/types'
  * @param keyring
  * @param pairType
  */
-export async function generateMnemonic(
-    keyring?: Keyring,
-    pairType?: KeypairType
-): Promise<[string, string]> {
+export async function generateMnemonic(keyring?: Keyring, pairType?: KeypairType): Promise<[string, string]> {
     if (!keyring) {
         keyring = new Keyring({ type: pairType || 'sr25519' })
     }

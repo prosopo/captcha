@@ -36,11 +36,7 @@ const extractHeaders = (req: Request) => {
         })
     }
 
-    if (
-        Array.isArray(signature) ||
-        Array.isArray(blocknumber) ||
-        !isHex(signature)
-    ) {
+    if (Array.isArray(signature) || Array.isArray(blocknumber) || !isHex(signature)) {
         throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', {
             context: { error: 'Invalid header format' },
         })
@@ -72,11 +68,7 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
     }
 }
 
-const verifySignature = (
-    signature: string,
-    blockNumber: string,
-    pair: KeyringPair
-) => {
+const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
     const u8Sig = hexToU8a(signature)
 
     if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {

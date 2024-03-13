@@ -13,11 +13,7 @@
 // limitations under the License.
 
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import {
-    type EnvironmentTypes,
-    EnvironmentTypesSchema,
-    ProsopoClientConfigSchema,
-} from '@prosopo/types'
+import { type EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { useState } from 'react'
 
 function App() {
@@ -30,8 +26,7 @@ function App() {
         web2: process.env.PROSOPO_WEB2 === 'true',
         dappName: 'client-example',
         defaultEnvironment:
-            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) ||
-            EnvironmentTypesSchema.enum.development,
+            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
         atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })

@@ -23,9 +23,7 @@ const copyOptions = copyTo
 const tsConfigPaths = [path.resolve('./tsconfig.json')]
 const packagesDir = path.resolve('..')
 // Get all folders in packagesDir
-const packages = fs
-    .readdirSync(packagesDir)
-    .filter((f) => fs.statSync(path.join(packagesDir, f)).isDirectory())
+const packages = fs.readdirSync(packagesDir).filter((f) => fs.statSync(path.join(packagesDir, f)).isDirectory())
 for (const packageName of packages) {
     // Add the tsconfig for each package to tsConfigPaths
     tsConfigPaths.push(path.resolve(`../${packageName}/tsconfig.json`))

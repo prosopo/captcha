@@ -6,14 +6,8 @@ import type { ProsopoConfigOutput } from '@prosopo/types'
 import type { ArgumentsCamelCase, Argv } from 'yargs'
 import type { CommandModule } from 'yargs'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-): CommandModule => {
-    const logger =
-        cmdArgs?.logger ||
-        getLogger(LogLevel.enum.info, 'cli.provider_accounts')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }): CommandModule => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_accounts')
 
     return {
         command: 'provider_accounts',
@@ -24,9 +18,7 @@ export default (
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const result = await (
-                    tasks.contract.contract as any
-                ).providerAccounts()
+                const result = await (tasks.contract.contract as any).providerAccounts()
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {
                 logger.error(err)

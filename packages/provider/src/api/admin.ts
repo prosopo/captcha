@@ -83,21 +83,17 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
                     address: z.string(),
                 })
                 .parse(req.body)
-            const provider = (
-                await tasks.contract.query.getProvider(address, {})
-            ).value
-                .unwrap()
-                .unwrap()
+            const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
             if (provider && (url || fee || payee || value)) {
-                const urlConverted = url
-                    ? Array.from(new UrlConverter().encode(url.toString()))
-                    : provider.url
-                await wrapQuery(
-                    tasks.contract.query.providerUpdate,
-                    tasks.contract.query
-                )(urlConverted, fee || provider.fee, payee || provider.payee, {
-                    value: value || 0,
-                })
+                const urlConverted = url ? Array.from(new UrlConverter().encode(url.toString())) : provider.url
+                await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
+                    urlConverted,
+                    fee || provider.fee,
+                    payee || provider.payee,
+                    {
+                        value: value || 0,
+                    }
+                )
                 const result = await tasks.contract.tx.providerUpdate(
                     urlConverted,
                     fee || provider.fee,

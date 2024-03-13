@@ -65,18 +65,15 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
             },
             minIncorrect: {
                 number: true,
-                description:
-                    'Minimum number of incorrect images in each captcha',
+                description: 'Minimum number of incorrect images in each captcha',
             },
             minLabelled: {
                 number: true,
-                description:
-                    'Minimum number of labelled images in each captcha',
+                description: 'Minimum number of labelled images in each captcha',
             },
             maxLabelled: {
                 number: true,
-                description:
-                    'Maximum number of labelled images in each captcha',
+                description: 'Maximum number of labelled images in each captcha',
             },
         })
     }
@@ -84,12 +81,9 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
     private setupTarget(i: number) {
         const _ = lodash()
         if (this.targets.length <= 1) {
-            throw new ProsopoDatasetError(
-                new Error('not enough different labels in labelled data'),
-                {
-                    translationKey: 'DATASET.NOT_ENOUGH_LABELS',
-                }
-            )
+            throw new ProsopoDatasetError(new Error('not enough different labels in labelled data'), {
+                translationKey: 'DATASET.NOT_ENOUGH_LABELS',
+            })
         }
 
         // uniformly sample targets
@@ -104,35 +98,22 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         const nUnlabelled = this.#size - nLabelled
 
         const targetItems = get(this.labelToImages, target)
-        const notTargetItems: Item[] = notTargets.flatMap((notTarget) =>
-            get(this.labelToImages, notTarget)
-        )
+        const notTargetItems: Item[] = notTargets.flatMap((notTarget) => get(this.labelToImages, notTarget))
 
         if (nUnlabelled > this.unlabelled.length) {
-            throw new ProsopoDatasetError(
-                new Error('not enough unlabelled data'),
-                {
-                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
-                }
-            )
+            throw new ProsopoDatasetError(new Error('not enough unlabelled data'), {
+                translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+            })
         }
         if (nCorrect > targetItems.length) {
-            throw new ProsopoDatasetError(
-                new Error(`not enough images for target (${target})`),
-                {
-                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
-                }
-            )
+            throw new ProsopoDatasetError(new Error(`not enough images for target (${target})`), {
+                translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+            })
         }
         if (nIncorrect > notTargetItems.length) {
-            throw new ProsopoDatasetError(
-                new Error(
-                    `not enough non-matching images for target (${target})`
-                ),
-                {
-                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
-                }
-            )
+            throw new ProsopoDatasetError(new Error(`not enough non-matching images for target (${target})`), {
+                translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+            })
         }
 
         this.#nCorrect = nCorrect
@@ -156,10 +137,8 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         this.#size = args.size || 9
         this.#minCorrect = args.minCorrect || 1
         this.#saltRounds = 10
-        this.#allowDuplicatesLabelled =
-            args.allowDuplicatesLabelled || args.allowDuplicates || false
-        this.#allowDuplicatesUnlabelled =
-            args.allowDuplicatesUnlabelled || args.allowDuplicates || false
+        this.#allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
+        this.#allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
         this.#minIncorrect = Math.max(args.minIncorrect || 1, 1) // at least 1 incorrect image
         this.#minLabelled = this.#minCorrect + this.#minIncorrect // min incorrect + correct
         this.#maxLabelled = Math.min(args.maxLabelled || this.#size, this.#size) // at least 1 labelled image
@@ -170,10 +149,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
         // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
 
-        const bar = new cliProgress.SingleBar(
-            {},
-            cliProgress.Presets.shades_classic
-        )
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
         bar.start(this.#count, 0)
 
         // generate n captchas
@@ -184,33 +160,20 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
             this.setupTarget(i)
 
             // get the correct items
-            const correctItems: Item[] = _.sampleSize(
-                this.#targetItems,
-                this.#nCorrect
-            )
+            const correctItems: Item[] = _.sampleSize(this.#targetItems, this.#nCorrect)
 
             // get the incorrect items
-            const incorrectItems: Item[] = _.sampleSize(
-                this.#notTargetItems,
-                this.#nIncorrect
-            )
+            const incorrectItems: Item[] = _.sampleSize(this.#notTargetItems, this.#nIncorrect)
 
             // get the unlabelled items
             const unlabelledItems = new Set<Item>()
             while (unlabelledItems.size < this.#size - this.#nLabelled) {
                 // get a random image from the unlabelled data
-                const image = at(
-                    this.unlabelled,
-                    _.random(0, this.unlabelled.length - 1)
-                )
+                const image = at(this.unlabelled, _.random(0, this.unlabelled.length - 1))
                 unlabelledItems.add(image)
             }
 
-            const itemsConcat: Item[] = [
-                ...correctItems,
-                ...incorrectItems,
-                ...unlabelledItems,
-            ]
+            const itemsConcat: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
             let indices: number[] = [...Array(itemsConcat.length).keys()]
             indices = _.shuffle(indices)
             const items = indices
@@ -244,10 +207,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
                         post: i, // the index of the item in the shuffled array
                     }
                 })
-                .filter(
-                    (item) =>
-                        item.pre >= correctItems.length + incorrectItems.length
-                ) // keep all items that were in the first n slots of the original item array - these were the correct items
+                .filter((item) => item.pre >= correctItems.length + incorrectItems.length) // keep all items that were in the first n slots of the original item array - these were the correct items
                 .map((item) => {
                     return item.post // return the index in the shuffled array
                 })

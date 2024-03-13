@@ -32,12 +32,7 @@ export default class ReloadingAPI {
     private api: Server | undefined
     private _restarting: boolean
 
-    constructor(
-        envPath: string,
-        config: ProsopoConfigOutput,
-        pair: KeyringPair,
-        processedArgs: AwaitedProcessedArgs
-    ) {
+    constructor(envPath: string, config: ProsopoConfigOutput, pair: KeyringPair, processedArgs: AwaitedProcessedArgs) {
         this._envPath = envPath
         this._config = config
         this._pair = pair

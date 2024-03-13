@@ -16,12 +16,7 @@ import { useMemo } from 'react'
 import { ContainerDiv, WidthBasedStylesDiv } from './Containers.js'
 import { LoadingSpinner } from './LoadingSpinner.js'
 import Logo from './Logo.js'
-import {
-    WIDGET_DIMENSIONS,
-    WIDGET_INNER_HEIGHT,
-    WIDGET_URL,
-    WIDGET_URL_TEXT,
-} from './WidgetConstants.js'
+import { WIDGET_DIMENSIONS, WIDGET_INNER_HEIGHT, WIDGET_URL, WIDGET_URL_TEXT } from './WidgetConstants.js'
 import { darkTheme, lightTheme } from './theme.js'
 
 type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
@@ -29,10 +24,7 @@ type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
 export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
     const darkMode = props.darkMode
     const themeColor = props.darkMode === 'light' ? 'light' : 'dark'
-    const theme = useMemo(
-        () => (darkMode === 'light' ? lightTheme : darkTheme),
-        [darkMode]
-    )
+    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
     return (
         <div>
             <div
@@ -50,8 +42,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                 style={{
                                     padding: '2px',
                                     border: '1px solid',
-                                    backgroundColor:
-                                        theme.palette.background.default,
+                                    backgroundColor: theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
                                     borderRadius: '8px',
                                     display: 'flex',
@@ -93,9 +84,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                                         display: 'inline-flex',
                                                     }}
                                                 >
-                                                    <LoadingSpinner
-                                                        themeColor={themeColor}
-                                                    />
+                                                    <LoadingSpinner themeColor={themeColor} />
                                                 </div>
                                             </div>
                                         </div>
@@ -107,12 +96,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                         flexDirection: 'column',
                                     }}
                                 >
-                                    <a
-                                        href={WIDGET_URL}
-                                        target='_blank'
-                                        aria-label={WIDGET_URL_TEXT}
-                                        rel='noreferrer'
-                                    >
+                                    <a href={WIDGET_URL} target='_blank' aria-label={WIDGET_URL_TEXT} rel='noreferrer'>
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor} />
                                         </div>

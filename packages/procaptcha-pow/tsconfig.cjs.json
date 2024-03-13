@@ -6,12 +6,7 @@
         "lib": ["es6", "dom"],
         "jsxImportSource": "@emotion/react"
     },
-    "include": [
-        "./src/**/*.ts",
-        "./src/**/*.json",
-        "./src/**/*.d.ts",
-        "./src/**/*.tsx"
-    ],
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
             "path": "../api/tsconfig.cjs.json"

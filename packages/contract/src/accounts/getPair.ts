@@ -76,10 +76,7 @@ export function getPair(
     }
 }
 
-export function getReadOnlyPair(
-    api: ApiPromise,
-    userAccount?: string
-): KeyringPair {
+export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringPair {
     // 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM is the all zero address
     return getPair(
         undefined,
@@ -91,8 +88,5 @@ export function getReadOnlyPair(
 }
 
 export function getZeroAddress(api: ApiPromise): AccountId {
-    return api.registry.createType(
-        'AccountId',
-        new Uint8Array(new Array(32).fill(0))
-    )
+    return api.registry.createType('AccountId', new Uint8Array(new Array(32).fill(0)))
 }
