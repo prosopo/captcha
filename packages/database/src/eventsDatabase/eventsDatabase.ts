@@ -44,6 +44,6 @@ export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, 
         accountId,
     }
 
-    const saved = await CaptchaEvent.create(captchaEventData)
-    console.log('Mongo Saved Event', saved)
+    await CaptchaEvent.create(captchaEventData)
+    logger.info('Mongo Saved Events')
 }

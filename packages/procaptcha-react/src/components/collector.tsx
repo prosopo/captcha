@@ -1,13 +1,14 @@
+import { Account, ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
 import { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
 import { startCollector } from '@prosopo/procaptcha'
 
 type CollectorProps = {
     onProcessData: (data: StoredEvents) => void
     sendData: boolean
+    account: Account | undefined
 }
 
-const Collector = ({ onProcessData, sendData }: CollectorProps) => {
+const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
     const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([])
     const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([])
     const [keyboardEvents, setStoredKeyboardEvents] = useState<ProsopoKeyboardEvent[]>([])
@@ -26,9 +27,8 @@ const Collector = ({ onProcessData, sendData }: CollectorProps) => {
             touchEvents,
             keyboardEvents,
         }
-
-        onProcessData(userEvents)
-    }, [sendData])
+        if (account) onProcessData(userEvents)
+    }, [sendData, account])
 
     return <div ref={ref}></div>
 }
