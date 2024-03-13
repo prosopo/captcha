@@ -56,7 +56,6 @@ export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
  */
 export interface ProcaptchaEvents {
     onError: (error: Error) => void
-    onAccountNotFound: (address: string) => void
     onHuman: (output: ProcaptchaOutput) => void
     onExtensionNotFound: () => void
     onChallengeExpired: () => void

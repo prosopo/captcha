@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
-import { Account, GetCaptchaResponse } from '@prosopo/types'
+import { Account, GetCaptchaResponse, ProcaptchaCallbacks, ProcaptchaClientConfigInput } from '@prosopo/types'
 import { Checkbox, LoadingSpinner, darkTheme, lightTheme } from '@prosopo/web-components'
 import {
     Manager,
-    ProcaptchaCallbacks,
-    ProcaptchaConfigOptional,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
     ProsopoCaptchaApi,
@@ -66,7 +64,7 @@ const logoStyle = css`
  */
 export interface ProcaptchaProps {
     // the configuration for procaptcha
-    config: ProcaptchaConfigOptional
+    config: ProcaptchaClientConfigInput
     // optional set of callbacks for various captcha events
     callbacks?: Partial<ProcaptchaCallbacks>
 }

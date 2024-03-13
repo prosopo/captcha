@@ -1,15 +1,23 @@
 {
-    "name": "@prosopo/procaptcha",
+    "name": "@prosopo/procaptcha-frictionless",
     "version": "0.3.1",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
     "type": "module",
-    "types": "./dist/index.d.ts",
+    "sideEffects": false,
     "engines": {
         "node": ">=18",
         "npm": ">=9"
     },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        }
+    },
+    "types": "./dist/index.d.ts",
+    "source": "./src/index.ts",
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
@@ -21,44 +29,20 @@
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
-    "exports": {
-        ".": {
-            "import": "./dist/index.js",
-            "require": "./dist/cjs/index.cjs"
-        },
-        "./modules/Manager": {
-            "types": "./dist/modules/Manager.d.ts",
-            "import": "./dist/modules/Manager.js",
-            "require": "./dist/cjs/modules/Manager.cjs",
-            "default": "./dist/modules/Manager.js"
-        }
-    },
+    "browserslist": [
+        "> 0.5%, last 2 versions, not dead"
+    ],
     "dependencies": {
-        "@fingerprintjs/fingerprintjs": "^3.3.6",
-        "@polkadot/api": "10.11.2",
-        "@polkadot/api-contract": "10.11.2",
-        "@polkadot/extension-base": "0.46.6",
-        "@polkadot/extension-dapp": "0.46.6",
-        "@polkadot/extension-inject": "0.46.6",
-        "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.11.2",
-        "@polkadot/types": "10.11.2",
-        "@polkadot/util": "12.6.2",
-        "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/account": "0.3.1",
-        "@prosopo/api": "0.3.1",
-        "@prosopo/common": "0.3.1",
-        "@prosopo/contract": "0.3.1",
-        "@prosopo/datasets": "0.3.1",
-        "@prosopo/types": "0.3.1",
-        "@prosopo/util": "0.3.1",
-        "rxjs": "7.8.1"
+        "@fingerprintjs/botd": "^1.9.0",
+        "@prosopo/procaptcha-pow": "^0.3.1",
+        "@prosopo/procaptcha-react": "0.3.1",
+        "@prosopo/web-components": "0.3.1",
+        "react": "^18.2.0"
     },
     "devDependencies": {
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
-    "keywords": [],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/prosopo/captcha.git"
@@ -70,6 +54,5 @@
     "description": "",
     "publishConfig": {
         "registry": "https://registry.npmjs.org"
-    },
-    "sideEffects": false
+    }
 }
