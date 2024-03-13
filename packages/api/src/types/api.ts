@@ -54,6 +54,8 @@ export interface VerificationResponse {
     status: string
     solutionApproved: boolean
     commitmentId: CaptchaSolutionCommitmentId
+    // The block at which the captcha was requested
+    blockNumber: number
 }
 
 export interface CaptchaSolutionResponse {

@@ -13,6 +13,7 @@
 // limitations under the License.
 import {
     Account,
+    ApiParams,
     CaptchaSolution,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
@@ -245,10 +246,11 @@ export function Manager(
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
-                            providerUrl: providerUrlFromStorage,
-                            user: account.account.address,
-                            dapp: getDappAccount(),
-                            commitmentId: verifyDappUserResponse.commitmentId,
+                            [ApiParams.providerUrl]: providerUrlFromStorage,
+                            [ApiParams.user]: account.account.address,
+                            [ApiParams.dapp]: getDappAccount(),
+                            [ApiParams.commitmentId]: verifyDappUserResponse.commitmentId,
+                            [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         })
                         setValidChallengeTimeout()
                         return

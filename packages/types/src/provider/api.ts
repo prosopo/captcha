@@ -47,6 +47,7 @@ export enum ApiParams {
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
+    solutionApproved = 'solutionApproved',
 }
 
 export interface DappUserSolutionResult {
