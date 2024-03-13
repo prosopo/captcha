@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
-import { AccountNotFoundError, ExtensionNotFoundError } from './errors.js'
+import { Extension } from './Extension.js'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
+import { ProsopoError } from '@prosopo/common'
 import { web3Enable } from '@polkadot/extension-dapp'
-import Extension from './Extension.js'
 
 /**
  * Class for interfacing with web3 accounts.
  */
-export default class ExtWeb3 extends Extension {
+export class ExtensionWeb3 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
         const { dappName, userAccountAddress: address } = config
 
         if (!address) {
-            throw new AccountNotFoundError('No account address provided')
+            throw new ProsopoError('WIDGET.NO_ACCOUNTS_FOUND', { context: { error: 'No account address provided' } })
         }
 
         // enable access to all extensions
         const extensions: InjectedExtension[] = await web3Enable(dappName)
         if (extensions.length === 0) {
-            throw new ExtensionNotFoundError()
+            throw new ProsopoError('WIDGET.NO_EXTENSION_FOUND')
         }
 
         // search through all extensions for the one that has the account
@@ -43,6 +43,8 @@ export default class ExtWeb3 extends Extension {
             }
         }
 
-        throw new AccountNotFoundError('No account found matching ' + address)
+        throw new ProsopoError('WIDGET.ACCOUNT_NOT_FOUND', {
+            context: { error: `No account found matching ${address}` },
+        })
     }
 }

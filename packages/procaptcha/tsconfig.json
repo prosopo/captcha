@@ -11,6 +11,9 @@
             "path": "../../contracts/captcha"
         },
         {
+            "path": "../account"
+        },
+        {
             "path": "../api"
         },
         {
