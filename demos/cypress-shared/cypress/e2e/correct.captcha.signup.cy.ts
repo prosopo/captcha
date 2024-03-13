@@ -57,8 +57,9 @@ describe('Captchas', () => {
                             cy.wrap(checkboxes).first().should('be.checked')
                         })
                     })
+                const uniqueId = Cypress._.uniqueId('test')
                 cy.get('input[type="password"]').type('password')
-                cy.get('input[id="email"]').type('test@prosopo.io')
+                cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`)
                 cy.get('input[id="name"]').type('test')
                 cy.get('button[type="button"]').first().click()
 
