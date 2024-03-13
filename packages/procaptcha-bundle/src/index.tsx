@@ -25,6 +25,7 @@ import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+import ProcaptchaFrictionless from '@prosopo/procaptcha-frictionless'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
@@ -157,10 +158,16 @@ const renderLogic = (
             config.challengeValidLength = parseInt(challengeValidLengthAttribute)
         }
 
-        if (renderOptions?.captchaType === 'pow') {
-            createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
-        } else {
-            createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+        switch (renderOptions?.captchaType) {
+            case 'pow':
+                createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
+                break
+            case 'frictionless':
+                createRoot(element).render(<ProcaptchaFrictionless config={config} callbacks={callbacks} />)
+                break
+            default:
+                createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+                break
         }
     })
 }
