@@ -79,5 +79,7 @@ export default function getConfig(
         captchaSolutions: captchaSolutionsConfig,
         batchCommit: batchCommitConfig,
         captchas: captchaServeConfig,
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true',
+        mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
     } as ProsopoConfigInput)
 }
