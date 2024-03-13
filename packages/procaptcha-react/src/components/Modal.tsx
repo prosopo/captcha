@@ -6,7 +6,6 @@ type ModalProps = {
 
 const ModalComponent = React.memo((props: ModalProps, nextProps: ModalProps) => {
     const { show, children } = props
-    console.log('rendering modal with show: ', show)
     const display = show ? 'block' : 'none'
     const ModalOuterDivCss: CSSProperties = {
         position: 'fixed',
