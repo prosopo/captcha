@@ -200,10 +200,7 @@ function App() {
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
-                                    <Procaptcha
-                                        config={config}
-                                        callbacks={{  onError, onHuman, onExpired }}
-                                    />
+                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>
