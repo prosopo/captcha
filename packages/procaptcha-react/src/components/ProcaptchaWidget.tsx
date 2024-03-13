@@ -271,7 +271,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                 </div>
             </div>
             {config.devOnlyWatchEvents && (
-                <Collector onProcessData={manager.exportData} sendData={state.showModal}></Collector>
+                <Collector onProcessData={manager.exportData} sendData={state.sendData}></Collector>
             )}
         </div>
     )

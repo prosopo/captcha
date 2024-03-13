@@ -711,9 +711,10 @@ export class Tasks {
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {
-        if (!this.config.mongoAtlasUri) {
+        if (!this.config.devOnlyWatchEvents || !this.config.mongoEventsUri) {
+            console.log('Dev watch events not set to true, not saving events')
             return
         }
-        await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
+        await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
     }
 }

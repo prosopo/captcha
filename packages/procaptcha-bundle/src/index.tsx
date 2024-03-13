@@ -72,7 +72,8 @@ const getConfig = (siteKey?: string) => {
             address: siteKey,
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        mongoAtlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 

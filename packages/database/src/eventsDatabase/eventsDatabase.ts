@@ -1,5 +1,5 @@
-import { ProsopoDBError, getLoggerDefault } from '@prosopo/common'
 import { StoredEventRecord, StoredEvents } from '@prosopo/types'
+import { getLoggerDefault } from '@prosopo/common'
 import mongoose, { Model } from 'mongoose'
 const logger = getLoggerDefault()
 const MAX_RETRIES = 3
@@ -36,47 +36,14 @@ try {
     CaptchaEvent = mongoose.model('CaptchaEvent', captchaEventSchema)
 }
 
-const addCaptchaEventRecord = async (record: StoredEventRecord): Promise<void> => {
-    try {
-        const newRecord = new CaptchaEvent(record)
-        await newRecord.save()
-        logger.info('Record added successfully')
-    } catch (error) {
-        logger.error('Error adding record to the database:', error)
-    }
-}
-
 export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, atlasUri: string) => {
-    return new Promise((resolve, reject) => {
-        const connection = mongoose.createConnection(atlasUri)
-        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            connection.once('open', resolve).on('error', (e) => {
-                logger.warn(`Mongoose connection error`)
-                logger.error(e)
+    await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
 
-                // Only reject on the last attempt, otherwise handle the retry logic
-                if (attempt === MAX_RETRIES) {
-                    reject(
-                        new ProsopoDBError('DATABASE.CONNECT_ERROR', {
-                            context: { failedFuncName: saveCaptchaEvent.name, db: 'events database' },
-                            logger: logger,
-                        })
-                    )
-                } else {
-                    // Remove the error listener to avoid accumulated listeners on retries
-                    connection?.removeAllListeners('error')
-                }
-            })
-        }
+    const captchaEventData = {
+        ...events,
+        accountId,
+    }
 
-        const captchaEventData = {
-            ...events,
-            accountId,
-        }
-
-        addCaptchaEventRecord(captchaEventData)
-            .then(() => logger.info('Captcha event data saved'))
-            .catch((error) => logger.error('Error saving captcha event data:', error))
-            .finally(() => connection.close())
-    })
+    const saved = await CaptchaEvent.create(captchaEventData)
+    console.log('Mongo Saved Event', saved)
 }
