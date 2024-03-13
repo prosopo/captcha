@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
-import ProcaptchaFrictionless from '@prosopo/procaptcha-frictionless'
 
 function App() {
     const [account, setAccount] = useState<string>('')

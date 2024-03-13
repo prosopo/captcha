@@ -22,10 +22,10 @@ import {
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
-import ProcaptchaFrictionless from '@prosopo/procaptcha-frictionless'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
