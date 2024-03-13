@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.2.41",
+    "version": "0.3.1",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -61,7 +61,7 @@
         "lint:fix": "npm --workspaces run lint:fix && npm run lint:fix:workspace",
         "lint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
-        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js",
+        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
         "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\""
     },
