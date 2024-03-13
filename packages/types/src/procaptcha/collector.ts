@@ -24,5 +24,5 @@ export type StoredEvents = {
 }
 
 export interface StoredEventRecord extends StoredEvents {
-    accountId: string
+    accountId?: string
 }

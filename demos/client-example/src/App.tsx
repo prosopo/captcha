@@ -49,7 +49,8 @@ function App() {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL,
+        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 

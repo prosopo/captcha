@@ -131,7 +131,6 @@ export function Manager(
             },
             onOpen: () => {
                 console.log('onOpen event triggered')
-                updateState({ sendData: !state.sendData })
             },
             onClose: () => {
                 console.log('onClose event triggered')
@@ -597,19 +596,34 @@ export function Manager(
     }
 
     const exportData = async (events: StoredEvents) => {
-        let providerUrl = storage.getProviderUrl()
-        if (!providerUrl && state.captchaApi?.provider.provider.url) {
-            providerUrl = trimProviderUrl(state.captchaApi?.provider.provider.url.toString())
+        const providerUrlFromStorage = storage.getProviderUrl()
+        let providerApi: ProviderApi
+
+        if (providerUrlFromStorage) {
+            providerApi = await loadProviderApi(providerUrlFromStorage)
+        } else {
+            const contract = await loadContract()
+            const getRandomProviderResponse: RandomProvider = await wrapQuery(
+                contract.query.getRandomActiveProvider,
+                contract.query
+            )(getAccount().account.address, getDappAccount())
+            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+            providerApi = await loadProviderApi(providerUrl)
         }
-        console.log('providerUrl', providerUrl)
-        if (providerUrl) {
-            console.log('providerUrl', providerUrl)
-            if (!providerUrl) {
-                return
-            }
-            const providerApi = await loadProviderApi(providerUrl)
-            await providerApi.submitUserEvents(events, getAccount().account.address)
+
+        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
+        if (!providerUrl) {
+            return
         }
+        console.log('Submitting events to provider', events)
+
+        let account = ''
+        try {
+            account = getAccount().account.address
+        } catch (e) {
+            console.error(e)
+        }
+        await providerApi.submitUserEvents(events, account)
     }
 
     return {
