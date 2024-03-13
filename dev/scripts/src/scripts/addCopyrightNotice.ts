@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at } from '@prosopo/util'
-import { at } from '@prosopo/util'
 import { glob } from 'glob'
 import fs from 'fs'
 import path from 'path'
