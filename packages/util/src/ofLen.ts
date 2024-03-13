@@ -2,18 +2,54 @@ export type Len0<T extends unknown[]> = Pick<Required<T>, 'length'>
 export type Len1<T extends unknown[]> = Pick<Required<T>, 0> & Len0<T>
 export type Len2<T extends unknown[]> = Pick<Required<T>, 0 | 1> & Len0<T>
 export type Len3<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2> & Len0<T>
-export type Len4<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3> & Len0<T>
-export type Len5<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4> & Len0<T>
-export type Len6<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5> & Len0<T>
-export type Len7<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6> & Len0<T>
-export type Len8<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7> & Len0<T>
-export type Len9<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8> & Len0<T>
-export type Len10<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9> & Len0<T>
-export type Len11<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10> & Len0<T>
-export type Len12<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11> & Len0<T>
-export type Len13<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12> &
+export type Len4<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3> &
     Len0<T>
-export type Len14<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13> &
+export type Len5<T extends unknown[]> = Pick<Required<T>, 0 | 1 | 2 | 3 | 4> &
+    Len0<T>
+export type Len6<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5
+> &
+    Len0<T>
+export type Len7<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6
+> &
+    Len0<T>
+export type Len8<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+> &
+    Len0<T>
+export type Len9<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+> &
+    Len0<T>
+export type Len10<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+> &
+    Len0<T>
+export type Len11<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+> &
+    Len0<T>
+export type Len12<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
+> &
+    Len0<T>
+export type Len13<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+> &
+    Len0<T>
+export type Len14<T extends unknown[]> = Pick<
+    Required<T>,
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
+> &
     Len0<T>
 export type Len15<T extends unknown[]> = Pick<
     Required<T>,
@@ -32,42 +68,206 @@ export type Len17<T extends unknown[]> = Pick<
     Len0<T>
 export type Len18<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
 > &
     Len0<T>
 export type Len19<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
 > &
     Len0<T>
 export type Len20<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
 > &
     Len0<T>
 export type Len21<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20
 > &
     Len0<T>
 export type Len22<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20
+    | 21
 > &
     Len0<T>
 export type Len23<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20
+    | 21
+    | 22
 > &
     Len0<T>
 export type Len24<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20
+    | 21
+    | 22
+    | 23
 > &
     Len0<T>
 export type Len25<T extends unknown[]> = Pick<
     Required<T>,
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20
+    | 21
+    | 22
+    | 23
+    | 24
 > &
     Len0<T>
 export type Len26<T extends unknown[]> = Pick<

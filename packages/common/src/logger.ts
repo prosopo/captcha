@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
-import { ProsopoEnvError } from './error.js'
 import { enum as zEnum, type infer as zInfer } from 'zod'
+import { ProsopoEnvError } from './error.js'
 
 // allows access to log levels via index, e.g. myLogger[LogLevel.enum.debug](...) or myLogger['error'](...), etc
 type LoggerLevelFns = {
@@ -26,7 +26,15 @@ export type Logger = {
     getLogLevel(): LogLevel
 } & LoggerLevelFns
 
-export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
+export const LogLevel = zEnum([
+    'trace',
+    'debug',
+    'info',
+    'warn',
+    'error',
+    'fatal',
+    'log',
+])
 export type LogLevel = zInfer<typeof LogLevel>
 
 // Create a new logger with the given level and scope
@@ -41,7 +49,9 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = createConsola({ formatOptions: { colors: true, date: true } }).withTag(scope)
+    const logger = createConsola({
+        formatOptions: { colors: true, date: true },
+    }).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
@@ -79,7 +89,9 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
                 default:
                     // this cannot be a ProsopoEnvError. The default logger calls this method, which creates a new ProsopoEnvError, which requires the default logger, which hasn't been constructed yet, leading to ts not being able to find getLoggerDefault() during runtime as it has not completed yet (I think).
                     // Either way, this should never happen in runtime, this error is just an edge case, every log level should be translated properly.
-                    throw new Error(`Invalid log level translation to consola's log level: ${level}`)
+                    throw new Error(
+                        `Invalid log level translation to consola's log level: ${level}`
+                    )
             }
             logger.level = logLevel
             currentLevel = level
@@ -102,7 +114,9 @@ export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
     try {
         return LogLevel.parse(logLevel)
     } catch (e) {
-        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
+        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', {
+            context: { logLevel },
+        })
     }
 }
 

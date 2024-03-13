@@ -1,3 +1,5 @@
+import fs, { type WriteStream, createWriteStream } from 'node:fs'
+import { Readable } from 'node:stream'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoCliError } from '@prosopo/common'
-import { Readable } from 'node:stream'
-import fs, { type WriteStream, createWriteStream } from 'node:fs'
 
 export function loadJSONFile(filePath: string) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (error) {
-        throw new ProsopoCliError('GENERAL.JSON_LOAD_FAILED', { context: { error, filePath } })
+        throw new ProsopoCliError('GENERAL.JSON_LOAD_FAILED', {
+            context: { error, filePath },
+        })
     }
 }
 

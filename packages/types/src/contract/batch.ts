@@ -1,3 +1,4 @@
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import type { BN } from '@polkadot/util/bn'
 import type { Hash } from '@prosopo/captcha-contract/types-arguments'
-import type { SubmittableExtrinsic } from '@polkadot/api/types'
 
 export interface ExtrinsicBatch {
     extrinsics: SubmittableExtrinsic<'promise'>[]

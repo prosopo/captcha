@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Logger } from '@prosopo/common'
-import { ProsopoDatabase as MongoDatabase } from './mongo.js'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+import { ProsopoDatabase as MongoDatabase } from './mongo.js'
 
 export class MongoMemoryDatabase extends MongoDatabase {
     private mongod: MongoMemoryServer | undefined
     private running = false
 
-    override async init(url: string, dbname: string, logger: Logger, authSource?: string): Promise<this> {
+    override async init(
+        url: string,
+        dbname: string,
+        logger: Logger,
+        authSource?: string
+    ): Promise<this> {
         this.mongod = await MongoMemoryServer.create()
         this.running = true
         const mongoMemoryURL = this.mongod.getUri()

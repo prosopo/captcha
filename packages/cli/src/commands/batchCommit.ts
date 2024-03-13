@@ -1,13 +1,23 @@
-import type { ArgumentsCamelCase, Argv } from 'yargs'
-import { BatchCommitmentsTask } from '@prosopo/provider'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
+import {
+    LogLevel,
+    type Logger,
+    ProsopoEnvError,
+    getLogger,
+} from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
+import { BatchCommitmentsTask } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { validateScheduleExpression } from './validators.js'
 
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.batch_commit')
+export default (
+    pair: KeyringPair,
+    config: ProsopoConfigOutput,
+    cmdArgs?: { logger?: Logger }
+) => {
+    const logger =
+        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.batch_commit')
     return {
         command: 'batch_commit',
         describe: 'Batch commit user solutions to contract' as const,
@@ -24,19 +34,19 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
             if (argv.schedule) {
                 throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
             }
-                if (env.db) {
-                    const batchCommitter = new BatchCommitmentsTask(
-                        env.config.batchCommit,
-                        env.getContractInterface(),
-                        env.db,
-                        0n,
-                        env.logger
-                    )
-                    const result = await batchCommitter.run()
-                    logger.info(`Batch commit complete: ${result}`)
-                } else {
-                    logger.error('No database configured')
-                }
+            if (env.db) {
+                const batchCommitter = new BatchCommitmentsTask(
+                    env.config.batchCommit,
+                    env.getContractInterface(),
+                    env.db,
+                    0n,
+                    env.logger
+                )
+                const result = await batchCommitter.run()
+                logger.info(`Batch commit complete: ${result}`)
+            } else {
+                logger.error('No database configured')
+            }
         },
         middlewares: [validateScheduleExpression],
     }

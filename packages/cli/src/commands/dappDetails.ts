@@ -1,13 +1,18 @@
-import type { ArgumentsCamelCase, Argv } from 'yargs'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, type Logger, getLogger } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { validateAddress } from './validators.js'
 
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_details')
+export default (
+    pair: KeyringPair,
+    config: ProsopoConfigOutput,
+    cmdArgs?: { logger?: Logger }
+) => {
+    const logger =
+        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_details')
 
     return {
         command: 'dapp_details',
@@ -23,7 +28,11 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const result = (await tasks.contract.query.getDapp(validateAddress(argv).address)).value
+                const result = (
+                    await tasks.contract.query.getDapp(
+                        validateAddress(argv).address
+                    )
+                ).value
                     .unwrap()
                     .unwrap()
 

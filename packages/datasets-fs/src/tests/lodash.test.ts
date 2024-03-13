@@ -1,3 +1,4 @@
+import { rng, seedLodash } from '@prosopo/util/lodash'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { rng, seedLodash } from '@prosopo/util/lodash'
 
 describe('rng', () => {
     test('generates random numbers using a seed', () => {
         const seed = 0
         const rand = rng(seed)
-        const expected = [-1681090547, 408334984, 788430095, 3233831872, 963300000, -299378919, 97582850]
+        const expected = [
+            -1681090547, 408334984, 788430095, 3233831872, 963300000,
+            -299378919, 97582850,
+        ]
         for (let i = 0; i < expected.length; i++) {
             expect(rand.int()).to.equal(expected[i])
         }

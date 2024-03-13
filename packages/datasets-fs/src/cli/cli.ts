@@ -1,7 +1,7 @@
-import type { CliCommandAny } from './cliCommand.js'
 import { LogLevel, Loggable, ProsopoCliError, getLogger } from '@prosopo/common'
-import { hideBin } from 'yargs/helpers'
 import yargs, { type Argv } from 'yargs'
+import { hideBin } from 'yargs/helpers'
+import type { CliCommandAny } from './cliCommand.js'
 
 const dirname = process.cwd()
 const logger = getLogger(LogLevel.enum.info, `${dirname}`)
@@ -45,11 +45,16 @@ export class Cli extends Loggable {
                 'default command',
                 (y: Argv) => y,
                 (argv: any) => {
-                    throw new ProsopoCliError('CLI.PARAMETER_ERROR', { context: { error: 'no command specified' } })
+                    throw new ProsopoCliError('CLI.PARAMETER_ERROR', {
+                        context: { error: 'no command specified' },
+                    })
                 }
             )
         }
-        y = y.demandCommand().strict().showHelpOnFail(false, 'Specify --help for available options')
+        y = y
+            .demandCommand()
+            .strict()
+            .showHelpOnFail(false, 'Specify --help for available options')
         return y
     }
 

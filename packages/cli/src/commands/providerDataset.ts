@@ -1,14 +1,24 @@
-import * as z from 'zod'
-import type { ArgumentsCamelCase, Argv } from 'yargs'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
+import {
+    LogLevel,
+    type Logger,
+    ProsopoEnvError,
+    getLogger,
+} from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import * as z from 'zod'
 import { writeJSONFile } from '../files.js'
 
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_dataset')
+export default (
+    pair: KeyringPair,
+    config: ProsopoConfigOutput,
+    cmdArgs?: { logger?: Logger }
+) => {
+    const logger =
+        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_dataset')
     return {
         command: 'provider_dataset',
         describe: 'Exports a dataset from the provider database',
@@ -35,8 +45,14 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 }
                 if (datasetId === undefined) {
                     const providerAddress = env.config.account.address
-                    const provider = (await tasks.contract.query.getProvider(providerAddress)).value.unwrap().unwrap()
-                    logger.info(`Getting dataset ID from provider ${providerAddress}`)
+                    const provider = (
+                        await tasks.contract.query.getProvider(providerAddress)
+                    ).value
+                        .unwrap()
+                        .unwrap()
+                    logger.info(
+                        `Getting dataset ID from provider ${providerAddress}`
+                    )
                     datasetId = provider.datasetId.toString()
                 }
                 // get the dataset from the provider database

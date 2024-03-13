@@ -1,3 +1,5 @@
+import { load } from '@fingerprintjs/botd'
+import { ProcaptchaPow, type ProcaptchaProps } from '@prosopo/procaptcha-pow'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,22 +15,29 @@
 // limitations under the License.
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
-import { ProcaptchaPow, type ProcaptchaProps } from '@prosopo/procaptcha-pow'
-import { load } from '@fingerprintjs/botd'
 import { useEffect, useState } from 'react'
 
-export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
+export const ProcaptchaFrictionless = ({
+    config,
+    callbacks,
+}: ProcaptchaProps) => {
     // Use state to manage which component to render
-    const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
+    const [componentToRender, setComponentToRender] = useState(
+        <ProcaptchaPlaceholder darkMode={config.theme} />
+    )
 
     useEffect(() => {
         const detectBot = async () => {
             const botd = await load()
             const result = botd.detect()
             if (result.bot) {
-                setComponentToRender(<Procaptcha config={config} callbacks={callbacks} />)
+                setComponentToRender(
+                    <Procaptcha config={config} callbacks={callbacks} />
+                )
             } else {
-                setComponentToRender(<ProcaptchaPow config={config} callbacks={callbacks} />)
+                setComponentToRender(
+                    <ProcaptchaPow config={config} callbacks={callbacks} />
+                )
             }
         }
 

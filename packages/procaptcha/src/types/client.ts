@@ -1,3 +1,4 @@
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,9 @@
 // limitations under the License.
 import type { CaptchaSolutionCommitmentId } from '@prosopo/api'
 import type { CaptchaSolutionResponse } from '@prosopo/types'
-import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, CaptchaSolutionCommitmentId, ContractSubmittableResult?]
+export type TCaptchaSubmitResult = [
+    CaptchaSolutionResponse,
+    CaptchaSolutionCommitmentId,
+    ContractSubmittableResult?,
+]

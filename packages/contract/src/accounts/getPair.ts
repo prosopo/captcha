@@ -1,3 +1,6 @@
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import { Keyring } from '@polkadot/keyring'
+import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from '@polkadot/types/interfaces'
-import type { ApiPromise } from '@polkadot/api/promise/Api'
-import type { KeypairType } from '@polkadot/util-crypto/types'
-import { Keyring } from '@polkadot/keyring'
-import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { type NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 import { hexToU8a } from '@polkadot/util/hex'
 import { isHex } from '@polkadot/util/is'
-import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
+import { ProsopoEnvError } from '@prosopo/common'
+import { type NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
 
 export async function getPairAsync(
     networkConfig?: NetworkConfig,
@@ -50,7 +50,8 @@ export function getPair(
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (!secret && account) {
         return keyring.addFromAddress(account)
-    }if (secret) {
+    }
+    if (secret) {
         if (mnemonicValidate(secret)) {
             return keyring.addFromUri(secret)
         }
@@ -75,7 +76,10 @@ export function getPair(
     }
 }
 
-export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringPair {
+export function getReadOnlyPair(
+    api: ApiPromise,
+    userAccount?: string
+): KeyringPair {
     // 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM is the all zero address
     return getPair(
         undefined,
@@ -87,5 +91,8 @@ export function getReadOnlyPair(api: ApiPromise, userAccount?: string): KeyringP
 }
 
 export function getZeroAddress(api: ApiPromise): AccountId {
-    return api.registry.createType('AccountId', new Uint8Array(new Array(32).fill(0)))
+    return api.registry.createType(
+        'AccountId',
+        new Uint8Array(new Array(32).fill(0))
+    )
 }

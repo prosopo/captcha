@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CssBaseline } from '@mui/material'
-import App from './App.js'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import App from './App.js'
 import reportWebVitals from './reportWebVitals.js'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)

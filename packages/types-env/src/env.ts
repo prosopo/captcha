@@ -12,15 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ApiPromise } from '@polkadot/api/promise/Api'
-import type { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import type { ContractAbi } from '@prosopo/types'
-import type { Database } from '@prosopo/types-database' // config
 import type { Keyring } from '@polkadot/keyring'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { Logger } from '@prosopo/common'
-import type { ProsopoBasicConfigOutput } from '@prosopo/types'
-import type { ProsopoCaptchaContract } from '@prosopo/contract'
 import type { WsProvider } from '@polkadot/rpc-provider/ws'
+import type { Logger } from '@prosopo/common'
+import type { ProsopoCaptchaContract } from '@prosopo/contract'
+import type {
+    AssetsResolver,
+    EnvironmentTypes,
+    NetworkNames,
+} from '@prosopo/types'
+import type { ContractAbi } from '@prosopo/types'
+import type { ProsopoBasicConfigOutput } from '@prosopo/types'
+import type { Database } from '@prosopo/types-database' // config
 
 export interface ProsopoEnvironment {
     config: ProsopoBasicConfigOutput

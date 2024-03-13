@@ -1,3 +1,4 @@
+import type { Server } from 'node:net'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type ProsopoApiError, i18nMiddleware } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import type { Server } from 'node:net'
-import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
-import { loadEnv } from './env.js'
+import { ProviderEnvironment } from '@prosopo/env'
 import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
-import express, { type NextFunction, type Request, type Response } from 'express'
+import express, {
+    type NextFunction,
+    type Request,
+    type Response,
+} from 'express'
+import { loadEnv } from './env.js'
+import { getDB, getSecret } from './process.env.js'
 import getConfig from './prosopo.config.js'
 
 // We need the unused params to make express recognise this function as an error handler
@@ -73,7 +77,11 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
             solved: { count: 2 },
             unsolved: { count: 0 },
         })
-        const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
+        const pair = await getPairAsync(
+            config.networks[config.defaultNetwork],
+            secret,
+            ''
+        )
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()

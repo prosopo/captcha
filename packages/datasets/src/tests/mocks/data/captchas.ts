@@ -14,8 +14,10 @@
 import type { DatasetWithIdsAndTree } from '@prosopo/types'
 
 export const datasetWithSolutionHashes = {
-    datasetId: '0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25',
-    datasetContentId: '0x3a2dbbf5610f04f54581843db3adf7e0fadc02cdb8e42e30b028c850e0603165',
+    datasetId:
+        '0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25',
+    datasetContentId:
+        '0x3a2dbbf5610f04f54581843db3adf7e0fadc02cdb8e42e30b028c850e0603165',
     format: 'SelectAll',
     contentTree: [
         [
@@ -101,8 +103,10 @@ export const datasetWithSolutionHashes = {
     ],
     captchas: [
         {
-            captchaId: '0xf96f89b2792512ec092ead208301f55ba18023ab7e02bec26c32fe888277cc45',
-            captchaContentId: '0x77ba6bdfedc563a34580c8b9cbcdec64608fda0ebf93649797af751d91b8e7a2',
+            captchaId:
+                '0xf96f89b2792512ec092ead208301f55ba18023ab7e02bec26c32fe888277cc45',
+            captchaContentId:
+                '0x77ba6bdfedc563a34580c8b9cbcdec64608fda0ebf93649797af751d91b8e7a2',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -160,8 +164,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x5d417991939a866abddffec672850be406e31985221914e9b3bbb4eeed57d13b',
-            captchaContentId: '0x0460173e77b2280224c8bc409cfdfcae8f77314e535a52db38258fafeb7e4670',
+            captchaId:
+                '0x5d417991939a866abddffec672850be406e31985221914e9b3bbb4eeed57d13b',
+            captchaContentId:
+                '0x0460173e77b2280224c8bc409cfdfcae8f77314e535a52db38258fafeb7e4670',
             solved: true,
             salt: '0x02020202020202020202020202020202',
             items: [
@@ -219,8 +225,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0xb66681a776e4bf1128d1c36c49daaf32e0140e425d6950d47029a8d4286ae670',
-            captchaContentId: '0x5073c70e3c1a89f69b00bd32c06857dbd045d345c2c2be7970c12bba8edaff82',
+            captchaId:
+                '0xb66681a776e4bf1128d1c36c49daaf32e0140e425d6950d47029a8d4286ae670',
+            captchaContentId:
+                '0x5073c70e3c1a89f69b00bd32c06857dbd045d345c2c2be7970c12bba8edaff82',
             solved: true,
             salt: '0x05050505050505050505050505050505',
             items: [
@@ -278,8 +286,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x683292a791c937e5e9be6f2fe0ac708deb4726af4e37c71cacc36f6371c3a088',
-            captchaContentId: '0x36b991ffb57cdcb6d5e5b3ec8d34855069357c4d7409e98af6cd9503c6504f60',
+            captchaId:
+                '0x683292a791c937e5e9be6f2fe0ac708deb4726af4e37c71cacc36f6371c3a088',
+            captchaContentId:
+                '0x36b991ffb57cdcb6d5e5b3ec8d34855069357c4d7409e98af6cd9503c6504f60',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -337,8 +347,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x9ad2b46ce33db79f62679a0d0c4262dfff9b359337243d50e47479ae46e4ca8e',
-            captchaContentId: '0xa3cf080335408e6cb29415ac3bdbf57d9dca2c24b52b7a9e682b209e65d586aa',
+            captchaId:
+                '0x9ad2b46ce33db79f62679a0d0c4262dfff9b359337243d50e47479ae46e4ca8e',
+            captchaContentId:
+                '0xa3cf080335408e6cb29415ac3bdbf57d9dca2c24b52b7a9e682b209e65d586aa',
             solved: true,
             salt: '0x02020202020202020202020202020202',
             items: [
@@ -396,8 +408,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0xa8309e583ba17f5cbdcbf09aa3c422bc94060a3cd86517b1c456e72be2e2d263',
-            captchaContentId: '0x5d07c582890d4a90b021e2c77b5a8341ec65e5ce31e8b59670b9378ed33a7f31',
+            captchaId:
+                '0xa8309e583ba17f5cbdcbf09aa3c422bc94060a3cd86517b1c456e72be2e2d263',
+            captchaContentId:
+                '0x5d07c582890d4a90b021e2c77b5a8341ec65e5ce31e8b59670b9378ed33a7f31',
             solved: true,
             salt: '0x03030303030303030303030303030303',
             items: [
@@ -455,8 +469,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x6cb3449c723ca8f419104446ccda1f98f7cf9eb06a88ecebdf1ba0f5d9228c40',
-            captchaContentId: '0xa45af7caacd6a2c19219f0a733c8febf453ef62258f6afa22f7f830f6125d9f2',
+            captchaId:
+                '0x6cb3449c723ca8f419104446ccda1f98f7cf9eb06a88ecebdf1ba0f5d9228c40',
+            captchaContentId:
+                '0xa45af7caacd6a2c19219f0a733c8febf453ef62258f6afa22f7f830f6125d9f2',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -513,8 +529,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x3bacf645655004bd36c56d3215ff0e1925fdc4241a41fdbb711d4222d3b56af3',
-            captchaContentId: '0xf4416f464d8df14718f0f1dac447d8b7403c9c8eaa3c5da8cf0019a06197b5f3',
+            captchaId:
+                '0x3bacf645655004bd36c56d3215ff0e1925fdc4241a41fdbb711d4222d3b56af3',
+            captchaContentId:
+                '0xf4416f464d8df14718f0f1dac447d8b7403c9c8eaa3c5da8cf0019a06197b5f3',
             solved: true,
             salt: '0x02020202020202020202020202020202',
             items: [
@@ -572,8 +590,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x723e7c158ce1621dafd2785996fce297ead3bcf6efb2e3f77a090bd83c8b9362',
-            captchaContentId: '0x89916d3a386b0dd3942aa659245bca778467d14ebe509312779c56b8a003f4bc',
+            captchaId:
+                '0x723e7c158ce1621dafd2785996fce297ead3bcf6efb2e3f77a090bd83c8b9362',
+            captchaContentId:
+                '0x89916d3a386b0dd3942aa659245bca778467d14ebe509312779c56b8a003f4bc',
             solved: true,
             salt: '0x03030303030303030303030303030303',
             items: [
@@ -631,8 +651,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0xf8d0abb371ec9a6984492cb7444bfaef848f7d13cb65b8058d479ab1b1e6c932',
-            captchaContentId: '0xe36eb6b306154f44fcdbe793a60257c474401e8bd8e63da15f9654e831c08eb2',
+            captchaId:
+                '0xf8d0abb371ec9a6984492cb7444bfaef848f7d13cb65b8058d479ab1b1e6c932',
+            captchaContentId:
+                '0xe36eb6b306154f44fcdbe793a60257c474401e8bd8e63da15f9654e831c08eb2',
             solved: true,
             salt: '0x04040404040404040404040404040404',
             items: [
@@ -683,11 +705,15 @@ export const datasetWithSolutionHashes = {
                 },
             ],
             target: 'bird',
-            solution: ['0x15671b7ab4c6d575d51bb0c6c2a5dd05427a2938e9cbcaca1de07c23eaced17f'],
+            solution: [
+                '0x15671b7ab4c6d575d51bb0c6c2a5dd05427a2938e9cbcaca1de07c23eaced17f',
+            ],
         },
         {
-            captchaId: '0xc9d80c281e124d55441b394bec7d6a64e35c4409d57e37bcb9b9748066b095d6',
-            captchaContentId: '0x7c08a0e5636efa5dff2f8815095ec4390e844e50bfbe63d8e1e1c75ec6540592',
+            captchaId:
+                '0xc9d80c281e124d55441b394bec7d6a64e35c4409d57e37bcb9b9748066b095d6',
+            captchaContentId:
+                '0x7c08a0e5636efa5dff2f8815095ec4390e844e50bfbe63d8e1e1c75ec6540592',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -745,8 +771,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0xd0d357d973f3971fa5431d6bcec9819cb2363b1e6d5d585d5bf97f4f18ac76a5',
-            captchaContentId: '0x2089b6232685100ad4318d75f9cc2d5909a0cd2ef49e7b3e314726b25a71c807',
+            captchaId:
+                '0xd0d357d973f3971fa5431d6bcec9819cb2363b1e6d5d585d5bf97f4f18ac76a5',
+            captchaContentId:
+                '0x2089b6232685100ad4318d75f9cc2d5909a0cd2ef49e7b3e314726b25a71c807',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -804,8 +832,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x8683a18e05a9eefb959ba41374f2ef208484079405e9c098910f9d9a4cf60ddf',
-            captchaContentId: '0x466dcd81d4e1d271cf3b5b0cdacb7417119ce11b2843aea517eb3dda847392a9',
+            captchaId:
+                '0x8683a18e05a9eefb959ba41374f2ef208484079405e9c098910f9d9a4cf60ddf',
+            captchaContentId:
+                '0x466dcd81d4e1d271cf3b5b0cdacb7417119ce11b2843aea517eb3dda847392a9',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -863,8 +893,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x43828174c4c62e82cd7be31465df33f10c6de4301d02feeff8ca15cc26ecd3bb',
-            captchaContentId: '0xe286bba23407a9036b9e60eec7ea41ebfe7f2b1452443da1e9561909534c719d',
+            captchaId:
+                '0x43828174c4c62e82cd7be31465df33f10c6de4301d02feeff8ca15cc26ecd3bb',
+            captchaContentId:
+                '0xe286bba23407a9036b9e60eec7ea41ebfe7f2b1452443da1e9561909534c719d',
             solved: true,
             salt: '0x01010101010101010101010101010101',
             items: [
@@ -922,8 +954,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0xfbc6d9acb0bc751f3a63682e1a960b74f97fd30b20b633b0acd39e2a4aba1a9c',
-            captchaContentId: '0x452063fa194844cf1f8f622aa7de46b7c948b1fc38fe87426b3443487a5104ce',
+            captchaId:
+                '0xfbc6d9acb0bc751f3a63682e1a960b74f97fd30b20b633b0acd39e2a4aba1a9c',
+            captchaContentId:
+                '0x452063fa194844cf1f8f622aa7de46b7c948b1fc38fe87426b3443487a5104ce',
             solved: true,
             salt: '0x02020202020202020202020202020202',
             items: [
@@ -981,8 +1015,10 @@ export const datasetWithSolutionHashes = {
             ],
         },
         {
-            captchaId: '0x59466eea239ed267b0a60ce0f28ec617834b6fbe41f5f38047f50de6539e659c',
-            captchaContentId: '0x78374f5795a85c1ff01fc13e60da3992b7054bcc16945a0820e4a58ba881b9ed',
+            captchaId:
+                '0x59466eea239ed267b0a60ce0f28ec617834b6fbe41f5f38047f50de6539e659c',
+            captchaContentId:
+                '0x78374f5795a85c1ff01fc13e60da3992b7054bcc16945a0820e4a58ba881b9ed',
             solved: true,
             salt: '0x03030303030303030303030303030303',
             items: [
@@ -1048,6 +1084,8 @@ export const datasetWithIndexSolutions = {
     captchas: datasetWithSolutionHashes.captchas.map((captcha, index) => ({
         ...captcha,
         //for solution in captcha.solution, find the index of captcha.item with item.hash == solution
-        solution: captcha.solution?.map((solution) => captcha.items.findIndex((item) => item.hash === solution)),
+        solution: captcha.solution?.map((solution) =>
+            captcha.items.findIndex((item) => item.hash === solution)
+        ),
     })),
 }

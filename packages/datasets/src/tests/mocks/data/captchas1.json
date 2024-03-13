@@ -4,15 +4,42 @@
             "salt": "0x01",
             "solution": [2, 3, 8],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_5.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_24.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_27.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_28.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_22.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_32.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_44.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_51.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_5.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_24.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_27.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_28.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_22.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_32.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_44.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_51.png",
+                    "type": "image"
+                }
             ],
             "target": "dog"
         },
@@ -20,30 +47,84 @@
             "salt": "0x02",
             "solution": [0, 1, 4],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_5.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_24.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_27.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_28.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_22.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_32.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_44.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_51.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_5.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_24.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_27.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_28.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_22.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_32.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_44.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_51.png",
+                    "type": "image"
+                }
             ],
             "target": "cat"
         },
         {
             "salt": "0x03",
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_5.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_24.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_27.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_28.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_22.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_32.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_26.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_44.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_51.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_5.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_24.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_27.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_28.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_22.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_32.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_26.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_44.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_51.png",
+                    "type": "image"
+                }
             ],
             "target": "horse"
         }

@@ -1,6 +1,11 @@
-import { type MutableRefObject, useEffect, useRef, useState } from 'react'
-import type { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
 import { startCollector } from '@prosopo/procaptcha'
+import type {
+    ProsopoKeyboardEvent,
+    ProsopoMouseEvent,
+    ProsopoTouchEvent,
+    StoredEvents,
+} from '@prosopo/types'
+import { type MutableRefObject, useEffect, useRef, useState } from 'react'
 
 type CollectorProps = {
     onProcessData: (data: StoredEvents) => void
@@ -8,15 +13,27 @@ type CollectorProps = {
 }
 
 const Collector = ({ onProcessData, sendData }: CollectorProps) => {
-    const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([])
-    const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([])
-    const [keyboardEvents, setStoredKeyboardEvents] = useState<ProsopoKeyboardEvent[]>([])
+    const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>(
+        []
+    )
+    const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>(
+        []
+    )
+    const [keyboardEvents, setStoredKeyboardEvents] = useState<
+        ProsopoKeyboardEvent[]
+    >([])
 
-    const ref: MutableRefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
+    const ref: MutableRefObject<HTMLDivElement | null> =
+        useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (ref?.current) {
-            startCollector(setStoredMouseEvents, setStoredTouchEvents, setStoredKeyboardEvents, ref.current)
+            startCollector(
+                setStoredMouseEvents,
+                setStoredTouchEvents,
+                setStoredKeyboardEvents,
+                ref.current
+            )
         }
     }, [])
 

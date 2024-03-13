@@ -1,5 +1,5 @@
-import { WIDGET_OUTER_HEIGHT } from './WidgetConstants.js'
 import styled from '@emotion/styled'
+import { WIDGET_OUTER_HEIGHT } from './WidgetConstants.js'
 
 export const ContainerDiv = styled.div`
     container-type: inline-size;

@@ -1,3 +1,4 @@
+import path from 'node:path'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { ProsopoServer, getServerConfig } from '@prosopo/server'
 import { getPairAsync } from '@prosopo/contract'
-import connectionFactory from './utils/connection.js'
+import { ProsopoServer, getServerConfig } from '@prosopo/server'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
-import memoryServerSetup from './utils/database.js'
-import path from 'node:path'
 import routesFactory from './routes/routes.js'
+import connectionFactory from './utils/connection.js'
+import memoryServerSetup from './utils/database.js'
 
 export function loadEnv() {
     dotenv.config({ path: getEnvFile() })
@@ -45,8 +45,14 @@ async function main() {
 
     app.use((_, res, next) => {
         res.setHeader('Access-Control-Allow-Origin', '*')
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Auth-Token, Authorization')
+        res.setHeader(
+            'Access-Control-Allow-Methods',
+            'GET, POST, PUT, PATCH, DELETE'
+        )
+        res.setHeader(
+            'Access-Control-Allow-Headers',
+            'Origin, Content-Type, X-Auth-Token, Authorization'
+        )
         next()
     })
 
@@ -58,10 +64,13 @@ async function main() {
     console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
     if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
-        const mnemonicError = new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
-            context: { missingParams: ['PROSOPO_SITE_PRIVATE_KEY'] },
-            logger,
-        })
+        const mnemonicError = new ProsopoEnvError(
+            'GENERAL.MNEMONIC_UNDEFINED',
+            {
+                context: { missingParams: ['PROSOPO_SITE_PRIVATE_KEY'] },
+                logger,
+            }
+        )
 
         logger.error(mnemonicError)
     }
@@ -69,7 +78,10 @@ async function main() {
     const config = getServerConfig()
 
     console.log('config', config)
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.PROSOPO_SITE_PRIVATE_KEY)
+    const pair = await getPairAsync(
+        config.networks[config.defaultNetwork],
+        process.env.PROSOPO_SITE_PRIVATE_KEY
+    )
     const prosopoServer = new ProsopoServer(config, pair)
 
     app.use(routesFactory(mongoose, prosopoServer))

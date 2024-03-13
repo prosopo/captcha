@@ -1,6 +1,11 @@
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import type React from 'react'
-import { type ButtonHTMLAttributes, type CSSProperties, useMemo, useState } from 'react'
+import {
+    type ButtonHTMLAttributes,
+    type CSSProperties,
+    useMemo,
+    useState,
+} from 'react'
 import addDataAttr from '../util/index.js'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -40,24 +45,38 @@ const buttonStyleBase: CSSProperties = {
         'rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px',
 }
 
-const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }: ButtonProps) => {
-    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
+const Button: React.FC<ButtonProps> = ({
+    themeColor,
+    buttonType,
+    text,
+    onClick,
+}: ButtonProps) => {
+    const theme = useMemo(
+        () => (themeColor === 'light' ? lightTheme : darkTheme),
+        [themeColor]
+    )
     const [hover, setHover] = useState(false)
     const buttonStyle = useMemo(() => {
         const baseStyle = {
             ...buttonStyleBase,
-            color: hover ? theme.palette.primary.contrastText : theme.palette.background.contrastText,
+            color: hover
+                ? theme.palette.primary.contrastText
+                : theme.palette.background.contrastText,
         }
         if (buttonType === 'cancel') {
             return {
                 ...baseStyle,
-                backgroundColor: hover ? theme.palette.grey[600] : 'transparent',
+                backgroundColor: hover
+                    ? theme.palette.grey[600]
+                    : 'transparent',
             }
         }
-            return {
-                ...baseStyle,
-                backgroundColor: hover ? theme.palette.primary.main : theme.palette.background.default,
-            }
+        return {
+            ...baseStyle,
+            backgroundColor: hover
+                ? theme.palette.primary.main
+                : theme.palette.background.default,
+        }
     }, [buttonType, hover, theme])
 
     return (

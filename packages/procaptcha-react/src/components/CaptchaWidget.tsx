@@ -1,3 +1,4 @@
+import { ProsopoDatasetError } from '@prosopo/common'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CaptchaResponseCaptcha } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
@@ -25,14 +25,24 @@ export interface CaptchaWidgetProps {
 
 const getHash = (item: any) => {
     if (!item.hash) {
-        throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', { context: { item } })
+        throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', {
+            context: { item },
+        })
     }
     return item.hash
 }
 
-export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: CaptchaWidgetProps) => {
+export const CaptchaWidget = ({
+    challenge,
+    solution,
+    onClick,
+    themeColor,
+}: CaptchaWidgetProps) => {
     const items = challenge.captcha.items
-    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
+    const theme = useMemo(
+        () => (themeColor === 'light' ? lightTheme : darkTheme),
+        [themeColor]
+    )
 
     const isTouchDevice = 'ontouchstart' in window
 
@@ -67,16 +77,34 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                         key={index}
                     >
                         <div
-                            style={{ cursor: 'pointer', height: '100%', width: '100%' }}
-                            onClick={isTouchDevice ? undefined : () => onClick(hash)}
-                            onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
+                            style={{
+                                cursor: 'pointer',
+                                height: '100%',
+                                width: '100%',
+                            }}
+                            onClick={
+                                isTouchDevice ? undefined : () => onClick(hash)
+                            }
+                            onTouchStart={
+                                isTouchDevice ? () => onClick(hash) : undefined
+                            }
                         >
-                            <div style={{ border: 1, borderColor: theme.palette.grey[300] }}>
+                            <div
+                                style={{
+                                    border: 1,
+                                    borderColor: theme.palette.grey[300],
+                                }}
+                            >
                                 <img
                                     style={{
                                         width: '100%', // image should be full width / height of the item
-                                        backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
-                                        opacity: solution.includes(hash) && isTouchDevice ? '50%' : '100%', // iphone workaround
+                                        backgroundColor:
+                                            theme.palette.grey[300], // colour of the bands when letterboxing and image
+                                        opacity:
+                                            solution.includes(hash) &&
+                                            isTouchDevice
+                                                ? '50%'
+                                                : '100%', // iphone workaround
                                         display: 'block', // removes whitespace below imgs
                                         objectFit: 'contain', // contain the entire image in the img tag
                                         aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
@@ -96,9 +124,12 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                     height: '100%',
                                     // shift it up 100% to overlay the item element
                                     top: '-100%',
-                                    visibility: solution.includes(hash) ? 'visible' : 'hidden',
+                                    visibility: solution.includes(hash)
+                                        ? 'visible'
+                                        : 'hidden',
                                     // transition on opacity upon (de)selection
-                                    transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+                                    transition:
+                                        'opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
                                     opacity: 1,
                                 }}
                             >
@@ -129,17 +160,18 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                             // how big the overlay icon is
                                             width: '35%',
                                             height: '35%',
-                                            transition: 'fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+                                            transition:
+                                                'fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
                                             userSelect: 'none',
                                             fill: 'currentcolor',
                                         }}
-                                        focusable="false"
-                                        color="#fff"
-                                        aria-hidden="true"
-                                        viewBox="0 0 24 24"
-                                        data-testid="CheckIcon"
+                                        focusable='false'
+                                        color='#fff'
+                                        aria-hidden='true'
+                                        viewBox='0 0 24 24'
+                                        data-testid='CheckIcon'
                                     >
-                                        <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        <path d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' />
                                     </svg>
                                 </div>
                             </div>

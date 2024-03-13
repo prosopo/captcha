@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { boolean } from 'zod'
 import type { input } from 'zod'
 import { literal } from 'zod'
@@ -23,12 +22,25 @@ import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import type { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
+import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 
-const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
+const LogLevel = zEnum([
+    'trace',
+    'debug',
+    'info',
+    'warn',
+    'error',
+    'fatal',
+    'log',
+])
 
 export const DatabaseTypes = zEnum(['mongo', 'mongoMemory'])
 
-export const EnvironmentTypesSchema = zEnum(['development', 'staging', 'production'])
+export const EnvironmentTypesSchema = zEnum([
+    'development',
+    'staging',
+    'production',
+])
 
 export type EnvironmentTypes = zInfer<typeof EnvironmentTypesSchema>
 
@@ -55,8 +67,12 @@ export type DatabaseConfigOutput = output<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = object({
     logLevel: LogLevel.optional().default(LogLevel.enum.info),
-    defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.production),
-    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.rococo),
+    defaultEnvironment: EnvironmentTypesSchema.default(
+        EnvironmentTypesSchema.Values.production
+    ),
+    defaultNetwork: NetworkNamesSchema.default(
+        NetworkNamesSchema.Values.rococo
+    ),
     // The account with which to query the contract.merge sign transactions
     account: object({
         address: string().optional(),
@@ -91,7 +107,9 @@ export const ProsopoCaptchaCountConfigSchema = object({
         .default({ count: 1 }),
 })
 
-export type ProsopoCaptchaCountConfigSchemaInput = input<typeof ProsopoCaptchaCountConfigSchema>
+export type ProsopoCaptchaCountConfigSchemaInput = input<
+    typeof ProsopoCaptchaCountConfigSchema
+>
 
 export const ProsopoImageServerConfigSchema = object({
     baseURL: string().url(),
@@ -158,11 +176,13 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
             solved: { count: 1 },
             unsolved: { count: 0 },
         }),
-        captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
-            requiredNumberOfSolutions: 3,
-            solutionWinningPercentage: 80,
-            captchaBlockRecency: 10,
-        }),
+        captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default(
+            {
+                requiredNumberOfSolutions: 3,
+                solutionWinningPercentage: 80,
+                captchaBlockRecency: 10,
+            }
+        ),
         batchCommit: BatchCommitConfigSchema.optional().default({
             interval: 300,
             maxBatchExtrinsicPercentage: 59,

@@ -1,13 +1,18 @@
-import { darkTheme, lightTheme } from './theme.js'
-import { useMemo } from 'react'
 import styled from '@emotion/styled'
+import { useMemo } from 'react'
+import { darkTheme, lightTheme } from './theme.js'
 
 export interface LoadingSpinnerComponentProps {
     themeColor: 'light' | 'dark'
 }
 
-export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => {
-    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
+export const LoadingSpinner = ({
+    themeColor,
+}: LoadingSpinnerComponentProps) => {
+    const theme = useMemo(
+        () => (themeColor === 'light' ? lightTheme : darkTheme),
+        [themeColor]
+    )
     const StyledDiv = styled.div`
         margin-top: 0;
         margin-left: 15px;

@@ -1,3 +1,4 @@
+import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import type { BN } from '@polkadot/util/bn'
 import { ProviderEnvironment } from './provider.js'
-import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 export class MockEnvironment extends ProviderEnvironment {
     public createAccountAndAddToKeyring(): [string, string] {
         const mnemonic: string = mnemonicGenerate()

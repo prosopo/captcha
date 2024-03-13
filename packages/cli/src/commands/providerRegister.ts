@@ -1,23 +1,29 @@
-import * as z from 'zod'
-import type { ArgumentsCamelCase, Argv } from 'yargs'
-import type { CommandModule } from 'yargs'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, type Logger, getLogger } from '@prosopo/common'
+import { stringToU8a } from '@polkadot/util/string'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
-import type { ProsopoConfigOutput } from '@prosopo/types'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
+import { wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { stringToU8a } from '@polkadot/util/string'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import type { CommandModule } from 'yargs'
+import * as z from 'zod'
 import { validateFee, validatePayee } from './validators.js'
-import { wrapQuery } from '@prosopo/contract'
 
 const providerRegisterArgsParser = z.object({
     url: z.string(),
     fee: z.number(),
     payee: z.nativeEnum(Payee),
 })
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_register')
+export default (
+    pair: KeyringPair,
+    config: ProsopoConfigOutput,
+    cmdArgs?: { logger?: Logger }
+) => {
+    const logger =
+        cmdArgs?.logger ||
+        getLogger(LogLevel.enum.info, 'cli.provider_register')
     return {
         command: 'provider_register',
         describe: 'Register a Provider',
@@ -44,7 +50,9 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
+                const providerRegisterArgs: Parameters<
+                    typeof tasks.contract.query.providerRegister
+                > = [
                     Array.from(stringToU8a(parsedArgs.url)),
                     parsedArgs.fee,
                     parsedArgs.payee,
@@ -52,8 +60,13 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                         value: 0,
                     },
                 ]
-                await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
-                const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
+                await wrapQuery(
+                    tasks.contract.query.providerRegister,
+                    tasks.contract.query
+                )(...providerRegisterArgs)
+                const result = await tasks.contract.tx.providerRegister(
+                    ...providerRegisterArgs
+                )
 
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {

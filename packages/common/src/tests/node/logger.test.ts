@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger } from '../../logger.js'
 import { describe, expect, test } from 'vitest'
+import { LogLevel, getLogger } from '../../logger.js'
 
 describe('logging', () => {
     test('set any valid log level', () => {
@@ -50,7 +50,9 @@ describe('logging', () => {
                 for (let j = 0; j < Math.max(i, 3); j++) {
                     let levelCased = level.toLowerCase()
                     levelCased =
-                        levelCased.slice(0, j) + levelCased.slice(j, j + 1).toUpperCase() + levelCased.slice(j + 1)
+                        levelCased.slice(0, j) +
+                        levelCased.slice(j, j + 1).toUpperCase() +
+                        levelCased.slice(j + 1)
                     logger.setLogLevel(level)
                     expect(logger.getLogLevel()).to.equal(level)
                     logger.setLogLevel(i === 0 ? 'info' : 'debug')

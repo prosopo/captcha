@@ -1,3 +1,22 @@
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { Keyring } from '@polkadot/keyring'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import type { SignerPayloadRaw } from '@polkadot/types/types'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { stringToU8a } from '@polkadot/util/string'
+import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
+import { type GetCaptchaResponse, ProviderApi } from '@prosopo/api'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import {
+    ProsopoApiError,
+    ProsopoContractError,
+    ProsopoDatasetError,
+    ProsopoEnvError,
+    ProsopoError,
+    trimProviderUrl,
+} from '@prosopo/common'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,29 +41,13 @@ import {
     type ProcaptchaEvents,
     type StoredEvents,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { type GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { Keyring } from '@polkadot/keyring'
-import type { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
-import {
-    ProsopoApiError,
-    ProsopoContractError,
-    ProsopoDatasetError,
-    ProsopoEnvError,
-    ProsopoError,
-    trimProviderUrl,
-} from '@prosopo/common'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import type { SignerPayloadRaw } from '@polkadot/types/types'
-import type { TCaptchaSubmitResult } from '../types/client.js'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at } from '@prosopo/util'
-import { randomAsHex } from '@polkadot/util-crypto/random'
+import type { TCaptchaSubmitResult } from '../types/client.js'
+import type {
+    ProcaptchaState,
+    ProcaptchaStateUpdateFn,
+} from '../types/manager.js'
 import { sleep } from '../utils/utils.js'
-import { stringToU8a } from '@polkadot/util/string'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -63,7 +66,10 @@ const defaultState = (): Partial<ProcaptchaState> => {
     }
 }
 
-const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaStateUpdateFn) => {
+const buildUpdateState = (
+    state: ProcaptchaState,
+    onStateUpdate: ProcaptchaStateUpdateFn
+) => {
     const updateCurrentState = (nextState: Partial<ProcaptchaState>) => {
         // mutate the current state. Note that this is in order of properties in the nextState object.
         // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
@@ -81,7 +87,9 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]
     if (!network) {
         throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', {
-            context: { error: `No network found for environment ${config.defaultEnvironment}` },
+            context: {
+                error: `No network found for environment ${config.defaultEnvironment}`,
+            },
         })
     }
     return network
@@ -106,7 +114,12 @@ export function Manager(
     const events: ProcaptchaEvents = Object.assign(
         {
             onError: alertError,
-            onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
+            onHuman: (output: {
+                user: string
+                dapp: string
+                commitmentId?: string
+                providerUrl?: string
+            }) => {
                 console.log('onHuman event triggered', output)
                 updateState({ sendData: !state.sendData })
             },
@@ -210,7 +223,10 @@ export function Manager(
             let contractIsHuman = false
             try {
                 contractIsHuman = (
-                    await contract.query.dappOperatorIsHumanUser(account.account.address, config.solutionThreshold)
+                    await contract.query.dappOperatorIsHumanUser(
+                        account.account.address,
+                        config.solutionThreshold
+                    )
                 ).value
                     .unwrap()
                     .unwrap()
@@ -237,27 +253,33 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(
-                        getDappAccount(),
-                        account.account.address,
-                        undefined,
-                        configOptional.challengeValidLength
-                    )
+                    const verifyDappUserResponse =
+                        await providerApi.verifyDappUser(
+                            getDappAccount(),
+                            account.account.address,
+                            undefined,
+                            configOptional.challengeValidLength
+                        )
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
                             [ApiParams.providerUrl]: providerUrlFromStorage,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
-                            [ApiParams.commitmentId]: verifyDappUserResponse.commitmentId,
-                            [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
+                            [ApiParams.commitmentId]:
+                                verifyDappUserResponse.commitmentId,
+                            [ApiParams.blockNumber]:
+                                verifyDappUserResponse.blockNumber,
                         })
                         setValidChallengeTimeout()
                         return
                     }
                 } catch (err) {
                     // if the provider is down, we should continue with the process of selecting a random provider
-                    console.error('Error contacting provider from storage', providerUrlFromStorage)
+                    console.error(
+                        'Error contacting provider from storage',
+                        providerUrlFromStorage
+                    )
                     // continue as if the provider was not in storage
                 }
             }
@@ -266,7 +288,9 @@ export function Manager(
                 data: stringToU8a('message'),
                 type: 'bytes',
             }
-            const signed = await account.extension?.signer?.signRaw?.(payload as unknown as SignerPayloadRaw)
+            const signed = await account.extension?.signer?.signRaw?.(
+                payload as unknown as SignerPayloadRaw
+            )
             console.log('Signature:', signed)
 
             // get a random provider
@@ -274,17 +298,26 @@ export function Manager(
                 contract.query.getRandomActiveProvider,
                 contract.query
             )(account.account.address, getDappAccount())
-            const blockNumber = Number.parseInt(getRandomProviderResponse.blockNumber.toString())
+            const blockNumber = Number.parseInt(
+                getRandomProviderResponse.blockNumber.toString()
+            )
             console.log('provider', getRandomProviderResponse)
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+            const providerUrl = trimProviderUrl(
+                getRandomProviderResponse.provider.url.toString()
+            )
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
             console.log('providerApi', providerApi)
             // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+            const captchaApi = await loadCaptchaApi(
+                contract,
+                getRandomProviderResponse,
+                providerApi
+            )
 
             console.log('captchaApi', captchaApi)
-            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
+            const challenge: GetCaptchaResponse =
+                await captchaApi.getCaptchaChallenge()
             console.log('challenge', challenge)
             if (challenge.captchas.length <= 0) {
                 throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
@@ -298,7 +331,11 @@ export function Manager(
                 console.log(`challenge expired after ${timeMillis}ms`)
                 events.onChallengeExpired()
                 // expired, disallow user's claim to be human
-                updateState({ isHuman: false, showModal: false, loading: false })
+                updateState({
+                    isHuman: false,
+                    showModal: false,
+                    loading: false,
+                })
             }, timeMillis)
 
             // update state with new challenge
@@ -321,7 +358,9 @@ export function Manager(
 
             if (!state.challenge) {
                 throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
-                    context: { error: 'Cannot submit, no Captcha found in state' },
+                    context: {
+                        error: 'Cannot submit, no Captcha found in state',
+                    },
                 })
             }
 
@@ -332,15 +371,16 @@ export function Manager(
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
-                const solution = at(state.solutions, index)
-                return {
-                    captchaId: captcha.captcha.captchaId,
-                    captchaContentId: captcha.captcha.captchaContentId,
-                    salt,
-                    solution,
-                }
-            })
+            const captchaSolution: CaptchaSolution[] =
+                state.challenge.captchas.map((captcha, index) => {
+                    const solution = at(state.solutions, index)
+                    return {
+                        captchaId: captcha.captcha.captchaId,
+                        captchaContentId: captcha.captcha.captchaContentId,
+                        salt,
+                        solution,
+                    }
+                })
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
@@ -356,13 +396,14 @@ export function Manager(
             const captchaApi = getCaptchaApi()
 
             // send the commitment to the provider
-            const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
-                signer,
-                challenge.requestHash,
-                first.captcha.datasetId,
-                captchaSolution,
-                salt
-            )
+            const submission: TCaptchaSubmitResult =
+                await captchaApi.submitCaptchaSolution(
+                    signer,
+                    challenge.requestHash,
+                    first.captcha.datasetId,
+                    captchaSolution,
+                    salt
+                )
 
             // mark as is human if solution has been approved
             const isHuman = submission[0].solutionApproved
@@ -379,7 +420,9 @@ export function Manager(
                 loading: false,
             })
             if (state.isHuman) {
-                const trimmedUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
+                const trimmedUrl = trimProviderUrl(
+                    captchaApi.provider.provider.url.toString()
+                )
                 // cache this provider for future use
                 storage.setProviderUrl(trimmedUrl)
                 events.onHuman({
@@ -416,7 +459,9 @@ export function Manager(
         }
         if (state.index >= state.challenge.captchas.length || state.index < 0) {
             throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
-                context: { error: 'Cannot select, index is out of range for this Captcha' },
+                context: {
+                    error: 'Cannot select, index is out of range for this Captcha',
+                },
             })
         }
         const index = state.index
@@ -445,7 +490,9 @@ export function Manager(
         }
         if (state.index + 1 >= state.challenge.captchas.length) {
             throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
-                context: { error: 'Cannot select, index is out of range for this Captcha' },
+                context: {
+                    error: 'Cannot select, index is out of range for this Captcha',
+                },
             })
         }
         console.log('proceeding to next round')
@@ -491,7 +538,8 @@ export function Manager(
 
     const setValidChallengeTimeout = () => {
         console.log('setting valid challenge timeout')
-        const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
+        const timeMillis: number =
+            configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
         const successfullChallengeTimeout = setTimeout(() => {
             console.log(`valid challenge expired after ${timeMillis}ms`)
 
@@ -512,7 +560,9 @@ export function Manager(
 
     const getCaptchaApi = () => {
         if (!state.captchaApi) {
-            throw new ProsopoApiError('API.UNKNOWN', { context: { error: 'Captcha api not set', state } })
+            throw new ProsopoApiError('API.UNKNOWN', {
+                context: { error: 'Captcha api not set', state },
+            })
         }
         return state.captchaApi
     }
@@ -525,7 +575,9 @@ export function Manager(
         // check if account has been provided in config (doesn't matter in web2 mode)
         if (!config.web2 && !config.userAccountAddress) {
             throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', {
-                context: { error: 'Account address has not been set for web3 mode' },
+                context: {
+                    error: 'Account address has not been set for web3 mode',
+                },
             })
         }
 
@@ -543,7 +595,9 @@ export function Manager(
 
     const getAccount = () => {
         if (!state.account) {
-            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', { context: { error: 'Account not loaded' } })
+            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', {
+                context: { error: 'Account not loaded' },
+            })
         }
         const account: Account = state.account
         return account
@@ -560,7 +614,9 @@ export function Manager(
 
     const getBlockNumber = () => {
         if (!state.blockNumber) {
-            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', {
+                context: { error: 'Block number not found' },
+            })
         }
         const blockNumber: number = state.blockNumber
         return blockNumber
@@ -572,10 +628,16 @@ export function Manager(
     const loadContract = async (): Promise<ProsopoCaptchaContract> => {
         const config = getConfig()
         const network = getNetwork(config)
-        const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint), initWasm: false })
+        const api = await ApiPromise.create({
+            provider: new WsProvider(network.endpoint),
+            initWasm: false,
+        })
         // TODO create a shared keyring that's stored somewhere
         const type = 'sr25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+        const keyring = new Keyring({
+            type,
+            ss58Format: api.registry.chainSS58,
+        })
         return new ProsopoCaptchaContract(
             api,
             JSON.parse(abiJson),
@@ -598,11 +660,15 @@ export function Manager(
                 contract.query.getRandomActiveProvider,
                 contract.query
             )(getAccount().account.address, getDappAccount())
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+            const providerUrl = trimProviderUrl(
+                getRandomProviderResponse.provider.url.toString()
+            )
             providerApi = await loadProviderApi(providerUrl)
         }
 
-        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
+        const providerUrl =
+            storage.getProviderUrl() ||
+            state.captchaApi?.provider.provider.url.toString()
         if (!providerUrl) {
             return
         }

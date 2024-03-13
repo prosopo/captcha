@@ -113,7 +113,9 @@ export class UrlConverter {
         }
         const symbols = this.getSymbols()
         if (symbols.length !== new Set(symbols).size) {
-            throw new ProsopoError('DEVELOPER.GENERAL', { context: { error: 'Symbols must be unique' } })
+            throw new ProsopoError('DEVELOPER.GENERAL', {
+                context: { error: 'Symbols must be unique' },
+            })
         }
     }
 
@@ -121,7 +123,9 @@ export class UrlConverter {
         const num = this.symbolToNumNull(symb)
         if (num === undefined) {
             throw new ProsopoError('DEVELOPER.GENERAL', {
-                context: { error: `Could not find number for symbol '${symb}'` },
+                context: {
+                    error: `Could not find number for symbol '${symb}'`,
+                },
             })
         }
         return num
@@ -170,7 +174,9 @@ export class UrlConverter {
             // check if couldn't find matching symbol
             if (num === undefined) {
                 throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: `Could not find symbol at '${url}' of '${origUrl}'` },
+                    context: {
+                        error: `Could not find symbol at '${url}' of '${origUrl}'`,
+                    },
                 })
             }
             // record the number of the symbol and slice the symbol from the url
@@ -198,7 +204,9 @@ export class UrlConverter {
             const num = nums[numIndex]
             if (num === undefined) {
                 throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: `Could not find number at index ${numIndex} of '${nums}'` },
+                    context: {
+                        error: `Could not find number at index ${numIndex} of '${nums}'`,
+                    },
                 })
             }
             const byteIndex = (bitCount / this.byteNBits) | 0
@@ -242,7 +250,9 @@ export class UrlConverter {
             const byte = bytes[byteIndex]
             if (byte === undefined) {
                 throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: `Could not find byte at index ${byteIndex} of '${bytes}'` },
+                    context: {
+                        error: `Could not find byte at index ${byteIndex} of '${bytes}'`,
+                    },
                 })
             }
             const usedBitsInByte = bitCount % this.byteNBits
@@ -270,7 +280,10 @@ export class UrlConverter {
 
     private bitSlice(num: number, startBit: number, lenBit: number) {
         const truncedLeft = this.bitTruncLeft(num, startBit)
-        const truncedLen = this.bitTruncRight(truncedLeft, Math.max(0, this.byteNBits - lenBit - startBit))
+        const truncedLen = this.bitTruncRight(
+            truncedLeft,
+            Math.max(0, this.byteNBits - lenBit - startBit)
+        )
         return truncedLen
     }
 

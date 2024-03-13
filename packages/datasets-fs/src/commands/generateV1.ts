@@ -1,13 +1,20 @@
-import * as z from 'zod'
-import { CaptchaTypes, type CaptchaWithoutId, type Captchas, CaptchasContainerSchema, type Item, type RawSolution } from '@prosopo/types'
-import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
-import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
-import { at, get } from '@prosopo/util'
+import fs from 'node:fs'
 import { blake2AsHex } from '@polkadot/util-crypto/blake2'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
+import {
+    CaptchaTypes,
+    type CaptchaWithoutId,
+    type Captchas,
+    CaptchasContainerSchema,
+    type Item,
+    type RawSolution,
+} from '@prosopo/types'
+import { at, get } from '@prosopo/util'
 import { lodash } from '@prosopo/util/lodash'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
-import fs from 'node:fs'
+import * as z from 'zod'
+import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
 
 export const ArgsSchema = GenerateArgsSchema.extend({
     solved: z.number().optional(),
@@ -63,9 +70,12 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             bar.increment()
 
             if (this.targets.length <= 1) {
-                throw new ProsopoDatasetError(new Error('not enough different labels in labelled data'), {
-                    translationKey: 'DATASET.NOT_ENOUGH_LABELS',
-                })
+                throw new ProsopoDatasetError(
+                    new Error('not enough different labels in labelled data'),
+                    {
+                        translationKey: 'DATASET.NOT_ENOUGH_LABELS',
+                    }
+                )
             }
 
             // uniformly sample targets
@@ -78,24 +88,37 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             const nIncorrect = size - nCorrect
 
             const targetItems: Item[] = get(this.labelToImages, target)
-            const notTargetItems: Item[] = notTargets.flatMap((notTarget) => get(this.labelToImages, notTarget))
+            const notTargetItems: Item[] = notTargets.flatMap((notTarget) =>
+                get(this.labelToImages, notTarget)
+            )
 
             if (targetItems.length < nCorrect) {
-                throw new ProsopoEnvError(new Error(`not enough images for target (${target})`), {
-                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
-                })
+                throw new ProsopoEnvError(
+                    new Error(`not enough images for target (${target})`),
+                    {
+                        translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+                    }
+                )
             }
             if (notTargetItems.length < nIncorrect) {
-                throw new ProsopoDatasetError(new Error(`not enough non-matching images for target (${target})`), {
-                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
-                })
+                throw new ProsopoDatasetError(
+                    new Error(
+                        `not enough non-matching images for target (${target})`
+                    ),
+                    {
+                        translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+                    }
+                )
             }
 
             // get the correct items
             const correctItems: Item[] = _.sampleSize(targetItems, nCorrect)
 
             // get the incorrect items
-            const incorrectItems: Item[] = _.sampleSize(notTargetItems, nIncorrect)
+            const incorrectItems: Item[] = _.sampleSize(
+                notTargetItems,
+                nIncorrect
+            )
 
             let items: Item[] = [...correctItems, ...incorrectItems]
             let indices: number[] = [...Array(items.length).keys()]
@@ -135,7 +158,11 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         return solvedCaptchas
     }
 
-    private generateUnsolved(unsolved: number, size: number, bar: cliProgress.SingleBar) {
+    private generateUnsolved(
+        unsolved: number,
+        size: number,
+        bar: cliProgress.SingleBar
+    ) {
         const _ = lodash()
         // this.logger.info(`Generating ${unsolved} unsolved captchas...`)
         // create a new progress bar instance and use shades_classic theme
@@ -144,16 +171,24 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         for (let i = 0; i < unsolved; i++) {
             bar.increment()
             if (this.unlabelled.length <= size) {
-                throw new ProsopoDatasetError(new Error('unlabelled map file does not contain enough data'), {
-                    translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
-                })
+                throw new ProsopoDatasetError(
+                    new Error(
+                        'unlabelled map file does not contain enough data'
+                    ),
+                    {
+                        translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+                    }
+                )
             }
             // pick a random label to be the target
             // note that these are potentially different to the labelled data labels
             if (this.labels.length <= 0) {
-                throw new ProsopoDatasetError(new Error('no labels found for unlabelled data'), {
-                    translationKey: 'DATASET.NOT_ENOUGH_LABELS',
-                })
+                throw new ProsopoDatasetError(
+                    new Error('no labels found for unlabelled data'),
+                    {
+                        translationKey: 'DATASET.NOT_ENOUGH_LABELS',
+                    }
+                )
             }
             const index = _.random(0, this.labels.length - 1)
             const target = at(this.labels, index)
@@ -198,11 +233,20 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         const unsolved: number = args.unsolved || 0
 
         // create a new progress bar instance and use shades_classic theme
-        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+        const bar = new cliProgress.SingleBar(
+            {},
+            cliProgress.Presets.shades_classic
+        )
 
         // this.logger.info(`Generating ${solved} solved captchas...`)
         bar.start(solved + unsolved, 0)
-        const solvedCaptchas = this.generateSolved(solved, size, minCorrect, maxCorrect, bar)
+        const solvedCaptchas = this.generateSolved(
+            solved,
+            size,
+            minCorrect,
+            maxCorrect,
+            bar
+        )
         const unsolvedCaptchas = this.generateUnsolved(unsolved, size, bar)
         bar.stop()
         // write to file
@@ -214,7 +258,9 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         // verify the output
         CaptchasContainerSchema.parse(output)
 
-        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), {
+            recursive: true,
+        })
         fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
     }
 }

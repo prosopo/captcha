@@ -1,9 +1,12 @@
-import type * as z from 'zod'
-import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { LabelledDataSchema, type LabelledItem } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { lodash } from '@prosopo/util/lodash'
 import fs from 'node:fs'
+import { ProsopoDatasetError } from '@prosopo/common'
+import { LabelledDataSchema, type LabelledItem } from '@prosopo/types'
+import { lodash } from '@prosopo/util/lodash'
+import type * as z from 'zod'
+import {
+    InputOutputArgsSchema,
+    InputOutputCliCommand,
+} from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
@@ -30,13 +33,18 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
 
         const file = args.input
         if (!fs.existsSync(file)) {
-            throw new ProsopoDatasetError(new Error(`file does not exist: ${file}`), {
-                translationKey: 'FS.FILE_NOT_FOUND',
-            })
+            throw new ProsopoDatasetError(
+                new Error(`file does not exist: ${file}`),
+                {
+                    translationKey: 'FS.FILE_NOT_FOUND',
+                }
+            )
         }
 
         const labelled: LabelledItem[] = file
-            ? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(file, 'utf8'))).items
+            ? LabelledDataSchema.parse(
+                  JSON.parse(fs.readFileSync(file, 'utf8'))
+              ).items
             : []
 
         const labels = new Set<string>()
@@ -46,8 +54,13 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
         const labelArray = Array.from(labels)
         labelArray.sort()
 
-        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
-        fs.writeFileSync(args.output, JSON.stringify({ labels: labelArray }, null, 4))
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), {
+            recursive: true,
+        })
+        fs.writeFileSync(
+            args.output,
+            JSON.stringify({ labels: labelArray }, null, 4)
+        )
     }
 
     public override getDescription(): string {

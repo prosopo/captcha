@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at, get, merge, permutations } from '../util.js'
-import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
     describe('merge', () => {
@@ -71,20 +71,30 @@ describe('util', () => {
             ])
         })
         test('array in object', () => {
-            expect(merge({ a: [0, 1, 2] }, { a: [3, 4] })).to.deep.equal({ a: [3, 4, 2] })
+            expect(merge({ a: [0, 1, 2] }, { a: [3, 4] })).to.deep.equal({
+                a: [3, 4, 2],
+            })
         })
         test('array in object atomic', () => {
-            expect(merge({ a: [0, 1, 2] }, { a: [3, 4] }, { atomicArrays: true })).to.deep.equal({ a: [3, 4] })
+            expect(
+                merge({ a: [0, 1, 2] }, { a: [3, 4] }, { atomicArrays: true })
+            ).to.deep.equal({ a: [3, 4] })
         })
         test('array in object in array', () => {
-            expect(merge([{ a: [0, 1, 2] }, { b: [3, 4, 5] }], [{ a: [6, 7] }, { b: [8, 9] }])).to.deep.equal([
-                { a: [6, 7, 2] },
-                { b: [8, 9, 5] },
-            ])
+            expect(
+                merge(
+                    [{ a: [0, 1, 2] }, { b: [3, 4, 5] }],
+                    [{ a: [6, 7] }, { b: [8, 9] }]
+                )
+            ).to.deep.equal([{ a: [6, 7, 2] }, { b: [8, 9, 5] }])
         })
         test('array in object in array atomic', () => {
             expect(
-                merge([{ a: [0, 1, 2] }, { b: [3, 4, 5] }], [{ a: [6, 7] }, { b: [8, 9] }], { atomicArrays: true })
+                merge(
+                    [{ a: [0, 1, 2] }, { b: [3, 4, 5] }],
+                    [{ a: [6, 7] }, { b: [8, 9] }],
+                    { atomicArrays: true }
+                )
             ).to.deep.equal([{ a: [6, 7] }, { b: [8, 9] }])
         })
 
@@ -107,13 +117,19 @@ describe('util', () => {
             expect(merge({ a: { b: 1 } }, { a: [1] })).to.deep.equal({ a: [1] })
         })
         test('object replaces primitive', () => {
-            expect(merge({ a: 1 }, { a: { b: 1 } })).to.deep.equal({ a: { b: 1 } })
+            expect(merge({ a: 1 }, { a: { b: 1 } })).to.deep.equal({
+                a: { b: 1 },
+            })
         })
         test('object replaces array', () => {
-            expect(merge({ a: [1] }, { a: { b: 1 } })).to.deep.equal({ a: { b: 1 } })
+            expect(merge({ a: [1] }, { a: { b: 1 } })).to.deep.equal({
+                a: { b: 1 },
+            })
         })
         test('object replaces object', () => {
-            expect(merge({ a: { b: 1 } }, { a: { c: 1 } })).to.deep.equal({ a: { b: 1, c: 1 } })
+            expect(merge({ a: { b: 1 } }, { a: { c: 1 } })).to.deep.equal({
+                a: { b: 1, c: 1 },
+            })
         })
     })
 
@@ -138,8 +154,12 @@ describe('util', () => {
             const a10: string = at('abc', 0, { optional: false })
             const a11: string | undefined = at('abc', 0, { optional: true })
             const a12: undefined = at([undefined, undefined, undefined], 0)
-            const a13: undefined = at([undefined, undefined, undefined], 0, { optional: true })
-            const a14: undefined = at([undefined, undefined, undefined], 0, { optional: false })
+            const a13: undefined = at([undefined, undefined, undefined], 0, {
+                optional: true,
+            })
+            const a14: undefined = at([undefined, undefined, undefined], 0, {
+                optional: false,
+            })
         })
 
         test('compatible with string', () => {
@@ -195,9 +215,15 @@ describe('util', () => {
         })
 
         test('allow undefined in bounds', () => {
-            expect(at([undefined, undefined, undefined], 0, { optional: true })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], 1, { optional: true })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], 2, { optional: true })).to.equal(undefined)
+            expect(
+                at([undefined, undefined, undefined], 0, { optional: true })
+            ).to.equal(undefined)
+            expect(
+                at([undefined, undefined, undefined], 1, { optional: true })
+            ).to.equal(undefined)
+            expect(
+                at([undefined, undefined, undefined], 2, { optional: true })
+            ).to.equal(undefined)
         })
     })
 
@@ -208,7 +234,11 @@ describe('util', () => {
             const v2: number | undefined = get({ a: 1 }, 'a', false)
             const v3: number = get({ a: 1 }, 'a', true)
             const v4: number | undefined = get({ a: 1, b: undefined }, 'a')
-            const v5: number | undefined = get({ a: 1, b: undefined }, 'a', false)
+            const v5: number | undefined = get(
+                { a: 1, b: undefined },
+                'a',
+                false
+            )
             // cast from any
             const v6: number = get(JSON.parse('{"a": 1}') as any, 'a')
             // cast from unknown
@@ -238,7 +268,9 @@ describe('util', () => {
         })
 
         test('handles empty array with empty set', () => {
-            expect([...permutations([], { includeEmpty: true })]).to.deep.equal([[]])
+            expect([...permutations([], { includeEmpty: true })]).to.deep.equal(
+                [[]]
+            )
         })
 
         test('permutes correctly using same size bins', () => {

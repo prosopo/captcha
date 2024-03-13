@@ -1,3 +1,6 @@
+import { web3Enable } from '@polkadot/extension-dapp'
+import type { InjectedExtension } from '@polkadot/extension-inject/types'
+import { ProsopoError } from '@prosopo/common'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,19 +16,20 @@
 // limitations under the License.
 import type { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { Extension } from './Extension.js'
-import type { InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProsopoError } from '@prosopo/common'
-import { web3Enable } from '@polkadot/extension-dapp'
 
 /**
  * Class for interfacing with web3 accounts.
  */
 export class ExtensionWeb3 extends Extension {
-    public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
+    public async getAccount(
+        config: ProcaptchaClientConfigOutput
+    ): Promise<Account> {
         const { dappName, userAccountAddress: address } = config
 
         if (!address) {
-            throw new ProsopoError('WIDGET.NO_ACCOUNTS_FOUND', { context: { error: 'No account address provided' } })
+            throw new ProsopoError('WIDGET.NO_ACCOUNTS_FOUND', {
+                context: { error: 'No account address provided' },
+            })
         }
 
         // enable access to all extensions
@@ -37,7 +41,9 @@ export class ExtensionWeb3 extends Extension {
         // search through all extensions for the one that has the account
         for (const extension of extensions) {
             const accounts = await extension.accounts.get()
-            const account = accounts.find((account) => account.address === address)
+            const account = accounts.find(
+                (account) => account.address === address
+            )
             if (account) {
                 return { account, extension }
             }

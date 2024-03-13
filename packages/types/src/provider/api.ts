@@ -1,3 +1,5 @@
+import type { Provider } from '@prosopo/captcha-contract/types-returns'
+import { array, number, object, string, type infer as zInfer } from 'zod'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +13,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaSolutionSchema, type CaptchaWithProof } from '../datasets/index.js'
-import type { Provider } from '@prosopo/captcha-contract/types-returns'
-import { array, number, object, string, type infer as zInfer } from 'zod'
+import {
+    CaptchaSolutionSchema,
+    type CaptchaWithProof,
+} from '../datasets/index.js'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',

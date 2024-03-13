@@ -15,7 +15,10 @@ import type { DefaultNamespace, Namespace, TFuncReturn } from 'react-i18next'
 import type { TranslationKey } from './utils.js'
 
 declare module 'i18next' {
-    interface TFunction<N extends Namespace = DefaultNamespace, TKPrefix = undefined> {
+    interface TFunction<
+        N extends Namespace = DefaultNamespace,
+        TKPrefix = undefined,
+    > {
         <
             TKeys extends TranslationKey,
             TDefaultResult extends TFunctionResult | React.ReactNode = string,

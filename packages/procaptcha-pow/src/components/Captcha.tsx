@@ -1,3 +1,7 @@
+import type {
+    ProcaptchaClientConfigInput,
+    ProcaptchaOutput,
+} from '@prosopo/types'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,9 +28,8 @@ import {
     darkTheme,
     lightTheme,
 } from '@prosopo/web-components'
-import { Manager } from '../Services/Manager.js'
-import type { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
 import { useMemo, useState } from 'react'
+import { Manager } from '../Services/Manager.js'
 
 export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
 
@@ -56,7 +59,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const [loading, setLoading] = useState(false)
     const darkMode = props.config.theme
     const themeColor = darkMode ? 'light' : 'dark'
-    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
+    const theme = useMemo(
+        () => (darkMode === 'light' ? lightTheme : darkTheme),
+        [darkMode]
+    )
 
     const handlePowCaptcha = async () => {
         setLoading(true)
@@ -71,7 +77,13 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
     return (
         <div>
-            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+            <div
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    overflowX: 'auto',
+                }}
+            >
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
                         <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
@@ -80,7 +92,8 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 style={{
                                     padding: '2px',
                                     border: '1px solid',
-                                    backgroundColor: theme.palette.background.default,
+                                    backgroundColor:
+                                        theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
                                     borderRadius: '4px',
                                     display: 'flex',
@@ -91,7 +104,12 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                     overflow: 'hidden',
                                 }}
                             >
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                                <div
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <div
                                         style={{
                                             display: 'flex',
@@ -116,13 +134,23 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                             >
                                                 <div style={{ flex: 1 }}>
                                                     {loading ? (
-                                                        <LoadingSpinner themeColor={themeColor} />
+                                                        <LoadingSpinner
+                                                            themeColor={
+                                                                themeColor
+                                                            }
+                                                        />
                                                     ) : (
                                                         <Checkbox
                                                             checked={checked}
-                                                            onChange={handlePowCaptcha}
-                                                            themeColor={themeColor}
-                                                            labelText={'I am human'}
+                                                            onChange={
+                                                                handlePowCaptcha
+                                                            }
+                                                            themeColor={
+                                                                themeColor
+                                                            }
+                                                            labelText={
+                                                                'I am human'
+                                                            }
                                                         />
                                                     )}
                                                 </div>
@@ -131,8 +159,18 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
+                                <div
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
+                                    <a
+                                        href={WIDGET_URL}
+                                        target='_blank'
+                                        aria-label={WIDGET_URL_TEXT}
+                                        rel='noreferrer'
+                                    >
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor} />
                                         </div>

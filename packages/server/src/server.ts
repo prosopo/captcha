@@ -12,7 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { Keyring } from '@polkadot/keyring'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { BN } from '@polkadot/util'
+import { ProviderApi } from '@prosopo/api'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import {
+    type LogLevel,
+    type Logger,
+    ProsopoEnvError,
+    getLogger,
+    trimProviderUrl,
+} from '@prosopo/common'
+import {
+    ProsopoCaptchaContract,
+    getExpectedBlockTime,
+    getZeroAddress,
+} from '@prosopo/contract'
 import {
     type ContractAbi,
     type NetworkConfig,
@@ -20,14 +38,6 @@ import {
     type ProcaptchaOutput,
     type ProsopoServerConfigOutput,
 } from '@prosopo/types'
-import { Keyring } from '@polkadot/keyring'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { type LogLevel, type Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
-import { ProviderApi } from '@prosopo/api'
-import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
 export class ProsopoServer {
@@ -55,7 +65,10 @@ export class ProsopoServer {
         this.prosopoContractAddress = this.network.contract.address
         this.dappContractAddress = this.config.account.address
         this.contractName = this.network.contract.name
-        this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
+        this.logger = getLogger(
+            this.config.logLevel as unknown as LogLevel,
+            '@prosopo/server'
+        )
         this.keyring = new Keyring({
             type: 'sr25519', // TODO get this from the chain
         })
@@ -63,7 +76,11 @@ export class ProsopoServer {
     }
 
     public async getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.network, providerUrl, this.getDappContractAddress())
+        return new ProviderApi(
+            this.network,
+            providerUrl,
+            this.getDappContractAddress()
+        )
     }
 
     public getDappContractAddress(): string {
@@ -75,18 +92,26 @@ export class ProsopoServer {
 
     async isReady() {
         try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+            this.api = await ApiPromise.create({
+                provider: this.wsProvider,
+                initWasm: false,
+            })
             await this.getSigner()
             await this.getContractApi()
         } catch (error) {
-            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error } })
+            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', {
+                context: { error },
+            })
         }
     }
 
     async getSigner(): Promise<void> {
         if (this.pair) {
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+                this.api = await ApiPromise.create({
+                    provider: this.wsProvider,
+                    initWasm: false,
+                })
             }
             await this.api.isReadyOrError
             try {
@@ -113,9 +138,13 @@ export class ProsopoServer {
         return this.contract
     }
 
-    async getViableHistoricBlockCount(maxVerifiedTime?: number): Promise<number> {
+    async getViableHistoricBlockCount(
+        maxVerifiedTime?: number
+    ): Promise<number> {
         const expectedBlockTime = getExpectedBlockTime(this.getApi())
-        return new BN(maxVerifiedTime || 60000).div(expectedBlockTime).toNumber()
+        return new BN(maxVerifiedTime || 60000)
+            .div(expectedBlockTime)
+            .toNumber()
     }
 
     /**
@@ -142,21 +171,30 @@ export class ProsopoServer {
         if (blockNumber) {
             blocksToCheck = [blockNumber]
         } else {
-            const numberOfHistoricBlocksToCheck = await this.getViableHistoricBlockCount(maxVerifiedTime)
-            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
+            const numberOfHistoricBlocksToCheck =
+                await this.getViableHistoricBlockCount(maxVerifiedTime)
+            const currentBlockNumber = (
+                await this.getApi().rpc.chain.getBlock()
+            ).block.header.number.toNumber()
             blocksToCheck = Array.from(
                 { length: numberOfHistoricBlocksToCheck },
                 (_, index) => currentBlockNumber - index
             )
         }
         while (blocksToCheck.length > 0) {
-            const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
-            const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
-                block,
-                'getRandomActiveProvider',
-                [user, dapp]
+            const block = await this.getApi().rpc.chain.getBlockHash(
+                blocksToCheck.pop() as number
             )
-            if (getRandomProviderResponse.provider.url.toString() === providerUrl) {
+            const getRandomProviderResponse =
+                await this.getContract().queryAtBlock<RandomProvider>(
+                    block,
+                    'getRandomActiveProvider',
+                    [user, dapp]
+                )
+            if (
+                getRandomProviderResponse.provider.url.toString() ===
+                providerUrl
+            ) {
                 return getRandomProviderResponse.provider
             }
         }
@@ -169,18 +207,29 @@ export class ProsopoServer {
      * @param maxVerifiedTime Maximum time in milliseconds since the blockNumber
      * @returns
      */
-    public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
+    public async isVerified(
+        payload: ProcaptchaOutput,
+        maxVerifiedTime?: number
+    ): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
         const contractApi = await this.getContractApi()
 
-        const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
+        const randomProvider = await this.checkRandomProvider(
+            user,
+            dapp,
+            providerUrl,
+            blockNumber,
+            maxVerifiedTime
+        )
 
         if (!randomProvider) {
             // We have not been able to repeat the provider selection
             return false
         }
 
-        const providerUrlTrimmed = trimProviderUrl(randomProvider.url.toString())
+        const providerUrlTrimmed = trimProviderUrl(
+            randomProvider.url.toString()
+        )
 
         if (providerUrlTrimmed !== providerUrl) {
             // An incorrect provider url was provided in the payload
@@ -189,22 +238,38 @@ export class ProsopoServer {
 
         if (providerUrl) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
+            const result = await providerApi.verifyDappUser(
+                dapp,
+                user,
+                commitmentId,
+                maxVerifiedTime
+            )
             return result.solutionApproved
         }
-            // Check the time since the last correct captcha is less than the maxVerifiedTime
-            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
-            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-                .unwrap()
-                .unwrap()
-                .before.valueOf()
-            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
-                return false
-            }
+        // Check the time since the last correct captcha is less than the maxVerifiedTime
+        const blockTime =
+            contractApi.api.consts.babe.expectedBlockTime.toNumber()
+        const blocksSinceLastCorrectCaptcha = (
+            await contractApi.query.dappOperatorLastCorrectCaptcha(user)
+        ).value
+            .unwrap()
+            .unwrap()
+            .before.valueOf()
+        if (
+            maxVerifiedTime &&
+            blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime
+        ) {
+            return false
+        }
 
-            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-                .unwrap()
-                .unwrap()
+        return (
+            await contractApi.query.dappOperatorIsHumanUser(
+                user,
+                this.config.solutionThreshold
+            )
+        ).value
+            .unwrap()
+            .unwrap()
     }
 
     public async getContractApi(): Promise<ProsopoCaptchaContract> {

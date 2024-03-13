@@ -1,3 +1,4 @@
+import type { u32 } from '@polkadot/types-codec/primitive'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from '@polkadot/types/interfaces/runtime'
-import { array, nativeEnum, number, object, string, undefined, union, type infer as zInfer } from 'zod'
-import type { u32 } from '@polkadot/types-codec/primitive'
+import {
+    array,
+    nativeEnum,
+    number,
+    object,
+    string,
+    undefined,
+    union,
+    type infer as zInfer,
+} from 'zod'
 
 export enum CaptchaTypes {
     SelectAll = 'SelectAll',
@@ -149,13 +158,16 @@ export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
     unlabelled: string().array().optional(),
 })
 
-export const SelectAllCaptchaSchemaWithNumericSolution = SelectAllCaptchaSchema.extend({
-    solution: number().array().optional(),
-    unlabelled: number().array().optional(),
-})
+export const SelectAllCaptchaSchemaWithNumericSolution =
+    SelectAllCaptchaSchema.extend({
+        solution: number().array().optional(),
+        unlabelled: number().array().optional(),
+    })
 
 export const CaptchasSchema = array(SelectAllCaptchaSchemaRaw)
-export const CaptchasWithNumericSolutionSchema = array(SelectAllCaptchaSchemaWithNumericSolution)
+export const CaptchasWithNumericSolutionSchema = array(
+    SelectAllCaptchaSchemaWithNumericSolution
+)
 
 export const CaptchaSolutionSchema = object({
     captchaId: string(),

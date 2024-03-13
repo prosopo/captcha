@@ -1,3 +1,5 @@
+import type { Hash } from '@prosopo/captcha-contract/types-arguments'
+import { array, nativeEnum, number, object, string } from 'zod'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +21,6 @@ import {
     CaptchasWithNumericSolutionSchema,
     SelectAllCaptchaSchema,
 } from './captcha.js'
-import type { Hash } from '@prosopo/captcha-contract/types-arguments'
-import { array, nativeEnum, number, object, string } from 'zod'
 
 export type DatasetBase = {
     datasetId?: Hash

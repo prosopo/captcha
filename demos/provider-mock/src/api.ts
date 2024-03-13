@@ -1,3 +1,4 @@
+import { ProsopoApiError } from '@prosopo/common'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPaths, VerifySolutionBody } from '@prosopo/types'
-import { ProsopoApiError } from '@prosopo/common'
 import type { VerifySolutionBodyType } from '@prosopo/types'
 import express, { type Router } from 'express'
 
@@ -44,13 +44,15 @@ export function prosopoRouter(): Router {
         }
         try {
             const testCommitmentId = '0x123456789test'
-            const testAccount = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+            const testAccount =
+                '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
             const testDapp = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
             let statusMessage = 'API.USER_NOT_VERIFIED'
             let approved = false
             if (
                 (parsed.user && parsed.user === testAccount) ||
-                (parsed.commitmentId && parsed.commitmentId === testCommitmentId) ||
+                (parsed.commitmentId &&
+                    parsed.commitmentId === testCommitmentId) ||
                 (parsed.dapp && parsed.dapp === testDapp)
             ) {
                 approved = true
@@ -67,7 +69,11 @@ export function prosopoRouter(): Router {
                 solutionApproved: false,
             })
         } catch (err) {
-            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
+            return next(
+                new ProsopoApiError('API.UNKNOWN', {
+                    context: { error: err, errorCode: 500 },
+                })
+            )
         }
     })
 

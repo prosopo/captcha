@@ -1,3 +1,10 @@
+import {
+    Manager,
+    type ProcaptchaState,
+    type ProcaptchaStateUpdateFn,
+    type ProsopoCaptchaApi,
+    type TCaptchaSubmitResult,
+} from '@prosopo/procaptcha'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +19,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
-import type { Account, GetCaptchaResponse, ProcaptchaCallbacks, ProcaptchaClientConfigInput } from '@prosopo/types'
+import type {
+    Account,
+    GetCaptchaResponse,
+    ProcaptchaCallbacks,
+    ProcaptchaClientConfigInput,
+} from '@prosopo/types'
 import {
     Checkbox,
     ContainerDiv,
@@ -26,17 +38,10 @@ import {
     lightTheme,
 } from '@prosopo/web-components'
 import { Logo } from '@prosopo/web-components'
-import {
-    Manager,
-    type ProcaptchaState,
-    type ProcaptchaStateUpdateFn,
-    type ProsopoCaptchaApi,
-    type TCaptchaSubmitResult,
-} from '@prosopo/procaptcha'
 import { useMemo, useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-import Collector from './collector.js'
 import Modal from './Modal.js'
+import Collector from './collector.js'
 
 /**
  * The props for the Procaptcha component.
@@ -66,18 +71,29 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [isHuman, setIsHuman] = useState(false)
     const [index, setIndex] = useState(0)
     const [solutions, setSolutions] = useState([] as string[][])
-    const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
+    const [captchaApi, setCaptchaApi] = useRefAsState<
+        ProsopoCaptchaApi | undefined
+    >(undefined)
     const [showModal, setShowModal] = useState(false)
-    const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
-    const [loading, setLoading] = useState(false)
-    const [account, setAccount] = useState<Account | undefined>(undefined)
-    const [dappAccount, setDappAccount] = useState<string | undefined>(undefined)
-    const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
-    const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
-    const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
-    const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
+    const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(
         undefined
     )
+    const [loading, setLoading] = useState(false)
+    const [account, setAccount] = useState<Account | undefined>(undefined)
+    const [dappAccount, setDappAccount] = useState<string | undefined>(
+        undefined
+    )
+    const [submission, setSubmission] = useRefAsState<
+        TCaptchaSubmitResult | undefined
+    >(undefined)
+    const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(
+        undefined
+    )
+    const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(
+        undefined
+    )
+    const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] =
+        useRefAsState<NodeJS.Timeout | undefined>(undefined)
     const [sendData, setSendData] = useState(false)
     return [
         // the state
@@ -104,18 +120,28 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             if (nextState.index !== undefined) setIndex(nextState.index)
             // force a copy of the array to ensure a re-render
             // nutshell: react doesn't look inside an array for changes, hence changes to the array need to result in a fresh array
-            if (nextState.solutions !== undefined) setSolutions(nextState.solutions.slice())
-            if (nextState.captchaApi !== undefined) setCaptchaApi(nextState.captchaApi)
-            if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
-            if (nextState.challenge !== undefined) setChallenge(nextState.challenge)
+            if (nextState.solutions !== undefined)
+                setSolutions(nextState.solutions.slice())
+            if (nextState.captchaApi !== undefined)
+                setCaptchaApi(nextState.captchaApi)
+            if (nextState.showModal !== undefined)
+                setShowModal(nextState.showModal)
+            if (nextState.challenge !== undefined)
+                setChallenge(nextState.challenge)
             if (nextState.loading !== undefined) setLoading(nextState.loading)
-            if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
-            if (nextState.dappAccount !== undefined) setDappAccount(nextState.dappAccount)
-            if (nextState.submission !== undefined) setSubmission(nextState.submission)
+            if (nextState.showModal !== undefined)
+                setShowModal(nextState.showModal)
+            if (nextState.dappAccount !== undefined)
+                setDappAccount(nextState.dappAccount)
+            if (nextState.submission !== undefined)
+                setSubmission(nextState.submission)
             if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
-            if (nextState.successfullChallengeTimeout !== undefined) setSuccessfullChallengeTimeout(nextState.timeout)
-            if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
-            if (nextState.sendData !== undefined) setSendData(nextState.sendData)
+            if (nextState.successfullChallengeTimeout !== undefined)
+                setSuccessfullChallengeTimeout(nextState.timeout)
+            if (nextState.blockNumber !== undefined)
+                setBlockNumber(nextState.blockNumber)
+            if (nextState.sendData !== undefined)
+                setSendData(nextState.sendData)
         },
     ]
 }
@@ -126,11 +152,20 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     const manager = Manager(config, state, updateState, callbacks)
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
+    const theme = useMemo(
+        () => (props.config.theme === 'light' ? lightTheme : darkTheme),
+        [props.config.theme]
+    )
 
     return (
         <div>
-            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+            <div
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    overflowX: 'auto',
+                }}
+            >
                 <Modal show={state.showModal}>
                     {state.challenge ? (
                         <CaptchaComponent
@@ -155,7 +190,8 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                 style={{
                                     padding: '2px',
                                     border: '1px solid',
-                                    backgroundColor: theme.palette.background.default,
+                                    backgroundColor:
+                                        theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
                                     borderRadius: '8px',
                                     display: 'flex',
@@ -166,7 +202,12 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     overflow: 'hidden',
                                 }}
                             >
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                                <div
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <div
                                         style={{
                                             alignItems: 'center',
@@ -184,30 +225,50 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                         >
                                             <div
                                                 style={{
-                                                    display: !state.loading ? 'flex' : 'none',
+                                                    display: !state.loading
+                                                        ? 'flex'
+                                                        : 'none',
                                                 }}
                                             >
                                                 <Checkbox
                                                     themeColor={themeColor}
                                                     onChange={manager.start}
                                                     checked={state.isHuman}
-                                                    labelText="I am human"
+                                                    labelText='I am human'
                                                 />
                                             </div>
                                             <div
                                                 style={{
-                                                    display: state.loading ? 'flex' : 'none',
+                                                    display: state.loading
+                                                        ? 'flex'
+                                                        : 'none',
                                                 }}
                                             >
-                                                <div style={{ display: 'inline-flex' }}>
-                                                    <LoadingSpinner themeColor={themeColor} />
+                                                <div
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                    }}
+                                                >
+                                                    <LoadingSpinner
+                                                        themeColor={themeColor}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
+                                <div
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
+                                    <a
+                                        href={WIDGET_URL}
+                                        target='_blank'
+                                        aria-label={WIDGET_URL_TEXT}
+                                        rel='noreferrer'
+                                    >
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor} />
                                         </div>
@@ -217,7 +278,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                         </div>
                     </WidthBasedStylesDiv>
                     {config.devOnlyWatchEvents && (
-                        <Collector onProcessData={manager.exportData} sendData={state.sendData} />
+                        <Collector
+                            onProcessData={manager.exportData}
+                            sendData={state.sendData}
+                        />
                     )}
                 </ContainerDiv>
             </div>
