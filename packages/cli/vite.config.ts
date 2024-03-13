@@ -22,8 +22,12 @@ export default defineConfig(async ({ command, mode }) => {
     return defineConfig({
         define: {
             ...backendConfig.define,
-            'process.env._DEV_ONLY_ATLAS_URI': JSON.stringify(process.env._DEV_ONLY_ATLAS_URI),
-            'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
+            ...(process.env.PROSOPO_MONGO_EVENTS_URI && {
+                'process.env.PROSOPO_MONGO_EVENTS_URI': JSON.stringify(process.env.PROSOPO_MONGO_EVENTS_URI),
+            }),
+            ...(process.env._DEV_ONLY_WATCH_EVENTS && {
+                'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
+            }),
         },
         ...backendConfig,
     })

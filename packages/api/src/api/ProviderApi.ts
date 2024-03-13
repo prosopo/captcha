@@ -119,7 +119,6 @@ export default class ProviderApi extends HttpClientBase {
     }
 
     public submitUserEvents(events: StoredEvents, accountId: AccountId) {
-        console.log('submitUserEvents', events, accountId)
         return this.post(ApiPaths.SubmitUserEvents, { events, accountId })
     }
 
