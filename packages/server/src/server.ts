@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BlockHash } from '@polkadot/types/interfaces'
+import { BN } from '@polkadot/util'
 import {
     ContractAbi,
     NetworkConfig,
@@ -23,7 +23,7 @@ import {
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -113,6 +113,56 @@ export class ProsopoServer {
         return this.contract
     }
 
+    async getViableHistoricBlockCount(maxVerifiedTime?: number): Promise<number> {
+        const expectedBlockTime = getExpectedBlockTime(this.getApi())
+        return new BN(maxVerifiedTime || 60000).div(expectedBlockTime).toNumber()
+    }
+
+    /**
+     * Check if the provider was actually chosen at blockNumber.
+     * - If no blockNumber is provided, check the last `n` blocks where `n` is the number of blocks that fit in
+     *   `maxVerifiedTime`.
+     * - If no `maxVerifiedTime` is provided, use the default of 1 minute.
+     * @param user
+     * @param dapp
+     * @param providerUrl
+     * @param blockNumber
+     * @param maxVerifiedTime
+     * @returns
+     */
+    async checkRandomProvider(
+        user: string,
+        dapp: string,
+        providerUrl?: string,
+        blockNumber?: number,
+        maxVerifiedTime?: number
+    ) {
+        // Check if the provider was actually chosen at blockNumber
+        let blocksToCheck: number[] = []
+        if (blockNumber) {
+            blocksToCheck = [blockNumber]
+        } else {
+            const numberOfHistoricBlocksToCheck = await this.getViableHistoricBlockCount(maxVerifiedTime)
+            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
+            blocksToCheck = Array.from(
+                { length: numberOfHistoricBlocksToCheck },
+                (_, index) => currentBlockNumber - index
+            )
+        }
+        while (blocksToCheck.length > 0) {
+            const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
+            const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
+                block,
+                'getRandomActiveProvider',
+                [user, dapp]
+            )
+            if (getRandomProviderResponse.provider.url.toString() === providerUrl) {
+                return getRandomProviderResponse.provider
+            }
+        }
+        return undefined
+    }
+
     /**
      *
      * @param payload Info output by procaptcha on completion of the captcha process
@@ -121,21 +171,23 @@ export class ProsopoServer {
      */
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
-
-        // Check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
-        const block = (await this.getApi().rpc.chain.getBlockHash(blockNumber)) as BlockHash
-        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
-            block,
-            'getRandomActiveProvider',
-            [user, dapp]
-        )
-        const providerUrlTrimmed = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
-        if (providerUrlTrimmed !== providerUrl) {
+
+        const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
+
+        if (!randomProvider) {
+            // We have not been able to repeat the provider selection
             return false
         }
-        console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
-        if (providerUrlTrimmed) {
+
+        const providerUrlTrimmed = trimProviderUrl(randomProvider.url.toString())
+
+        if (providerUrlTrimmed !== providerUrl) {
+            // An incorrect provider url was provided in the payload
+            return false
+        }
+
+        if (providerUrl) {
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
