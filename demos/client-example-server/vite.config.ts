@@ -18,15 +18,7 @@ process.env.TS_NODE_PROJECT = path.resolve('./tsconfig.json')
 
 // Merge with generic backend config
 export default defineConfig(async ({ command, mode }) => {
-    const backendConfig = await ViteBackendConfig(
-        packageName,
-        packageVersion,
-        bundleName,
-        dir,
-        entry,
-        command,
-        mode
-    )
+    const backendConfig = await ViteBackendConfig(packageName, packageVersion, bundleName, dir, entry, command, mode)
     return defineConfig({
         ...backendConfig,
         server: { port: process.env.PROSOPO_SERVER_PORT },

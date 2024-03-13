@@ -21,12 +21,7 @@ import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { BN, BN_ZERO } from '@polkadot/util/bn'
-import {
-    LogLevel,
-    type Logger,
-    ProsopoContractError,
-    getLogger,
-} from '@prosopo/common'
+import { LogLevel, type Logger, ProsopoContractError, getLogger } from '@prosopo/common'
 import type { UseWeight } from '@prosopo/types'
 import { dispatchErrorHandler } from './helpers.js'
 import { calcInterval } from './useBlockInterval.js'
@@ -68,10 +63,7 @@ export class ContractDeployer {
         this.constructorIndex = constructorIndex
         this.value = value
         this.salt = salt
-        this.logger = getLogger(
-            logLevel || LogLevel.enum.info,
-            'ContractDeployer'
-        )
+        this.logger = getLogger(logLevel || LogLevel.enum.info, 'ContractDeployer')
         this.code = new CodePromise(api, abi, wasm)
     }
 
@@ -91,58 +83,38 @@ export class ContractDeployer {
         )
         this.logger.debug('Weight', weight.weightV2?.toHuman())
 
-        const nonce = await this.api.rpc.system.accountNextIndex(
-            this.pair.address
-        )
+        const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
 
         if (contract) {
             // eslint-disable-next-line no-async-promise-executor
             return new Promise(async (resolve, reject) => {
-                const unsub = await contract?.signAndSend(
-                    this.pair,
-                    { nonce },
-                    (result: ISubmittableResult) => {
-                        if (
-                            result.status.isFinalized ||
-                            result.status.isInBlock
-                        ) {
-                            result.events
-                                .filter(
-                                    ({ event: { section } }): boolean =>
-                                        section === 'system'
-                                )
-                                .forEach((event): void => {
-                                    const {
-                                        event: { method },
-                                    } = event
+                const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
+                    if (result.status.isFinalized || result.status.isInBlock) {
+                        result.events
+                            .filter(({ event: { section } }): boolean => section === 'system')
+                            .forEach((event): void => {
+                                const {
+                                    event: { method },
+                                } = event
 
-                                    if (method === 'ExtrinsicFailed') {
-                                        unsub()
-                                        reject(
-                                            dispatchErrorHandler(
-                                                this.api.registry,
-                                                event
-                                            )
-                                        )
-                                    }
-                                })
+                                if (method === 'ExtrinsicFailed') {
+                                    unsub()
+                                    reject(dispatchErrorHandler(this.api.registry, event))
+                                }
+                            })
 
-                            // ContractEmitted is the current generation, ContractExecution is the previous generation
-                            unsub()
-                            resolve(new ContractSubmittableResult(result))
-                        } else if (result.isError) {
-                            unsub()
-                            reject(
-                                new ProsopoContractError(
-                                    'CONTRACT.UNKNOWN_ERROR',
-                                    {
-                                        context: { error: result.status.type },
-                                    }
-                                )
-                            )
-                        }
+                        // ContractEmitted is the current generation, ContractExecution is the previous generation
+                        unsub()
+                        resolve(new ContractSubmittableResult(result))
+                    } else if (result.isError) {
+                        unsub()
+                        reject(
+                            new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
+                                context: { error: result.status.type },
+                            })
+                        )
                     }
-                )
+                })
             })
         }
         throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
@@ -183,9 +155,7 @@ export async function dryRunDeploy(
         }
         const method = message.method
         if (code && message && accountId) {
-            const dryRunParams: Parameters<
-                typeof api.call.contractsApi.instantiate
-            > = [
+            const dryRunParams: Parameters<typeof api.call.contractsApi.instantiate> = [
                 pair.address,
                 message.isPayable
                     ? api.registry.createType('Balance', value)
@@ -197,9 +167,7 @@ export async function dryRunDeploy(
                 '',
             ]
 
-            const dryRunResult = await api.call.contractsApi.instantiate(
-                ...dryRunParams
-            )
+            const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
             const func = code.tx[method]
             if (func === undefined) {
                 throw new ProsopoContractError('CONTRACT.INVALID_METHOD', {
@@ -208,9 +176,7 @@ export async function dryRunDeploy(
             }
             const options: BlueprintOptions = {
                 gasLimit: dryRunResult.gasRequired,
-                storageDepositLimit: dryRunResult.storageDeposit.isCharge
-                    ? dryRunResult.storageDeposit.asCharge
-                    : null,
+                storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
                 salt: saltOrNull,
             }
             if (value !== undefined) {

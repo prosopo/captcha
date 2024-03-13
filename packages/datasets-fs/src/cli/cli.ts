@@ -51,10 +51,7 @@ export class Cli extends Loggable {
                 }
             )
         }
-        y = y
-            .demandCommand()
-            .strict()
-            .showHelpOnFail(false, 'Specify --help for available options')
+        y = y.demandCommand().strict().showHelpOnFail(false, 'Specify --help for available options')
         return y
     }
 

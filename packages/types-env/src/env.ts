@@ -17,11 +17,7 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { WsProvider } from '@polkadot/rpc-provider/ws'
 import type { Logger } from '@prosopo/common'
 import type { ProsopoCaptchaContract } from '@prosopo/contract'
-import type {
-    AssetsResolver,
-    EnvironmentTypes,
-    NetworkNames,
-} from '@prosopo/types'
+import type { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import type { ContractAbi } from '@prosopo/types'
 import type { ProsopoBasicConfigOutput } from '@prosopo/types'
 import type { Database } from '@prosopo/types-database' // config

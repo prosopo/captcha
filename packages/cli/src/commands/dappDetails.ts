@@ -6,13 +6,8 @@ import type { ProsopoConfigOutput } from '@prosopo/types'
 import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { validateAddress } from './validators.js'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_details')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_details')
 
     return {
         command: 'dapp_details',
@@ -28,11 +23,7 @@ export default (
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const result = (
-                    await tasks.contract.query.getDapp(
-                        validateAddress(argv).address
-                    )
-                ).value
+                const result = (await tasks.contract.query.getDapp(validateAddress(argv).address)).value
                     .unwrap()
                     .unwrap()
 

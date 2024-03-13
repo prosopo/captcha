@@ -16,11 +16,7 @@ import { captchaSort } from '@prosopo/datasets'
 import { CaptchaStates } from '@prosopo/types'
 import { ScheduledTaskNames } from '@prosopo/types'
 import type { ProviderEnvironment } from '@prosopo/types-env'
-import {
-    calculateNewSolutions,
-    checkIfTaskIsRunning,
-    updateSolutions,
-} from '../util.js'
+import { calculateNewSolutions, checkIfTaskIsRunning, updateSolutions } from '../util.js'
 import { Tasks } from './tasks.js'
 export class CalculateSolutionsTask extends Tasks {
     constructor(env: ProviderEnvironment) {
@@ -33,27 +29,18 @@ export class CalculateSolutionsTask extends Tasks {
      */
     async run(): Promise<number> {
         try {
-            const taskRunning = await checkIfTaskIsRunning(
-                ScheduledTaskNames.CalculateSolution,
-                this.db
-            )
+            const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.CalculateSolution, this.db)
             if (!taskRunning) {
                 // Get the current datasetId from the contract
-                const provider = (
-                    await this.contract.methods.getProvider(
-                        this.contract.pair.address,
-                        {}
-                    )
-                ).value
+                const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
                     .unwrap()
                     .unwrap()
 
                 // Get any unsolved CAPTCHA challenges from the database for this datasetId
-                const unsolvedCaptchas =
-                    await this.db.getAllCaptchasByDatasetId(
-                        provider.datasetId.toString(),
-                        CaptchaStates.Unsolved
-                    )
+                const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(
+                    provider.datasetId.toString(),
+                    CaptchaStates.Unsolved
+                )
 
                 // edge case when a captcha dataset contains no unsolved CAPTCHA challenges
                 if (!unsolvedCaptchas) {
@@ -62,68 +49,34 @@ export class CalculateSolutionsTask extends Tasks {
 
                 // Sort the unsolved CAPTCHA challenges by their captchaId
                 const unsolvedSorted = unsolvedCaptchas.sort(captchaSort)
-                this.logger.info(
-                    `There are ${unsolvedSorted.length} unsolved CAPTCHA challenges`
-                )
+                this.logger.info(`There are ${unsolvedSorted.length} unsolved CAPTCHA challenges`)
 
                 // Get the solution configuration from the config file
-                const requiredNumberOfSolutions =
-                    this.captchaSolutionConfig.requiredNumberOfSolutions
-                const winningPercentage =
-                    this.captchaSolutionConfig.solutionWinningPercentage
-                const winningNumberOfSolutions = Math.round(
-                    requiredNumberOfSolutions * (winningPercentage / 100)
-                )
+                const requiredNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
+                const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
+                const winningNumberOfSolutions = Math.round(requiredNumberOfSolutions * (winningPercentage / 100))
                 if (unsolvedSorted && unsolvedSorted.length > 0) {
-                    const captchaIds = unsolvedSorted.map(
-                        (captcha) => captcha.captchaId
-                    )
-                    const solutions =
-                        (await this.db.getAllDappUserSolutions(captchaIds)) ||
-                        []
-                    const solutionsToUpdate = calculateNewSolutions(
-                        solutions,
-                        winningNumberOfSolutions
-                    )
+                    const captchaIds = unsolvedSorted.map((captcha) => captcha.captchaId)
+                    const solutions = (await this.db.getAllDappUserSolutions(captchaIds)) || []
+                    const solutionsToUpdate = calculateNewSolutions(solutions, winningNumberOfSolutions)
                     if (solutionsToUpdate.rows().length > 0) {
                         this.logger.info(
-                            `There are ${
-                                solutionsToUpdate.rows().length
-                            } CAPTCHA challenges to update with solutions`
+                            `There are ${solutionsToUpdate.rows().length} CAPTCHA challenges to update with solutions`
                         )
                         try {
                             // TODO polars doesn't have the captchaId field in the type
-                            const captchaIdsToUpdate = [
-                                ...(
-                                    solutionsToUpdate as any
-                                ).captchaId.values(),
-                            ]
+                            const captchaIdsToUpdate = [...(solutionsToUpdate as any).captchaId.values()]
                             const commitmentIds = solutions
-                                .filter(
-                                    (s) =>
-                                        captchaIdsToUpdate.indexOf(
-                                            s.captchaId
-                                        ) > -1
-                                )
+                                .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                                 .map((s) => s.commitmentId)
-                            const dataset = await this.db.getDataset(
-                                provider.datasetId.toString()
-                            )
-                            dataset.captchas = updateSolutions(
-                                solutionsToUpdate,
-                                dataset.captchas,
-                                this.logger
-                            )
+                            const dataset = await this.db.getDataset(provider.datasetId.toString())
+                            dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                             // store new solutions in database
                             await this.providerSetDataset(dataset)
                             // mark user solutions as used to calculate new solutions
-                            await this.db.flagProcessedDappUserSolutions(
-                                captchaIdsToUpdate
-                            )
+                            await this.db.flagProcessedDappUserSolutions(captchaIdsToUpdate)
                             // mark user commitments as used to calculate new solutions
-                            await this.db.flagProcessedDappUserCommitments(
-                                commitmentIds
-                            )
+                            await this.db.flagProcessedDappUserCommitments(commitmentIds)
                             // remove old captcha challenges from database
                             await this.db.removeCaptchas(captchaIdsToUpdate)
                             return solutionsToUpdate.rows().length
@@ -133,9 +86,7 @@ export class CalculateSolutionsTask extends Tasks {
                     }
                     return 0
                 }
-                this.logger.info(
-                    'There are no CAPTCHA challenges that require their solutions to be updated'
-                )
+                this.logger.info('There are no CAPTCHA challenges that require their solutions to be updated')
                 return 0
             }
             return 0

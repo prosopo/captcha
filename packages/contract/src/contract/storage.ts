@@ -13,11 +13,7 @@
 // limitations under the License.
 import type { Abi } from '@polkadot/api-contract/Abi'
 import type { ApiPromise } from '@polkadot/api/promise/Api'
-import type {
-    AccountId,
-    PortableType,
-    StorageEntryMetadataLatest,
-} from '@polkadot/types/interfaces'
+import type { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
 import { hexToNumber } from '@polkadot/util/hex'
 import { ProsopoContractError, reverseHexString } from '@prosopo/common'
 import type { AbiMetadata, AbiStorageField } from '@prosopo/types'
@@ -58,9 +54,7 @@ export const getPrimitiveTypes = (abiJson: AbiMetadata): PrimitiveTypes => {
         }
         if (type.type.path && type.type.path.length > 0) {
             const path = Array.from(type.type.path) as string[]
-            return (
-                at(path, 0).indexOf('primitive') > -1 && at(path, 1) === 'types'
-            )
+            return at(path, 0).indexOf('primitive') > -1 && at(path, 1) === 'types'
         }
         return false
     })
@@ -96,11 +90,7 @@ export const getPrimitiveStorageFields = (
     let startBytes = 0
     for (const storageField of storageFields) {
         const storageName = storageField.name
-        if (
-            storageField.layout &&
-            storageField.layout.leaf &&
-            storageField.layout.leaf.ty !== undefined
-        ) {
+        if (storageField.layout && storageField.layout.leaf && storageField.layout.leaf.ty !== undefined) {
             const type = storageField.layout.leaf.ty
             if (primitiveStorageTypes[type]) {
                 const typeNameAny = get(primitiveStorageTypes, type)
@@ -161,10 +151,7 @@ export function getStorageKeyAndType(
         }
 
         const rootKeyReversed = reverseHexString(rootKey.slice(2))
-        const item = get<PortableType>(
-            abi.registry.lookup.types,
-            storage.layout.leaf.ty
-        )
+        const item = get<PortableType>(abi.registry.lookup.types, storage.layout.leaf.ty)
         return {
             storageType: item,
             storageKey: rootKeyReversed,
@@ -187,9 +174,7 @@ export function getStorageEntry(
     storageEntry?: StorageEntryMetadataLatest & AbiStorageField
     index?: number
 } {
-    const index = json.storage.root.layout.struct?.fields.findIndex(
-        (obj: { name: string }) => obj.name === storageName
-    )
+    const index = json.storage.root.layout.struct?.fields.findIndex((obj: { name: string }) => obj.name === storageName)
     if (index) {
         return {
             storageEntry: json.storage.root.layout.struct?.fields[index],
@@ -216,10 +201,7 @@ export async function getPrimitiveStorageValue<T>(
     address: AccountId
 ): Promise<T> {
     // Primitive storage is packed together in the contract storage at key 0x00000000
-    const promiseResult = api.rx.call.contractsApi.getStorage(
-        address,
-        '0x00000000'
-    )
+    const promiseResult = api.rx.call.contractsApi.getStorage(address, '0x00000000')
     const result = await firstValueFrom(promiseResult)
     const optionStorageBytes = abi.registry.createType('Option<Bytes>', result)
     const storageBytes = optionStorageBytes.unwrap().toU8a(true)

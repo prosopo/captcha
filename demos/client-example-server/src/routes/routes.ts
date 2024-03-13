@@ -18,10 +18,7 @@ import { isAuth, login, signup } from '../controllers/auth.js'
 
 const router = express.Router()
 
-function getRoutes(
-    mongoose: Connection,
-    prosopoServer: ProsopoServer
-): express.Router {
+function getRoutes(mongoose: Connection, prosopoServer: ProsopoServer): express.Router {
     router.post('/login', login.bind(null, mongoose, prosopoServer))
 
     router.post('/signup', signup.bind(null, mongoose, prosopoServer))

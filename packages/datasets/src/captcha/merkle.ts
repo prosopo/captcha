@@ -12,13 +12,7 @@ import { ProsopoError, hexHashArray } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {
-    MerkleLayer,
-    MerkleLeaf,
-    MerkleNodeInterface,
-    MerkleProof,
-    MerkleProofLayer,
-} from '@prosopo/types'
+import type { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
 import { at } from '@prosopo/util'
 
 class MerkleNode implements MerkleNodeInterface {
@@ -78,10 +72,7 @@ export class CaptchaMerkleTree {
                     context: { error: 'leftChild undefined' },
                 })
             }
-            const rightChild =
-                leafIndex + 1 < numLeaves
-                    ? at(leaves, leafIndex + 1)
-                    : leftChild
+            const rightChild = leafIndex + 1 < numLeaves ? at(leaves, leafIndex + 1) : leftChild
             const parentNode = this.createParent(leftChild, rightChild)
             newLayer.push(parentNode.hash)
             parents.push(parentNode)
@@ -93,9 +84,7 @@ export class CaptchaMerkleTree {
     }
 
     createParent(leftChild: MerkleNode, rightChild: MerkleNode): MerkleNode {
-        const parent = new MerkleNode(
-            hexHashArray([leftChild.hash, rightChild.hash])
-        )
+        const parent = new MerkleNode(hexHashArray([leftChild.hash, rightChild.hash]))
         leftChild.parent = parent.hash
         rightChild.parent = parent.hash
         return parent
@@ -118,8 +107,7 @@ export class CaptchaMerkleTree {
             const leafIndex = layer.indexOf(leafHash)
             // if layer 0 leaf index is 3, it should be partnered with 2: [L0,L1],[L2,L3],[L3,L4],...
             // layer one pairs looks like [L0L1, L2L3], [L3L4, L5L6],...etc
-            let partnerIndex =
-                leafIndex % 2 && leafIndex > 0 ? leafIndex - 1 : leafIndex + 1
+            let partnerIndex = leafIndex % 2 && leafIndex > 0 ? leafIndex - 1 : leafIndex + 1
             // if there are an odd number of leaves in the layer, the last leaf is duplicated
             if (partnerIndex > layer.length - 1) {
                 partnerIndex = leafIndex

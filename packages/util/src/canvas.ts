@@ -53,11 +53,7 @@ function x64Multiply(m: number[], n: number[]) {
     o[1] += at(m, 3) * at(n, 1)
     o[0] += at(o, 1) >>> 16
     o[1] &= 0xffff
-    o[0] +=
-        at(m, 0) * at(n, 3) +
-        at(m, 1) * at(n, 2) +
-        at(m, 2) * at(n, 1) +
-        at(m, 3) * at(n, 0)
+    o[0] += at(m, 0) * at(n, 3) + at(m, 1) * at(n, 2) + at(m, 2) * at(n, 1) + at(m, 3) * at(n, 0)
     o[0] &= 0xffff
     return [(at(o, 0) << 16) | at(o, 1), (at(o, 2) << 16) | at(o, 3)]
 }
@@ -68,16 +64,10 @@ function x64Rotl(m: number[], n: number) {
         return [at(m, 1), at(m, 0)]
     }
     if (n < 32) {
-        return [
-            (at(m, 0) << n) | (at(m, 1) >>> (32 - n)),
-            (at(m, 1) << n) | (at(m, 0) >>> (32 - n)),
-        ]
+        return [(at(m, 0) << n) | (at(m, 1) >>> (32 - n)), (at(m, 1) << n) | (at(m, 0) >>> (32 - n))]
     }
     n -= 32
-    return [
-        (at(m, 1) << n) | (at(m, 0) >>> (32 - n)),
-        (at(m, 0) << n) | (at(m, 1) >>> (32 - n)),
-    ]
+    return [(at(m, 1) << n) | (at(m, 0) >>> (32 - n)), (at(m, 0) << n) | (at(m, 1) >>> (32 - n))]
 }
 
 function x64LeftShift(m: number[], n: number) {
@@ -237,8 +227,7 @@ export function picassoCanvas(
         maxShadowBlur: number
     }
 ) {
-    const { area, offsetParameter, multiplier, fontSizeFactor, maxShadowBlur } =
-        params
+    const { area, offsetParameter, multiplier, fontSizeFactor, maxShadowBlur } = params
 
     class Prng {
         currentNumber: number
@@ -251,17 +240,12 @@ export function picassoCanvas(
         }
 
         getNext() {
-            this.currentNumber =
-                (multiplier * this.currentNumber) % offsetParameter
+            this.currentNumber = (multiplier * this.currentNumber) % offsetParameter
             return this.currentNumber
         }
     }
 
-    function adaptRandomNumberToContext(
-        randomNumber: number,
-        maxBound: number,
-        floatAllowed: boolean | undefined
-    ) {
+    function adaptRandomNumberToContext(randomNumber: number, maxBound: number, floatAllowed: boolean | undefined) {
         randomNumber = (randomNumber - 1) / offsetParameter
         if (floatAllowed) {
             return randomNumber * maxBound
@@ -270,11 +254,7 @@ export function picassoCanvas(
         return Math.floor(randomNumber * maxBound)
     }
 
-    function addRandomCanvasGradient(
-        prng: Prng,
-        context: CanvasRenderingContext2D,
-        area: Area
-    ) {
+    function addRandomCanvasGradient(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
         const canvasGradient = context.createRadialGradient(
             adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
             adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
@@ -283,28 +263,8 @@ export function picassoCanvas(
             adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
             adaptRandomNumberToContext(prng.getNext(), area.width, undefined)
         )
-        canvasGradient.addColorStop(
-            0,
-            at(
-                colors,
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    colors.length,
-                    undefined
-                )
-            )
-        )
-        canvasGradient.addColorStop(
-            1,
-            at(
-                colors,
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    colors.length,
-                    undefined
-                )
-            )
-        )
+        canvasGradient.addColorStop(0, at(colors, adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)))
+        canvasGradient.addColorStop(1, at(colors, adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)))
         context.fillStyle = canvasGradient
     }
 
@@ -313,8 +273,7 @@ export function picassoCanvas(
         const maxAscii = 126
         const wordGenerated: string[] = []
         for (let i = 0; i < wordLength; i++) {
-            const asciiCode =
-                minAscii + (prng.getNext() % (maxAscii - minAscii))
+            const asciiCode = minAscii + (prng.getNext() % (maxAscii - minAscii))
             wordGenerated.push(String.fromCharCode(asciiCode))
         }
 
@@ -379,185 +338,66 @@ export function picassoCanvas(
     ]
 
     const primitives = [
-        function arc(
-            prng: Prng,
-            context: CanvasRenderingContext2D,
-            area: Area
-        ) {
+        function arc(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.arc(
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    Math.min(area.width, area.height),
-                    undefined
-                ),
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
+                adaptRandomNumberToContext(prng.getNext(), Math.min(area.width, area.height), undefined),
                 adaptRandomNumberToContext(prng.getNext(), 2 * Math.PI, true),
                 adaptRandomNumberToContext(prng.getNext(), 2 * Math.PI, true)
             )
             context.stroke()
         },
-        function text(
-            prng: Prng,
-            context: CanvasRenderingContext2D,
-            area: Area
-        ) {
-            const wordLength = Math.max(
-                1,
-                adaptRandomNumberToContext(prng.getNext(), 5, undefined)
-            )
+        function text(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
+            const wordLength = Math.max(1, adaptRandomNumberToContext(prng.getNext(), 5, undefined))
             const textToStroke = generateRandomWord(prng, wordLength)
             context.font = `${area.height / fontSizeFactor}px aafakefontaa`
 
             context.strokeText(
                 textToStroke,
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                )
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined)
             )
         },
-        function bezierCurve(
-            prng: Prng,
-            context: CanvasRenderingContext2D,
-            area: Area
-        ) {
+        function bezierCurve(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.moveTo(
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                )
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined)
             )
             context.bezierCurveTo(
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                )
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined)
             )
             context.stroke()
         },
-        function quadraticCurve(
-            prng: Prng,
-            context: CanvasRenderingContext2D,
-            area: Area
-        ) {
+        function quadraticCurve(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.moveTo(
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                )
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined)
             )
             context.quadraticCurveTo(
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                )
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined)
             )
             context.stroke()
         },
-        function ellipse(
-            prng: Prng,
-            context: CanvasRenderingContext2D,
-            area: Area
-        ) {
+        function ellipse(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.ellipse(
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.width,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    area.height,
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    Math.floor(area.width / 2),
-                    undefined
-                ),
-                adaptRandomNumberToContext(
-                    prng.getNext(),
-                    Math.floor(area.height / 2),
-                    undefined
-                ),
+                adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
+                adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
+                adaptRandomNumberToContext(prng.getNext(), Math.floor(area.width / 2), undefined),
+                adaptRandomNumberToContext(prng.getNext(), Math.floor(area.height / 2), undefined),
                 adaptRandomNumberToContext(prng.getNext(), 2 * Math.PI, true),
                 adaptRandomNumberToContext(prng.getNext(), 2 * Math.PI, true),
                 adaptRandomNumberToContext(prng.getNext(), 2 * Math.PI, true)
@@ -577,26 +417,11 @@ export function picassoCanvas(
         if (context !== null) {
             for (let i = 0; i < roundNumber; i++) {
                 addRandomCanvasGradient(prng, context, area)
-                context.shadowBlur = adaptRandomNumberToContext(
-                    prng.getNext(),
-                    maxShadowBlur,
-                    undefined
-                )
-                context.shadowColor = at(
-                    colors,
-                    adaptRandomNumberToContext(
-                        prng.getNext(),
-                        colors.length,
-                        undefined
-                    )
-                )
+                context.shadowBlur = adaptRandomNumberToContext(prng.getNext(), maxShadowBlur, undefined)
+                context.shadowColor = at(colors, adaptRandomNumberToContext(prng.getNext(), colors.length, undefined))
                 const randomPrimitive = at(
                     primitives,
-                    adaptRandomNumberToContext(
-                        prng.getNext(),
-                        primitives.length,
-                        undefined
-                    )
+                    adaptRandomNumberToContext(prng.getNext(), primitives.length, undefined)
                 )
                 randomPrimitive(prng, context, area)
                 context.fill()
@@ -604,8 +429,6 @@ export function picassoCanvas(
         }
         return x64hash128(canvasElt.toDataURL(), seed)
     } catch (error) {
-        throw new Error(
-            `Error with Captcha canvas. context: ${JSON.stringify(error)}`
-        )
+        throw new Error(`Error with Captcha canvas. context: ${JSON.stringify(error)}`)
     }
 }

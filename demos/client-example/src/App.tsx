@@ -11,16 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    Alert,
-    Box,
-    Button,
-    FormControl,
-    FormGroup,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material'
+import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import {
     ApiParams,
@@ -33,8 +24,7 @@ import { useState } from 'react'
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-    'Access-Control-Allow-Headers':
-        'Origin, Content-Type, X-Auth-Token, Authorization',
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
 function App() {
@@ -48,9 +38,7 @@ function App() {
     // whether the form is doing a login or a signup action
     const [isLogin, setIsLogin] = useState(true)
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
-    const [procaptchaOutput, setProcaptchaOutput] = useState<
-        ProcaptchaOutput | undefined
-    >(undefined)
+    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
     const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
@@ -60,12 +48,10 @@ function App() {
         web2: process.env.PROSOPO_WEB2 === 'true',
         dappName: 'client-example',
         defaultEnvironment:
-            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) ||
-            EnvironmentTypesSchema.enum.development,
+            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
-        devOnlyWatchEvents:
-            process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 
     const label = isLogin ? 'Login' : 'Sign up'
@@ -182,24 +168,16 @@ function App() {
                 }}
             >
                 <Box>
-                    <Typography component={'span'}>
-                        {message ? getMessage() : null}
-                    </Typography>
+                    <Typography component={'span'}>{message ? getMessage() : null}</Typography>
                     {!config.web2 ? (
-                        <ExtensionAccountSelect
-                            dappName={config.dappName}
-                            value={account}
-                            onChange={setAccount}
-                        />
+                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
                     ) : (
                         <></>
                     )}
                     <Box>
                         <h1>{label}</h1>
                         <form>
-                            <FormGroup
-                                sx={{ '& .MuiTextField-root': { m: 1 } }}
-                            >
+                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
                                 <FormControl>
                                     <TextField
                                         id='email'
@@ -207,9 +185,7 @@ function App() {
                                         type='text'
                                         autoComplete='Email'
                                         autoCapitalize='none'
-                                        onChange={(e) =>
-                                            setEmail(e.target.value)
-                                        }
+                                        onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </FormControl>
 
@@ -220,9 +196,7 @@ function App() {
                                             label='Name'
                                             type='text'
                                             autoComplete='Name'
-                                            onChange={(e) =>
-                                                setName(e.target.value)
-                                            }
+                                            onChange={(e) => setName(e.target.value)}
                                         />
                                     </FormControl>
                                 )}
@@ -233,9 +207,7 @@ function App() {
                                         label='Password'
                                         type='password'
                                         autoComplete='Password'
-                                        onChange={(e) =>
-                                            setPassword(e.target.value)
-                                        }
+                                        onChange={(e) => setPassword(e.target.value)}
                                     />
                                 </FormControl>
 
@@ -251,11 +223,7 @@ function App() {
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>
-                                        <Stack
-                                            direction='column'
-                                            spacing={1}
-                                            sx={{ '& button': { m: 1 } }}
-                                        >
+                                        <Stack direction='column' spacing={1} sx={{ '& button': { m: 1 } }}>
                                             <Button
                                                 variant='contained'
                                                 onClick={onActionHandler}
@@ -270,14 +238,10 @@ function App() {
                                                 }}
                                             >
                                                 <Box>
-                                                    <Typography>
-                                                        - or -
-                                                    </Typography>
+                                                    <Typography>- or -</Typography>
                                                 </Box>
                                             </Box>
-                                            <Button onClick={onChangeHandler}>
-                                                {isLogin ? 'Signup' : 'Login'}
-                                            </Button>
+                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
                                         </Stack>
                                     </Box>
                                 </FormControl>

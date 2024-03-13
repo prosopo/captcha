@@ -42,15 +42,8 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
             expect(response).to.not.be.undefined
             expect(response?.statusCode).to.equal(200)
             expect(response?.body).to.have.property('captchas')
-            const captchas = response?.body.captchas.map(
-                ({ captcha }: { captcha: CaptchaWithProof }) => captcha
-            )
-            console.log(
-                '-----------------------------captchas',
-                captchas,
-                'length',
-                captchas.length
-            )
+            const captchas = response?.body.captchas.map(({ captcha }: { captcha: CaptchaWithProof }) => captcha)
+            console.log('-----------------------------captchas', captchas, 'length', captchas.length)
             expect(captchas).to.have.lengthOf(2)
             expect(captchas[0]).to.have.property('items')
             console.log(
@@ -91,9 +84,7 @@ function getSelectors(captcha: Captcha) {
                 let selectors: string[] = []
                 // Get the index of the captcha in the solution records array
                 const captchaIndex = solutions.findIndex(
-                    (testSolution) =>
-                        testSolution.captchaContentId ===
-                        captcha.captchaContentId
+                    (testSolution) => testSolution.captchaContentId === captcha.captchaContentId
                 )
                 if (captchaIndex !== -1) {
                     const solution = at(solutions, captchaIndex).solution
@@ -101,17 +92,9 @@ function getSelectors(captcha: Captcha) {
                         .filter((item) => solution.includes(item.hash))
                         // create a query selector for each image that is a solution
                         // drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
-                        .map(
-                            (item) =>
-                                `img[src="${item.data.replace(
-                                    /^http(s)*:\/\//,
-                                    '//'
-                                )}"]`
-                        )
+                        .map((item) => `img[src="${item.data.replace(/^http(s)*:\/\//, '//')}"]`)
                 } else {
-                    console.log(
-                        'Unsolved captcha or captcha with zero solutions'
-                    )
+                    console.log('Unsolved captcha or captcha with zero solutions')
                 }
                 return selectors
             })
@@ -120,9 +103,7 @@ function getSelectors(captcha: Captcha) {
     return cy.get('@selectors')
 }
 
-function clickCorrectCaptchaImages(
-    captcha: Captcha
-): Chainable<JQuery<HTMLElement>> {
+function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLElement>> {
     return cy.captchaImages().then(() => {
         cy.getSelectors(captcha).then((selectors: string[]) => {
             console.log('captchaId', captcha.captchaId, 'selectors', selectors)

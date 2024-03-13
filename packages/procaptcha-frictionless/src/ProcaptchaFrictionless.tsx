@@ -17,27 +17,18 @@ import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { useEffect, useState } from 'react'
 
-export const ProcaptchaFrictionless = ({
-    config,
-    callbacks,
-}: ProcaptchaProps) => {
+export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
     // Use state to manage which component to render
-    const [componentToRender, setComponentToRender] = useState(
-        <ProcaptchaPlaceholder darkMode={config.theme} />
-    )
+    const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
 
     useEffect(() => {
         const detectBot = async () => {
             const botd = await load()
             const result = botd.detect()
             if (result.bot) {
-                setComponentToRender(
-                    <Procaptcha config={config} callbacks={callbacks} />
-                )
+                setComponentToRender(<Procaptcha config={config} callbacks={callbacks} />)
             } else {
-                setComponentToRender(
-                    <ProcaptchaPow config={config} callbacks={callbacks} />
-                )
+                setComponentToRender(<ProcaptchaPow config={config} callbacks={callbacks} />)
             }
         }
 

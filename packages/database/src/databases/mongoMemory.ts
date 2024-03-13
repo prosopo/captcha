@@ -19,12 +19,7 @@ export class MongoMemoryDatabase extends MongoDatabase {
     private mongod: MongoMemoryServer | undefined
     private running = false
 
-    override async init(
-        url: string,
-        dbname: string,
-        logger: Logger,
-        authSource?: string
-    ): Promise<this> {
+    override async init(url: string, dbname: string, logger: Logger, authSource?: string): Promise<this> {
         this.mongod = await MongoMemoryServer.create()
         this.running = true
         const mongoMemoryURL = this.mongod.getUri()

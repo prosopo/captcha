@@ -34,10 +34,7 @@ describe('DATASET FUNCTIONS', async () => {
         MOCK_ITEMS = await Promise.all(
             new Array(9).fill(0).map((_, i) =>
                 computeItemHash({
-                    data: path.join(
-                        'http://localhost',
-                        `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`
-                    ),
+                    data: path.join('http://localhost', `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`),
                     type: CaptchaItemTypes.Text,
                     hash: '',
                 })
@@ -96,8 +93,7 @@ describe('DATASET FUNCTIONS', async () => {
             format: CaptchaTypes.SelectAll,
             captchas: [
                 {
-                    captchaId:
-                        '0x7e6d425c3aae7194e06ff5f6f40ae7ce3f28f3cedff572d94141294af357bec2',
+                    captchaId: '0x7e6d425c3aae7194e06ff5f6f40ae7ce3f28f3cedff572d94141294af357bec2',
                     captchaContentId: '0x01010101010101010101010101010101',
                     solution: [],
                     salt: '0x01010101010101010101010101010101',
@@ -105,8 +101,7 @@ describe('DATASET FUNCTIONS', async () => {
                     items: ITEMS,
                 },
                 {
-                    captchaId:
-                        '0xff104b75ea2eff08e9cbc8deeee26be24c1e731f3f64eee430dccfe2687be289',
+                    captchaId: '0xff104b75ea2eff08e9cbc8deeee26be24c1e731f3f64eee430dccfe2687be289',
                     captchaContentId: '0x01010101010101010101010101010101',
                     salt: '0x02020202020202020202020202020202',
                     target: 'train',
@@ -117,15 +112,13 @@ describe('DATASET FUNCTIONS', async () => {
 
         RECEIVED = [
             {
-                captchaId:
-                    '0x65389f35bfda0ce10a80baea75e34c8defc5ec22931ccc5ef66f3c273ba4ec38',
+                captchaId: '0x65389f35bfda0ce10a80baea75e34c8defc5ec22931ccc5ef66f3c273ba4ec38',
                 captchaContentId: '0x01010101010101010101010101010101',
                 solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
                 salt: '',
             },
             {
-                captchaId:
-                    '0x138c099916b1877ceba74fbd93a441bc561103b087e3dbe751d486bd854644d3',
+                captchaId: '0x138c099916b1877ceba74fbd93a441bc561103b087e3dbe751d486bd854644d3',
                 captchaContentId: '0x01010101010101010101010101010101',
                 solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
                 salt: '',
@@ -134,8 +127,7 @@ describe('DATASET FUNCTIONS', async () => {
 
         STORED = [
             {
-                captchaId:
-                    '0x65389f35bfda0ce10a80baea75e34c8defc5ec22931ccc5ef66f3c273ba4ec38',
+                captchaId: '0x65389f35bfda0ce10a80baea75e34c8defc5ec22931ccc5ef66f3c273ba4ec38',
                 captchaContentId: '0x01010101010101010101010101010101',
                 salt: '0x01010101010101010101010101010101',
                 items: MOCK_ITEMS,
@@ -143,8 +135,7 @@ describe('DATASET FUNCTIONS', async () => {
                 solved: true,
             },
             {
-                captchaId:
-                    '0x138c099916b1877ceba74fbd93a441bc561103b087e3dbe751d486bd854644d3',
+                captchaId: '0x138c099916b1877ceba74fbd93a441bc561103b087e3dbe751d486bd854644d3',
                 captchaContentId: '0x01010101010101010101010101010101',
                 salt: '0x02020202020202020202020202020202',
                 items: MOCK_ITEMS,
@@ -156,9 +147,7 @@ describe('DATASET FUNCTIONS', async () => {
 
     test('Validates a captcha dataset correctly', async () => {
         // duplicate the CAPTCHAS in DATASET.captchas by 1000 times
-        DATASET.captchas = new Array(10000)
-            .fill(0)
-            .map(() => at(DATASET.captchas, 0))
+        DATASET.captchas = new Array(10000).fill(0).map(() => at(DATASET.captchas, 0))
         const validated = await validateDatasetContent(DATASET)
         expect(validated).to.be.true
     })

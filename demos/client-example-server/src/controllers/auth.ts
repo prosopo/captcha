@@ -54,11 +54,7 @@ const signup = async (
             return res.status(409).json({ message: 'email already exists' })
         }
 
-        if (
-            await prosopoServer.isVerified(
-                payload[ApiParams.procaptchaResponse]
-            )
-        ) {
+        if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
             // salt
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
@@ -93,12 +89,7 @@ const signup = async (
     }
 }
 
-const login = async (
-    mongoose: Connection,
-    prosopoServer: ProsopoServer,
-    req: Request,
-    res: Response
-) => {
+const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response) => {
     const User = mongoose.model<UserInterface>('User')
     await prosopoServer.isReady()
     // checks if email exists
@@ -110,26 +101,16 @@ const login = async (
                 res.status(404).json({ message: 'user not found' })
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
-                if (
-                    await prosopoServer.isVerified(
-                        payload[ApiParams.procaptchaResponse]
-                    )
-                ) {
+                if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
                     // password hash
                     // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
-                    const passwordHash = hashPassword(
-                        `${req.body.password}${dbUser.salt}`
-                    )
+                    const passwordHash = hashPassword(`${req.body.password}${dbUser.salt}`)
                     if (passwordHash !== dbUser.password) {
                         // password doesnt match
                         res.status(401).json({ message: 'invalid credentials' })
                     } else {
                         // password match
-                        const token = jwt.sign(
-                            { email: req.body.email },
-                            'secret',
-                            { expiresIn: '1h' }
-                        )
+                        const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
                         res.status(200).json({
                             message: 'user logged in',
                             token: token,

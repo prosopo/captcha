@@ -21,9 +21,7 @@ import { Extension } from './Extension.js'
  * Class for interfacing with web3 accounts.
  */
 export class ExtensionWeb3 extends Extension {
-    public async getAccount(
-        config: ProcaptchaClientConfigOutput
-    ): Promise<Account> {
+    public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
         const { dappName, userAccountAddress: address } = config
 
         if (!address) {
@@ -41,9 +39,7 @@ export class ExtensionWeb3 extends Extension {
         // search through all extensions for the one that has the account
         for (const extension of extensions) {
             const accounts = await extension.accounts.get()
-            const account = accounts.find(
-                (account) => account.address === address
-            )
+            const account = accounts.find((account) => account.address === address)
             if (account) {
                 return { account, extension }
             }

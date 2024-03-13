@@ -1,7 +1,4 @@
-import type {
-    InjectedAccount,
-    InjectedExtension,
-} from '@polkadot/extension-inject/types'
+import type { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { number, object, string, type infer as zInfer } from 'zod'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //

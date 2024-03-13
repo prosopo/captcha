@@ -7,14 +7,8 @@ import type { ProsopoConfigOutput } from '@prosopo/types'
 import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { validateAddress } from './validators.js'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger ||
-        getLogger(LogLevel.enum.info, 'cli.provider_deregister')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_deregister')
 
     return {
         command: 'provider_deregister',

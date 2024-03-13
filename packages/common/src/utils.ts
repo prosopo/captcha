@@ -17,11 +17,7 @@ import { ProsopoError } from './error.js'
 import translationEn from './locales/en.json' assert { type: 'json' }
 
 export function isClientSide(): boolean {
-    return !!(
-        typeof window !== 'undefined' &&
-        window.document &&
-        window.document.createElement
-    )
+    return !!(typeof window !== 'undefined' && window.document && window.document.createElement)
 }
 
 export type TFunctionParams = Parameters<TFunction>
@@ -29,8 +25,7 @@ export type TFunctionParams = Parameters<TFunction>
 // https://medium.com/xgeeks/typescript-utility-keyof-nested-object-fa3e457ef2b2
 // slightly modified since we only need string keys, number is there so IDE/Typescript doesn't complain
 type NestedKeyOf<ObjectType extends object> = {
-    [Key in keyof ObjectType &
-        (string | number)]: ObjectType[Key] extends object
+    [Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object
         ? `${Key}.${NestedKeyOf<ObjectType[Key]>}`
         : `${Key}`
 }[keyof ObjectType & (string | number)]
@@ -64,9 +59,7 @@ function getLeafFieldPath(obj: Node): string[] {
 }
 
 export type TranslationKey = NestedKeyOf<typeof translationEn>
-export const translationKeys = getLeafFieldPath(
-    translationEn
-) as TranslationKey[]
+export const translationKeys = getLeafFieldPath(translationEn) as TranslationKey[]
 
 // String utils
 
@@ -75,9 +68,7 @@ export const trimProviderUrl = (url: string) => {
 }
 
 export function snakeToCamelCase(str: string): string {
-    return str.replace(/([-_][a-z])/g, (group) =>
-        group.toUpperCase().replace('-', '').replace('_', '')
-    )
+    return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
 }
 
 export function reverseHexString(str: string): `0x${string}` {

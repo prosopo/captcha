@@ -13,16 +13,7 @@ import type { u32 } from '@polkadot/types-codec/primitive'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from '@polkadot/types/interfaces/runtime'
-import {
-    array,
-    nativeEnum,
-    number,
-    object,
-    string,
-    undefined,
-    union,
-    type infer as zInfer,
-} from 'zod'
+import { array, nativeEnum, number, object, string, undefined, union, type infer as zInfer } from 'zod'
 
 export enum CaptchaTypes {
     SelectAll = 'SelectAll',
@@ -158,16 +149,13 @@ export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
     unlabelled: string().array().optional(),
 })
 
-export const SelectAllCaptchaSchemaWithNumericSolution =
-    SelectAllCaptchaSchema.extend({
-        solution: number().array().optional(),
-        unlabelled: number().array().optional(),
-    })
+export const SelectAllCaptchaSchemaWithNumericSolution = SelectAllCaptchaSchema.extend({
+    solution: number().array().optional(),
+    unlabelled: number().array().optional(),
+})
 
 export const CaptchasSchema = array(SelectAllCaptchaSchemaRaw)
-export const CaptchasWithNumericSolutionSchema = array(
-    SelectAllCaptchaSchemaWithNumericSolution
-)
+export const CaptchasWithNumericSolutionSchema = array(SelectAllCaptchaSchemaWithNumericSolution)
 
 export const CaptchaSolutionSchema = object({
     captchaId: string(),

@@ -42,8 +42,7 @@ interface ProcaptchaRenderOptions {
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getProcaptchaScript = () =>
-    document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
+const getProcaptchaScript = () => document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
 const extractParams = (name: string) => {
     const script = getProcaptchaScript()
@@ -63,9 +62,7 @@ const getConfig = (siteKey?: string) => {
     }
     return ProcaptchaConfigSchema.parse({
         defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(
-                  process.env.PROSOPO_DEFAULT_ENVIRONMENT
-              )
+            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
             : EnvironmentTypesSchema.enum.development,
         defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
             ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
@@ -76,20 +73,16 @@ const getConfig = (siteKey?: string) => {
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
-        devOnlyWatchEvents:
-            process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 
-const getParentForm = (element: Element): HTMLFormElement | null =>
-    element.closest('form') as HTMLFormElement
+const getParentForm = (element: Element): HTMLFormElement | null => element.closest('form') as HTMLFormElement
 
 const getWindowCallback = (callbackName: string) => {
     const fn = (window as any)[callbackName.replace('window.', '')]
     if (typeof fn !== 'function') {
-        throw new Error(
-            `Callback ${callbackName} is not defined on the window object`
-        )
+        throw new Error(`Callback ${callbackName} is not defined on the window object`)
     }
     return fn
 }
@@ -111,9 +104,7 @@ const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
 
 const customThemeSet = new Set(['light', 'dark'])
 const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
-    customThemeSet.has(themeAttribute)
-        ? (themeAttribute as 'light' | 'dark')
-        : 'light'
+    customThemeSet.has(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
 
 const renderLogic = (
     elements: Element[],
@@ -121,28 +112,18 @@ const renderLogic = (
     renderOptions?: ProcaptchaRenderOptions
 ) => {
     elements.forEach((element) => {
-        const callbackName =
-            renderOptions?.callback || element.getAttribute('data-callback')
+        const callbackName = renderOptions?.callback || element.getAttribute('data-callback')
         const chalExpiredCallbackName =
-            renderOptions?.['chalexpired-callback'] ||
-            element.getAttribute('data-chalexpired-callback')
-        const errorCallback =
-            renderOptions?.['error-callback'] ||
-            element.getAttribute('data-error-callback')
-        const onCloseCallbackName =
-            renderOptions?.['close-callback'] ||
-            element.getAttribute('data-close-callback')
-        const onOpenCallbackName =
-            renderOptions?.['open-callback'] ||
-            element.getAttribute('data-open-callback')
+            renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
+        const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
+        const onCloseCallbackName = renderOptions?.['close-callback'] || element.getAttribute('data-close-callback')
+        const onOpenCallbackName = renderOptions?.['open-callback'] || element.getAttribute('data-open-callback')
         const onExpiredCallbackName =
-            renderOptions?.['expired-callback'] ||
-            element.getAttribute('data-expired-callback')
+            renderOptions?.['expired-callback'] || element.getAttribute('data-expired-callback')
 
         // Setting up default callbacks object
         const callbacks = {
-            onHuman: (payload: ProcaptchaOutput) =>
-                handleOnHuman(element, payload),
+            onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
             onChallengeExpired: () => {
                 console.log('Challenge expired')
             },
@@ -161,53 +142,32 @@ const renderLogic = (
         }
 
         if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
-        if (chalExpiredCallbackName)
-            callbacks.onChallengeExpired = getWindowCallback(
-                chalExpiredCallbackName
-            )
-        if (onExpiredCallbackName)
-            callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
+        if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
+        if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
         if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
-        if (onCloseCallbackName)
-            callbacks.onClose = getWindowCallback(onCloseCallbackName)
-        if (onOpenCallbackName)
-            callbacks.onOpen = getWindowCallback(onOpenCallbackName)
+        if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
+        if (onOpenCallbackName) callbacks.onOpen = getWindowCallback(onOpenCallbackName)
 
         // Getting and setting the theme
-        const themeAttribute =
-            renderOptions?.theme ||
-            element.getAttribute('data-theme') ||
-            'light'
+        const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
         config.theme = validateTheme(themeAttribute)
 
         // Getting and setting the challenge valid length
         const challengeValidLengthAttribute =
-            renderOptions?.['challenge-valid-length'] ||
-            element.getAttribute('data-challenge-valid-length')
+            renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
         if (challengeValidLengthAttribute) {
-            config.challengeValidLength = Number.parseInt(
-                challengeValidLengthAttribute
-            )
+            config.challengeValidLength = Number.parseInt(challengeValidLengthAttribute)
         }
 
         switch (renderOptions?.captchaType) {
             case 'pow':
-                createRoot(element).render(
-                    <ProcaptchaPow config={config} callbacks={callbacks} />
-                )
+                createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
                 break
             case 'frictionless':
-                createRoot(element).render(
-                    <ProcaptchaFrictionless
-                        config={config}
-                        callbacks={callbacks}
-                    />
-                )
+                createRoot(element).render(<ProcaptchaFrictionless config={config} callbacks={callbacks} />)
                 break
             default:
-                createRoot(element).render(
-                    <Procaptcha config={config} callbacks={callbacks} />
-                )
+                createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
                 break
         }
     })
@@ -216,9 +176,7 @@ const renderLogic = (
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = () => {
     // Get elements with class 'procaptcha'
-    const elements: Element[] = Array.from(
-        document.getElementsByClassName('procaptcha')
-    )
+    const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
 
     // Set siteKey from renderOptions or from the first element's data-sitekey attribute
     if (elements.length) {
@@ -229,21 +187,15 @@ const implicitRender = () => {
         }
         const features = Object.values(FeaturesEnum)
         const captchaType =
-            features.find(
-                (feature) =>
-                    feature ===
-                    at(elements, 0).getAttribute('data-captcha-type')
-            ) || ('image' as const)
+            features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
+            ('image' as const)
 
         renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }
 }
 
 // Explicit render for targeting specific elements
-export const render = (
-    elementId: string,
-    renderOptions: ProcaptchaRenderOptions
-) => {
+export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
     const siteKey = renderOptions.siteKey
     const element = document.getElementById(elementId)
 

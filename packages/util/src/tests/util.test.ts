@@ -76,25 +76,17 @@ describe('util', () => {
             })
         })
         test('array in object atomic', () => {
-            expect(
-                merge({ a: [0, 1, 2] }, { a: [3, 4] }, { atomicArrays: true })
-            ).to.deep.equal({ a: [3, 4] })
+            expect(merge({ a: [0, 1, 2] }, { a: [3, 4] }, { atomicArrays: true })).to.deep.equal({ a: [3, 4] })
         })
         test('array in object in array', () => {
-            expect(
-                merge(
-                    [{ a: [0, 1, 2] }, { b: [3, 4, 5] }],
-                    [{ a: [6, 7] }, { b: [8, 9] }]
-                )
-            ).to.deep.equal([{ a: [6, 7, 2] }, { b: [8, 9, 5] }])
+            expect(merge([{ a: [0, 1, 2] }, { b: [3, 4, 5] }], [{ a: [6, 7] }, { b: [8, 9] }])).to.deep.equal([
+                { a: [6, 7, 2] },
+                { b: [8, 9, 5] },
+            ])
         })
         test('array in object in array atomic', () => {
             expect(
-                merge(
-                    [{ a: [0, 1, 2] }, { b: [3, 4, 5] }],
-                    [{ a: [6, 7] }, { b: [8, 9] }],
-                    { atomicArrays: true }
-                )
+                merge([{ a: [0, 1, 2] }, { b: [3, 4, 5] }], [{ a: [6, 7] }, { b: [8, 9] }], { atomicArrays: true })
             ).to.deep.equal([{ a: [6, 7] }, { b: [8, 9] }])
         })
 
@@ -215,15 +207,9 @@ describe('util', () => {
         })
 
         test('allow undefined in bounds', () => {
-            expect(
-                at([undefined, undefined, undefined], 0, { optional: true })
-            ).to.equal(undefined)
-            expect(
-                at([undefined, undefined, undefined], 1, { optional: true })
-            ).to.equal(undefined)
-            expect(
-                at([undefined, undefined, undefined], 2, { optional: true })
-            ).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 0, { optional: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 1, { optional: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 2, { optional: true })).to.equal(undefined)
         })
     })
 
@@ -234,11 +220,7 @@ describe('util', () => {
             const v2: number | undefined = get({ a: 1 }, 'a', false)
             const v3: number = get({ a: 1 }, 'a', true)
             const v4: number | undefined = get({ a: 1, b: undefined }, 'a')
-            const v5: number | undefined = get(
-                { a: 1, b: undefined },
-                'a',
-                false
-            )
+            const v5: number | undefined = get({ a: 1, b: undefined }, 'a', false)
             // cast from any
             const v6: number = get(JSON.parse('{"a": 1}') as any, 'a')
             // cast from unknown
@@ -268,9 +250,7 @@ describe('util', () => {
         })
 
         test('handles empty array with empty set', () => {
-            expect([...permutations([], { includeEmpty: true })]).to.deep.equal(
-                [[]]
-            )
+            expect([...permutations([], { includeEmpty: true })]).to.deep.equal([[]])
         })
 
         test('permutes correctly using same size bins', () => {

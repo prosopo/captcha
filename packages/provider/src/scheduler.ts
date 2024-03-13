@@ -22,10 +22,7 @@ import { CronJob } from 'cron'
 import { BatchCommitmentsTask } from './batch/commitments.js'
 import { CalculateSolutionsTask } from './tasks/calculateSolutions.js'
 
-export async function calculateSolutionsScheduler(
-    pair: KeyringPair,
-    config: ProsopoConfigOutput
-) {
+export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     const tasks = new CalculateSolutionsTask(env)
@@ -39,23 +36,14 @@ export async function calculateSolutionsScheduler(
     job.start()
 }
 
-export async function batchCommitScheduler(
-    pair: KeyringPair,
-    config: ProsopoConfigOutput
-) {
+export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     if (env.db === undefined) {
         throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')
     }
 
-    const tasks = new BatchCommitmentsTask(
-        config.batchCommit,
-        env.getContractInterface(),
-        env.db,
-        0n,
-        env.logger
-    )
+    const tasks = new BatchCommitmentsTask(config.batchCommit, env.getContractInterface(), env.db, 0n, env.logger)
     const job = new CronJob(at(process.argv, 2), () => {
         env.logger.debug('BatchCommitmentsTask....')
         tasks.run().catch((err) => {

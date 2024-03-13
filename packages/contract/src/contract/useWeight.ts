@@ -8,11 +8,7 @@ import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util/bn'
 import type { BN } from '@polkadot/util/bn'
 import type { UseWeight } from '@prosopo/types'
 
-export function useWeightImpl(
-    api: ApiPromise,
-    blockTime: BN,
-    scalingFactor: BN
-): Promise<UseWeight> {
+export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN): Promise<UseWeight> {
     const isWeightV2 = !!api.registry.createType<WeightV2>('Weight').proofSize
     const megaGas = <BN>convertWeight(
         api.consts.system.blockWeights

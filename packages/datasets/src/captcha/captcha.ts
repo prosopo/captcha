@@ -1,10 +1,5 @@
 import { isHex } from '@polkadot/util'
-import {
-    ProsopoDatasetError,
-    ProsopoEnvError,
-    hexHash,
-    hexHashArray,
-} from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 // Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,25 +45,15 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
             captchas: result.captchas.map((captcha) => {
                 return {
                     ...captcha,
-                    solution: captcha.solution
-                        ? matchItemsToSolutions(captcha.solution, captcha.items)
-                        : [],
-                    unlabelled: captcha.unlabelled
-                        ? matchItemsToSolutions(
-                              captcha.unlabelled,
-                              captcha.items
-                          )
-                        : [],
+                    solution: captcha.solution ? matchItemsToSolutions(captcha.solution, captcha.items) : [],
+                    unlabelled: captcha.unlabelled ? matchItemsToSolutions(captcha.unlabelled, captcha.items) : [],
                 }
             }),
         }
         if (result.datasetId !== undefined) result2.datasetId = result.datasetId
-        if (result.contentTree !== undefined)
-            result2.contentTree = result.contentTree
-        if (result.datasetContentId !== undefined)
-            result2.datasetContentId = result.datasetContentId
-        if (result.solutionTree !== undefined)
-            result2.solutionTree = result.solutionTree
+        if (result.contentTree !== undefined) result2.contentTree = result.contentTree
+        if (result.datasetContentId !== undefined) result2.datasetContentId = result.datasetContentId
+        if (result.solutionTree !== undefined) result2.solutionTree = result.solutionTree
         return result2
     } catch (err) {
         throw new ProsopoDatasetError('DATASET.DATASET_PARSE_ERROR', {
@@ -82,9 +67,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
  * @param {JSON} captchaJSON captcha solutions received from the api
  * @return {CaptchaSolution[]} an array of parsed and sorted captcha solutions
  */
-export function parseAndSortCaptchaSolutions(
-    captchaJSON: CaptchaSolution[]
-): CaptchaSolution[] {
+export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): CaptchaSolution[] {
     try {
         return CaptchaSolutionArraySchema.parse(captchaJSON).map((captcha) => ({
             ...captcha,
@@ -108,29 +91,27 @@ export function sortAndComputeHashes(
     received.sort(captchaSort)
     stored.sort(captchaSort)
 
-    return stored.map(
-        ({ salt, items = [], target = '', captchaId, solved }, index) => {
-            const item = at(received, index)
-            if (captchaId !== item.captchaId) {
-                throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
-            }
-
-            return {
-                hash: computeCaptchaHash(
-                    {
-                        solution: solved ? item.solution : [],
-                        salt,
-                        items,
-                        target,
-                    },
-                    true,
-                    true,
-                    false
-                ),
-                captchaId,
-            }
+    return stored.map(({ salt, items = [], target = '', captchaId, solved }, index) => {
+        const item = at(received, index)
+        if (captchaId !== item.captchaId) {
+            throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
         }
-    )
+
+        return {
+            hash: computeCaptchaHash(
+                {
+                    solution: solved ? item.solution : [],
+                    salt,
+                    items,
+                    target,
+                },
+                true,
+                true,
+                false
+            ),
+            captchaId,
+        }
+    })
 }
 
 /**
@@ -139,10 +120,7 @@ export function sortAndComputeHashes(
  * @param  {Captcha[]} stored
  * @return {boolean}
  */
-export function compareCaptchaSolutions(
-    received: CaptchaSolution[],
-    stored: Captcha[]
-): boolean {
+export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): boolean {
     if (received.length && stored.length && received.length === stored.length) {
         const hashes = sortAndComputeHashes(received, stored)
         return hashes.every(({ hash, captchaId }) => hash === captchaId)
@@ -181,9 +159,7 @@ export function computeCaptchaHash(
             captcha.target,
             // empty array hashes as empty string, undefined solution results in the array [`NO_SOLUTION`]
             // [undefined] also hashes as empty string, which is why we don't use it
-            ...(includeSolution
-                ? getSolutionValueToHash(captcha.solution)
-                : []),
+            ...(includeSolution ? getSolutionValueToHash(captcha.solution) : []),
             includeSalt ? captcha.salt : '',
             sortItemHashes ? itemHashes.sort() : itemHashes,
         ])
@@ -198,9 +174,7 @@ export function computeCaptchaHash(
  * solution
  * @param solution
  */
-export function getSolutionValueToHash(
-    solution?: HashedSolution[] | RawSolution[]
-) {
+export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution[]) {
     return solution !== undefined ? solution.sort() : [NO_SOLUTION_VALUE]
 }
 
@@ -257,12 +231,7 @@ export function matchItemsToSolutions(
  * @return {string} the hex string hash
  */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHashArray([
-        captcha.captchaId,
-        captcha.captchaContentId,
-        [...captcha.solution].sort(),
-        captcha.salt,
-    ])
+    return hexHashArray([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt])
 }
 
 /**
@@ -272,21 +241,14 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @param  {string} salt
  * @return {string}
  */
-export function computePendingRequestHash(
-    captchaIds: string[],
-    userAccount: string,
-    salt: string
-): string {
+export function computePendingRequestHash(captchaIds: string[], userAccount: string, salt: string): string {
     return hexHashArray([...captchaIds.sort(), userAccount, salt])
 }
 
 /**
  * Parse the image items in a captcha and pass back a URI if they exist
  */
-export function parseCaptchaAssets(
-    item: Item,
-    assetsResolver: AssetsResolver | undefined
-) {
+export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined) {
     return {
         ...item,
         path: assetsResolver?.resolveAsset(item.data).getURL() || item.data,

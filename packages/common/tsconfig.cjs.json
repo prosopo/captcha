@@ -4,12 +4,7 @@
         "rootDir": "./src",
         "outDir": "./dist/cjs"
     },
-    "include": [
-        "./src/**/*.ts",
-        "./src/**/*.json",
-        "./src/**/*.d.ts",
-        "./src/**/*.tsx"
-    ],
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
             "path": "../util/tsconfig.cjs.json"

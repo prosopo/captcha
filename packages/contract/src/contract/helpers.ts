@@ -13,12 +13,7 @@
 // limitations under the License.
 import type { Abi } from '@polkadot/api-contract/Abi'
 import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import type {
-    AbiMessage,
-    ContractCallOutcome,
-    ContractOptions,
-    DecodedEvent,
-} from '@polkadot/api-contract/types'
+import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 import type { ApiPromise } from '@polkadot/api/promise/Api'
 import type { SubmittableResult } from '@polkadot/api/submittable'
 import type { ApiBase } from '@polkadot/api/types'
@@ -38,11 +33,7 @@ import type { AnyJson } from '@polkadot/types/types/codec'
 import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
 import { isHex, isU8a } from '@polkadot/util/is'
 import { stringToHex } from '@polkadot/util/string'
-import {
-    type Logger,
-    ProsopoContractError,
-    capitaliseFirstLetter,
-} from '@prosopo/common'
+import { type Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
 
 /**
  * Get the event name from the contract method name
@@ -64,9 +55,7 @@ export function getEventsFromMethodName(
 ): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
     if (response?.contractEvents) {
-        return response?.contractEvents?.filter(
-            (x) => x.event.identifier === eventName
-        )
+        return response?.contractEvents?.filter((x) => x.event.identifier === eventName)
     }
     return []
 }
@@ -75,36 +64,24 @@ export function getEventsFromMethodName(
  * the ABI types
  * @return encoded arguments
  */
-export function encodeStringArgs(
-    abi: Abi,
-    methodObj: AbiMessage,
-    args: any[]
-): Uint8Array[] {
+export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): Uint8Array[] {
     const encodedArgs: Uint8Array[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
     methodObj.args.forEach((methodArg, idx) => {
         let argVal = args[idx]
         // hash values that have been passed as strings
-        if (
-            typesToHash.indexOf(methodArg.type.type) > -1 &&
-            !(isU8a(argVal) || isHex(argVal))
-        ) {
+        if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
             argVal = stringToHexPadded(argVal) // hashes must be 32 bytes long
         }
-        encodedArgs.push(
-            abi.registry.createType(methodArg.type.type, argVal).toU8a()
-        )
+        encodedArgs.push(abi.registry.createType(methodArg.type.type, argVal).toU8a())
     })
     return encodedArgs
 }
 
 /** Handle errors returned from contract queries by throwing them
  */
-export function handleContractCallOutcomeErrors(
-    response: ContractCallOutcome,
-    contractMethodName: string
-): void {
+export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
     if (response.output) {
         const out: any = response.output
         if (out.isOk) {
@@ -139,11 +116,7 @@ export function stringToHexPadded(data: string): string {
 }
 
 // TODO add test for this
-export function decodeEvents(
-    contractAddress: AccountId,
-    records: EventRecord[],
-    abi: Abi
-): DecodedEvent[] | undefined {
+export function decodeEvents(contractAddress: AccountId, records: EventRecord[], abi: Abi): DecodedEvent[] | undefined {
     return records
         .filter(({ event }) => () => {
             const data = event.toPrimitive().data
@@ -153,10 +126,7 @@ export function decodeEvents(
             if (!(data instanceof Object)) {
                 return false
             }
-            return (
-                event.toPrimitive().section === 'contracts' &&
-                data.contracts === contractAddress.toString()
-            )
+            return event.toPrimitive().section === 'contracts' && data.contracts === contractAddress.toString()
         })
         .map((record): DecodedEvent | null => {
             try {
@@ -169,10 +139,7 @@ export function decodeEvents(
         .filter((decoded): decoded is DecodedEvent => !!decoded)
 }
 
-export function dispatchErrorHandler(
-    registry: Registry,
-    event: EventRecord
-): ProsopoContractError {
+export function dispatchErrorHandler(registry: Registry, event: EventRecord): ProsopoContractError {
     const dispatchError = event.event.data[0] as DispatchError
     let message: string = dispatchError.type
 
@@ -180,15 +147,10 @@ export function dispatchErrorHandler(
         try {
             const mod = dispatchError.asModule
             const error = registry.findMetaError(
-                new Uint8Array([
-                    mod.index.toNumber(),
-                    bnFromHex(mod.error.toHex().slice(0, 4)).toNumber(),
-                ])
+                new Uint8Array([mod.index.toNumber(), bnFromHex(mod.error.toHex().slice(0, 4)).toNumber()])
             )
             message = `${error.section}.${error.name}${
-                Array.isArray(error.docs)
-                    ? `(${error.docs.join('')})`
-                    : error.docs || ''
+                Array.isArray(error.docs) ? `(${error.docs.join('')})` : error.docs || ''
             }`
         } catch (error) {
             // swallow
@@ -261,18 +223,11 @@ export function getDispatchError(dispatchError: DispatchError): string {
     return message
 }
 
-export function filterAndDecodeContractEvents(
-    result: SubmittableResult,
-    abi: Abi,
-    logger: Logger
-): DecodedEvent[] {
+export function filterAndDecodeContractEvents(result: SubmittableResult, abi: Abi, logger: Logger): DecodedEvent[] {
     return result.events
         .filter(
             (e) =>
-                e.event.section === 'contracts' &&
-                ['ContractEmitted', 'ContractExecution'].indexOf(
-                    e.event.method
-                ) > -1
+                e.event.section === 'contracts' && ['ContractEmitted', 'ContractExecution'].indexOf(e.event.method) > -1
         )
         .map((eventRecord): DecodedEvent | null => {
             const {
@@ -283,11 +238,7 @@ export function filterAndDecodeContractEvents(
             try {
                 return abi.decodeEvent(data as Bytes)
             } catch (error) {
-                logger.error(
-                    `Unable to decode contract event: ${
-                        (error as Error).message
-                    }`
-                )
+                logger.error(`Unable to decode contract event: ${(error as Error).message}`)
                 logger.error(eventRecord.event.toHuman())
 
                 return null
@@ -298,11 +249,7 @@ export function filterAndDecodeContractEvents(
 
 export function formatEvent(event: Event): string {
     return `${event.section}.${event.method}${
-        'docs' in event
-            ? Array.isArray(event.docs)
-                ? `(${event.docs.join('')})`
-                : event.docs || ''
-            : ''
+        'docs' in event ? (Array.isArray(event.docs) ? `(${event.docs.join('')})` : event.docs || '') : ''
     }`
 }
 
@@ -310,8 +257,6 @@ export function getExpectedBlockTime(api: ApiPromise): BN {
     return new BN(api.consts.babe?.expectedBlockTime || 6000)
 }
 
-export async function getBlockNumber(
-    api: ApiPromise
-): Promise<Compact<BlockNumber>> {
+export async function getBlockNumber(api: ApiPromise): Promise<Compact<BlockNumber>> {
     return (await api.rpc.chain.getBlock()).block.header.number
 }

@@ -53,11 +53,7 @@ describe('reloading api', () => {
     }, 120000)
 })
 
-const onData = async (
-    data: any,
-    rootDir: string,
-    appended: boolean
-): Promise<{ appended: boolean; kill: boolean }> => {
+const onData = async (data: any, rootDir: string, appended: boolean): Promise<{ appended: boolean; kill: boolean }> => {
     console.log(`stdout:\n${data}`)
     await new Promise((resolve) => setTimeout(resolve, 500))
 

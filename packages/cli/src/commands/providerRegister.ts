@@ -16,14 +16,8 @@ const providerRegisterArgsParser = z.object({
     fee: z.number(),
     payee: z.nativeEnum(Payee),
 })
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger ||
-        getLogger(LogLevel.enum.info, 'cli.provider_register')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_register')
     return {
         command: 'provider_register',
         describe: 'Register a Provider',
@@ -50,9 +44,7 @@ export default (
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const providerRegisterArgs: Parameters<
-                    typeof tasks.contract.query.providerRegister
-                > = [
+                const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
                     Array.from(stringToU8a(parsedArgs.url)),
                     parsedArgs.fee,
                     parsedArgs.payee,
@@ -60,13 +52,8 @@ export default (
                         value: 0,
                     },
                 ]
-                await wrapQuery(
-                    tasks.contract.query.providerRegister,
-                    tasks.contract.query
-                )(...providerRegisterArgs)
-                const result = await tasks.contract.tx.providerRegister(
-                    ...providerRegisterArgs
-                )
+                await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
+                const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
 
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {

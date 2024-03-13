@@ -15,28 +15,12 @@ import type { ProviderEnvironment } from '@prosopo/env'
 // limitations under the License.
 // Create a user of specified type using the databasePopulator
 import type { Account } from './accounts.js'
-import {
-    AccountKey,
-    type IDatabaseAccounts,
-} from './dataUtils/DatabaseAccounts.js'
-import {
-    DappAbiJSON,
-    DappWasm,
-} from './dataUtils/dapp-example-contract/loadFiles.js'
-import {
-    populateDatabase,
-    userFundMapDefault,
-} from './dataUtils/populateDatabase.js'
+import { AccountKey, type IDatabaseAccounts } from './dataUtils/DatabaseAccounts.js'
+import { DappAbiJSON, DappWasm } from './dataUtils/dapp-example-contract/loadFiles.js'
+import { populateDatabase, userFundMapDefault } from './dataUtils/populateDatabase.js'
 
-export async function getUser(
-    env: ProviderEnvironment,
-    accountType: AccountKey,
-    fund = true
-): Promise<Account> {
-    const accountConfig = Object.assign(
-        {},
-        ...Object.keys(AccountKey).map((item) => ({ [item]: 0 }))
-    )
+export async function getUser(env: ProviderEnvironment, accountType: AccountKey, fund = true): Promise<Account> {
+    const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
     accountConfig[accountType] = 1
     const dappWasm = await DappWasm()
     const dappAbiJSON = await DappAbiJSON()
@@ -51,9 +35,7 @@ export async function getUser(
     )
     const account = databaseAccounts[accountType].pop()
     if (account === undefined) {
-        throw new ProsopoEnvError(
-            new Error(`${accountType} not created by databasePopulator`)
-        )
+        throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
     }
     return account
 }

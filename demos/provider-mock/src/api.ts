@@ -44,15 +44,13 @@ export function prosopoRouter(): Router {
         }
         try {
             const testCommitmentId = '0x123456789test'
-            const testAccount =
-                '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+            const testAccount = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
             const testDapp = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
             let statusMessage = 'API.USER_NOT_VERIFIED'
             let approved = false
             if (
                 (parsed.user && parsed.user === testAccount) ||
-                (parsed.commitmentId &&
-                    parsed.commitmentId === testCommitmentId) ||
+                (parsed.commitmentId && parsed.commitmentId === testCommitmentId) ||
                 (parsed.dapp && parsed.dapp === testDapp)
             ) {
                 approved = true

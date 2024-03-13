@@ -100,15 +100,9 @@ export const Manager = async (configInput: ProcaptchaClientConfigInput) => {
         contract.query
     )(account.account.address, configInput.account.address || '')
 
-    const providerUrl = trimProviderUrl(
-        getRandomProviderResponse.provider.url.toString()
-    )
+    const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
 
-    const providerApi = new ProviderApi(
-        getNetwork(getConfig()),
-        providerUrl,
-        configInput.account.address || ''
-    )
+    const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, configInput.account.address || '')
 
     const challenge = await providerApi.getPowCaptchaChallenge(
         account.account.address,

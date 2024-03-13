@@ -13,10 +13,7 @@ import { array, number, object, string, type infer as zInfer } from 'zod'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    CaptchaSolutionSchema,
-    type CaptchaWithProof,
-} from '../datasets/index.js'
+import { CaptchaSolutionSchema, type CaptchaWithProof } from '../datasets/index.js'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',

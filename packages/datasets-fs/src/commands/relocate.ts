@@ -2,10 +2,7 @@ import fs from 'node:fs'
 import { get } from '@prosopo/util'
 import { lodash } from '@prosopo/util/lodash'
 import * as z from 'zod'
-import {
-    InputOutputArgsSchema,
-    InputOutputCliCommand,
-} from '../utils/inputOutput.js'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     from: z.string(),
@@ -22,12 +19,10 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             input: {
-                description:
-                    'A json file containing a list of objects with (at least) a url',
+                description: 'A json file containing a list of objects with (at least) a url',
             },
             output: {
-                description:
-                    'Where to write the new json file containing the new urls',
+                description: 'Where to write the new json file containing the new urls',
             },
             from: {
                 string: true,
@@ -73,9 +68,7 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
         }
 
         const file: string = args.input
-        this.logger.log(
-            `relocating data in ${file} from ${args.from} to ${args.to}`
-        )
+        this.logger.log(`relocating data in ${file} from ${args.from} to ${args.to}`)
         // read the file
         let data = JSON.parse(fs.readFileSync(file, 'utf8'))
         // replace the urls by recursively traversing the data

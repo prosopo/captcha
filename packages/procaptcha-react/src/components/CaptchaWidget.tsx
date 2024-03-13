@@ -32,17 +32,9 @@ const getHash = (item: any) => {
     return item.hash
 }
 
-export const CaptchaWidget = ({
-    challenge,
-    solution,
-    onClick,
-    themeColor,
-}: CaptchaWidgetProps) => {
+export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: CaptchaWidgetProps) => {
     const items = challenge.captcha.items
-    const theme = useMemo(
-        () => (themeColor === 'light' ? lightTheme : darkTheme),
-        [themeColor]
-    )
+    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
     const isTouchDevice = 'ontouchstart' in window
 
@@ -82,12 +74,8 @@ export const CaptchaWidget = ({
                                 height: '100%',
                                 width: '100%',
                             }}
-                            onClick={
-                                isTouchDevice ? undefined : () => onClick(hash)
-                            }
-                            onTouchStart={
-                                isTouchDevice ? () => onClick(hash) : undefined
-                            }
+                            onClick={isTouchDevice ? undefined : () => onClick(hash)}
+                            onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
                         >
                             <div
                                 style={{
@@ -98,13 +86,8 @@ export const CaptchaWidget = ({
                                 <img
                                     style={{
                                         width: '100%', // image should be full width / height of the item
-                                        backgroundColor:
-                                            theme.palette.grey[300], // colour of the bands when letterboxing and image
-                                        opacity:
-                                            solution.includes(hash) &&
-                                            isTouchDevice
-                                                ? '50%'
-                                                : '100%', // iphone workaround
+                                        backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
+                                        opacity: solution.includes(hash) && isTouchDevice ? '50%' : '100%', // iphone workaround
                                         display: 'block', // removes whitespace below imgs
                                         objectFit: 'contain', // contain the entire image in the img tag
                                         aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
@@ -124,12 +107,9 @@ export const CaptchaWidget = ({
                                     height: '100%',
                                     // shift it up 100% to overlay the item element
                                     top: '-100%',
-                                    visibility: solution.includes(hash)
-                                        ? 'visible'
-                                        : 'hidden',
+                                    visibility: solution.includes(hash) ? 'visible' : 'hidden',
                                     // transition on opacity upon (de)selection
-                                    transition:
-                                        'opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+                                    transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
                                     opacity: 1,
                                 }}
                             >
@@ -160,8 +140,7 @@ export const CaptchaWidget = ({
                                             // how big the overlay icon is
                                             width: '35%',
                                             height: '35%',
-                                            transition:
-                                                'fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+                                            transition: 'fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
                                             userSelect: 'none',
                                             fill: 'currentcolor',
                                         }}

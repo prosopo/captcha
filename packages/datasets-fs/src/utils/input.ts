@@ -9,9 +9,7 @@ export const InputArgsSchema = z.object({
 
 export type InputArgs = z.infer<typeof InputArgsSchema>
 
-export class InputCliCommand<
-    T extends typeof InputArgsSchema,
-> extends CliCommand<T> {
+export class InputCliCommand<T extends typeof InputArgsSchema> extends CliCommand<T> {
     public override getArgSchema(): T {
         throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
@@ -34,12 +32,9 @@ export class InputCliCommand<
         await super._check(args)
         // input must exist
         if (!fs.existsSync(args.input)) {
-            throw new ProsopoDatasetError(
-                new Error(`input path does not exist: ${args.input}`),
-                {
-                    translationKey: 'FS.FILE_NOT_FOUND',
-                }
-            )
+            throw new ProsopoDatasetError(new Error(`input path does not exist: ${args.input}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
     }
 }

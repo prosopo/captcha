@@ -7,9 +7,7 @@ export const InputOutputArgsSchema = InputArgsSchema.merge(OutputArgsSchema)
 
 export type InputOutputArgs = z.infer<typeof InputOutputArgsSchema>
 
-export abstract class InputOutputCliCommand<
-    T extends typeof InputOutputArgsSchema,
-> extends CliCommandComposite<T> {
+export abstract class InputOutputCliCommand<T extends typeof InputOutputArgsSchema> extends CliCommandComposite<T> {
     constructor() {
         super([new InputCliCommand<T>(), new OutputCliCommand<T>()])
     }

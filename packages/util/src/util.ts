@@ -1,6 +1,5 @@
 // sleep for some milliseconds
-export const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms))
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // create a generator that yields the permutations for a set of options
 // E.g. say we have 3 chars which can take 2 values each ('a' or 'b'), then we have 2^3 = 8 permutations:
@@ -50,36 +49,14 @@ export function* permutations(
     }
 }
 
-export function get<T>(
-    obj: T,
-    key: unknown,
-    required?: true
-): Exclude<T[keyof T], undefined>
-export function get<T>(
-    obj: T,
-    key: unknown,
-    required: false
-): T[keyof T] | undefined
-export function get<T>(
-    obj: unknown,
-    key: string | number | symbol,
-    required?: true
-): Exclude<T, undefined>
-export function get<T>(
-    obj: unknown,
-    key: string | number | symbol,
-    required: false
-): T | undefined
+export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
+export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
+export function get<T>(obj: unknown, key: string | number | symbol, required?: true): Exclude<T, undefined>
+export function get<T>(obj: unknown, key: string | number | symbol, required: false): T | undefined
 export function get<T, V>(obj: T, key: unknown, required = true): V {
     const value = obj[key as unknown as keyof T]
     if (required && value === undefined) {
-        throw new Error(
-            `Object has no property '${String(key)}': ${JSON.stringify(
-                obj,
-                null,
-                2
-            )}`
-        )
+        throw new Error(`Object has no property '${String(key)}': ${JSON.stringify(obj, null, 2)}`)
     }
     return value as V
 }
@@ -89,28 +66,16 @@ export type AtOptions = {
     noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
 }
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null (can be overridden with the options)
-export function at(
-    str: string,
-    index: number,
-    options: AtOptions & { optional: true }
-): string | undefined
+export function at(str: string, index: number, options: AtOptions & { optional: true }): string | undefined
 export function at(str: string, index: number, options?: AtOptions): string
-export function at<T>(
-    items: T[] | string,
-    index: number,
-    options: AtOptions & { optional: false }
-): T
+export function at<T>(items: T[] | string, index: number, options: AtOptions & { optional: false }): T
 export function at<T>(
     items: (T | undefined)[] | string,
     index: number,
     options: AtOptions & { optional: true }
 ): T | undefined
 export function at<T>(items: T[], index: number, options?: AtOptions): T
-export function at<T>(
-    items: T[] | string,
-    index: number,
-    options?: AtOptions
-): T {
+export function at<T>(items: T[] | string, index: number, options?: AtOptions): T {
     if (items.length === 0) {
         throw new Error('Array is empty')
     }
@@ -122,15 +87,12 @@ export function at<T>(
             // negative index, so index wraps in reverse
             // e.g. say the index is -25 and the items length is 10
             // ceil(25 / 10) = 3 * 10 = 30 + -25 = 5
-            index =
-                Math.ceil(Math.abs(index) / items.length) * items.length + index
+            index = Math.ceil(Math.abs(index) / items.length) * items.length + index
         }
     }
 
     if (index >= items.length) {
-        throw new Error(
-            `Index ${index} larger than array length ${items.length}`
-        )
+        throw new Error(`Index ${index} larger than array length ${items.length}`)
     }
     if (index < 0) {
         throw new Error(`Index ${index} smaller than 0`)
@@ -142,16 +104,9 @@ export function at<T>(
 type ChoiceOptions = {
     withReplacement?: boolean
 }
-function choice<T>(
-    items: T[],
-    n: number,
-    random: () => number,
-    options?: ChoiceOptions
-): T[] {
+function choice<T>(items: T[], n: number, random: () => number, options?: ChoiceOptions): T[] {
     if (n > items.length) {
-        throw new Error(
-            `Cannot choose ${n} items from array of length ${items.length}`
-        )
+        throw new Error(`Cannot choose ${n} items from array of length ${items.length}`)
     }
 
     const result: T[] = []
@@ -171,10 +126,7 @@ export function getCurrentFileDirectory(url: string) {
     return new URL(url).pathname.split('/').slice(0, -1).join('/')
 }
 
-export const flattenObj = (
-    obj: object,
-    prefix = ''
-): Record<string, unknown> => {
+export const flattenObj = (obj: object, prefix = ''): Record<string, unknown> => {
     const flattenedObj: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
         if (value instanceof Object) {
@@ -188,10 +140,7 @@ export const flattenObj = (
 
 // https://stackoverflow.com/questions/63116039/camelcase-to-kebab-case
 export const kebabCase = (str: string) =>
-    str.replace(
-        /[A-Z]+(?![a-z])|[A-Z]/g,
-        ($, ofs) => (ofs ? '-' : '') + $.toLowerCase()
-    )
+    str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
 
 export type MergeOptions = {
     atomicArrays?: boolean
@@ -246,10 +195,7 @@ export function merge<T extends object | A[], U extends object | B[], A, B>(
                 // copy the elements from src into dest
                 for (let i = 0; i < src.length; i++) {
                     // if the element is an array or object, then we need to merge it
-                    if (
-                        (isArray(dest[i]) && isArray(src[i])) ||
-                        (isObject(dest[i]) && isObject(src[i]))
-                    ) {
+                    if ((isArray(dest[i]) && isArray(src[i])) || (isObject(dest[i]) && isObject(src[i]))) {
                         // need to merge arrays or objects
                         queue.push({
                             src: src[i],
@@ -269,10 +215,7 @@ export function merge<T extends object | A[], U extends object | B[], A, B>(
             // for every entry in src
             for (const [key, value] of Object.entries(src)) {
                 // if the value in src + dest is an array or object, then we need to merge it
-                if (
-                    (isArray(value) && isArray(destAny[key])) ||
-                    (isObject(value) && isObject(destAny[key]))
-                ) {
+                if ((isArray(value) && isArray(destAny[key])) || (isObject(value) && isObject(destAny[key]))) {
                     // need to merge arrays or objects
                     queue.push({
                         src: value,

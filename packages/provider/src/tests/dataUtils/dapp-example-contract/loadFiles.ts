@@ -35,9 +35,7 @@ export async function DappAbiJSON(): Promise<Abi> {
 }
 
 export async function DappWasm(): Promise<Uint8Array> {
-    const wasm: `0x${string}` = `0x${fse
-        .readFileSync(path.resolve(__dirname, './dapp.wasm'))
-        .toString('hex')}`
+    const wasm: `0x${string}` = `0x${fse.readFileSync(path.resolve(__dirname, './dapp.wasm')).toString('hex')}`
     const wasmBytes = hexToU8a(wasm)
     if (isWasm(wasmBytes)) {
         return wasmBytes

@@ -1,12 +1,6 @@
 import fs from 'node:fs'
 import { ProsopoDatasetError } from '@prosopo/common'
-import {
-    DataSchema,
-    type Item,
-    LabelledDataSchema,
-    type LabelledItem,
-    LabelsContainerSchema,
-} from '@prosopo/types'
+import { DataSchema, type Item, LabelledDataSchema, type LabelledItem, LabelsContainerSchema } from '@prosopo/types'
 import { lodash, setSeedGlobal } from '@prosopo/util/lodash'
 import * as z from 'zod'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
@@ -25,9 +19,7 @@ export const ArgsSchema = OutputArgsSchema.extend({
 export type ArgsSchemaType = typeof ArgsSchema
 export type Args = z.infer<ArgsSchemaType>
 
-export abstract class Generate<
-    T extends ArgsSchemaType,
-> extends OutputCliCommand<T> {
+export abstract class Generate<T extends ArgsSchemaType> extends OutputCliCommand<T> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             output: {
@@ -59,8 +51,7 @@ export abstract class Generate<
             },
             allowDuplicates: {
                 boolean: true,
-                description:
-                    'If true, allow duplicates in the data (labelled and unlabelled)',
+                description: 'If true, allow duplicates in the data (labelled and unlabelled)',
             },
             allowDuplicatesLabelled: {
                 boolean: true,
@@ -77,25 +68,15 @@ export abstract class Generate<
         // if specified, check files exist
         const labelledMapFile: string | undefined = args.labelled
         if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-            throw new ProsopoDatasetError(
-                new Error(
-                    `labelled map file does not exist: ${labelledMapFile}`
-                ),
-                {
-                    translationKey: 'FS.FILE_NOT_FOUND',
-                }
-            )
+            throw new ProsopoDatasetError(new Error(`labelled map file does not exist: ${labelledMapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         const unlabelledMapFile: string | undefined = args.unlabelled
         if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-            throw new ProsopoDatasetError(
-                new Error(
-                    `unlabelled map file does not exist: ${unlabelledMapFile}`
-                ),
-                {
-                    translationKey: 'FS.FILE_NOT_FOUND',
-                }
-            )
+            throw new ProsopoDatasetError(new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         this.labelledMapFile = labelledMapFile || ''
         this.unlabelledMapFile = unlabelledMapFile || ''
@@ -111,21 +92,15 @@ export abstract class Generate<
     saltRounds = 10
 
     private loadData(args: Args) {
-        const allowDuplicatesLabelled =
-            args.allowDuplicatesLabelled || args.allowDuplicates || false
-        const allowDuplicatesUnlabelled =
-            args.allowDuplicatesUnlabelled || args.allowDuplicates || false
+        const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
+        const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
 
         // load the map to get the labelled and unlabelled data
         this.labelled = this.labelledMapFile
-            ? LabelledDataSchema.parse(
-                  JSON.parse(fs.readFileSync(this.labelledMapFile, 'utf8'))
-              ).items
+            ? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(this.labelledMapFile, 'utf8'))).items
             : []
         this.unlabelled = this.unlabelledMapFile
-            ? DataSchema.parse(
-                  JSON.parse(fs.readFileSync(this.unlabelledMapFile, 'utf8'))
-              ).items
+            ? DataSchema.parse(JSON.parse(fs.readFileSync(this.unlabelledMapFile, 'utf8'))).items
             : []
 
         // check for duplicates
@@ -151,11 +126,7 @@ export abstract class Generate<
         this.labels = []
         if (args.labels && fs.existsSync(args.labels)) {
             this.labels.push(
-                ...[
-                    ...LabelsContainerSchema.parse(
-                        JSON.parse(fs.readFileSync(args.labels, 'utf8'))
-                    ).labels,
-                ]
+                ...[...LabelsContainerSchema.parse(JSON.parse(fs.readFileSync(args.labels, 'utf8'))).labels]
             )
         } else {
             // else default to the labels in the labelled data
@@ -186,10 +157,8 @@ export const checkDuplicates = (
 ) => {
     // check for duplicates
     const all = new Set<string>()
-    if (!options.allowDuplicatesLabelled)
-        addAllUnique(all, labelled, 'labelled')
-    if (!options.allowDuplicatesUnlabelled)
-        addAllUnique(all, unlabelled, 'unlabelled')
+    if (!options.allowDuplicatesLabelled) addAllUnique(all, labelled, 'labelled')
+    if (!options.allowDuplicatesUnlabelled) addAllUnique(all, unlabelled, 'unlabelled')
 }
 
 const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
@@ -202,9 +171,7 @@ const addUnique = (all: Set<string>, entry: Item, dataType: string) => {
     if (all.has(entry.data)) {
         throw new ProsopoDatasetError('DATASET.DUPLICATE_IMAGE', {
             context: {
-                error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(
-                    entry
-                )}`,
+                error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}`,
             },
         })
     }

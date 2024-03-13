@@ -18,20 +18,10 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { isAddress } from '@polkadot/util-crypto/address'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import {
-    type LogLevel,
-    type Logger,
-    ProsopoEnvError,
-    getLogger,
-} from '@prosopo/common'
+import { type LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { Databases } from '@prosopo/database'
-import type {
-    AssetsResolver,
-    ContractAbi,
-    EnvironmentTypes,
-    NetworkNames,
-} from '@prosopo/types'
+import type { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import type { ProsopoBasicConfigOutput } from '@prosopo/types'
 import type { Database } from '@prosopo/types-database'
 import type { ProsopoEnvironment } from '@prosopo/types-env'
@@ -61,10 +51,7 @@ export class Environment implements ProsopoEnvironment {
         this.logger = getLogger(this.config.logLevel, 'ProsopoEnvironment')
         if (
             this.config.defaultNetwork &&
-            Object.prototype.hasOwnProperty.call(
-                this.config.networks,
-                this.config.defaultNetwork
-            ) &&
+            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultNetwork) &&
             this.config.networks &&
             this.config.networks[this.defaultNetwork]
         ) {
@@ -114,38 +101,28 @@ export class Environment implements ProsopoEnvironment {
 
     getApi(): ApiPromise {
         if (this.api === undefined) {
-            throw new ProsopoEnvError(
-                new Error('api not setup! Please call isReady() first')
-            )
+            throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
         }
         return this.api
     }
 
     getDb(): Database {
         if (this.db === undefined) {
-            throw new ProsopoEnvError(
-                new Error('db not setup! Please call isReady() first')
-            )
+            throw new ProsopoEnvError(new Error('db not setup! Please call isReady() first'))
         }
         return this.db
     }
 
     getAssetsResolver(): AssetsResolver {
         if (this.assetsResolver === undefined) {
-            throw new ProsopoEnvError(
-                new Error(
-                    'assetsResolver not setup! Please call isReady() first'
-                )
-            )
+            throw new ProsopoEnvError(new Error('assetsResolver not setup! Please call isReady() first'))
         }
         return this.assetsResolver
     }
 
     getPair(): KeyringPair {
         if (this.pair === undefined) {
-            throw new ProsopoEnvError(
-                new Error('pair not setup! Please call isReady() first')
-            )
+            throw new ProsopoEnvError(new Error('pair not setup! Please call isReady() first'))
         }
         return this.pair
     }
@@ -158,9 +135,7 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = this.pair
-            ? await this.getApi().rpc.system.accountNextIndex(this.pair.address)
-            : 0
+        const nonce = this.pair ? await this.getApi().rpc.system.accountNextIndex(this.pair.address) : 0
         if (!isAddress(this.contractAddress)) {
             throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
         }
@@ -195,9 +170,7 @@ export class Environment implements ProsopoEnvironment {
             } else {
                 // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
                 // just console logging for the time being!
-                console.warn(
-                    `invalid contract address: ${this.contractAddress}`
-                )
+                console.warn(`invalid contract address: ${this.contractAddress}`)
             }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
@@ -205,9 +178,7 @@ export class Environment implements ProsopoEnvironment {
                 })
             }
             if (this.db && this.db.connection?.readyState !== 1) {
-                this.logger.warn(
-                    'Database connection is not ready, reconnecting...'
-                )
+                this.logger.warn('Database connection is not ready, reconnecting...')
                 await this.db.connect()
                 this.logger.info('Connected to db')
             }
@@ -239,8 +210,7 @@ export class Environment implements ProsopoEnvironment {
                     error,
                     environment: this.config.database
                         ? this.config.database[this.defaultEnvironment]
-                            ? this.config.database[this.defaultEnvironment]
-                                  ?.type
+                            ? this.config.database[this.defaultEnvironment]?.type
                             : undefined
                         : undefined,
                 },

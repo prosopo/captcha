@@ -7,10 +7,7 @@ import { lodash } from '@prosopo/util/lodash'
 import cliProgress from 'cli-progress'
 import sharp from 'sharp'
 import * as z from 'zod'
-import {
-    InputOutputArgsSchema,
-    InputOutputCliCommand,
-} from '../utils/inputOutput.js'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     size: z.number(),
@@ -27,8 +24,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
             input: {
-                description:
-                    'JSON file containing a list of objects with (at least) a url',
+                description: 'JSON file containing a list of objects with (at least) a url',
             },
             output: {
                 description:
@@ -55,22 +51,16 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 
         const mapFile: string = args.input
         if (!fs.existsSync(mapFile)) {
-            throw new ProsopoDatasetError(
-                new Error(`Map file does not exist: ${mapFile}`),
-                {
-                    translationKey: 'FS.FILE_NOT_FOUND',
-                }
-            )
+            throw new ProsopoDatasetError(new Error(`Map file does not exist: ${mapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         const outDir: string = args.output
         const overwrite = args.overwrite || false
         if (!overwrite && fs.existsSync(outDir)) {
-            throw new ProsopoEnvError(
-                new Error(`Output directory already exists: ${outDir}`),
-                {
-                    translationKey: 'FS.FILE_NOT_FOUND',
-                }
-            )
+            throw new ProsopoEnvError(new Error(`Output directory already exists: ${outDir}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
 
         // create the output directory
@@ -78,15 +68,10 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         fs.mkdirSync(imgDir, { recursive: true })
 
         // read the map file
-        const inputItems: Item[] = DataSchema.parse(
-            JSON.parse(fs.readFileSync(mapFile, 'utf8'))
-        ).items
+        const inputItems: Item[] = DataSchema.parse(JSON.parse(fs.readFileSync(mapFile, 'utf8'))).items
 
         // for each item
-        const bar = new cliProgress.SingleBar(
-            {},
-            cliProgress.Presets.shades_classic
-        )
+        const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
         bar.start(inputItems.length, 0)
         const outputItems: Item[] = []
         for (const inputItem of inputItems) {

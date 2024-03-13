@@ -15,8 +15,4 @@ import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Cont
 import type { CaptchaSolutionCommitmentId } from '@prosopo/api'
 import type { CaptchaSolutionResponse } from '@prosopo/types'
 
-export type TCaptchaSubmitResult = [
-    CaptchaSolutionResponse,
-    CaptchaSolutionCommitmentId,
-    ContractSubmittableResult?,
-]
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, CaptchaSolutionCommitmentId, ContractSubmittableResult?]

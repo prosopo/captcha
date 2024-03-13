@@ -9,13 +9,8 @@ import type { ArgumentsCamelCase, Argv } from 'yargs'
 import * as z from 'zod'
 import { validateAddress, validatePayee } from './validators.js'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_update')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_update')
 
     return {
         command: 'provider_update',
@@ -56,19 +51,10 @@ export default (
                         address: z.string(),
                     })
                     .parse(argv)
-                const provider = (
-                    await tasks.contract.query.getProvider(address, {})
-                ).value
-                    .unwrap()
-                    .unwrap()
+                const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
                 if (provider && (url || fee || payee || value)) {
-                    const urlConverted = url
-                        ? Array.from(new UrlConverter().encode(url.toString()))
-                        : provider.url
-                    await wrapQuery(
-                        tasks.contract.query.providerUpdate,
-                        tasks.contract.query
-                    )(
+                    const urlConverted = url ? Array.from(new UrlConverter().encode(url.toString())) : provider.url
+                    await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
                         urlConverted,
                         fee || provider.fee,
                         payee || provider.payee,

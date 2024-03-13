@@ -16,9 +16,7 @@ export default class AccountSigner implements Signer {
         this.#registry = registry
     }
 
-    public async signPayload(
-        payload: SignerPayloadJSON
-    ): Promise<SignerResult> {
+    public async signPayload(payload: SignerPayloadJSON): Promise<SignerResult> {
         return new Promise((resolve): void => {
             const signed = this.#registry
                 .createType('ExtrinsicPayload', payload, {

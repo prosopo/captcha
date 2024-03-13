@@ -10,13 +10,8 @@ import type { ArgumentsCamelCase, Argv } from 'yargs'
 import * as z from 'zod'
 import { validateContract, validatePayee } from './validators.js'
 
-export default (
-    pair: KeyringPair,
-    config: ProsopoConfigOutput,
-    cmdArgs?: { logger?: Logger }
-) => {
-    const logger =
-        cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_register')
+export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_register')
 
     return {
         command: 'dapp_register',
@@ -38,22 +33,15 @@ export default (
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const dappRegisterArgs: Parameters<
-                    typeof tasks.contract.query.dappRegister
-                > = [
+                const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappRegister> = [
                     z.string().parse(argv.contract),
                     get(DappPayee, z.string().parse(argv.payee)),
                     {
                         value: 0,
                     },
                 ]
-                await wrapQuery(
-                    tasks.contract.query.dappRegister,
-                    tasks.contract.query
-                )(...dappRegisterArgs)
-                const result = await tasks.contract.tx.dappRegister(
-                    ...dappRegisterArgs
-                )
+                await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(...dappRegisterArgs)
+                const result = await tasks.contract.tx.dappRegister(...dappRegisterArgs)
 
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {
