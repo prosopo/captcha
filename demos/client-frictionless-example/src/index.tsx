@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Keyring } from '@polkadot/keyring'
-import { blake2AsHex } from '@polkadot/util-crypto/blake2'
-import { u8aToHex } from '@polkadot/util/u8a'
+import { CssBaseline } from '@mui/material'
+import App from './App.js'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 
-export function sign(message: string): { messageHash: string; signature: string } {
-    const keyring = new Keyring({ type: 'ecdsa' })
-    const pair = keyring.addFromUri('//Alice')
-    const sig = pair.sign(message)
-    const signature = u8aToHex(sig)
-    const messageHash = blake2AsHex(message)
-    return { messageHash, signature }
-}
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
+
+root.render(
+    <React.Fragment>
+        <CssBaseline />
+        <App />
+    </React.Fragment>
+)

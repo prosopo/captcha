@@ -145,10 +145,6 @@ function App() {
         alert(error.message)
     }
 
-    const onAccountNotFound = (address: string) => {
-        alert(`Account ${address} not found`)
-    }
-
     const onExpired = () => {
         alert('Challenge has expired')
     }
@@ -206,7 +202,7 @@ function App() {
                                 <FormControl sx={{ m: 1 }}>
                                     <Procaptcha
                                         config={config}
-                                        callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
+                                        callbacks={{  onError, onHuman, onExpired }}
                                     />
                                 </FormControl>
                                 <FormControl>
