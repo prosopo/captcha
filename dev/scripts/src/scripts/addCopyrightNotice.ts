@@ -15,15 +15,11 @@ import { at } from '@prosopo/util'
 import { glob } from 'glob'
 import fs from 'fs'
 import path from 'path'
+import { getRootDir } from '@prosopo/config'
 
 const searchPaths = ['./**/*.ts', './**/*.tsx', './**/*.rs', './**/*.js', './**/*.cjs', './**/*.mjs']
 
-const currentPath = path.resolve('.')
-
-if (!currentPath.endsWith('captcha')) {
-    console.error('This script should be run from the root of the captcha workspace')
-    process.exit(1)
-}
+const currentPath = getRootDir()
 
 const files = glob.sync(searchPaths, {
     cwd: currentPath,
