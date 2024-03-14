@@ -52,7 +52,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-            
+
             - uses: actions/checkout@v3
               with:
                   # fetch all history + branches
@@ -324,9 +324,11 @@ jobs:
               if: steps.check_version_any.outputs.bump == 'true'
 
             - uses: actions/setup-node@v3
+              if: steps.check_version_any.outputs.bump == 'true'
               with:
                   node-version-file: '.nvmrc'
             - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+              if: steps.check_version_any.outputs.bump == 'true'
 
             - name: Install
               if: steps.check_version_any.outputs.bump == 'true'
