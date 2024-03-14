@@ -53,7 +53,7 @@ const signup = async (
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
         }
-
+        console.log('payload', payload)
         if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
             // salt
             const salt = randomAsHex(32)

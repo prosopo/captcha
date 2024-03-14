@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ describe('Captchas', () => {
     })
 
     it('Selecting the correct images passes the captcha', () => {
+        cy.get('button[type="button"]').eq(1).click()
         cy.clickIAmHuman().then(() => {
             // Make sure the images are loaded
             cy.captchaImages().then(() => {
@@ -56,6 +57,18 @@ describe('Captchas', () => {
                             cy.wrap(checkboxes).first().should('be.checked')
                         })
                     })
+                const uniqueId = Cypress._.uniqueId('test')
+                cy.get('input[type="password"]').type('password')
+                cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`)
+                cy.get('input[id="name"]').type('test')
+                cy.get('button[type="button"]').first().click()
+
+                cy.contains('user created').should('be.visible')
+
+                // reloading the page and checking the box again should not require a captcha to be solved
+                cy.reload()
+
+                cy.get(checkboxClass, { timeout: 12000 }).first().click()
             })
         })
     })
