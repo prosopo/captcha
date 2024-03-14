@@ -16,6 +16,20 @@ import { getRootDir } from '@prosopo/config'
 import { glob } from 'glob'
 import fs from 'fs'
 
+const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.`
+
 const searchPaths = [
     '**/*.ts',
     '**/*.tsx',
@@ -46,26 +60,20 @@ const files = glob.sync(searchPaths, {
 if (process.argv[2] === 'list') {
     console.log(JSON.stringify(files, null, 4))
     console.log('Found', files.length, 'files')
-    if (process.env['CI']) {
-        console.log('running in CI, exiting')
-        process.exit(1)
+}
+
+if (process.argv[2] === 'check') {
+    for (const file of files) {
+        const fileContents = fs.readFileSync(file, 'utf8')
+        if(fileContents.startsWith(header)) {
+            console.log('License present:', file)
+        } else {
+            throw new Error(`License not present: ${file}`)
+        }
     }
 }
 
 if (process.argv[2] === 'license') {
-    const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.`
 
     //for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
     for (const file of files) {
