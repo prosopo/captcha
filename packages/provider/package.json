@@ -21,6 +21,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "build:debug": "tsc --build --verbose",
         "build:config": "tsc --project",
+        "test": "NODE_ENV=test vitest --run",
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
         "populate-data": "ts-node ./tests/dataUtils/populateDatabase.ts",
