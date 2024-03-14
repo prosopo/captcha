@@ -56,17 +56,15 @@
         "prettier:fix": "npm --workspaces run prettier:fix && npm run prettier:fix:workspace",
         "prettier:fix:workspace": "npm run prettier:workspace -- --write",
         "prettier:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run prettier:fix",
-        "lint": "npm --workspaces run lint && npm run lint:workspace",
+        "lint": "npm run -w @prosopo/scripts license && npm --workspaces run lint && npm run lint:workspace",
         "lint:workspace": "npm run eslint:workspace && npm run prettier:workspace",
         "lint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint",
-        "lint:fix": "npm --workspaces run lint:fix && npm run lint:fix:workspace",
+        "lint:fix": "npm run -w @prosopo/scripts license:fix && npm --workspaces run lint:fix && npm run lint:fix:workspace",
         "lint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
-        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\"",
-        "license": "npm run -w @prosopo/scripts license",
-        "license:fix": "npm run -w @prosopo/scripts license:fix"
+        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\""
     },
     "private": true,
     "engines": {
