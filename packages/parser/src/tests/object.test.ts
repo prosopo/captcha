@@ -5,6 +5,8 @@ import { bool } from '../parsers/BooleanParser.js';
 import { num } from '../parsers/NumberParser.js';
 import { obj } from '../parsers/ObjectParser.js';
 import { str } from '../parsers/StringParser.js';
+import { arr } from '../parsers/ArrayParser.js';
+import { tuple } from '../parsers/TupleParser.js';
 
 enum Foo {
     A = 'x',
@@ -28,6 +30,118 @@ const p = () => obj({
 });
 
 describe("object", () => {
+    it("should parse object with correct fields", () => {
+        expect(p().parse({a: "a", b: 1, c: true})).toEqual({a: "a", b: 1, c: true});
+    })
+
+    it("should error on object with missing fields", () => {
+        expect(() => p().parse({a: "a", b: 1})).toThrow();
+    })
+
+    it("should error on object with extra fields", () => {
+        expect(() => p().parse({a: "a", b: 1, c: true, d: "d"})).toThrow();
+    })
+
+    it("should error on object with incorrect field type", () => {
+        expect(() => p().parse({a: "a", b: 1, c: 1})).toThrow();
+    })
+
+    it("should parse nested object with correct fields", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: obj({
+                d: bool(),
+                e: str()
+            })
+        });
+        expect(p.parse({a: "a", b: 1, c: {d: true, e: "e"}})).toEqual({a: "a", b: 1, c: {d: true, e: "e"}});
+    })
+
+    it("should error on nested object with missing fields", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: obj({
+                d: bool(),
+                e: str()
+            })
+        });
+        expect(() => p.parse({a: "a", b: 1, c: {d: true}})).toThrow();
+    })
+
+    it("should error on nested object with extra fields", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: obj({
+                d: bool(),
+                e: str()
+            })
+        });
+        expect(() => p.parse({a: "a", b: 1, c: {d: true, e: "e", f: "f"}})).toThrow();
+    })
+
+    it("should error on nested object with incorrect field type", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: obj({
+                d: bool(),
+                e: str()
+            })
+        });
+        expect(() => p.parse({a: "a", b: 1, c: {d: true, e: 1}})).toThrow();
+    })
+
+    it("should parse object with array field", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: arr(num())
+        });
+        expect(p.parse({a: "a", b: 1, c: [1, 2, 3]})).toEqual({a: "a", b: 1, c: [1, 2, 3]});
+    })
+
+    it("should error on object with array field with incorrect element type", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: arr(num())
+        });
+        expect(() => p.parse({a: "a", b: 1, c: [1, 2, "3"]})).toThrow();
+    })
+
+    it("should parse object with tuple field", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: tuple([num(), str()])
+        });
+        expect(p.parse({a: "a", b: 1, c: [1, "2"]})).toEqual({a: "a", b: 1, c: [1, "2"]});
+    })
+
+    it("should error on object with tuple field with incorrect element type", () => {
+        const p = obj({
+            a: str(),
+            b: num(),
+            c: tuple([num(), str()])
+        });
+        expect(() => p.parse({a: "a", b: 1, c: [1, 2]})).toThrow();
+    })
+
+    // todo
+    // type with tuple
+    // type with array
+    // array of objs
+    // tuple of objs
+    // intersection in obj
+    // union in obj
+    // intersection in nested obj
+    // union in nested obj
+    // deeply nested obj
+    // deeply complex obj
+
     it("should have correct typename", () => {
         expect(p().name).toBe("{\n\ta: string,\n\tb: number,\n\tc: boolean\n}")
     })
@@ -40,6 +154,34 @@ describe("object", () => {
         }>();
         const parser = p();
         const a: {a: string, b: number, c: boolean} = {a: "a", b: 1, c: true}
+        const b: ReturnType<typeof parser.parse> = a
+    })
+
+    it("should parse to correct type with nested object", () => {
+        expectTypeOf(() => obj({
+            a: str(),
+            b: num(),
+            c: obj({
+                d: bool(),
+                e: str()
+            })
+        }).parse(null)).returns.toMatchTypeOf<{
+            a: string;
+            b: number;
+            c: {
+                d: boolean;
+                e: string;
+            }
+        }>();
+        const parser = obj({
+            a: str(),
+            b: num(),
+            c: obj({
+                d: bool(),
+                e: str()
+            })
+        });
+        const a: { a: string, b: number, c: { d: boolean, e: string } } = { a: "a", b: 1, c: { d: true, e: "e" } }
         const b: ReturnType<typeof parser.parse> = a
     })
 
@@ -183,3 +325,4 @@ describe("object", () => {
         expect(() => p().parse(/./)).toThrow();
     })
 });
+
