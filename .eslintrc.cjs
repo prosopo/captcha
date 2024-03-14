@@ -1,18 +1,19 @@
 const visibleFiles = [
-                '*.ts',
-                '*.tsx',
-                '*.js',
-                '*.jsx',
-                '*.mjs',
-                '*.cjs',
-                '*.json',
-                '*.yaml',
-                '*.yml',
-                '*.toml',
-                '*.d.ts',
-                '*.cts',
-    '*.mts',]
-                
+    '*.ts',
+    '*.tsx',
+    '*.js',
+    '*.jsx',
+    '*.mjs',
+    '*.cjs',
+    '*.json',
+    '*.yaml',
+    '*.yml',
+    '*.toml',
+    '*.d.ts',
+    '*.cts',
+    '*.mts',
+]
+
 const hiddenFiles = visibleFiles.map((file) => `.${file}`)
 
 const files = visibleFiles.concat(hiddenFiles)
