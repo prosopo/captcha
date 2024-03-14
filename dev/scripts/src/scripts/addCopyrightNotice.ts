@@ -12,12 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at } from '@prosopo/util'
+import { getRootDir } from '@prosopo/config'
 import { glob } from 'glob'
 import fs from 'fs'
-import path from 'path'
-import { getRootDir } from '@prosopo/config'
 
-const searchPaths = ['**/*.ts', '**/*.tsx', '**/*.rs', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs', '**/*.cts', '**/*.mts']
+const searchPaths = [
+    '**/*.ts',
+    '**/*.tsx',
+    '**/*.rs',
+    '**/*.js',
+    '**/*.jsx',
+    '**/*.cjs',
+    '**/*.mjs',
+    '**/*.cts',
+    '**/*.mts',
+]
 
 const currentPath = getRootDir()
 
