@@ -44,18 +44,20 @@ const searchPaths = [
 
 const currentPath = getRootDir()
 
-const files = glob.sync(searchPaths, {
-    cwd: currentPath,
-    absolute: true,
-    ignore: [
-        '**/node_modules/**',
-        '**/cargo-cache/**',
-        '**/dist/**',
-        '**/target/**',
-        '**/coverage/**',
-        '**/vite.cjs.config.ts.timestamp*',
-    ],
-}).filter(file => fs.lstatSync(file).isFile())
+const files = glob
+    .sync(searchPaths, {
+        cwd: currentPath,
+        absolute: true,
+        ignore: [
+            '**/node_modules/**',
+            '**/cargo-cache/**',
+            '**/dist/**',
+            '**/target/**',
+            '**/coverage/**',
+            '**/vite.cjs.config.ts.timestamp*',
+        ],
+    })
+    .filter((file) => fs.lstatSync(file).isFile())
 
 if (process.argv[2] === 'list') {
     console.log(JSON.stringify(files, null, 4))
@@ -65,7 +67,7 @@ if (process.argv[2] === 'list') {
 if (process.argv[2] === 'check') {
     for (const file of files) {
         const fileContents = fs.readFileSync(file, 'utf8')
-        if(fileContents.startsWith(header)) {
+        if (fileContents.startsWith(header)) {
             console.log('License present:', file)
         } else {
             throw new Error(`License not present: ${file}`)
@@ -74,7 +76,6 @@ if (process.argv[2] === 'check') {
 }
 
 if (process.argv[2] === 'license') {
-
     //for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
     for (const file of files) {
         //check if file is a file, not a directory

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // #!/usr/bin/env node
 // import { hexToString, hexToU8a, u8aToHex } from '@polkadot/util'
 // import { Environment } from '../src/env'
