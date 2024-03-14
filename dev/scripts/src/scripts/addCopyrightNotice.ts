@@ -17,7 +17,7 @@ import fs from 'fs'
 import path from 'path'
 import { getRootDir } from '@prosopo/config'
 
-const searchPaths = ['./**/*.ts', './**/*.tsx', './**/*.rs', './**/*.js', './**/*.cjs', './**/*.mjs']
+const searchPaths = ['./**/*.ts', './**/*.tsx', './**/*.rs', './**/*.js', './**/*.jsx', './**/*.cjs', './**/*.mjs']
 
 const currentPath = getRootDir()
 
