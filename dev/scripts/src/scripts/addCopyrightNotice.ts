@@ -41,6 +41,10 @@ const files = glob.sync(searchPaths, {
 if (process.argv[2] === 'list') {
     console.log(JSON.stringify(files, null, 4))
     console.log('Found', files.length, 'files')
+    if (process.env['CI']) {
+        console.log('running in CI, exiting')
+        process.exit(1)
+    }
 }
 
 if (process.argv[2] === 'license') {
