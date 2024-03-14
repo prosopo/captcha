@@ -85,5 +85,6 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install -g npm@8.9
-            - run: npm install
+            - run: npm ci
+            - run: npm run build -w @prosopo/scripts
             - run: npm run license
