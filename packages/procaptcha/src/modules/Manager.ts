@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,23 +13,20 @@
 // limitations under the License.
 import {
     Account,
+    ApiParams,
     CaptchaSolution,
+    ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
+    ProcaptchaEvents,
     StoredEvents,
 } from '@prosopo/types'
-import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
-import {
-    ProcaptchaCallbacks,
-    ProcaptchaConfigOptional,
-    ProcaptchaEvents,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-} from '../types/manager.js'
+import { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
 import {
     ProsopoApiError,
     ProsopoContractError,
@@ -48,8 +45,6 @@ import { at } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util/string'
-import ExtensionWeb2 from '../api/ExtensionWeb2.js'
-import ExtensionWeb3 from '../api/ExtensionWeb3.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -96,21 +91,20 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
 export function Manager(
-    configOptional: ProcaptchaConfigOptional,
+    configOptional: ProcaptchaClientConfigInput,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
 
-    const alertError = (error: Error) => {
+    const alertError = (error: ProsopoError) => {
         console.log(error)
         alert(error.message)
     }
 
     const events: ProcaptchaEvents = Object.assign(
         {
-            onAccountNotFound: alertError,
             onError: alertError,
             onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
                 console.log('onHuman event triggered', output)
@@ -131,7 +125,6 @@ export function Manager(
             },
             onOpen: () => {
                 console.log('onOpen event triggered')
-                updateState({ sendData: !state.sendData })
             },
             onClose: () => {
                 console.log('onClose event triggered')
@@ -142,11 +135,7 @@ export function Manager(
 
     const dispatchErrorEvent = (err: unknown) => {
         const error = err instanceof Error ? err : new Error(String(err))
-        if (error instanceof AccountNotFoundError) {
-            events.onAccountNotFound(error.message)
-        } else {
-            events.onError(error)
-        }
+        events.onError(error)
     }
 
     // get the state update mechanism
@@ -257,10 +246,11 @@ export function Manager(
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
-                            providerUrl: providerUrlFromStorage,
-                            user: account.account.address,
-                            dapp: getDappAccount(),
-                            commitmentId: verifyDappUserResponse.commitmentId,
+                            [ApiParams.providerUrl]: providerUrlFromStorage,
+                            [ApiParams.user]: account.account.address,
+                            [ApiParams.dapp]: getDappAccount(),
+                            [ApiParams.commitmentId]: verifyDappUserResponse.commitmentId,
+                            [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         })
                         setValidChallengeTimeout()
                         return
@@ -597,12 +587,34 @@ export function Manager(
     }
 
     const exportData = async (events: StoredEvents) => {
+        const providerUrlFromStorage = storage.getProviderUrl()
+        let providerApi: ProviderApi
+
+        if (providerUrlFromStorage) {
+            providerApi = await loadProviderApi(providerUrlFromStorage)
+        } else {
+            const contract = await loadContract()
+            const getRandomProviderResponse: RandomProvider = await wrapQuery(
+                contract.query.getRandomActiveProvider,
+                contract.query
+            )(getAccount().account.address, getDappAccount())
+            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+            providerApi = await loadProviderApi(providerUrl)
+        }
+
         const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
         if (!providerUrl) {
             return
         }
-        const providerApi = await loadProviderApi(providerUrl)
-        await providerApi.submitUserEvents(events, getAccount().account.address)
+        console.log('Submitting events to provider', events)
+
+        let account = ''
+        try {
+            account = getAccount().account.address
+        } catch (e) {
+            console.error(e)
+        }
+        await providerApi.submitUserEvents(events, account)
     }
 
     return {

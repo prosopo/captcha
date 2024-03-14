@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ describe('Captchas', () => {
                 context: { datasetWithSolutionHashes },
             })
         }
-        cy.intercept('/dummy').as('dummy')
 
         // visit the base URL specified on command line when running cypress
         return cy.visit(Cypress.env('default_page')).then(() => {

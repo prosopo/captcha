@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,15 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, GetCaptchaResponse, ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
+import { Account, GetCaptchaResponse, ProcaptchaEvents } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
-
-/**
- * The config to be passed to procaptcha. Some fields can be optional, e.g.
- * userAccountAddress and web2, depending on the mode of Procaptcha (web2 or web3).
- */
-export type ProcaptchaConfigOptional = ProcaptchaClientConfigInput
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha
@@ -50,32 +44,10 @@ export interface ProcaptchaState {
  */
 export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void
 
-/**
- * A set of callbacks called by Procaptcha on certain events. These are optional
- * as the client can decide which events they wish to listen for.
- */
-export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
-
-/**
- * A list of all events which can occur during the Procaptcha process.
- */
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onAccountNotFound: (address: string) => void
-    onHuman: (output: ProcaptchaOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
-
 export type TProcaptchaEventNames = keyof ProcaptchaEvents
 
 export const ProcapchaEventNames: TProcaptchaEventNames[] = [
     'onError',
-    'onAccountNotFound',
     'onHuman',
     'onExtensionNotFound',
     'onChallengeExpired',

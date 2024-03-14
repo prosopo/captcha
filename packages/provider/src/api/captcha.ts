@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
+import { VerificationResponse } from '@prosopo/api'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
@@ -149,11 +150,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             }
 
             const isApproved = solution.status === CaptchaStatus.approved
-            return res.json({
+            const response: VerificationResponse = {
                 status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                solutionApproved: isApproved,
-                commitmentId: solution.id,
-            })
+                [ApiParams.solutionApproved]: isApproved,
+                [ApiParams.commitmentId]: solution.id.toString(),
+                [ApiParams.blockNumber]: solution.requestedAt,
+            }
+            return res.json(response)
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
@@ -173,7 +176,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
             return res.json({
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                solutionApproved: approved,
+                [ApiParams.solutionApproved]: approved,
             })
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
@@ -208,25 +211,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json(challenge)
         } catch (err) {
             console.log(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
-        }
-    })
-
-    /**
-     * Verifies a user's PoW solution as being approved or not
-     *
-     * @param {string} blocknumber - Dapp User address
-     * @param {string} challenge - Dapp User address
-     * @param {number} difficulty - Dapp User address
-     * @param {string} signature - Dapp User address
-     * @param {string} nonce - Dapp User address
-     */
-    router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
-        try {
-            const { blocknumber, challenge, difficulty, signature, nonce } = req.body
-            const verified = await tasks.verifyPowCaptchaSolution(blocknumber, challenge, difficulty, signature, nonce)
-            return res.json({ verified })
-        } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
     })

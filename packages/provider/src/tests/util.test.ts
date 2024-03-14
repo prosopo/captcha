@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util
 import { describe, expect, test } from 'vitest'
 import { getPairAsync } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
+import { sleep } from '@prosopo/util'
 
 describe('UTIL FUNCTIONS', async () => {
     test('does not modify an already encoded address', () => {
@@ -63,6 +64,7 @@ describe('UTIL FUNCTIONS', async () => {
         await env
             .getDb()
             .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
+        await sleep(1000)
         result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(false)
         await env.getDb().close()

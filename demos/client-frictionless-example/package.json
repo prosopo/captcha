@@ -1,0 +1,59 @@
+{
+    "name": "@prosopo/client-frictionless-example",
+    "version": "0.3.2",
+    "private": true,
+    "type": "module",
+    "engines": {
+        "node": ">=18",
+        "npm": ">=9"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.9.3",
+        "@emotion/styled": "^11.9.3",
+        "@mui/material": "^5.9.1",
+        "@prosopo/common": "0.3.2",
+        "@prosopo/procaptcha": "0.3.2",
+        "@prosopo/procaptcha-frictionless": "0.3.2",
+        "@prosopo/types": "0.3.2",
+        "@types/react-dom": "^18.2.4",
+        "electron": "25.8.4",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "web-vitals": "^2.1.4",
+        "@prosopo/procaptcha-pow": "0.3.2"
+    },
+    "devDependencies": {
+        "@prosopo/cli": "0.3.2",
+        "@prosopo/config": "0.3.2",
+        "@types/node": "^20.3.1",
+        "css-loader": "^6.8.1",
+        "eslint-config-react-app": "^7.0.1",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
+    },
+    "scripts": {
+        "start": "vite serve --mode=development --config vite.config.ts --port 9240 --host --force",
+        "build": "tsc --build --verbose",
+        "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
+        "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
+        "clean": "tsc --build --clean",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
+}

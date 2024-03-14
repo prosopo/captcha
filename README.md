@@ -127,7 +127,40 @@ data contains the following fields:
 
 ## Verify the User Response Server Side
 
-To verify a user's response on the server side, simpy import the `verify` function from `@prosopo/server` and pass it
+By adding the client side code, you were able to render a Procaptcha widget that identified if users were real people or
+automated bots. When the captcha succeeded, the Procaptcha script inserted unique data into your form data, which is
+then sent to your server for verification. The are currently two options for verifying the user's response server side:
+
+### Option 1. API Verification
+
+To verify that the token is indeed real and valid, you must now verify it at the API endpoint:
+
+https://api.prosopo.io/siteverify
+
+The endpoint expects a POST request with two parameters: your account secret and the `procaptcha-response` sent from
+your frontend HTML to your backend for verification. You can optionally include the user's IP address as an additional
+security check.
+
+A simple test will look like this:
+
+```bash
+curl -X POST https://api.prosopo.io/siteverify \
+-H "Content-Type: application/json" \
+-d 'PROCAPTCHA_RESPONSE'
+```
+
+Note that the endpoint expects the application/json Content-Type. You can see exactly what is sent
+using
+
+```bash
+curl -vv
+```
+
+in the example above.
+
+### Option 2. TypeScript Verification Package
+
+To verify a user's response using TypeScript, simpy import the `verify` function from `@prosopo/server` and pass it
 the `procaptcha-response` POST data. Types can be imported from `@prosopo/types`.
 
 ```typescript
@@ -141,5 +174,5 @@ if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
 }
 ```
 
-There is an example server side implementation
+There is an example TypeScript server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).

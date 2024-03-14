@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@ import {
     ApiParams,
     EnvironmentTypes,
     EnvironmentTypesSchema,
+    ProcaptchaConfigSchema,
     ProcaptchaOutput,
-    ProsopoClientConfigSchema,
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { useState } from 'react'
@@ -40,7 +40,7 @@ function App() {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const config = ProsopoClientConfigSchema.parse({
+    const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
         account: {
             address: process.env.PROSOPO_SITE_KEY || '',
@@ -50,7 +50,8 @@ function App() {
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 
     const label = isLogin ? 'Login' : 'Sign up'
@@ -58,7 +59,7 @@ function App() {
 
     const onLoggedIn = (token: string) => {
         console.log('getting private resource with token ', token)
-        fetch(`${config.serverUrl}/private`, {
+        fetch(new URL('/private', config.serverUrl).href, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -92,7 +93,7 @@ function App() {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(`${config.serverUrl}/${urlPath}`, {
+        fetch(new URL(urlPath, config.serverUrl).href, {
             method: 'POST',
             headers: {
                 ...corsHeaders,
@@ -142,10 +143,6 @@ function App() {
 
     const onError = (error: Error) => {
         alert(error.message)
-    }
-
-    const onAccountNotFound = (address: string) => {
-        alert(`Account ${address} not found`)
     }
 
     const onExpired = () => {
@@ -202,28 +199,28 @@ function App() {
                                     />
                                 </FormControl>
 
-                                <Procaptcha
-                                    config={config}
-                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                                />
-
-                                <Box sx={{ p: 1 }}>
-                                    <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={onActionHandler}
-                                            disabled={!procaptchaOutput}
-                                        >
-                                            {isLogin ? 'Login' : 'Sign up'}
-                                        </Button>
-                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                            <Box>
-                                                <Typography>- or -</Typography>
+                                <FormControl sx={{ m: 1 }}>
+                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                </FormControl>
+                                <FormControl>
+                                    <Box sx={{ p: 1 }}>
+                                        <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={onActionHandler}
+                                                disabled={!procaptchaOutput}
+                                            >
+                                                {isLogin ? 'Login' : 'Sign up'}
+                                            </Button>
+                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                <Box>
+                                                    <Typography>- or -</Typography>
+                                                </Box>
                                             </Box>
-                                        </Box>
-                                        <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
-                                    </Stack>
-                                </Box>
+                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                        </Stack>
+                                    </Box>
+                                </FormControl>
                             </FormGroup>
                         </form>
                     </Box>

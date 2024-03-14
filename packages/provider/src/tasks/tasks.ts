@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -711,9 +711,10 @@ export class Tasks {
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {
-        if (!this.config.mongoAtlasUri) {
+        if (!this.config.devOnlyWatchEvents || !this.config.mongoEventsUri) {
+            this.logger.info('Dev watch events not set to true, not saving events')
             return
         }
-        await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
+        await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
     }
 }

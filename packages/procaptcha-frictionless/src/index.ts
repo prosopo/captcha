@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,15 +11,4 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Keyring } from '@polkadot/keyring'
-import { blake2AsHex } from '@polkadot/util-crypto/blake2'
-import { u8aToHex } from '@polkadot/util/u8a'
-
-export function sign(message: string): { messageHash: string; signature: string } {
-    const keyring = new Keyring({ type: 'ecdsa' })
-    const pair = keyring.addFromUri('//Alice')
-    const sig = pair.sign(message)
-    const signature = u8aToHex(sig)
-    const messageHash = blake2AsHex(message)
-    return { messageHash, signature }
-}
+export * from './ProcaptchaFrictionless.js'
