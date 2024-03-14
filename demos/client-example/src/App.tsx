@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ function App() {
 
     const onLoggedIn = (token: string) => {
         console.log('getting private resource with token ', token)
-        fetch(`${config.serverUrl}/private`, {
+        fetch(new URL('/private', config.serverUrl).href, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -93,7 +93,7 @@ function App() {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(`${config.serverUrl}/${urlPath}`, {
+        fetch(new URL(urlPath, config.serverUrl).href, {
             method: 'POST',
             headers: {
                 ...corsHeaders,

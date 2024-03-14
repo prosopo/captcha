@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -149,6 +149,7 @@ export class ProsopoServer {
                 (_, index) => currentBlockNumber - index
             )
         }
+
         while (blocksToCheck.length > 0) {
             const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
             const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
@@ -156,7 +157,7 @@ export class ProsopoServer {
                 'getRandomActiveProvider',
                 [user, dapp]
             )
-            if (getRandomProviderResponse.provider.url.toString() === providerUrl) {
+            if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
                 return getRandomProviderResponse.provider
             }
         }
@@ -176,22 +177,19 @@ export class ProsopoServer {
         const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
 
         if (!randomProvider) {
+            this.logger.info('Random provider selection failed')
             // We have not been able to repeat the provider selection
             return false
         }
 
-        const providerUrlTrimmed = trimProviderUrl(randomProvider.url.toString())
-
-        if (providerUrlTrimmed !== providerUrl) {
-            // An incorrect provider url was provided in the payload
-            return false
-        }
-
         if (providerUrl) {
+            this.logger.info('Random provider is valid. Verifying with provider.')
+            // We can now trust the provider URL as it has been shown to have been randomly selected
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
             return result.solutionApproved
         } else {
+            this.logger.info('Provider URL not provided. Verifying with contract.')
             // Check the time since the last correct captcha is less than the maxVerifiedTime
             const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
             const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
