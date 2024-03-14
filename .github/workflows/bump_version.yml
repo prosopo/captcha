@@ -86,7 +86,7 @@ jobs:
               with:
                   node-version-file: '.nvmrc'
             - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
-            
+
             - run: npm ci
 
             - run: npm run build -w @prosopo/scripts

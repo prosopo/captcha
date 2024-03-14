@@ -58,7 +58,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-            
+
             - uses: actions/checkout@v3
 
             - name: Check versions are consistent amongst packages

@@ -59,7 +59,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-                  
+
             - uses: actions/checkout@v3
 
             - name: Check contract version matches provider version
