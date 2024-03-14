@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -217,7 +217,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                         </div>
                     </WidthBasedStylesDiv>
                     {config.devOnlyWatchEvents && (
-                        <Collector onProcessData={manager.exportData} sendData={state.sendData}></Collector>
+                        <Collector
+                            onProcessData={manager.exportData}
+                            sendData={state.sendData}
+                            account={state.account}
+                        ></Collector>
                     )}
                 </ContainerDiv>
             </div>

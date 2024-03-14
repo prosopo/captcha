@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
-import { at } from '@prosopo/util'
 import { checkboxClass } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
@@ -31,7 +30,6 @@ describe('Captchas', () => {
                 context: { datasetWithSolutionHashes },
             })
         }
-        cy.intercept('/dummy').as('dummy')
 
         // visit the base URL specified on command line when running cypress
         return cy.visit(Cypress.env('default_page')).then(() => {
@@ -41,47 +39,37 @@ describe('Captchas', () => {
         })
     })
 
-    it("Captchas load when 'I am human' is pressed", () => {
-        cy.clickIAmHuman().then((captchas) => {
-            expect(captchas.length).to.be.gt(0)
-        })
-    })
-
-    it('Number of displayed captchas equals number received in response', () => {
-        cy.clickIAmHuman().then((captchas: Captcha[]) => {
-            cy.wait(2000)
-            cy.captchaImages().then(() => {
-                console.log("captchas in 'Number of displayed captchas equals number received in response'", captchas)
-                cy.get('@captchaImages').should('have.length', at(captchas, 0).items.length)
-            })
-        })
-    })
-
-    // move to component testing later
-    it('Can select an item', () => {
+    it('Selecting the correct images passes the captcha', () => {
+        cy.get('button[type="button"]').eq(1).click()
         cy.clickIAmHuman().then(() => {
-            cy.wait(2000)
+            // Make sure the images are loaded
             cy.captchaImages().then(() => {
-                cy.get('@captchaImages').first().click()
-                cy.get('@captchaImages').first().siblings().first().should('have.css', 'opacity', '1')
+                // Solve the captchas
+                cy.get('@captchas')
+                    .each((captcha: Captcha) => {
+                        cy.log('in each function')
+                        // Click correct images and submit the solution
+                        cy.clickCorrectCaptchaImages(captcha)
+                    })
+                    .then(() => {
+                        // Get inputs of type checkbox
+                        cy.get("input[type='checkbox']").then((checkboxes) => {
+                            cy.wrap(checkboxes).first().should('be.checked')
+                        })
+                    })
+                const uniqueId = Cypress._.uniqueId('test')
+                cy.get('input[type="password"]').type('password')
+                cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`)
+                cy.get('input[id="name"]').type('test')
+                cy.get('button[type="button"]').first().click()
+
+                cy.contains('user created').should('be.visible')
+
+                // reloading the page and checking the box again should not require a captcha to be solved
+                cy.reload()
+
+                cy.get(checkboxClass, { timeout: 12000 }).first().click()
             })
         })
     })
-
-    //
-    // it('Solution is rejected when incorrect', () => {
-    //     const captchas = await cy.clickIAmHuman().promisify()
-    //
-    //     cy.intercept('POST', '**/solution').as('postSolution')
-    //
-    //     captchas.forEach((_, index) => {
-    //         cy.get(`[data-cy='captcha-${index}'] > [data-cy='captcha-item']`).each(($el) => $el.trigger('click'))
-    //
-    //         cy.get('[data-cy="button-next"]').click()
-    //     })
-    //
-    //     cy.wait('@postSolution').then(
-    //         (interception) => expect(interception.response!.body.solutionApproved).to.be.false
-    //     )
-    // })
 })
