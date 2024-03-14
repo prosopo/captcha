@@ -48,8 +48,12 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-
+            
             - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - name: Enable auto-merge on PR
               env:

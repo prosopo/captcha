@@ -52,7 +52,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-            # checkout the repo
+            
             - uses: actions/checkout@v3
               with:
                   # fetch all history + branches
@@ -287,15 +287,6 @@ jobs:
                     echo "nothing needs bumping"
                   fi
 
-            # setup node
-            - uses: actions/setup-node@v3
-              if: steps.check_version_any.outputs.bump == 'true'
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              if: steps.check_version_any.outputs.bump == 'true'
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
-
             # get the latest build from the cache produced in the post_pr workflow
 
             - run: mkdir -p protocol/cargo-cache
@@ -332,18 +323,21 @@ jobs:
             - run: ls -la node_modules || true
               if: steps.check_version_any.outputs.bump == 'true'
 
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
             - name: Install
               if: steps.check_version_any.outputs.bump == 'true'
               run: |
-                  npm install
+                  npm ci
 
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
-            - name: Install dependencies and build packages
+            - name: Build packages
               if: steps.check_version_any.outputs.bump == 'true'
               run: |
-                  echo "Installing dependencies..."
-                  npm ci
                   echo "Building packages..."
                   npm run build:all
                   npm run build:all:cjs

@@ -56,13 +56,8 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-            # Checkout the repo
+
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -84,6 +79,11 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - run: npm install -g npm@8.9
-            - run: npm install
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: npm ci
+
             - run: npm run lint
