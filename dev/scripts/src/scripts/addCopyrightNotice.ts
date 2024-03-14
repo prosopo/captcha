@@ -14,37 +14,23 @@
 import { at } from '@prosopo/util'
 import { glob } from 'glob'
 import fs from 'fs'
+import { getRootDir } from '@prosopo/config'
+
+const rootDir = getRootDir()
 
 const searchPaths = [
-    '../**/*.ts',
-    '../../**/*.ts',
-    '../../../**/*.ts',
-    '../**/*.tsx',
-    '../../**/*.tsx',
-    '../../../**/*.tsx',
-    '../**/*.rs',
-    '../../**/*.rs',
-    '../../../**/*.rs',
-    '../../../**/**/*.rs',
-    '../../../**/**/**/*.rs',
+    `${rootDir}/**/*.ts`,
+    `${rootDir}/**/*.tsx`,
+    `${rootDir}/**/*.rs`,
 ]
 const files = glob.sync(searchPaths, {
-    cwd: __dirname,
+    cwd: rootDir,
     absolute: true,
     ignore: [
         'node_modules/**',
-        'node_modules/**',
-        '../../**/node_modules/**',
-        '../node_modules/**',
-        '../../node_modules/**',
-        '../../../node_modules/**',
+        '**/node_modules/**',
+        'dist/**',
         '**/dist/**',
-        '**/**/dist/**',
-        '../../dist/**',
-        '../../../packages/**/node_modules/**',
-        '../../../demos/**/node_modules/**',
-        '../../../packages/**/dist/**',
-        '../../../demos/**/dist/**',
     ],
 })
 
