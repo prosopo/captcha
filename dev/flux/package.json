@@ -40,7 +40,8 @@
         "socket.io-client": "^4.7.4",
         "varuint-bitcoin": "^1.1.2",
         "yargs": "^17.5.1",
-        "yargs-parser": "^21.0.1"
+        "yargs-parser": "^21.0.1",
+        "zod": "^3.22.4"
     },
     "overrides": {
         "@polkadot/keyring": "12.6.1"
