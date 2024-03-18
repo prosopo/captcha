@@ -112,13 +112,62 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
 })
 ```
 
+### Proof of Work CAPTCHA
+
+Procaptcha Premium's Proof-of-Work feature deters bot attacks by requiring users to solve a cryptographic puzzle. The
+puzzle is easy for humans to solve but computationally expensive for bots.
+
+#### Example of Proof-of-Work rendering
+
+[Explicit Rendering](###Explicit Rendering) is used to render a proof of work CAPTCHA by setting the `captchaType`
+to `pow`.
+
+```javascript
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+        captchaType: 'pow',
+    })
+})
+```
+
+### Frictionless CAPTCHA
+
+Procaptcha Premium's Frictionless feature dynamically detects if the user is a bot or a human. If the user is likely to
+be a bot, the user will be presented with a CAPTCHA challenge. If the user is likely to be a human, the user will not be
+presented with a CAPTCHA challenge.
+
+#### Example of Frictionless rendering
+
+[Explicit Rendering](###Explicit Rendering) is used to render a proof of work CAPTCHA by setting the `captchaType`
+to `frictionless`.
+
+```javascript
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+        captchaType: 'frictionless',
+    })
+})
+```
+
 ### Procaptcha-response
 
 The output from the `onCaptchaVerified` function is the `procaptcha-response` JSON data. The `procaptcha-response` JSON
 data contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
-| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
+|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
 | commitmentId | string | The commitment ID of the captcha challenge. This is used to verify the user's response on-chain.                              |
 | providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
 | dapp         | string | The SITE_KEY of your application / website                                                                                    |
