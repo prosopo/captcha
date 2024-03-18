@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './contract.js'
-export * from './manager.js'
-export * from './client.js'
+import { CaptchaSolutionCommitmentId } from '../api/api.js'
+import { CaptchaSolutionResponse } from '@prosopo/types'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, CaptchaSolutionCommitmentId, ContractSubmittableResult?]

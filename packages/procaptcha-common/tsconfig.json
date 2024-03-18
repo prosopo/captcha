@@ -2,18 +2,18 @@
     "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "lib": ["es6", "dom"],
+        "jsxImportSource": "@emotion/react"
     },
     "include": ["src", "src/**/*.json"],
+
     "references": [
         {
-            "path": "../util"
+            "path": "../common"
         },
         {
             "path": "../types"
-        },
-        {
-            "path": "../../contracts/captcha"
         }
     ]
 }

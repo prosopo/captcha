@@ -25,42 +25,20 @@ import {
     lightTheme,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
-import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
-import { useState } from 'react'
+import { ProcaptchaCallbacks, ProcaptchaProps } from '@prosopo/types'
+import { useProcaptcha } from '@prosopo/procaptcha-common'
+import { useRef, useState } from 'react'
 
-export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
-
-/**
- * A list of all events which can occur during the Procaptcha process.
- */
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onHuman: (output: ProcaptchaOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
-
-export interface ProcaptchaProps {
-    // the configuration for procaptcha
-    config: ProcaptchaClientConfigInput
-    // optional set of callbacks for various captcha events
-    callbacks?: Partial<ProcaptchaCallbacks>
-}
-
-const Procaptcha = (props: ProcaptchaProps) => {
-    const [checked, setChecked] = useState(false)
-    const [loading, setLoading] = useState(false)
+const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
-
+    const [state, updateState] = useProcaptcha(useState, useRef)
+    const [checked, setChecked] = updateState({ checked: false })
+    const [loading, setLoading] = updateState({ loading: false })
     const handlePowCaptcha = async () => {
         setLoading(true)
-        Manager(props.config).then((verified) => {
-            if (verified.verified) {
+        Manager(props.config, state, updateState, callbacks).then((verified) => {
+            if (verified && verified.verified) {
                 console.log('verified')
                 setChecked(true)
             }

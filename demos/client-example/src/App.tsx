@@ -20,6 +20,7 @@ import {
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
@@ -200,6 +201,10 @@ function App() {
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
+                                    <ProcaptchaFrictionless
+                                        config={config}
+                                        callbacks={{ onError, onHuman, onExpired }}
+                                    />
                                     <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
                                 </FormControl>
                                 <FormControl>

@@ -170,8 +170,8 @@ export class Tasks {
     /**
      * @description Generates a PoW Captcha for a given user and dapp
      *
-     * @param {string} userAccount - Dapp User address
-     * @param {string} dappAccount - Dapp User address
+     * @param {string} userAccount - user that is solving the captcha
+     * @param {string} dappAccount - dapp that is requesting the captcha
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         // TODO: Verify that the origin matches the url of the dapp
@@ -187,12 +187,13 @@ export class Tasks {
     }
 
     /**
-     * @description Generates a PoW Captcha for a given user and dapp
+     * @description Verifies a PoW Captcha for a given user and dapp
      *
-     * @param {string} blocknumber - Dapp User address
-     * @param {string} challenge - Dapp User address
-     * @param {string} difficulty - Dapp User address
-     * @param {string} nonce - Dapp User address
+     * @param {string} blocknumber - the block at which the Provider was selected
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {string} difficulty - how many leading zeroes the solution must have
+     * @param {string} signature - proof that the Provider provided the challenge
+     * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
      */
     async verifyPowCaptchaSolution(
         blocknumber: number,
