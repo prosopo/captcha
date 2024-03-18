@@ -165,7 +165,7 @@ The output from the `onCaptchaVerified` function is the `procaptcha-response` JS
 data contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
-|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | commitmentId | string | The commitment ID of the captcha challenge. This is used to verify the user's response on-chain.                              |
 | providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
 | dapp         | string | The SITE_KEY of your application / website                                                                                    |
