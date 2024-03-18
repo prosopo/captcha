@@ -33,7 +33,7 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
 import Collector from './collector.js'
 import Modal from './Modal.js'
@@ -126,7 +126,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     const manager = Manager(config, state, updateState, callbacks)
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
+    const theme = props.config.theme === 'light' ? lightTheme : darkTheme
 
     return (
         <div>
