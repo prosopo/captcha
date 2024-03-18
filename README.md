@@ -175,6 +175,8 @@ if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
 There is an example TypeScript server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
 
+## Procaptcha Premium Features
+
 ### Proof of Work CAPTCHA
 
 Procaptcha Premium's Proof-of-Work feature deters bot attacks by requiring users to solve a cryptographic puzzle. The
