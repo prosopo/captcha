@@ -26,23 +26,24 @@ import {
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaCallbacks, ProcaptchaProps } from '@prosopo/types'
-import { useProcaptcha } from '@prosopo/procaptcha-common'
+import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
 import { useRef, useState } from 'react'
 
 const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
-    const [state, updateState] = useProcaptcha(useState, useRef)
-    const [checked, setChecked] = updateState({ checked: false })
-    const [loading, setLoading] = updateState({ loading: false })
+    const [state, _updateState] = useProcaptcha(useState, useRef)
+    // get the state update mechanism
+    const updateState = buildUpdateState(state, _updateState)
+    updateState({ isHuman: false, loading: false })
     const handlePowCaptcha = async () => {
-        setLoading(true)
+        updateState({ loading: true })
         Manager(props.config, state, updateState, callbacks).then((verified) => {
             if (verified && verified.verified) {
                 console.log('verified')
-                setChecked(true)
+                updateState({ isHuman: true })
             }
-            setLoading(false)
+            updateState({ loading: true })
         })
     }
 
@@ -92,11 +93,11 @@ const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
                                                 }}
                                             >
                                                 <div style={{ flex: 1 }}>
-                                                    {loading ? (
+                                                    {state.loading ? (
                                                         <LoadingSpinner themeColor={themeColor} />
                                                     ) : (
                                                         <Checkbox
-                                                            checked={checked}
+                                                            checked={state.isHuman}
                                                             onChange={handlePowCaptcha}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}

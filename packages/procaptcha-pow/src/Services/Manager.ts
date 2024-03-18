@@ -11,8 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ExtensionWeb2 } from '@prosopo/account'
+import { Keyring } from '@polkadot/keyring'
 import {
-    ApiParams,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
@@ -20,9 +22,6 @@ import {
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
@@ -31,25 +30,6 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { getDefaultEvents } from '@prosopo/procaptcha-common'
 import { solvePoW } from './SolverService.js'
-
-type ProcaptchaPowOutput = {
-    user: string
-    dapp: string
-    commitmentId?: string | undefined
-    providerUrl?: string | undefined
-    blockNumber?: number | undefined
-}
-
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onHuman: (output: ProcaptchaPowOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
 
 export const Manager = async (
     configInput: ProcaptchaClientConfigInput,
@@ -136,16 +116,16 @@ export const Manager = async (
     )
 
     // pass { challenge, dappAccount } to server to verify the captcha
-    if (verifiedSolution.verified) {
-        updateState({ isHuman: true, loading: false })
-        events.onHuman({
-            [ApiParams.providerUrl]: providerUrlFromStorage,
-            [ApiParams.user]: account.account.address,
-            [ApiParams.dapp]: getDappAccount(),
-            [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
-        })
-        setValidChallengeTimeout()
-        return
-    }
+    // if (verifiedSolution.verified) {
+    //     updateState({ isHuman: true, loading: false })
+    //     events.onHuman({
+    //         [ApiParams.providerUrl]: providerUrlFromStorage,
+    //         [ApiParams.user]: account.account.address,
+    //         [ApiParams.dapp]: getDappAccount(),
+    //         [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
+    //     })
+    //     setValidChallengeTimeout()
+    //     return
+    // }
     return verifiedSolution
 }
