@@ -54,9 +54,8 @@ export interface ProcaptchaProps {
 const Procaptcha = (props: ProcaptchaProps) => {
     const [checked, setChecked] = useState(false)
     const [loading, setLoading] = useState(false)
-    const darkMode = props.config.theme
-    const themeColor = darkMode ? 'light' : 'dark'
-    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
+    const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
+    const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
 
     const handlePowCaptcha = async () => {
         setLoading(true)

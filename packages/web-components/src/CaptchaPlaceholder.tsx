@@ -22,9 +22,8 @@ import Logo from './Logo.js'
 type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
 
 export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
-    const darkMode = props.darkMode
     const themeColor = props.darkMode === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
+    const theme = useMemo(() => (props.darkMode === 'light' ? lightTheme : darkTheme), [props.darkMode])
     return (
         <div>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
