@@ -2,9 +2,7 @@
 
 Prosopo Procaptcha is a drop-replacement for reCAPTCHA and hCaptcha that protects user privacy and collects zero data.
 
-Prosopo is a distributed human verification service that can be used to stop bots from interacting with your apps.
-
-Sign up to be a network [beta tester](https://prosopo.io/#signup) to get your sitekey today. You need a sitekey to use
+Sign up [for a 3 month trial](https://prosopo.io/register) and get your sitekey today. You need a sitekey to use
 this library.
 
 # Configuration
@@ -176,3 +174,54 @@ if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
 
 There is an example TypeScript server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
+
+## Procaptcha Premium Features
+
+### Proof of Work CAPTCHA
+
+Procaptcha Premium's Proof-of-Work feature deters bot attacks by requiring users to solve a cryptographic puzzle. The
+puzzle is easy for humans to solve but computationally expensive for bots.
+
+#### Example of Proof-of-Work rendering
+
+[Explicit Rendering](###Explicit Rendering) is used to render a proof of work CAPTCHA by setting the `captchaType`
+to `pow`.
+
+```javascript
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+        captchaType: 'pow',
+    })
+})
+```
+
+### Frictionless CAPTCHA
+
+Procaptcha Premium's Frictionless feature dynamically detects if the user is a bot or a human. If the user is likely to
+be a bot, the user will be presented with a CAPTCHA challenge. If the user is likely to be a human, the user will not be
+presented with a CAPTCHA challenge.
+
+#### Example of Frictionless rendering
+
+[Explicit Rendering](###Explicit Rendering) is used to render a proof of work CAPTCHA by setting the `captchaType`
+to `frictionless`.
+
+```javascript
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+        captchaType: 'frictionless',
+    })
+})
+```
