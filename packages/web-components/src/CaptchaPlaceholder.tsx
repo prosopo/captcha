@@ -16,14 +16,13 @@ import { ContainerDiv, WidthBasedStylesDiv } from './Containers.js'
 import { LoadingSpinner } from './LoadingSpinner.js'
 import { WIDGET_DIMENSIONS, WIDGET_INNER_HEIGHT, WIDGET_URL, WIDGET_URL_TEXT } from './WidgetConstants.js'
 import { darkTheme, lightTheme } from './theme.js'
-import { useMemo } from 'react'
 import Logo from './Logo.js'
 
 type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
 
 export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
     const themeColor = props.darkMode === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (props.darkMode === 'light' ? lightTheme : darkTheme), [props.darkMode])
+    const theme = props.darkMode === 'light' ? lightTheme : darkTheme
     return (
         <div>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>

@@ -26,7 +26,7 @@ import {
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
 
@@ -55,7 +55,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const [checked, setChecked] = useState(false)
     const [loading, setLoading] = useState(false)
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
-    const theme = useMemo(() => (props.config.theme === 'light' ? lightTheme : darkTheme), [props.config.theme])
+    const theme = props.config.theme === 'light' ? lightTheme : darkTheme
 
     const handlePowCaptcha = async () => {
         setLoading(true)
