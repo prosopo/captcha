@@ -22,8 +22,8 @@ export const getDefaultEvents = (
     stateUpdater: ProcaptchaStateUpdateFn,
     state: ProcaptchaState,
     callbacks: ProcaptchaCallbacks
-): ProcaptchaEvents => {
-    return Object.assign(
+): ProcaptchaEvents =>
+    Object.assign(
         {
             onError: alertError,
             onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
@@ -51,4 +51,3 @@ export const getDefaultEvents = (
         },
         callbacks
     )
-}

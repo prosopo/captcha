@@ -40,7 +40,6 @@ const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
         updateState({ loading: true })
         Manager(props.config, state, updateState, callbacks).then((verified) => {
             if (verified && verified.verified) {
-                console.log('verified')
                 updateState({ isHuman: true })
             }
             updateState({ loading: true })
