@@ -40,4 +40,4 @@ protocol/target
 .nvmrc
 diagram.svg
 .env.*
-client-bundle-example/src/*.js
+**/src/*.js
