@@ -25,46 +25,24 @@ import {
     lightTheme,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
-import { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
-import { useState } from 'react'
+import { ProcaptchaCallbacks, ProcaptchaProps } from '@prosopo/types'
+import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
+import { useRef, useState } from 'react'
 
-export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
-
-/**
- * A list of all events which can occur during the Procaptcha process.
- */
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onHuman: (output: ProcaptchaOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
-
-export interface ProcaptchaProps {
-    // the configuration for procaptcha
-    config: ProcaptchaClientConfigInput
-    // optional set of callbacks for various captcha events
-    callbacks?: Partial<ProcaptchaCallbacks>
-}
-
-const Procaptcha = (props: ProcaptchaProps) => {
-    const [checked, setChecked] = useState(false)
-    const [loading, setLoading] = useState(false)
+const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
-
+    const [state, _updateState] = useProcaptcha(useState, useRef)
+    // get the state update mechanism
+    const updateState = buildUpdateState(state, _updateState)
+    updateState({ isHuman: false, loading: false })
     const handlePowCaptcha = async () => {
-        setLoading(true)
-        Manager(props.config).then((verified) => {
-            if (verified.verified) {
-                console.log('verified')
-                setChecked(true)
+        updateState({ loading: true })
+        Manager(props.config, state, updateState, callbacks).then((verified) => {
+            if (verified && verified.verified) {
+                updateState({ isHuman: true })
             }
-            setLoading(false)
+            updateState({ loading: true })
         })
     }
 
@@ -114,11 +92,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                 }}
                                             >
                                                 <div style={{ flex: 1 }}>
-                                                    {loading ? (
+                                                    {state.loading ? (
                                                         <LoadingSpinner themeColor={themeColor} />
                                                     ) : (
                                                         <Checkbox
-                                                            checked={checked}
+                                                            checked={state.isHuman}
                                                             onChange={handlePowCaptcha}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}

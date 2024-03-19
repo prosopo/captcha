@@ -11,27 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId, StoredEvents } from '@prosopo/types'
+import { AccountId } from '@prosopo/captcha-contract'
 import {
     ApiPaths,
+    CaptchaResponseBody,
     CaptchaSolution,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
-    VerifySolutionBodyType,
-} from '@prosopo/types'
-import {
     CaptchaSolutionResponse,
-    GetCaptchaResponse,
     GetPowCaptchaResponse,
+    NetworkConfig,
     PowCaptchaSolutionResponse,
     ProviderRegistered,
+    StoredEvents,
     VerificationResponse,
-} from '../types/index.js'
-import { NetworkConfig } from '@prosopo/types'
+    VerifySolutionBodyType,
+} from '@prosopo/types'
 import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
 
-export default class ProviderApi extends HttpClientBase {
+export default class ProviderApi extends HttpClientBase implements ProviderApi {
     private network: NetworkConfig
     private account: AccountId
 
@@ -39,19 +38,17 @@ export default class ProviderApi extends HttpClientBase {
         if (!providerUrl.startsWith('http')) {
             providerUrl = `https://${providerUrl}`
         }
-        console.log('ProviderApi', providerUrl)
         super(providerUrl)
         this.network = network
         this.account = account
     }
 
-    public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
+    public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody> {
         const { provider, blockNumber } = randomProvider
         const dappAccount = this.account
         const url = `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
             .toString()
             .replace(/,/g, '')}`
-        console.log(url)
         return this.fetch(url)
     }
 

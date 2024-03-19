@@ -242,7 +242,9 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
 
 /**
  * Parse the image items in a captcha and pass back a URI if they exist
+ * @param  {Item} item
+ * @param  {AssetsResolver} assetsResolver
  */
-export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined) {
-    return { ...item, path: assetsResolver?.resolveAsset(item.data).getURL() || item.data }
+export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined): Item {
+    return { ...item, data: assetsResolver?.resolveAsset(item.data).getURL() || item.data }
 }

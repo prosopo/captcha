@@ -14,35 +14,29 @@
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2 } from '@prosopo/account'
 import { Keyring } from '@polkadot/keyring'
-import { ProcaptchaClientConfigInput, ProcaptchaClientConfigOutput, ProcaptchaConfigSchema } from '@prosopo/types'
+import {
+    ProcaptchaCallbacks,
+    ProcaptchaClientConfigInput,
+    ProcaptchaClientConfigOutput,
+    ProcaptchaConfigSchema,
+    ProcaptchaState,
+    ProcaptchaStateUpdateFn,
+} from '@prosopo/types'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { getDefaultEvents } from '@prosopo/procaptcha-common'
 import { solvePoW } from './SolverService.js'
 
-type ProcaptchaPowOutput = {
-    user: string
-    dapp: string
-    commitmentId?: string | undefined
-    providerUrl?: string | undefined
-    blockNumber?: number | undefined
-}
-
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onHuman: (output: ProcaptchaPowOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
-
-export const Manager = async (configInput: ProcaptchaClientConfigInput) => {
+export const Manager = async (
+    configInput: ProcaptchaClientConfigInput,
+    state: ProcaptchaState,
+    onStateUpdate: ProcaptchaStateUpdateFn,
+    callbacks: ProcaptchaCallbacks
+) => {
     const getConfig = () => {
         const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
@@ -93,6 +87,9 @@ export const Manager = async (configInput: ProcaptchaClientConfigInput) => {
     const account = await ext.getAccount(config)
 
     const contract = await loadContract()
+
+    const events = getDefaultEvents(onStateUpdate, state, callbacks)
+
     // get a random provider
     const getRandomProviderResponse: RandomProvider = await wrapQuery(
         contract.query.getRandomActiveProvider,
@@ -108,14 +105,7 @@ export const Manager = async (configInput: ProcaptchaClientConfigInput) => {
         configInput.account.address || ''
     )
 
-    console.log('challenge', challenge)
-
-    console.log('challenge', challenge.challenge)
-    console.log('challenge', challenge.difficulty)
-
     const solution = solvePoW(challenge.challenge, challenge.difficulty)
-
-    console.log('solution', solution)
 
     const verifiedSolution = await providerApi.submitPowCaptchaSolution(
         challenge,
@@ -124,5 +114,6 @@ export const Manager = async (configInput: ProcaptchaClientConfigInput) => {
         getRandomProviderResponse,
         solution
     )
+
     return verifiedSolution
 }

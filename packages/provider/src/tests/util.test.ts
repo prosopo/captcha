@@ -58,7 +58,7 @@ describe('UTIL FUNCTIONS', async () => {
         await env
             .getDb()
             .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
-
+        await sleep(1000)
         let result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
         expect(result).to.equal(true)
         await env

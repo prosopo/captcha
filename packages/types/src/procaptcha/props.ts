@@ -11,8 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { SubmittableResultValue } from '@polkadot/api/types'
+import { ProcaptchaCallbacks } from './manager.js'
+import { ProcaptchaClientConfigInput } from '../config/index.js'
 
-export type TransactionResponse = SubmittableResultValue & {
-    blockHash?: string
+/**
+ * The props for the Procaptcha component.
+ */
+export interface ProcaptchaProps {
+    // the configuration for procaptcha
+    config: ProcaptchaClientConfigInput
+    // optional set of callbacks for various captcha events
+    callbacks?: Partial<ProcaptchaCallbacks>
 }

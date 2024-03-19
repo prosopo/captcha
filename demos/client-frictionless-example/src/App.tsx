@@ -31,7 +31,7 @@ function App() {
         atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
     return (
-        <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ height: '100%', justifyContent: 'center', alignItems: 'center' }}>
             <ProcaptchaFrictionless config={config} />
         </div>
     )
