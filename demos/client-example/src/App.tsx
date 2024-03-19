@@ -22,6 +22,7 @@ import {
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
@@ -33,7 +34,6 @@ function App() {
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
     const [account, setAccount] = useState<string>('')
-
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action

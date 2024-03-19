@@ -25,26 +25,19 @@ import {
     lightTheme,
 } from '@prosopo/web-components'
 import { Manager } from '../Services/Manager.js'
-import { ProcaptchaCallbacks, ProcaptchaProps } from '@prosopo/types'
+import { ProcaptchaProps } from '@prosopo/types'
 import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
 import { useRef, useState } from 'react'
 
-const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
-    const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
+const Procaptcha = (props: ProcaptchaProps) => {
+    const config = props.config
+    const themeColor = config.theme === 'light' ? 'light' : 'dark'
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
+    const callbacks = props.callbacks || {}
     const [state, _updateState] = useProcaptcha(useState, useRef)
     // get the state update mechanism
     const updateState = buildUpdateState(state, _updateState)
-    updateState({ isHuman: false, loading: false })
-    const handlePowCaptcha = async () => {
-        updateState({ loading: true })
-        Manager(props.config, state, updateState, callbacks).then((verified) => {
-            if (verified && verified.verified) {
-                updateState({ isHuman: true })
-            }
-            updateState({ loading: true })
-        })
-    }
+    const manager = Manager(config, state, updateState, callbacks)
 
     return (
         <div>
@@ -97,7 +90,7 @@ const Procaptcha = (props: ProcaptchaProps, callbacks: ProcaptchaCallbacks) => {
                                                     ) : (
                                                         <Checkbox
                                                             checked={state.isHuman}
-                                                            onChange={handlePowCaptcha}
+                                                            onChange={manager.start}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
                                                         ></Checkbox>
