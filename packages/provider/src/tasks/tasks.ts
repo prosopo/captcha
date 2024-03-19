@@ -333,7 +333,7 @@ export class Tasks {
 
         let response: DappUserSolutionResult = {
             captchas: [],
-            solutionApproved: false,
+            verified: false,
         }
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
@@ -372,7 +372,7 @@ export class Tasks {
                         captchaId: id,
                         proof: tree.proof(id),
                     })),
-                    solutionApproved: true,
+                    verified: true,
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
             } else {
@@ -381,7 +381,7 @@ export class Tasks {
                         captchaId: id,
                         proof: [[]],
                     })),
-                    solutionApproved: false,
+                    verified: false,
                 }
             }
         }

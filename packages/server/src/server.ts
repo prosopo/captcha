@@ -187,7 +187,7 @@ export class ProsopoServer {
             // We can now trust the provider URL as it has been shown to have been randomly selected
             const providerApi = await this.getProviderApi(providerUrl)
             const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
-            return result.solutionApproved
+            return result.verified
         } else {
             this.logger.info('Provider URL not provided. Verifying with contract.')
             // Check the time since the last correct captcha is less than the maxVerifiedTime

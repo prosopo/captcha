@@ -81,7 +81,7 @@ describe('Captchas', () => {
     //     })
     //
     //     cy.wait('@postSolution').then(
-    //         (interception) => expect(interception.response!.body.solutionApproved).to.be.false
+    //         (interception) => expect(interception.response!.body.verified).to.be.false
     //     )
     // })
 })

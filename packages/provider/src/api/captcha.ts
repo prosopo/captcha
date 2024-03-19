@@ -18,6 +18,7 @@ import {
     CaptchaResponseBody,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
+    CaptchaSolutionResponse,
     CaptchaWithProof,
     DappUserSolutionResult,
     VerificationResponse,
@@ -108,10 +109,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 parsed[ApiParams.captchas],
                 parsed[ApiParams.signature]
             )
-            return res.json({
-                status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
+            const returnValue: CaptchaSolutionResponse = {
+                status: req.i18n.t(result.verified ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
                 ...result,
-            })
+            }
+            return res.json(returnValue)
         } catch (err) {
             return next(new ProsopoApiError('API.UNKNOWN', { context: { errorCode: 400, error: err } }))
         }
@@ -137,7 +139,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
-                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
+                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), verified: false })
             }
 
             if (parsed.maxVerifiedTime) {
@@ -146,14 +148,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
 
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
-                    return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
+                    return res.json({ status: req.t('API.USER_NOT_VERIFIED'), verified: false })
                 }
             }
 
             const isApproved = solution.status === CaptchaStatus.approved
             const response: VerificationResponse = {
                 status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.solutionApproved]: isApproved,
+                [ApiParams.verified]: isApproved,
                 [ApiParams.commitmentId]: solution.id.toString(),
                 [ApiParams.blockNumber]: solution.requestedAt,
             }
@@ -177,7 +179,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
             return res.json({
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.solutionApproved]: approved,
+                [ApiParams.verified]: approved,
             })
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
