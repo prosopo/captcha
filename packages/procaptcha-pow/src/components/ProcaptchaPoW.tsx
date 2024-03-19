@@ -14,7 +14,8 @@
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { Suspense, lazy } from 'react'
 
-const ProcaptchaWidget = lazy(async () => import('./Captcha.js'))
+// https://github.com/microsoft/TypeScript/issues/42873
+const ProcaptchaWidget: any = lazy(async () => import('./Captcha.js'))
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
