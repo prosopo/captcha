@@ -148,9 +148,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 const currentBlockNumber = await tasks.getCurrentBlockNumber()
                 const blockTimeMs = await tasks.getBlockTimeMs()
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
-
+                const verificationResponse: VerificationResponse = {
+                    status: req.t('API.USER_NOT_VERIFIED'),
+                    verified: false,
+                }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
-                    return res.json({ status: req.t('API.USER_NOT_VERIFIED'), verified: false })
+                    return res.json(verificationResponse)
                 }
             }
 
