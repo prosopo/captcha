@@ -40,4 +40,5 @@ protocol/target
 .nvmrc
 diagram.svg
 .env.*
-**/src/*.js
+**/assets/*.js
+*.min.js
