@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
 import {
+    Account,
+    ApiParams,
+    PowCaptchaSolutionResponse,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
@@ -22,8 +22,11 @@ import {
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '@prosopo/types'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ExtensionWeb2 } from '@prosopo/account'
+import { Keyring } from '@polkadot/keyring'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoContractError, ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -36,7 +39,7 @@ export const Manager = async (
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
-) => {
+): Promise<PowCaptchaSolutionResponse> => {
     const getConfig = () => {
         const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
@@ -74,6 +77,31 @@ export const Manager = async (
         )
     }
 
+    const getAccount = () => {
+        if (!state.account) {
+            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', { context: { error: 'Account not loaded' } })
+        }
+        const account: Account = state.account
+        return account
+    }
+
+    const getDappAccount = () => {
+        if (!state.dappAccount) {
+            throw new ProsopoEnvError('GENERAL.SITE_KEY_MISSING')
+        }
+
+        const dappAccount: string = state.dappAccount
+        return dappAccount
+    }
+
+    const getBlockNumber = () => {
+        if (!state.blockNumber) {
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
+        }
+        const blockNumber: number = state.blockNumber
+        return blockNumber
+    }
+
     const config = getConfig()
     // check if account has been provided in config (doesn't matter in web2 mode)
     if (!config.web2 && !config.userAccountAddress) {
@@ -94,26 +122,33 @@ export const Manager = async (
     const getRandomProviderResponse: RandomProvider = await wrapQuery(
         contract.query.getRandomActiveProvider,
         contract.query
-    )(account.account.address, configInput.account.address || '')
+    )(account.account.address, getDappAccount())
 
     const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
 
-    const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, configInput.account.address || '')
+    const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, getDappAccount())
 
-    const challenge = await providerApi.getPowCaptchaChallenge(
-        account.account.address,
-        configInput.account.address || ''
-    )
+    const challenge = await providerApi.getPowCaptchaChallenge(account.account.address, getDappAccount())
 
     const solution = solvePoW(challenge.challenge, challenge.difficulty)
 
     const verifiedSolution = await providerApi.submitPowCaptchaSolution(
         challenge,
-        account.account.address,
-        configInput.account.address || '',
+        getAccount().account.address,
+        getDappAccount(),
         getRandomProviderResponse,
         solution
     )
+
+    if (state.isHuman) {
+        events.onHuman({
+            providerUrl,
+            [ApiParams.user]: getAccount().account.address,
+            [ApiParams.dapp]: getDappAccount(),
+            [ApiParams.challengeId]: challenge.challenge,
+            [ApiParams.blockNumber]: getBlockNumber(),
+        })
+    }
 
     return verifiedSolution
 }

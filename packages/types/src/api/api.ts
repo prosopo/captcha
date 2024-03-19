@@ -17,9 +17,9 @@ import {
     CaptchaResponseBody,
     CaptchaSolutionResponse,
     GetPowCaptchaResponse,
+    ImageVerificationResponse,
     PowCaptchaSolutionResponse,
     ProviderRegistered,
-    VerificationResponse,
 } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
 import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
@@ -39,7 +39,7 @@ export interface ProviderApiInterface {
         userAccount: AccountId,
         commitmentId?: string,
         maxVerifiedTime?: number
-    ): Promise<VerificationResponse>
+    ): Promise<ImageVerificationResponse>
     getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse>
     submitPowCaptchaSolution(
         challenge: GetPowCaptchaResponse,

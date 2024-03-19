@@ -49,16 +49,17 @@ export enum ApiParams {
     maxVerifiedTime = 'maxVerifiedTime',
     verified = 'verified',
     status = 'status',
+    challengeId = 'challengeId',
 }
 
 export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]
     partialFee?: string
-    verified: boolean
+    [ApiParams.verified]: boolean
 }
 
 export interface CaptchaSolutionResponse extends DappUserSolutionResult {
-    status: string
+    [ApiParams.status]: string
 }
 
 export interface CaptchaIdAndProof {
@@ -120,6 +121,9 @@ export interface ProviderDetails {
 export interface VerificationResponse {
     [ApiParams.status]: string
     [ApiParams.verified]: boolean
+}
+
+export interface ImageVerificationResponse extends VerificationResponse {
     [ApiParams.commitmentId]: Hash
     // The block at which the captcha was requested
     [ApiParams.blockNumber]: number
@@ -134,3 +138,10 @@ export interface GetPowCaptchaResponse {
 export interface PowCaptchaSolutionResponse {
     [ApiParams.verified]: boolean
 }
+
+export const ServerPowCaptchaVerifyRequestBody = object({
+    [ApiParams.challengeId]: string(),
+    [ApiParams.dapp]: string(),
+})
+
+export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>

@@ -88,8 +88,10 @@ export interface CaptchaWithProof {
     proof: MerkleProof
 }
 
+export type PoWChallengeId = string
+
 export interface PoWCaptcha {
-    challenge: string
+    challenge: PoWChallengeId
     difficulty: number
     signature: string
 }
