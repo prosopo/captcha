@@ -67,21 +67,4 @@ describe('Captchas', () => {
             })
         })
     })
-
-    //
-    // it('Solution is rejected when incorrect', () => {
-    //     const captchas = await cy.clickIAmHuman().promisify()
-    //
-    //     cy.intercept('POST', '**/solution').as('postSolution')
-    //
-    //     captchas.forEach((_, index) => {
-    //         cy.get(`[data-cy='captcha-${index}'] > [data-cy='captcha-item']`).each(($el) => $el.trigger('click'))
-    //
-    //         cy.get('[data-cy="button-next"]').click()
-    //     })
-    //
-    //     cy.wait('@postSolution').then(
-    //         (interception) => expect(interception.response!.body.verified).to.be.false
-    //     )
-    // })
 })

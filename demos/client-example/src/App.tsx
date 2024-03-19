@@ -29,7 +29,11 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
-function App() {
+interface AppProps {
+    captchaType?: string
+}
+
+function App(props: AppProps) {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
@@ -201,11 +205,14 @@ function App() {
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
-                                    <ProcaptchaFrictionless
-                                        config={config}
-                                        callbacks={{ onError, onHuman, onExpired }}
-                                    />
-                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    {props.captchaType === 'frictionless' ? (
+                                        <ProcaptchaFrictionless
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                        />
+                                    ) : (
+                                        <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    )}
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>

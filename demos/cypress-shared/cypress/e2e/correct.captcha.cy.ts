@@ -31,6 +31,8 @@ describe('Captchas', () => {
             })
         }
 
+        cy.intercept('/dummy').as('dummy')
+
         // visit the base URL specified on command line when running cypress
         return cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
