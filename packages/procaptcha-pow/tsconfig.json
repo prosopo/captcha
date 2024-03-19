@@ -10,6 +10,9 @@
 
     "references": [
         {
+            "path": "../account"
+        },
+        {
             "path": "../api"
         },
         {
@@ -17,6 +20,12 @@
         },
         {
             "path": "../procaptcha"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../util"
         },
         {
             "path": "../web-components"
