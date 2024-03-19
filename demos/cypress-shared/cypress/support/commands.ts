@@ -22,7 +22,6 @@ declare global {
     namespace Cypress {
         interface Chainable<Subject = any> {
             clickIAmHuman(): Cypress.Chainable<Captcha[]>
-            clickIAmHumanFrictionless(): Cypress.Chainable<undefined>
             captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>
             clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>
             getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
@@ -136,5 +135,4 @@ Cypress.Commands.addAll({
     clickCorrectCaptchaImages,
     getSelectors,
     clickNextButton,
-    clickIAmHumanFrictionless,
 })
