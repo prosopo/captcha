@@ -115,17 +115,5 @@ export const Manager = async (
         solution
     )
 
-    // pass { challenge, dappAccount } to server to verify the captcha
-    // if (verifiedSolution.verified) {
-    //     updateState({ isHuman: true, loading: false })
-    //     events.onHuman({
-    //         [ApiParams.providerUrl]: providerUrlFromStorage,
-    //         [ApiParams.user]: account.account.address,
-    //         [ApiParams.dapp]: getDappAccount(),
-    //         [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
-    //     })
-    //     setValidChallengeTimeout()
-    //     return
-    // }
     return verifiedSolution
 }
