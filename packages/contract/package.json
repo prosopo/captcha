@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/contract",
-    "version": "0.3.3",
+    "version": "0.3.4",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
@@ -56,10 +56,10 @@
         "@polkadot/types-create": "10.11.2",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/common": "0.3.3",
-        "@prosopo/types": "0.3.3",
-        "@prosopo/util": "0.3.3",
-        "@prosopo/captcha-contract": "0.3.3",
+        "@prosopo/common": "0.3.4",
+        "@prosopo/types": "0.3.4",
+        "@prosopo/util": "0.3.4",
+        "@prosopo/captcha-contract": "0.3.4",
         "@prosopo/typechain-types": "1.1.14",
         "rxjs": "^7.8.1"
     },

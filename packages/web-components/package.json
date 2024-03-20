@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/web-components",
-    "version": "0.3.3",
+    "version": "0.3.4",
     "description": "Non business logic utilities for web applications",
     "main": "dist/index.js",
     "type": "module",
@@ -43,7 +43,7 @@
     "devDependencies": {
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "@prosopo/config": "0.3.3"
+        "@prosopo/config": "0.3.4"
     },
     "sideEffects": false
 }
