@@ -1,4 +1,7 @@
 {
+    "ACCOUNT": {
+        "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
+    },
     "WIDGET": {
         "SELECT_ALL": "Select all images containing a",
         "NEXT": "Next",
@@ -158,7 +161,6 @@
         "INVALID_DIR_FORMAT": "Invalid directory format"
     },
     "PROGUI": {
-        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider",
-        "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
+        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider"
     }
 }

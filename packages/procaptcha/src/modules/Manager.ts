@@ -301,7 +301,7 @@ export function Manager(
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
-            const signer = account.extension.signer
+            const signer = getExtension(account).signer
 
             const first = at<CaptchaWithProof>(challenge.captchas, 0)
             if (!first.captcha.datasetId) {
@@ -514,6 +514,14 @@ export function Manager(
         }
         const blockNumber: number = state.blockNumber
         return blockNumber
+    }
+
+    const getExtension = (account?: Account) => {
+        account = account || getAccount()
+        if (!account.extension) {
+            throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION', { context: { error: 'Extension not loaded' } })
+        }
+        return account.extension
     }
 
     /**

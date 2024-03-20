@@ -76,7 +76,7 @@ export class ExtensionWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.11',
+            version: '0.3.x',
             signer,
         }
     }

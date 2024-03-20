@@ -22,7 +22,7 @@ import { number, object, string, infer as zInfer } from 'zod'
  */
 export interface Account {
     account: InjectedAccount
-    extension: InjectedExtension
+    extension?: InjectedExtension
 }
 
 export const ProcaptchaOutputSchema = object({
@@ -31,7 +31,7 @@ export const ProcaptchaOutputSchema = object({
     [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number().optional(),
-    [ApiParams.challengeId]: string().optional(),
+    [ApiParams.challenge]: string().optional(),
 })
 
 /**
