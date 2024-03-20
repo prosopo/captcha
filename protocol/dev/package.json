@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/protocol-dev",
-    "version": "0.3.3",
+    "version": "0.3.4",
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
     "type": "module",
