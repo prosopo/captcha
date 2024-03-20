@@ -18,6 +18,7 @@ import { checkIfTaskIsRunning, encodeStringAddress, shuffleArray } from '../util
 import { describe, expect, test } from 'vitest'
 import { getPairAsync } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '@prosopo/util'
 
 describe('UTIL FUNCTIONS', async () => {
@@ -55,12 +56,17 @@ describe('UTIL FUNCTIONS', async () => {
             throw new ProsopoEnvError(e as Error)
         }
         const db = env.getDb()
+        const randomTaskId = randomAsHex()
         // insert a task into the database
-        await db.storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
+        await db.storeScheduledTaskStatus(randomTaskId, ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
         await sleep(1000)
         const initialResult = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, db)
         expect(initialResult).to.equal(true)
-        await db.storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
+        await db.storeScheduledTaskStatus(
+            randomTaskId,
+            ScheduledTaskNames.BatchCommitment,
+            ScheduledTaskStatus.Completed
+        )
         await sleep(1000)
         const secondResult = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, db)
         expect(secondResult).to.equal(false)
