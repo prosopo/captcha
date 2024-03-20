@@ -188,7 +188,7 @@ const implicitRender = () => {
         const features = Object.values(FeaturesEnum)
         const captchaType =
             features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
-            ('image' as const)
+            ('frictionless' as const)
 
         renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }
