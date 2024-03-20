@@ -106,7 +106,7 @@ jobs:
 
                   # rebuild typechain
                   npm run build:typechain
-                  
+
                   # lint
                   npm run lint:fix
 
