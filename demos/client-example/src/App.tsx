@@ -54,7 +54,7 @@ function App(props: AppProps) {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        serverUrl: process.env.PROSOPO_SERVER_URL || 'localhost:9228',
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
@@ -63,8 +63,9 @@ function App(props: AppProps) {
     const urlPath = isLogin ? 'login' : 'signup'
 
     const onLoggedIn = (token: string) => {
-        console.log('getting private resource with token ', token)
-        fetch(new URL('/private', config.serverUrl).href, {
+        const url = new URL('/private', config.serverUrl).href
+        console.log('getting private resource with token ', token, 'at', url)
+        fetch(url, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -98,7 +99,9 @@ function App(props: AppProps) {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(new URL(urlPath, config.serverUrl).href, {
+        const url = new URL(urlPath, config.serverUrl).href
+        console.log('posting to', url, 'with payload', payload)
+        fetch(url, {
             method: 'POST',
             headers: {
                 ...corsHeaders,

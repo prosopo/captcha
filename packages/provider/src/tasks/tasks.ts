@@ -189,14 +189,14 @@ export class Tasks {
     /**
      * @description Verifies a PoW Captcha for a given user and dapp
      *
-     * @param {string} blocknumber - the block at which the Provider was selected
+     * @param {string} blockNumber - the block at which the Provider was selected
      * @param {string} challenge - the starting string for the PoW challenge
      * @param {string} difficulty - how many leading zeroes the solution must have
      * @param {string} signature - proof that the Provider provided the challenge
      * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
      */
     async verifyPowCaptchaSolution(
-        blocknumber: number,
+        blockNumber: number,
         challenge: string,
         difficulty: number,
         signature: string,
@@ -205,12 +205,13 @@ export class Tasks {
         const latestHeader = await this.contract.api.rpc.chain.getHeader()
         const latestBlockNumber = latestHeader.number.toNumber()
 
-        if (latestBlockNumber > blocknumber - 5) {
+        if (blockNumber < latestBlockNumber - 5) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
                     ERROR: 'Blockhash must be from within last 5 blocks',
                     failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blocknumber,
+                    blockNumber,
+                    latestBlockNumber,
                 },
             })
         }

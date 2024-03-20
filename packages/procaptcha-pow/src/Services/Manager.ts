@@ -142,11 +142,19 @@ export const Manager = (
         }
 
         resetState()
+
+        const config = getConfig()
+
+        // use the passed in account (could be web3) or the zero account
+        const userAccount = config.userAccountAddress || '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
+
         // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
-        updateState({ loading: true })
+        updateState({
+            loading: true,
+            account: { account: { address: userAccount } },
+        })
 
         // snapshot the config into the state
-        const config = getConfig()
         updateState({ dappAccount: config.account.address })
 
         // allow UI to catch up with the loading state
@@ -180,20 +188,24 @@ export const Manager = (
         const challenge = await providerApi.getPowCaptchaChallenge(account.account.address, getDappAccount())
 
         const solution = solvePoW(challenge.challenge, challenge.difficulty)
-        await providerApi.submitPowCaptchaSolution(
+        const verifiedSolution = await providerApi.submitPowCaptchaSolution(
             challenge,
             getAccount().account.address,
             getDappAccount(),
             getRandomProviderResponse,
             solution
         )
-        if (state.isHuman) {
+        if (verifiedSolution[ApiParams.verified]) {
+            updateState({
+                isHuman: true,
+                loading: false,
+            })
             events.onHuman({
                 providerUrl,
                 [ApiParams.user]: getAccount().account.address,
                 [ApiParams.dapp]: getDappAccount(),
-                [ApiParams.challengeId]: challenge.challenge,
-                [ApiParams.blockNumber]: getBlockNumber(),
+                [ApiParams.challenge]: challenge.challenge,
+                [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
             })
         }
     }
