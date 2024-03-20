@@ -106,6 +106,9 @@ jobs:
 
                   # rebuild typechain
                   npm run build:typechain
+                  
+                  # lint
+                  npm run lint:fix
 
                   # set the author in git
                   git config user.name "prosoponator[bot]"
