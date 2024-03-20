@@ -20,6 +20,7 @@ import {
     CaptchaSolutionBodyType,
     CaptchaSolutionResponse,
     GetPowCaptchaResponse,
+    ImageVerificationResponse,
     NetworkConfig,
     PowCaptchaSolutionResponse,
     ProviderRegistered,
@@ -75,7 +76,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         userAccount: AccountId,
         commitmentId?: string,
         maxVerifiedTime?: number
-    ): Promise<VerificationResponse> {
+    ): Promise<ImageVerificationResponse> {
         const payload: {
             dapp: AccountId
             user: AccountId
@@ -125,5 +126,9 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 
     public getProviderDetails(): Promise<Provider> {
         return this.fetch(ApiPaths.GetProviderDetails)
+    }
+
+    public getPowCaptchaVerify(challengeId: string, dappAccount: string): Promise<VerificationResponse> {
+        return this.post(ApiPaths.ServerPowCaptchaVerify, { challengeId, dappAccount })
     }
 }

@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
 import {
+    Account,
+    ApiParams,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
@@ -22,21 +21,47 @@ import {
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '@prosopo/types'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ExtensionWeb2 } from '@prosopo/account'
+import { Keyring } from '@polkadot/keyring'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoContractError, ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { getDefaultEvents } from '@prosopo/procaptcha-common'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
+import { sleep } from '@prosopo/procaptcha'
 import { solvePoW } from './SolverService.js'
 
-export const Manager = async (
+export const Manager = (
     configInput: ProcaptchaClientConfigInput,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) => {
+    const defaultState = (): Partial<ProcaptchaState> => {
+        return {
+            // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
+            showModal: false,
+            loading: false,
+            index: 0,
+            challenge: undefined,
+            solutions: undefined,
+            isHuman: false,
+            captchaApi: undefined,
+            account: undefined,
+            // don't handle timeout here, this should be handled by the state management
+        }
+    }
+
+    const clearTimeout = () => {
+        // clear the timeout
+        window.clearTimeout(state.timeout)
+        // then clear the timeout from the state
+        updateState({ timeout: undefined })
+    }
+
     const getConfig = () => {
         const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
@@ -74,46 +99,106 @@ export const Manager = async (
         )
     }
 
-    const config = getConfig()
-    // check if account has been provided in config (doesn't matter in web2 mode)
-    if (!config.web2 && !config.userAccountAddress) {
-        throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', {
-            context: { error: 'Account address has not been set for web3 mode' },
-        })
+    const getAccount = () => {
+        if (!state.account) {
+            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', { context: { error: 'Account not loaded' } })
+        }
+        const account: Account = state.account
+        return account
     }
 
-    // check if account exists in extension
-    const ext = new ExtensionWeb2()
-    const account = await ext.getAccount(config)
+    const getDappAccount = () => {
+        if (!state.dappAccount) {
+            throw new ProsopoEnvError('GENERAL.SITE_KEY_MISSING')
+        }
 
-    const contract = await loadContract()
+        const dappAccount: string = state.dappAccount
+        return dappAccount
+    }
 
-    const events = getDefaultEvents(onStateUpdate, state, callbacks)
+    const getBlockNumber = () => {
+        if (!state.blockNumber) {
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
+        }
+        const blockNumber: number = state.blockNumber
+        return blockNumber
+    }
 
-    // get a random provider
-    const getRandomProviderResponse: RandomProvider = await wrapQuery(
-        contract.query.getRandomActiveProvider,
-        contract.query
-    )(account.account.address, configInput.account.address || '')
+    // get the state update mechanism
+    const updateState = buildUpdateState(state, onStateUpdate)
 
-    const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+    const resetState = () => {
+        // clear timeout just in case a timer is still active (shouldn't be)
+        clearTimeout()
+        updateState(defaultState())
+    }
 
-    const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, configInput.account.address || '')
+    const start = async () => {
+        if (state.loading) {
+            return
+        }
+        if (state.isHuman) {
+            return
+        }
 
-    const challenge = await providerApi.getPowCaptchaChallenge(
-        account.account.address,
-        configInput.account.address || ''
-    )
+        resetState()
+        // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+        updateState({ loading: true })
 
-    const solution = solvePoW(challenge.challenge, challenge.difficulty)
+        // snapshot the config into the state
+        const config = getConfig()
+        updateState({ dappAccount: config.account.address })
 
-    const verifiedSolution = await providerApi.submitPowCaptchaSolution(
-        challenge,
-        account.account.address,
-        configInput.account.address || '',
-        getRandomProviderResponse,
-        solution
-    )
+        // allow UI to catch up with the loading state
+        await sleep(100)
 
-    return verifiedSolution
+        // check if account has been provided in config (doesn't matter in web2 mode)
+        if (!config.web2 && !config.userAccountAddress) {
+            throw new ProsopoEnvError('GENERAL.ACCOUNT_NOT_FOUND', {
+                context: { error: 'Account address has not been set for web3 mode' },
+            })
+        }
+
+        // check if account exists in extension
+        const ext = new ExtensionWeb2()
+        const account = await ext.getAccount(config)
+
+        const contract = await loadContract()
+
+        const events = getDefaultEvents(onStateUpdate, state, callbacks)
+
+        // get a random provider
+        const getRandomProviderResponse: RandomProvider = await wrapQuery(
+            contract.query.getRandomActiveProvider,
+            contract.query
+        )(account.account.address, getDappAccount())
+
+        const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+
+        const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, getDappAccount())
+
+        const challenge = await providerApi.getPowCaptchaChallenge(account.account.address, getDappAccount())
+
+        const solution = solvePoW(challenge.challenge, challenge.difficulty)
+        await providerApi.submitPowCaptchaSolution(
+            challenge,
+            getAccount().account.address,
+            getDappAccount(),
+            getRandomProviderResponse,
+            solution
+        )
+        if (state.isHuman) {
+            events.onHuman({
+                providerUrl,
+                [ApiParams.user]: getAccount().account.address,
+                [ApiParams.dapp]: getDappAccount(),
+                [ApiParams.challengeId]: challenge.challenge,
+                [ApiParams.blockNumber]: getBlockNumber(),
+            })
+        }
+    }
+
+    return {
+        start,
+    }
 }

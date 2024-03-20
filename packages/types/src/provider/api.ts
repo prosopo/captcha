@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
-import { Provider } from '@prosopo/captcha-contract/types-returns'
+import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
@@ -47,13 +47,19 @@ export enum ApiParams {
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
-    solutionApproved = 'solutionApproved',
+    verified = 'verified',
+    status = 'status',
+    challengeId = 'challengeId',
 }
 
 export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]
     partialFee?: string
-    solutionApproved: boolean
+    [ApiParams.verified]: boolean
+}
+
+export interface CaptchaSolutionResponse extends DappUserSolutionResult {
+    [ApiParams.status]: string
 }
 
 export interface CaptchaIdAndProof {
@@ -111,3 +117,31 @@ export interface ProviderDetails {
     provider: Provider
     dbConnectionOk: boolean
 }
+
+export interface VerificationResponse {
+    [ApiParams.status]: string
+    [ApiParams.verified]: boolean
+}
+
+export interface ImageVerificationResponse extends VerificationResponse {
+    [ApiParams.commitmentId]: Hash
+    // The block at which the captcha was requested
+    [ApiParams.blockNumber]: number
+}
+
+export interface GetPowCaptchaResponse {
+    challenge: string
+    difficulty: number
+    signature: string
+}
+
+export interface PowCaptchaSolutionResponse {
+    [ApiParams.verified]: boolean
+}
+
+export const ServerPowCaptchaVerifyRequestBody = object({
+    [ApiParams.challengeId]: string(),
+    [ApiParams.dapp]: string(),
+})
+
+export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>

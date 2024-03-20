@@ -22,18 +22,22 @@ import {
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
-function App() {
+interface AppProps {
+    captchaType?: string
+}
+
+function App(props: AppProps) {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
     const [account, setAccount] = useState<string>('')
-
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action
@@ -201,11 +205,14 @@ function App() {
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
-                                    <ProcaptchaFrictionless
-                                        config={config}
-                                        callbacks={{ onError, onHuman, onExpired }}
-                                    />
-                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    {props.captchaType === 'frictionless' ? (
+                                        <ProcaptchaFrictionless
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                        />
+                                    ) : (
+                                        <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    )}
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>

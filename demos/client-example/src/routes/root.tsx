@@ -11,5 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './events.js'
-export * from './state/builder.js'
+import App from '../App.js'
+import React from 'react'
+
+export default function Root() {
+    return (
+        <React.Fragment>
+            <App />
+        </React.Fragment>
+    )
+}
