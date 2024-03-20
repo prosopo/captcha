@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
