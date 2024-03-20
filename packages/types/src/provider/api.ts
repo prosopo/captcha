@@ -38,6 +38,7 @@ export enum ApiParams {
     datasetId = 'datasetId',
     user = 'user',
     dapp = 'dapp',
+    provider = 'provider',
     blockNumber = 'blockNumber',
     signature = 'signature',
     requestHash = 'requestHash',
@@ -49,7 +50,9 @@ export enum ApiParams {
     maxVerifiedTime = 'maxVerifiedTime',
     verified = 'verified',
     status = 'status',
-    challengeId = 'challengeId',
+    challenge = 'challenge',
+    difficulty = 'difficulty',
+    nonce = 'nonce',
 }
 
 export interface DappUserSolutionResult {
@@ -130,9 +133,9 @@ export interface ImageVerificationResponse extends VerificationResponse {
 }
 
 export interface GetPowCaptchaResponse {
-    challenge: string
-    difficulty: number
-    signature: string
+    [ApiParams.challenge]: string
+    [ApiParams.difficulty]: number
+    [ApiParams.signature]: string
 }
 
 export interface PowCaptchaSolutionResponse {
@@ -140,8 +143,20 @@ export interface PowCaptchaSolutionResponse {
 }
 
 export const ServerPowCaptchaVerifyRequestBody = object({
-    [ApiParams.challengeId]: string(),
+    [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
 })
 
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
+
+export const SubmitPowCaptchaSolutionBody = object({
+    [ApiParams.blockNumber]: number(),
+    [ApiParams.challenge]: string(),
+    [ApiParams.difficulty]: number(),
+    [ApiParams.signature]: string(),
+    [ApiParams.user]: string(),
+    [ApiParams.dapp]: string(),
+    [ApiParams.nonce]: number(),
+})
+
+export type SubmitPowCaptchaSolutionBodyType = zInfer<typeof SubmitPowCaptchaSolutionBody>

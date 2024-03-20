@@ -171,7 +171,7 @@ export class ProsopoServer {
      * @returns
      */
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
-        const { user, dapp, providerUrl, commitmentId, blockNumber, challengeId } = payload
+        const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
         const contractApi = await this.getContractApi()
 
         const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
@@ -186,8 +186,8 @@ export class ProsopoServer {
             this.logger.info('Random provider is valid. Verifying with provider.')
             // We can now trust the provider URL as it has been shown to have been randomly selected
             const providerApi = await this.getProviderApi(providerUrl)
-            if (challengeId) {
-                const result = await providerApi.getPowCaptchaVerify(dapp, challengeId)
+            if (challenge) {
+                const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
                 return result.verified
             }
             const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)

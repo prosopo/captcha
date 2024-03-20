@@ -16,8 +16,11 @@ import {
     Checkbox,
     ContainerDiv,
     LoadingSpinner,
+    WIDGET_BORDER,
+    WIDGET_BORDER_RADIUS,
     WIDGET_DIMENSIONS,
     WIDGET_INNER_HEIGHT,
+    WIDGET_PADDING,
     WIDGET_URL,
     WIDGET_URL_TEXT,
     WidthBasedStylesDiv,
@@ -66,11 +69,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                             {' '}
                             <div
                                 style={{
-                                    padding: '2px',
-                                    border: '1px solid',
+                                    padding: WIDGET_PADDING,
+                                    border: WIDGET_BORDER,
                                     backgroundColor: theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
-                                    borderRadius: '8px',
+                                    borderRadius: WIDGET_BORDER_RADIUS,
                                     display: 'flex',
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
