@@ -54,19 +54,16 @@ describe('UTIL FUNCTIONS', async () => {
         } catch (e) {
             throw new ProsopoEnvError(e as Error)
         }
+        const db = env.getDb()
         // insert a task into the database
-        await env
-            .getDb()
-            .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
+        await db.storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Running)
         await sleep(1000)
-        let result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
-        expect(result).to.equal(true)
-        await env
-            .getDb()
-            .storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
+        const initialResult = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, db)
+        expect(initialResult).to.equal(true)
+        await db.storeScheduledTaskStatus('0x01', ScheduledTaskNames.BatchCommitment, ScheduledTaskStatus.Completed)
         await sleep(1000)
-        result = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, env.getDb())
-        expect(result).to.equal(false)
-        await env.getDb().close()
+        const secondResult = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, db)
+        expect(secondResult).to.equal(false)
+        await db.close()
     })
 })
