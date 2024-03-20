@@ -44,7 +44,7 @@ import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { at } from '@prosopo/util'
+import { at, hashToHex } from '@prosopo/util'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
@@ -201,13 +201,13 @@ export function Manager(
                         undefined,
                         configOptional.challengeValidLength
                     )
-                    if (verifyDappUserResponse.solutionApproved) {
+                    if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
                         const output: ProcaptchaOutput = {
                             [ApiParams.providerUrl]: providerUrlFromStorage,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
-                            [ApiParams.commitmentId]: verifyDappUserResponse.commitmentId,
+                            [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
                             [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         }
                         events.onHuman(output)
@@ -322,7 +322,7 @@ export function Manager(
             )
 
             // mark as is human if solution has been approved
-            const isHuman = submission[0].solutionApproved
+            const isHuman = submission[0].verified
 
             if (!isHuman) {
                 // user failed the captcha for some reason according to the provider
@@ -343,7 +343,7 @@ export function Manager(
                     providerUrl: trimmedUrl,
                     user: account.account.address,
                     dapp: getDappAccount(),
-                    commitmentId: submission[1],
+                    commitmentId: hashToHex(submission[1]),
                     blockNumber,
                 })
                 setValidChallengeTimeout()

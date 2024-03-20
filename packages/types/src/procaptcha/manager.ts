@@ -31,6 +31,7 @@ export const ProcaptchaOutputSchema = object({
     [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number().optional(),
+    [ApiParams.challengeId]: string().optional(),
 })
 
 /**

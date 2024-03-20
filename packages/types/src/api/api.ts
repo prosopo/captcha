@@ -13,66 +13,17 @@
 // limitations under the License.
 
 import { AccountId } from '@prosopo/captcha-contract'
-import { Captcha, MerkleProof } from '../datasets/index.js'
-import { CaptchaResponseBody, ProviderRegistered } from '../provider/index.js'
+import {
+    CaptchaResponseBody,
+    CaptchaSolutionResponse,
+    GetPowCaptchaResponse,
+    ImageVerificationResponse,
+    PowCaptchaSolutionResponse,
+    ProviderRegistered,
+} from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
 import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { StoredEvents } from '../procaptcha/index.js'
-
-export interface GetPowCaptchaResponse {
-    challenge: string
-    difficulty: number
-    signature: string
-}
-
-export interface PowCaptchaSolutionResponse {
-    verified: boolean
-}
-
-export interface ProsopoRandomProviderResponse {
-    providerId: string
-    blockNumber: string
-    provider: ProposoProvider
-}
-
-export interface VerificationResponse {
-    status: string
-    solutionApproved: boolean
-    commitmentId: CaptchaSolutionCommitmentId
-    // The block at which the captcha was requested
-    blockNumber: number
-}
-
-export interface GetVerificationResponse {
-    status: string
-    solutionApproved: boolean
-}
-
-export type CaptchaSolutionCommitmentId = string
-
-export type ProsopoDappOperatorIsHumanUserResponse = boolean
-
-export interface ProposoProvider {
-    balance: string
-    datasetId: string
-    datasetIdContent: string
-    fee: string
-    payee: string
-    serviceOrigin: string
-    status: string
-}
-
-export interface CaptchaResponseCaptcha {
-    captcha: Omit<Captcha, 'solution'>
-    proof: MerkleProof
-}
-
-export interface CaptchaSolutionResponse {
-    captchas: CaptchaResponseCaptcha[]
-    status: string
-    partialFee: string
-    solutionApproved: boolean
-}
 
 export interface ProviderApiInterface {
     getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody>
@@ -88,7 +39,7 @@ export interface ProviderApiInterface {
         userAccount: AccountId,
         commitmentId?: string,
         maxVerifiedTime?: number
-    ): Promise<GetVerificationResponse>
+    ): Promise<ImageVerificationResponse>
     getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse>
     submitPowCaptchaSolution(
         challenge: GetPowCaptchaResponse,

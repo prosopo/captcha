@@ -10,6 +10,7 @@
                     siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
                     theme: 'dark',
                     callback: 'onCaptchaVerified',
+                    captchaType: 'frictionless',
                 })
             }
             window.captchaLoaded = captchaLoaded
@@ -22,7 +23,7 @@
         <script
             id="procaptchaScript"
             type="module"
-            src="./assets/procaptcha.bundle.js?onload=captchaLoaded&render=explicit"
+            src="./procaptcha.bundle.js?onload=captchaLoaded&render=explicit"
             async
             defer
         ></script>

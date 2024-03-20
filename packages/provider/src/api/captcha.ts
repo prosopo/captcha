@@ -18,8 +18,11 @@ import {
     CaptchaResponseBody,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
+    CaptchaSolutionResponse,
     CaptchaWithProof,
     DappUserSolutionResult,
+    ImageVerificationResponse,
+    ServerPowCaptchaVerifyRequestBody,
     VerificationResponse,
     VerifySolutionBody,
     VerifySolutionBodyType,
@@ -108,10 +111,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 parsed[ApiParams.captchas],
                 parsed[ApiParams.signature]
             )
-            return res.json({
-                status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
+            const returnValue: CaptchaSolutionResponse = {
+                status: req.i18n.t(result.verified ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
                 ...result,
-            })
+            }
+            return res.json(returnValue)
         } catch (err) {
             return next(new ProsopoApiError('API.UNKNOWN', { context: { errorCode: 400, error: err } }))
         }
@@ -137,23 +141,26 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
-                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
+                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), verified: false })
             }
 
             if (parsed.maxVerifiedTime) {
                 const currentBlockNumber = await tasks.getCurrentBlockNumber()
                 const blockTimeMs = await tasks.getBlockTimeMs()
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
-
+                const verificationResponse: VerificationResponse = {
+                    status: req.t('API.USER_NOT_VERIFIED'),
+                    verified: false,
+                }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
-                    return res.json({ status: req.t('API.USER_NOT_VERIFIED'), solutionApproved: false })
+                    return res.json(verificationResponse)
                 }
             }
 
             const isApproved = solution.status === CaptchaStatus.approved
-            const response: VerificationResponse = {
+            const response: ImageVerificationResponse = {
                 status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.solutionApproved]: isApproved,
+                [ApiParams.verified]: isApproved,
                 [ApiParams.commitmentId]: solution.id.toString(),
                 [ApiParams.blockNumber]: solution.requestedAt,
             }
@@ -171,14 +178,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.get(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
         try {
-            const { challenge, dappAccount } = req.body
+            const { challengeId, dapp } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
 
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dappAccount, challenge)
+            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challengeId)
 
-            return res.json({
+            const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.solutionApproved]: approved,
-            })
+                [ApiParams.verified]: approved,
+            }
+
+            return res.json(verificationResponse)
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
         }
