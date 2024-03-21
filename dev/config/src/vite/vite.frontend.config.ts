@@ -89,10 +89,10 @@ export default async function (
 
     // drop console logs if in production mode
     let drop: undefined | Drop[]
-    let pure: string[] | undefined
+    let pure: string[] = []
     if (isProduction) {
         drop = ['debugger']
-        pure = ['console.log', 'console.warn']
+        pure = ['console.log', 'console.warn', 'console.info', 'console.debug']
     }
 
     logger.info('Bundle name', bundleName)
