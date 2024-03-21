@@ -1,5 +1,18 @@
-import { ProsopoDBError, getLoggerDefault } from '@prosopo/common'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { StoredEventRecord, StoredEvents } from '@prosopo/types'
+import { getLoggerDefault } from '@prosopo/common'
 import mongoose, { Model } from 'mongoose'
 const logger = getLoggerDefault()
 const MAX_RETRIES = 3
@@ -36,47 +49,14 @@ try {
     CaptchaEvent = mongoose.model('CaptchaEvent', captchaEventSchema)
 }
 
-const addCaptchaEventRecord = async (record: StoredEventRecord): Promise<void> => {
-    try {
-        const newRecord = new CaptchaEvent(record)
-        await newRecord.save()
-        logger.info('Record added successfully')
-    } catch (error) {
-        logger.error('Error adding record to the database:', error)
-    }
-}
-
 export const saveCaptchaEvent = async (events: StoredEvents, accountId: string, atlasUri: string) => {
-    return new Promise((resolve, reject) => {
-        const connection = mongoose.createConnection(atlasUri)
-        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            connection.once('open', resolve).on('error', (e) => {
-                logger.warn(`Mongoose connection error`)
-                logger.error(e)
+    await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
 
-                // Only reject on the last attempt, otherwise handle the retry logic
-                if (attempt === MAX_RETRIES) {
-                    reject(
-                        new ProsopoDBError('DATABASE.CONNECT_ERROR', {
-                            context: { failedFuncName: saveCaptchaEvent.name, db: 'events database' },
-                            logger: logger,
-                        })
-                    )
-                } else {
-                    // Remove the error listener to avoid accumulated listeners on retries
-                    connection?.removeAllListeners('error')
-                }
-            })
-        }
+    const captchaEventData = {
+        ...events,
+        accountId,
+    }
 
-        const captchaEventData = {
-            ...events,
-            accountId,
-        }
-
-        addCaptchaEventRecord(captchaEventData)
-            .then(() => logger.info('Captcha event data saved'))
-            .catch((error) => logger.error('Error saving captcha event data:', error))
-            .finally(() => connection.close())
-    })
+    await CaptchaEvent.create(captchaEventData)
+    logger.info('Mongo Saved Events')
 }

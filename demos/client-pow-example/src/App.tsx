@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ function App() {
         atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
     return (
-        <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ height: '100%', display: 'block', justifyContent: 'center', alignItems: 'center' }}>
             <ProcaptchaPow config={config} />
         </div>
     )

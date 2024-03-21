@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/types",
-    "version": "0.3.1",
+    "version": "0.3.4",
     "description": "Types for prosopo TypeScript packages",
     "main": "dist/index.js",
     "type": "module",
@@ -40,8 +40,8 @@
         "@polkadot/api-contract": "10.11.2",
         "@polkadot/types": "10.11.2",
         "@polkadot/types-codec": "10.11.2",
-        "@prosopo/common": "0.3.1",
-        "@prosopo/captcha-contract": "0.3.1",
+        "@prosopo/common": "0.3.4",
+        "@prosopo/captcha-contract": "0.3.4",
         "consola": "^3.2.3",
         "zod": "^3.22.3"
     },

@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import {
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
@@ -71,7 +72,8 @@ const getConfig = (siteKey?: string) => {
             address: siteKey,
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        mongoAtlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 
@@ -157,10 +159,16 @@ const renderLogic = (
             config.challengeValidLength = parseInt(challengeValidLengthAttribute)
         }
 
-        if (renderOptions?.captchaType === 'pow') {
-            createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
-        } else {
-            createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+        switch (renderOptions?.captchaType) {
+            case 'pow':
+                createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
+                break
+            case 'frictionless':
+                createRoot(element).render(<ProcaptchaFrictionless config={config} callbacks={callbacks} />)
+                break
+            default:
+                createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+                break
         }
     })
 }
@@ -180,7 +188,7 @@ const implicitRender = () => {
         const features = Object.values(FeaturesEnum)
         const captchaType =
             features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
-            ('image' as const)
+            ('frictionless' as const)
 
         renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }

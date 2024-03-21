@@ -1,3 +1,16 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { CaptchasContainerSchema, DataSchema } from '@prosopo/types'
 import { Flatten } from '../commands/flatten.js'
 import { GenerateV1 } from '../commands/generateV1.js'
@@ -8,29 +21,35 @@ import { Resize } from '../commands/resize.js'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 import { blake2b } from '@noble/hashes/blake2b'
 import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from './utils.js'
+import { getRootDir, getTestResultsDir } from '@prosopo/config'
 import { u8aToHex } from '@polkadot/util/u8a'
 import fs from 'fs'
+import path from 'path'
 import sharp from 'sharp'
 
 describe('dataset commands', () => {
+    const pkgDir = path.relative(getRootDir(), __dirname)
+    const pkgInternalPath = pkgDir.replace(`${__dirname}/`, '')
+    const testResultsDir = `${getTestResultsDir()}/${pkgInternalPath}`
+
     beforeAll(() => {
         // substitute the repo path in the data for tests
         substituteRepoDir()
-        // remove previous test results
-        if (fs.existsSync(`${__dirname}/test_results`)) {
-            fs.rmdirSync(`${__dirname}/test_results`, { recursive: true })
-        }
-        fs.mkdirSync(`${__dirname}/test_results`, { recursive: true })
+        fs.mkdirSync(`${testResultsDir}`, { recursive: true })
     })
 
     afterAll(() => {
         // restore repo path back to placeholder
         restoreRepoDir()
+        // remove test results
+        if (fs.existsSync(`${testResultsDir}`)) {
+            fs.rmdirSync(`${testResultsDir}`, { recursive: true })
+        }
     })
 
     test('labels', async () => {
         const input = `${__dirname}/data/flat_resized/data.json`
-        const output = `${__dirname}/test_results/labels.json`
+        const output = `${testResultsDir}/labels.json`
         const labels = new Labels()
         labels.logger.setLogLevel('error')
         await labels.exec({
@@ -52,7 +71,7 @@ describe('dataset commands', () => {
 
     test('generate v2', async () => {
         const input = `${__dirname}/data/flat_resized/data.json`
-        const output = `${__dirname}/test_results/captchas_v2.json`
+        const output = `${testResultsDir}/captchas_v2.json`
         const minIncorrect = 1
         const minCorrect = 1
         const minLabelled = 2
@@ -120,7 +139,7 @@ describe('dataset commands', () => {
 
     test('generate v1', async () => {
         const input = `${__dirname}/data/flat_resized/data.json`
-        const output = `${__dirname}/test_results/captchas_v1.json`
+        const output = `${testResultsDir}/captchas_v1.json`
         const generate = new GenerateV1()
         generate.logger.setLogLevel('error')
         await generate.exec({
@@ -143,7 +162,7 @@ describe('dataset commands', () => {
 
     test('resizes data', async () => {
         const input = `${__dirname}/data/flat/data.json`
-        const output = `${__dirname}/test_results/flat_resized`
+        const output = `${testResultsDir}/flat_resized`
         const resize = new Resize()
         resize.logger.setLogLevel('error')
         await resize.exec({
@@ -174,7 +193,7 @@ describe('dataset commands', () => {
 
     test('relocates data', async () => {
         const input = `${__dirname}/data/flat_resized/data.json`
-        const output = `${__dirname}/test_results/relocated_data.json`
+        const output = `${testResultsDir}/relocated_data.json`
         const relocate = new Relocate()
         relocate.logger.setLogLevel('error')
         await relocate.exec({
@@ -192,7 +211,7 @@ describe('dataset commands', () => {
 
     test('flattens hierarchical data', async () => {
         const input = `${__dirname}/data/hierarchical`
-        const output = `${__dirname}/test_results/flat`
+        const output = `${testResultsDir}/flat`
         const flatten = new Flatten()
         flatten.logger.setLogLevel('error')
         await flatten.exec({

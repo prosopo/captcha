@@ -1,6 +1,19 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent } from '@prosopo/types'
 
-const COLLECTOR_LIMIT = 1000
+const COLLECTOR_LIMIT = 10000
 
 type SetStateAction<T> = T | ((prevState: T) => T)
 type SetStateEvent<T> = (setValueFunc: SetStateAction<T[]>) => void
@@ -38,12 +51,7 @@ const logKeyboardEvent = (event: globalThis.KeyboardEvent, setKeyboardEvent: Set
 }
 
 const logTouchEvent = (event: globalThis.TouchEvent, setTouchEvent: SetTouchEvent) => {
-    // Iterate over the TouchList (map doesn't work on TouchList)
-    for (let i = 0; i < event.touches.length; i++) {
-        const touch = event.touches[i]
-        if (!touch) {
-            continue
-        }
+    for (const touch of Array.from(event.touches)) {
         storeLog({ x: touch.clientX, y: touch.clientY, timestamp: event.timeStamp }, setTouchEvent)
     }
 }

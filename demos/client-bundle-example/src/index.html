@@ -3,7 +3,7 @@
     <head>
         <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
         <title>Procaptcha demo: Simple page</title>
-        <script id="procaptchaScript" type="module" src="procaptcha.bundle.js" async defer></script>
+        <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
     </head>
     <body>
         <div class="mui-container">
@@ -17,19 +17,23 @@
                     <label>Password</label>
                     <input type="password" required />
                 </div>
-                <div id="procaptcha-container"></div>
-                <!-- Dev sitekey -->
-                <div
-                    class="procaptcha"
-                    data-theme="light"
-                    data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
-                ></div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <div id="procaptcha-container"></div>
+                </div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <!-- Dev sitekey -->
+                    <div
+                        class="procaptcha"
+                        data-theme="light"
+                        data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                    ></div>
+                </div>
                 <input type="submit" class="mui-btn mui-btn--raised" />
             </form>
         </div>
         <script type="module">
             // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-            import { render } from './procaptcha.bundle.js'
+            import { render } from './assets/procaptcha.bundle.js'
 
             // Define a callback function to be called when the CAPTCHA is verified
             window.onCaptchaVerified = function (output) {

@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["dom", "dom.iterable", "esnext"]
+    },
+    "include": ["src", "src/**/*.json"],
+    "references": [
+        {
+            "path": "../../packages/procaptcha-frictionless"
+        },
+        {
+            "path": "../../packages/cli"
+        },
+        {
+            "path": "../../dev/config"
+        }
+    ]
+}
