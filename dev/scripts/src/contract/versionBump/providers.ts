@@ -146,16 +146,7 @@ const loadContract = async (
 
     const provider = new WsProvider(network.endpoint)
     console.log('provider', provider.endpoint)
-    // THIS SILENTLY KILLS THE PROCESS AND I HAVE NO IDEA WHY --
     const api = await ApiPromise.create({ provider, initWasm: false })
-        .then((api) => {
-            console.log(api.type, 'aisudnflaisdhbnfliasuhbfilnb')
-            return api
-        })
-        .catch((err) => {
-            console.error(err)
-            throw new Error('Error creating API')
-        })
 
     const oldContract = JSON.parse(fs.readFileSync(contractAbiJSON, 'utf-8')) as ContractAbi
     console.log('oldContract', oldContract)
@@ -175,7 +166,7 @@ const run = async () => {
     console.log('here')
     const api = await ApiPromise.create({ provider, noInitWarn: true })
     console.log('here2')
-    //await TransferProviders(providersJson, oldContractAddress, oldContractAbiPath)
+    await TransferProviders(providersJson, oldContractAddress, oldContractAbiPath)
 
     console.log('how far did we get?')
 }
