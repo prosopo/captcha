@@ -530,7 +530,11 @@ export function Manager(
     const loadContract = async (): Promise<ProsopoCaptchaContract> => {
         const config = getConfig()
         const network = getNetwork(config)
-        const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint), initWasm: false })
+        const api = await ApiPromise.create({
+            provider: new WsProvider(network.endpoint),
+            initWasm: false,
+            noInitWarn: true,
+        })
         // TODO create a shared keyring that's stored somewhere
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
