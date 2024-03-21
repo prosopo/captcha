@@ -10,10 +10,10 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
+// limitations under the License.
 
 import { ProsopoError } from '../index.js'
 
-// limitations under the License.
 export class UrlConverter {
     private readonly symbols = [
         '', // empty string == termination symbol / noop. This may occur at the end of a byte array where the first 2 bits are used in the final symbol and the remaining 6 bits are ignored. But, because of the spacing, the remaining 6 bits appear to be a symbol. These 6 bits will be set to 000000. Thus we map 000000 (decimal number 0) to the empty string here.

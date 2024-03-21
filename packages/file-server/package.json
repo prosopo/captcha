@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/file-server",
-    "version": "0.3.2",
+    "version": "0.3.4",
     "description": "Simple static file server",
     "main": "dist/index.js",
     "type": "module",

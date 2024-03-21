@@ -14,19 +14,22 @@
 import {
     Account,
     ApiParams,
+    CaptchaResponseBody,
     CaptchaSolution,
+    CaptchaWithProof,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaEvents,
+    ProcaptchaOutput,
+    ProcaptchaState,
+    ProcaptchaStateUpdateFn,
     StoredEvents,
+    TCaptchaSubmitResult,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { Keyring } from '@polkadot/keyring'
-import { ProcaptchaState, ProcaptchaStateUpdateFn } from '../types/manager.js'
 import {
     ProsopoApiError,
     ProsopoContractError,
@@ -36,12 +39,13 @@ import {
     trimProviderUrl,
 } from '@prosopo/common'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { SignerPayloadRaw } from '@polkadot/types/types'
-import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { at } from '@prosopo/util'
+import { at, hashToHex } from '@prosopo/util'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util/string'
@@ -61,20 +65,6 @@ const defaultState = (): Partial<ProcaptchaState> => {
         account: undefined,
         // don't handle timeout here, this should be handled by the state management
     }
-}
-
-const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaStateUpdateFn) => {
-    const updateCurrentState = (nextState: Partial<ProcaptchaState>) => {
-        // mutate the current state. Note that this is in order of properties in the nextState object.
-        // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
-        Object.assign(state, nextState)
-        // then call the update function for the frontend to do the same
-        onStateUpdate(nextState)
-
-        console.log('Procaptcha state update:', nextState, '\nResult:', state)
-    }
-
-    return updateCurrentState
 }
 
 const getNetwork = (config: ProcaptchaClientConfigOutput) => {
@@ -99,39 +89,10 @@ export function Manager(
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
 
     const alertError = (error: ProsopoError) => {
-        console.log(error)
         alert(error.message)
     }
 
-    const events: ProcaptchaEvents = Object.assign(
-        {
-            onError: alertError,
-            onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
-                console.log('onHuman event triggered', output)
-                updateState({ sendData: !state.sendData })
-            },
-            onExtensionNotFound: () => {
-                alert('No extension found')
-            },
-            onFailed: () => {
-                alert('Captcha challenge failed. Please try again')
-                updateState({ sendData: !state.sendData })
-            },
-            onExpired: () => {
-                alert('Completed challenge has expired, please try again')
-            },
-            onChallengeExpired: () => {
-                alert('Uncompleted challenge has expired, please try again')
-            },
-            onOpen: () => {
-                console.log('onOpen event triggered')
-            },
-            onClose: () => {
-                console.log('onClose event triggered')
-            },
-        },
-        callbacks
-    )
+    const events = getDefaultEvents(onStateUpdate, state, callbacks)
 
     const dispatchErrorEvent = (err: unknown) => {
         const error = err instanceof Error ? err : new Error(String(err))
@@ -177,15 +138,12 @@ export function Manager(
      * Called on start of user verification. This is when the user ticks the box to claim they are human.
      */
     const start = async () => {
-        console.log('Starting procaptcha')
         events.onOpen()
         await fallable(async () => {
             if (state.loading) {
-                console.log('Procaptcha already loading')
                 return
             }
             if (state.isHuman) {
-                console.log('already human')
                 return
             }
 
@@ -243,15 +201,16 @@ export function Manager(
                         undefined,
                         configOptional.challengeValidLength
                     )
-                    if (verifyDappUserResponse.solutionApproved) {
+                    if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
-                        events.onHuman({
+                        const output: ProcaptchaOutput = {
                             [ApiParams.providerUrl]: providerUrlFromStorage,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
-                            [ApiParams.commitmentId]: verifyDappUserResponse.commitmentId,
+                            [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
                             [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
-                        })
+                        }
+                        events.onHuman(output)
                         setValidChallengeTimeout()
                         return
                     }
@@ -267,7 +226,6 @@ export function Manager(
                 type: 'bytes',
             }
             const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
-            console.log('Signature:', signed)
 
             // get a random provider
             const getRandomProviderResponse: RandomProvider = await wrapQuery(
@@ -275,27 +233,25 @@ export function Manager(
                 contract.query
             )(account.account.address, getDappAccount())
             const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
-            console.log('provider', getRandomProviderResponse)
+
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
-            console.log('providerApi', providerApi)
+
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
 
-            console.log('captchaApi', captchaApi)
-            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
-            console.log('challenge', challenge)
+            const challenge = await captchaApi.getCaptchaChallenge()
+
             if (challenge.captchas.length <= 0) {
                 throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
             }
 
             // setup timeout
             const timeMillis: number = challenge.captchas
-                .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
-                .reduce((a, b) => a + b)
+                .map((captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || 30 * 1000)
+                .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
-                console.log('challenge expired after ' + timeMillis + 'ms')
                 events.onChallengeExpired()
                 // expired, disallow user's claim to be human
                 updateState({ isHuman: false, showModal: false, loading: false })
@@ -315,7 +271,6 @@ export function Manager(
 
     const submit = async () => {
         await fallable(async () => {
-            console.log('submitting solutions')
             // disable the time limit, user has submitted their solution in time
             clearTimeout()
 
@@ -328,25 +283,27 @@ export function Manager(
             // hide the modal, no further input required from user
             updateState({ showModal: false })
 
-            const challenge: GetCaptchaResponse = state.challenge
+            const challenge: CaptchaResponseBody = state.challenge
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
-                const solution = at(state.solutions, index)
-                return {
-                    captchaId: captcha.captcha.captchaId,
-                    captchaContentId: captcha.captcha.captchaContentId,
-                    salt,
-                    solution,
+            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
+                (captcha: CaptchaWithProof, index: number) => {
+                    const solution = at(state.solutions, index)
+                    return {
+                        captchaId: captcha.captcha.captchaId,
+                        captchaContentId: captcha.captcha.captchaContentId,
+                        salt,
+                        solution,
+                    }
                 }
-            })
+            )
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
-            const signer = account.extension.signer
+            const signer = getExtension(account).signer
 
-            const first = at(challenge.captchas, 0)
+            const first = at<CaptchaWithProof>(challenge.captchas, 0)
             if (!first.captcha.datasetId) {
                 throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_ID', {
                     context: { error: 'No datasetId set for challenge' },
@@ -365,7 +322,7 @@ export function Manager(
             )
 
             // mark as is human if solution has been approved
-            const isHuman = submission[0].solutionApproved
+            const isHuman = submission[0].verified
 
             if (!isHuman) {
                 // user failed the captcha for some reason according to the provider
@@ -386,7 +343,7 @@ export function Manager(
                     providerUrl: trimmedUrl,
                     user: account.account.address,
                     dapp: getDappAccount(),
-                    commitmentId: submission[1],
+                    commitmentId: hashToHex(submission[1]),
                     blockNumber,
                 })
                 setValidChallengeTimeout()
@@ -395,7 +352,6 @@ export function Manager(
     }
 
     const cancel = async () => {
-        console.log('cancel')
         // disable the time limit
         clearTimeout()
         // abandon the captcha process
@@ -421,13 +377,11 @@ export function Manager(
         }
         const index = state.index
         const solutions = state.solutions
-        const solution = at(solutions, index)
+        const solution = at<string[]>(solutions, index)
         if (solution.includes(hash)) {
-            console.log('deselecting', hash)
             // remove the hash from the solution
             solution.splice(solution.indexOf(hash), 1)
         } else {
-            console.log('selecting', hash)
             // add the hash to the solution
             solution.push(hash)
         }
@@ -448,7 +402,7 @@ export function Manager(
                 context: { error: 'Cannot select, index is out of range for this Captcha' },
             })
         }
-        console.log('proceeding to next round')
+
         updateState({ index: state.index + 1 })
     }
 
@@ -490,11 +444,8 @@ export function Manager(
     }
 
     const setValidChallengeTimeout = () => {
-        console.log('setting valid challenge timeout')
         const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
         const successfullChallengeTimeout = setTimeout(() => {
-            console.log('valid challenge expired after ' + timeMillis + 'ms')
-
             // Human state expired, disallow user's claim to be human
             updateState({ isHuman: false })
 
@@ -535,7 +486,6 @@ export function Manager(
         // Store the account in local storage
         storage.setAccount(account.account.address)
 
-        console.log('Using account:', account)
         updateState({ account })
 
         return getAccount()
@@ -564,6 +514,14 @@ export function Manager(
         }
         const blockNumber: number = state.blockNumber
         return blockNumber
+    }
+
+    const getExtension = (account?: Account) => {
+        account = account || getAccount()
+        if (!account.extension) {
+            throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION', { context: { error: 'Extension not loaded' } })
+        }
+        return account.extension
     }
 
     /**
@@ -606,7 +564,6 @@ export function Manager(
         if (!providerUrl) {
             return
         }
-        console.log('Submitting events to provider', events)
 
         let account = ''
         try {

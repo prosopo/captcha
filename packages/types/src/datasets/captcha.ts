@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AccountId } from '@polkadot/types/interfaces/runtime'
+import { MerkleProof } from './merkle.js'
 import { array, nativeEnum, number, object, string, undefined, union, infer as zInfer } from 'zod'
 import { u32 } from '@polkadot/types-codec/primitive'
 
@@ -84,11 +85,13 @@ export interface CaptchaSolution {
 
 export interface CaptchaWithProof {
     captcha: Captcha
-    proof: string[][]
+    proof: MerkleProof
 }
 
+export type PoWChallengeId = string
+
 export interface PoWCaptcha {
-    challenge: string
+    challenge: PoWChallengeId
     difficulty: number
     signature: string
 }

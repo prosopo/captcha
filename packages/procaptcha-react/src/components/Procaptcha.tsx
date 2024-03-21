@@ -11,10 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { LazyExoticComponent, Suspense, lazy } from 'react'
+import { ProcaptchaEvents } from '@prosopo/types'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
-import { Suspense, lazy } from 'react'
+import { ReactElement } from 'react'
 
-const ProcaptchaWidget = lazy(async () => import('./ProcaptchaWidget.js'))
+//https://github.com/microsoft/TypeScript/issues/42873
+const ProcaptchaWidget: LazyExoticComponent<(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement> = lazy(
+    async () => import('./ProcaptchaWidget.js')
+)
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>
 
 const Procaptcha = (props: ProcaptchaProps) => (

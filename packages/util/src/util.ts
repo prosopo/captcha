@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // sleep for some milliseconds
+import { u8aToHex } from '@polkadot/util'
+
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // create a generator that yields the permutations for a set of options
@@ -255,4 +257,15 @@ export const isArray = (value: unknown): boolean => {
 
 export const isObject = (value: unknown): boolean => {
     return value instanceof Object && !isArray(value)
+}
+
+export type Hash = string | number[]
+
+export const hashToHex = (hash: Hash) => {
+    if (isArray(hash)) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return u8aToHex(new Uint8Array(hash))
+    }
+    return hash.toString()
 }
