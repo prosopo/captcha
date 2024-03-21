@@ -11,6 +11,7 @@ const fluxAuthArgs = z.object({
     app: z.string(),
     ip: z.string().optional(),
     file: z.string().optional(),
+    count: z.string().optional(),
 })
 
 const writeLogs = (file: string, result: { url: string; logs: string }[]) => {
@@ -50,6 +51,11 @@ export default (cmdArgs?: { logger?: Logger }) => {
                     type: 'string' as const,
                     demandOption: false,
                     desc: 'Write the logs to a file',
+                } as const)
+                .option('count', {
+                    type: 'string' as const,
+                    demandOption: false,
+                    desc: 'Number of log lines to get (default 100, max 1000)',
                 } as const),
 
         handler: async (argv: ArgumentsCamelCase) => {
@@ -57,7 +63,13 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 const privateKey = getPrivateKey()
                 const publicKey = getPublicKey()
                 const parsedArgs = fluxAuthArgs.parse(argv)
-                const result = await main(publicKey, privateKey, parsedArgs.app, parsedArgs.ip)
+                const result = await main(
+                    publicKey,
+                    privateKey,
+                    parsedArgs.app,
+                    parsedArgs.ip,
+                    parsedArgs.count ? Number(parsedArgs.count) : undefined
+                )
                 consoleTableWithWrapping(result)
                 if (parsedArgs.file) {
                     writeLogs(parsedArgs.file, result)
