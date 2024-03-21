@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ export class ExtensionWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.11',
+            version: '0.3.x',
             signer,
         }
     }

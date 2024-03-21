@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -170,8 +170,8 @@ export class Tasks {
     /**
      * @description Generates a PoW Captcha for a given user and dapp
      *
-     * @param {string} userAccount - Dapp User address
-     * @param {string} dappAccount - Dapp User address
+     * @param {string} userAccount - user that is solving the captcha
+     * @param {string} dappAccount - dapp that is requesting the captcha
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         // TODO: Verify that the origin matches the url of the dapp
@@ -187,15 +187,16 @@ export class Tasks {
     }
 
     /**
-     * @description Generates a PoW Captcha for a given user and dapp
+     * @description Verifies a PoW Captcha for a given user and dapp
      *
-     * @param {string} blocknumber - Dapp User address
-     * @param {string} challenge - Dapp User address
-     * @param {string} difficulty - Dapp User address
-     * @param {string} nonce - Dapp User address
+     * @param {string} blockNumber - the block at which the Provider was selected
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {string} difficulty - how many leading zeroes the solution must have
+     * @param {string} signature - proof that the Provider provided the challenge
+     * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
      */
     async verifyPowCaptchaSolution(
-        blocknumber: number,
+        blockNumber: number,
         challenge: string,
         difficulty: number,
         signature: string,
@@ -204,12 +205,13 @@ export class Tasks {
         const latestHeader = await this.contract.api.rpc.chain.getHeader()
         const latestBlockNumber = latestHeader.number.toNumber()
 
-        if (latestBlockNumber > blocknumber - 5) {
+        if (blockNumber < latestBlockNumber - 5) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
                     ERROR: 'Blockhash must be from within last 5 blocks',
                     failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blocknumber,
+                    blockNumber,
+                    latestBlockNumber,
                 },
             })
         }
@@ -332,7 +334,7 @@ export class Tasks {
 
         let response: DappUserSolutionResult = {
             captchas: [],
-            solutionApproved: false,
+            verified: false,
         }
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
@@ -371,7 +373,7 @@ export class Tasks {
                         captchaId: id,
                         proof: tree.proof(id),
                     })),
-                    solutionApproved: true,
+                    verified: true,
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
             } else {
@@ -380,7 +382,7 @@ export class Tasks {
                         captchaId: id,
                         proof: [[]],
                     })),
-                    solutionApproved: false,
+                    verified: false,
                 }
             }
         }
@@ -711,9 +713,10 @@ export class Tasks {
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {
-        if (!this.config.mongoAtlasUri) {
+        if (!this.config.devOnlyWatchEvents || !this.config.mongoEventsUri) {
+            this.logger.info('Dev watch events not set to true, not saving events')
             return
         }
-        await saveCaptchaEvent(events, accountId, this.config.mongoAtlasUri)
+        await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
     }
 }

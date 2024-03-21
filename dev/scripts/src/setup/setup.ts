@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,10 +44,9 @@ function getDatasetFilePath() {
 }
 
 function getDefaultProvider(): IProviderAccount {
+    const host = process.env.PROSOPO_PROVIDER_HOST || 'localhost'
     return {
-        url: process.env.PROSOPO_API_PORT
-            ? `http://localhost:${process.env.PROSOPO_API_PORT}`
-            : 'http://localhost:9229',
+        url: process.env.PROSOPO_API_PORT ? `http://${host}:${process.env.PROSOPO_API_PORT}` : `http://${host}:9229`,
         fee: 10,
         payee: Payee.dapp,
         stake: Math.pow(10, 13),

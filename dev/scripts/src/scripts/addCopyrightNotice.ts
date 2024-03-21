@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,45 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at } from '@prosopo/util'
+import { getRootDir } from '@prosopo/config'
 import { glob } from 'glob'
 import fs from 'fs'
 
-const searchPaths = [
-    '../**/*.ts',
-    '../../**/*.ts',
-    '../../../**/*.ts',
-    '../**/*.tsx',
-    '../../**/*.tsx',
-    '../../../**/*.tsx',
-    '../**/*.rs',
-    '../../**/*.rs',
-    '../../../**/*.rs',
-    '../../../**/**/*.rs',
-    '../../../**/**/**/*.rs',
-]
-const files = glob.sync(searchPaths, {
-    cwd: __dirname,
-    absolute: true,
-    ignore: [
-        'node_modules/**',
-        'node_modules/**',
-        '../../**/node_modules/**',
-        '../node_modules/**',
-        '../../node_modules/**',
-        '../../../node_modules/**',
-        '**/dist/**',
-        '**/**/dist/**',
-        '../../dist/**',
-        '../../../packages/**/node_modules/**',
-        '../../../demos/**/node_modules/**',
-        '../../../packages/**/dist/**',
-        '../../../demos/**/dist/**',
-    ],
-})
-
-console.log('Modding:\n', JSON.stringify(files, null, 4))
-
-const header = `// Copyright 2021-2023 Prosopo (UK) Ltd.
+const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,13 +30,58 @@ const header = `// Copyright 2021-2023 Prosopo (UK) Ltd.
 // See the License for the specific language governing permissions and
 // limitations under the License.`
 
-// for each file, check if file starts with // Copyright (C) Prosopo (UK) Ltd.
-for (const file of files) {
-    if (fs.lstatSync(file).isFile()) {
+const searchPaths = [
+    '**/*.ts',
+    '**/*.tsx',
+    '**/*.rs',
+    '**/*.js',
+    '**/*.jsx',
+    '**/*.cjs',
+    '**/*.mjs',
+    '**/*.cts',
+    '**/*.mts',
+]
+
+const currentPath = getRootDir()
+
+const files = glob
+    .sync(searchPaths, {
+        cwd: currentPath,
+        absolute: true,
+        ignore: [
+            '**/node_modules/**',
+            '**/cargo-cache/**',
+            '**/dist/**',
+            '**/target/**',
+            '**/coverage/**',
+            '**/vite.cjs.config.ts.timestamp*',
+        ],
+    })
+    .filter((file) => fs.lstatSync(file).isFile())
+
+if (process.argv[2] === 'list') {
+    console.log(JSON.stringify(files, null, 4))
+    console.log('Found', files.length, 'files')
+}
+
+if (process.argv[2] === 'check') {
+    for (const file of files) {
+        const fileContents = fs.readFileSync(file, 'utf8')
+        if (fileContents.startsWith(header)) {
+            console.log('License present:', file)
+        } else {
+            throw new Error(`License not present: ${file}`)
+        }
+    }
+}
+
+if (process.argv[2] === 'license') {
+    //for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
+    for (const file of files) {
         //check if file is a file, not a directory
         const fileContents = fs.readFileSync(file, 'utf8')
         const lines = fileContents.split('\n')
-        if (at(lines, 0).startsWith('// Copyright')) {
+        if (fileContents.indexOf('// Copyright') > -1) {
             //remove the old license and replace with the new one
             // find the line containing `// along with Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.` and take the lines array from there
             let count = 0

@@ -91,11 +91,12 @@ jobs:
                   # subsequent steps can choose whether the version has been bumped or not. All we know at this stage is the version has been changed, i.e. new_version != old_version, but we don't know whether new_version > old_version or new_version < old_version
                   if [[ -n "$version_changes" ]]; then
                     echo "version has changed"
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   else
                     echo "version has not changed"
-                    # fail here if the version has not changed, we don't want to publish anything if the version has not changed!
-                    echo "non-manual run, failing"
-                    exit 1
+                    # skip remaining steps which bump the version
+                    echo "bump=false" >> $GITHUB_OUTPUT
+                    exit 0
                   fi
 
                   VERSION=$(cat package.json | jq -r '.version' || echo "0.0.0")
@@ -117,7 +118,7 @@ jobs:
             # check for version bump against github release
             - name: Check version github
               id: check_version_github
-
+              if: steps.next_version.outputs.bump == 'true'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -154,6 +155,7 @@ jobs:
 
             - name: Check version npm
               id: check_version_npm
+              if: steps.next_version.outputs.bump == 'true'
               run: |
                   # get the current version number from latest release on npm (use procaptcha as the baseline, as workspace package is not published)
                   VERSION=$(npm view @prosopo/procaptcha version)
@@ -188,6 +190,7 @@ jobs:
 
             - name: Check version docker js_server
               id: check_version_docker_js_server
+              if: steps.next_version.outputs.bump == 'true'
               run: |
                   # get the current version number from latest release on docker
                   VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
@@ -222,6 +225,7 @@ jobs:
 
             - name: Check version docker provider
               id: check_version_docker_provider
+              if: steps.next_version.outputs.bump == 'true'
               run: |
                   # get the current version number from latest release on docker
                   VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/provider/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
@@ -257,22 +261,30 @@ jobs:
             - name: Should bump?
               id: check_version_any
               run: |
+                  bump=false
                   # only bump if any of the version checks have detected a bump
                   if [[ "${{ steps.check_version_github.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                    bump=true
                     echo "github bump required"
-                  elif [[ "${{ steps.check_version_npm.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                  fi
+                  if [[ "${{ steps.check_version_npm.outputs.bump }}" == 'true' ]]; then
+                    bump=true
                     echo "npm bump required"
-                  elif [[ "${{ steps.check_version_docker_js_server.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                  fi
+                  if [[ "${{ steps.check_version_docker_js_server.outputs.bump }}" == 'true' ]]; then
+                    bump=true
                     echo "docker js_server bump required"
-                  elif [[ "${{ steps.check_version_docker_provider.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                  fi
+                  if [[ "${{ steps.check_version_docker_provider.outputs.bump }}" == 'true' ]]; then
+                    bump=true
                     echo "docker provider bump required"
+                  fi
+                  if [[ "$bump" == 'true' ]]; then
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "something needs bumping"
                   else
                     echo "bump=false" >> $GITHUB_OUTPUT
-                    echo "no bump required"
+                    echo "nothing needs bumping"
                   fi
 
             # setup node
@@ -502,7 +514,6 @@ jobs:
                     npx tsx ./dev/flux/dist/index.js deploy --app ProcaptchaJavascriptServer
                   else
                     echo "Skipping flux redeploy."
-                    exit 1
                   fi
 
             - name:
@@ -511,14 +522,18 @@ jobs:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
-                  if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
-                    echo "Redeployed flux docker js_server."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
-                    echo "Redeploying flux docker js_server failed."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                    if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
+                        echo "Redeployed flux docker js_server."
+                        curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
+                        echo "Redeploying flux docker js_server failed."
+                        curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    else
+                        echo "Redeploying flux docker js_server skipped / cancelled."
+                    fi
                   else
-                    echo "Redeploying flux docker js_server skipped / cancelled."
+                    echo "Skipping flux redeploy notification."
                   fi
 
             - name: Build and Push the Provider Bundle
