@@ -1,4 +1,3 @@
-import * as fs from 'fs'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ContractAbi } from '@prosopo/types'
 import { KeyringPair$Json } from '@polkadot/keyring/types'
@@ -8,7 +7,8 @@ import { Tasks } from '@prosopo/provider'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { defaultConfig } from '@prosopo/cli'
 import { deployProtocol } from '../index.js'
-import { getSendAmount, getStakeAmount, sendFunds } from '../../index.js'
+import { getSendAmount, getStakeAmount, sendFunds } from '../../setup/funds.js'
+import fs from 'fs'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { ReturnNumber } from '@prosopo/typechain-types'
 
@@ -39,7 +39,7 @@ export const TransferProviders = async (
     const newContract = await loadContract(protocolContractAddress.toString(), abiJson)
 
     // Register the providers in the new contract
-    oldContractProviders.forEach(async (provider) => {
+    for (const provider of oldContractProviders) {
         const env = new ProviderEnvironment(defaultConfig())
 
         const providerKeyringPair: KeyringPair = env.keyring.addFromJson(provider.secret as KeyringPair$Json)
@@ -112,7 +112,7 @@ export const TransferProviders = async (
         })
 
         console.log(txResult)
-    })
+    }
 }
 
 export const getOldProviderDetails = async (
@@ -170,18 +170,19 @@ const run = async () => {
     const config = defaultConfig()
     const network = config.networks[config.defaultNetwork]
     const provider = new WsProvider(network.endpoint)
-    console.log('provider', provider.endpoint);
+    console.log('provider', provider.endpoint)
     // THIS SILENTLY KILLS THE PROCESS AND I HAVE NO IDEA WHY --
-    console.log("here")
-    const api = await ApiPromise.create({provider})
-    console.log("here2")
+    console.log('here')
+    const api = await ApiPromise.create({ provider, noInitWarn: true })
+    console.log('here2')
     //await TransferProviders(providersJson, oldContractAddress, oldContractAbiPath)
 
     console.log('how far did we get?')
-
 }
 
-run().then(() => process.exit(0)).catch((error) => {
-    console.error(error)
-    process.exit(-1)
-})
+run()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error)
+        process.exit(-1)
+    })
