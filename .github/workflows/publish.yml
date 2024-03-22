@@ -560,7 +560,7 @@ jobs:
                   sudo apt-get install -y qemu qemu-user-static
                   docker buildx build --platform linux/amd64,linux/arm64 -f ./docker/images/provider.dockerfile . t prosopo/provider:${{ steps.next_version.outputs.version }}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${{ steps.next_version.outputs.versi ,   on }}
+                  docker push prosopo/provider:${{ steps.next_version.outputs.version }}
 
                   # Push latest
                   docker tag prosopo/provider:${{ steps.next_version.outputs.version }} prosopo/provider:latest
