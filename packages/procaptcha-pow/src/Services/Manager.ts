@@ -85,7 +85,11 @@ export const Manager = (
      */
     const loadContract = async (): Promise<ProsopoCaptchaContract> => {
         const network = getNetwork(getConfig())
-        const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint), initWasm: false })
+        const api = await ApiPromise.create({
+            provider: new WsProvider(network.endpoint),
+            initWasm: false,
+            noInitWarn: true,
+        })
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
 
