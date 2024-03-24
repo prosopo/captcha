@@ -14,6 +14,7 @@
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
+import { version } from '@prosopo/util'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.version')
@@ -22,8 +23,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
         command: 'version',
         describe: 'Return the version of the software',
         handler: async () => {
-            const version = JSON.stringify(process.env.PROSOPO_PACKAGE_VERSION) || 'dev'
-            logger.info(`Version: ${version}`)
+            logger.info(`Version: ${JSON.stringify(version)}`)
         },
     }
 }

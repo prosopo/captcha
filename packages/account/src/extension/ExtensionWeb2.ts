@@ -27,6 +27,7 @@ import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
+import { version } from '@prosopo/util'
 import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
@@ -76,7 +77,7 @@ export class ExtensionWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.3.x',
+            version,
             signer,
         }
     }

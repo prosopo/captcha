@@ -36,6 +36,7 @@ import { Tasks } from '../tasks/tasks.js'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
+import { version } from '@prosopo/util'
 import express, { Router } from 'express'
 
 /**
@@ -288,7 +289,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
         try {
             const details = await tasks.getProviderDetails()
-            return res.json(details)
+            return res.json({ version, ...details })
         } catch (err) {
             tasks.logger.error(err)
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
