@@ -42,7 +42,7 @@ export const nodejsPolarsNativeFilePlugin = (logger: Logger, nodeFiles: string[]
                         const customRequire = createRequire(import.meta.url)
     
                         // load the .node file expecting it to be in the same directory as the output bundle
-                        const content = customRequire('./nodejs-polars.linux-x64-gnu.node')
+                        const content = customRequire('./${file}')
     
                         // export the content straight back out again
                         export default content

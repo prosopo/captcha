@@ -18,8 +18,6 @@ import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
-import { nodejsPolarsDirnamePlugin } from './NodejsPolarsDirnamePlugin.js'
-import { nodejsPolarsNativeFilePlugin } from './NodejsPolarsNativeFilePlugin.js'
 import { wasm } from '@rollup/plugin-wasm'
 import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
@@ -42,10 +40,6 @@ export default async function (
     // Get all dependencies of the current package
     const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName, true)
 
-    // Assuming node_modules are at the root of the workspace
-    const baseDir = path.resolve(optionalBaseDir)
-    const nodeModulesDir = path.resolve(baseDir, 'node_modules')
-
     // Output directory is relative to directory of the package
     const outDir = path.resolve(packageDir, 'dist/bundle')
 
@@ -61,12 +55,6 @@ export default async function (
     ]
 
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-
-    const nodeJsNodeFileToCopy = path.resolve(
-        nodeModulesDir,
-        './nodejs-polars-linux-x64-gnu/nodejs-polars.linux-x64-gnu.node'
-    )
-    logger.info(`.node files to copy ${nodeJsNodeFileToCopy}`)
 
     const define = {
         'process.env.WS_NO_BUFFER_UTIL': 'true',
@@ -92,9 +80,6 @@ export default async function (
 
     // drop console logs if in production mode
     const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
-
-    // a list of the node files to be handled. Starts from root dir
-    const nodeFiles = [nodeJsNodeFileToCopy]
 
     return {
         ssr: {
@@ -135,13 +120,7 @@ export default async function (
                 output: {
                     entryFileNames: `${bundleName}.[name].bundle.js`,
                 },
-                plugins: [
-                    css(),
-                    wasm(),
-                    nodeResolve(),
-                    nodejsPolarsDirnamePlugin(logger),
-                    nodejsPolarsNativeFilePlugin(logger, nodeFiles, outDir),
-                ],
+                plugins: [css(), wasm(), nodeResolve()],
             },
         },
         plugins: [

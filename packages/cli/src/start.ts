@@ -21,6 +21,7 @@ import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import getConfig from './prosopo.config.js'
+import morgan from 'morgan'
 
 // We need the unused params to make express recognise this function as an error handler
 export const handleErrors = (
@@ -54,6 +55,7 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
     }
+    apiApp.use(morgan('combined'))
 
     apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
