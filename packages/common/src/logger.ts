@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = createConsola({}).withTag(scope)
+    const logger = createConsola({ formatOptions: { colors: true, date: true } }).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
@@ -73,8 +73,13 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
                 case LogLevel.enum.fatal:
                     logLevel = ConsolaLogLevels.fatal
                     break
+                case LogLevel.enum.log:
+                    logLevel = ConsolaLogLevels.log
+                    break
                 default:
-                    throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
+                    // this cannot be a ProsopoEnvError. The default logger calls this method, which creates a new ProsopoEnvError, which requires the default logger, which hasn't been constructed yet, leading to ts not being able to find getLoggerDefault() during runtime as it has not completed yet (I think).
+                    // Either way, this should never happen in runtime, this error is just an edge case, every log level should be translated properly.
+                    throw new Error(`Invalid log level translation to consola's log level: ${level}`)
             }
             logger.level = logLevel
             currentLevel = level

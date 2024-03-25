@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -186,11 +186,11 @@ export function getOptions(
               proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),
           })
         : isMutating
-          ? (api.registry.createType('WeightV2', {
-                proofSize: new BN(1_000_000),
-                refTime: MAX_CALL_WEIGHT,
-            }) as WeightV2)
-          : undefined
+        ? (api.registry.createType('WeightV2', {
+              proofSize: new BN(1_000_000),
+              refTime: MAX_CALL_WEIGHT,
+          }) as WeightV2)
+        : undefined
 
     return {
         gasLimit: _gasLimit,
@@ -198,8 +198,8 @@ export function getOptions(
             ? storageDeposit.isCharge
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                  ? storageDeposit.asRefund
-                  : null
+                ? storageDeposit.asRefund
+                : null
             : null,
         value: value || BN_ZERO,
     } as ContractOptions

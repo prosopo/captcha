@@ -1,3 +1,16 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
 import { Drop } from 'esbuild'
 import { UserConfig } from 'vite'
@@ -45,7 +58,9 @@ export default async function (
         'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
         'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
+        'process.env.PROSOPO_MONGO_EVENTS_URI': JSON.stringify(process.env.PROSOPO_MONGO_EVENTS_URI),
         'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
+        'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(process.env.PROSOPO_PACKAGE_VERSION),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }
@@ -74,7 +89,12 @@ export default async function (
     logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
-    const drop: Drop[] | undefined = mode === 'production' ? ['console', 'debugger'] : undefined
+    let drop: undefined | Drop[]
+    let pure: string[] = []
+    if (isProduction) {
+        drop = ['debugger']
+        pure = ['console.log', 'console.warn', 'console.info', 'console.debug']
+    }
 
     logger.info('Bundle name', bundleName)
     return {
@@ -93,6 +113,7 @@ export default async function (
             platform: 'browser',
             target: ['es2020', 'chrome60', 'edge18', 'firefox60', 'node12', 'safari11'],
             drop,
+            pure,
             legalComments: 'none',
         },
         define,
@@ -107,9 +128,8 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                // sets the bundle to an Instantly Invoked Function Expression (IIFE)
                 fileName: `${bundleName}.bundle.js`,
-                formats: ['iife'],
+                formats: ['es'],
             },
             modulePreload: { polyfill: true },
             commonjsOptions: {

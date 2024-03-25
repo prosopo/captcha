@@ -92,7 +92,6 @@ jobs:
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             # build all packages in workspace
             - run: npm run build:all
@@ -115,7 +114,7 @@ jobs:
 
             # deploy protocol and run the unit tests
             - run: npm run deploy_protocol
-            - run: npm run test -- --watch=false
+            - run: npm run test
 
             # restart the docker images to drop any changes made by the unit tests to the contract(s) before running cypress tests
             - name: Reset the docker containers
@@ -145,3 +144,7 @@ jobs:
             - name: Run the cypress tests on client-bundle-example
               run: |
                   npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
+
+            - name: Run the cypress tests on client-bundle-example explicit rendering
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others

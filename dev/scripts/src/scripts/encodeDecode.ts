@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,19 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BN, hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
+import { at } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import {
-    hexToNumber,
-    hexToString,
-    hexToU8a,
-    isHex,
-    isU8a,
-    stringToHex,
-    stringToU8a,
-    u8aToHex,
-    u8aToString,
-} from '@polkadot/util'
 
 // https://stackoverflow.com/a/75872362/1178971
 function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
@@ -62,25 +53,25 @@ function isJSON(arg: string): boolean {
     }
 }
 
+function isBN(arg: string): boolean {
+    try {
+        new BN(`0x${arg}`)
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
 function main() {
     const ss58Format = process.env.PROSOPO_SS58_FORMAT ? parseInt(process.env.PROSOPO_SS58_FORMAT) : 42
-
-    // join any multiline args
-    const arg = process.argv.slice(2).join('').replace(/\s/g, '').trim()
+    const arg = at(process.argv.slice(2), 0).trim()
     const argIsHex = isHex(arg)
     const argIsAddress = isAddress(arg, false, ss58Format)
-    const argIsJSON = isJSON(arg)
-    const argIsU8a = isU8a(arg)
     const output: { name: string; value: string }[] = []
     output.push({ name: 'arg', value: arg })
     output.push({ name: 'length', value: arg.length.toString() })
     output.push({ name: 'argIsAddress', value: argIsAddress.toString() })
     output.push({ name: 'argIsHex', value: argIsHex.toString() })
-    output.push({ name: 'argIsJSON', value: argIsJSON.toString() })
-    output.push({ name: 'argIsU8a', value: argIsU8a.toString() })
-    output.push({ name: 'stringToHex', value: stringToHex(arg) })
-    output.push({ name: 'stringToU8a', value: stringToU8a(arg).toString() })
-
     if (argIsAddress) {
         try {
             const encodedAddress = encodeAddress(decodeAddress(arg, false, ss58Format), ss58Format)
@@ -94,22 +85,22 @@ function main() {
                 output.push({ name: `Address as hex`, value: u8aToHex(decodeAddress(encodedAddress)) })
             }
         } catch (e) {
-            output.push({ name: `Failure encoding/decoding address`, value: `${e}` })
+            output.push({ name: `Failure encoding/decoding address`, value: `FAIL - ${e}` })
         }
     }
-
     if (argIsHex) {
         output.push({ name: `Decoding hex to string`, value: hexToString(arg) })
         try {
             output.push({ name: `Decoding hex to number`, value: hexToNumber(arg).toString() })
         } catch (e) {
-            output.push({ name: `Decoding hex to number`, value: `${e}` })
+            output.push({ name: `Decoding hex to number`, value: `FAIL - ${e}` })
         }
         output.push({ name: `Decoding string to hex to u8a`, value: hexToU8a(stringToHex(arg)).toString() })
+    } else {
         output.push({ name: `Hashing string using blake2AsHex`, value: blake2AsHex(arg) })
     }
 
-    if (argIsJSON) {
+    if (isJSON(arg)) {
         const u8aMaybe = JSON.parse(arg)
         output.push({ name: `Found JSON`, value: u8aMaybe })
         // pad the array
@@ -119,18 +110,18 @@ function main() {
 
         const hex = u8aToHex(padded)
         output.push({ name: `u8aToHex`, value: u8aToHex(padded) })
-        try {
-            output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
-        } catch (e: any) {
-            output.push({ name: `encodeAddress(_, ss58Format)`, value: e.toString() })
-        }
+        output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
         output.push({ name: `u8aToString`, value: u8aToString(padded) })
     }
 
-    console.log('\nJSON OUTPUT\n')
-    console.log(JSON.stringify(output, null, 4))
+    if (isBN(arg)) {
+        output.push({ name: `BN`, value: new BN(arg).toString() })
+    }
+
     console.log('\nTABLE OUTPUT\n')
     consoleTableWithWrapping(output)
+    console.log('\nJSON OUTPUT\n')
+    console.log(JSON.stringify(output, null, 4))
 }
 
 main()

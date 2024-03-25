@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { getPairAsync } from '@prosopo/contract'
-import { getSecret } from './process.env.js'
 import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
@@ -27,15 +26,27 @@ const log = getLogger(LogLevel.enum.info, 'CLI')
 async function main() {
     const envPath = loadEnv()
 
-    const secret = getSecret()
-
     // quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
     const config: ProsopoConfigOutput = getConfig(undefined, undefined, undefined, {
         solved: { count: 2 },
         unsolved: { count: 0 },
     })
 
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
+    if (config.devOnlyWatchEvents) {
+        log.warn(
+            `
+        ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
+        EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
+        ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
+            `
+        )
+    }
+
+    const pair = await getPairAsync(
+        config.networks[config.defaultNetwork],
+        config.account.secret,
+        config.account.address
+    )
 
     log.info(`Pair address: ${pair.address}`)
 

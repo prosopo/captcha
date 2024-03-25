@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/env",
-    "version": "0.2.30",
+    "version": "0.3.5",
     "description": "Path env prosopo environment",
     "main": "dist/index.js",
     "type": "module",
@@ -26,18 +26,18 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
-        "@polkadot/util-crypto": "12.6.1",
-        "@prosopo/common": "0.2.30",
-        "@prosopo/contract": "0.2.30",
-        "@prosopo/database": "0.2.30",
-        "@prosopo/types": "0.2.30",
-        "@prosopo/types-database": "0.2.30",
-        "@prosopo/types-env": "0.2.30",
-        "@prosopo/util": "0.2.30",
+        "@polkadot/util-crypto": "12.6.2",
+        "@prosopo/common": "0.3.5",
+        "@prosopo/contract": "0.3.5",
+        "@prosopo/database": "0.3.5",
+        "@prosopo/types": "0.3.5",
+        "@prosopo/types-database": "0.3.5",
+        "@prosopo/types-env": "0.3.5",
+        "@prosopo/util": "0.3.5",
         "dotenv": "^16.0.1"
     },
     "overrides": {
-        "@polkadot/keyring": "12.6.1"
+        "@polkadot/keyring": "12.6.2"
     },
     "devDependencies": {
         "tslib": "2.6.2",

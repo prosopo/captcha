@@ -88,7 +88,6 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             - name: Clippy
               run: |

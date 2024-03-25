@@ -1,5 +1,18 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { getLogLevel, getLogger } from '@prosopo/common'
-import { getPaths } from '@prosopo/config'
+import { getRootDir } from '@prosopo/config'
 import { loadEnv } from '@prosopo/cli'
 import { parse, stringify } from '@iarna/toml'
 import fs from 'fs'
@@ -53,7 +66,7 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
 export default async function setVersion(version: string, ignore?: string[]) {
     log.info('Setting version to ', version)
     version = parseVersion(version)
-    const root = getPaths().root
+    const root = getRootDir()
     const ignorePaths = ['node_modules', 'cargo-cache', ...(ignore ?? [])]
     log.debug('Ignoring paths: ', ignorePaths)
     // walk through all files finding .json or .toml

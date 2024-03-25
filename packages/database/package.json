@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/database",
-    "version": "0.2.30",
+    "version": "0.3.5",
     "description": "Prosopo database plugins for provider",
     "main": "dist/index.js",
     "type": "module",
@@ -36,12 +36,12 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@polkadot/util": "^12.5.1",
-        "@prosopo/captcha-contract": "0.2.30",
-        "@prosopo/common": "0.2.30",
-        "@prosopo/config": "0.2.30",
-        "@prosopo/types": "0.2.30",
-        "@prosopo/types-database": "0.2.30",
+        "@polkadot/util": "12.6.1",
+        "@prosopo/captcha-contract": "0.3.5",
+        "@prosopo/common": "0.3.5",
+        "@prosopo/config": "0.3.5",
+        "@prosopo/types": "0.3.5",
+        "@prosopo/types-database": "0.3.5",
         "mongodb": "5.8.0",
         "mongodb-memory-server": "^8.7.2",
         "mongoose": "^7.3.3"

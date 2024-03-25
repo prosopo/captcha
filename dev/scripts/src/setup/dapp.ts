@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,63 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Dapp, DappPayee } from '@prosopo/captcha-contract'
 import { IDappAccount } from '@prosopo/types'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel } from '@prosopo/common'
+import { ProsopoCaptchaContract, TransactionQueue, oneUnit, wrapQuery } from '@prosopo/contract'
+import { ProsopoContractError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { oneUnit, wrapQuery } from '@prosopo/contract'
 import { sendFunds } from './funds.js'
 
-export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount, address?: string): Promise<void> {
+const log = getLogger(LogLevel.enum.info, 'setupDapp')
+
+async function submitTx(
+    transactionQueue: TransactionQueue,
+    contract: ProsopoCaptchaContract,
+    method: string,
+    args: any[],
+    value: number | BN,
+    pair?: KeyringPair
+): Promise<ContractSubmittableResult> {
+    return new Promise((resolve, reject) => {
+        if (
+            contract.nativeContract.tx &&
+            method in contract.nativeContract.tx &&
+            contract.nativeContract.tx[method] !== undefined
+        ) {
+            try {
+                contract.dryRunContractMethod(method, args, value).then((extrinsic) => {
+                    transactionQueue
+                        .add(
+                            extrinsic,
+                            (result: ContractSubmittableResult) => {
+                                resolve(result)
+                            },
+                            pair,
+                            method
+                        )
+                        .then((result) => {
+                            log.debug('Transaction added to queue', result)
+                        })
+                })
+            } catch (err) {
+                reject(err)
+            }
+        } else {
+            reject(new ProsopoContractError('CONTRACT.INVALID_METHOD'))
+        }
+    })
+}
+
+export async function setupDapp(
+    env: ProviderEnvironment,
+    dapp: IDappAccount,
+    address?: string,
+    queue?: TransactionQueue
+): Promise<void> {
     const logger = env.logger
 
     if (dapp.pair) {
@@ -34,15 +83,40 @@ export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount, ad
             )(addressToRegister)
             logger.info('   - dapp is already registered')
             logger.info('Dapp', dappResult)
+            if (dappResult.status === 'Inactive') {
+                await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(addressToRegister, {
+                    value: dapp.fundAmount,
+                })
+
+                logger.info('   - dappFund')
+
+                if (queue) {
+                    await submitTx(queue, tasks.contract, 'dappFund', [addressToRegister], dapp.fundAmount)
+                } else {
+                    await tasks.contract.tx.dappFund(addressToRegister, { value: dapp.fundAmount })
+                }
+            }
         } catch (e) {
-            logger.info('   - dappRegister')
+            logger.info('   - dappRegister', addressToRegister)
+
             await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(addressToRegister, DappPayee.dapp)
-            await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
-            logger.info('   - dappFund')
+            if (queue) {
+                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], 0)
+            } else {
+                await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
+            }
+
             await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(addressToRegister, {
                 value: dapp.fundAmount,
             })
-            await tasks.contract.tx.dappFund(addressToRegister, { value: dapp.fundAmount })
+
+            logger.info('   - dappFund')
+
+            if (queue) {
+                await submitTx(queue, tasks.contract, 'dappFund', [addressToRegister], dapp.fundAmount)
+            } else {
+                await tasks.contract.tx.dappFund(addressToRegister, { value: dapp.fundAmount })
+            }
         }
     }
 }

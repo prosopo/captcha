@@ -70,7 +70,6 @@ jobs:
             - run: mkdir -p ~/.cache/Cypress
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             - name: Rust formatting check
               run: |

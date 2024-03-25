@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import {
     Item,
     MerkleProof,
 } from '@prosopo/types'
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../../src/captcha/index.js'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import { at, get } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import {
@@ -36,7 +36,7 @@ import {
     parseCaptchaDataset,
     sortAndComputeHashes,
     verifyProof,
-} from '../../src/captcha/index.js'
+} from '../captcha/index.js'
 import path from 'path'
 
 describe('CAPTCHA FUNCTIONS', async function () {

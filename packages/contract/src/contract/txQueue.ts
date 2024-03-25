@@ -1,3 +1,16 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 /* The following class takes extrinsics and submits them to the chain with a higher nonce than the previously submitted
  * extrinsic. This is to avoid the situation where an extrinsic is submitted, but not yet completed, and then another
  * extrinsic is submitted with the same nonce. This causes the second extrinsic to fail. Extrinsics are generated
@@ -101,6 +114,7 @@ export class TransactionQueue {
             }
 
             if (this.busy) {
+                this.logger.debug('TxQueue busy')
                 // if busy, wait for the next extrinsic to be added to the queue
                 return undefined
             }
@@ -112,6 +126,7 @@ export class TransactionQueue {
             const queueItem = this.queue.shift()
 
             if (queueItem) {
+                this.logger.debug('Submitting item', queueItem.method)
                 const { method, extrinsic, callback, pair } = queueItem
 
                 // eslint-disable-next-line no-async-promise-executor
@@ -120,13 +135,15 @@ export class TransactionQueue {
                     const submittingPair = pair || this.pair
 
                     // take the nonce from the chain for the submitting pair
-                    this.nonce = (await this.api.rpc.system.accountNextIndex(submittingPair.address)).toNumber()
+                    this.nonce = -1
 
+                    this.logger.debug('Nonce:', this.nonce)
                     const unsub = await extrinsic.signAndSend(
                         submittingPair,
-                        { nonce: this.nonce },
+                        { nonce: -1 },
                         async (result: SubmittableResult) => {
                             // TODO handle contract reverted by creating a new ContractSubmittableResult from the result
+                            this.logger.debug(JSON.stringify(result))
                             if (result.status.isInBlock || result.status.isFinalized) {
                                 // run the callback for this extrinsic
                                 this.logger.debug('Running user callback')
@@ -139,6 +156,23 @@ export class TransactionQueue {
                                 this.logger.debug('Running next extrinsic in queue')
                                 this.busy = false
                                 this.submitted++
+                                await this.submit()
+                            } else if (result.status.isUsurped) {
+                                // This shouldn't happen as it means we've submitted a nonce with too low a value
+                                this.logger.debug(`Transaction was usurped.`)
+                                reject(
+                                    new ProsopoTxQueueError(new Error('CONTRACT.TX_QUEUE_ERROR'), {
+                                        logLevel: this.logger.getLogLevel(),
+                                        context: { method, result: JSON.stringify(result) },
+                                    })
+                                )
+                            } else if (result.status.isInvalid) {
+                                await this.add(extrinsic, callback, pair, method)
+                                this.logger.debug('Resubmitted invalid transaction')
+                                this.busy = false
+                                this.logger.debug('Running next extrinsic in queue')
+                                // unsubscribe from this extrinsic
+                                unsub()
                                 await this.submit()
                             } else if (result.status.isFuture) {
                                 // This shouldn't happen as it means we've submitted a nonce with too high a value

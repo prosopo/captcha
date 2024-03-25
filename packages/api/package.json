@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/api",
-    "version": "0.2.30",
+    "version": "0.3.5",
     "description": "Wrapper for the provider API",
     "main": "dist/index.js",
     "type": "module",
@@ -36,11 +36,11 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@prosopo/types": "0.2.30"
+        "@prosopo/types": "0.3.5"
     },
     "devDependencies": {
-        "@prosopo/captcha-contract": "0.2.30",
-        "@prosopo/config": "0.2.30",
+        "@prosopo/captcha-contract": "0.3.5",
+        "@prosopo/config": "0.3.5",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

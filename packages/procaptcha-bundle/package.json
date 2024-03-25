@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-bundle",
-    "version": "0.2.30",
+    "version": "0.3.5",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -36,15 +36,12 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@emotion/react": "^11.11.1",
-        "@emotion/styled": "^11.11.0",
-        "@mui/icons-material": "^5.14.3",
-        "@mui/material": "^5.14.5",
-        "@prosopo/common": "0.2.30",
-        "@prosopo/procaptcha": "0.2.30",
-        "@prosopo/procaptcha-react": "0.2.30",
-        "@prosopo/types": "0.2.30",
-        "@prosopo/util": "0.2.30"
+        "@prosopo/procaptcha-frictionless": "0.3.5",
+        "@prosopo/procaptcha-pow": "0.3.5",
+        "@prosopo/procaptcha-react": "0.3.5",
+        "@prosopo/types": "0.3.5",
+        "@prosopo/util": "0.3.5",
+        "react-dom": "^18.2.0"
     },
     "repository": {
         "type": "git",
@@ -60,9 +57,9 @@
     },
     "devDependencies": {
         "@originjs/vite-plugin-commonjs": "^1.0.3",
-        "@prosopo/config": "0.2.30",
+        "@prosopo/config": "0.3.5",
         "@rollup/plugin-typescript": "^11.1.2",
-        "@vitejs/plugin-react": "^4.0.4",
+        "@vitejs/plugin-react": "^4.2.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "webpack-merge": "^5.9.0"

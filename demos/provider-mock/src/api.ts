@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,14 +57,14 @@ export function prosopoRouter(): Router {
                 statusMessage = 'API.USER_VERIFIED'
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: approved,
+                    verified: approved,
                     commitmentId: testCommitmentId,
                 })
             }
 
             return res.json({
                 status: req.t(statusMessage),
-                solutionApproved: false,
+                verified: false,
             })
         } catch (err) {
             return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))

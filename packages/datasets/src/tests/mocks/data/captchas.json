@@ -2,7 +2,7 @@
     "datasetId": "0x80f2e82ed079330c5fd9ea849a2b068e5b5c3473061219e5b33f2f210e6f1715",
     "captchas": [
         {
-            "salt": "0x01",
+            "salt": "0x0ee5e8130bf5834978971abbb3e94703",
             "solution": [1, 2, 3],
             "timeLimit": 20,
             "items": [
@@ -55,7 +55,7 @@
             "target": "bus"
         },
         {
-            "salt": "0x02",
+            "salt": "0xc91bc6807f3b240802b4fbb77b7a64cc",
             "solution": [0, 7, 8],
             "items": [
                 {
@@ -107,7 +107,7 @@
             "target": "train"
         },
         {
-            "salt": "0x03",
+            "salt": "0x2b1bab8943b8a24ffdaa23e16b66ad91",
             "solution": [],
             "items": [
                 {
@@ -159,7 +159,7 @@
             "target": "car"
         },
         {
-            "salt": "0x05",
+            "salt": "0x70c4756934dbb66b1aafa44178aa9e2e",
             "items": [
                 {
                     "hash": "0x7f4313a6d4240e206d7c7f16d368ddf12d5f1d78296fd3de7e91df1d7739a35f",
@@ -210,7 +210,7 @@
             "target": "plane"
         },
         {
-            "salt": "0x01",
+            "salt": "0x5f3e0f226785935762337f97aee6eb9b",
             "solution": [2, 3, 8],
             "items": [
                 {
@@ -262,7 +262,7 @@
             "target": "dog"
         },
         {
-            "salt": "0x02",
+            "salt": "0x2e81556317a19f15942558cc17715afc",
             "solution": [0, 1, 4],
             "items": [
                 {
@@ -314,7 +314,7 @@
             "target": "cat"
         },
         {
-            "salt": "0x03",
+            "salt": "0xdc77a6623da63d4379ebacd5ad440907",
             "items": [
                 {
                     "hash": "0x0138ab8b1951c2b36284f6abacfc40cc3ec8280adc38462cc5f6b852e17ffe59",
@@ -365,7 +365,7 @@
             "target": "horse"
         },
         {
-            "salt": "0x01",
+            "salt": "0x0e33da9deb5f1cbeef4dce867c33c0c5",
             "solution": [0, 7],
             "items": [
                 {
@@ -417,7 +417,7 @@
             "target": "plane"
         },
         {
-            "salt": "0x02",
+            "salt": "0x71ed6ca839978fc286f0651dfcef7862",
             "solution": [4, 6, 8],
             "items": [
                 {
@@ -469,7 +469,7 @@
             "target": "dog"
         },
         {
-            "salt": "0x03",
+            "salt": "0xcc8730f359718c4d94c8dc565938621c",
             "solution": [2, 3, 5],
             "items": [
                 {
@@ -521,7 +521,7 @@
             "target": "horse"
         },
         {
-            "salt": "0x04",
+            "salt": "0x234e4dc3fe6db2588645a66b78b9128a",
             "items": [
                 {
                     "hash": "0x6e0784791bf2edbb348ed69fb8080f69f4c38d3a8169f9204b5600a44bdaa600",
@@ -572,7 +572,7 @@
             "target": "bird"
         },
         {
-            "salt": "0x01",
+            "salt": "0xe7988f0244c7bbf76a8f3986c9e0e136",
             "solution": [1, 6, 8],
             "items": [
                 {
@@ -624,7 +624,7 @@
             "target": "cat"
         },
         {
-            "salt": "0x01",
+            "salt": "0x743db1f415ed40fc96d83957034e624c",
             "solution": [0, 3, 4],
             "items": [
                 {
@@ -676,7 +676,7 @@
             "target": "plane"
         },
         {
-            "salt": "0x01",
+            "salt": "0xaeb51120352c09c503caae1c811421ba",
             "solution": [2, 5, 7],
             "items": [
                 {
@@ -728,7 +728,7 @@
             "target": "car"
         },
         {
-            "salt": "0x010101",
+            "salt": "0x1ef72a0d9424c9d616f41537a5dc6add",
             "solution": [3, 6, 7],
             "items": [
                 {
@@ -780,7 +780,7 @@
             "target": "cat"
         },
         {
-            "salt": "0x020202",
+            "salt": "0xf6abd9232e3c3dd786be74e31a2dde62",
             "solution": [8, 5, 1],
             "items": [
                 {
@@ -832,7 +832,7 @@
             "target": "deer"
         },
         {
-            "salt": "0x030303",
+            "salt": "0xc567e7b688bd615d75b8ae7d108c3dfb",
             "items": [
                 {
                     "hash": "0xeba2c2c032639c02627f28c6fb77bdd48de56d7a7260f4898a2cfbaa916aa488",

@@ -2,9 +2,7 @@
 
 Prosopo Procaptcha is a drop-replacement for reCAPTCHA and hCaptcha that protects user privacy and collects zero data.
 
-Prosopo is a distributed human verification service that can be used to stop bots from interacting with your apps.
-
-Sign up to be a network [beta tester](https://prosopo.io/#signup) to get your sitekey today. You need a sitekey to use
+Sign up [for a 3 month trial](https://prosopo.io/register) and get your sitekey today. You need a sitekey to use
 this library.
 
 # Configuration
@@ -18,7 +16,7 @@ via HTTPS and can
 be placed anywhere on the page. Inside the <head> tag or immediately after the `.procaptcha` container are both fine.
 
 ```html
-<script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+<script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
 ```
 
 Now, you can either render the Procaptcha widget implicitly or explicitly.
@@ -52,7 +50,7 @@ solved.
 <html>
     <head>
         <title>Procaptcha Demo</title>
-        <script src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+        <script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
     </head>
     <body>
         <form action="" method="POST">
@@ -79,7 +77,13 @@ id `procaptcha-container` where the widget will be rendered.
 ```html
 <html>
     <head>
-        <script id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+        <script
+            type="module"
+            id="procaptcha-script"
+            src="https://js.prosopo.io/js/procaptcha.bundle.js"
+            async
+            defer
+        ></script>
     </head>
     <body>
         <div id="procaptcha-container"></div>
@@ -121,7 +125,40 @@ data contains the following fields:
 
 ## Verify the User Response Server Side
 
-To verify a user's response on the server side, simpy import the `verify` function from `@prosopo/server` and pass it
+By adding the client side code, you were able to render a Procaptcha widget that identified if users were real people or
+automated bots. When the captcha succeeded, the Procaptcha script inserted unique data into your form data, which is
+then sent to your server for verification. The are currently two options for verifying the user's response server side:
+
+### Option 1. API Verification
+
+To verify that the token is indeed real and valid, you must now verify it at the API endpoint:
+
+https://api.prosopo.io/siteverify
+
+The endpoint expects a POST request with two parameters: your account secret and the `procaptcha-response` sent from
+your frontend HTML to your backend for verification. You can optionally include the user's IP address as an additional
+security check.
+
+A simple test will look like this:
+
+```bash
+curl -X POST https://api.prosopo.io/siteverify \
+-H "Content-Type: application/json" \
+-d 'PROCAPTCHA_RESPONSE'
+```
+
+Note that the endpoint expects the application/json Content-Type. You can see exactly what is sent
+using
+
+```bash
+curl -vv
+```
+
+in the example above.
+
+### Option 2. TypeScript Verification Package
+
+To verify a user's response using TypeScript, simpy import the `verify` function from `@prosopo/server` and pass it
 the `procaptcha-response` POST data. Types can be imported from `@prosopo/types`.
 
 ```typescript
@@ -135,5 +172,56 @@ if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
 }
 ```
 
-There is an example server side implementation
+There is an example TypeScript server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
+
+## Procaptcha Premium Features
+
+### Proof of Work CAPTCHA
+
+Procaptcha Premium's Proof-of-Work feature deters bot attacks by requiring users to solve a cryptographic puzzle. The
+puzzle is easy for humans to solve but computationally expensive for bots.
+
+#### Example of Proof-of-Work rendering
+
+[Explicit Rendering](###Explicit Rendering) is used to render a proof of work CAPTCHA by setting the `captchaType`
+to `pow`.
+
+```javascript
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+        captchaType: 'pow',
+    })
+})
+```
+
+### Frictionless CAPTCHA
+
+Procaptcha Premium's Frictionless feature dynamically detects if the user is a bot or a human. If the user is likely to
+be a bot, the user will be presented with a CAPTCHA challenge. If the user is likely to be a human, the user will not be
+presented with a CAPTCHA challenge.
+
+#### Example of Frictionless rendering
+
+[Explicit Rendering](###Explicit Rendering) is used to render a proof of work CAPTCHA by setting the `captchaType`
+to `frictionless`.
+
+```javascript
+document.getElementById('procaptcha-script').addEventListener('load', function () {
+    window.onCaptchaVerified = function (output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+    window.procaptcha.render('procaptcha-container', {
+        siteKey: 'YOUR_SITE_KEY',
+        theme: 'dark',
+        callback: 'onCaptchaVerified',
+        captchaType: 'frictionless',
+    })
+})
+```

@@ -17,6 +17,12 @@
             "path": "../procaptcha-react"
         },
         {
+            "path": "../procaptcha-pow"
+        },
+        {
+            "path": "../procaptcha-frictionless"
+        },
+        {
             "path": "../util"
         }
     ]

@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
-import { getContractNames, getPaths } from '@prosopo/config'
+import { getContractNames, getContractsDir, getProtocolDistDir, getScriptsPkgDir } from '@prosopo/config'
 import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
@@ -25,7 +25,6 @@ import path from 'path'
 import setVersion from '../scripts/setVersion.js'
 import yargs from 'yargs'
 
-const paths = getPaths()
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -106,8 +105,8 @@ export async function processArgs(args: string[]) {
             (yargs) => yargs,
             async (argv) => {
                 const env = getEnv()
-                const paths = getPaths()
-                await exec(`cp -v ${paths.scripts}/env.${env} ${paths.scripts}/.env.${env}`)
+                const scripts = getScriptsPkgDir()
+                await exec(`cp -v ${scripts}/env.${env} ${scripts}/.env.${env}`)
             },
             []
         )
@@ -154,9 +153,9 @@ export async function processArgs(args: string[]) {
             handler: async (argv) => {
                 const contracts = getContractNames()
                 for (const contract of contracts) {
-                    const inDir = `${paths.protocolDist}/${contract}`
+                    const inDir = `${getProtocolDistDir()}/${contract}`
                     await exec(
-                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractPackagesDir}/${contract}/src`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${getContractsDir()}/${contract}/src`
                     )
                 }
             },

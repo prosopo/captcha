@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ if (isClientSide()) {
         .use(initReactI18next)
         .init({ ...commonOptions, ...reactOptions })
 } else {
-    i18n.use(Backend)
+    i18n.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
         .use(MiddlewareLanguageDetector)
         .init({ ...commonOptions, ...nodeOptions })
 }
