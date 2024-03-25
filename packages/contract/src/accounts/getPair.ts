@@ -1,6 +1,4 @@
-import type { ApiPromise } from '@polkadot/api/promise/Api'
-import { Keyring } from '@polkadot/keyring'
-import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
+
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,9 @@ import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import { Keyring } from '@polkadot/keyring'
+import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
 import type { AccountId } from '@polkadot/types/interfaces'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
