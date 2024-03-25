@@ -1,14 +1,27 @@
-import * as path from 'node:path'
-import { loadEnv } from '@prosopo/cli'
-import { getLogger } from '@prosopo/common'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import * as path from 'path'
 import { VitePluginCloseAndCopy } from '@prosopo/config'
-import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-const logger = getLogger('Info', 'vite.config.js')
+import { getLogger } from '@prosopo/common'
+import { loadEnv } from '@prosopo/cli'
+import react from '@vitejs/plugin-react'
+const logger = getLogger(`Info`, `vite.config.js`)
 const dir = path.resolve('.')
 loadEnv(dir)
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(function ({ command, mode }) {
     logger.info(`Running at ${dir} in ${mode} mode`)
     // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
     // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
@@ -45,10 +58,7 @@ export default defineConfig(({ command, mode }) => {
         },
         build: {
             modulePreload: { polyfill: true },
-            lib: {
-                entry: path.resolve(__dirname, './index.html'),
-                name: 'client_example',
-            },
+            lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' },
         },
         plugins: [
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -58,8 +68,6 @@ export default defineConfig(({ command, mode }) => {
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
-        server: {
-            port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9234,
-        },
+        server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9234 },
     }
 })

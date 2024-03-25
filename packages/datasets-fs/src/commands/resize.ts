@@ -1,13 +1,26 @@
-import fs from 'node:fs'
-import { blake2b } from '@noble/hashes/blake2b'
-import { u8aToHex } from '@polkadot/util/u8a'
-import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
-import { type Data, DataSchema, type Item } from '@prosopo/types'
-import { lodash } from '@prosopo/util/lodash'
-import cliProgress from 'cli-progress'
-import sharp from 'sharp'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import * as z from 'zod'
-import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { Data, DataSchema, Item } from '@prosopo/types'
+import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
+import { blake2b } from '@noble/hashes/blake2b'
+import { lodash } from '@prosopo/util/lodash'
+import { u8aToHex } from '@polkadot/util/u8a'
+import cliProgress from 'cli-progress'
+import fs from 'fs'
+import sharp from 'sharp'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     size: z.number(),
@@ -130,10 +143,8 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         this.logger.info('verifying data')
         DataSchema.parse(data)
 
-        this.logger.info('writing data')
-        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), {
-            recursive: true,
-        })
+        this.logger.info(`writing data`)
+        fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outputMapFile, JSON.stringify(data, null, 4))
     }
 

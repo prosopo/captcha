@@ -1,6 +1,19 @@
-import fs from 'node:fs'
-import { type CaptchasContainer, CaptchasContainerSchema, DataSchema } from '@prosopo/types'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { CaptchasContainer, CaptchasContainerSchema, DataSchema } from '@prosopo/types'
 import { at } from '@prosopo/util'
+import fs from 'fs'
 
 // recursively list files in a directory
 export function* fsWalk(
@@ -63,7 +76,7 @@ export const fsEq = (pth1: string, pth2: string) => {
 export const readDataJson = (pth: string) => {
     let content = fs.readFileSync(pth).toString()
     // TODO use getPaths() here to find the repo dir
-    content = content.replaceAll('${repo}', `${__dirname}/../../../..`)
+    content = content.replaceAll('${repo}', __dirname + '/../../../..')
     const dataJson = JSON.parse(content.toString())
     const data = DataSchema.parse(dataJson)
     return data
@@ -105,16 +118,16 @@ export const captchasEq = (first: CaptchasContainer, second: CaptchasContainer) 
 
 export const substituteRepoDir = () => {
     // read all json files in the test data dir
-    for (const pth of fsWalk(`${__dirname}/data`)) {
+    for (const pth of fsWalk(__dirname + '/data')) {
         if (!pth.endsWith('.json')) {
             continue
         }
         // make a backup of each file
-        fs.copyFileSync(pth, `${pth}.bak`)
+        fs.copyFileSync(pth, pth + '.bak')
         // replace ${repo} with the path to the repo
         let content = fs.readFileSync(pth).toString()
         // TODO use getPaths() here to find the repo dir
-        content = content.replaceAll('${repo}', `${__dirname}/../../../..`)
+        content = content.replaceAll('${repo}', __dirname + '/../../../..')
         // rewrite the file
         fs.writeFileSync(pth, content)
     }
@@ -122,11 +135,11 @@ export const substituteRepoDir = () => {
 
 export const restoreRepoDir = () => {
     // read all json files in the test data dir
-    for (const pth of fsWalk(`${__dirname}/data`)) {
+    for (const pth of fsWalk(__dirname + '/data')) {
         if (!pth.endsWith('.json')) {
             continue
         }
         // restore the backup of each file
-        fs.renameSync(`${pth}.bak`, pth)
+        fs.renameSync(pth + '.bak', pth)
     }
 }

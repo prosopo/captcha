@@ -1,5 +1,4 @@
-import type { ProcaptchaClientConfigInput, ProcaptchaOutput } from '@prosopo/types'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,78 +16,46 @@ import {
     ContainerDiv,
     LoadingSpinner,
     Logo,
+    WIDGET_BORDER,
+    WIDGET_BORDER_RADIUS,
     WIDGET_DIMENSIONS,
     WIDGET_INNER_HEIGHT,
+    WIDGET_PADDING,
     WIDGET_URL,
     WIDGET_URL_TEXT,
     WidthBasedStylesDiv,
     darkTheme,
     lightTheme,
 } from '@prosopo/web-components'
-import { useMemo, useState } from 'react'
 import { Manager } from '../Services/Manager.js'
-
-export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
-
-/**
- * A list of all events which can occur during the Procaptcha process.
- */
-export interface ProcaptchaEvents {
-    onError: (error: Error) => void
-    onHuman: (output: ProcaptchaOutput) => void
-    onExtensionNotFound: () => void
-    onChallengeExpired: () => void
-    onExpired: () => void
-    onFailed: () => void
-    onOpen: () => void
-    onClose: () => void
-}
-
-export interface ProcaptchaProps {
-    // the configuration for procaptcha
-    config: ProcaptchaClientConfigInput
-    // optional set of callbacks for various captcha events
-    callbacks?: Partial<ProcaptchaCallbacks>
-}
+import { ProcaptchaProps } from '@prosopo/types'
+import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
+import { useRef, useState } from 'react'
 
 const Procaptcha = (props: ProcaptchaProps) => {
-    const [checked, setChecked] = useState(false)
-    const [loading, setLoading] = useState(false)
-    const darkMode = props.config.theme
-    const themeColor = darkMode ? 'light' : 'dark'
-    const theme = useMemo(() => (darkMode === 'light' ? lightTheme : darkTheme), [darkMode])
-
-    const handlePowCaptcha = async () => {
-        setLoading(true)
-        Manager(props.config).then((verified) => {
-            if (verified.verified) {
-                console.log('verified')
-                setChecked(true)
-            }
-            setLoading(false)
-        })
-    }
+    const config = props.config
+    const themeColor = config.theme === 'light' ? 'light' : 'dark'
+    const theme = props.config.theme === 'light' ? lightTheme : darkTheme
+    const callbacks = props.callbacks || {}
+    const [state, _updateState] = useProcaptcha(useState, useRef)
+    // get the state update mechanism
+    const updateState = buildUpdateState(state, _updateState)
+    const manager = Manager(config, state, updateState, callbacks)
 
     return (
         <div>
-            <div
-                style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    overflowX: 'auto',
-                }}
-            >
+            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
                         <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
-                                    padding: '2px',
-                                    border: '1px solid',
+                                    padding: WIDGET_PADDING,
+                                    border: WIDGET_BORDER,
                                     backgroundColor: theme.palette.background.default,
                                     borderColor: theme.palette.grey[300],
-                                    borderRadius: '4px',
+                                    borderRadius: WIDGET_BORDER_RADIUS,
                                     display: 'flex',
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
@@ -97,12 +64,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                     overflow: 'hidden',
                                 }}
                             >
-                                <div
-                                    style={{
-                                        display: 'inline-flex',
-                                        flexDirection: 'column',
-                                    }}
-                                >
+                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <div
                                         style={{
                                             display: 'flex',
@@ -126,15 +88,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                 }}
                                             >
                                                 <div style={{ flex: 1 }}>
-                                                    {loading ? (
+                                                    {state.loading ? (
                                                         <LoadingSpinner themeColor={themeColor} />
                                                     ) : (
                                                         <Checkbox
-                                                            checked={checked}
-                                                            onChange={handlePowCaptcha}
+                                                            checked={state.isHuman}
+                                                            onChange={manager.start}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
-                                                        />
+                                                        ></Checkbox>
                                                     )}
                                                 </div>
                                             </div>
@@ -142,15 +104,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
 
-                                <div
-                                    style={{
-                                        display: 'inline-flex',
-                                        flexDirection: 'column',
-                                    }}
-                                >
-                                    <a href={WIDGET_URL} target='_blank' aria-label={WIDGET_URL_TEXT} rel='noreferrer'>
+                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor} />
+                                            <Logo themeColor={themeColor}></Logo>
                                         </div>
                                     </a>
                                 </div>

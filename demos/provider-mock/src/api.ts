@@ -1,5 +1,4 @@
-import { ProsopoApiError } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +12,9 @@ import { ProsopoApiError } from '@prosopo/common'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPaths, VerifySolutionBody } from '@prosopo/types'
-import type { VerifySolutionBodyType } from '@prosopo/types'
-import express, { type Router } from 'express'
+import { ProsopoApiError } from '@prosopo/common'
+import { VerifySolutionBodyType } from '@prosopo/types'
+import express, { Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -57,21 +57,17 @@ export function prosopoRouter(): Router {
                 statusMessage = 'API.USER_VERIFIED'
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: approved,
+                    verified: approved,
                     commitmentId: testCommitmentId,
                 })
             }
 
             return res.json({
                 status: req.t(statusMessage),
-                solutionApproved: false,
+                verified: false,
             })
         } catch (err) {
-            return next(
-                new ProsopoApiError('API.UNKNOWN', {
-                    context: { error: err, errorCode: 500 },
-                })
-            )
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
         }
     })
 

@@ -1,5 +1,4 @@
-import path from 'node:path'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,19 +12,19 @@ import path from 'node:path'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    type Captcha,
+    Captcha,
     CaptchaItemTypes,
-    type CaptchaSolution,
+    CaptchaSolution,
     CaptchaTypes,
-    type CaptchaWithoutId,
-    type Dataset,
-    type HashedItem,
-    type Item,
-    type MerkleProof,
+    CaptchaWithoutId,
+    Dataset,
+    HashedItem,
+    Item,
+    MerkleProof,
 } from '@prosopo/types'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import { at, get } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import {
     compareCaptchaSolutions,
     computeCaptchaHash,
@@ -38,8 +37,9 @@ import {
     sortAndComputeHashes,
     verifyProof,
 } from '../captcha/index.js'
+import path from 'path'
 
-describe('CAPTCHA FUNCTIONS', async () => {
+describe('CAPTCHA FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]
     let DATASET: Dataset
     let RECEIVED: CaptchaSolution[]
@@ -160,7 +160,7 @@ describe('CAPTCHA FUNCTIONS', async () => {
     })
 
     test('Parses a captcha dataset correctly', () => {
-        expect(() => {
+        expect(function () {
             parseCaptchaDataset(JSON.parse(JSON.stringify({ ...DATASET })) as JSON)
         }).to.not.throw()
     })
@@ -198,7 +198,7 @@ describe('CAPTCHA FUNCTIONS', async () => {
             '[{ "captchaId": "1", "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }, { "captchaId": "2", "solution": ["1", "2", "3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }]'
         ) as CaptchaSolution[]
 
-        expect(() => {
+        expect(function () {
             parseAndSortCaptchaSolutions(captchaSolutions)
         }).to.throw()
     })

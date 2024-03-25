@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
-import { type EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { useState } from 'react'
 
 function App() {
@@ -31,14 +31,7 @@ function App() {
         atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
     return (
-        <div
-            style={{
-                height: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}
-        >
+        <div style={{ height: '100%', justifyContent: 'center', alignItems: 'center' }}>
             <ProcaptchaFrictionless config={config} />
         </div>
     )

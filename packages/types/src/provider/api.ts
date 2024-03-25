@@ -1,6 +1,4 @@
-import type { Provider } from '@prosopo/captcha-contract/types-returns'
-import { array, number, object, string, type infer as zInfer } from 'zod'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +11,9 @@ import { array, number, object, string, type infer as zInfer } from 'zod'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaSolutionSchema, type CaptchaWithProof } from '../datasets/index.js'
+import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
+import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
@@ -38,6 +38,7 @@ export enum ApiParams {
     datasetId = 'datasetId',
     user = 'user',
     dapp = 'dapp',
+    provider = 'provider',
     blockNumber = 'blockNumber',
     signature = 'signature',
     requestHash = 'requestHash',
@@ -47,13 +48,21 @@ export enum ApiParams {
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
-    solutionApproved = 'solutionApproved',
+    verified = 'verified',
+    status = 'status',
+    challenge = 'challenge',
+    difficulty = 'difficulty',
+    nonce = 'nonce',
 }
 
 export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]
     partialFee?: string
-    solutionApproved: boolean
+    [ApiParams.verified]: boolean
+}
+
+export interface CaptchaSolutionResponse extends DappUserSolutionResult {
+    [ApiParams.status]: string
 }
 
 export interface CaptchaIdAndProof {
@@ -111,3 +120,43 @@ export interface ProviderDetails {
     provider: Provider
     dbConnectionOk: boolean
 }
+
+export interface VerificationResponse {
+    [ApiParams.status]: string
+    [ApiParams.verified]: boolean
+}
+
+export interface ImageVerificationResponse extends VerificationResponse {
+    [ApiParams.commitmentId]: Hash
+    // The block at which the captcha was requested
+    [ApiParams.blockNumber]: number
+}
+
+export interface GetPowCaptchaResponse {
+    [ApiParams.challenge]: string
+    [ApiParams.difficulty]: number
+    [ApiParams.signature]: string
+}
+
+export interface PowCaptchaSolutionResponse {
+    [ApiParams.verified]: boolean
+}
+
+export const ServerPowCaptchaVerifyRequestBody = object({
+    [ApiParams.challenge]: string(),
+    [ApiParams.dapp]: string(),
+})
+
+export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
+
+export const SubmitPowCaptchaSolutionBody = object({
+    [ApiParams.blockNumber]: number(),
+    [ApiParams.challenge]: string(),
+    [ApiParams.difficulty]: number(),
+    [ApiParams.signature]: string(),
+    [ApiParams.user]: string(),
+    [ApiParams.dapp]: string(),
+    [ApiParams.nonce]: number(),
+})
+
+export type SubmitPowCaptchaSolutionBodyType = zInfer<typeof SubmitPowCaptchaSolutionBody>

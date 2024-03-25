@@ -1,5 +1,4 @@
-import { ProsopoEnvError, getLogger } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +11,13 @@ import { ProsopoEnvError, getLogger } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
+import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
+import { CaptchaMerkleTree } from './merkle.js'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
-import { CaptchaMerkleTree } from './merkle.js'
 
-const logger = getLogger('Info', 'dataset.ts')
+const logger = getLogger(`Info`, `dataset.ts`)
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     return datasetRaw.captchas.map(async (captcha) => {
@@ -48,17 +48,18 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
         )
         if (captchaRaw) {
             return captcha.items.every((item, index) => item.hash === at(captchaRaw.items, index).hash)
+        } else {
+            return false
         }
-        return false
     })
 
     return hashes.every((hash) => hash)
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    logger.debug('Adding solution hashes to dataset')
+    logger.debug(`Adding solution hashes to dataset`)
     const dataset = await addSolutionHashesToDataset(datasetRaw)
-    logger.debug('Building dataset merkle trees')
+    logger.debug(`Building dataset merkle trees`)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
@@ -103,9 +104,7 @@ export function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Dataset {
             ...captcha,
             items: captcha.items,
             // some captcha challenges will not have a solution
-            ...(captcha.solution !== undefined && {
-                solution: matchItemsToSolutions(captcha.solution, captcha.items),
-            }),
+            ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, captcha.items) }),
         }
     })
 

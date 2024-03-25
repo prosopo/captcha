@@ -1,5 +1,4 @@
-import { ProsopoDatasetError } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +11,13 @@ import { ProsopoDatasetError } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { CaptchaResponseCaptcha } from '@prosopo/types'
+import { CaptchaWithProof } from '@prosopo/types'
+import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
 export interface CaptchaWidgetProps {
-    challenge: CaptchaResponseCaptcha
+    challenge: CaptchaWithProof
     solution: string[]
     onClick: (hash: string) => void
     themeColor: 'light' | 'dark'
@@ -25,9 +25,7 @@ export interface CaptchaWidgetProps {
 
 const getHash = (item: any) => {
     if (!item.hash) {
-        throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', {
-            context: { item },
-        })
+        throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', { context: { item } })
     }
     return item.hash
 }
@@ -69,20 +67,11 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                         key={index}
                     >
                         <div
-                            style={{
-                                cursor: 'pointer',
-                                height: '100%',
-                                width: '100%',
-                            }}
+                            style={{ cursor: 'pointer', height: '100%', width: '100%' }}
                             onClick={isTouchDevice ? undefined : () => onClick(hash)}
                             onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
                         >
-                            <div
-                                style={{
-                                    border: 1,
-                                    borderColor: theme.palette.grey[300],
-                                }}
-                            >
+                            <div style={{ border: 1, borderColor: theme.palette.grey[300] }}>
                                 <img
                                     style={{
                                         width: '100%', // image should be full width / height of the item
@@ -144,13 +133,13 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                             userSelect: 'none',
                                             fill: 'currentcolor',
                                         }}
-                                        focusable='false'
-                                        color='#fff'
-                                        aria-hidden='true'
-                                        viewBox='0 0 24 24'
-                                        data-testid='CheckIcon'
+                                        focusable="false"
+                                        color="#fff"
+                                        aria-hidden="true"
+                                        viewBox="0 0 24 24"
+                                        data-testid="CheckIcon"
                                     >
-                                        <path d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' />
+                                        <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
                                     </svg>
                                 </div>
                             </div>

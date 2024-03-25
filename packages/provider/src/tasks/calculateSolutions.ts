@@ -1,6 +1,4 @@
-import { ProsopoEnvError, getLogger } from '@prosopo/common'
-import { captchaSort } from '@prosopo/datasets'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +12,12 @@ import { captchaSort } from '@prosopo/datasets'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaStates } from '@prosopo/types'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { ScheduledTaskNames } from '@prosopo/types'
-import type { ProviderEnvironment } from '@prosopo/types-env'
-import { calculateNewSolutions, checkIfTaskIsRunning, updateSolutions } from '../util.js'
 import { Tasks } from './tasks.js'
+import { calculateNewSolutions, checkIfTaskIsRunning, updateSolutions } from '../util.js'
+import { captchaSort } from '@prosopo/datasets'
 export class CalculateSolutionsTask extends Tasks {
     constructor(env: ProviderEnvironment) {
         super(env)
@@ -65,7 +65,7 @@ export class CalculateSolutionsTask extends Tasks {
                         )
                         try {
                             // TODO polars doesn't have the captchaId field in the type
-                            const captchaIdsToUpdate = [...(solutionsToUpdate as any).captchaId.values()]
+                            const captchaIdsToUpdate = [...(solutionsToUpdate as any)['captchaId'].values()]
                             const commitmentIds = solutions
                                 .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                                 .map((s) => s.commitmentId)
@@ -85,15 +85,14 @@ export class CalculateSolutionsTask extends Tasks {
                         }
                     }
                     return 0
+                } else {
+                    this.logger.info(`There are no CAPTCHA challenges that require their solutions to be updated`)
+                    return 0
                 }
-                this.logger.info('There are no CAPTCHA challenges that require their solutions to be updated')
-                return 0
             }
             return 0
         } catch (error) {
-            throw new ProsopoEnvError('GENERAL.CALCULATE_CAPTCHA_SOLUTION', {
-                context: { error },
-            })
+            throw new ProsopoEnvError('GENERAL.CALCULATE_CAPTCHA_SOLUTION', { context: { error } })
         }
     }
 }

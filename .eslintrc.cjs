@@ -1,3 +1,23 @@
+const visibleFiles = [
+    '*.ts',
+    '*.tsx',
+    '*.js',
+    '*.jsx',
+    '*.mjs',
+    '*.cjs',
+    '*.json',
+    '*.yaml',
+    '*.yml',
+    '*.toml',
+    '*.d.ts',
+    '*.cts',
+    '*.mts',
+]
+
+const hiddenFiles = visibleFiles.map((file) => `.${file}`)
+
+const files = visibleFiles.concat(hiddenFiles)
+
 module.exports = {
     env: {
         browser: true,
@@ -68,28 +88,7 @@ module.exports = {
             },
         },
         {
-            files: [
-                '*.ts',
-                '*.tsx',
-                '*.js',
-                '*.jsx',
-                '*.mjs',
-                '*.cjs',
-                '*.json',
-                '*.yaml',
-                '*.yml',
-                '*.toml',
-                '*.d.ts',
-                '*.cts',
-                '*.mts',
-                '.*.json',
-                '.*.js',
-                '.*.mjs',
-                '.*.cjs',
-                '.*.yaml',
-                '.*.yml',
-                '.*.toml',
-            ],
+            files,
         },
     ],
 }

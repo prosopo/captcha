@@ -1,5 +1,4 @@
-import path from 'node:path'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,14 +12,15 @@ import path from 'node:path'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { getPairAsync } from '@prosopo/contract'
 import { ProsopoServer, getServerConfig } from '@prosopo/server'
+import { getPairAsync } from '@prosopo/contract'
+import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
-import routesFactory from './routes/routes.js'
-import connectionFactory from './utils/connection.js'
 import memoryServerSetup from './utils/database.js'
+import path from 'path'
+import routesFactory from './routes/routes.js'
 
 export function loadEnv() {
     dotenv.config({ path: getEnvFile() })

@@ -1,5 +1,4 @@
-import { hexHashArray } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +11,11 @@ import { hexHashArray } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaItemTypes, CaptchaTypes, type Dataset, type RawSolution } from '@prosopo/types'
+import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
+import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
 import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
+import { hexHashArray } from '@prosopo/common'
 
 async function getDataset(): Promise<Dataset> {
     return {
@@ -24,21 +24,9 @@ async function getDataset(): Promise<Dataset> {
             {
                 salt: '0x01020304',
                 items: await Promise.all([
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: '1',
-                        hash: '',
-                    }),
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: 'b',
-                        hash: '',
-                    }),
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: 'c',
-                        hash: '',
-                    }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: '1', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'b', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'c', hash: '' }),
                 ]),
                 target: 'letters',
                 solution: [0] as RawSolution[],
@@ -46,42 +34,18 @@ async function getDataset(): Promise<Dataset> {
             {
                 salt: '0x02020304',
                 items: await Promise.all([
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: 'c',
-                        hash: '',
-                    }),
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: 'e',
-                        hash: '',
-                    }),
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: '3',
-                        hash: '',
-                    }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'c', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'e', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: '3', hash: '' }),
                 ]),
                 target: 'letters',
             },
             {
                 salt: '0x03020304',
                 items: await Promise.all([
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: 'h',
-                        hash: '',
-                    }),
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: 'f',
-                        hash: '',
-                    }),
-                    computeItemHash({
-                        type: CaptchaItemTypes.Text,
-                        data: '5',
-                        hash: '',
-                    }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'h', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: 'f', hash: '' }),
+                    computeItemHash({ type: CaptchaItemTypes.Text, data: '5', hash: '' }),
                 ]),
                 target: 'letters',
                 solution: [1] as RawSolution[],
@@ -91,7 +55,7 @@ async function getDataset(): Promise<Dataset> {
     }
 }
 
-describe('DATASETS MERKLE TREE', async () => {
+describe('DATASETS MERKLE TREE', async function () {
     let DATASET: Dataset
     beforeAll(async () => {
         DATASET = await getDataset()
@@ -118,7 +82,7 @@ describe('DATASETS MERKLE TREE', async () => {
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
 
         tree.build(captchaHashes)
-        expect(tree.root?.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
+        expect(tree.root!.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
     })
     test('Tree proof works when computing leaf hashes', () => {
         const dataset = DATASET
@@ -146,7 +110,7 @@ describe('DATASETS MERKLE TREE', async () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
-        expect(tree.root?.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
+        expect(tree.root!.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
     })
     test('Tree proof works when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()

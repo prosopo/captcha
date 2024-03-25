@@ -1,9 +1,4 @@
-import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
-import { hexToU8a } from '@polkadot/util/hex'
-import { isHex } from '@polkadot/util/is'
-import { type Logger, ProsopoContractError } from '@prosopo/common'
-import { arrayJoin } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,18 +11,21 @@ import { arrayJoin } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type Captcha, type CaptchaSolution, type ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import type { Database } from '@prosopo/types-database'
+import { Captcha, CaptchaSolution, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { Database } from '@prosopo/types-database'
+import { Logger, ProsopoContractError } from '@prosopo/common'
+import { arrayJoin } from '@prosopo/common'
 import { at } from '@prosopo/util'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
+import { hexToU8a } from '@polkadot/util/hex'
+import { isHex } from '@polkadot/util/is'
 import pl from 'nodejs-polars'
 
 export function encodeStringAddress(address: string) {
     try {
         return encodeAddress(isHex(address) ? hexToU8a(address) : decodeAddress(address))
     } catch (err) {
-        throw new ProsopoContractError('CONTRACT.INVALID_ADDRESS', {
-            context: { address },
-        })
+        throw new ProsopoContractError('CONTRACT.INVALID_ADDRESS', { context: { address } })
     }
 }
 
@@ -73,7 +71,7 @@ export async function promiseQueue<T>(array: (() => Promise<T>)[]): Promise<Prom
 }
 
 export function parseBlockNumber(blockNumberString: string) {
-    return Number.parseInt(blockNumberString.replace(/,/g, ''))
+    return parseInt(blockNumberString.replace(/,/g, ''))
 }
 
 export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumberOfSolutions: number) {
@@ -88,7 +86,7 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     const group = df.groupBy(['captchaId', 'solutionKey']).agg(pl.count('captchaContentId').alias('count'))
     const filtered: pl.DataFrame = group.filter(pl.col('count').gt(winningNumberOfSolutions))
     // TODO is below correct? 'solutionKey' does not exist in the type
-    const key = (filtered as any).solutionKey
+    const key = (filtered as any)['solutionKey']
     return filtered.withColumn(key.str.split(',').rename('solution'))
 }
 
@@ -101,7 +99,9 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
             try {
                 const captchaSolutions = [
                     // TODO is below correct? 'solution' is not in the type
-                    ...(solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId))) as any).solution.values(),
+                    ...(solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId))) as any)[
+                        'solution'
+                    ].values(),
                 ]
                 if (captchaSolutions.length > 0) {
                     captcha.solution = captchaSolutions[0]

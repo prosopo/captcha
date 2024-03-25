@@ -1,9 +1,22 @@
-import fs from 'node:fs'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import * as z from 'zod'
+import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
 import { get } from '@prosopo/util'
 import { lodash } from '@prosopo/util/lodash'
 import cliProgress from 'cli-progress'
-import * as z from 'zod'
-import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
+import fs from 'fs'
 
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
@@ -27,13 +40,13 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 
         const list: string[] = []
         const traverse = async (data: any) => {
-            if (Array.isArray(data)) {
+            if (data instanceof Array) {
                 for (let i = 0; i < data.length; i++) {
                     data[i] = await traverse(data[i])
                 }
             } else if (data instanceof Object) {
                 for (const key of Object.keys(data)) {
-                    if (key === 'data') {
+                    if (key == 'data') {
                         const value = get(data, key)
                         const url = z.string().parse(value)
                         list.push(url)

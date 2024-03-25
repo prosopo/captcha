@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { Keyring } from '@polkadot/keyring'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { BN } from '@polkadot/util'
-import { ProviderApi } from '@prosopo/api'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { type LogLevel, type Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
 import {
-    type ContractAbi,
-    type NetworkConfig,
+    ContractAbi,
+    NetworkConfig,
     NetworkNamesSchema,
-    type ProcaptchaOutput,
-    type ProsopoServerConfigOutput,
+    ProcaptchaOutput,
+    ProsopoServerConfigOutput,
 } from '@prosopo/types'
+import { Keyring } from '@polkadot/keyring'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
+import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
+import { ProviderApi } from '@prosopo/api'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
 export class ProsopoServer {
@@ -75,26 +75,18 @@ export class ProsopoServer {
 
     async isReady() {
         try {
-            this.api = await ApiPromise.create({
-                provider: this.wsProvider,
-                initWasm: false,
-            })
+            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             await this.getSigner()
             await this.getContractApi()
         } catch (error) {
-            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', {
-                context: { error },
-            })
+            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error } })
         }
     }
 
     async getSigner(): Promise<void> {
         if (this.pair) {
             if (!this.api) {
-                this.api = await ApiPromise.create({
-                    provider: this.wsProvider,
-                    initWasm: false,
-                })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             }
             await this.api.isReadyOrError
             try {
@@ -157,6 +149,7 @@ export class ProsopoServer {
                 (_, index) => currentBlockNumber - index
             )
         }
+
         while (blocksToCheck.length > 0) {
             const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
             const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
@@ -164,7 +157,7 @@ export class ProsopoServer {
                 'getRandomActiveProvider',
                 [user, dapp]
             )
-            if (getRandomProviderResponse.provider.url.toString() === providerUrl) {
+            if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
                 return getRandomProviderResponse.provider
             }
         }
@@ -178,41 +171,43 @@ export class ProsopoServer {
      * @returns
      */
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
-        const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
+        const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
         const contractApi = await this.getContractApi()
 
         const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
 
         if (!randomProvider) {
+            this.logger.info('Random provider selection failed')
             // We have not been able to repeat the provider selection
             return false
         }
 
-        const providerUrlTrimmed = trimProviderUrl(randomProvider.url.toString())
-
-        if (providerUrlTrimmed !== providerUrl) {
-            // An incorrect provider url was provided in the payload
-            return false
-        }
-
         if (providerUrl) {
+            this.logger.info('Random provider is valid. Verifying with provider.')
+            // We can now trust the provider URL as it has been shown to have been randomly selected
             const providerApi = await this.getProviderApi(providerUrl)
+            if (challenge) {
+                const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
+                return result.verified
+            }
             const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
-            return result.solutionApproved
-        }
-        // Check the time since the last correct captcha is less than the maxVerifiedTime
-        const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
-        const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-            .unwrap()
-            .unwrap()
-            .before.valueOf()
-        if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
-            return false
-        }
+            return result.verified
+        } else {
+            this.logger.info('Provider URL not provided. Verifying with contract.')
+            // Check the time since the last correct captcha is less than the maxVerifiedTime
+            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
+            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+                .unwrap()
+                .unwrap()
+                .before.valueOf()
+            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
+                return false
+            }
 
-        return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-            .unwrap()
-            .unwrap()
+            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+                .unwrap()
+                .unwrap()
+        }
     }
 
     public async getContractApi(): Promise<ProsopoCaptchaContract> {

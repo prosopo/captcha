@@ -1,5 +1,4 @@
-import { describe, expect, test } from 'vitest'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +12,7 @@ import { describe, expect, test } from 'vitest'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at, get, merge, permutations } from '../util.js'
+import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
     describe('merge', () => {
@@ -71,9 +71,7 @@ describe('util', () => {
             ])
         })
         test('array in object', () => {
-            expect(merge({ a: [0, 1, 2] }, { a: [3, 4] })).to.deep.equal({
-                a: [3, 4, 2],
-            })
+            expect(merge({ a: [0, 1, 2] }, { a: [3, 4] })).to.deep.equal({ a: [3, 4, 2] })
         })
         test('array in object atomic', () => {
             expect(merge({ a: [0, 1, 2] }, { a: [3, 4] }, { atomicArrays: true })).to.deep.equal({ a: [3, 4] })
@@ -109,19 +107,13 @@ describe('util', () => {
             expect(merge({ a: { b: 1 } }, { a: [1] })).to.deep.equal({ a: [1] })
         })
         test('object replaces primitive', () => {
-            expect(merge({ a: 1 }, { a: { b: 1 } })).to.deep.equal({
-                a: { b: 1 },
-            })
+            expect(merge({ a: 1 }, { a: { b: 1 } })).to.deep.equal({ a: { b: 1 } })
         })
         test('object replaces array', () => {
-            expect(merge({ a: [1] }, { a: { b: 1 } })).to.deep.equal({
-                a: { b: 1 },
-            })
+            expect(merge({ a: [1] }, { a: { b: 1 } })).to.deep.equal({ a: { b: 1 } })
         })
         test('object replaces object', () => {
-            expect(merge({ a: { b: 1 } }, { a: { c: 1 } })).to.deep.equal({
-                a: { b: 1, c: 1 },
-            })
+            expect(merge({ a: { b: 1 } }, { a: { c: 1 } })).to.deep.equal({ a: { b: 1, c: 1 } })
         })
     })
 
@@ -146,12 +138,8 @@ describe('util', () => {
             const a10: string = at('abc', 0, { optional: false })
             const a11: string | undefined = at('abc', 0, { optional: true })
             const a12: undefined = at([undefined, undefined, undefined], 0)
-            const a13: undefined = at([undefined, undefined, undefined], 0, {
-                optional: true,
-            })
-            const a14: undefined = at([undefined, undefined, undefined], 0, {
-                optional: false,
-            })
+            const a13: undefined = at([undefined, undefined, undefined], 0, { optional: true })
+            const a14: undefined = at([undefined, undefined, undefined], 0, { optional: false })
         })
 
         test('compatible with string', () => {

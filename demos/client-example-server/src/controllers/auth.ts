@@ -1,8 +1,4 @@
-import { blake2b } from '@noble/hashes/blake2b'
-import { u8aToHex } from '@polkadot/util'
-import { randomAsHex } from '@polkadot/util-crypto'
-import type { ProsopoServer } from '@prosopo/server'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +12,17 @@ import type { ProsopoServer } from '@prosopo/server'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '@prosopo/types'
+import { Connection } from 'mongoose'
+import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
+import { ProsopoServer } from '@prosopo/server'
+import { UserInterface } from '../models/user.js'
 import { at } from '@prosopo/util'
-import type { NextFunction, Request, Response } from 'express'
-import jwt from 'jsonwebtoken'
-import type { Connection } from 'mongoose'
+import { blake2b } from '@noble/hashes/blake2b'
+import { randomAsHex } from '@polkadot/util-crypto'
+import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
-import type { UserInterface } from '../models/user.js'
+import jwt from 'jsonwebtoken'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -53,7 +53,7 @@ const signup = async (
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
         }
-
+        console.log('payload', payload)
         if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
             // salt
             const salt = randomAsHex(32)
@@ -71,21 +71,15 @@ const signup = async (
                     })
                     .catch((err) => {
                         console.log(err)
-                        res.status(502).json({
-                            message: 'error while creating the user',
-                        })
+                        res.status(502).json({ message: 'error while creating the user' })
                     })
             }
         } else {
-            res.status(401).json({
-                message: 'user has not completed a captcha',
-            })
+            res.status(401).json({ message: 'user has not completed a captcha' })
         }
     } catch (err) {
         console.error('error', err)
-        res.status(500).json({
-            message: (err as Error).message || 'internal server error',
-        })
+        res.status(500).json({ message: (err as Error).message || 'internal server error' })
     }
 }
 
@@ -111,19 +105,14 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
                     } else {
                         // password match
                         const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
-                        res.status(200).json({
-                            message: 'user logged in',
-                            token: token,
-                        })
+                        res.status(200).json({ message: 'user logged in', token: token })
                     }
                 }
             }
         })
         .catch((err) => {
             console.error('error', err)
-            res.status(500).json({
-                message: err.message || 'internal server error',
-            })
+            res.status(500).json({ message: err.message || 'internal server error' })
         })
 }
 
@@ -138,9 +127,7 @@ const isAuth = (req: Request, res: Response) => {
     try {
         decodedToken = jwt.verify(token, 'secret')
     } catch (err) {
-        res.status(500).json({
-            message: (err as Error).message || 'could not decode the token',
-        })
+        res.status(500).json({ message: (err as Error).message || 'could not decode the token' })
     }
 
     if (!decodedToken) {

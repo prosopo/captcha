@@ -1,5 +1,4 @@
-import { ProsopoError, hexHashArray } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +11,8 @@ import { ProsopoError, hexHashArray } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
+import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
+import { ProsopoError, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'
 
 class MerkleNode implements MerkleNodeInterface {
@@ -68,9 +68,7 @@ export class CaptchaMerkleTree {
         while (leafIndex < numLeaves) {
             const leftChild = leaves[leafIndex]
             if (leftChild === undefined) {
-                throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: 'leftChild undefined' },
-                })
+                throw new ProsopoError('DEVELOPER.GENERAL', { context: { error: 'leftChild undefined' } })
             }
             const rightChild = leafIndex + 1 < numLeaves ? at(leaves, leafIndex + 1) : leftChild
             const parentNode = this.createParent(leftChild, rightChild)
@@ -97,11 +95,7 @@ export class CaptchaMerkleTree {
             const layer = this.layers[layerNum]
             if (layer === undefined) {
                 throw new ProsopoError('DATASET.MERKLE_ERROR', {
-                    context: {
-                        error: 'layer undefined',
-                        failedFuncName: this.proof.name,
-                        layerNum,
-                    },
+                    context: { error: 'layer undefined', failedFuncName: this.proof.name, layerNum },
                 })
             }
             const leafIndex = layer.indexOf(leafHash)

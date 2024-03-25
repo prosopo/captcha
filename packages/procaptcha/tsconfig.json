@@ -26,6 +26,9 @@
             "path": "../datasets"
         },
         {
+            "path": "../procaptcha-common"
+        },
+        {
             "path": "../types"
         },
         {

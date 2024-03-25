@@ -1,5 +1,4 @@
-import process from 'node:process'
-// Copyright 2021-2022 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,13 +12,14 @@ import process from 'node:process'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
+import { ProsopoConfigOutput } from '@prosopo/types'
 import { getPairAsync } from '@prosopo/contract'
-import type { ProsopoConfigOutput } from '@prosopo/types'
 import { isMain } from '@prosopo/util'
-import { processArgs } from './argv.js'
 import { loadEnv } from './env.js'
-import getConfig from './prosopo.config.js'
+import { processArgs } from './argv.js'
 import ReloadingAPI from './reloader.js'
+import getConfig from './prosopo.config.js'
+import process from 'process'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
 
@@ -31,6 +31,16 @@ async function main() {
         solved: { count: 2 },
         unsolved: { count: 0 },
     })
+
+    if (config.devOnlyWatchEvents) {
+        log.warn(
+            `
+        ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
+        EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
+        ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
+            `
+        )
+    }
 
     const pair = await getPairAsync(
         config.networks[config.defaultNetwork],
