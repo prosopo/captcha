@@ -1,5 +1,4 @@
-import { blake2AsHex } from '@polkadot/util-crypto/blake2'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +12,7 @@ import { blake2AsHex } from '@polkadot/util-crypto/blake2'
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { arrayJoin } from './array.js'
+import { blake2AsHex } from '@polkadot/util-crypto/blake2'
 export const HEX_HASH_BIT_LENGTH = 256
 
 export function hexHash(data: string | Uint8Array, bitLength?: 256 | 512 | 64 | 128 | 384 | undefined): string {

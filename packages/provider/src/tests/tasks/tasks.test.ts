@@ -1,52 +1,51 @@
-import type { ApiPromise } from '@polkadot/api/promise/Api'
-import { createType } from '@polkadot/types/create'
-import type { EventRecord } from '@polkadot/types/interfaces'
-import { randomAsHex } from '@polkadot/util-crypto/random'
-import { signatureVerify } from '@polkadot/util-crypto/signature'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util/bn'
-import { stringToHex, stringToU8a } from '@polkadot/util/string'
-import { u8aToHex } from '@polkadot/util/u8a'
-import { CaptchaStatus, type Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
-import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
-import { getTestConfig } from '@prosopo/config'
-import { ContractDeployer, getBlockNumber, getDispatchError, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { BatchCommitmentsTask } from '../../batch/commitments.js'
 import {
     CaptchaMerkleTree,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
     datasetWithSolutionHashes,
 } from '@prosopo/datasets'
-import { datasetWithIndexSolutions } from '@prosopo/datasets'
-import { MockEnvironment, type ProviderEnvironment } from '@prosopo/env'
-import type { ViteTestContext } from '@prosopo/env'
-import type { ReturnNumber } from '@prosopo/typechain-types'
-import type { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
-import { ScheduledTaskNames } from '@prosopo/types'
-import type { UserCommitmentRecord } from '@prosopo/types-database'
-import { at, get } from '@prosopo/util'
-import { sleep } from '@prosopo/util'
-import { assert, beforeEach, describe, expect, test } from 'vitest'
-import { BatchCommitmentsTask } from '../../batch/commitments.js'
-import { parseBlockNumber } from '../../index.js'
-import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
-// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of provider <https://github.com/prosopo/provider>.
-//
-// provider is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// provider is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
+import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
+import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
+import { ContractDeployer, getBlockNumber, getDispatchError, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
+import { EventRecord } from '@polkadot/types/interfaces'
+import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
+import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
+import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
+import { ReturnNumber } from '@prosopo/typechain-types'
+import { ScheduledTaskNames } from '@prosopo/types'
+import { UserCommitmentRecord } from '@prosopo/types-database'
+import { ViteTestContext } from '@prosopo/env'
+import { assert, beforeEach, describe, expect, test } from 'vitest'
+import { at, get } from '@prosopo/util'
+import { createType } from '@polkadot/types/create'
+import { datasetWithIndexSolutions } from '@prosopo/datasets'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
+import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
+import { parseBlockNumber } from '../../index.js'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { signatureVerify } from '@polkadot/util-crypto/signature'
+import { sleep } from '@prosopo/util'
+import { stringToHex, stringToU8a } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util/u8a'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
@@ -68,10 +67,10 @@ function calcInterval(api: ApiPromise): BN {
                 ? // Default minimum period config
                   api.consts.timestamp.minimumPeriod.mul(BN_TWO)
                 : api.query.parachainSystem
-                  ? // default guess for a parachain
-                      DEFAULT_TIME.mul(BN_TWO)
-                  : // default guess for others
-                      DEFAULT_TIME)
+                ? // default guess for a parachain
+                  DEFAULT_TIME.mul(BN_TWO)
+                : // default guess for others
+                  DEFAULT_TIME)
     )
 }
 
@@ -81,8 +80,8 @@ declare module 'vitest' {
     export interface TestContext extends ViteTestContext {}
 }
 
-describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
-    beforeEach(async (context) => {
+describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
+    beforeEach(async function (context) {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
@@ -147,11 +146,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
             )
             const solution = at(solutions, solutionIndex).solution
             const unsolvedCaptcha = at(randomCaptchasResult, 0)
-            const captchaSolution: CaptchaSolution = {
-                ...unsolvedCaptcha,
-                solution,
-                salt: randomAsHex(),
-            }
+            const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
             const commitmentIds: string[] = []
 
             // Store 10 commitments in the local db
@@ -234,12 +229,12 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
             if (
                 !batcherResult ||
                 (batcherResult && !batcherResult.result) ||
-                (batcherResult?.result && !batcherResult.result.data)
+                (batcherResult && batcherResult.result && !batcherResult.result.data)
             ) {
                 expect(true).to.be.false
             }
 
-            if (batcherResult?.result?.data) {
+            if (batcherResult && batcherResult.result && batcherResult.result.data) {
                 const processedCommitmentIds = batcherResult.result.data.commitmentIds
                 const processedCommitments = commitmentsBeforeBatching.filter(
                     (commitment) => processedCommitmentIds.indexOf(commitment.id.toString()) > -1
@@ -277,7 +272,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
                     ScheduledTaskNames.BatchCommitment
                 )
                 expect(lastBatchCommit).to.be.not.empty
-                expect(lastBatchCommit?.status).to.be.equal('Completed')
+                expect(lastBatchCommit!.status).to.be.equal('Completed')
 
                 // Expect the last batch commitment time to be within the last 10 seconds
                 if (lastBatchCommit !== undefined) {
@@ -353,7 +348,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         }
     }
 
-    test('Provider registration', async ({ env, providerStakeThreshold }) => {
+    test('Provider registration', async function ({ env, providerStakeThreshold }) {
         const [providerMnemonic, providerAddress] = env.createAccountAndAddToKeyring() || ['', '']
         const tasks = await getSignedTasks(env, [providerMnemonic, providerAddress])
         const stakeAmount = getStakeAmount(env, providerStakeThreshold)
@@ -467,7 +462,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         }))
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed)
-        const commitmentId = tree.root?.hash
+        const commitmentId = tree.root!.hash
 
         const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
@@ -518,7 +513,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
 
         tree.build(captchasHashed)
-        const commitmentId = tree.root?.hash
+        const commitmentId = tree.root!.hash
 
         const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
@@ -557,7 +552,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
 
         tree.build(captchasHashed)
-        const commitmentId = tree.root?.hash
+        const commitmentId = tree.root!.hash
 
         const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
@@ -581,7 +576,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
 
         // check the timestamp
-        const completedAtCheck = Number.parseInt(commitment.completedAt.toString().replace(',', ''))
+        const completedAtCheck = parseInt(commitment.completedAt.toString().replace(',', ''))
 
         expect(completedAtCheck).to.be.above(0)
 
@@ -713,7 +708,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
 
         tree.build(captchasHashed)
-        const commitmentId = tree.root?.hash
+        const commitmentId = tree.root!.hash
 
         const provider = (await dappUserTasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
@@ -749,7 +744,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
         expect(result.captchas.length).to.be.eq(2)
         const expectedProof = tree.proof(at(captchaSolutionsSalted, 0).captchaId)
         const filteredResult = at(
-            result.captchas.filter((res) => res.captchaId === at(captchaSolutionsSalted, 0).captchaId),
+            result.captchas.filter((res) => res.captchaId == at(captchaSolutionsSalted, 0).captchaId),
             0
         )
         expect(filteredResult.proof).to.deep.eq(expectedProof)
@@ -878,7 +873,7 @@ describe.sequential('CONTRACT TASKS', async (): Promise<void> => {
             const captchasHashed = captchaSolutions.map((captcha) => computeCaptchaSolutionHash(captcha))
 
             initialTree.build(captchasHashed)
-            const initialCommitmentId = initialTree.root?.hash
+            const initialCommitmentId = initialTree.root!.hash
 
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 

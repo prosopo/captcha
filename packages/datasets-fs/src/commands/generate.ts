@@ -1,9 +1,22 @@
-import fs from 'node:fs'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { DataSchema, type Item, LabelledDataSchema, type LabelledItem, LabelsContainerSchema } from '@prosopo/types'
-import { lodash, setSeedGlobal } from '@prosopo/util/lodash'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import * as z from 'zod'
+import { DataSchema, Item, LabelledDataSchema, LabelledItem, LabelsContainerSchema } from '@prosopo/types'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
+import { ProsopoDatasetError } from '@prosopo/common'
+import { lodash, setSeedGlobal } from '@prosopo/util/lodash'
+import fs from 'fs'
 
 export const ArgsSchema = OutputArgsSchema.extend({
     labels: z.string().optional(),
@@ -170,9 +183,7 @@ const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
 const addUnique = (all: Set<string>, entry: Item, dataType: string) => {
     if (all.has(entry.data)) {
         throw new ProsopoDatasetError('DATASET.DUPLICATE_IMAGE', {
-            context: {
-                error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}`,
-            },
+            context: { error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}` },
         })
     }
     all.add(entry.data)

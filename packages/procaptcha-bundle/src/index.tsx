@@ -1,7 +1,4 @@
-import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
-import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { Procaptcha } from '@prosopo/procaptcha-react'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,13 +14,16 @@ import { Procaptcha } from '@prosopo/procaptcha-react'
 import {
     ApiParams,
     EnvironmentTypesSchema,
-    type Features,
+    Features,
     FeaturesEnum,
     NetworkNamesSchema,
-    type ProcaptchaClientConfigInput,
+    ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
-    type ProcaptchaOutput,
+    ProcaptchaOutput,
 } from '@prosopo/types'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
@@ -156,7 +156,7 @@ const renderLogic = (
         const challengeValidLengthAttribute =
             renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
         if (challengeValidLengthAttribute) {
-            config.challengeValidLength = Number.parseInt(challengeValidLengthAttribute)
+            config.challengeValidLength = parseInt(challengeValidLengthAttribute)
         }
 
         switch (renderOptions?.captchaType) {
@@ -188,7 +188,7 @@ const implicitRender = () => {
         const features = Object.values(FeaturesEnum)
         const captchaType =
             features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
-            ('image' as const)
+            ('frictionless' as const)
 
         renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }

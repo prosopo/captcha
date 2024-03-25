@@ -1,5 +1,4 @@
-import path from 'node:path'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +11,14 @@ import path from 'node:path'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    type Captcha,
-    CaptchaItemTypes,
-    type CaptchaSolution,
-    CaptchaTypes,
-    type Dataset,
-    type Item,
-} from '@prosopo/types'
+import { Captcha, CaptchaItemTypes, CaptchaSolution, CaptchaTypes, Dataset, Item } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { computeItemHash, matchItemsToSolutions } from '../index.js'
 import { validateDatasetContent } from '../index.js'
+import path from 'path'
 
-describe('DATASET FUNCTIONS', async () => {
+describe('DATASET FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]
     let DATASET: Dataset
     let RECEIVED: CaptchaSolution[]

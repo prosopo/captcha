@@ -1,7 +1,4 @@
-import { readFile, writeFile } from 'node:fs'
-import path from 'node:path'
-import { at, get } from '@prosopo/util'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +11,11 @@ import { at, get } from '@prosopo/util'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Account } from '../accounts.js'
+import { Account } from '../accounts.js'
 import { IDatabasePopulatorMethods } from './DatabasePopulator.js'
+import { at, get } from '@prosopo/util'
+import { readFile, writeFile } from 'fs'
+import path from 'path'
 
 export enum AccountKey {
     providers = 'providers',
@@ -55,7 +55,7 @@ export async function exportDatabaseAccounts(database: IDatabaseAccounts) {
             }
         }, {})
 
-        writeFile(getPath('export'), JSON.stringify(jsonData), (err) => {
+        writeFile(getPath('export'), JSON.stringify(jsonData), function (err) {
             if (err) {
                 console.log(err)
             } else {
@@ -101,7 +101,7 @@ class DatabaseAccounts implements IDatabaseAccounts {
             [key: string]: Account[]
         } = this as any
         return new Promise((resolve) => {
-            readFile(getPath('import'), { encoding: 'utf-8' }, (err, stringData) => {
+            readFile(getPath('import'), { encoding: 'utf-8' }, function (err, stringData) {
                 if (err) {
                     console.log(err)
                 } else {

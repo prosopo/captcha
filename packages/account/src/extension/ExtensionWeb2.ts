@@ -1,18 +1,4 @@
-import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import Signer from '@polkadot/extension-base/page/Signer'
-import type { InjectedAccount } from '@polkadot/extension-inject/types'
-import type { InjectedExtension } from '@polkadot/extension-inject/types'
-import { Keyring } from '@polkadot/keyring'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
-import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import type { KeypairType } from '@polkadot/util-crypto/types'
-import { stringToU8a } from '@polkadot/util/string'
-import { u8aToHex } from '@polkadot/util/u8a'
-import { ProsopoEnvError, hexHash } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +11,24 @@ import { ProsopoEnvError, hexHash } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
-import { picassoCanvas } from '@prosopo/util'
+import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
+import { ApiPromise } from '@polkadot/api/promise/Api'
 import { Extension } from './Extension.js'
+import { InjectedAccount } from '@polkadot/extension-inject/types'
+import { InjectedExtension } from '@polkadot/extension-inject/types'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { Keyring } from '@polkadot/keyring'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { ProsopoEnvError, hexHash } from '@prosopo/common'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
+import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
+import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
+import { picassoCanvas } from '@prosopo/util'
+import { stringToU8a } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util/u8a'
+import { version } from '@prosopo/util'
+import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
@@ -76,7 +77,7 @@ export class ExtensionWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.11',
+            version,
             signer,
         }
     }
@@ -97,15 +98,9 @@ export class ExtensionWeb2 extends Extension {
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
-        const api = await ApiPromise.create({
-            provider: wsProvider,
-            initWasm: false,
-        })
+        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false, noInitWarn: true })
         const type: KeypairType = 'ed25519'
-        const keyring = new Keyring({
-            type,
-            ss58Format: api.registry.chainSS58,
-        })
+        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         const keypair = keyring.addFromMnemonic(mnemonic)
         const address =
             keypair.address.length === 42
@@ -134,9 +129,7 @@ export class ExtensionWeb2 extends Extension {
         const network = config.networks[config.defaultNetwork]
         if (!network) {
             throw new ProsopoEnvError('DEVELOPER.NETWORK_NOT_FOUND', {
-                context: {
-                    error: `No network found for environment ${config.defaultEnvironment}`,
-                },
+                context: { error: `No network found for environment ${config.defaultEnvironment}` },
             })
         }
         return network

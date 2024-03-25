@@ -1,5 +1,4 @@
-import type { u32 } from '@polkadot/types-codec/primitive'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +11,10 @@ import type { u32 } from '@polkadot/types-codec/primitive'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { AccountId } from '@polkadot/types/interfaces/runtime'
-import { array, nativeEnum, number, object, string, undefined, union, type infer as zInfer } from 'zod'
+import { AccountId } from '@polkadot/types/interfaces/runtime'
+import { MerkleProof } from './merkle.js'
+import { array, nativeEnum, number, object, string, undefined, union, infer as zInfer } from 'zod'
+import { u32 } from '@polkadot/types-codec/primitive'
 
 export enum CaptchaTypes {
     SelectAll = 'SelectAll',
@@ -84,11 +85,13 @@ export interface CaptchaSolution {
 
 export interface CaptchaWithProof {
     captcha: Captcha
-    proof: string[][]
+    proof: MerkleProof
 }
 
+export type PoWChallengeId = string
+
 export interface PoWCaptcha {
-    challenge: string
+    challenge: PoWChallengeId
     difficulty: number
     signature: string
 }

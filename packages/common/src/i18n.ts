@@ -1,7 +1,4 @@
-import i18n, { type InitOptions } from 'i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
-import Backend from 'i18next-http-backend'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +13,11 @@ import Backend from 'i18next-http-backend'
 // limitations under the License.
 import { LanguageDetector as MiddlewareLanguageDetector } from 'i18next-http-middleware'
 import { initReactI18next } from 'react-i18next'
-import translationEn from './locales/en.json' assert { type: 'json' }
 import { isClientSide } from './utils.js'
+import Backend from 'i18next-http-backend'
+import LanguageDetector from 'i18next-browser-languagedetector'
+import i18n, { InitOptions } from 'i18next'
+import translationEn from './locales/en.json' assert { type: 'json' }
 
 const commonOptions: InitOptions = {
     debug: false,

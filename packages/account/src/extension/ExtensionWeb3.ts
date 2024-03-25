@@ -1,7 +1,4 @@
-import { web3Enable } from '@polkadot/extension-dapp'
-import type { InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProsopoError } from '@prosopo/common'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +11,11 @@ import { ProsopoError } from '@prosopo/common'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
+import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { Extension } from './Extension.js'
+import { InjectedExtension } from '@polkadot/extension-inject/types'
+import { ProsopoError } from '@prosopo/common'
+import { web3Enable } from '@polkadot/extension-dapp'
 
 /**
  * Class for interfacing with web3 accounts.
@@ -25,9 +25,7 @@ export class ExtensionWeb3 extends Extension {
         const { dappName, userAccountAddress: address } = config
 
         if (!address) {
-            throw new ProsopoError('WIDGET.NO_ACCOUNTS_FOUND', {
-                context: { error: 'No account address provided' },
-            })
+            throw new ProsopoError('WIDGET.NO_ACCOUNTS_FOUND', { context: { error: 'No account address provided' } })
         }
 
         // enable access to all extensions

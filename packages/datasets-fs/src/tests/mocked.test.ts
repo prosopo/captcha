@@ -1,18 +1,31 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { blake2b } from '@noble/hashes/blake2b'
-import { u8aToHex } from '@polkadot/util/u8a'
-import { getRootDir, getTestResultsDir } from '@prosopo/config'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { CaptchasContainerSchema, DataSchema } from '@prosopo/types'
-import sharp from 'sharp'
-import { afterAll, beforeAll, describe, test } from 'vitest'
 import { Flatten } from '../commands/flatten.js'
 import { GenerateV1 } from '../commands/generateV1.js'
 import { GenerateV2 } from '../commands/generateV2.js'
 import { Labels } from '../commands/labels.js'
 import { Relocate } from '../commands/relocate.js'
 import { Resize } from '../commands/resize.js'
+import { afterAll, beforeAll, describe, test } from 'vitest'
+import { blake2b } from '@noble/hashes/blake2b'
 import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from './utils.js'
+import { getRootDir, getTestResultsDir } from '@prosopo/config'
+import { u8aToHex } from '@polkadot/util/u8a'
+import fs from 'fs'
+import path from 'path'
+import sharp from 'sharp'
 
 describe('dataset commands', () => {
     const pkgDir = path.relative(getRootDir(), __dirname)
@@ -80,7 +93,7 @@ describe('dataset commands', () => {
         })
         // make sure the results are the same as the expected results
         if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)) {
-            throw new Error('captchas not equal')
+            throw new Error(`captchas not equal`)
         }
 
         // test that the solutions array and unlabelled array per captcha never conflict
@@ -93,7 +106,7 @@ describe('dataset commands', () => {
             // both should not be undefined
             if (solutions === undefined || unlabelled === undefined) {
                 console.log(captcha)
-                throw new Error('solutions or unlabelled array is undefined')
+                throw new Error(`solutions or unlabelled array is undefined`)
             }
             for (const solution of solutions) {
                 // solution should not be in unlabelled
@@ -143,7 +156,7 @@ describe('dataset commands', () => {
         })
         // make sure the results are the same as the expected results
         if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)) {
-            throw new Error('captchas not equal')
+            throw new Error(`captchas not equal`)
         }
     })
 
@@ -260,7 +273,7 @@ describe('dataset commands', () => {
                 throw new Error(`unable to find image ${pth} in data.json`)
             }
             // correct name, so check category
-            if (item.label !== category) {
+            if (item.label != category) {
                 throw new Error(`expected ${category} but found ${item.label}`)
             }
             // type should be image

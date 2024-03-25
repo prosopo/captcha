@@ -1,5 +1,4 @@
-import type { ContractPromise } from '@polkadot/api-contract/promise'
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +11,16 @@ import type { ContractPromise } from '@polkadot/api-contract/promise'
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { ApiPromise } from '@polkadot/api/promise/Api'
-import type { SubmittableResult } from '@polkadot/api/submittable'
-import type { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { DispatchError, Event } from '@polkadot/types/interfaces'
-import type { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
-import { type Logger, ProsopoContractError } from '@prosopo/common'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { ContractPromise } from '@polkadot/api-contract/promise'
+import { DispatchError, Event } from '@polkadot/types/interfaces'
+import { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
+import { Logger, ProsopoContractError } from '@prosopo/common'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
+import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
-import { oneUnit } from '../balances/index.js'
 import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
+import { oneUnit } from '../balances/index.js'
 
 /**
  * Batch commits an array of transactions to the contract
@@ -71,22 +71,14 @@ export async function batch(
                 logger.error('Too many calls')
                 const item = at(tooManyCallsEvent, 0)
                 const message = formatEvent(item.event)
-                reject(
-                    new ProsopoContractError('CONTRACT.TOO_MANY_CALLS', {
-                        context: { message },
-                    })
-                )
+                reject(new ProsopoContractError('CONTRACT.TOO_MANY_CALLS', { context: { message } }))
             }
 
             if (batchInterruptedEvent.length > 0) {
                 logger.error('Batch interrupted')
                 const item = at(batchInterruptedEvent, 0)
                 const message = formatBatchInterruptedEvent(item.event)
-                reject(
-                    new ProsopoContractError('CONTRACT.INTERRUPTED_EVENT', {
-                        context: { message },
-                    })
-                )
+                reject(new ProsopoContractError('CONTRACT.INTERRUPTED_EVENT', { context: { message } }))
             }
 
             if (result.status.isFinalized || result.status.isInBlock) {

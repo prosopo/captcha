@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,27 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import {
     ApiParams,
-    type EnvironmentTypes,
+    EnvironmentTypes,
     EnvironmentTypesSchema,
     ProcaptchaConfigSchema,
-    type ProcaptchaOutput,
+    ProcaptchaOutput,
 } from '@prosopo/types'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
-function App() {
+interface AppProps {
+    captchaType?: string
+}
+
+function App(props: AppProps) {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
     const [account, setAccount] = useState<string>('')
-
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action
@@ -49,7 +54,7 @@ function App() {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        serverUrl: process.env.PROSOPO_SERVER_URL || 'localhost:9228',
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
@@ -58,8 +63,9 @@ function App() {
     const urlPath = isLogin ? 'login' : 'signup'
 
     const onLoggedIn = (token: string) => {
-        console.log('getting private resource with token ', token)
-        fetch(`${config.serverUrl}/private`, {
+        const url = new URL('/private', config.serverUrl).href
+        console.log('getting private resource with token ', token, 'at', url)
+        fetch(url, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -93,7 +99,9 @@ function App() {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(`${config.serverUrl}/${urlPath}`, {
+        const url = new URL(urlPath, config.serverUrl).href
+        console.log('posting to', url, 'with payload', payload)
+        fetch(url, {
             method: 'POST',
             headers: {
                 ...corsHeaders,
@@ -135,9 +143,10 @@ function App() {
 
     const getMessage = () => {
         if (isError) {
-            return <Alert severity='error'>{message}</Alert>
+            return <Alert severity="error">{message}</Alert>
+        } else {
+            return <Alert severity="success">{message}</Alert>
         }
-        return <Alert severity='success'>{message}</Alert>
     }
 
     const onError = (error: Error) => {
@@ -149,23 +158,10 @@ function App() {
     }
 
     return (
-        <div
-            style={{
-                height: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}
-        >
+        <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Box
                 className={'App'}
-                sx={{
-                    width: '100%',
-                    maxWidth: 500,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
+                sx={{ width: '100%', maxWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
             >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
@@ -180,11 +176,11 @@ function App() {
                             <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
                                 <FormControl>
                                     <TextField
-                                        id='email'
-                                        label='Email'
-                                        type='text'
-                                        autoComplete='Email'
-                                        autoCapitalize='none'
+                                        id="email"
+                                        label="Email"
+                                        type="text"
+                                        autoComplete="Email"
+                                        autoCapitalize="none"
                                         onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </FormControl>
@@ -192,10 +188,10 @@ function App() {
                                 {!isLogin && (
                                     <FormControl>
                                         <TextField
-                                            id='name'
-                                            label='Name'
-                                            type='text'
-                                            autoComplete='Name'
+                                            id="name"
+                                            label="Name"
+                                            type="text"
+                                            autoComplete="Name"
                                             onChange={(e) => setName(e.target.value)}
                                         />
                                     </FormControl>
@@ -203,40 +199,35 @@ function App() {
 
                                 <FormControl>
                                     <TextField
-                                        id='password'
-                                        label='Password'
-                                        type='password'
-                                        autoComplete='Password'
+                                        id="password"
+                                        label="Password"
+                                        type="password"
+                                        autoComplete="Password"
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
-                                    <Procaptcha
-                                        config={config}
-                                        callbacks={{
-                                            onError,
-                                            onHuman,
-                                            onExpired,
-                                        }}
-                                    />
+                                    {props.captchaType === 'frictionless' ? (
+                                        <ProcaptchaFrictionless
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                        />
+                                    ) : (
+                                        <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    )}
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>
-                                        <Stack direction='column' spacing={1} sx={{ '& button': { m: 1 } }}>
+                                        <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
                                             <Button
-                                                variant='contained'
+                                                variant="contained"
                                                 onClick={onActionHandler}
                                                 disabled={!procaptchaOutput}
                                             >
                                                 {isLogin ? 'Login' : 'Sign up'}
                                             </Button>
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                }}
-                                            >
+                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                                 <Box>
                                                     <Typography>- or -</Typography>
                                                 </Box>

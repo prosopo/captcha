@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.3.1",
+    "version": "0.3.5",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -39,6 +39,7 @@
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:demo:pow": "npm -w @prosopo/client-pow-example run start",
+        "start:demo:frictionless": "npm -w @prosopo/client-frictionless-example run start",
         "start:bundle": "npm -w @prosopo/client-bundle-example run start",
         "start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
         "populate-data": "npm -w @prosopo/provider run populate-data",
@@ -56,15 +57,15 @@
         "prettier:fix": "npm --workspaces run prettier:fix && npm run prettier:fix:workspace",
         "prettier:fix:workspace": "npm run prettier:workspace -- --write",
         "prettier:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run prettier:fix",
-        "lint": "npm --workspaces run lint && npm run lint:workspace",
+        "lint": "npm run -w @prosopo/scripts license && npm --workspaces run lint && npm run lint:workspace",
         "lint:workspace": "npm run eslint:workspace && npm run prettier:workspace",
         "lint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint",
-        "lint:fix": "npm --workspaces run lint:fix && npm run lint:fix:workspace",
+        "lint:fix": "npm run -w @prosopo/scripts license:fix && npm --workspaces run lint:fix && npm run lint:fix:workspace",
         "lint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
-        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\""
+        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
     },
     "private": true,
     "engines": {
