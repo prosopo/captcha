@@ -1,4 +1,3 @@
-
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,13 +38,16 @@ export function getPair(
     networkConfig?: NetworkConfig,
     secret?: string,
     account?: string | Uint8Array,
-    pairType?: KeypairType,
-    ss58Format?: number
+    pairTypeOption?: KeypairType,
+    ss58FormatOption?: number
 ): KeyringPair {
+    let pairType = pairTypeOption
+    let ss58Format = ss58FormatOption
     if (networkConfig) {
         pairType = networkConfig.pairType
         ss58Format = networkConfig.ss58Format
-    } else if (!pairType || !ss58Format) {
+    }
+    if (!pairType || !ss58Format) {
         throw new ProsopoEnvError('GENERAL.NO_PAIR_TYPE_OR_SS58_FORMAT')
     }
     const keyring = new Keyring({ type: pairType, ss58Format })
