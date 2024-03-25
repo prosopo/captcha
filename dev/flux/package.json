@@ -16,9 +16,8 @@
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
-        "prettier:fix": "npm run prettier -- --write",
-        "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "prettier:fix": "npm run prettier -- --write"
+
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",

@@ -1,3 +1,7 @@
+import fs from 'node:fs'
+import { ProsopoDatasetError } from '@prosopo/common'
+import { LabelledDataSchema, type LabelledItem } from '@prosopo/types'
+import { lodash } from '@prosopo/util/lodash'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,12 +15,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as z from 'zod'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
+import type * as z from 'zod'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema

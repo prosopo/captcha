@@ -13,8 +13,8 @@
 // limitations under the License.
 'use client'
 
-import { Box, Theme, useTheme } from '@mui/material'
-import { SxProps } from '@mui/system'
+import { Box, type Theme, useTheme } from '@mui/material'
+import type { SxProps } from '@mui/system'
 
 interface Props {
     height: number

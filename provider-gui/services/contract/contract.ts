@@ -1,3 +1,4 @@
+import { defaultConfig } from '@prosopo/cli'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { defaultConfig } from '@prosopo/cli'
 
 export const getContractApi = async (account: string) => {
     const env = new ProviderEnvironment(defaultConfig())

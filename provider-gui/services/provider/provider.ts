@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { stringToHex } from '@polkadot/util'
 import { web3Enable, web3FromSource } from '@polkadot/extension-dapp'
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { stringToHex } from '@polkadot/util'
+import { ProsopoEnvError } from '@prosopo/common'
 
 export const signedBlockNumberHeaders = async (currentAccount: InjectedAccountWithMeta) => {
     const blocknumber = await getCurrentBlockNumber()

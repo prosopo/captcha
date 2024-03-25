@@ -1,3 +1,6 @@
+import styled from '@emotion/styled'
+import type React from 'react'
+import type { ButtonHTMLAttributes } from 'react'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +16,6 @@
 // limitations under the License.
 import LogoWithText from './LogoWithText.js'
 import LogoWithoutText from './LogoWithoutText.js'
-import React, { ButtonHTMLAttributes } from 'react'
-import styled from '@emotion/styled'
 
 interface LogoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'

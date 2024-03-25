@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as path from 'path'
+import * as path from 'node:path'
+import { loadEnv } from '@prosopo/cli'
 import { ViteBackendConfig } from '@prosopo/config'
 import { defineConfig } from 'vite'
-import { loadEnv } from '@prosopo/cli'
 import { version } from './package.json'
 
 // load env using our util because vite loadEnv is not working for .env.development

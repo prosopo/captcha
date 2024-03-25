@@ -1,3 +1,7 @@
+import { blake2b } from '@noble/hashes/blake2b'
+import { u8aToHex } from '@polkadot/util'
+import { randomAsHex } from '@polkadot/util-crypto'
+import type { ProsopoServer } from '@prosopo/server'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +16,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '@prosopo/types'
-import { Connection } from 'mongoose'
-import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
-import { ProsopoServer } from '@prosopo/server'
-import { UserInterface } from '../models/user.js'
 import { at } from '@prosopo/util'
-import { blake2b } from '@noble/hashes/blake2b'
-import { randomAsHex } from '@polkadot/util-crypto'
-import { u8aToHex } from '@polkadot/util'
-import { z } from 'zod'
+import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import type { Connection } from 'mongoose'
+import { z } from 'zod'
+import type { UserInterface } from '../models/user.js'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({

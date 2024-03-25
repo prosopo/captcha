@@ -1,3 +1,4 @@
+import { startCollector } from '@prosopo/procaptcha'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +12,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
-import { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { startCollector } from '@prosopo/procaptcha'
+import type { Account, ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
+import { type MutableRefObject, useEffect, useRef, useState } from 'react'
 
 type CollectorProps = {
     onProcessData: (data: StoredEvents) => void
@@ -29,7 +29,7 @@ const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
     const ref: MutableRefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (ref && ref.current) {
+        if (ref?.current) {
             startCollector(setStoredMouseEvents, setStoredTouchEvents, setStoredKeyboardEvents, ref.current)
         }
     }, [])
@@ -43,7 +43,7 @@ const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
         if (account) onProcessData(userEvents)
     }, [sendData, account])
 
-    return <div ref={ref}></div>
+    return <div ref={ref} />
 }
 
 export default Collector

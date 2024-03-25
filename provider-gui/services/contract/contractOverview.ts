@@ -1,3 +1,4 @@
+import type { GuiContract } from '@/types/ContractOverview'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
-import { GovernanceStatus } from '@prosopo/captcha-contract'
-import { GuiContract } from '@/types/ContractOverview'
-import { NetworkNames, ProcaptchaClientConfigOutput, ProsopoBasicConfigOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/common'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
-import { getConfig } from './config'
 import { hexToString } from '@polkadot/util'
+import { GovernanceStatus } from '@prosopo/captcha-contract'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
+import type { NetworkNames, ProcaptchaClientConfigOutput, ProsopoBasicConfigOutput } from '@prosopo/types'
+import { getConfig } from './config'
 
 export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     const network = config.networks[config.defaultNetwork]

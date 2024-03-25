@@ -1,3 +1,6 @@
+import { Loggable } from '@prosopo/common'
+import { kebabCase } from '@prosopo/util'
+import type { Options } from 'yargs'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as z from 'zod'
-import { Loggable } from '@prosopo/common'
-import { Options } from 'yargs'
-import { kebabCase } from '@prosopo/util'
+import type * as z from 'zod'
 
 export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
     // get the options for the CLI

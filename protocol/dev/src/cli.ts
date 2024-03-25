@@ -1,3 +1,8 @@
+import { spawn } from 'node:child_process'
+import { readdirSync } from 'node:fs'
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +17,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { hexToU8a } from '@polkadot/util'
-import { hideBin } from 'yargs/helpers'
-import { readdirSync } from 'fs'
-import { spawn } from 'child_process'
 import chalk from 'chalk'
-import fs from 'fs'
-import path from 'path'
-import process from 'process'
-import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
+import yargs, { type ArgumentsCamelCase, type Argv } from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
@@ -38,7 +38,7 @@ const getGitCommitId = async () => {
     // console.log("git commit id:", gitCommitId)
     const gitCommitIdBytes = hexToU8a(gitCommitId)
     // console.log("git commit id bytes:", gitCommitIdBytes)
-    const gitCommitIdBytesString: string = '[' + gitCommitIdBytes.toString().split(',').join(', ') + ', ]'
+    const gitCommitIdBytesString: string = `[${gitCommitIdBytes.toString().split(',').join(', ')}, ]`
     // console.log("git commit id byte string:", gitCommitIdBytesString)
     return gitCommitIdBytesString
 }
@@ -58,7 +58,7 @@ const setEnvVariable = async (filePath: string, name: string, value: string) => 
     // let ENV_ABC: u32 = 3;
     //
 
-    name = 'env_' + name // add the env prefix to the name
+    name = `env_${name}` // add the env prefix to the name
     // names could be lower, upper or specific case
     for (const declaration of ['let', 'const']) {
         const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gims')
@@ -104,7 +104,7 @@ const setEnvVariables = async (filePaths: string[], env: Env, argv: ArgumentsCam
     if (!recursiveCall) {
         // finished setting env variables
         // format the code
-        await exec(`npm run cli -- fmt --verbose --all`)
+        await exec('npm run cli -- fmt --verbose --all')
     }
 }
 
@@ -143,7 +143,7 @@ const exec = (
     })
 
     return new Promise((resolve, reject) => {
-        prc.on('close', function (code) {
+        prc.on('close', (code) => {
             prc.stdout.push('\n')
             const output = {
                 stdout: stdoutData.join(''),
@@ -219,11 +219,10 @@ export async function processArgs(args: string[]) {
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
-        } else {
-            for (const pkg of (argv.contract as string[]) || []) {
-                // add the package to the end of the cmd
-                cmd = `${cmd} --package ${pkg}`
-            }
+        }
+        for (const pkg of (argv.contract as string[]) || []) {
+            // add the package to the end of the cmd
+            cmd = `${cmd} --package ${pkg}`
         }
 
         let script = ''
@@ -266,7 +265,7 @@ Cargo pass-through commands:
             },
             async (argv) => {
                 const contracts = argv.contract as string[]
-                delete argv.contract
+                argv.contract = undefined
                 await exec(`cd ${repoDir} && mkdir -p expanded`)
                 for (const contract of contracts) {
                     const dir = `${contractsDir}/${contract}`
@@ -287,7 +286,7 @@ Cargo pass-through commands:
             },
             async (argv) => {
                 const contracts = argv.contract as string[]
-                delete argv.contract
+                argv.contract = undefined
                 for (const contract of contracts) {
                     const dir = `${contractsDir}/${contract}`
                     await exec(`${buildCargoCmd(argv, 'contract metadata', dir)}`)
@@ -307,7 +306,7 @@ Cargo pass-through commands:
             },
             async (argv) => {
                 const contracts = argv.contract as string[]
-                delete argv.contract
+                argv.contract = undefined
                 for (const contract of contracts) {
                     const dir = `${contractsDir}/${contract}`
                     await exec(`${buildCargoCmd(argv, 'contract instantiate', dir)}`)
@@ -343,7 +342,7 @@ Cargo pass-through commands:
                 }
 
                 const contracts = argv.contract as string[]
-                delete argv.contract
+                argv.contract = undefined
 
                 for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
@@ -361,7 +360,7 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                if (argv._ && argv._.length == 0) {
+                if (argv._ && argv._.length === 0) {
                     throw new Error('No command specified')
                 }
                 const cmd = String(argv._[0] || '') // the first arg (the command)

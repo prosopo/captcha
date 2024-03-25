@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as z from 'zod'
+import type * as z from 'zod'
 import { CliCommandComposite } from '../cli/cliCommandComposite.js'
 import { InputArgsSchema, InputCliCommand } from './input.js'
 import { OutputArgsSchema, OutputCliCommand } from './output.js'

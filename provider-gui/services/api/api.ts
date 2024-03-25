@@ -1,3 +1,4 @@
+import { ProsopoApiError } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AdminApiPaths } from '@prosopo/types'
-import { ProsopoApiError } from '@prosopo/common'
 
 async function handleResponse(response: Response) {
     if (!response.ok) {
@@ -33,7 +33,7 @@ export async function batchCommit(BASE_URL: string, additionalHeaders: Record<st
     return handleResponse(response)
 }
 
-export async function updateDataset(BASE_URL: string, additionalHeaders: Record<string, string> = {}, jsonFile: any) {
+export async function updateDataset(BASE_URL: string, additionalHeaders: Record<string, string>, jsonFile: any) {
     const jsonFileString = JSON.stringify(jsonFile)
     const response = await fetch(`${BASE_URL}${AdminApiPaths.UpdateDataset}`, {
         method: 'POST',
@@ -59,7 +59,7 @@ export async function providerDeregister(BASE_URL: string, additionalHeaders: Re
 
 export async function providerUpdate(
     BASE_URL: string,
-    additionalHeaders: Record<string, string> = {},
+    additionalHeaders: Record<string, string>,
     updateData: {
         url: string
         address: string

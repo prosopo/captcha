@@ -1,3 +1,4 @@
+import { ProsopoDatasetError } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaWithProof } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
+import type { CaptchaWithProof } from '@prosopo/types'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
@@ -133,13 +133,13 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                             userSelect: 'none',
                                             fill: 'currentcolor',
                                         }}
-                                        focusable="false"
-                                        color="#fff"
-                                        aria-hidden="true"
-                                        viewBox="0 0 24 24"
-                                        data-testid="CheckIcon"
+                                        focusable='false'
+                                        color='#fff'
+                                        aria-hidden='true'
+                                        viewBox='0 0 24 24'
+                                        data-testid='CheckIcon'
                                     >
-                                        <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                                        <path d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' />
                                     </svg>
                                 </div>
                             </div>

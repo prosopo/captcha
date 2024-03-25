@@ -13,19 +13,19 @@
 // limitations under the License.
 
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
-import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoBasicConfigOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { get } from '@prosopo/util'
 import { isAddress } from '@polkadot/util-crypto/address'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { type LogLevel, type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { Databases } from '@prosopo/database'
+import type { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
+import type { ProsopoBasicConfigOutput } from '@prosopo/types'
+import type { Database } from '@prosopo/types-database'
+import type { ProsopoEnvironment } from '@prosopo/types-env'
+import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
@@ -48,7 +48,7 @@ export class Environment implements ProsopoEnvironment {
         this.defaultEnvironment = this.config.defaultEnvironment
         this.defaultNetwork = this.config.defaultNetwork
         this.pair = pair
-        this.logger = getLogger(this.config.logLevel, `ProsopoEnvironment`)
+        this.logger = getLogger(this.config.logLevel, 'ProsopoEnvironment')
         if (
             this.config.defaultNetwork &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultNetwork) &&
@@ -141,7 +141,7 @@ export class Environment implements ProsopoEnvironment {
             this.abi,
             this.contractAddress,
             this.contractName,
-            parseInt(nonce.toString()),
+            Number.parseInt(nonce.toString()),
             this.pair,
             this.config.logLevel as unknown as LogLevel,
             this.config.account.address // allows calling the contract from a public address only
@@ -164,7 +164,7 @@ export class Environment implements ProsopoEnvironment {
             } else {
                 // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
                 // just console logging for the time being!
-                console.warn('invalid contract address: ' + this.contractAddress)
+                console.warn(`invalid contract address: ${this.contractAddress}`)
             }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
@@ -172,9 +172,9 @@ export class Environment implements ProsopoEnvironment {
                 })
             }
             if (this.db && this.db.connection?.readyState !== 1) {
-                this.logger.warn(`Database connection is not ready, reconnecting...`)
+                this.logger.warn('Database connection is not ready, reconnecting...')
                 await this.db.connect()
-                this.logger.info(`Connected to db`)
+                this.logger.info('Connected to db')
             }
         } catch (err) {
             throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error: err }, logger: this.logger })

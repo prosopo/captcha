@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CssBaseline } from '@mui/material'
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import FrictionlessRoot from './routes/frictionless.js'
-import ImageCaptchaRoot from './routes/root.js'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import reportWebVitals from './reportWebVitals.js'
+import FrictionlessRoot from './routes/frictionless.js'
+import ImageCaptchaRoot from './routes/root.js'
 
 const router = createBrowserRouter([
     {

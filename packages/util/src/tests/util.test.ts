@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at, get, merge, permutations } from '../util.js'
-import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
     describe('merge', () => {

@@ -1,3 +1,5 @@
+import fs, { type WriteStream, createWriteStream } from 'node:fs'
+import { Readable } from 'node:stream'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoCliError } from '@prosopo/common'
-import { Readable } from 'stream'
-import fs, { WriteStream, createWriteStream } from 'fs'
 
 export function loadJSONFile(filePath: string) {
     try {

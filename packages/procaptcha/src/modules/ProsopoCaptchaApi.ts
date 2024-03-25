@@ -1,3 +1,10 @@
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { Signer } from '@polkadot/api/types'
+import { stringToHex } from '@polkadot/util/string'
+import type { ProviderApi } from '@prosopo/api'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
+import type { ProsopoCaptchaContract } from '@prosopo/contract'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +25,15 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import {
+import type {
     CaptchaResponseBody,
     CaptchaSolution,
     CaptchaSolutionResponse,
     CaptchaWithProof,
     ProsopoCaptchaApiInterface,
 } from '@prosopo/types'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { Signer } from '@polkadot/api/types'
-import { TCaptchaSubmitResult } from '@prosopo/types'
+import type { TCaptchaSubmitResult } from '@prosopo/types'
 import { at } from '@prosopo/util'
-import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
     userAccount: string
@@ -119,7 +119,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
         const captchasHashed = solutions.map((captcha) => computeCaptchaSolutionHash(captcha))
 
         tree.build(captchasHashed)
-        const commitmentId = tree.root!.hash
+        const commitmentId = tree.root?.hash
 
         console.log('solveCaptchaChallenge commitmentId', commitmentId)
         const tx: ContractSubmittableResult | undefined = undefined

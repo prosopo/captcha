@@ -11,26 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId } from '@prosopo/captcha-contract'
+import type { AccountId } from '@prosopo/captcha-contract'
+import type { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import {
     ApiParams,
     ApiPaths,
-    CaptchaResponseBody,
-    CaptchaSolution,
+    type CaptchaResponseBody,
+    type CaptchaSolution,
     CaptchaSolutionBody,
-    CaptchaSolutionBodyType,
-    CaptchaSolutionResponse,
-    GetPowCaptchaResponse,
-    ImageVerificationResponse,
-    NetworkConfig,
-    PowCaptchaSolutionResponse,
-    ProviderRegistered,
-    StoredEvents,
-    SubmitPowCaptchaSolutionBodyType,
-    VerificationResponse,
-    VerifySolutionBodyType,
+    type CaptchaSolutionBodyType,
+    type CaptchaSolutionResponse,
+    type GetPowCaptchaResponse,
+    type ImageVerificationResponse,
+    type NetworkConfig,
+    type PowCaptchaSolutionResponse,
+    type ProviderRegistered,
+    type StoredEvents,
+    type SubmitPowCaptchaSolutionBodyType,
+    type VerificationResponse,
+    type VerifySolutionBodyType,
 } from '@prosopo/types'
-import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase implements ProviderApi {
@@ -86,10 +86,10 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             [ApiParams.maxVerifiedTime]?: number
         } = { dapp: dapp, user: userAccount }
         if (commitmentId) {
-            payload['commitmentId'] = commitmentId
+            payload.commitmentId = commitmentId
         }
         if (maxVerifiedTime) {
-            payload['maxVerifiedTime'] = maxVerifiedTime
+            payload.maxVerifiedTime = maxVerifiedTime
         }
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }

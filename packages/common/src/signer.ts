@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Signer, SignerResult } from '@polkadot/api/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { Registry, SignerPayloadJSON } from '@polkadot/types/types'
 // Copyright 2017-2023 @polkadot/react-signer authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 import { objectSpread } from '@polkadot/util/object'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import type { Registry, SignerPayloadJSON } from '@polkadot/types/types'
-import type { Signer, SignerResult } from '@polkadot/api/types'
 
 let id = 0
 
