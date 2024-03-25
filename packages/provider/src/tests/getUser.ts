@@ -33,10 +33,8 @@ export async function getUser(env: ProviderEnvironment, accountType: AccountKey,
         dappWasm
     )
     const account = databaseAccounts[accountType].pop()
-
     if (account === undefined) {
         throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
     }
-
     return account
 }

@@ -15,16 +15,13 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoDBError, getLogLevel } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoDBError } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, loadEnv } from '@prosopo/cli'
-import { get, isMain } from '@prosopo/util'
-import { getLogger } from '@prosopo/common'
-import { getPairAsync } from '@prosopo/contract'
-import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
 
-loadEnv('../../dev/scripts')
+import { get } from '@prosopo/util'
+import { getLogger } from '@prosopo/common'
+import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
 
 const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.Values.info, 'populateDatabase.ts')
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
@@ -138,19 +135,4 @@ export default async function run(pair: KeyringPair, config: ProsopoConfigOutput
         dappWasm,
         logLevel
     )
-}
-
-//if main process
-if (isMain(import.meta.url, 'provider')) {
-    const startDate = Date.now()
-    const config = defaultConfig()
-    const secret = '//Alice'
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], secret)
-    const logLevel = getLogLevel()
-    run(pair, config, logLevel)
-        .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
-        .finally(() => process.exit())
-        .catch((error) => {
-            logger.error(error)
-        })
 }
