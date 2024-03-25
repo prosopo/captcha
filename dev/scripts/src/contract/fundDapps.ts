@@ -103,16 +103,7 @@ export async function run(wasmPath: string | undefined, abiPath: string | undefi
     const fundAmount = oneUnit(env.getApi())
     await Promise.all(
         dapps
-            .filter(
-                (dappRecord) =>
-                    dappRecord.account &&
-                    !dappRecord.email.includes('hugh') &&
-                    !dappRecord.email.includes('forgetso') &&
-                    !dappRecord.email.includes('prosopo') &&
-                    !dappRecord.email.includes('seth') &&
-                    !dappRecord.email.includes('dawn') &&
-                    !dappRecord.name.includes('George')
-            )
+            .filter((dappRecord) => dappRecord.account)
             .map((dappRecord) => setupDapp(env, { pair, secret, fundAmount }, dappRecord.account, queue))
     )
 }
