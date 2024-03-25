@@ -79,18 +79,9 @@ async function populateStep(
 
     const dummyArray = new Array(userCount).fill(userCount)
     const accountPromises = dummyArray.map(() => () => databasePopulator[key](fund))
-    const promise = await Promise.all(accountPromises.map((promise) => promise()))
+    await Promise.all(accountPromises.map((promise) => promise()))
     const time = Date.now() - startDate
-
     logger.debug(` [ ${msToSecString(time)} ]\n`)
-
-    // promise
-    //     .filter(({ error }) => error)
-    //     .forEach(({ error }) => {
-    //         if (error) {
-    //             throw new ProsopoDBError(error)
-    //         }
-    //     })
 }
 
 export async function populateDatabase(
