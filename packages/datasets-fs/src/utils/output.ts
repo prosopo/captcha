@@ -1,3 +1,7 @@
+import fs from 'node:fs'
+import { ProsopoEnvError, ProsopoError } from '@prosopo/common'
+import { lodash } from '@prosopo/util/lodash'
+import { boolean, object, string, type infer as zInfer } from 'zod'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +16,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CliCommand } from '../cli/cliCommand.js'
-import { ProsopoEnvError, ProsopoError } from '@prosopo/common'
-import { boolean, object, string, infer as zInfer } from 'zod'
-import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
 
 export const OutputArgsSchema = object({
     output: string(),

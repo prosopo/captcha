@@ -1,3 +1,6 @@
+import { Manager } from '@prosopo/procaptcha'
+import { useProcaptcha } from '@prosopo/procaptcha-common'
+import type { ProcaptchaProps } from '@prosopo/types'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,13 +31,10 @@ import {
     lightTheme,
 } from '@prosopo/web-components'
 import { Logo } from '@prosopo/web-components'
-import { Manager } from '@prosopo/procaptcha'
-import { ProcaptchaProps } from '@prosopo/types'
-import { useProcaptcha } from '@prosopo/procaptcha-common'
 import { useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
-import Collector from './collector.js'
 import Modal from './Modal.js'
+import Collector from './collector.js'
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const config = props.config
@@ -107,7 +107,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                                     themeColor={themeColor}
                                                     onChange={manager.start}
                                                     checked={state.isHuman}
-                                                    labelText="I am human"
+                                                    labelText='I am human'
                                                 />
                                             </div>
                                             <div
@@ -123,9 +123,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+                                    <a href={WIDGET_URL} target='_blank' aria-label={WIDGET_URL_TEXT} rel='noreferrer'>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} />
                                         </div>
                                     </a>
                                 </div>
@@ -137,7 +137,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                             onProcessData={manager.exportData}
                             sendData={state.sendData}
                             account={state.account}
-                        ></Collector>
+                        />
                     )}
                 </ContainerDiv>
             </div>

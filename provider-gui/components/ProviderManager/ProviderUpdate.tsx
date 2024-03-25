@@ -1,3 +1,5 @@
+import { providerUpdate } from '@/services/api/api'
+import { signedBlockNumberHeaders } from '@/services/provider/provider'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,14 +20,13 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    SelectChangeEvent,
+    type SelectChangeEvent,
     TextField,
     Typography,
 } from '@mui/material'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { providerUpdate } from '@/services/api/api'
-import { signedBlockNumberHeaders } from '@/services/provider/provider'
-import React, { useState } from 'react'
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import type React from 'react'
+import { useState } from 'react'
 
 type ProviderUpdateProps = {
     currentAccount: InjectedAccountWithMeta
@@ -54,7 +55,7 @@ export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount, 
             return
         }
 
-        if (isNaN(Number(fee)) || isNaN(Number(value))) {
+        if (Number.isNaN(Number(fee)) || Number.isNaN(Number(value))) {
             alert('Fee and Value must be numbers.')
             return
         }
@@ -74,41 +75,41 @@ export const ProviderUpdate: React.FC<ProviderUpdateProps> = ({ currentAccount, 
 
     return (
         <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+            <Typography variant='h6' sx={{ mb: 2 }}>
                 Provider Update
             </Typography>
             <TextField
                 fullWidth
-                label="URL"
-                variant="outlined"
+                label='URL'
+                variant='outlined'
                 sx={{ mb: 2 }}
                 value={url}
                 onChange={handleFieldChange(setUrl)}
             />
             <TextField
                 fullWidth
-                label="Fee"
-                variant="outlined"
+                label='Fee'
+                variant='outlined'
                 sx={{ mb: 2 }}
                 value={fee}
                 onChange={handleFieldChange(setFee)}
             />
             <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel id="payee-label">Payee</InputLabel>
-                <Select labelId="payee-label" value={payee} label="Payee" onChange={handlePayeeChange}>
-                    <MenuItem value="Dapp">Dapp</MenuItem>
-                    <MenuItem value="Provider">Provider</MenuItem>
+                <InputLabel id='payee-label'>Payee</InputLabel>
+                <Select labelId='payee-label' value={payee} label='Payee' onChange={handlePayeeChange}>
+                    <MenuItem value='Dapp'>Dapp</MenuItem>
+                    <MenuItem value='Provider'>Provider</MenuItem>
                 </Select>
             </FormControl>
             <TextField
                 fullWidth
-                label="Value"
-                variant="outlined"
+                label='Value'
+                variant='outlined'
                 sx={{ mb: 2 }}
                 value={value}
                 onChange={handleFieldChange(setValue)}
             />
-            <Button fullWidth variant="contained" color="primary" onClick={handleUpdateProvider}>
+            <Button fullWidth variant='contained' color='primary' onClick={handleUpdateProvider}>
                 Update Provider
             </Button>
         </Box>

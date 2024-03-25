@@ -1,3 +1,9 @@
+import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
+import { wrapQuery } from '@prosopo/contract'
+import { AdminApiPaths } from '@prosopo/types'
+import type { ProviderEnvironment } from '@prosopo/types-env'
+import { Router } from 'express'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +18,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { AdminApiPaths } from '@prosopo/types'
 import { BatchCommitmentsTask, Tasks } from '../index.js'
-import { Payee } from '@prosopo/captcha-contract/types-returns'
-import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { Router } from 'express'
 import { authMiddleware } from './authMiddleware.js'
-import { wrapQuery } from '@prosopo/contract'
 
 // Setting batch commit interval to 0 for API calls
 const apiBatchCommitConfig = {

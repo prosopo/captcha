@@ -1,3 +1,11 @@
+import type { Compact } from '@polkadot/types-codec/base'
+import type { u128 } from '@polkadot/types-codec/primitive'
+import { ProsopoEnvError } from '@prosopo/common'
+import { encodeStringAddress } from '@prosopo/provider'
+import { PayeeSchema } from '@prosopo/types'
+import { lodash } from '@prosopo/util/lodash'
+import parser from 'cron-parser'
+import type { ArgumentsCamelCase } from 'yargs'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +20,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { ArgumentsCamelCase } from 'yargs'
-import { Compact } from '@polkadot/types-codec/base'
-import { PayeeSchema } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { encodeStringAddress } from '@prosopo/provider'
-import { lodash } from '@prosopo/util/lodash'
-import { u128 } from '@polkadot/types-codec/primitive'
-import parser from 'cron-parser'
 
 export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
     const address = encodeStringAddress(argv.address as string)
@@ -75,7 +75,6 @@ export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
         }
 
         return { schedule: argv.schedule as string }
-    } else {
-        return { schedule: null }
     }
+    return { schedule: null }
 }

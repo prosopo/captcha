@@ -1,3 +1,5 @@
+import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
+import type { ProcaptchaProps } from '@prosopo/types'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +29,8 @@ import {
     darkTheme,
     lightTheme,
 } from '@prosopo/web-components'
-import { Manager } from '../Services/Manager.js'
-import { ProcaptchaProps } from '@prosopo/types'
-import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
 import { useRef, useState } from 'react'
+import { Manager } from '../Services/Manager.js'
 
 const Procaptcha = (props: ProcaptchaProps) => {
     const config = props.config
@@ -96,7 +96,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                             onChange={manager.start}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
-                                                        ></Checkbox>
+                                                        />
                                                     )}
                                                 </div>
                                             </div>
@@ -105,9 +105,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 </div>
 
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+                                    <a href={WIDGET_URL} target='_blank' aria-label={WIDGET_URL_TEXT} rel='noreferrer'>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} />
                                         </div>
                                     </a>
                                 </div>

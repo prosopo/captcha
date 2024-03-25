@@ -1,3 +1,5 @@
+import styled from '@emotion/styled'
+import { useMemo } from 'react'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { darkTheme, lightTheme } from './theme.js'
-import { useMemo } from 'react'
-import styled from '@emotion/styled'
 
 export interface LoadingSpinnerComponentProps {
     themeColor: 'light' | 'dark'
@@ -43,7 +43,7 @@ export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => 
             }
         }
     `
-    return <StyledDiv></StyledDiv>
+    return <StyledDiv />
 }
 
 export default LoadingSpinner

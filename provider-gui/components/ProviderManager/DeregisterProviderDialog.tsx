@@ -1,3 +1,6 @@
+import { useGlobalState } from '@/contexts/GlobalContext'
+import { providerDeregister } from '@/services/api/api'
+import { signedBlockNumberHeaders } from '@/services/provider/provider'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +23,8 @@ import {
     DialogContentText,
     DialogTitle,
 } from '@mui/material'
-import { providerDeregister } from '@/services/api/api'
-import { signedBlockNumberHeaders } from '@/services/provider/provider'
-import { useGlobalState } from '@/contexts/GlobalContext'
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 
 type DeregisterDialogProps = {
     isDeregisterDialogOpen: boolean
@@ -65,10 +66,10 @@ export const DeregisterConfirmationDialog: React.FC<DeregisterDialogProps> = ({
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleCloseDeregisterDialog} color="primary">
+                <Button onClick={handleCloseDeregisterDialog} color='primary'>
                     Cancel
                 </Button>
-                <Button onClick={handleDeregister} color="error">
+                <Button onClick={handleDeregister} color='error'>
                     Deregister
                 </Button>
             </DialogActions>

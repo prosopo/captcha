@@ -1,3 +1,7 @@
+import fs from 'node:fs'
+import { get } from '@prosopo/util'
+import { lodash } from '@prosopo/util/lodash'
+import cliProgress from 'cli-progress'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +17,6 @@
 // limitations under the License.
 import * as z from 'zod'
 import { InputArgsSchema, InputCliCommand } from '../utils/input.js'
-import { get } from '@prosopo/util'
-import { lodash } from '@prosopo/util/lodash'
-import cliProgress from 'cli-progress'
-import fs from 'fs'
 
 export const ArgsSchema = InputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema
@@ -40,13 +40,13 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 
         const list: string[] = []
         const traverse = async (data: any) => {
-            if (data instanceof Array) {
+            if (Array.isArray(data)) {
                 for (let i = 0; i < data.length; i++) {
                     data[i] = await traverse(data[i])
                 }
             } else if (data instanceof Object) {
                 for (const key of Object.keys(data)) {
-                    if (key == 'data') {
+                    if (key === 'data') {
                         const value = get(data, key)
                         const url = z.string().parse(value)
                         list.push(url)

@@ -14,6 +14,7 @@
 /** @jsxImportSource @emotion/react */
 import { ContainerDiv, WidthBasedStylesDiv } from './Containers.js'
 import { LoadingSpinner } from './LoadingSpinner.js'
+import Logo from './Logo.js'
 import {
     WIDGET_BORDER,
     WIDGET_BORDER_RADIUS,
@@ -24,7 +25,6 @@ import {
     WIDGET_URL_TEXT,
 } from './WidgetConstants.js'
 import { darkTheme, lightTheme } from './theme.js'
-import Logo from './Logo.js'
 
 type PlaceholderProps = { darkMode: 'light' | 'dark' | undefined }
 
@@ -82,9 +82,9 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+                                    <a href={WIDGET_URL} target='_blank' aria-label={WIDGET_URL_TEXT} rel='noreferrer'>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} />
                                         </div>
                                     </a>
                                 </div>

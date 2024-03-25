@@ -1,3 +1,4 @@
+import { hexHashArray } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +12,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
-import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
+import { CaptchaItemTypes, CaptchaTypes, type Dataset, type RawSolution } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { hexHashArray } from '@prosopo/common'
+import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
 
 async function getDataset(): Promise<Dataset> {
     return {
@@ -55,7 +55,7 @@ async function getDataset(): Promise<Dataset> {
     }
 }
 
-describe('DATASETS MERKLE TREE', async function () {
+describe('DATASETS MERKLE TREE', async () => {
     let DATASET: Dataset
     beforeAll(async () => {
         DATASET = await getDataset()
@@ -82,7 +82,7 @@ describe('DATASETS MERKLE TREE', async function () {
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
 
         tree.build(captchaHashes)
-        expect(tree.root!.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
+        expect(tree.root?.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
     })
     test('Tree proof works when computing leaf hashes', () => {
         const dataset = DATASET
@@ -110,7 +110,7 @@ describe('DATASETS MERKLE TREE', async function () {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
-        expect(tree.root!.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
+        expect(tree.root?.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
     })
     test('Tree proof works when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()

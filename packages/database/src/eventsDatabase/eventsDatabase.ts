@@ -1,3 +1,4 @@
+import { getLoggerDefault } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +12,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { StoredEventRecord, StoredEvents } from '@prosopo/types'
-import { getLoggerDefault } from '@prosopo/common'
-import mongoose, { Model } from 'mongoose'
+import type { StoredEventRecord, StoredEvents } from '@prosopo/types'
+import mongoose, { type Model } from 'mongoose'
 const logger = getLoggerDefault()
 const MAX_RETRIES = 3
 

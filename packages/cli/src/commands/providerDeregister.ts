@@ -1,3 +1,9 @@
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProviderEnvironment } from '@prosopo/env'
+import { Tasks } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +17,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import { Tasks } from '@prosopo/provider'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { validateAddress } from './validators.js'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {

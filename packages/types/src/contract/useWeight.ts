@@ -1,3 +1,4 @@
+import type { WeightV2 } from '@polkadot/types/interfaces'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util/bn'
-import { WeightV2 } from '@polkadot/types/interfaces'
+import type { BN } from '@polkadot/util/bn'
 
 export interface UseWeight {
     executionTime: number

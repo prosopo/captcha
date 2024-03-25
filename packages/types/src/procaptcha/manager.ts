@@ -1,3 +1,5 @@
+import type { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { number, object, string, type infer as zInfer } from 'zod'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +13,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, CaptchaResponseBody } from '../provider/index.js'
-import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProsopoCaptchaApiInterface } from './api.js'
-import { TCaptchaSubmitResult } from './client.js'
-import { number, object, string, infer as zInfer } from 'zod'
+import { ApiParams, type CaptchaResponseBody } from '../provider/index.js'
+import type { ProsopoCaptchaApiInterface } from './api.js'
+import type { TCaptchaSubmitResult } from './client.js'
 
 /**
  * House the account and associated extension.

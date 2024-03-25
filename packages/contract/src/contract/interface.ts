@@ -1,3 +1,16 @@
+import { ContractPromise } from '@polkadot/api-contract/promise'
+import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { SubmittableExtrinsic } from '@polkadot/api/promise/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
+import { BN } from '@polkadot/util/bn'
+import { Contract } from '@prosopo/captcha-contract'
+import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
+import type { default as Query } from '@prosopo/captcha-contract/query'
+import type { LangError } from '@prosopo/captcha-contract/types-arguments'
+import { LogLevel, type Logger, ProsopoContractError, getLogger, snakeToCamelCase } from '@prosopo/common'
+import type { QueryReturnType, Result } from '@prosopo/typechain-types'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,30 +24,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AbiMetaDataSpec, AbiMetadata, ContractAbi, IProsopoCaptchaContract } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util/bn'
-import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
-import { Contract } from '@prosopo/captcha-contract'
-import { ContractPromise } from '@polkadot/api-contract/promise'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LangError } from '@prosopo/captcha-contract/types-arguments'
-import { LogLevel, Logger, ProsopoContractError, getLogger, snakeToCamelCase } from '@prosopo/common'
-import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
-import { default as Query } from '@prosopo/captcha-contract/query'
-import { QueryReturnType, Result } from '@prosopo/typechain-types'
-import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
+import { AbiMetaDataSpec, type AbiMetadata, type ContractAbi, type IProsopoCaptchaContract } from '@prosopo/types'
 import { firstValueFrom } from 'rxjs'
+import { getReadOnlyPair } from '../accounts/index.js'
+import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
 import {
     getPrimitiveStorageFields,
     getPrimitiveStorageValue,
     getPrimitiveTypes,
     getStorageKeyAndType,
 } from './storage.js'
-import { getReadOnlyPair } from '../accounts/index.js'
 import { useWeightImpl } from './useWeight.js'
-import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
 export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
@@ -56,7 +56,7 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
                 },
             })
         }
-        if (result && result.value.err) {
+        if (result?.value.err) {
             throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
                 context: {
                     error: result.value.err.toString(),
@@ -140,9 +140,8 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
         const methods: any = new Methods(api, this.contract, this.signer)
         if (args) {
             return (await methods[methodName](...args)).value.unwrap().unwrap() as T
-        } else {
-            return (await methods[methodName]()).value.unwrap().unwrap() as T
         }
+        return (await methods[methodName]()).value.unwrap().unwrap() as T
     }
 
     /**
@@ -197,11 +196,10 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
                 options,
                 storageDeposit: response.storageDeposit,
             }
-        } else {
-            throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
-            })
         }
+        throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
+            context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
+        })
     }
 
     /**
@@ -216,15 +214,14 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
         )
         if (name in primitiveStorageFields) {
             return getPrimitiveStorageValue<T>(this.api, this.abi, name, primitiveStorageFields, this.contract.address)
-        } else {
-            const { storageKey, storageType } = getStorageKeyAndType(this.api, this.abi, this.json, name)
-            if (storageType) {
-                const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageType.id.toNumber()}`)
-                const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
-                const result = await firstValueFrom(promiseResult)
-                const optionBytes = this.abi.registry.createType('Option<Bytes>', result)
-                return this.abi.registry.createType(typeDef.type, [optionBytes.unwrap().toU8a(true)]) as T
-            }
+        }
+        const { storageKey, storageType } = getStorageKeyAndType(this.api, this.abi, this.json, name)
+        if (storageType) {
+            const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageType.id.toNumber()}`)
+            const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
+            const result = await firstValueFrom(promiseResult)
+            const optionBytes = this.abi.registry.createType('Option<Bytes>', result)
+            return this.abi.registry.createType(typeDef.type, [optionBytes.unwrap().toU8a(true)]) as T
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', {
             context: { failedFuncName: this.getStorage.name },

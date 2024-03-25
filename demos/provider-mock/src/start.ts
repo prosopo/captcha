@@ -1,3 +1,4 @@
+import { handleErrors } from '@prosopo/cli'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { handleErrors } from '@prosopo/cli'
 import { i18nMiddleware } from '@prosopo/common'
-import { prosopoRouter } from './api.js'
 import cors from 'cors'
 import express from 'express'
+import { prosopoRouter } from './api.js'
 const logger = getLogger(LogLevel.enum.info, 'prosopo:provider-mock:start.ts')
 
 async function startApi() {
