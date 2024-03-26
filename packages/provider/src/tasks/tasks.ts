@@ -56,6 +56,8 @@ import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
 
+const POW_SEPARATOR = '___'
+
 /**
  * @description Tasks that are shared by the API and CLI
  */
@@ -262,7 +264,7 @@ export class Tasks {
             return false
         }
 
-        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split('___')
+        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
 
         if (dappAccount !== challengeDappAccount) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {

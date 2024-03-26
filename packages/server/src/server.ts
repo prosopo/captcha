@@ -75,7 +75,7 @@ export class ProsopoServer {
 
     async isReady() {
         try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             await this.getSigner()
             await this.getContractApi()
         } catch (error) {
@@ -86,7 +86,7 @@ export class ProsopoServer {
     async getSigner(): Promise<void> {
         if (this.pair) {
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             }
             await this.api.isReadyOrError
             try {
