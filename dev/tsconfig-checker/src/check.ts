@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as glob from 'glob'
 import { at, get } from '@prosopo/util'
 import fs from 'fs'
+import path from 'path'
 import z from 'zod'
-import * as glob from 'glob';
-import path from 'path';
 
 const readPackageJson = (dir: string): JSON => {
     const pkgJsonStr = fs.readFileSync(`${dir}/package.json`, 'utf8')
@@ -37,22 +37,31 @@ const main = async () => {
     // console.log('workspacePkgGlobPaths', workspacePkgGlobPaths)
     // glob the workspace paths
     // i.e. packages/* => [packages/pkg1, packages/pkg2, ...]
-    const workspacePkgPaths = workspacePkgGlobPaths.map(p => glob.sync(`${workspaceDir}/${p}`)).reduce((acc, val) => acc.concat(val), []).filter(p => fs.lstatSync(p).isDirectory()).filter(p => fs.existsSync(`${p}/package.json`)).map(p => path.relative('.', p)).map(p => p === '' ? '.' : p)
+    const workspacePkgPaths = workspacePkgGlobPaths
+        .map((p) => glob.sync(`${workspaceDir}/${p}`))
+        .reduce((acc, val) => acc.concat(val), [])
+        .filter((p) => fs.lstatSync(p).isDirectory())
+        .filter((p) => fs.existsSync(`${p}/package.json`))
+        .map((p) => path.relative('.', p))
+        .map((p) => (p === '' ? '.' : p))
     // console.log('workspacePkgPaths', workspacePkgPaths)
-    const workspacePkgNames = workspacePkgPaths.map(p => z.string().parse(get(readPackageJson(p), 'name')))
+    const workspacePkgNames = workspacePkgPaths.map((p) => z.string().parse(get(readPackageJson(p), 'name')))
 
     // read the pkg json
     const pkgJson = readPackageJson(packageDir)
-    
+
     // get the pkg json deps
-    const deps = z.string().array().parse(Object.keys(get(pkgJson, 'dependencies')))
+    const deps = z
+        .string()
+        .array()
+        .parse(Object.keys(get(pkgJson, 'dependencies')))
     // TODO should we include dev deps?
     const devDeps = [] as string[] // z.string().array().parse(Object.keys(get(pkgJson, 'devDependencies')))
     const allDeps = deps.concat(devDeps)
     // filter deps down to those present in the workspace
-    const workspaceDeps = allDeps.filter(d => workspacePkgNames.includes(d))
-    const workspaceDepPaths = workspaceDeps.map(d => at(workspacePkgPaths, workspacePkgNames.indexOf(d)))
-    
+    const workspaceDeps = allDeps.filter((d) => workspacePkgNames.includes(d))
+    const workspaceDepPaths = workspaceDeps.map((d) => at(workspacePkgPaths, workspacePkgNames.indexOf(d)))
+
     console.log('workspaceDeps', workspaceDeps)
     console.log('workspaceDepPaths', workspaceDepPaths)
 
@@ -61,8 +70,8 @@ const main = async () => {
     const tsconfigJson = JSON.parse(tsconfigJsonStr)
 
     // get the tsconfig references
-    const refs = ((tsconfigJson.references || []) as { path: string }[]).map(r => r.path)
-    const relRefs = refs.map(r => path.relative(packageDir, r))
+    const refs = ((tsconfigJson.references || []) as { path: string }[]).map((r) => r.path)
+    const relRefs = refs.map((r) => path.relative(packageDir, r))
     console.log('tsconfig refs', refs)
     // console.log('relRefs', relRefs)
 
@@ -92,13 +101,17 @@ const main = async () => {
 
     if (missing.length > 0) {
         if (!fix) throw new Error(`Missing packages: ${missing.join(', ')}`)
-        
+
         // new refs = old refs + missing dep paths
-        const newRefs = refs.map(p => {
-            return { path: p }
-        }).concat(missingPaths.map(p => {
-            return { path: p }
-        }))
+        const newRefs = refs
+            .map((p) => {
+                return { path: p }
+            })
+            .concat(
+                missingPaths.map((p) => {
+                    return { path: p }
+                })
+            )
         console.log('new tsconfig refs', newRefs)
         tsconfigJson.references = newRefs
         const newTsconfigJsonStr = JSON.stringify(tsconfigJson, null, 4)
