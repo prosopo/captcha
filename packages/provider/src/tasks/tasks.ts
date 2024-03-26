@@ -317,7 +317,7 @@ export class Tasks {
         dappAccount: string,
         requestHash: string,
         captchas: CaptchaSolution[],
-        signature: string // the signature to indicate ownership of account (web2 only)
+        signature: string // the signature to indicate ownership of account
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
@@ -325,7 +325,7 @@ export class Tasks {
             })
         }
 
-        // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
+        // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
