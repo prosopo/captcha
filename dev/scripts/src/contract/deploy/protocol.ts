@@ -83,6 +83,7 @@ export async function run(
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {
+    log.info('Running deploy script')
     log.info('Loading env from', path.resolve('.'))
     loadEnv(path.resolve('.'))
     run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH)

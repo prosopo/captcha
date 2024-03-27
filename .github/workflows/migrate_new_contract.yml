@@ -1,0 +1,29 @@
+name: migrate_new_contract
+on:
+    pull_request:
+        branches:
+            - 'main'
+    workflow_dispatch:
+
+jobs:
+    process-abis:
+        runs-on: ubuntu-latest
+        steps:
+            # Checkout the repo at the state before the current push
+            - name: Checkout at previous commit
+              uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.event.before }}
+
+            # Save the old ABI
+            - name: Save old ABI
+              run: cp contracts/captcha/src/captcha.json dev/scripts/src/dist/contract/versionBump/oldContract.json
+
+            # Checkout back to the current commit
+            - name: Checkout at current commit
+              uses: actions/checkout@v3
+
+            # Now you have access to both ABIs and can use them as needed
+            - name: Use the ABIs
+              run: |
+                  node
