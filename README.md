@@ -123,6 +123,30 @@ data contains the following fields:
 | user         | string | The user's account address                                                                                                    |
 | blockNumber  | number | The block number of the captcha challenge. This is used to verify that the contacted provider was randomly selected on-chain. |
 
+## Add the Procaptcha Widget to your site with React
+
+You must import Procaptcha, define a config with ProcaptchaConfigSchema, optionally define callbacks, and render via the Procaptcha component. A minimal example would be as follows:
+
+```javascript
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaConfigSchema } from '@prosopo/types'
+
+const MyApp = () => {
+    const config = ProcaptchaConfigSchema.parse({
+        account: {
+            address: 'YOUR_SITEKEY',
+        },
+        // Other config options, see demos/client-example for more details
+    })
+
+    return <Procaptcha config={config} />
+}
+
+export default MyApp
+```
+
+Further example usage can be seen in demos/client-example
+
 ## Verify the User Response Server Side
 
 By adding the client side code, you were able to render a Procaptcha widget that identified if users were real people or
