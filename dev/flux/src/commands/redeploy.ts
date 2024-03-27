@@ -15,7 +15,7 @@ import * as z from 'zod'
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { getPrivateKey, getPublicKey } from './process.env.js'
-import { main } from '../lib/deploy.js'
+import { main } from '../lib/redeploy.js'
 
 const fluxDeployArgs = z.object({
     app: z.string(),
@@ -27,7 +27,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.deploy')
 
     return {
-        command: 'deploy',
+        command: 'redeploy',
         describe: 'Deploy a Flux application',
         builder: (yargs: Argv) =>
             yargs.option('hard', {
