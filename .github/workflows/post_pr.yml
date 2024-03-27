@@ -57,19 +57,22 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
+
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
             - run: mkdir -p ~/.cache/Cypress
 
-            - run: npm install
+            # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: npm ci
 
             - name: Rust formatting check
               run: |

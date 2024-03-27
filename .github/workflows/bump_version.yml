@@ -54,12 +54,8 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
+
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -86,13 +82,15 @@ jobs:
             - run: ls -la protocol/target/ink || true
             - run: ls -la node_modules || true
 
-            - name: Install dependencies
-              run: npm ci
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
-            - name: Build
-              run: |
-                  npm run build -w @prosopo/scripts
-                  npm run build -w @prosopo/protocol-dev
+            - run: npm ci
+
+            - run: npm run build -w @prosopo/scripts
+            - run: npm run build -w @prosopo/protocol-dev
 
             - name: Bump version
               env:
