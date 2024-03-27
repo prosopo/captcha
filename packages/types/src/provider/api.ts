@@ -32,6 +32,7 @@ export enum AdminApiPaths {
     UpdateDataset = '/v1/prosopo/provider/admin/dataset',
     ProviderDeregister = '/v1/prosopo/provider/admin/deregister',
     ProviderUpdate = '/v1/prosopo/provider/admin/update',
+    DappMonitoring = '/v1/prosopo/provider/admin/dapp',
 }
 
 export enum ApiParams {

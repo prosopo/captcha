@@ -721,4 +721,14 @@ export class Tasks {
         }
         await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
     }
+
+    async getCaptchaEventDetails() {
+        return this.db.getUnbatchedDappUserCommitments().then((commitments) =>
+            commitments.map(({ dappContract: dapp, requestedAt: time, status }) => ({
+                dapp,
+                time,
+                status,
+            }))
+        )
+    }
 }

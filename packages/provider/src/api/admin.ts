@@ -31,10 +31,9 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
     const router = Router()
     const tasks = new Tasks(env)
 
-    // Use the authMiddleware for all routes in this router
-    router.use(authMiddleware(tasks, env))
-
     router.post(AdminApiPaths.BatchCommit, async (req, res, next) => {
+        authMiddleware(tasks, env)
+
         if (env.db) {
             try {
                 const batchCommitter = new BatchCommitmentsTask(
@@ -60,6 +59,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
         try {
+            authMiddleware(tasks, env)
+
             const result = await tasks.providerSetDataset(req.body)
 
             console.info(`Dataset update complete: ${result}`)
@@ -72,6 +73,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     router.post(AdminApiPaths.ProviderDeregister, async (req, res, next) => {
         try {
+            authMiddleware(tasks, env)
+
             const address = env.pair?.address
             if (!address) {
                 throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', { context: { error: 'No address' } })
@@ -85,6 +88,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     router.post(AdminApiPaths.ProviderUpdate, async (req, res, next) => {
         try {
+            authMiddleware(tasks, env)
+
             const { url, fee, payee, value, address } = z
                 .object({
                     url: z.string(),
@@ -112,6 +117,15 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
                 console.info(JSON.stringify(result, null, 2))
             }
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
+        }
+    })
+
+    router.post(AdminApiPaths.DappMonitoring, async (req, res, next) => {
+        try {
+            authMiddleware(tasks, env)
         } catch (err) {
             console.error(err)
             res.status(500).send(err)
