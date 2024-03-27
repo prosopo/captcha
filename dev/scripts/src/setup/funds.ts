@@ -97,8 +97,20 @@ export async function sendFunds(
             })
     })
     await result
-        .then((result: ISubmittableResult) => {
-            env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
+        .then(async (result: ISubmittableResult) => {
+            if (result.status.isFuture) {
+                const block = await api.rpc.chain.getBlock()
+                JSON.stringify(block)
+                env.logger.debug(
+                    who,
+                    'sent amount',
+                    unitAmount,
+                    'UNIT in FUTURE tx hash ',
+                    result.status.asInBlock.toHex()
+                )
+            } else {
+                env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.txHash.toHex())
+            }
         })
         .catch((e) => {
             throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error: e } })

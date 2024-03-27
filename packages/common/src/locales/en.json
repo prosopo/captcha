@@ -55,7 +55,9 @@
         "UNKNOWN_ERROR": "Unknown error",
         "CHAIN_DECIMALS_UNDEFINED": "Chain decimals are not defined",
         "INVALID_DATA_FORMAT": "Invalid data format",
-        "INVALID_BLOCKHASH": "Invalid blockhash"
+        "INVALID_BLOCKHASH": "Invalid blockhash",
+        "TX_QUEUE_ERROR": "Error in Transaction Queue",
+        "DISPATCH_ERROR": "Error dispatching transaction"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
