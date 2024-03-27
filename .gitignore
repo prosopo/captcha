@@ -139,3 +139,6 @@ vite.config.ts.timestamp*
 
 # ignore our cache dir
 .cache
+
+js_bundles_host_temp
+**/client-bundle-example/src/assets/**

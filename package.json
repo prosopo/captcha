@@ -42,6 +42,7 @@
         "start:demo:frictionless": "npm -w @prosopo/client-frictionless-example run start",
         "start:bundle": "npm -w @prosopo/client-bundle-example run start",
         "start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
+        "start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
@@ -80,6 +81,9 @@
         "demos/*",
         "provider-gui"
     ],
+    "dependencies": {
+        "@prosopo/flux": "0.2.41"
+    },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
