@@ -1,3 +1,9 @@
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProviderEnvironment } from '@prosopo/env'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import { at } from '@prosopo/util'
+import { CronJob } from 'cron'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +19,6 @@
 // limitations under the License.
 import { BatchCommitmentsTask } from './batch/commitments.js'
 import { CalculateSolutionsTask } from './tasks/calculateSolutions.js'
-import { CronJob } from 'cron'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import { at } from '@prosopo/util'
 
 export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
     const env = new ProviderEnvironment(config, pair)

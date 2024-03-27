@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import {
     ApiParams,
-    EnvironmentTypes,
+    type EnvironmentTypes,
     EnvironmentTypesSchema,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
+    type ProcaptchaOutput,
 } from '@prosopo/types'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
 
 const corsHeaders = {
@@ -143,10 +143,9 @@ function App(props: AppProps) {
 
     const getMessage = () => {
         if (isError) {
-            return <Alert severity="error">{message}</Alert>
-        } else {
-            return <Alert severity="success">{message}</Alert>
+            return <Alert severity='error'>{message}</Alert>
         }
+        return <Alert severity='success'>{message}</Alert>
     }
 
     const onError = (error: Error) => {
@@ -176,11 +175,11 @@ function App(props: AppProps) {
                             <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
                                 <FormControl>
                                     <TextField
-                                        id="email"
-                                        label="Email"
-                                        type="text"
-                                        autoComplete="Email"
-                                        autoCapitalize="none"
+                                        id='email'
+                                        label='Email'
+                                        type='text'
+                                        autoComplete='Email'
+                                        autoCapitalize='none'
                                         onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </FormControl>
@@ -188,10 +187,10 @@ function App(props: AppProps) {
                                 {!isLogin && (
                                     <FormControl>
                                         <TextField
-                                            id="name"
-                                            label="Name"
-                                            type="text"
-                                            autoComplete="Name"
+                                            id='name'
+                                            label='Name'
+                                            type='text'
+                                            autoComplete='Name'
                                             onChange={(e) => setName(e.target.value)}
                                         />
                                     </FormControl>
@@ -199,10 +198,10 @@ function App(props: AppProps) {
 
                                 <FormControl>
                                     <TextField
-                                        id="password"
-                                        label="Password"
-                                        type="password"
-                                        autoComplete="Password"
+                                        id='password'
+                                        label='Password'
+                                        type='password'
+                                        autoComplete='Password'
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
                                 </FormControl>
@@ -219,9 +218,9 @@ function App(props: AppProps) {
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>
-                                        <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                        <Stack direction='column' spacing={1} sx={{ '& button': { m: 1 } }}>
                                             <Button
-                                                variant="contained"
+                                                variant='contained'
                                                 onClick={onActionHandler}
                                                 disabled={!procaptchaOutput}
                                             >

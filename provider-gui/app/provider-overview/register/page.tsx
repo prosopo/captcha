@@ -14,7 +14,8 @@
 'use client'
 
 import { Button, Step, StepLabel, Stepper, TextField } from '@mui/material'
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 
 enum RegistrationSteps {
     Account = 'Account Details',
@@ -65,7 +66,7 @@ export default function RegistrationStepper() {
                 <Button disabled={activeStep === 0} onClick={handleBack}>
                     Back
                 </Button>
-                <Button variant="contained" color="primary" onClick={handleNext}>
+                <Button variant='contained' color='primary' onClick={handleNext}>
                     {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
                 </Button>
             </div>
@@ -75,26 +76,26 @@ export default function RegistrationStepper() {
 
 const StepOne: React.FC = () => (
     <>
-        <TextField label="Account" />
-        <TextField label="URL" />
-        <TextField label="Payee" />
-        <TextField label="Fee" />
+        <TextField label='Account' />
+        <TextField label='URL' />
+        <TextField label='Payee' />
+        <TextField label='Fee' />
     </>
 )
 
 const StepTwo: React.FC = () => (
     <>
-        <TextField label="Folder" />
-        <TextField label="URL" />
+        <TextField label='Folder' />
+        <TextField label='URL' />
     </>
 )
 
 const StepThree: React.FC = () => (
     <>
-        <TextField label="Labelled Data" />
-        <TextField label="Unlabelled Data" />
-        <TextField label="Labels" />
+        <TextField label='Labelled Data' />
+        <TextField label='Unlabelled Data' />
+        <TextField label='Labels' />
     </>
 )
 
-const StepFour: React.FC = () => <TextField label="Amount" />
+const StepFour: React.FC = () => <TextField label='Amount' />

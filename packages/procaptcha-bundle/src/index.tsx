@@ -1,3 +1,6 @@
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
+import { Procaptcha } from '@prosopo/procaptcha-react'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +17,13 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
-    Features,
+    type Features,
     FeaturesEnum,
     NetworkNamesSchema,
-    ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
+    type ProcaptchaOutput,
 } from '@prosopo/types'
-import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
-import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
@@ -156,7 +156,7 @@ const renderLogic = (
         const challengeValidLengthAttribute =
             renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
         if (challengeValidLengthAttribute) {
-            config.challengeValidLength = parseInt(challengeValidLengthAttribute)
+            config.challengeValidLength = Number.parseInt(challengeValidLengthAttribute)
         }
 
         switch (renderOptions?.captchaType) {

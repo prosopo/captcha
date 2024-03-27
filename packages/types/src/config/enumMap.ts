@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ZodEnum, ZodTypeAny, record } from 'zod'
+import { type ZodEnum, type ZodTypeAny, record } from 'zod'
 
 export const enumMap = <T extends [string, ...string[]], U extends ZodTypeAny>(enumeration: ZodEnum<T>, obj: U) => {
     const validateKeysInEnum = <I>(

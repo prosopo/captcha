@@ -1,3 +1,4 @@
+import path from 'node:path'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Captcha,
+    type Captcha,
     CaptchaItemTypes,
-    CaptchaSolution,
+    type CaptchaSolution,
     CaptchaTypes,
-    CaptchaWithoutId,
-    Dataset,
-    HashedItem,
-    Item,
-    MerkleProof,
+    type CaptchaWithoutId,
+    type Dataset,
+    type HashedItem,
+    type Item,
+    type MerkleProof,
 } from '@prosopo/types'
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import { at, get } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../captcha/index.js'
 import {
     compareCaptchaSolutions,
     computeCaptchaHash,
@@ -37,9 +38,8 @@ import {
     sortAndComputeHashes,
     verifyProof,
 } from '../captcha/index.js'
-import path from 'path'
 
-describe('CAPTCHA FUNCTIONS', async function () {
+describe('CAPTCHA FUNCTIONS', async () => {
     let MOCK_ITEMS: Item[]
     let DATASET: Dataset
     let RECEIVED: CaptchaSolution[]
@@ -160,7 +160,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
     })
 
     test('Parses a captcha dataset correctly', () => {
-        expect(function () {
+        expect(() => {
             parseCaptchaDataset(JSON.parse(JSON.stringify({ ...DATASET })) as JSON)
         }).to.not.throw()
     })
@@ -198,7 +198,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
             '[{ "captchaId": "1", "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }, { "captchaId": "2", "solution": ["1", "2", "3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }]'
         ) as CaptchaSolution[]
 
-        expect(function () {
+        expect(() => {
             parseAndSortCaptchaSolutions(captchaSolutions)
         }).to.throw()
     })

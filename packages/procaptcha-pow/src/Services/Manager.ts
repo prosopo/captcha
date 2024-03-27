@@ -1,3 +1,14 @@
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { Keyring } from '@polkadot/keyring'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ExtensionWeb2 } from '@prosopo/account'
+import { ProviderApi } from '@prosopo/api'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoContractError, ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { sleep } from '@prosopo/procaptcha'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +23,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Account,
+    type Account,
     ApiParams,
-    ProcaptchaCallbacks,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type ProcaptchaCallbacks,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
+    type ProcaptchaState,
+    type ProcaptchaStateUpdateFn,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoContractError, ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
-import { sleep } from '@prosopo/procaptcha'
 import { solvePoW } from './SolverService.js'
 
 export const Manager = (

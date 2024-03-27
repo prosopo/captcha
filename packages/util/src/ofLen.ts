@@ -34616,6 +34616,6 @@ export function ofLen<T extends unknown[]>(
         case 256:
             return arr as Len256<T>
         default:
-            throw new Error('Len' + len + ' type is not enumerated')
+            throw new Error(`Len${len} type is not enumerated`)
     }
 }

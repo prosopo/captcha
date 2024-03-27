@@ -14,7 +14,7 @@
 'use client'
 
 import { Button, Container, Grid, TextField, Typography } from '@mui/material'
-import React, { ChangeEvent, FormEvent, useState } from 'react'
+import React, { type ChangeEvent, type FormEvent, useState } from 'react'
 
 interface EnvironmentVariables {
     [key: string]: string | number | boolean
@@ -41,7 +41,7 @@ const GenericForm: React.FC<GenericFormProps> = ({ initialValues, onSubmit }) =>
     }
 
     return (
-        <Container maxWidth="md">
+        <Container maxWidth='md'>
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={3}>
                     {Object.keys(values).map((key) => (
@@ -50,12 +50,12 @@ const GenericForm: React.FC<GenericFormProps> = ({ initialValues, onSubmit }) =>
                                 <Typography>{key}</Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <TextField fullWidth label="Value" value={values[key]} onChange={handleChange(key)} />
+                                <TextField fullWidth label='Value' value={values[key]} onChange={handleChange(key)} />
                             </Grid>
                         </React.Fragment>
                     ))}
                     <Grid item xs={12}>
-                        <Button type="submit" fullWidth variant="contained" color="primary">
+                        <Button type='submit' fullWidth variant='contained' color='primary'>
                             Submit
                         </Button>
                     </Grid>

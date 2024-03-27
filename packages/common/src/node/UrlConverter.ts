@@ -101,7 +101,7 @@ export class UrlConverter {
         this.longestSymbolLength = this.symbols.reduce((longest, symb) => {
             return Math.max(longest, symb.length)
         }, 0)
-        const maxSymbols = Math.pow(2, this.symbolNBits)
+        const maxSymbols = 2 ** this.symbolNBits
         if (this.symbols.length > maxSymbols) {
             throw new ProsopoError('DEVELOPER.GENERAL', {
                 context: {
@@ -113,7 +113,9 @@ export class UrlConverter {
         }
         const symbols = this.getSymbols()
         if (symbols.length !== new Set(symbols).size) {
-            throw new ProsopoError('DEVELOPER.GENERAL', { context: { error: 'Symbols must be unique' } })
+            throw new ProsopoError('DEVELOPER.GENERAL', {
+                context: { error: 'Symbols must be unique' },
+            })
         }
     }
 
@@ -121,7 +123,9 @@ export class UrlConverter {
         const num = this.symbolToNumNull(symb)
         if (num === undefined) {
             throw new ProsopoError('DEVELOPER.GENERAL', {
-                context: { error: `Could not find number for symbol '${symb}'` },
+                context: {
+                    error: `Could not find number for symbol '${symb}'`,
+                },
             })
         }
         return num
@@ -170,7 +174,9 @@ export class UrlConverter {
             // check if couldn't find matching symbol
             if (num === undefined) {
                 throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: `Could not find symbol at '${url}' of '${origUrl}'` },
+                    context: {
+                        error: `Could not find symbol at '${url}' of '${origUrl}'`,
+                    },
                 })
             }
             // record the number of the symbol and slice the symbol from the url
@@ -198,7 +204,9 @@ export class UrlConverter {
             const num = nums[numIndex]
             if (num === undefined) {
                 throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: `Could not find number at index ${numIndex} of '${nums}'` },
+                    context: {
+                        error: `Could not find number at index ${numIndex} of '${nums}'`,
+                    },
                 })
             }
             const byteIndex = (bitCount / this.byteNBits) | 0
@@ -211,7 +219,7 @@ export class UrlConverter {
                 const usedBitsInSymbol = bitCount % this.symbolNBits
                 const unusedBitsInSymbol = this.symbolNBits - usedBitsInSymbol
                 // truncate the number by bits used
-                const max = Math.pow(2, unusedBitsInSymbol)
+                const max = 2 ** unusedBitsInSymbol
                 const remNum = num % max
                 // make num occupy left most bits of a byte
                 const shift = this.byteNBits - unusedBitsInSymbol
@@ -242,7 +250,9 @@ export class UrlConverter {
             const byte = bytes[byteIndex]
             if (byte === undefined) {
                 throw new ProsopoError('DEVELOPER.GENERAL', {
-                    context: { error: `Could not find byte at index ${byteIndex} of '${bytes}'` },
+                    context: {
+                        error: `Could not find byte at index ${byteIndex} of '${bytes}'`,
+                    },
                 })
             }
             const usedBitsInByte = bitCount % this.byteNBits
@@ -280,7 +290,7 @@ export class UrlConverter {
 
     private bitTruncLeft(num: number, nBits: number) {
         const threshNBits = this.byteNBits - nBits
-        const thresh = Math.pow(2, threshNBits)
+        const thresh = 2 ** threshNBits
         return thresh <= 0 ? 0 : num % thresh
     }
 

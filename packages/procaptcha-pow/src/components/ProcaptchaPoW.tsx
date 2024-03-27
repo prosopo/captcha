@@ -1,3 +1,5 @@
+import type { ProcaptchaEvents } from '@prosopo/types'
+import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LazyExoticComponent, Suspense, lazy } from 'react'
-import { ProcaptchaEvents } from '@prosopo/types'
-import { ProcaptchaPlaceholder } from '@prosopo/web-components'
-import { ReactElement } from 'react'
+import { type LazyExoticComponent, Suspense, lazy } from 'react'
+import type { ReactElement } from 'react'
 
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>
 // https://github.com/microsoft/TypeScript/issues/42873
@@ -24,6 +24,6 @@ const ProcaptchaWidget: LazyExoticComponent<(props: any, callbacks: Partial<Proc
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
     <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
-        <ProcaptchaWidget config={props.config} callbacks={props.callbacks}></ProcaptchaWidget>
+        <ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
     </Suspense>
 )

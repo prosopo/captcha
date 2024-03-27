@@ -13,8 +13,8 @@
 // limitations under the License.
 'use client'
 
-import { environmentMock } from '@/mocks/profile-mocks'
 import GenericForm from '@/components/ContentEditForm'
+import { environmentMock } from '@/mocks/profile-mocks'
 import React from 'react'
 
 export default function EnvironmentForm() {

@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { getLogLevel } from '@prosopo/common'
 import {
-    BatchCommitConfigSchema,
+    type BatchCommitConfigSchema,
     DatabaseTypes,
     EnvironmentTypesSchema,
     NetworkNamesSchema,
-    ProsopoCaptchaCountConfigSchemaInput,
-    ProsopoCaptchaSolutionConfigSchema,
-    ProsopoConfigInput,
-    ProsopoConfigOutput,
+    type ProsopoCaptchaCountConfigSchemaInput,
+    type ProsopoCaptchaSolutionConfigSchema,
+    type ProsopoConfigInput,
+    type ProsopoConfigOutput,
     ProsopoConfigSchema,
-    ProsopoNetworksSchemaInput,
+    type ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
-import { getLogLevel } from '@prosopo/common'
 import { getSecret } from './process.env.js'
 
 function getMongoURI(): string {
@@ -73,7 +73,7 @@ export default function getConfig(
         },
         server: {
             baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
-            port: process.env.PROSOPO_API_PORT ? parseInt(process.env.PROSOPO_API_PORT) : 9229,
+            port: process.env.PROSOPO_API_PORT ? Number.parseInt(process.env.PROSOPO_API_PORT) : 9229,
         },
         networks: networksConfig,
         captchaSolutions: captchaSolutionsConfig,

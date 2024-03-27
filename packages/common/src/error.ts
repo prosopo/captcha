@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, Logger, TranslationKey, getLoggerDefault, i18n as i18next } from './index.js'
+import { type LogLevel, type Logger, type TranslationKey, getLoggerDefault, i18n as i18next } from './index.js'
 
 type BaseErrorOptions<ContextType> = {
     name?: string
@@ -60,7 +60,10 @@ export abstract class ProsopoBaseError<ContextType extends BaseContextParams = B
     private logError(logger: Logger, logLevel: LogLevel) {
         const errorFormatter = '\n*************** ERROR ***************\n'
         const errorName = `Error Type: ${this.name}\n`
-        const errorParams = JSON.stringify({ error: this.message, context: this.context })
+        const errorParams = JSON.stringify({
+            error: this.message,
+            context: this.context,
+        })
         const errorMessage = `${errorFormatter}${errorName}${errorParams}`
         logger[logLevel](errorMessage)
     }
@@ -121,7 +124,11 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
     constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ApiContextParams>) {
         const errorName = options?.name || 'ProsopoApiError'
         const errorCode = options?.context?.code || 500
-        options = { ...options, name: errorName, context: { ...options?.context, errorCode } }
+        options = {
+            ...options,
+            name: errorName,
+            context: { ...options?.context, errorCode },
+        }
         super(error, options)
         this.code = errorCode
     }

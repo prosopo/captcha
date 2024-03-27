@@ -1,3 +1,17 @@
+import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import Signer from '@polkadot/extension-base/page/Signer'
+import type { InjectedAccount } from '@polkadot/extension-inject/types'
+import type { InjectedExtension } from '@polkadot/extension-inject/types'
+import { Keyring } from '@polkadot/keyring'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
+import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
+import type { KeypairType } from '@polkadot/util-crypto/types'
+import { stringToU8a } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util/u8a'
+import { ProsopoEnvError, hexHash } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,24 +25,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { Extension } from './Extension.js'
-import { InjectedAccount } from '@polkadot/extension-inject/types'
-import { InjectedExtension } from '@polkadot/extension-inject/types'
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoEnvError, hexHash } from '@prosopo/common'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
-import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
+import type { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { picassoCanvas } from '@prosopo/util'
-import { stringToU8a } from '@polkadot/util/string'
-import { u8aToHex } from '@polkadot/util/u8a'
 import { version } from '@prosopo/util'
-import Signer from '@polkadot/extension-base/page/Signer'
+import { Extension } from './Extension.js'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 

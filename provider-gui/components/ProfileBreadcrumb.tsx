@@ -13,11 +13,11 @@
 // limitations under the License.
 'use client'
 
-import * as React from 'react'
-import { emphasize, styled } from '@mui/material/styles'
 import Breadcrumbs from '@mui/material/Breadcrumbs'
 import Chip from '@mui/material/Chip'
+import { emphasize, styled } from '@mui/material/styles'
 import Link from 'next/link'
+import type * as React from 'react'
 
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
     const backgroundColor = theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800]
@@ -42,19 +42,19 @@ const handleClick = (event: React.MouseEvent<Element, MouseEvent>) => {
 }
 
 const ProfileBreadcrumb: React.FC = () => (
-    <div role="presentation" onClick={handleClick}>
-        <Breadcrumbs aria-label="breadcrumb">
-            <Link href="./summary" passHref>
-                <StyledBreadcrumb component="a" label="Profile Summary" />
+    <div role='presentation' onClick={handleClick}>
+        <Breadcrumbs aria-label='breadcrumb'>
+            <Link href='./summary' passHref>
+                <StyledBreadcrumb component='a' label='Profile Summary' />
             </Link>
-            <Link href="./actions" passHref>
-                <StyledBreadcrumb component="a" label="Profile Actions" />
+            <Link href='./actions' passHref>
+                <StyledBreadcrumb component='a' label='Profile Actions' />
             </Link>
-            <Link href="./dataset" passHref>
-                <StyledBreadcrumb component="a" label="Profile Dataset" />
+            <Link href='./dataset' passHref>
+                <StyledBreadcrumb component='a' label='Profile Dataset' />
             </Link>
-            <Link href="./environment" passHref>
-                <StyledBreadcrumb component="a" label="Profile Environment" />
+            <Link href='./environment' passHref>
+                <StyledBreadcrumb component='a' label='Profile Environment' />
             </Link>
         </Breadcrumbs>
     </div>

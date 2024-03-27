@@ -1,3 +1,4 @@
+import type { ProviderSummary } from '@/types/ProviderProfileTypes'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Box, Button, Divider, List, ListItem, Modal, Paper, Typography } from '@mui/material'
-import { ProviderManagementOptions } from './ProviderManagementOptions'
-import { ProviderSummary } from '@/types/ProviderProfileTypes'
 import React, { useState } from 'react'
+import { ProviderManagementOptions } from './ProviderManagementOptions'
 
 type ProviderManagementProps = {
     isModalOpen: boolean
@@ -48,8 +48,8 @@ const RowDataModal: React.FC<ProviderManagementProps> = ({
                     Object.entries(selectedRow).map(([key, value], index) => (
                         <React.Fragment key={key}>
                             <ListItem sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="subtitle1">{key}:</Typography>
-                                <Typography variant="body2">{value.toString()}</Typography>
+                                <Typography variant='subtitle1'>{key}:</Typography>
+                                <Typography variant='body2'>{value.toString()}</Typography>
                             </ListItem>
                             {index < Object.entries(selectedRow).length - 1 && <Divider />}
                         </React.Fragment>
@@ -75,7 +75,7 @@ const RowDataModal: React.FC<ProviderManagementProps> = ({
                     overflow: 'auto',
                 }}
             >
-                <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+                <Typography variant='h6' component='h2' sx={{ mb: 2 }}>
                     {isManageProvider ? 'Manage Provider' : 'Edit Row Data'}
                 </Typography>
                 {isManageProvider ? (
@@ -89,7 +89,7 @@ const RowDataModal: React.FC<ProviderManagementProps> = ({
                 ) : (
                     <Box>
                         {renderRowDetails()}
-                        <Button variant="contained" onClick={toggleManageProvider}>
+                        <Button variant='contained' onClick={toggleManageProvider}>
                             Manage Provider
                         </Button>
                     </Box>

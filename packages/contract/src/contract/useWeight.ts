@@ -15,12 +15,12 @@
 // Copyright 2017-2023 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util/bn'
 import { convertWeight } from '@polkadot/api-contract/base/util'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
+import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util/bn'
 import type { BN } from '@polkadot/util/bn'
 import type { UseWeight } from '@prosopo/types'
-import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
 
 export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN): Promise<UseWeight> {
     const isWeightV2 = !!api.registry.createType<WeightV2>('Weight').proofSize
@@ -43,7 +43,9 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN)
     const proofSize = <BN>(api.consts.system.blockWeights
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          api.consts.system.blockWeights.perClass.normal.maxExtrinsic.unwrapOrDefault().proofSize.toBn()
+          api.consts.system.blockWeights.perClass.normal.maxExtrinsic
+              .unwrapOrDefault()
+              .proofSize.toBn()
         : BN_ZERO)
     const isEmpty = false
 
@@ -89,7 +91,9 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN)
                     api.consts.system.blockWeights
                         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                           // @ts-ignore
-                          api.consts.system.blockWeights.perClass.normal.maxExtrinsic.unwrapOrDefault().refTime.toBn()
+                          api.consts.system.blockWeights.perClass.normal.maxExtrinsic
+                              .unwrapOrDefault()
+                              .refTime.toBn()
                         : BN_ONE
                 )
                 .toNumber()

@@ -13,11 +13,11 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import '@cypress/xpath'
-import { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import type { Captcha } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { checkboxClass } from '../support/commands.js'
-import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 describe('Captchas', () => {
     beforeEach(() => {

@@ -1,3 +1,4 @@
+import '@cypress/xpath'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,4 +13,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import './commands'
-import '@cypress/xpath'

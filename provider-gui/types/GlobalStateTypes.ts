@@ -1,3 +1,4 @@
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Actions, Dataset, Environment, ProviderSummary } from './ProviderProfileTypes'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import type { Actions, Dataset, Environment, ProviderSummary } from './ProviderProfileTypes'
 
 export interface GlobalState {
     profile: { environment?: Environment; actions?: Actions; dataset?: Dataset; summary?: ProviderSummary }

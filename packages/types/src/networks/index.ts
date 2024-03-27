@@ -1,3 +1,4 @@
+import type { ProsopoNetworksSchemaInput } from '../config/index.js'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { NetworkNamesSchema, NetworkPairTypeSchema } from '../config/network.js'
-import { ProsopoNetworksSchemaInput } from '../config/index.js'
 
 const pairTypeSr25519 = NetworkPairTypeSchema.parse('sr25519')
 

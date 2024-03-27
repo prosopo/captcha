@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 import {
     commandBatchCommit,
     commandCalculateCaptchaSolutions,
@@ -30,17 +32,28 @@ import {
     commandProviderUpdate,
     commandVersion,
 } from './commands/index.js'
-import { hideBin } from 'yargs/helpers'
-import yargs from 'yargs'
 
-export type AwaitedProcessedArgs = { [x: string]: unknown; api: boolean; _: (string | number)[]; $0: string }
+export type AwaitedProcessedArgs = {
+    [x: string]: unknown
+    api: boolean
+    _: (string | number)[]
+    $0: string
+}
 
 export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfigOutput) {
     const logger = getLogger(LogLevel.enum.info, 'CLI')
     return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
-        .option('api', { demand: false, default: false, type: 'boolean' } as const)
-        .option('adminApi', { demand: false, default: false, type: 'boolean' } as const)
+        .option('api', {
+            demand: false,
+            default: false,
+            type: 'boolean',
+        } as const)
+        .option('adminApi', {
+            demand: false,
+            default: false,
+            type: 'boolean',
+        } as const)
         .command(commandProviderRegister(pair, config, { logger }))
         .command(commandProviderUpdate(pair, config, { logger }))
         .command(commandProviderDeregister(pair, config, { logger }))

@@ -1,3 +1,11 @@
+import fs from 'node:fs'
+import { blake2b } from '@noble/hashes/blake2b'
+import { u8aToHex } from '@polkadot/util/u8a'
+import { ProsopoDatasetError } from '@prosopo/common'
+import { CaptchaItemTypes, type Data, DataSchema, type LabelledItem } from '@prosopo/types'
+import { at } from '@prosopo/util'
+import { lodash } from '@prosopo/util/lodash'
+import cliProgress from 'cli-progress'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +20,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { at } from '@prosopo/util'
-import { blake2b } from '@noble/hashes/blake2b'
-import { lodash } from '@prosopo/util/lodash'
-import { u8aToHex } from '@polkadot/util/u8a'
-import cliProgress from 'cli-progress'
-import fs from 'fs'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     allowDuplicates: z.boolean().optional(),

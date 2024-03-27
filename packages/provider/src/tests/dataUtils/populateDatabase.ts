@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
-import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger, ProsopoDBError } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type Logger, ProsopoDBError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { get } from '@prosopo/util'
 import { promiseQueue } from '../../util.js'
+import { AccountKey, type IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
+import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles.js'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 

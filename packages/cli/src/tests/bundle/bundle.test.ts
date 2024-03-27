@@ -1,3 +1,6 @@
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
+import { getCurrentFileDirectory } from '@prosopo/util'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { assert, describe, test } from 'vitest'
-import { exec } from 'child_process'
-import { getCurrentFileDirectory } from '@prosopo/util'
-import { promisify } from 'util'
 const execPromise = promisify(exec)
 
 describe('provider bundle', () => {

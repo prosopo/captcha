@@ -4,15 +4,42 @@
             "salt": "0x01",
             "solution": [1, 6, 8],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_82.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_78.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_89.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_61.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_69.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_71.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_33.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_25.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_21.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_82.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_78.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_89.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_61.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_69.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_71.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_33.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_25.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_21.png",
+                    "type": "image"
+                }
             ],
             "target": "cat"
         },
@@ -20,15 +47,42 @@
             "salt": "0x01",
             "solution": [0, 3, 4],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_82.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_78.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_89.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_61.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_69.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_71.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_33.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_25.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_21.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_82.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_78.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_89.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_61.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_69.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_71.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_33.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_25.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_21.png",
+                    "type": "image"
+                }
             ],
             "target": "plane"
         },
@@ -36,15 +90,42 @@
             "salt": "0x01",
             "solution": [2, 5, 7],
             "items": [
-                { "data": "http://localhost:4000/img/test_image_png_82.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_78.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_89.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_61.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_69.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_71.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_33.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_25.png", "type": "image" },
-                { "data": "http://localhost:4000/img/test_image_png_21.png", "type": "image" }
+                {
+                    "data": "http://localhost:4000/img/test_image_png_82.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_78.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_89.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_61.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_69.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_71.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_33.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_25.png",
+                    "type": "image"
+                },
+                {
+                    "data": "http://localhost:4000/img/test_image_png_21.png",
+                    "type": "image"
+                }
             ],
             "target": "car"
         }

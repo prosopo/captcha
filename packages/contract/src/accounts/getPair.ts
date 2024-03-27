@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId } from '@polkadot/types/interfaces'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { KeypairType } from '@polkadot/util-crypto/types'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
+import type { AccountId } from '@polkadot/types/interfaces'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 import { hexToU8a } from '@polkadot/util/hex'
 import { isHex } from '@polkadot/util/is'
-import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
+import { ProsopoEnvError } from '@prosopo/common'
+import { type NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
 
 export async function getPairAsync(
     networkConfig?: NetworkConfig,
@@ -38,19 +38,23 @@ export function getPair(
     networkConfig?: NetworkConfig,
     secret?: string,
     account?: string | Uint8Array,
-    pairType?: KeypairType,
-    ss58Format?: number
+    pairTypeOption?: KeypairType,
+    ss58FormatOption?: number
 ): KeyringPair {
+    let pairType = pairTypeOption
+    let ss58Format = ss58FormatOption
     if (networkConfig) {
         pairType = networkConfig.pairType
         ss58Format = networkConfig.ss58Format
-    } else if (!pairType || !ss58Format) {
+    }
+    if (!pairType || !ss58Format) {
         throw new ProsopoEnvError('GENERAL.NO_PAIR_TYPE_OR_SS58_FORMAT')
     }
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (!secret && account) {
         return keyring.addFromAddress(account)
-    } else if (secret) {
+    }
+    if (secret) {
         if (mnemonicValidate(secret)) {
             return keyring.addFromUri(secret)
         }

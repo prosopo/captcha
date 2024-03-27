@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import { ProsopoDatasetError, ProsopoError } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +15,6 @@
 // limitations under the License.
 import * as z from 'zod'
 import { CliCommand } from '../cli/cliCommand.js'
-import { ProsopoDatasetError, ProsopoError } from '@prosopo/common'
-import fs from 'fs'
 
 export const InputArgsSchema = z.object({
     input: z.string(),

@@ -1,3 +1,8 @@
+import { spawn } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+import { promisify } from 'node:util'
+import { getCurrentFileDirectory } from '@prosopo/util'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +17,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { getCurrentFileDirectory } from '@prosopo/util'
-import { promisify } from 'util'
-import { spawn } from 'child_process'
-import fs from 'fs'
-import path from 'path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
@@ -37,7 +37,7 @@ describe('reloading api', () => {
             console.log('rootDir', rootDir)
 
             // run API
-            const child = spawn(`npm`, ['run', 'cli', '--', '--api'], {
+            const child = spawn('npm', ['run', 'cli', '--', '--api'], {
                 cwd: rootDir,
                 env: { ...process.env, NODE_ENV: 'test' },
             })

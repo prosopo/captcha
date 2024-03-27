@@ -1,3 +1,4 @@
+import { ProsopoApiError } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPaths, VerifySolutionBody } from '@prosopo/types'
-import { ProsopoApiError } from '@prosopo/common'
-import { VerifySolutionBodyType } from '@prosopo/types'
-import express, { Router } from 'express'
+import type { VerifySolutionBodyType } from '@prosopo/types'
+import express, { type Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

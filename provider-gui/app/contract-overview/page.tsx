@@ -13,15 +13,16 @@
 // limitations under the License.
 'use client'
 
-import { Box, Button, Chip, CircularProgress, Grid, TextField } from '@mui/material'
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid'
-import { GuiContract } from '@/types/ContractOverview'
-import { at, get } from '@prosopo/util'
-import { contractOverview } from '@/services/contract/contractOverview'
 import { useGlobalState } from '@/contexts/GlobalContext'
-import { useState } from 'react'
-import React, { useEffect } from 'react'
+import { contractOverview } from '@/services/contract/contractOverview'
+import type { GuiContract } from '@/types/ContractOverview'
+import { Box, Button, Chip, CircularProgress, Grid, TextField } from '@mui/material'
+import { DataGrid, type GridColDef, type GridRowsProp } from '@mui/x-data-grid'
+import { at, get } from '@prosopo/util'
 import dynamic from 'next/dynamic'
+import { useState } from 'react'
+import type React from 'react'
+import { useEffect } from 'react'
 
 const RowDataModal = dynamic(() => import('@/components/ProviderManager/ProviderModal'), {
     ssr: false,
@@ -36,7 +37,7 @@ const calculateFlex = (length: number) => {
 }
 
 const ContractOverview = () => {
-    const { currentAccount: currentAccount, network, contracts, setContracts } = useGlobalState()
+    const { currentAccount, network, contracts, setContracts } = useGlobalState()
     const [loading, setLoading] = useState<boolean>(false)
     const [newContractAddr, setNewContractAddr] = useState<string>('')
     const [isDeregisterDialogOpen, setIsDeregisterDialogOpen] = useState(false)
@@ -125,7 +126,7 @@ const ContractOverview = () => {
                 headerName: 'Actions',
                 flex: 1,
                 renderCell: (params) => (
-                    <Button variant="contained" size="small" onClick={() => handleEditClick(params.row)}>
+                    <Button variant='contained' size='small' onClick={() => handleEditClick(params.row)}>
                         Edit
                     </Button>
                 ),
@@ -133,10 +134,10 @@ const ContractOverview = () => {
         }
 
         return (
-            <Box component="div" key={contractIndex}>
+            <Box component='div' key={contractIndex}>
                 <h2>
                     {contract.contractAddress}
-                    {contractIndex === 0 && <Chip label="Default Contract" sx={{ marginLeft: '2rem' }} />}
+                    {contractIndex === 0 && <Chip label='Default Contract' sx={{ marginLeft: '2rem' }} />}
                 </h2>
                 <DataGrid autoHeight rows={rows} columns={columns} />
             </Box>
@@ -149,22 +150,22 @@ const ContractOverview = () => {
             <Grid container spacing={2}>
                 <Grid item>
                     <TextField
-                        name="contractAddress"
-                        label="New Contract Address"
-                        variant="outlined"
+                        name='contractAddress'
+                        label='New Contract Address'
+                        variant='outlined'
                         onChange={handleNewAddrChange}
                     />
                 </Grid>
                 <Grid item>
                     <Button
-                        type="submit"
-                        variant="contained"
+                        type='submit'
+                        variant='contained'
                         disabled={loading}
                         onClick={handleSubmit}
-                        size="large"
+                        size='large'
                         style={{ height: '100%' }}
                     >
-                        {loading ? <CircularProgress size="24px" /> : 'Add Contract'}
+                        {loading ? <CircularProgress size='24px' /> : 'Add Contract'}
                     </Button>
                 </Grid>
             </Grid>

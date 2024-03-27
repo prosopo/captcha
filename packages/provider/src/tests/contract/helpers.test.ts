@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
+import type { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { BN } from '@polkadot/util/bn'
-import { ContractSelector } from '@polkadot/types/interfaces'
+import type { ContractSelector } from '@polkadot/types/interfaces'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@prosopo/typechain-types'
+import type { ReturnNumber } from '@prosopo/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create/types'
-import { ViteTestContext } from '@prosopo/env'
+import type { ViteTestContext } from '@prosopo/env'
 import { at } from '@prosopo/util'
 import { beforeEach, describe, expect, test } from 'vitest'
 import { encodeStringArgs, getPairAsync, wrapQuery } from '@prosopo/contract'
@@ -30,10 +30,10 @@ declare module 'vitest' {
     export interface TestContext extends ViteTestContext {}
 }
 
-describe('CONTRACT HELPERS', function () {
+describe('CONTRACT HELPERS', () => {
     const log = getLogger(LogLevel.enum.info, 'TEST')
 
-    beforeEach(async function (context) {
+    beforeEach(async (context) => {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
@@ -55,24 +55,20 @@ describe('CONTRACT HELPERS', function () {
         }
     })
 
-    test('Properly encodes `Hash` arguments when passed unhashed', async function ({ env }) {
+    test('Properly encodes `Hash` arguments when passed unhashed', async ({ env }) => {
         try {
             log.info('env ready')
             const args = ['https://localhost:9229']
             const methodObj = {
                 args: [{ type: { type: 'Hash', info: TypeDefInfo.UInt }, name: '' }],
                 docs: [],
-                fromU8a: function (): DecodedMessage {
-                    return {} as DecodedMessage
-                },
+                fromU8a: (): DecodedMessage => {} as DecodedMessage,
                 identifier: '',
                 index: 0,
                 method: '',
                 path: [''],
                 selector: hexToU8a('0x42b45efa') as ContractSelector,
-                toU8a: function (): any {
-                    return {} as AbiMessage
-                },
+                toU8a: (): any => {} as AbiMessage,
             }
             expect(at(encodeStringArgs(env.getContractInterface().abi, methodObj, args), 0).toString()).to.equal(
                 hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a39323239').toString()

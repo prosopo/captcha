@@ -1,3 +1,6 @@
+import { Keyring } from '@polkadot/keyring'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { Keyring } from '@polkadot/keyring'
-import { cryptoWaitReady } from '@polkadot/util-crypto'
-import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 
 /** Generate a mnemonic, returning the mnemonic and associated address
  * @param keyring

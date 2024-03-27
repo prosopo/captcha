@@ -11,9 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import {
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { SubmittableResult } from '@polkadot/api/submittable'
+import type { ApiBase } from '@polkadot/api/types'
+import type { Compact } from '@polkadot/types-codec/base'
+import type { Bytes } from '@polkadot/types-codec/extended'
+import type { Registry } from '@polkadot/types-codec/types/registry'
+import type {
     AccountId,
     BlockNumber,
     DispatchError,
@@ -22,18 +29,11 @@ import {
     StorageDeposit,
     WeightV2,
 } from '@polkadot/types/interfaces'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { ApiBase } from '@polkadot/api/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { AnyJson } from '@polkadot/types/types/codec'
 import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
-import { Bytes } from '@polkadot/types-codec/extended'
-import { Compact } from '@polkadot/types-codec/base'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
-import { Registry } from '@polkadot/types-codec/types/registry'
-import { SubmittableResult } from '@polkadot/api/submittable'
 import { isHex, isU8a } from '@polkadot/util/is'
 import { stringToHex } from '@polkadot/util/string'
+import { type Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
 
 /**
  * Get the event name from the contract method name
@@ -54,15 +54,10 @@ export function getEventsFromMethodName(
     contractMethodName: string
 ): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
-    if (response && response.contractEvents) {
-        return (
-            response &&
-            response.contractEvents &&
-            response.contractEvents.filter((x) => x.event.identifier === eventName)
-        )
-    } else {
-        return []
+    if (response?.contractEvents) {
+        return response?.contractEvents?.filter((x) => x.event.identifier === eventName)
     }
+    return []
 }
 
 /** Encodes arguments, padding and converting to hex if necessary
@@ -93,7 +88,10 @@ export function handleContractCallOutcomeErrors(response: ContractCallOutcome, c
             const responseOk = out.asOk
             if (responseOk.isErr) {
                 throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                    context: { error: responseOk.toPrimitive().err.toString(), contractMethodName },
+                    context: {
+                        error: responseOk.toPrimitive().err.toString(),
+                        contractMethodName,
+                    },
                 })
             }
         }
@@ -107,7 +105,9 @@ export function stringToHexPadded(data: string): string {
     const maxLength = 64
     if (data.length > maxLength) {
         throw new ProsopoContractError('CONTRACT.INVALID_DATA_FORMAT', {
-            context: { error: `stringToHexPadded: string length ${data.length} exceeds ${maxLength}` },
+            context: {
+                error: `stringToHexPadded: string length ${data.length} exceeds ${maxLength}`,
+            },
         })
     }
 
@@ -118,21 +118,16 @@ export function stringToHexPadded(data: string): string {
 // TODO add test for this
 export function decodeEvents(contractAddress: AccountId, records: EventRecord[], abi: Abi): DecodedEvent[] | undefined {
     return records
-        .filter(
-            ({ event }) =>
-                function () {
-                    const data = event.toPrimitive().data
-                    if (data instanceof Array) {
-                        return false
-                    }
-                    if (!(data instanceof Object)) {
-                        return false
-                    }
-                    return (
-                        event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
-                    )
-                }
-        )
+        .filter(({ event }) => () => {
+            const data = event.toPrimitive().data
+            if (Array.isArray(data)) {
+                return false
+            }
+            if (!(data instanceof Object)) {
+                return false
+            }
+            return event.toPrimitive().section === 'contracts' && data.contracts === contractAddress.toString()
+        })
         .map((record): DecodedEvent | null => {
             try {
                 return abi.decodeEvent(record.event.data.toU8a() as Bytes)
@@ -161,7 +156,9 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
             // swallow
         }
     }
-    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message } })
+    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
+        context: { error: message },
+    })
 }
 
 // 4_999_999_999_999
@@ -187,11 +184,11 @@ export function getOptions(
               proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),
           })
         : isMutating
-        ? (api.registry.createType('WeightV2', {
-              proofSize: new BN(1_000_000),
-              refTime: MAX_CALL_WEIGHT,
-          }) as WeightV2)
-        : undefined
+          ? (api.registry.createType('WeightV2', {
+                  proofSize: new BN(1_000_000),
+                  refTime: MAX_CALL_WEIGHT,
+              }) as WeightV2)
+          : undefined
 
     return {
         gasLimit: _gasLimit,
@@ -199,8 +196,8 @@ export function getOptions(
             ? storageDeposit.isCharge
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                ? storageDeposit.asRefund
-                : null
+                  ? storageDeposit.asRefund
+                  : null
             : null,
         value: value || BN_ZERO,
     } as ContractOptions

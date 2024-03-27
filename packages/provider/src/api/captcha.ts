@@ -1,3 +1,7 @@
+import { validateAddress } from '@polkadot/util-crypto/address'
+import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoApiError } from '@prosopo/common'
+import { parseCaptchaAssets } from '@prosopo/datasets'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,29 +19,25 @@ import {
     ApiParams,
     ApiPaths,
     CaptchaRequestBody,
-    CaptchaResponseBody,
+    type CaptchaResponseBody,
     CaptchaSolutionBody,
-    CaptchaSolutionBodyType,
-    CaptchaSolutionResponse,
-    CaptchaWithProof,
-    DappUserSolutionResult,
-    ImageVerificationResponse,
-    PowCaptchaSolutionResponse,
+    type CaptchaSolutionBodyType,
+    type CaptchaSolutionResponse,
+    type CaptchaWithProof,
+    type DappUserSolutionResult,
+    type ImageVerificationResponse,
+    type PowCaptchaSolutionResponse,
     ServerPowCaptchaVerifyRequestBody,
     SubmitPowCaptchaSolutionBody,
-    VerificationResponse,
+    type VerificationResponse,
     VerifySolutionBody,
-    VerifySolutionBodyType,
+    type VerifySolutionBodyType,
 } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
-import { ProsopoApiError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
+import { version } from '@prosopo/util'
+import express, { type Router } from 'express'
 import { Tasks } from '../tasks/tasks.js'
 import { parseBlockNumber } from '../util.js'
-import { parseCaptchaAssets } from '@prosopo/datasets'
-import { validateAddress } from '@polkadot/util-crypto/address'
-import { version } from '@prosopo/util'
-import express, { Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

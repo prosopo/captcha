@@ -13,14 +13,14 @@
 // limitations under the License.
 'use client'
 
-import { FormControl, FormGroup, MenuItem, Select } from '@mui/material'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { SelectChangeEvent } from '@mui/material/Select'
 import { networks } from '@/types/GlobalStateTypes'
-import { useEffect, useState } from 'react'
-import { useGlobalState } from '../contexts/GlobalContext'
+import { FormControl, FormGroup, MenuItem, Select } from '@mui/material'
+import type { SelectChangeEvent } from '@mui/material/Select'
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
-import React from 'react'
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { useEffect, useState } from 'react'
+import type React from 'react'
+import { useGlobalState } from '../contexts/GlobalContext'
 
 const AccountPicker: React.FC = () => {
     const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
@@ -48,7 +48,7 @@ const AccountPicker: React.FC = () => {
     return (
         <FormGroup>
             <FormControl fullWidth>
-                <Select id="account-picker" value={currentAccount} onChange={handleAccountChange}>
+                <Select id='account-picker' value={currentAccount} onChange={handleAccountChange}>
                     {accounts.map((account) => (
                         <MenuItem key={account.address} value={account.address}>
                             {account.meta.name} ({account.address})
@@ -57,7 +57,7 @@ const AccountPicker: React.FC = () => {
                 </Select>
             </FormControl>
             <FormControl fullWidth>
-                <Select id="network-picker" value={network} onChange={handleNetworkChange}>
+                <Select id='network-picker' value={network} onChange={handleNetworkChange}>
                     {networks.map((network) => (
                         <MenuItem key={network} value={network}>
                             {network}

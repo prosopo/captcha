@@ -11,26 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts.js'
-import { AnyNumber } from '@polkadot/types-codec/types'
-import { BN } from '@polkadot/util/bn'
-import { ContractDeployer, getPairAsync, wrapQuery } from '@prosopo/contract'
-import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
-import { DatasetWithIdsAndTree } from '@prosopo/types'
-import { EventRecord } from '@polkadot/types/interfaces'
-import { IDatabaseAccounts } from './DatabaseAccounts.js'
-import { ProsopoContractError, ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@prosopo/typechain-types'
-import { Tasks } from '../../tasks/index.js'
-import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { AnyNumber } from '@polkadot/types-codec/types'
 import { createType } from '@polkadot/types/create'
-import { datasetWithSolutionHashes } from '@prosopo/datasets'
-import { get } from '@prosopo/util'
+import type { EventRecord } from '@polkadot/types/interfaces'
 import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { BN } from '@polkadot/util/bn'
 import { stringToU8a } from '@polkadot/util/string'
+import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoContractError, ProsopoEnvError } from '@prosopo/common'
+import { ContractDeployer, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import type { ProviderEnvironment } from '@prosopo/env'
+import type { ReturnNumber } from '@prosopo/typechain-types'
+import type { DatasetWithIdsAndTree } from '@prosopo/types'
+import { get } from '@prosopo/util'
+import { Tasks } from '../../tasks/index.js'
+import { type Account, accountAddress, accountContract, accountMnemonic } from '../accounts.js'
+import type { IDatabaseAccounts } from './DatabaseAccounts.js'
+import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
 
 const urlBase = 'http://localhost:'
 
@@ -367,7 +367,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        await tasks.contract.tx.dappFund(accountContract(account), { value: this.stakeAmount })
+        await tasks.contract.tx.dappFund(accountContract(account), {
+            value: this.stakeAmount,
+        })
     }
 
     public async registerDappWithStake(fund: boolean): Promise<Account> {
@@ -401,7 +403,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         } = {
             error: err,
         }
-        return new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED', { context: { functionName, e } })
+        return new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED', {
+            context: { functionName, e },
+        })
     }
 }
 

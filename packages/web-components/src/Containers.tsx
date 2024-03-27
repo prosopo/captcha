@@ -1,3 +1,4 @@
+import styled from '@emotion/styled'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { WIDGET_OUTER_HEIGHT } from './WidgetConstants.js'
-import styled from '@emotion/styled'
 
 export const ContainerDiv = styled.div`
     container-type: inline-size;

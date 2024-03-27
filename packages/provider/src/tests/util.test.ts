@@ -1,3 +1,4 @@
+import { hexHash } from '@prosopo/common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
 import { encodeStringAddress, shuffleArray } from '../util.js'
-import { hexHash } from '@prosopo/common'
 
 describe('UTIL FUNCTIONS', async () => {
     test('does not modify an already encoded address', () => {
@@ -22,7 +22,7 @@ describe('UTIL FUNCTIONS', async () => {
         )
     })
     test('fails on an invalid address', () => {
-        expect(function () {
+        expect(() => {
             encodeStringAddress('xx')
         }).to.throw()
     })

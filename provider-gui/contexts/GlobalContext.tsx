@@ -13,10 +13,11 @@
 // limitations under the License.
 'use client'
 
-import { GuiContract } from '@/types/ContractOverview'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import type { GuiContract } from '@/types/ContractOverview'
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import React, { ReactNode, createContext, useContext, useState } from 'react'
+import type React from 'react'
+import { type ReactNode, createContext, useContext, useState } from 'react'
 
 interface GlobalStateContextProps {
     currentAccount: InjectedAccountWithMeta | undefined

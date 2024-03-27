@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
+import { enum as zEnum, type infer as zInfer } from 'zod'
 import { ProsopoEnvError } from './error.js'
-import { enum as zEnum, infer as zInfer } from 'zod'
 
 // allows access to log levels via index, e.g. myLogger[LogLevel.enum.debug](...) or myLogger['error'](...), etc
 type LoggerLevelFns = {
@@ -41,7 +41,9 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = createConsola({ formatOptions: { colors: true, date: true } }).withTag(scope)
+    const logger = createConsola({
+        formatOptions: { colors: true, date: true },
+    }).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
@@ -52,7 +54,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         error: logger.error,
         fatal: logger.fatal,
         setLogLevel: (level: LogLevel | string) => {
-            let logLevel = NaN
+            let logLevel = Number.NaN
             level = getLogLevel(level) // sanitise
             switch (level) {
                 case LogLevel.enum.trace:
@@ -102,7 +104,9 @@ export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
     try {
         return LogLevel.parse(logLevel)
     } catch (e) {
-        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
+        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', {
+            context: { logLevel },
+        })
     }
 }
 

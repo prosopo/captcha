@@ -1,3 +1,5 @@
+import { load } from '@fingerprintjs/botd'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import type { ProcaptchaProps } from '@prosopo/types'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
-import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { ProcaptchaProps } from '@prosopo/types'
-import { load } from '@fingerprintjs/botd'
 import { useEffect, useState } from 'react'
 
 export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {

@@ -1,3 +1,11 @@
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { LogLevel, type Logger, UrlConverter, getLogger } from '@prosopo/common'
+import { wrapQuery } from '@prosopo/contract'
+import { ProviderEnvironment } from '@prosopo/env'
+import { Tasks } from '@prosopo/provider'
+import type { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +20,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, UrlConverter, getLogger } from '@prosopo/common'
-import { Payee } from '@prosopo/captcha-contract/types-returns'
-import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProviderEnvironment } from '@prosopo/env'
-import { Tasks } from '@prosopo/provider'
 import { validateAddress, validatePayee } from './validators.js'
-import { wrapQuery } from '@prosopo/contract'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_update')

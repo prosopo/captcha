@@ -11,17 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util/bn'
-import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
-import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoContractError } from '@prosopo/common'
-import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { WeightV2 } from '@polkadot/types/interfaces'
-import { checkIfTaskIsRunning } from '../util.js'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { WeightV2 } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { BN } from '@polkadot/util/bn'
+import type { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
+import { type Logger, ProsopoContractError } from '@prosopo/common'
+import { type ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import {
+    type BatchCommitConfigOutput,
+    type ExtrinsicBatch,
+    ScheduledTaskNames,
+    ScheduledTaskStatus,
+} from '@prosopo/types'
+import type { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { checkIfTaskIsRunning } from '../util.js'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'
@@ -170,18 +175,25 @@ export class BatchCommitmentsTask {
                 const msg = extrinsicTooHigh ? 'Max batch extrinsic percentage reached' : 'Fee too high'
                 this.logger.warn(msg)
                 break
-            } else {
-                batchedCommitmentIds.push(commitment.id)
             }
+            batchedCommitmentIds.push(commitment.id)
         }
         if (!extrinsic) {
-            throw new ProsopoContractError('CONTRACT.TX_ERROR', { context: { error: 'No extrinsics created' } })
+            throw new ProsopoContractError('CONTRACT.TX_ERROR', {
+                context: { error: 'No extrinsics created' },
+            })
         }
         txs.push(extrinsic)
         this.logger.info(`${txs.length} transactions will be batched`)
         this.logger.debug('totalRefTime:', totalRefTime.toString())
         this.logger.debug('totalProofSize:', totalProofSize.toString())
-        return { extrinsics: txs, ids: batchedCommitmentIds, totalFee, totalRefTime, totalProofSize }
+        return {
+            extrinsics: txs,
+            ids: batchedCommitmentIds,
+            totalFee,
+            totalRefTime,
+            totalProofSize,
+        }
     }
 
     extrinsicTooHigh(totalRefTime: BN, totalProofSize: BN, maxBlockWeight: WeightV2): boolean {

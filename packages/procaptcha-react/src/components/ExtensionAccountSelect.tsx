@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { useEffect, useState } from 'react'
-import { useTranslation } from '@prosopo/common'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
+import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { useTranslation } from '@prosopo/common'
+import { useEffect, useState } from 'react'
 
 export const ExtensionAccountSelect = ({
     value,
@@ -42,7 +42,7 @@ export const ExtensionAccountSelect = ({
     return (
         // react select box
         <select
-            id="select-account"
+            id='select-account'
             onChange={(e) => {
                 const value = e.target.value
                 const account = accounts.find((a) => a.address === value) || null

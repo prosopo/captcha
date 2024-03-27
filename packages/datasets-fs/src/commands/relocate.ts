@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import { get } from '@prosopo/util'
+import { lodash } from '@prosopo/util/lodash'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { get } from '@prosopo/util'
-import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     from: z.string(),

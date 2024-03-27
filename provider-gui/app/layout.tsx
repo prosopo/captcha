@@ -1,3 +1,6 @@
+import type { Metadata } from 'next'
+import { Roboto } from 'next/font/google'
+import TopBar from '../components/Topbar'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { GlobalStateProvider } from '../contexts/GlobalContext'
-import { Roboto } from 'next/font/google'
-import TopBar from '../components/Topbar'
-import type { Metadata } from 'next'
 
 const roboto = Roboto({ weight: '400', subsets: ['latin'] })
 
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
+        <html lang='en'>
             <body className={roboto.className}>
                 <GlobalStateProvider>
                     <>

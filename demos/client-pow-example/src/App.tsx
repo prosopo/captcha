@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
+import { type EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { useState } from 'react'
 
 function App() {
@@ -31,7 +31,14 @@ function App() {
         atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
     return (
-        <div style={{ height: '100%', display: 'block', justifyContent: 'center', alignItems: 'center' }}>
+        <div
+            style={{
+                height: '100%',
+                display: 'block',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
             <ProcaptchaPow config={config} />
         </div>
     )

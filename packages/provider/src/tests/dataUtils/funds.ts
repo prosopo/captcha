@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // TODO merge this with duplicate file in dev package
-import { AnyNumber } from '@polkadot/types-codec/types'
+import type { AnyNumber } from '@polkadot/types-codec/types'
+import type { ISubmittableResult } from '@polkadot/types/types'
 import { BN } from '@polkadot/util/bn'
-import { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { at } from '@prosopo/util'
 import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
+import type { ProsopoEnvironment } from '@prosopo/types-env'
+import { at } from '@prosopo/util'
 
 const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
@@ -48,7 +48,11 @@ export async function sendFunds(
     } = await env.getContractInterface().api.query.system.account(pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
         throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
-            context: { mnemonic, previousFree: previousFree.toString(), amount: amount.toString() },
+            context: {
+                mnemonic,
+                previousFree: previousFree.toString(),
+                amount: amount.toString(),
+            },
         })
     }
 
@@ -97,7 +101,9 @@ export async function sendFunds(
             env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
         })
         .catch((error) => {
-            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error } })
+            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', {
+                context: { error },
+            })
         })
 }
 

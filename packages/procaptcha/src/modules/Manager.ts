@@ -1,3 +1,23 @@
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { Keyring } from '@polkadot/keyring'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import type { SignerPayloadRaw } from '@polkadot/types/types'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { stringToU8a } from '@polkadot/util/string'
+import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
+import { ProviderApi } from '@prosopo/api'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import type { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import {
+    ProsopoApiError,
+    ProsopoContractError,
+    ProsopoDatasetError,
+    ProsopoEnvError,
+    ProsopoError,
+    trimProviderUrl,
+} from '@prosopo/common'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,43 +32,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Account,
+    type Account,
     ApiParams,
-    CaptchaResponseBody,
-    CaptchaSolution,
-    CaptchaWithProof,
-    ProcaptchaCallbacks,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type CaptchaResponseBody,
+    type CaptchaSolution,
+    type CaptchaWithProof,
+    type ProcaptchaCallbacks,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-    StoredEvents,
-    TCaptchaSubmitResult,
+    type ProcaptchaOutput,
+    type ProcaptchaState,
+    type ProcaptchaStateUpdateFn,
+    type StoredEvents,
+    type TCaptchaSubmitResult,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
-import {
-    ProsopoApiError,
-    ProsopoContractError,
-    ProsopoDatasetError,
-    ProsopoEnvError,
-    ProsopoError,
-    trimProviderUrl,
-} from '@prosopo/common'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { SignerPayloadRaw } from '@polkadot/types/types'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at, hashToHex } from '@prosopo/util'
-import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
-import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
-import { stringToU8a } from '@polkadot/util/string'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -225,14 +225,14 @@ export function Manager(
                 data: stringToU8a('message'),
                 type: 'bytes',
             }
-            const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
+            const signed = await account.extension?.signer?.signRaw?.(payload as unknown as SignerPayloadRaw)
 
             // get a random provider
             const getRandomProviderResponse: RandomProvider = await wrapQuery(
                 contract.query.getRandomActiveProvider,
                 contract.query
             )(account.account.address, getDappAccount())
-            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
+            const blockNumber = Number.parseInt(getRandomProviderResponse.blockNumber.toString())
 
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst

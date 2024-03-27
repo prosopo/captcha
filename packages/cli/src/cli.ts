@@ -1,3 +1,4 @@
+import process from 'node:process'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
 import { getPairAsync } from '@prosopo/contract'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { isMain } from '@prosopo/util'
-import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
-import ReloadingAPI from './reloader.js'
+import { loadEnv } from './env.js'
 import getConfig from './prosopo.config.js'
-import process from 'process'
+import ReloadingAPI from './reloader.js'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
 

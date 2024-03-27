@@ -1,3 +1,6 @@
+import { LogLevel, Loggable, ProsopoCliError, getLogger } from '@prosopo/common'
+import yargs, { type Argv } from 'yargs'
+import { hideBin } from 'yargs/helpers'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CliCommandAny } from './cliCommand.js'
-import { LogLevel, Loggable, ProsopoCliError, getLogger } from '@prosopo/common'
-import { hideBin } from 'yargs/helpers'
-import yargs, { Argv } from 'yargs'
+import type { CliCommandAny } from './cliCommand.js'
 
 const dirname = process.cwd()
 const logger = getLogger(LogLevel.enum.info, `${dirname}`)
@@ -58,7 +58,7 @@ export class Cli extends Loggable {
                 'default command',
                 (y: Argv) => y,
                 (argv: any) => {
-                    throw new ProsopoCliError('CLI.PARAMETER_ERROR', { context: { error: `no command specified` } })
+                    throw new ProsopoCliError('CLI.PARAMETER_ERROR', { context: { error: 'no command specified' } })
                 }
             )
         }

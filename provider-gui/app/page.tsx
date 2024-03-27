@@ -13,11 +13,11 @@
 // limitations under the License.
 'use client'
 
-import { useRouter } from 'next/navigation'
 import Button from '@mui/material/Button'
 import Container from '@mui/material/Container'
-import React from 'react'
 import Tooltip from '@mui/material/Tooltip'
+import { useRouter } from 'next/navigation'
+import type React from 'react'
 
 const App: React.FC = () => {
     const router = useRouter()
@@ -28,15 +28,15 @@ const App: React.FC = () => {
 
     return (
         <Container style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 }}>
-            <Tooltip title="This feature is under development">
+            <Tooltip title='This feature is under development'>
                 <span>
-                    <Button variant="contained" size="large" disabled style={{ marginBottom: 20 }}>
+                    <Button variant='contained' size='large' disabled style={{ marginBottom: 20 }}>
                         Interact with a Provider
                     </Button>
                 </span>
             </Tooltip>
 
-            <Button variant="contained" size="large" color="primary" onClick={handleContractOverviewClick}>
+            <Button variant='contained' size='large' color='primary' onClick={handleContractOverviewClick}>
                 Contract Overview
             </Button>
         </Container>

@@ -18,12 +18,17 @@ export async function downloadImage(url: string): Promise<Uint8Array> {
         const response = await fetch(url)
         if (!response.ok) {
             throw new ProsopoApiError('API.BAD_REQUEST', {
-                context: { error: `Network response was not ok, status: ${response.status}`, url },
+                context: {
+                    error: `Network response was not ok, status: ${response.status}`,
+                    url,
+                },
             })
         }
         const buffer = await response.arrayBuffer()
         return new Uint8Array(buffer)
     } catch (err) {
-        throw new ProsopoEnvError('DATABASE.IMAGE_GET_FAILED', { context: { error: err } })
+        throw new ProsopoEnvError('DATABASE.IMAGE_GET_FAILED', {
+            context: { error: err },
+        })
     }
 }

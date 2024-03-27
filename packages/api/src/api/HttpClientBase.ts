@@ -33,7 +33,10 @@ export class HttpClientBase {
     }
 
     protected async post<T, U>(input: RequestInfo, body: U, init?: RequestInit): Promise<T> {
-        const headers = { 'Content-Type': 'application/json', ...(init?.headers || {}) }
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(init?.headers || {}),
+        }
         try {
             const response = await fetch(this.baseURL + input, {
                 method: 'POST',

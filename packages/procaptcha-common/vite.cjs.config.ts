@@ -1,3 +1,4 @@
+import path from 'node:path'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteCommonJSConfig } from '@prosopo/config'
-import path from 'path'
 
 export default function () {
     return ViteCommonJSConfig('procaptcha-common', path.resolve('./tsconfig.cjs.json'))

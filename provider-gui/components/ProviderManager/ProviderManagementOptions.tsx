@@ -1,3 +1,6 @@
+import { useGlobalState } from '@/contexts/GlobalContext'
+import { batchCommit, updateDataset } from '@/services/api/api'
+import { signedBlockNumberHeaders } from '@/services/provider/provider'
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Box, Button, Divider, FormControlLabel, Switch, TextField } from '@mui/material'
+import type React from 'react'
+import { useState } from 'react'
 import { DeregisterConfirmationDialog } from './DeregisterProviderDialog'
 import { ProviderUpdate } from './ProviderUpdate'
-import { batchCommit, updateDataset } from '@/services/api/api'
-import { signedBlockNumberHeaders } from '@/services/provider/provider'
-import { useGlobalState } from '@/contexts/GlobalContext'
-import React, { useState } from 'react'
 
 type ProviderManagementOptionsProps = {
     onBack: () => void
@@ -84,7 +85,7 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
                 <>
                     <ProviderUpdate currentAccount={currentAccount} providerBaseUrl={providerBaseUrl} />
                     <Divider sx={{ mb: 4 }} />
-                    <Button fullWidth variant="contained" color="primary" onClick={batchCommitHandler}>
+                    <Button fullWidth variant='contained' color='primary' onClick={batchCommitHandler}>
                         Batch Commit
                     </Button>
                     <Divider sx={{ mb: 4 }} />
@@ -92,7 +93,7 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
                     <Box sx={{ mb: 4 }}>
                         <FormControlLabel
                             control={<Switch checked={isJson} onChange={toggleJsonInput} />}
-                            label="Input as JSON or text"
+                            label='Input as JSON or text'
                         />
                         <TextField
                             fullWidth
@@ -101,25 +102,25 @@ export const ProviderManagementOptions: React.FC<ProviderManagementOptionsProps>
                             rows={4}
                             value={datasetInput}
                             onChange={updateDatasetInput}
-                            variant="outlined"
+                            variant='outlined'
                             sx={{ mb: 2 }}
                         />
-                        <Button fullWidth variant="contained" color="primary" onClick={submitDataset}>
+                        <Button fullWidth variant='contained' color='primary' onClick={submitDataset}>
                             Set Provider Dataset
                         </Button>
                     </Box>
 
                     <Button
                         fullWidth
-                        variant="contained"
-                        color="error"
+                        variant='contained'
+                        color='error'
                         sx={{ mb: 4 }}
                         onClick={handleOpenDeregisterDialog}
                     >
                         Provider Deregister
                     </Button>
                     <Divider />
-                    <Button fullWidth variant="outlined" color="primary" onClick={onBack} sx={{ mt: 4 }}>
+                    <Button fullWidth variant='outlined' color='primary' onClick={onBack} sx={{ mt: 4 }}>
                         Back to Details
                     </Button>
                 </>
