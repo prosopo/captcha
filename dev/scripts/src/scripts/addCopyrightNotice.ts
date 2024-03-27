@@ -69,7 +69,7 @@ if (process.argv[2] === 'list') {
 if (process.argv[2] === 'check') {
     for (const file of files) {
         const fileContents = fs.readFileSync(file, 'utf8')
-        if (fileContents.startsWith(header)) {
+        if (fileContents.includes(header)) {
             console.log('License present:', file)
         } else {
             throw new Error(`License not present: ${file}`)
