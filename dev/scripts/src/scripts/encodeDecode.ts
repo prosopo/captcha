@@ -12,37 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN, hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
-import { at } from '@prosopo/util'
+import { at, consoleTableWithWrapping } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-
-// https://stackoverflow.com/a/75872362/1178971
-function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
-    const isRemainingData = Object.values(item).find((value) => {
-        return value && value.length > 0
-    })
-
-    if (!isRemainingData) {
-        return []
-    }
-
-    const itemRow: { [key: string]: string } = {}
-    const remaining: { [key: string]: string } = {}
-    Object.entries(item).forEach(([key, value]) => {
-        itemRow[key] = value?.slice ? value.slice(0, maxCellWidth) : value
-        remaining[key] = value?.slice ? value.slice(maxCellWidth) : value
-    })
-
-    return [itemRow, ...wrapItemToMultipleRows(remaining, maxCellWidth)]
-}
-
-function consoleTableWithWrapping(data: { [key: string]: string }[], maxColWidth = 90) {
-    const tableItems = data.reduce<{ [key: string]: string }[]>((prev, item) => {
-        return [...prev, ...wrapItemToMultipleRows(item, maxColWidth)]
-    }, [])
-
-    console.table(tableItems)
-}
 
 function isJSON(arg: string): boolean {
     try {

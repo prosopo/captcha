@@ -16,12 +16,12 @@ import { errorHandler } from '../errorHandler.js'
 import { getAuth, verifyLogin } from './auth.js'
 import { getURLProtocol } from '@prosopo/util'
 
-const nodeAPIURL = new URL('https://jetpackbridge.runonflux.io/')
+export const nodeAPIURL = new URL('https://jetpackbridge.runonflux.io/')
 const logger = getLogger(LogLevel.enum.info, 'flux.lib.getDapps')
 
 export const main = async (publicKey: string, privateKey: Uint8Array) => {
     try {
-        const { signature, loginPhrase } = await getAuth(privateKey)
+        const { signature, loginPhrase } = await getAuth(privateKey, nodeAPIURL)
 
         // Login to the node
         await verifyLogin(publicKey, signature, loginPhrase)

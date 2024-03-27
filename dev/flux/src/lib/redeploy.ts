@@ -14,7 +14,7 @@
 import { main as authMain, verifyLogin } from './auth.js'
 import { errorHandler } from '../errorHandler.js'
 import { getLogger } from '@prosopo/common'
-import qs from 'qs'
+import { getZelIdAuthHeader } from './url.js'
 
 const log = getLogger(`Info`, `deploy.js`)
 
@@ -32,11 +32,7 @@ const reDeploy = async (
     hard = false
 ) => {
     const apiUrl = new URL(`${url}apps/redeploy/${appName}/${hard}/true`).toString()
-    const Zelidauth = qs.stringify({
-        zelid,
-        signature,
-        loginPhrase,
-    })
+    const Zelidauth = getZelIdAuthHeader(zelid, signature, loginPhrase)
     const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
