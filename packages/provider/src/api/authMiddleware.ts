@@ -30,8 +30,6 @@ export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
             verifyEnvironmentKeyPair(env)
             await verifyBlockNumber(blocknumber, tasks)
             verifySignature(signature, blocknumber, env.pair)
-
-            next()
         } catch (err) {
             console.error('Auth Middleware Error:', err)
             res.status(401).json({ error: 'Unauthorized', message: err })
