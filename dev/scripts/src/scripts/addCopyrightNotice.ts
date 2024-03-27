@@ -55,6 +55,8 @@ const files = glob
             '**/target/**',
             '**/coverage/**',
             '**/vite.cjs.config.ts.timestamp*',
+            '**/js_bundles_host_temp/**',
+            '**/client-bundle-example/src/assets/**',
         ],
     })
     .filter((file) => fs.lstatSync(file).isFile())
@@ -82,9 +84,15 @@ if (process.argv[2] === 'license') {
         const fileContents = fs.readFileSync(file, 'utf8')
         const lines = fileContents.split('\n')
         if (fileContents.indexOf('// Copyright') > -1) {
+            // get the line on which the license begins
+            let startingLine = 0
+            while (!at(lines, startingLine).startsWith('//')) {
+                startingLine++
+            }
+
             //remove the old license and replace with the new one
             // find the line containing `// along with Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.` and take the lines array from there
-            let count = 0
+            let count = startingLine
             let line = at(lines, count)
             let lineStartsWithSlashes = line.startsWith('//')
             while (lineStartsWithSlashes) {
@@ -101,7 +109,14 @@ if (process.argv[2] === 'license') {
                 line.endsWith('If not, see <http://www.gnu.org/licenses/>.') ||
                 line.endsWith('// limitations under the License.')
             ) {
-                const newFileContents = `${header}\n${lines.slice(count + 1).join('\n')}`
+                let newFileContents = ''
+                if (startingLine > 0) {
+                    newFileContents = `${lines.slice(0, startingLine).join('\n')}\n${header}\n${lines
+                        .slice(count + 1)
+                        .join('\n')}`
+                } else {
+                    newFileContents = `${header}\n${lines.slice(count + 1).join('\n')}`
+                }
 
                 if (newFileContents !== fileContents) {
                     //console.log(newFileContents)
