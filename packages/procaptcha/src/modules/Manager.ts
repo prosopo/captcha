@@ -41,14 +41,12 @@ import {
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { SignerPayloadRaw } from '@polkadot/types/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at, hashToHex } from '@prosopo/util'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
-import { stringToU8a } from '@polkadot/util/string'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -220,12 +218,6 @@ export function Manager(
                     // continue as if the provider was not in storage
                 }
             }
-            const payload = {
-                address: account.account.address,
-                data: stringToU8a('message'),
-                type: 'bytes',
-            }
-            const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
 
             // get a random provider
             const getRandomProviderResponse: RandomProvider = await wrapQuery(

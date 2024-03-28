@@ -19,7 +19,8 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
+import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { useState } from 'react'
 
@@ -165,15 +166,22 @@ function App(props: AppProps) {
             >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
-                    {!config.web2 ? (
-                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
-                    ) : (
-                        <></>
-                    )}
+
                     <Box>
                         <h1>{label}</h1>
                         <form>
-                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
+                            <FormGroup sx={{ '& .MuiTextField-root,#select-account': { m: 1 } }}>
+                                {!config.web2 ? (
+                                    <FormControl>
+                                        <ExtensionAccountSelect
+                                            dappName={config.dappName}
+                                            value={account}
+                                            onChange={setAccount}
+                                        />
+                                    </FormControl>
+                                ) : (
+                                    <></>
+                                )}
                                 <FormControl>
                                     <TextField
                                         id="email"
