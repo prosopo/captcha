@@ -11,17 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, it, expect, test } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import config from '../index.js'
 
 describe('env', () => {
     it('loads env files with extends', () => {
-        expect(config({
-            path: __dirname + '/extends/root.env',
-            debug: true
-
-        })).to.deep.equal({
-            'root': 'true',
+        expect(
+            config({
+                path: __dirname + '/extends/root.env',
+                debug: true,
+            })
+        ).to.deep.equal({
+            root: 'true',
             'root.0': 'true',
             'root.1': 'true',
             'root.2': 'true',
@@ -31,36 +32,44 @@ describe('env', () => {
     })
 
     it('errors on circular extends', () => {
-        expect(() => config({
-            path: __dirname + '/circular/env'
-        })).to.throw()
+        expect(() =>
+            config({
+                path: __dirname + '/circular/env',
+            })
+        ).to.throw()
     })
 
     it('overrides extended values', () => {
-        expect(config({
-            path: __dirname + '/override/a.env',
-        })).to.deep.equal({
+        expect(
+            config({
+                path: __dirname + '/override/a.env',
+            })
+        ).to.deep.equal({
             A: 'true',
             B: 'true',
             C: 'false',
             D: 'false',
-            E: 'true'
+            E: 'true',
         })
     })
 
     it('loads relative', () => {
-        expect(config({
-            path: './src/tests/override/c.env'
-        })).to.deep.equal({
+        expect(
+            config({
+                path: './src/tests/override/c.env',
+            })
+        ).to.deep.equal({
             C: 'true',
             D: 'true',
-            E: 'true'
+            E: 'true',
         })
     })
 
     it('errors on missing file', () => {
-        expect(() => config({
-            path: './src/tests/missing.env'
-        })).to.throw()
+        expect(() =>
+            config({
+                path: './src/tests/missing.env',
+            })
+        ).to.throw()
     })
 })
