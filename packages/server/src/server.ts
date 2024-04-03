@@ -165,6 +165,74 @@ export class ProsopoServer {
     }
 
     /**
+     * Verify the time since the blockNumber is equal to or less than the maxVerifiedTime.
+     * @param maxVerifiedTime
+     * @param blockNumber
+     */
+    public async verifyRecency(blockNumber: number, maxVerifiedTime = 60000) {
+        const contractApi = await this.getContractApi()
+        // Get the current block number
+        const currentBlock = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
+        // Calculate how many blocks have passed since the blockNumber
+        const blocksPassed = currentBlock - blockNumber
+        // Check the time since the last correct captcha is less than the maxVerifiedTime
+        const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
+        // Check if the time since the last correct captcha is within the limit
+        return blockTime * blocksPassed <= maxVerifiedTime
+    }
+
+    /**
+     * Verify the user with the contract. We check the contract to see if the user has had a correct captcha in the
+     * past. If they have, we check the time since the last correct captcha is within the maxVerifiedTime and we check
+     * whether the user is marked as human within the contract.
+     * @param user
+     * @param maxVerifiedTime
+     */
+    public async verifyContract(user: string, maxVerifiedTime?: number) {
+        const contractApi = await this.getContractApi()
+        this.logger.info('Provider URL not provided. Verifying with contract.')
+        const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+            .unwrap()
+            .unwrap()
+            .before.valueOf()
+        const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
+        const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+            .unwrap()
+            .unwrap()
+        return isHuman && verifyRecency
+    }
+
+    /**
+     * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
+     * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
+     * @param providerUrl
+     * @param dapp
+     * @param user
+     * @param challenge
+     * @param commitmentId
+     * @param maxVerifiedTime
+     */
+    public async verifyProvider(
+        providerUrl: string,
+        dapp: string,
+        user: string,
+        challenge?: string,
+        commitmentId?: string,
+        maxVerifiedTime?: number
+    ) {
+        this.logger.info('Verifying with provider.')
+        const providerApi = await this.getProviderApi(providerUrl)
+        if (challenge) {
+            // We don't care about recency with POW challenges as they are single use
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
+            return result.verified
+        }
+        const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
+        const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
+        return result.verified && verifyRecency
+    }
+
+    /**
      *
      * @param payload Info output by procaptcha on completion of the captcha process
      * @param maxVerifiedTime Maximum time in milliseconds since the blockNumber
@@ -172,41 +240,26 @@ export class ProsopoServer {
      */
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
-        const contractApi = await this.getContractApi()
 
-        const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
+        // TODO should blockNumber always be required when a providerURL is submitted? This would load balance requests
+        //  to the providers by requiring that the random provider selection should be repeatable.
 
-        if (!randomProvider) {
-            this.logger.info('Random provider selection failed')
-            // We have not been able to repeat the provider selection
-            return false
-        }
-
-        if (providerUrl) {
-            this.logger.info('Random provider is valid. Verifying with provider.')
-            // We can now trust the provider URL as it has been shown to have been randomly selected
-            const providerApi = await this.getProviderApi(providerUrl)
-            if (challenge) {
-                const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
-                return result.verified
-            }
-            const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
-            return result.verified
-        } else {
-            this.logger.info('Provider URL not provided. Verifying with contract.')
-            // Check the time since the last correct captcha is less than the maxVerifiedTime
-            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
-            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-                .unwrap()
-                .unwrap()
-                .before.valueOf()
-            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
+        if (blockNumber) {
+            // If we have a block number, we check the provider was selected at that block.
+            const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
+            if (!randomProvider) {
+                this.logger.info('Random provider selection failed')
+                // We have not been able to repeat the provider selection
                 return false
             }
+        }
 
-            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-                .unwrap()
-                .unwrap()
+        if (providerUrl && !blockNumber) {
+            // If we simply have a providerURL, we verify with the provider
+            return await this.verifyProvider(providerUrl, dapp, user, challenge, commitmentId, maxVerifiedTime)
+        } else {
+            // If we don't have a providerURL, we verify with the contract
+            return await this.verifyContract(user, maxVerifiedTime)
         }
     }
 
