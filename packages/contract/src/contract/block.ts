@@ -11,10 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './block.js'
-export * from './interface.js'
-export * from './helpers.js'
-export * from './useWeight.js'
-export * from './deploy.js'
-export * from './batch.js'
-export * from './storage.js'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
+
+/**
+ * Get the current block time in milliseconds
+ */
+export const getBlockTimeMs = (api: ApiPromise): number => {
+    const babe = api.consts.babe
+    const blockTime = babe ? babe.expectedBlockTime : new BN(6000)
+    return blockTime.toNumber()
+}
+
+/**
+ * Get the current block number
+ */
+export const getCurrentBlockNumber = async (api: ApiPromise): Promise<number> => {
+    return (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+}

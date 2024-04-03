@@ -22,7 +22,7 @@ import {
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getBlockTimeMs, getCurrentBlockNumber, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -149,11 +149,11 @@ export class ProsopoServer {
     public async verifyRecency(blockNumber: number, maxVerifiedTime: number) {
         const contractApi = await this.getContractApi()
         // Get the current block number
-        const currentBlock = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
+        const currentBlock = await getCurrentBlockNumber(contractApi.api)
         // Calculate how many blocks have passed since the blockNumber
         const blocksPassed = currentBlock - blockNumber
         // Get the expected block time
-        const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
+        const blockTime = getBlockTimeMs(contractApi.api)
         // Check if the time since the last correct captcha is within the limit
         return blockTime * blocksPassed <= maxVerifiedTime
     }

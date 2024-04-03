@@ -21,7 +21,7 @@ const PROCAPTCHA_STORAGE_KEY = '@prosopo/procaptcha'
  * Gets procaptcha storage object from localStorage
  */
 function getProcaptchaStorage(): ProcaptchaLocalStorage {
-    return JSON.parse(hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || '7b7d'))
+    return JSON.parse(hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || '0x7b7d'))
 }
 
 /**

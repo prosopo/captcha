@@ -23,7 +23,7 @@ import {
 } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
 import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
-import { ContractDeployer, getBlockNumber, getDispatchError, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { ContractDeployer, getCurrentBlockNumber, getDispatchError, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
@@ -319,7 +319,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             pendingRequestSalt
         )
 
-        const blockNumber = (await getBlockNumber(env.getApi())).toNumber()
+        const blockNumber = await getCurrentBlockNumber(env.getApi())
 
         if ('storeDappUserPending' in env.getDb()) {
             await env

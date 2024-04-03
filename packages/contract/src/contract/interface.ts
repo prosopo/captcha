@@ -24,8 +24,9 @@ import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
 import { default as Query } from '@prosopo/captcha-contract/query'
 import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
+import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
+import { getBlockTimeMs } from './block.js'
 import {
     getPrimitiveStorageFields,
     getPrimitiveStorageValue,
@@ -157,7 +158,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
-        const expectedBlockTime = getExpectedBlockTime(this.api)
+        const expectedBlockTime = new BN(getBlockTimeMs(this.api))
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
