@@ -11,8 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export type ProcaptchaLocalStorage = {
-    account: string
-    blockNumber?: number
-    providerUrl?: string
-}
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+    test: {
+        environment: 'jsdom',
+    },
+})
