@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util'
 import {
     ContractAbi,
     NetworkConfig,
@@ -23,12 +22,15 @@ import {
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
+
+export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
+export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
@@ -113,11 +115,6 @@ export class ProsopoServer {
         return this.contract
     }
 
-    async getViableHistoricBlockCount(maxVerifiedTime?: number): Promise<number> {
-        const expectedBlockTime = getExpectedBlockTime(this.getApi())
-        return new BN(maxVerifiedTime || 60000).div(expectedBlockTime).toNumber()
-    }
-
     /**
      * Check if the provider was actually chosen at blockNumber.
      * - If no blockNumber is provided, check the last `n` blocks where `n` is the number of blocks that fit in
@@ -127,40 +124,20 @@ export class ProsopoServer {
      * @param dapp
      * @param providerUrl
      * @param blockNumber
-     * @param maxVerifiedTime
      * @returns
      */
-    async checkRandomProvider(
-        user: string,
-        dapp: string,
-        providerUrl?: string,
-        blockNumber?: number,
-        maxVerifiedTime?: number
-    ) {
+    async checkRandomProvider(user: string, dapp: string, providerUrl: string, blockNumber: number) {
+        const block = await this.getApi().rpc.chain.getBlockHash(blockNumber)
         // Check if the provider was actually chosen at blockNumber
-        let blocksToCheck: number[] = []
-        if (blockNumber) {
-            blocksToCheck = [blockNumber]
-        } else {
-            const numberOfHistoricBlocksToCheck = await this.getViableHistoricBlockCount(maxVerifiedTime)
-            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
-            blocksToCheck = Array.from(
-                { length: numberOfHistoricBlocksToCheck },
-                (_, index) => currentBlockNumber - index
-            )
+        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
+            block,
+            'getRandomActiveProvider',
+            [user, dapp]
+        )
+        if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
+            return getRandomProviderResponse.provider
         }
 
-        while (blocksToCheck.length > 0) {
-            const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
-            const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
-                block,
-                'getRandomActiveProvider',
-                [user, dapp]
-            )
-            if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
-                return getRandomProviderResponse.provider
-            }
-        }
         return undefined
     }
 
@@ -169,7 +146,7 @@ export class ProsopoServer {
      * @param maxVerifiedTime
      * @param blockNumber
      */
-    public async verifyRecency(blockNumber: number, maxVerifiedTime = 60000) {
+    public async verifyRecency(blockNumber: number, maxVerifiedTime: number) {
         const contractApi = await this.getContractApi()
         // Get the current block number
         const currentBlock = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
@@ -188,7 +165,7 @@ export class ProsopoServer {
      * @param user
      * @param maxVerifiedTime
      */
-    public async verifyContract(user: string, maxVerifiedTime?: number) {
+    public async verifyContract(user: string, maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CONTRACT) {
         const contractApi = await this.getContractApi()
         this.logger.info('Provider URL not provided. Verifying with contract.')
         const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
@@ -208,6 +185,7 @@ export class ProsopoServer {
      * @param providerUrl
      * @param dapp
      * @param user
+     * @param blockNumber
      * @param challenge
      * @param commitmentId
      * @param maxVerifiedTime
@@ -216,18 +194,19 @@ export class ProsopoServer {
         providerUrl: string,
         dapp: string,
         user: string,
+        blockNumber: number,
         challenge?: string,
         commitmentId?: string,
-        maxVerifiedTime?: number
+        maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
     ) {
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            // We don't care about recency with POW challenges as they are single use
             const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
+            // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
-        const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
+        const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
         const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
         return result.verified && verifyRecency
     }
@@ -241,27 +220,27 @@ export class ProsopoServer {
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
 
-        // TODO should blockNumber always be required when a providerURL is submitted? This would load balance requests
-        //  to the providers by requiring that the random provider selection should be repeatable. The alternative is to
-        //  push the random provider check to the provider itself, which is what we do now. Since we can't rely on
-        //  people to implement this logic on the server side by using this package, we should continue to get the
-        //  provider to verify the selection process. However, we should also implement this check locally in the server
-        //  to save round trips to the provider. The same thing applies to our AWS serverless endpoint, which inherits
-        //  its verification methods from this server package.
-
-        if (blockNumber) {
-            // If we have a block number, we check the provider was selected at that block.
-            const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
+        if (providerUrl && blockNumber) {
+            // By requiring block number, we load balance requests to the providers by requiring that the random
+            // provider selection should be repeatable. If we have a block number, we check the provider was selected
+            // at that block.
+            const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
             if (!randomProvider) {
                 this.logger.info('Random provider selection failed')
                 // We have not been able to repeat the provider selection
                 return false
             }
-        }
 
-        if (providerUrl && !blockNumber) {
-            // If we simply have a providerURL, we verify with the provider
-            return await this.verifyProvider(providerUrl, dapp, user, challenge, commitmentId, maxVerifiedTime)
+            // If we have a providerURL and a blockNumber, we verify with the provider
+            return await this.verifyProvider(
+                providerUrl,
+                dapp,
+                user,
+                blockNumber,
+                challenge,
+                commitmentId,
+                maxVerifiedTime
+            )
         } else {
             // If we don't have a providerURL, we verify with the contract
             return await this.verifyContract(user, maxVerifiedTime)
