@@ -30,6 +30,7 @@ export default function () {
             },
         },
         test: {
+            environment: 'jsdom',
             root: getRootDir(),
             include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
             watch: false,
