@@ -546,7 +546,7 @@ export function Manager(
         const providerUrlFromStorage = procaptchaStorage.providerUrl
         let providerApi: ProviderApi
 
-        if (providerUrlFromStorage && procaptchaStorage.blockNumber) {
+        if (providerUrlFromStorage) {
             providerApi = await loadProviderApi(providerUrlFromStorage)
         } else {
             const contract = await loadContract()
