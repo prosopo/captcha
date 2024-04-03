@@ -152,14 +152,14 @@ export class ProsopoServer {
         const currentBlock = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
         // Calculate how many blocks have passed since the blockNumber
         const blocksPassed = currentBlock - blockNumber
-        // Check the time since the last correct captcha is less than the maxVerifiedTime
+        // Get the expected block time
         const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
         // Check if the time since the last correct captcha is within the limit
         return blockTime * blocksPassed <= maxVerifiedTime
     }
 
     /**
-     * Verify the user with the contract. We check the contract to see if the user has had a correct captcha in the
+     * Verify the user with the contract. We check the contract to see if the user has completed a captcha in the
      * past. If they have, we check the time since the last correct captcha is within the maxVerifiedTime and we check
      * whether the user is marked as human within the contract.
      * @param user
