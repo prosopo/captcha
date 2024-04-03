@@ -242,7 +242,12 @@ export class ProsopoServer {
         const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
 
         // TODO should blockNumber always be required when a providerURL is submitted? This would load balance requests
-        //  to the providers by requiring that the random provider selection should be repeatable.
+        //  to the providers by requiring that the random provider selection should be repeatable. The alternative is to
+        //  push the random provider check to the provider itself, which is what we do now. Since we can't rely on
+        //  people to implement this logic on the server side by using this package, we should continue to get the
+        //  provider to verify the selection process. However, we should also implement this check locally in the server
+        //  to save round trips to the provider. The same thing applies to our AWS serverless endpoint, which inherits
+        //  its verification methods from this server package.
 
         if (blockNumber) {
             // If we have a block number, we check the provider was selected at that block.
