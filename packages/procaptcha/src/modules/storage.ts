@@ -36,16 +36,14 @@ function setProcaptchaStorage(storage: ProcaptchaLocalStorage) {
  * Sets default `account`
  */
 function setAccount(account: string) {
-    const storage = getProcaptchaStorage()
-    storage['account'] = account
-    setProcaptchaStorage(storage)
+    setProcaptchaStorage({ ...getProcaptchaStorage(), account })
 }
 
 /**
  * Gets default `account`
  */
 function getAccount(): string | null {
-    return getProcaptchaStorage()['account']
+    return getProcaptchaStorage().account
 }
 
 export default {
