@@ -22,6 +22,7 @@ describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
         // check for the env file in either the root or the package directory
         const envFile = `.env.${process.env.NODE_ENV || 'development'}`
+        console.log('env file ', envFile)
         const rootDir = getRootDir()
         const packageDir = getCliPkgDir()
         const rootEnvPath = `${rootDir}/${envFile}`
@@ -42,17 +43,17 @@ describe('reloading api', () => {
         }
 
         return new Promise<void>((resolve, reject) => {
-            console.log('rootDir', rootDir)
+            console.log('packageDir', packageDir)
 
             // run API
             const child = spawn(`npm`, ['run', 'cli', '--', '--api'], {
-                cwd: rootDir,
+                cwd: packageDir,
                 env: { ...process.env, NODE_ENV: 'test' },
             })
 
             let appended = false
             child.stdout.on('data', (data) =>
-                onData(data, rootDir, appended).then((result) => {
+                onData(data, packageDir, appended).then((result) => {
                     appended = result.appended
                     const kill = result.kill
                     // console.log('onData ran, appended', appended, 'kill', kill)
