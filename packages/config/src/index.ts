@@ -131,7 +131,8 @@ export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
     // populate process.env if requested
     if (args.populateProcessEnv) {
         for (const key in parsedConfig) {
-            process.env[key] = String(parsedConfig[key]);
+            // convert all values into strings via json encoding. this is to ensure that all values are strings. Any non-string objects will need to be JSON parsed before use. E.g. { a: { b: 1 } } will be stored as "{ "a": { "b": "1" } }", i.e. you'd need to JSON.parse(process.env.a).b to get the number 1 - but that would be a string, also.
+            process.env[key] = JSON.stringify(parsedConfig[key]);
         }
     }
 
