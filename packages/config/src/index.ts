@@ -1,5 +1,6 @@
 import { getLogger } from '@prosopo/common';
 import fs from 'fs';
+import z from 'zod';
 
 const logger = getLogger('info', import.meta.url);
 
@@ -11,6 +12,7 @@ const logger = getLogger('info', import.meta.url);
 export type Args = {
     populateProcessEnv?: boolean,
     path?: string,
+    schema: z.ZodAny
 }
 
 const loadConfigFromEnv = (path: string): {
@@ -31,9 +33,7 @@ const loadConfigFromTs = (path: string): {
  * Loads the config from env or a config file.
  * @param args - The arguments for loading environment variables.
  */
-export function loadConfig(args?: Args) {
-    args = args ?? {};
-    let config;
+export function loadConfig(args: Args) {
     if (args.path === undefined) {
         const defaultConfigTsPath = './config.ts';
         const defaultEnvPath = './.env';
@@ -48,10 +48,30 @@ export function loadConfig(args?: Args) {
         }
     }
     // load the config from the specified path
+    let config: {
+        [key: string]: string
+    };
     if (args.path?.endsWith('.ts')) {
         config = loadConfigFromTs(args.path);
     } else {
         config = loadConfigFromEnv(args.path);
     }
     logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
+
+    // parse the config to ensure it meets the expected format
+    let parsedConfig: z.infer<typeof args.schema>;
+    try {
+        parsedConfig = args.schema.parse(config);
+    } catch (err) {
+        throw new Error(`Failed to parse config at '${args.path}': ${err}`);
+    }
+
+    // populate process.env if requested
+    if (args.populateProcessEnv) {
+        for (const key in parsedConfig) {
+            process.env[key] = parsedConfig[key];
+        }
+    }
+
+    return parsedConfig;
 }
