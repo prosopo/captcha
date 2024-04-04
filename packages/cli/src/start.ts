@@ -51,11 +51,12 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+    apiApp.use(handleErrors)
+
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
     }
 
-    apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })
