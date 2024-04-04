@@ -18,7 +18,7 @@ import { ConfigSchema } from './config.js'
 describe('config', () => {
     
     it('should load config from env', async () => {
-        expect(await loadConfig({ path: `${__dirname}/example.env`, schema: ConfigSchema })).to.deep.equal({
+        expect(await loadConfig({ path: `${__dirname}/example.config.env`, schema: ConfigSchema })).to.deep.equal({
             a: true,
             b: 1,
             c: 'hello',
@@ -50,7 +50,7 @@ describe('config', () => {
     })
 
     it('should load into process.env', async () => {
-        const config = await loadConfig({ path: `${__dirname}/example.env`, schema: ConfigSchema, populateProcessEnv: true})
+        const config = await loadConfig({ path: `${__dirname}/example.config.env`, schema: ConfigSchema, populateProcessEnv: true})
         for(const key of Object.keys(config)) {
             expect(process.env[key]).to.equal(JSON.stringify(config[key as keyof typeof config]))
         }
