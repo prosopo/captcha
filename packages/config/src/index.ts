@@ -21,6 +21,10 @@ const loadConfigFromEnv = async (path: string): Promise<{
 }> => {
     logger.debug(`Loading env-based config from: ${path}`)
 
+    if (!fs.existsSync(path)) {
+        throw new Error(`Config file not found at '${path}'`)
+    }
+
     const result = {}
     dotenv.config({
         path,
@@ -35,6 +39,10 @@ const loadConfigFromJs = async (path: string): Promise<{
 }> => {
     logger.debug(`Loading js-based config from: ${path}`);
     
+    if (!fs.existsSync(path)) {
+        throw new Error(`Config file not found at '${path}'. Have you compiled your typescript config file? e.g. \`npx tsc config.ts\``)
+    }
+
     // dynamic import the js file
     // this will have no typing!
     const buildConfig = (await import(`../${path}`)).default
