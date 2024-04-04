@@ -25,6 +25,14 @@ describe('config', () => {
         })
     })
 
+    it('should load config from json', async () => {
+        expect(await loadConfig({ path: `${__dirname}/example.config.json`, schema: ConfigSchema })).to.deep.equal({
+            a: true,
+            b: 1,
+            c: 'hello',
+        })
+    })
+
     it('should load config from js', async () => {
         expect(await loadConfig({ path: `${__dirname}/example.config.js`, schema: ConfigSchema })).to.deep.equal({
             a: true,
