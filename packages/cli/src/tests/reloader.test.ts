@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { getCurrentFileDirectory } from '@prosopo/util'
+import { getCliPkgDir, getRootDir } from '@prosopo/config'
 import { promisify } from 'util'
 import { spawn } from 'child_process'
 import fs from 'fs'
@@ -20,14 +20,22 @@ import path from 'path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
-        // get file location
-        const dir = getCurrentFileDirectory(import.meta.url)
-
-        // get root directory of this package
-        const rootDir = dir.split('/').slice(0, -2).join('/')
+        // check for the env file in either the root or the package directory
+        const envFile = `.env.${process.env.NODE_ENV || 'development'}`
+        const rootDir = getRootDir()
+        const packageDir = getCliPkgDir()
+        const rootEnvPath = `${rootDir}/${envFile}`
+        const packageEnvPath = `${packageDir}/${envFile}`
+        let envPath = ''
+        if (fs.existsSync(rootEnvPath)) {
+            envPath = path.resolve(rootEnvPath)
+        } else if (fs.existsSync(packageEnvPath)) {
+            envPath = path.resolve(packageEnvPath)
+        } else {
+            throw new Error(`No ${envFile} file found`)
+        }
 
         const restoreEnv = async () => {
-            const envPath = path.resolve(`${rootDir}/.env.test`)
             const envContent = await promisify(fs.readFile)(envPath, 'utf8')
             const newEnvContent = envContent.replace('\nTEST=TEST', '')
             await promisify(fs.writeFile)(envPath, newEnvContent)
