@@ -1,5 +1,5 @@
 {
-    "name": "@prosopo/config",
+    "name": "@prosopo/config2",
     "version": "0.3.5",
     "description": "Prosopo config library",
     "main": "./dist/index.js",

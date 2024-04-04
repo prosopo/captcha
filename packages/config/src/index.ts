@@ -1,20 +1,30 @@
+import { getLogger } from '@prosopo/common';
+import fs from 'fs';
+
+const logger = getLogger('info', import.meta.url);
+
 /**
  * The arguments for loading environment variables.
  * @param populateProcessEnv - Whether to populate `process.env` with the loaded environment variables. Defaults to `false`.
- * @param src - The path to the source file containing the environment variables. If unspecified, falls back to `config.ts` then `.env`.
+ * @param path - The path to the source file containing the environment variables. If unspecified, falls back to `config.ts` then `.env`.
  */
 export type Args = {
     populateProcessEnv?: boolean,
-    src?: string,
+    path?: string,
 }
 
-const loadConfigEnv = (args?: Args) => {
-    args = args ?? {};
+const loadConfigFromEnv = (path: string): {
+    [key: string]: string
+} => {
+    logger.debug(`Loading env-based config from: ${path}`)
+    return {}
 }
 
-const loadConfigTs = (args?: Args) => {
-    args = args ?? {};
-
+const loadConfigFromTs = (path: string): {
+    [key: string]: string
+} => {
+    logger.debug(`Loading ts-based config from: ${path}`)
+    return {}
 }
 
 /**
@@ -23,9 +33,26 @@ const loadConfigTs = (args?: Args) => {
  */
 export function loadConfig(args?: Args) {
     args = args ?? {};
-    if (args.src?.endsWith('.ts')) {
-        return loadConfigTs(args);
+    let config;
+    if (args.path === undefined) {
+        const defaultConfigTsPath = './config.ts';
+        const defaultEnvPath = './.env';
+        if (fs.existsSync(defaultConfigTsPath)) {
+            // try to load ${cwd}/config.ts
+            config = loadConfigFromTs(defaultConfigTsPath);
+        } else if (fs.existsSync(defaultEnvPath)) {
+            // try to load ${cwd}/.env
+            config = loadConfigFromEnv(defaultEnvPath);
+        } else {
+            throw new Error(`No config file found at default locations of '${defaultConfigTsPath}' or '${defaultEnvPath}'`);
+        }
     } else {
-        return loadConfigEnv(args);
+        // path to config has been specified
+        if (args.path?.endsWith('.ts')) {
+            config = loadConfigFromTs(args.path);
+        } else {
+            config = loadConfigFromEnv(args.path);
+        }
     }
+    logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
 }
