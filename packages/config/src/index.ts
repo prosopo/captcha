@@ -39,20 +39,19 @@ export function loadConfig(args?: Args) {
         const defaultEnvPath = './.env';
         if (fs.existsSync(defaultConfigTsPath)) {
             // try to load ${cwd}/config.ts
-            config = loadConfigFromTs(defaultConfigTsPath);
+            args.path = defaultConfigTsPath;
         } else if (fs.existsSync(defaultEnvPath)) {
             // try to load ${cwd}/.env
-            config = loadConfigFromEnv(defaultEnvPath);
+            args.path = defaultEnvPath;
         } else {
             throw new Error(`No config file found at default locations of '${defaultConfigTsPath}' or '${defaultEnvPath}'`);
         }
+    }
+    // load the config from the specified path
+    if (args.path?.endsWith('.ts')) {
+        config = loadConfigFromTs(args.path);
     } else {
-        // path to config has been specified
-        if (args.path?.endsWith('.ts')) {
-            config = loadConfigFromTs(args.path);
-        } else {
-            config = loadConfigFromEnv(args.path);
-        }
+        config = loadConfigFromEnv(args.path);
     }
     logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
 }
