@@ -149,8 +149,11 @@ export const Manager = (
 
         const config = getConfig()
 
-        // use the passed in account (could be web3) or the zero account
-        const userAccount = config.userAccountAddress || '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
+        // check if account exists in extension
+        const ext = new ExtensionWeb2()
+
+        // use the passed in account (could be web3) or create a new account
+        const userAccount = config.userAccountAddress || (await ext.getAccount(config)).account.address
 
         // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
         updateState({
@@ -171,10 +174,6 @@ export const Manager = (
             })
         }
 
-        // check if account exists in extension
-        const ext = new ExtensionWeb2()
-        const account = await ext.getAccount(config)
-
         const contract = await loadContract()
 
         const events = getDefaultEvents(onStateUpdate, state, callbacks)
@@ -183,13 +182,13 @@ export const Manager = (
         const getRandomProviderResponse: RandomProvider = await wrapQuery(
             contract.query.getRandomActiveProvider,
             contract.query
-        )(account.account.address, getDappAccount())
+        )(userAccount, getDappAccount())
 
         const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
 
         const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, getDappAccount())
 
-        const challenge = await providerApi.getPowCaptchaChallenge(account.account.address, getDappAccount())
+        const challenge = await providerApi.getPowCaptchaChallenge(userAccount, getDappAccount())
 
         const solution = solvePoW(challenge.challenge, challenge.difficulty)
         const verifiedSolution = await providerApi.submitPowCaptchaSolution(
