@@ -71,7 +71,9 @@ export async function loadConfig(args: Args) {
     let config: {
         [key: string]: string
     };
-    if (args.path?.endsWith('.js')) {
+    const tsExtension = '.ts'
+    if (args.path?.endsWith(tsExtension)) {
+        const jsPath = args.path.slice(0, -tsExtension.length) + '.js';
         config = await loadConfigFromJs(args.path);
     } else {
         config = await loadConfigFromEnv(args.path);

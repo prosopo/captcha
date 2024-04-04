@@ -22,7 +22,7 @@ export type Config = {
 describe('config', () => {
     
     it('should load config from env', async () => {
-
+        
     })
 
     it('should load config from js', async () => {
