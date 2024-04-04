@@ -1,17 +1,16 @@
-
 /**
  * Loading from json/js/ts has been disabled for now on the basis that it causes issues with loading config in docker/flux. Native env var support makes it super easy to load config from env vars, so this is the recommended approach atm. Unfortunately, this means no dynamic config via js/ts, and no complex config types via js/ts. This is a tradeoff for compatibility. See https://github.com/prosopo/captcha/pull/1136 for reasoning.
- * 
+ *
  * Old code for loading json/js/ts will remain here, in case we need it in the future.
  */
 
-import { getLogger } from '@prosopo/common';
-import fs from 'fs';
-import z from 'zod';
+import { getLogger } from '@prosopo/common'
 import dotenv from 'dotenv'
+import fs from 'fs'
+import z from 'zod'
 // import ts from 'typescript'
 
-const logger = getLogger('warn', import.meta.url);
+const logger = getLogger('warn', import.meta.url)
 
 /**
  * The arguments for loading environment variables.
@@ -19,12 +18,14 @@ const logger = getLogger('warn', import.meta.url);
  * @param path - The path to the source file containing the environment variables. If unspecified, falls back to `config.ts` then `.env`.
  */
 export type Args<T extends object> = {
-    populateProcessEnv?: boolean,
-    path?: string,
+    populateProcessEnv?: boolean
+    path?: string
     schema: z.ZodType<T>
 }
 
-const loadConfigFromEnv = async (path: string): Promise<{
+const loadConfigFromEnv = async (
+    path: string
+): Promise<{
     [key: string]: string
 }> => {
     logger.debug(`Loading env-based config from: ${path}`)
@@ -36,7 +37,7 @@ const loadConfigFromEnv = async (path: string): Promise<{
     const result = {}
     dotenv.config({
         path,
-        processEnv: result // make dotenv load into the result object
+        processEnv: result, // make dotenv load into the result object
     })
 
     return result
@@ -52,7 +53,7 @@ const loadConfigFromEnv = async (path: string): Promise<{
 //     }
 
 //     const result = JSON.parse(fs.readFileSync(path, 'utf-8'))
-    
+
 //     return result
 // }
 
@@ -60,7 +61,7 @@ const loadConfigFromEnv = async (path: string): Promise<{
 //     [key: string]: string
 // }> => {
 //     logger.debug(`Loading ts-based config from: ${path}`);
-    
+
 //     if (!fs.existsSync(path)) {
 //         throw new Error(`Config file not found at '${path}'`)
 //     }
@@ -82,12 +83,11 @@ const loadConfigFromEnv = async (path: string): Promise<{
 //     return config
 // }
 
-
 // const loadConfigFromJs = async (path: string): Promise<{
 //     [key: string]: string
 // }> => {
 //     logger.debug(`Loading js-based config from: ${path}`);
-    
+
 //     if (!fs.existsSync(path)) {
 //         throw new Error(`Config file not found at '${path}'. Have you compiled your typescript config file? e.g. \`npx tsc config.ts\``)
 //     }
@@ -115,53 +115,53 @@ export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
     if (args.path === undefined) {
         // check whether it has been set in the process.env
         if (process.env.ENV) {
-            args.path = process.env.ENV;
+            args.path = process.env.ENV
         } else {
             // const defaultConfigTsPath = './config.ts';
-            const defaultEnvPath = './.env';
+            const defaultEnvPath = './.env'
             // if (fs.existsSync(defaultConfigTsPath)) {
             //     // try to load ${cwd}/config.ts
             //     args.path = defaultConfigTsPath;
             // } else
             if (fs.existsSync(defaultEnvPath)) {
                 // try to load ${cwd}/.env
-                args.path = defaultEnvPath;
+                args.path = defaultEnvPath
             } else {
-                throw new Error(`No config file found at default location of '${defaultEnvPath}'`);
+                throw new Error(`No config file found at default location of '${defaultEnvPath}'`)
             }
         }
     }
     // load the config from the specified path
-    let config: {
+    const config: {
         [key: string]: string
-    };
+    } = await loadConfigFromEnv(args.path)
     // const tsExtension = '.ts'
     // if (args.path?.endsWith(tsExtension)) {
     //     config = await loadConfigFromTs(args.path);
     // } else if (args.path?.endsWith('.js')) {
     //     config = await loadConfigFromJs(args.path);
     // } else if (args.path?.endsWith('.json')) {
-    //     config = await loadConfigFromJson(args.path);   
+    //     config = await loadConfigFromJson(args.path);
     // } else {
-        config = await loadConfigFromEnv(args.path);
+    //     config = await loadConfigFromEnv(args.path);
     // }
     logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
 
     // parse the config to ensure it meets the expected format
-    let parsedConfig: T;
+    let parsedConfig: T
     try {
-        parsedConfig = args.schema.parse(config);
+        parsedConfig = args.schema.parse(config)
     } catch (err) {
-        throw new Error(`Failed to parse config at '${args.path}': ${err}`);
+        throw new Error(`Failed to parse config at '${args.path}': ${err}`)
     }
 
     // populate process.env if requested
     if (args.populateProcessEnv) {
         for (const key in parsedConfig) {
             // convert all values into strings via json encoding. this is to ensure that all values are strings. Any non-string objects will need to be JSON parsed before use. E.g. { a: { b: 1 } } will be stored as "{ "a": { "b": "1" } }", i.e. you'd need to JSON.parse(process.env.a).b to get the number 1 - but that would be a string, also.
-            process.env[key] = JSON.stringify(parsedConfig[key]);
+            process.env[key] = JSON.stringify(parsedConfig[key])
         }
     }
 
-    return parsedConfig;
+    return parsedConfig
 }
