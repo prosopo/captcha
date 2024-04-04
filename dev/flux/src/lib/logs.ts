@@ -41,6 +41,26 @@ async function getLogs(
     return await response.text()
 }
 
+// Helper function to parse logs and extract URLs
+function extractReferrersFromLogs(logsText: string) {
+    const urls = [
+        ...logsText.split('\n').reduce((accumulator, line) => {
+            // Regex to find strings starting with http or https
+            const matches = line.match(/"(https?:\/\/[^"]+)"/g)
+            if (matches) {
+                matches.forEach((match) => {
+                    // Removing the leading and trailing double quotes from the match
+                    const url = match.substring(1, match.length - 1)
+                    accumulator.add(url)
+                })
+            }
+            return accumulator
+        }, new Set()),
+    ]
+
+    return urls.join('           ')
+}
+
 export const main = async (
     publicKey: string,
     privateKey: Uint8Array,
@@ -75,18 +95,21 @@ export const main = async (
             // Login to the node
             await verifyLogin(publicKey, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
+            const logs = await getLogs(
+                publicKey,
+                nodeSignature,
+                nodeLoginPhrase,
+                nodeAPIURL,
+                appName,
+                appComponentName,
+                lineCount
+            )
+
             // Get the logs for the app
             return {
                 url: ip.href,
-                logs: await getLogs(
-                    publicKey,
-                    nodeSignature,
-                    nodeLoginPhrase,
-                    nodeAPIURL,
-                    appName,
-                    appComponentName,
-                    lineCount
-                ),
+                logs,
+                uniqueReferrers: extractReferrersFromLogs(logs),
             }
         })
 
