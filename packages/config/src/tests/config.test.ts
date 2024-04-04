@@ -12,30 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test, it } from 'vitest'
+import { loadConfig } from '../index.js'
+import { ConfigSchema } from './config.js'
 
 describe('config', () => {
     
     it('should load config from env', async () => {
-
+        expect(await loadConfig({ path: `${__dirname}/example.env`, schema: ConfigSchema })).to.deep.equal({
+            a: true,
+            b: 1,
+            c: 'hello',
+        })
     })
 
     it('should load config from js', async () => {
-
-    })
-
-    it('should load config from default env location', async () => {
-
-    })
-
-    it('should load config from default js location', async () => {
-
+        expect(await loadConfig({ path: `${__dirname}/example.config.js`, schema: ConfigSchema })).to.deep.equal({
+            a: true,
+            b: 1,
+            c: 'hello',
+        })
     })
 
     it('should load config from ts', async () => {
-
+        expect(await loadConfig({ path: `${__dirname}/example.config.ts`, schema: ConfigSchema })).to.deep.equal({
+            a: true,
+            b: 1,
+            c: 'hello',
+        })
     })
 
     it('should load into process.env', async () => {
-
+        const config = await loadConfig({ path: `${__dirname}/example.env`, schema: ConfigSchema, populateProcessEnv: true})
+        for(const key of Object.keys(config)) {
+            expect(process.env[key]).to.equal(JSON.stringify(config[key as keyof typeof config]))
+        }
     })
 })

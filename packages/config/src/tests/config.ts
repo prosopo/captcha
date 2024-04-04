@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 export const ConfigSchema = z.object({
-    a: z.boolean(),
-    b: z.number(),
+    a: z.coerce.boolean(),
+    b: z.coerce.number(),
     c: z.string(),
 })
 
