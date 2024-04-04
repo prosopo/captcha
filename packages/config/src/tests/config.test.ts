@@ -13,6 +13,12 @@
 // limitations under the License.
 import { describe, expect, test, it } from 'vitest'
 
+export type Config = {
+    a: boolean,
+    b: number,
+    c: string,
+}
+
 describe('config', () => {
     
     it('should load config from env', async () => {
