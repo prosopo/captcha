@@ -2,6 +2,7 @@ import { getLogger } from '@prosopo/common';
 import fs from 'fs';
 import z from 'zod';
 import dotenv from 'dotenv'
+import ts from 'typescript'
 
 const logger = getLogger('info', import.meta.url);
 
@@ -33,6 +34,33 @@ const loadConfigFromEnv = async (path: string): Promise<{
 
     return result
 }
+
+const loadConfigFromTs = async (path: string): Promise<{
+    [key: string]: string
+}> => {
+    logger.debug(`Loading ts-based config from: ${path}`);
+    
+    if (!fs.existsSync(path)) {
+        throw new Error(`Config file not found at '${path}'`)
+    }
+
+    // read the ts file
+    const tsCode = fs.readFileSync(path, 'utf-8')
+    // compile the ts file
+    const jsCode = ts.transpileModule(tsCode, {}).outputText
+    // write the js code to a temporary file
+    const jsPath = path.slice(0, -3) + '.js'
+    fs.writeFileSync(jsPath, jsCode)
+
+    // load the config from the js file
+    const config = await loadConfigFromJs(jsPath)
+
+    // delete the temporary js file
+    fs.unlinkSync(jsPath)
+
+    return config
+}
+
 
 const loadConfigFromJs = async (path: string): Promise<{
     [key: string]: string
@@ -81,8 +109,7 @@ export async function loadConfig(args: Args) {
     };
     const tsExtension = '.ts'
     if (args.path?.endsWith(tsExtension)) {
-        const jsPath = args.path.slice(0, -tsExtension.length) + '.js';
-        config = await loadConfigFromJs(args.path);
+        config = await loadConfigFromTs(args.path);
     } else {
         config = await loadConfigFromEnv(args.path);
     }
