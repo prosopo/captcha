@@ -16,9 +16,9 @@ export type Args = {
     schema: z.ZodAny
 }
 
-const loadConfigFromEnv = (path: string): {
+const loadConfigFromEnv = async (path: string): Promise<{
     [key: string]: string
-} => {
+}> => {
     logger.debug(`Loading env-based config from: ${path}`)
 
     const result = {}
@@ -30,18 +30,23 @@ const loadConfigFromEnv = (path: string): {
     return result
 }
 
-const loadConfigFromTs = (path: string): {
+const loadConfigFromJs = async (path: string): Promise<{
     [key: string]: string
-} => {
-    logger.debug(`Loading ts-based config from: ${path}`)
-    return {}
+}> => {
+    logger.debug(`Loading js-based config from: ${path}`);
+    
+    // dynamic import the js file
+    // this will have no typing!
+    const config = (await import(`../${path}`)).default
+    
+    return config
 }
 
 /**
  * Loads the config from env or a config file.
  * @param args - The arguments for loading environment variables.
  */
-export function loadConfig(args: Args) {
+export async function loadConfig(args: Args) {
     if (args.path === undefined) {
         const defaultConfigTsPath = './config.ts';
         const defaultEnvPath = './.env';
@@ -59,10 +64,10 @@ export function loadConfig(args: Args) {
     let config: {
         [key: string]: string
     };
-    if (args.path?.endsWith('.ts')) {
-        config = loadConfigFromTs(args.path);
+    if (args.path?.endsWith('.js')) {
+        config = await loadConfigFromJs(args.path);
     } else {
-        config = loadConfigFromEnv(args.path);
+        config = await loadConfigFromEnv(args.path);
     }
     logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
 
