@@ -1,6 +1,7 @@
 import { getLogger } from '@prosopo/common';
 import fs from 'fs';
 import z from 'zod';
+import dotenv from 'dotenv'
 
 const logger = getLogger('info', import.meta.url);
 
@@ -19,7 +20,14 @@ const loadConfigFromEnv = (path: string): {
     [key: string]: string
 } => {
     logger.debug(`Loading env-based config from: ${path}`)
-    return {}
+
+    const result = {}
+    dotenv.config({
+        path,
+        processEnv: result // make dotenv load into the result object
+    })
+
+    return result
 }
 
 const loadConfigFromTs = (path: string): {
