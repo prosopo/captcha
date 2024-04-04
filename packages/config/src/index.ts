@@ -49,7 +49,7 @@ const loadConfigFromTs = async (path: string): Promise<{
     // compile the ts file
     const jsCode = ts.transpileModule(tsCode, {}).outputText
     // write the js code to a temporary file
-    const jsPath = path.slice(0, -3) + '.js'
+    const jsPath = path.slice(0, -3) + '.js.tmp'
     fs.writeFileSync(jsPath, jsCode)
 
     // load the config from the js file
@@ -73,8 +73,9 @@ const loadConfigFromJs = async (path: string): Promise<{
 
     // dynamic import the js file
     // this will have no typing!
-    const buildConfig = (await import(`../${path}`)).default
-    
+    const buildConfig = (await import(`${path}`)).default
+    console.log('buildConfig', buildConfig)
+
     // ensure the config is a function
     if (typeof buildConfig !== 'function') {
         throw new Error(`Config at '${path}' must export a function to build the config object.`)
@@ -115,6 +116,8 @@ export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
     const tsExtension = '.ts'
     if (args.path?.endsWith(tsExtension)) {
         config = await loadConfigFromTs(args.path);
+    } else if (args.path?.endsWith('.js')) {
+        config = await loadConfigFromJs(args.path);
     } else {
         config = await loadConfigFromEnv(args.path);
     }

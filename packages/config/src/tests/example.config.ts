@@ -1,4 +1,4 @@
-import { Config } from './src/tests/config.js';
+import { Config } from './config.js'
 
 export default function buildConfig(): Config {
     return {
