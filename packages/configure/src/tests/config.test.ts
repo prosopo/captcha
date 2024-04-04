@@ -25,29 +25,29 @@ describe('config', () => {
         })
     })
 
-    it('should load config from json', async () => {
-        expect(await loadConfig({ path: `${__dirname}/example.config.json`, schema: ConfigSchema })).to.deep.equal({
-            a: true,
-            b: 1,
-            c: 'hello',
-        })
-    })
+    // it('should load config from json', async () => {
+    //     expect(await loadConfig({ path: `${__dirname}/example.config.json`, schema: ConfigSchema })).to.deep.equal({
+    //         a: true,
+    //         b: 1,
+    //         c: 'hello',
+    //     })
+    // })
 
-    it('should load config from js', async () => {
-        expect(await loadConfig({ path: `${__dirname}/example.config.js`, schema: ConfigSchema })).to.deep.equal({
-            a: true,
-            b: 1,
-            c: 'hello',
-        })
-    })
+    // it('should load config from js', async () => {
+    //     expect(await loadConfig({ path: `${__dirname}/example.config.js`, schema: ConfigSchema })).to.deep.equal({
+    //         a: true,
+    //         b: 1,
+    //         c: 'hello',
+    //     })
+    // })
 
-    it('should load config from ts', async () => {
-        expect(await loadConfig({ path: `${__dirname}/example.config.ts`, schema: ConfigSchema })).to.deep.equal({
-            a: true,
-            b: 1,
-            c: 'hello',
-        })
-    })
+    // it('should load config from ts', async () => {
+    //     expect(await loadConfig({ path: `${__dirname}/example.config.ts`, schema: ConfigSchema })).to.deep.equal({
+    //         a: true,
+    //         b: 1,
+    //         c: 'hello',
+    //     })
+    // })
 
     it('should load into process.env', async () => {
         const config = await loadConfig({ path: `${__dirname}/example.config.env`, schema: ConfigSchema, populateProcessEnv: true})

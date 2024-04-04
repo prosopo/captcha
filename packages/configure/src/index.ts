@@ -1,8 +1,15 @@
+
+/**
+ * Loading from json/js/ts has been disabled for now on the basis that it causes issues with loading config in docker/flux. Native env var support makes it super easy to load config from env vars, so this is the recommended approach atm. Unfortunately, this means no dynamic config via js/ts, and no complex config types via js/ts. This is a tradeoff for compatibility. See https://github.com/prosopo/captcha/pull/1136 for reasoning.
+ * 
+ * Old code for loading json/js/ts will remain here, in case we need it in the future.
+ */
+
 import { getLogger } from '@prosopo/common';
 import fs from 'fs';
 import z from 'zod';
 import dotenv from 'dotenv'
-import ts from 'typescript'
+// import ts from 'typescript'
 
 const logger = getLogger('warn', import.meta.url);
 
@@ -35,70 +42,70 @@ const loadConfigFromEnv = async (path: string): Promise<{
     return result
 }
 
-const loadConfigFromJson = async (path: string): Promise<{
-    [key: string]: string
-}> => {
-    logger.debug(`Loading json-based config from: ${path}`)
+// const loadConfigFromJson = async (path: string): Promise<{
+//     [key: string]: string
+// }> => {
+//     logger.debug(`Loading json-based config from: ${path}`)
 
-    if (!fs.existsSync(path)) {
-        throw new Error(`Config file not found at '${path}'`)
-    }
+//     if (!fs.existsSync(path)) {
+//         throw new Error(`Config file not found at '${path}'`)
+//     }
 
-    const result = JSON.parse(fs.readFileSync(path, 'utf-8'))
+//     const result = JSON.parse(fs.readFileSync(path, 'utf-8'))
     
-    return result
-}
+//     return result
+// }
 
-const loadConfigFromTs = async (path: string): Promise<{
-    [key: string]: string
-}> => {
-    logger.debug(`Loading ts-based config from: ${path}`);
+// const loadConfigFromTs = async (path: string): Promise<{
+//     [key: string]: string
+// }> => {
+//     logger.debug(`Loading ts-based config from: ${path}`);
     
-    if (!fs.existsSync(path)) {
-        throw new Error(`Config file not found at '${path}'`)
-    }
+//     if (!fs.existsSync(path)) {
+//         throw new Error(`Config file not found at '${path}'`)
+//     }
 
-    // read the ts file
-    const tsCode = fs.readFileSync(path, 'utf-8')
-    // compile the ts file
-    const jsCode = ts.transpileModule(tsCode, {}).outputText
-    // write the js code to a temporary file
-    const jsPath = path.slice(0, -3) + '.js.tmp'
-    fs.writeFileSync(jsPath, jsCode)
+//     // read the ts file
+//     const tsCode = fs.readFileSync(path, 'utf-8')
+//     // compile the ts file
+//     const jsCode = ts.transpileModule(tsCode, {}).outputText
+//     // write the js code to a temporary file
+//     const jsPath = path.slice(0, -3) + '.js.tmp'
+//     fs.writeFileSync(jsPath, jsCode)
 
-    // load the config from the js file
-    const config = await loadConfigFromJs(jsPath)
+//     // load the config from the js file
+//     const config = await loadConfigFromJs(jsPath)
 
-    // delete the temporary js file
-    fs.unlinkSync(jsPath)
+//     // delete the temporary js file
+//     fs.unlinkSync(jsPath)
 
-    return config
-}
+//     return config
+// }
 
 
-const loadConfigFromJs = async (path: string): Promise<{
-    [key: string]: string
-}> => {
-    logger.debug(`Loading js-based config from: ${path}`);
+// const loadConfigFromJs = async (path: string): Promise<{
+//     [key: string]: string
+// }> => {
+//     logger.debug(`Loading js-based config from: ${path}`);
     
-    if (!fs.existsSync(path)) {
-        throw new Error(`Config file not found at '${path}'. Have you compiled your typescript config file? e.g. \`npx tsc config.ts\``)
-    }
+//     if (!fs.existsSync(path)) {
+//         throw new Error(`Config file not found at '${path}'. Have you compiled your typescript config file? e.g. \`npx tsc config.ts\``)
+//     }
 
-    // dynamic import the js file
-    // this will have no typing!
-    const buildConfig = (await import(`${path}`)).default
-    console.log('buildConfig', buildConfig)
+//     // dynamic import the js file
+//     // this will have no typing!
+//     const buildConfig = (await import(`${path}`)).default
+//     console.log('buildConfig', buildConfig)
 
-    // ensure the config is a function
-    if (typeof buildConfig !== 'function') {
-        throw new Error(`Config at '${path}' must export a function to build the config object.`)
-    }
+//     // ensure the config is a function
+//     if (typeof buildConfig !== 'function') {
+//         throw new Error(`Config at '${path}' must export a function to build the config object.`)
+//     }
 
-    const config = buildConfig()
+//     const config = buildConfig()
 
-    return config
-}
+//     return config
+// }
 
 /**
  * Loads the config from env or a config file.
@@ -107,19 +114,20 @@ const loadConfigFromJs = async (path: string): Promise<{
 export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
     if (args.path === undefined) {
         // check whether it has been set in the process.env
-        if (process.env.CONFIG_PATH) {
-            args.path = process.env.CONFIG_PATH;
+        if (process.env.ENV) {
+            args.path = process.env.ENV;
         } else {
-            const defaultConfigTsPath = './config.ts';
+            // const defaultConfigTsPath = './config.ts';
             const defaultEnvPath = './.env';
-            if (fs.existsSync(defaultConfigTsPath)) {
-                // try to load ${cwd}/config.ts
-                args.path = defaultConfigTsPath;
-            } else if (fs.existsSync(defaultEnvPath)) {
+            // if (fs.existsSync(defaultConfigTsPath)) {
+            //     // try to load ${cwd}/config.ts
+            //     args.path = defaultConfigTsPath;
+            // } else
+            if (fs.existsSync(defaultEnvPath)) {
                 // try to load ${cwd}/.env
                 args.path = defaultEnvPath;
             } else {
-                throw new Error(`No config file found at default locations of '${defaultConfigTsPath}' or '${defaultEnvPath}'`);
+                throw new Error(`No config file found at default location of '${defaultEnvPath}'`);
             }
         }
     }
@@ -127,16 +135,16 @@ export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
     let config: {
         [key: string]: string
     };
-    const tsExtension = '.ts'
-    if (args.path?.endsWith(tsExtension)) {
-        config = await loadConfigFromTs(args.path);
-    } else if (args.path?.endsWith('.js')) {
-        config = await loadConfigFromJs(args.path);
-    } else if (args.path?.endsWith('.json')) {
-        config = await loadConfigFromJson(args.path);   
-    } else {
+    // const tsExtension = '.ts'
+    // if (args.path?.endsWith(tsExtension)) {
+    //     config = await loadConfigFromTs(args.path);
+    // } else if (args.path?.endsWith('.js')) {
+    //     config = await loadConfigFromJs(args.path);
+    // } else if (args.path?.endsWith('.json')) {
+    //     config = await loadConfigFromJson(args.path);   
+    // } else {
         config = await loadConfigFromEnv(args.path);
-    }
+    // }
     logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
 
     // parse the config to ensure it meets the expected format
