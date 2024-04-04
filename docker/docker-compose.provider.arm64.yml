@@ -17,7 +17,7 @@ services:
       - external
 
   database:
-    image: mongo:5.0.4
+    image: mongodb-raspberrypi4-unofficial-r6.0.10
     volumes:
       - /data/db:/data/db
     ports:
