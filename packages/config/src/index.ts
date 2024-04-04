@@ -4,7 +4,7 @@ import z from 'zod';
 import dotenv from 'dotenv'
 import ts from 'typescript'
 
-const logger = getLogger('info', import.meta.url);
+const logger = getLogger('warn', import.meta.url);
 
 /**
  * The arguments for loading environment variables.
