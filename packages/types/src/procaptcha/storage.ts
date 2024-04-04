@@ -14,7 +14,7 @@
 import { z } from 'zod'
 
 export const ProsopoLocalStorageSchema = z.object({
-    account: z.string(),
+    account: z.string().optional(),
     blockNumber: z.number().optional(),
     providerUrl: z.string().optional(),
 })
