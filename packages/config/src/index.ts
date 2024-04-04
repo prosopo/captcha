@@ -11,10 +11,10 @@ const logger = getLogger('info', import.meta.url);
  * @param populateProcessEnv - Whether to populate `process.env` with the loaded environment variables. Defaults to `false`.
  * @param path - The path to the source file containing the environment variables. If unspecified, falls back to `config.ts` then `.env`.
  */
-export type Args = {
+export type Args<T extends object> = {
     populateProcessEnv?: boolean,
     path?: string,
-    schema: z.ZodAny
+    schema: z.ZodType<T>
 }
 
 const loadConfigFromEnv = async (path: string): Promise<{
@@ -89,18 +89,23 @@ const loadConfigFromJs = async (path: string): Promise<{
  * Loads the config from env or a config file.
  * @param args - The arguments for loading environment variables.
  */
-export async function loadConfig(args: Args) {
+export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
     if (args.path === undefined) {
-        const defaultConfigTsPath = './config.ts';
-        const defaultEnvPath = './.env';
-        if (fs.existsSync(defaultConfigTsPath)) {
-            // try to load ${cwd}/config.ts
-            args.path = defaultConfigTsPath;
-        } else if (fs.existsSync(defaultEnvPath)) {
-            // try to load ${cwd}/.env
-            args.path = defaultEnvPath;
+        // check whether it has been set in the process.env
+        if (process.env.CONFIG_PATH) {
+            args.path = process.env.CONFIG_PATH;
         } else {
-            throw new Error(`No config file found at default locations of '${defaultConfigTsPath}' or '${defaultEnvPath}'`);
+            const defaultConfigTsPath = './config.ts';
+            const defaultEnvPath = './.env';
+            if (fs.existsSync(defaultConfigTsPath)) {
+                // try to load ${cwd}/config.ts
+                args.path = defaultConfigTsPath;
+            } else if (fs.existsSync(defaultEnvPath)) {
+                // try to load ${cwd}/.env
+                args.path = defaultEnvPath;
+            } else {
+                throw new Error(`No config file found at default locations of '${defaultConfigTsPath}' or '${defaultEnvPath}'`);
+            }
         }
     }
     // load the config from the specified path
@@ -116,7 +121,7 @@ export async function loadConfig(args: Args) {
     logger.info(`Loaded config from '${args.path}': ${JSON.stringify(config)}`)
 
     // parse the config to ensure it meets the expected format
-    let parsedConfig: z.infer<typeof args.schema>;
+    let parsedConfig: T;
     try {
         parsedConfig = args.schema.parse(config);
     } catch (err) {
@@ -126,7 +131,7 @@ export async function loadConfig(args: Args) {
     // populate process.env if requested
     if (args.populateProcessEnv) {
         for (const key in parsedConfig) {
-            process.env[key] = parsedConfig[key];
+            process.env[key] = String(parsedConfig[key]);
         }
     }
 
