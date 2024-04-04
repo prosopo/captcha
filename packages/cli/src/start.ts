@@ -52,6 +52,7 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
     apiApp.use(handleErrors)
+
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
     }
