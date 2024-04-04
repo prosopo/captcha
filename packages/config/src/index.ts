@@ -35,6 +35,20 @@ const loadConfigFromEnv = async (path: string): Promise<{
     return result
 }
 
+const loadConfigFromJson = async (path: string): Promise<{
+    [key: string]: string
+}> => {
+    logger.debug(`Loading json-based config from: ${path}`)
+
+    if (!fs.existsSync(path)) {
+        throw new Error(`Config file not found at '${path}'`)
+    }
+
+    const result = JSON.parse(fs.readFileSync(path, 'utf-8'))
+    
+    return result
+}
+
 const loadConfigFromTs = async (path: string): Promise<{
     [key: string]: string
 }> => {
@@ -118,6 +132,8 @@ export async function loadConfig<T extends object>(args: Args<T>): Promise<T> {
         config = await loadConfigFromTs(args.path);
     } else if (args.path?.endsWith('.js')) {
         config = await loadConfigFromJs(args.path);
+    } else if (args.path?.endsWith('.json')) {
+        config = await loadConfigFromJson(args.path);   
     } else {
         config = await loadConfigFromEnv(args.path);
     }
