@@ -12,27 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BatchCommitmentsTask } from './batch/commitments.js'
-import { CalculateSolutionsTask } from './tasks/calculateSolutions.js'
 import { CronJob } from 'cron'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { at } from '@prosopo/util'
-
-export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
-    const env = new ProviderEnvironment(config, pair)
-    await env.isReady()
-    const tasks = new CalculateSolutionsTask(env)
-    const job = new CronJob(at(process.argv, 2), () => {
-        env.logger.debug('CalculateSolutionsTask....')
-        tasks.run().catch((err) => {
-            env.logger.error(err)
-        })
-    })
-
-    job.start()
-}
 
 export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
     const env = new ProviderEnvironment(config, pair)
