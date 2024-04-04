@@ -15,6 +15,7 @@
         }
     },
     "scripts": {
+        "test": "echo \"Error: no test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",

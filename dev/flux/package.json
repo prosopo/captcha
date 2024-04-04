@@ -12,10 +12,10 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"Error: no test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest run --config ./src/vite.config.ts",
         "cli": "node dist/index.js",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",

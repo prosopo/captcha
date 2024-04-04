@@ -9,6 +9,7 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"Error: no test specified\"",
         "dev": "vite serve --mode=development --config ./vite.config.ts --host",
         "start": "node ./dist/app.js",
         "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",

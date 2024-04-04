@@ -20,6 +20,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "bundle:dev": "vite build --config vite.config.ts --mode development",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
+        "test": "npx vitest run --config ./vite.test.config.ts",
         "cli": "node ./dist/cli.js",
         "start": "node ./dist/cli.js --api",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
