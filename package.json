@@ -44,7 +44,7 @@
         "start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
         "start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
         "populate-data": "npm -w @prosopo/provider run populate-data",
-        "test": "npm run --workspaces --if-present test",
+        "test": "npm run --workspaces test",
         "test:all": "npm run --workspaces --if-present test",
         "eslint": "npm --workspaces run eslint && npm run eslint:workspace",
         "eslint:workspace": "npx eslint '.*.*' '*.*' .vscode .github --ignore-pattern README.md --ignore-pattern diagram.svg --ignore-path .eslintignore",
