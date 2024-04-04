@@ -37,8 +37,15 @@ const loadConfigFromJs = async (path: string): Promise<{
     
     // dynamic import the js file
     // this will have no typing!
-    const config = (await import(`../${path}`)).default
+    const buildConfig = (await import(`../${path}`)).default
     
+    // ensure the config is a function
+    if (typeof buildConfig !== 'function') {
+        throw new Error(`Config at '${path}' must export a function to build the config object.`)
+    }
+
+    const config = buildConfig()
+
     return config
 }
 
