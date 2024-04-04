@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProcaptchaLocalStorage } from '@prosopo/types'
+import { ProcaptchaLocalStorage, ProsopoLocalStorageSchema } from '@prosopo/types'
 import { hexToString } from '@polkadot/util'
 import { stringToHex } from '@polkadot/util/string'
 
@@ -21,7 +21,7 @@ const PROCAPTCHA_STORAGE_KEY = '@prosopo/procaptcha'
  * Gets procaptcha storage object from localStorage
  */
 function getProcaptchaStorage(): ProcaptchaLocalStorage {
-    return JSON.parse(hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || '0x7b7d'))
+    return ProsopoLocalStorageSchema.parse(hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || '0x7b7d'))
 }
 
 /**
@@ -29,7 +29,7 @@ function getProcaptchaStorage(): ProcaptchaLocalStorage {
  * @param storage
  */
 function setProcaptchaStorage(storage: ProcaptchaLocalStorage) {
-    localStorage.setItem(PROCAPTCHA_STORAGE_KEY, stringToHex(JSON.stringify(storage)))
+    localStorage.setItem(PROCAPTCHA_STORAGE_KEY, stringToHex(JSON.stringify(ProsopoLocalStorageSchema.parse(storage))))
 }
 
 /**

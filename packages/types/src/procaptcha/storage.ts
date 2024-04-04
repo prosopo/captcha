@@ -11,8 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export type ProcaptchaLocalStorage = {
-    account: string
-    blockNumber?: number
-    providerUrl?: string
-}
+import { z } from 'zod'
+
+export const ProsopoLocalStorageSchema = z.object({
+    account: z.string(),
+    blockNumber: z.number().optional(),
+    providerUrl: z.string().optional(),
+})
+
+export type ProcaptchaLocalStorage = z.infer<typeof ProsopoLocalStorageSchema>
