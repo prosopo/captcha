@@ -43,7 +43,7 @@ function setAccount(account: string) {
  * Gets default `account`
  */
 function getAccount(): string | null {
-    return getProcaptchaStorage().account
+    return getProcaptchaStorage().account || null
 }
 
 export default {
