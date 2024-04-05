@@ -1,5 +1,5 @@
 import { LiteralParser } from "./LiteralParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 
 export class NullParser extends LiteralParser<null> {
     constructor() {

@@ -1,7 +1,7 @@
 import { boundNum } from "./BoundNumberParser.js"
 import { custom, redefine } from "./CustomParser.js"
 import { NumberParser, num } from "./NumberParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 const min = -Math.pow(2, 8) + (Math.pow(2, 8) / 2)

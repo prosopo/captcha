@@ -1,7 +1,7 @@
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 
 
-export class CustomParser<T> extends Shaper<T> {
+export class CustomParser<T> extends Validator<T> {
     constructor(private readonly fn: (value: unknown) => T, private readonly _name: string) {
         super()
     }
@@ -19,11 +19,11 @@ export class CustomParser<T> extends Shaper<T> {
     }
 }
 
-export const custom = <T>(fn: (value: unknown) => T, name: string): Shaper<T> => {
+export const custom = <T>(fn: (value: unknown) => T, name: string): Validator<T> => {
     return new CustomParser<T>(fn, name);
 }
 export const define = custom
-export const redefine = <T>(create: () => Shaper<T>, name: string): () => Shaper<T> => {
+export const redefine = <T>(create: () => Validator<T>, name: string): () => Validator<T> => {
     return () => {
         const p = create()
         return custom((value: unknown) => p.shape(value), name)

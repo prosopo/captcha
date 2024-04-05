@@ -1,8 +1,8 @@
 import { NumberParser, num } from "./NumberParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
-export class FiniteNumber extends Shaper<number> {
+export class FiniteNumber extends Validator<number> {
 
     public override shape(value: unknown): number {
         const v = num().shape(value)

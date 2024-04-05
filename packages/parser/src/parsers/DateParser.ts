@@ -1,5 +1,5 @@
 import { InstanceParser } from "./InstanceParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { Ctor } from "./utils.js"
 
 export class DateParser extends InstanceParser<Ctor<Date>> {

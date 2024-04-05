@@ -1,12 +1,12 @@
 import { num } from "./NumberParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { str } from "./StringParser.js"
 import { Resolve, UnionToIntersection } from "./utils.js"
 
-export type ParserArrayToShapeUnion<T> = T extends [] ? never : T extends [Shaper<infer A>, ...infer B] ? A | ParserArrayToShapeUnion<B> : never
+export type ParserArrayToShapeUnion<T> = T extends [] ? never : T extends [Validator<infer A>, ...infer B] ? A | ParserArrayToShapeUnion<B> : never
 export type IntersectParserArray<T> = UnionToIntersection<ParserArrayToShapeUnion<T>>
 
-export class IntersectParser<const T extends Shaper<any>[]> extends Shaper<IntersectParserArray<T>> {
+export class IntersectParser<const T extends Validator<any>[]> extends Validator<IntersectParserArray<T>> {
 
     constructor(private _parsers: T) {
         super()
@@ -42,8 +42,8 @@ export class IntersectParser<const T extends Shaper<any>[]> extends Shaper<Inter
     }
 }
 
-export const pIntersect = <const T extends Shaper<any>[]>(parsers: T) => new IntersectParser<T>(parsers)
+export const pIntersect = <const T extends Validator<any>[]>(parsers: T) => new IntersectParser<T>(parsers)
 export const intersect = pIntersect
 export const intersection = pIntersect
-export const pAnd = <T extends Shaper<any>, U extends Shaper<any>>(a: T, b: U) => pIntersect([a, b])
+export const pAnd = <T extends Validator<any>, U extends Validator<any>>(a: T, b: U) => pIntersect([a, b])
 export const and = pAnd

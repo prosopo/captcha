@@ -1,12 +1,12 @@
 import { inst } from "./InstanceParser.js";
 import { OptionalParser } from "./OptionalParser.js";
-import { IsOptional, IsReadonly, Shaper, Shape } from "./Parser.js";
+import { IsOptional, IsReadonly, Validator, Shape } from "./Parser.js";
 import { ReadonlyParser } from "./ReadonlyParser.js";
 import { DeepOmit, DeepPick, Extend, Mask, Prop, Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
 
 export type Schema<T> = {
-    [K in keyof T]: Shaper<T[K]>
+    [K in keyof T]: Validator<T[K]>
 }
 
 export type PartialSchema<T extends Schema<any>> = Resolve<{
@@ -200,7 +200,7 @@ export type UnpackSchema<T> = Extend<{
 
 export type ExtractSchema<T extends ObjectParser<any>> = T extends ObjectParser<infer U> ? U : never
 
-export class ObjectParser<T extends Schema<any>> extends Shaper<UnpackSchema<T>> {
+export class ObjectParser<T extends Schema<any>> extends Validator<UnpackSchema<T>> {
 
     private handler: SchemaHandler<T>
 
