@@ -1,5 +1,5 @@
 import { LiteralParser } from "./LiteralParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 
 export class UndefinedParser extends LiteralParser<undefined> {
 

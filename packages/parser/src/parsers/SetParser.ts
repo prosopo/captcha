@@ -1,7 +1,7 @@
 import { inst } from "./InstanceParser.js"
-import { Parser, Shape } from "./Parser.js"
+import { Shaper, Shape } from "./Parser.js"
 
-export class SetParser<T extends Parser<any>> extends Parser<Set<Shape<T>>> {
+export class SetParser<T extends Shaper<any>> extends Shaper<Set<Shape<T>>> {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -30,5 +30,5 @@ export class SetParser<T extends Parser<any>> extends Parser<Set<Shape<T>>> {
     }
 }
 
-export const pSet = <T extends Parser<any>>(parser: T) => new SetParser(parser)
+export const pSet = <T extends Shaper<any>>(parser: T) => new SetParser(parser)
 export const set = pSet

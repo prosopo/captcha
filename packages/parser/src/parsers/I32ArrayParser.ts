@@ -1,7 +1,7 @@
 import { boundNum } from "./BoundNumberParser.js"
 import { InstanceParser } from "./InstanceParser.js"
 import { NumberParser, num } from "./NumberParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor, InferTypeFromCtor } from "./utils.js"
 

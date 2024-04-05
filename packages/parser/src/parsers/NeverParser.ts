@@ -1,7 +1,7 @@
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { stringify } from "./utils.js"
 
-export class NeverParser extends Parser<never> {
+export class NeverParser extends Shaper<never> {
     public override shape(value: unknown): never {
         throw new Error(`Expected never but got ${stringify(value)} of type ${JSON.stringify(typeof value, null, 2)}`)
     }

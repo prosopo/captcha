@@ -1,7 +1,7 @@
 import { boundNum } from "./BoundNumberParser.js"
 import { redefine } from "./CustomParser.js"
 import { NumberParser, num } from "./NumberParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 const max = Math.pow(2, 16) - 1

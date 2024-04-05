@@ -1,7 +1,7 @@
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { stringify } from "./utils.js"
 
-export class TypeofParser<T, U extends string> extends Parser<T> {
+export class TypeofParser<T, U extends string> extends Shaper<T> {
 
     constructor(readonly typeName: U) {
         super()

@@ -1,6 +1,6 @@
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 
-export class AnyParser extends Parser<any> {
+export class AnyParser extends Shaper<any> {
 
     constructor() {
         super()

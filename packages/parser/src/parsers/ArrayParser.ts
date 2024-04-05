@@ -1,7 +1,7 @@
 import { inst } from "./InstanceParser.js"
-import { Parser, Shape } from "./Parser.js"
+import { Shaper, Shape } from "./Parser.js"
 
-export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
+export class ArrayParser<T extends Shaper<any>> extends Shaper<Shape<T>[]> {
 
     constructor(private _parser: T, readonly length: number = -1) {
         super()
@@ -37,7 +37,7 @@ export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
     }
 }
 
-export const pArray = <T extends Parser<any>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)
+export const pArray = <T extends Shaper<any>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)
 export const arr = pArray
 export const list = pArray
 export const array = pArray

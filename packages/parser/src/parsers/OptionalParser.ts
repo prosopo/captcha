@@ -1,6 +1,6 @@
-import { NestedParser, OptionalProp, Parser, Shape, optionalMarker } from "./Parser.js";
+import { NestedShaper, OptionalProp, Shaper, Shape, optionalMarker } from "./Parser.js";
 
-export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | undefined> implements OptionalProp<true, T>  {
+export class OptionalParser<T extends Shaper<any>> extends Shaper<Shape<T> | undefined> implements OptionalProp<true, T>  {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -28,6 +28,6 @@ export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | und
     readonly [optionalMarker] = true
 }
 
-export const pOptional = <T extends Parser<any>>(parser: T) => new OptionalParser<T>(parser)
+export const pOptional = <T extends Shaper<any>>(parser: T) => new OptionalParser<T>(parser)
 export const opt = pOptional
 export const optional = pOptional

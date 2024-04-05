@@ -2,7 +2,7 @@ import { boundBi } from "./BoundBigIntParser.js"
 import { boundNum } from "./BoundNumberParser.js"
 import { redefine } from "./CustomParser.js"
 import { NumberParser, num } from "./NumberParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 const max = BigInt(2) ** BigInt(256) - BigInt(1)

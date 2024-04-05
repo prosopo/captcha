@@ -1,4 +1,4 @@
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 export class NumberParser extends TypeofParser<number, "number"> {

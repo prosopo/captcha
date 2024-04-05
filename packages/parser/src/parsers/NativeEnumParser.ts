@@ -1,5 +1,5 @@
 import { inst } from "./InstanceParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { stringify } from "./utils.js"
 
 // ts enums are a simple mapping from string to number
@@ -36,7 +36,7 @@ import { stringify } from "./utils.js"
 //    "3": "C",
 //    "y": "D"
 // }
-export class NativeEnumParser<T> extends Parser<T[keyof T]> {
+export class NativeEnumParser<T> extends Shaper<T[keyof T]> {
     // store a list of the variants
     readonly variants: readonly T[keyof T][]
 

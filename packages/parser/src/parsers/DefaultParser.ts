@@ -1,9 +1,9 @@
 import { InstanceParser } from "./InstanceParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { Ctor } from "./utils.js"
 
-export class DefaultParser<T> extends Parser<T> {
-    constructor(private _parser: Parser<T>, public defaultFn: () => T) {
+export class DefaultParser<T> extends Shaper<T> {
+    constructor(private _parser: Shaper<T>, public defaultFn: () => T) {
         super()
         this._parser = this._parser.clone()
     }
@@ -29,7 +29,7 @@ export class DefaultParser<T> extends Parser<T> {
     }
 }
 
-export const pDefault = <T>(parser: Parser<T>, defaultFn: () => T) => new DefaultParser<T>(parser, defaultFn)
+export const pDefault = <T>(parser: Shaper<T>, defaultFn: () => T) => new DefaultParser<T>(parser, defaultFn)
 export const def = pDefault
 export const defaultTo = pDefault
 export const defaulted = pDefault
