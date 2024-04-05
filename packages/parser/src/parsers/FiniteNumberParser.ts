@@ -4,8 +4,8 @@ import { TypeofParser } from "./TypeofParser.js"
 
 export class FiniteNumber extends Parser<number> {
 
-    public override parse(value: unknown): number {
-        const v = num().parse(value)
+    public override shape(value: unknown): number {
+        const v = num().shape(value)
         if (!Number.isFinite(v)) {
             throw new Error(`Expected a finite number, but got ${v}`)
         }

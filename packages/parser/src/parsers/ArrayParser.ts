@@ -12,9 +12,9 @@ export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
         return this._parser.clone() as T
     }
 
-    public override parse(value: unknown): Shape<T>[] {
+    public override shape(value: unknown): Shape<T>[] {
         // value is definitely an array
-        const valueArray = inst(Array).parse(value)
+        const valueArray = inst(Array).shape(value)
         if (this.length >= 0) {
             // then expecting fixed length array
             if (valueArray.length !== this.length) {
@@ -23,7 +23,7 @@ export class ArrayParser<T extends Parser<any>> extends Parser<Shape<T>[]> {
         }
         for (let i = 0; i < valueArray.length; i++) {
             // parse each element
-            valueArray[i] = this._parser.parse(valueArray[i])
+            valueArray[i] = this._parser.shape(valueArray[i])
         }
         return value as Shape<T>[]
     }

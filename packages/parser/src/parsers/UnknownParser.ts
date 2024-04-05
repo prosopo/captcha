@@ -6,7 +6,7 @@ export class UnknownParser extends Parser<unknown> {
         super()
     }
 
-    public override parse(value: unknown): unknown {
+    public override shape(value: unknown): unknown {
         // no-op parser
         return value
     }

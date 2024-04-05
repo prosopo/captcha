@@ -10,8 +10,8 @@ export class BoundNumber extends Parser<number> {
         super()
     }
 
-    public override parse(value: unknown): number {
-        const v = finiteNum().parse(value)
+    public override shape(value: unknown): number {
+        const v = finiteNum().shape(value)
         if (this.min !== undefined) {
             if (v < this.min) {
                 throw new Error(`Expected a number greater than or equal to ${this.min}, but got ${v}`)

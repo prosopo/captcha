@@ -9,7 +9,7 @@ export class EnumParser<const T extends readonly any[]> extends Parser<Variant<T
         super()
     }
 
-    public override parse(value: unknown): Variant<T> {
+    public override shape(value: unknown): Variant<T> {
         for (const variant of this.variants) {
             if (variant === value) {
                 return variant

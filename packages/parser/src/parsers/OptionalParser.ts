@@ -10,11 +10,11 @@ export class OptionalParser<T extends Parser<any>> extends Parser<Shape<T> | und
         return this._parser.clone() as T
     }
 
-    public override parse(value: unknown): Shape<T> | undefined {
+    public override shape(value: unknown): Shape<T> | undefined {
         if (value === undefined) {
             return undefined
         }
-        return this._parser.parse(value)
+        return this._parser.shape(value)
     }
 
     public override clone() {

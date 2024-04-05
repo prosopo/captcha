@@ -17,12 +17,12 @@ export class UnionParser<const T extends Parser<any>[]> extends Parser<UnionPars
         return this._parsers.map(parser => parser.clone()) as T
     }
 
-    public override parse(value: unknown): UnionParserArray<T> {
+    public override shape(value: unknown): UnionParserArray<T> {
         if(this._parsers.length == 0) throw new Error("No parsers provided to union, cannot parse value")
         const errors: unknown[] = []
         for (const parser of this._parsers) {
             try {
-                return parser.parse(value)
+                return parser.shape(value)
             } catch (error) {
                 errors.push(error)
             }

@@ -10,8 +10,8 @@ export class ReadonlyParser<T extends Parser<any>> extends Parser<Shape<T>> impl
         return this._parser.clone() as T
     }
 
-    public override parse(value: unknown): Shape<T> {
-        return this._parser.parse(value)
+    public override shape(value: unknown): Shape<T> {
+        return this._parser.shape(value)
     }
 
     public override clone() {

@@ -11,12 +11,12 @@ export class SetParser<T extends Parser<any>> extends Parser<Set<Shape<T>>> {
         return this._parser.clone() as T
     }
 
-    public override parse(value: unknown): Set<Shape<T>> {
-        const valueSet = inst(Set).parse(value)
+    public override shape(value: unknown): Set<Shape<T>> {
+        const valueSet = inst(Set).shape(value)
         const result = new Set<Shape<T>>()
         for (const value of valueSet) {
             // parse every value to ensure they are of the correct type
-            result.add(this._parser.parse(value))
+            result.add(this._parser.shape(value))
         }
         return result
     }
