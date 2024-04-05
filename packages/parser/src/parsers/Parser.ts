@@ -1,40 +1,31 @@
 import { OptionalParser, opt } from "./OptionalParser.js"
 import { ReadonlyParser } from "./ReadonlyParser.js"
+import { Refiner } from "./Refiner.js"
 import { Result, failible } from "./result.js"
 import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 
 /**
  * A Shaper takes an unknown value and shapes it into a known type, or throws an error if it cannot.
  */
-export abstract class Shaper<T> extends Cloneable<Shaper<T>> {
+export abstract class Shaper<T> extends Refiner<T> {
+
+    /**
+     * Convert an unknown value into a known type, or throw an error if it cannot. E.g. a string parser would test whether the value is a string, and throw an error if it is not.
+     * @param value an unknown value to shape
+     */
     public abstract shape(value: unknown): T
-    
-    public isShape(value: unknown): {
-        ok: true,
-        result: T,
-    } | {
-        ok: false,
-        result: Error,
-    } {
-        try {
-            return {
-                ok: true,
-                result: this.shape(value),
-            }
-        } catch (e) {
-            return {
-                ok: false,
-                result: e instanceof Error ? e : new Error(String(e)),
-            }
-        }
+
+    /**
+     * Validating an unknown value is the process of shaping it into a known type, then refining it. If the value cannot be shaped, an error is thrown. If the value cannot be refined, an error is thrown. E.g. an email parser would first check if the value is a string (shape), then trim whitespace (transform) and check the string conforms to email address format (validation).
+     * @param value the unknown value to validate
+     * @returns a validated value
+     */
+    public validate(value: unknown): T {
+        const shaped = this.shape(value)
+        const refined = this.refine(shaped)
+        return refined
     }
 
-    public get name(): string {
-        const name = this.constructor.name
-        const typeName = removeSuffix(name, "Parser")
-        const typeNameCamel = toCamelCase(typeName)
-        return typeNameCamel
-    }
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface
