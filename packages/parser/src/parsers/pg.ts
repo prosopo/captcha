@@ -2,7 +2,7 @@ import { bool } from "./BooleanParser.js";
 import { num } from "./NumberParser.js";
 import { ExtractSchema, ObjectParser, SchemaHandler, UnpackSchema, obj } from "./ObjectParser.js";
 import { opt } from "./OptionalParser.js";
-import { IsOptional, IsReadonly, NestedParser, Parser, ReadonlyProp, Shape } from "./Parser.js";
+import { IsOptional, IsReadonly, NestedShaper, Shaper, ReadonlyProp, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
 import { str } from "./StringParser.js";
 
@@ -74,7 +74,7 @@ const d7 = d1.partialDeep()
 const d8 = obj(d7)
 type d9 = ReturnType<typeof d8.shape>
 type d10<T> = {
-    [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
+    [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Shaper<infer U> ? U : never
 }
 type d11 = typeof d8
 type d12 = ExtractSchema<d11>
@@ -83,7 +83,7 @@ type d14<T> = {
     [K in keyof T]: IsOptional<T[K]>
 }
 type d15 = d14<d12>
-type IsRO<T> = T extends NestedParser<infer U> ? true: false
+type IsRO<T> = T extends NestedShaper<infer U> ? true: false
 type d16<T> = {
     [K in keyof T]: IsRO<T[K]>
 }

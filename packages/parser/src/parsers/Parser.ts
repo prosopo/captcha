@@ -3,8 +3,10 @@ import { ReadonlyParser } from "./ReadonlyParser.js"
 import { Result, failible } from "./result.js"
 import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 
-// simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
-export abstract class Parser<T> extends Cloneable<Parser<T>> {
+/**
+ * A Shaper takes an unknown value and shapes it into a known type, or throws an error if it cannot.
+ */
+export abstract class Shaper<T> extends Cloneable<Shaper<T>> {
     public abstract shape(value: unknown): T
     
     public isShape(value: unknown): [true, T] | [false, Error] {
@@ -24,7 +26,7 @@ export abstract class Parser<T> extends Cloneable<Parser<T>> {
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface
-export interface NestedParser<T extends Parser<any>> {
+export interface NestedShaper<T extends Shaper<any>> {
     readonly parser: T
 }
 
@@ -40,12 +42,12 @@ export interface ReadonlyPropMarker<P> {
     readonly [readonlyMarker]: P
 }
 
-export interface OptionalProp<P, T extends Parser<any>> extends OptionalPropMarker<P>, NestedParser<T> { }
-export interface ReadonlyProp<P, T extends Parser<any>> extends ReadonlyPropMarker<P>, NestedParser<T> { }
+export interface OptionalProp<P, T extends Shaper<any>> extends OptionalPropMarker<P>, NestedShaper<T> { }
+export interface ReadonlyProp<P, T extends Shaper<any>> extends ReadonlyPropMarker<P>, NestedShaper<T> { }
 
-export type Shape<T> = T extends Parser<infer U> ? U : never
+export type Shape<T> = T extends Shaper<infer U> ? U : never
 
 // optional if OptionalProp<P> is present. P determines if the prop is optional or not. If OptionalProp<P> is not present, the prop is not optional. However, if it is a nested parser then we need to look at the inner parser, as that may be optional itself, so recurse.
-export type IsOptional<T> = T extends OptionalPropMarker<infer P> ? P : T extends NestedParser<infer U> ? IsOptional<U> : false
+export type IsOptional<T> = T extends OptionalPropMarker<infer P> ? P : T extends NestedShaper<infer U> ? IsOptional<U> : false
 // same for readonly
-export type IsReadonly<T> = T extends ReadonlyPropMarker<infer P> ? P : T extends NestedParser<infer U> ? IsReadonly<U> : false
+export type IsReadonly<T> = T extends ReadonlyPropMarker<infer P> ? P : T extends NestedShaper<infer U> ? IsReadonly<U> : false

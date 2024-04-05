@@ -1,4 +1,4 @@
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 export class StringParser extends TypeofParser<string, "string"> {

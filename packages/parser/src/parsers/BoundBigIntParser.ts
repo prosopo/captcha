@@ -1,11 +1,11 @@
 import { bi } from "./BigIntParser.js"
 import { finiteNum } from "./FiniteNumberParser.js"
 import { NumberParser, num } from "./NumberParser.js"
-import { Parser } from "./Parser.js"
+import { Shaper } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 
-export class BoundBigInt extends Parser<bigint> {
+export class BoundBigInt extends Shaper<bigint> {
 
     constructor(public min?: bigint, public max?: bigint) {
         super()

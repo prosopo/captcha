@@ -1,7 +1,7 @@
 import { inst } from "./InstanceParser.js"
-import { Parser, Shape } from "./Parser.js"
+import { Shaper, Shape } from "./Parser.js"
 
-export class MapParser<T extends Parser<any>, U extends Parser<any>> extends Parser<Map<Shape<T>, Shape<U>>> {
+export class MapParser<T extends Shaper<any>, U extends Shaper<any>> extends Shaper<Map<Shape<T>, Shape<U>>> {
     constructor(private _keyParser: T, private _valueParser: U) {
         super()
         this._keyParser = this.keyParser // clone parser
@@ -35,6 +35,6 @@ export class MapParser<T extends Parser<any>, U extends Parser<any>> extends Par
     }
 }
 
-export const pMap = <T extends Parser<any>, U extends Parser<any>>(keyParser: T, valueParser: U) => new MapParser<T, U>(keyParser, valueParser)
+export const pMap = <T extends Shaper<any>, U extends Shaper<any>>(keyParser: T, valueParser: U) => new MapParser<T, U>(keyParser, valueParser)
 export const map = pMap
 export const kv = pMap
