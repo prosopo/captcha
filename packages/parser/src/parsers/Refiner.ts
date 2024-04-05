@@ -20,7 +20,7 @@ export abstract class Refiner<T> extends Cloneable<Validator<T>> {
      * @returns the refined value
      */
     public refine(value: T): T {
-        // no-op
+        // default no-op
         return value
     }
 
@@ -39,7 +39,7 @@ export abstract class Refiner<T> extends Cloneable<Validator<T>> {
      */
     public get name(): string {
         const name = this.constructor.name
-        const typeName = removeSuffix(name, "Parser")
+        const typeName = removeSuffix(name, "Validator")
         const typeNameCamel = toCamelCase(typeName)
         return typeNameCamel
     }
