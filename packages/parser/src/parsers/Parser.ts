@@ -7,7 +7,7 @@ import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 /**
  * A validator takes an unknown value and shapes it into a known type, or throws an error if it cannot. The value is then refined, or an error is thrown if it cannot be refined.
  */
-export abstract class Validator<T> extends Refiner<T> {
+export abstract class Validator<T> extends Refiner<T> implements Cloneable<Validator<T>> {
 
     /**
      * Convert an unknown value into a known type, or throw an error if it cannot. E.g. a string parser would test whether the value is a string, and throw an error if it is not.
@@ -26,6 +26,7 @@ export abstract class Validator<T> extends Refiner<T> {
         return refined
     }
 
+    public abstract override clone(): Validator<T>
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface
