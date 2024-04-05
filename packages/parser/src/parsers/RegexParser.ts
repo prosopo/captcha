@@ -1,5 +1,5 @@
 import { InstanceParser } from "./InstanceParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 

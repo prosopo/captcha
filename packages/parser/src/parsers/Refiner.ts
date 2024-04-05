@@ -1,4 +1,4 @@
-import { Shaper } from "./Parser.js";
+import { Validator } from "./Parser.js";
 import { Cloneable, removeSuffix, toCamelCase } from "./utils.js"
 
 
@@ -12,7 +12,7 @@ import { Cloneable, removeSuffix, toCamelCase } from "./utils.js"
  * 
  * If the value cannot be refined, an error is thrown.
  */
-export abstract class Refiner<T> extends Cloneable<Shaper<T>> {
+export abstract class Refiner<T> extends Cloneable<Validator<T>> {
 
     /**
      * Refine a known type. Refinement validates the value and transforms it if necessary. For example, an email parser may trim whitespace from the email address (a transform) then check the string conforms to email address format (a validation). If the value cannot be refined, an error is thrown.

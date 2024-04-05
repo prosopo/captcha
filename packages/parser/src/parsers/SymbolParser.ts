@@ -1,4 +1,4 @@
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
 export class SymbolParser extends TypeofParser<Symbol, "symbol"> {

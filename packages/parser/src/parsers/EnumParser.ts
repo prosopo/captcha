@@ -1,9 +1,9 @@
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { stringify } from "./utils.js"
 
 export type Variant<T extends readonly any[]> = T extends readonly [infer A, ...infer B] ? A | Variant<B> : never
 
-export class EnumParser<const T extends readonly any[]> extends Shaper<Variant<T>> {
+export class EnumParser<const T extends readonly any[]> extends Validator<Variant<T>> {
 
     constructor(readonly variants: T) {
         super()

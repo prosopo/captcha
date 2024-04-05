@@ -1,10 +1,10 @@
 import { finiteNum } from "./FiniteNumberParser.js"
 import { NumberParser, num } from "./NumberParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 
-export class BoundNumber extends Shaper<number> {
+export class BoundNumber extends Validator<number> {
 
     constructor(public min?: number, public max?: number) {
         super()

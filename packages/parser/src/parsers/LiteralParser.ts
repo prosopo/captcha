@@ -1,7 +1,7 @@
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { stringify } from "./utils.js"
 
-export class LiteralParser<const T> extends Shaper<T> {
+export class LiteralParser<const T> extends Validator<T> {
     constructor(readonly value: T) {
         super()
     }

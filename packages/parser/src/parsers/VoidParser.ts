@@ -1,11 +1,11 @@
 import { LiteralParser } from "./LiteralParser.js"
 import { nul } from "./NullParser.js"
-import { Shaper } from "./Parser.js"
+import { Validator } from "./Parser.js"
 import { undef } from "./UndefinedParser.js"
 import { or } from "./UnionParser.js"
 import { stringify } from "./utils.js"
 
-export class VoidParser extends Shaper<void> {
+export class VoidParser extends Validator<void> {
 
     public override shape(value: unknown): void {
         // void === null or void === undefined
