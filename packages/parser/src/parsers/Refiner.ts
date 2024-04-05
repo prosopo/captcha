@@ -14,6 +14,11 @@ import { Cloneable, removeSuffix, toCamelCase } from "./utils.js"
  */
 export abstract class Refiner<T> extends Cloneable<Validator<T>> {
 
+    constructor() {
+        super()
+        this.name = this.getDefaultName()
+    }
+
     /**
      * Refine a known type. Refinement validates the value and transforms it if necessary. For example, an email parser may trim whitespace from the email address (a transform) then check the string conforms to email address format (a validation). If the value cannot be refined, an error is thrown.
      * @param value the value to refine
@@ -37,11 +42,12 @@ export abstract class Refiner<T> extends Cloneable<Validator<T>> {
      * 
      * @returns the name of the parser
      */
-    public get name(): string {
+    public name: string
+
+    public getDefaultName() {
         const name = this.constructor.name
         const typeName = removeSuffix(name, "Validator")
         const typeNameCamel = toCamelCase(typeName)
         return typeNameCamel
     }
-
 }
