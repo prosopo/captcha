@@ -29,7 +29,7 @@ export abstract class Validator<T> extends Refiner<T> {
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface
-export interface NestedShaper<T extends Validator<any>> {
+export interface NestedValidator<T extends Validator<any>> {
     readonly parser: T
 }
 
@@ -45,12 +45,12 @@ export interface ReadonlyPropMarker<P> {
     readonly [readonlyMarker]: P
 }
 
-export interface OptionalProp<P, T extends Validator<any>> extends OptionalPropMarker<P>, NestedShaper<T> { }
-export interface ReadonlyProp<P, T extends Validator<any>> extends ReadonlyPropMarker<P>, NestedShaper<T> { }
+export interface OptionalProp<P, T extends Validator<any>> extends OptionalPropMarker<P>, NestedValidator<T> { }
+export interface ReadonlyProp<P, T extends Validator<any>> extends ReadonlyPropMarker<P>, NestedValidator<T> { }
 
 export type Shape<T> = T extends Validator<infer U> ? U : never
 
 // optional if OptionalProp<P> is present. P determines if the prop is optional or not. If OptionalProp<P> is not present, the prop is not optional. However, if it is a nested parser then we need to look at the inner parser, as that may be optional itself, so recurse.
-export type IsOptional<T> = T extends OptionalPropMarker<infer P> ? P : T extends NestedShaper<infer U> ? IsOptional<U> : false
+export type IsOptional<T> = T extends OptionalPropMarker<infer P> ? P : T extends NestedValidator<infer U> ? IsOptional<U> : false
 // same for readonly
-export type IsReadonly<T> = T extends ReadonlyPropMarker<infer P> ? P : T extends NestedShaper<infer U> ? IsReadonly<U> : false
+export type IsReadonly<T> = T extends ReadonlyPropMarker<infer P> ? P : T extends NestedValidator<infer U> ? IsReadonly<U> : false

@@ -2,7 +2,7 @@ import { bool } from "./BooleanParser.js";
 import { num } from "./NumberParser.js";
 import { ExtractSchema, ObjectParser, SchemaHandler, UnpackSchema, obj } from "./ObjectParser.js";
 import { opt } from "./OptionalParser.js";
-import { IsOptional, IsReadonly, NestedShaper, Validator, ReadonlyProp, Shape } from "./Parser.js";
+import { IsOptional, IsReadonly, NestedValidator, Validator, ReadonlyProp, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
 import { str } from "./StringParser.js";
 import { run } from "./utils.js";
@@ -84,7 +84,7 @@ type d14<T> = {
     [K in keyof T]: IsOptional<T[K]>
 }
 type d15 = d14<d12>
-type IsRO<T> = T extends NestedShaper<infer U> ? true: false
+type IsRO<T> = T extends NestedValidator<infer U> ? true: false
 type d16<T> = {
     [K in keyof T]: IsRO<T[K]>
 }

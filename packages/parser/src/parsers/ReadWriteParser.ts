@@ -1,4 +1,4 @@
-import { NestedShaper, Validator, ReadonlyProp, Shape, readonlyMarker } from "./Parser.js";
+import { NestedValidator, Validator, ReadonlyProp, Shape, readonlyMarker } from "./Parser.js";
 
 export class ReadWriteParser<T extends Validator<any>> extends Validator<Shape<T>> implements ReadonlyProp<false, T> {
     constructor(private _parser: T) {

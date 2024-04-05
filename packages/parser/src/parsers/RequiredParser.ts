@@ -1,5 +1,5 @@
 import { opt } from "./OptionalParser.js"
-import { NestedShaper, OptionalProp, Validator, Shape, optionalMarker } from "./Parser.js"
+import { NestedValidator, OptionalProp, Validator, Shape, optionalMarker } from "./Parser.js"
 
 export class RequiredParser<T extends Validator<any>> extends Validator<Exclude<Shape<T>, undefined>> implements OptionalProp<false, T> {
     constructor(private _parser: T) {
