@@ -9,7 +9,7 @@ export class VoidParser extends Shaper<void> {
 
     public override shape(value: unknown): void {
         // void === null or void === undefined
-        const [ok, result] = or(undef(), nul()).isShape(value)
+        const [ok, result] = or(undef(), nul()).tryShape(value)
         if (!ok) {
             throw new Error(`Expected void but got ${stringify(value)}`)
         }
