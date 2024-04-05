@@ -1,4 +1,3 @@
-import { Validator } from "./Parser.js";
 import { Cloneable, removeSuffix, toCamelCase } from "./utils.js"
 
 
@@ -12,7 +11,7 @@ import { Cloneable, removeSuffix, toCamelCase } from "./utils.js"
  * 
  * If the value cannot be refined, an error is thrown.
  */
-export abstract class Refiner<T> extends Cloneable<Validator<T>> {
+export abstract class Refiner<T> extends Cloneable<Refiner<T>> {
 
     constructor() {
         super()
