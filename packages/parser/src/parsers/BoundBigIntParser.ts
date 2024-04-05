@@ -11,8 +11,8 @@ export class BoundBigInt extends Parser<bigint> {
         super()
     }
 
-    public override parse(value: unknown): bigint {
-        const v = bi().parse(value)
+    public override shape(value: unknown): bigint {
+        const v = bi().shape(value)
         if (this.min !== undefined) {
             if (v < this.min) {
                 throw new Error(`Expected a bigint greater than or equal to ${this.min}, but got ${v}`)

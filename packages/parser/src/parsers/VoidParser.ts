@@ -7,9 +7,9 @@ import { stringify } from "./utils.js"
 
 export class VoidParser extends Parser<void> {
 
-    public override parse(value: unknown): void {
+    public override shape(value: unknown): void {
         // void === null or void === undefined
-        const [ok, result] = or(undef(), nul()).tryParse(value)
+        const [ok, result] = or(undef(), nul()).isShape(value)
         if (!ok) {
             throw new Error(`Expected void but got ${stringify(value)}`)
         }

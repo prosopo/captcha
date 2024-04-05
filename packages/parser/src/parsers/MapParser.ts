@@ -16,12 +16,12 @@ export class MapParser<T extends Parser<any>, U extends Parser<any>> extends Par
         return this._valueParser.clone() as U
     }
 
-    public override parse(value: unknown): Map<Shape<T>, Shape<U>> {
-        const valueMap = inst(Map).parse(value)
+    public override shape(value: unknown): Map<Shape<T>, Shape<U>> {
+        const valueMap = inst(Map).shape(value)
         const result = new Map<Shape<T>, Shape<U>>()
         for (const [key, value] of valueMap) {
             // parse every key and value to ensure they are of the correct type
-            result.set(this._keyParser.parse(key), this._valueParser.parse(value))
+            result.set(this._keyParser.shape(key), this._valueParser.shape(value))
         }
         return result
     }

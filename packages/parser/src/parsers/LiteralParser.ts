@@ -6,7 +6,7 @@ export class LiteralParser<const T> extends Parser<T> {
         super()
     }
 
-    public override parse(value: unknown): T {
+    public override shape(value: unknown): T {
         if (value !== this.value) {
             throw new Error(`Expected ${stringify(this.value)} of type ${JSON.stringify(typeof this.value, null, 2)} but got ${stringify(value)} of type ${JSON.stringify(typeof value, null, 2)}`)
         }

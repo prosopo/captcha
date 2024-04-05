@@ -6,7 +6,7 @@ export class CustomParser<T> extends Parser<T> {
         super()
     }
 
-    public override parse(value: unknown): T {
+    public override shape(value: unknown): T {
         return this.fn(value)
     }
 
@@ -26,6 +26,6 @@ export const define = custom
 export const redefine = <T>(create: () => Parser<T>, name: string): () => Parser<T> => {
     return () => {
         const p = create()
-        return custom((value: unknown) => p.parse(value), name)
+        return custom((value: unknown) => p.shape(value), name)
     }
 }

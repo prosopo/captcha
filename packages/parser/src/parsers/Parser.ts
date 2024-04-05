@@ -5,11 +5,11 @@ import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 
 // simple parser which takes an unknown value and returns a known value of type T, throwing an error if the value is not of type T
 export abstract class Parser<T> extends Cloneable<Parser<T>> {
-    public abstract parse(value: unknown): T
+    public abstract shape(value: unknown): T
     
-    public tryParse(value: unknown): [true, T] | [false, unknown] {
+    public isShape(value: unknown): [true, T] | [false, unknown] {
         try {
-            return [true, this.parse(value)]
+            return [true, this.shape(value)]
         } catch (e) {
             return [false, e]
         }

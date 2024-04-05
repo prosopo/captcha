@@ -22,8 +22,8 @@ const a1 = obj({
     x2: ro(bool()),
     x3: ro(opt(bool())),
 })
-type a2 = ReturnType<typeof a1.parse>
-const a3 = a1.parse({ a: "a", b: 1, c: true, d: { e: "e", f: 2, y2: true }, x2: true })
+type a2 = ReturnType<typeof a1.shape>
+const a3 = a1.shape({ a: "a", b: 1, c: true, d: { e: "e", f: 2, y2: true }, x2: true })
 console.log(a3)
 
 const b1 = opt(str())
@@ -72,7 +72,7 @@ const d5 = d1.partialShallow()
 const d6 = d1.readonlyShallow()
 const d7 = d1.partialDeep()
 const d8 = obj(d7)
-type d9 = ReturnType<typeof d8.parse>
+type d9 = ReturnType<typeof d8.shape>
 type d10<T> = {
     [K in keyof T as IsOptional<T[K]> extends true ? IsReadonly<T[K]> extends false ? K : never : never]?: T[K] extends Parser<infer U> ? U : never
 }
@@ -104,63 +104,63 @@ const e2 = e1.pick({
         e: true,
     }
 })
-type e3 = ReturnType<typeof e2.parse>
+type e3 = ReturnType<typeof e2.shape>
 const e4 = e1.omit({
     a: true,
     d: {
         e: true,
     }
 })
-type e5 = ReturnType<typeof e4.parse>
+type e5 = ReturnType<typeof e4.shape>
 const e6 = e1.extend({
     g: bool(),
 })
-type e7 = ReturnType<typeof e6.parse>
+type e7 = ReturnType<typeof e6.shape>
 const e8 = e1.partialShallow()
-type e9 = ReturnType<typeof e8.parse>
+type e9 = ReturnType<typeof e8.shape>
 const e10 = e1.readonlyShallow()
-type e11 = ReturnType<typeof e10.parse>
+type e11 = ReturnType<typeof e10.shape>
 const e12 = e1.readonlyShallow().partialShallow()
-type e13 = ReturnType<typeof e12.parse>
+type e13 = ReturnType<typeof e12.shape>
 const e14 = e1.partialDeep()
-type e15 = ReturnType<typeof e14.parse>
+type e15 = ReturnType<typeof e14.shape>
 const e16 = e1.readonlyDeep()
-type e17 = ReturnType<typeof e16.parse>
+type e17 = ReturnType<typeof e16.shape>
 const e18 = e1.pick({
     a: true,
     d: {
         e: true,
     }
 }).readonlyShallow()
-type e19 = ReturnType<typeof e18.parse>
+type e19 = ReturnType<typeof e18.shape>
 const e20 = e1.pickPartial({
     a: true,
     d: {
         e: true,
     }
 })
-type e21 = ReturnType<typeof e20.parse>
+type e21 = ReturnType<typeof e20.shape>
 const e22 = e1.pickReadonly({
     a: true,
     d: {
         e: true,
     }
 })
-type e23 = ReturnType<typeof e22.parse>
+type e23 = ReturnType<typeof e22.shape>
 const e24 = e1.omitPartial({
     a: true,
     d: {
         e: true,
     }
 })
-type e25 = ReturnType<typeof e24.parse>
+type e25 = ReturnType<typeof e24.shape>
 const e26 = e1.omitReadonly({
     a: true,
     d: {
         e: true,
     }
 })
-type e27 = ReturnType<typeof e26.parse>
+type e27 = ReturnType<typeof e26.shape>
 
 
 
@@ -174,7 +174,7 @@ const f1 = obj({
     }),
 })
 
-const [ok, result] = f1.tryParse({})
+const [ok, result] = f1.isShape({})
 if (ok) {
     const value = result
 } else {

@@ -23,20 +23,20 @@ describe("unknown", () => {
     })
 
     it("should parse to correct type", () => {
-        expectTypeOf(() => unknown().parse(null)).returns.toMatchTypeOf<unknown>();
+        expectTypeOf(() => unknown().shape(null)).returns.toMatchTypeOf<unknown>();
         const parser = unknown();
         const a: unknown = undefined
-        const b: ReturnType<typeof parser.parse> = a
+        const b: ReturnType<typeof parser.shape> = a
     })
 
     it("should pass-through", () => {
-        expect(unknown().parse(1)).toBe(1);
-        expect(unknown().parse("")).toBe("");
-        expect(unknown().parse({})).toEqual({});
-        expect(unknown().parse([])).toEqual([]);
-        expect(unknown().parse(null)).toBe(null);
-        expect(unknown().parse(undefined)).toBe(undefined);
-        expect(unknown().parse(NaN)).toBe(NaN);
+        expect(unknown().shape(1)).toBe(1);
+        expect(unknown().shape("")).toBe("");
+        expect(unknown().shape({})).toEqual({});
+        expect(unknown().shape([])).toEqual([]);
+        expect(unknown().shape(null)).toBe(null);
+        expect(unknown().shape(undefined)).toBe(undefined);
+        expect(unknown().shape(NaN)).toBe(NaN);
     })
 
     // haven't tested the normal cases as these should be simple pass-throughs

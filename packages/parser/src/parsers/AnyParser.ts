@@ -6,7 +6,7 @@ export class AnyParser extends Parser<any> {
         super()
     }
 
-    public override parse(value: unknown): any {
+    public override shape(value: unknown): any {
         // no-op parser
         return value
     }
