@@ -5,7 +5,7 @@ import { Result, failible } from "./result.js"
 import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 
 /**
- * A Shaper takes an unknown value and shapes it into a known type, or throws an error if it cannot.
+ * A validator takes an unknown value and shapes it into a known type, or throws an error if it cannot. The value is then refined, or an error is thrown if it cannot be refined.
  */
 export abstract class Validator<T> extends Refiner<T> {
 
@@ -16,7 +16,7 @@ export abstract class Validator<T> extends Refiner<T> {
     public abstract shape(value: unknown): T
 
     /**
-     * Validating an unknown value is the process of shaping it into a known type, then refining it. If the value cannot be shaped, an error is thrown. If the value cannot be refined, an error is thrown. E.g. an email parser would first check if the value is a string (shape), then trim whitespace (transform) and check the string conforms to email address format (validation).
+     * Validating an unknown value is the process of shaping it into a known type, then refining it. If the value cannot be shaped, an error is thrown. If the value cannot be refined, an error is thrown. E.g. an email parser would first check if the value is a string (shape), then trim whitespace (transform) and check the string conforms to email address format (validation). Transforming and validating are both steps in refinement.
      * @param value the unknown value to validate
      * @returns a validated value
      */
