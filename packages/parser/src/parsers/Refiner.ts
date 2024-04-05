@@ -15,7 +15,6 @@ export abstract class Refiner<T> extends Cloneable<Refiner<T>> {
 
     constructor() {
         super()
-        this.name = this.getDefaultName()
     }
 
     /**
@@ -41,7 +40,9 @@ export abstract class Refiner<T> extends Cloneable<Refiner<T>> {
      * 
      * @returns the name of the parser
      */
-    public name: string
+    public get name(): string {
+        return this.getDefaultName()
+    }
 
     public getDefaultName() {
         const name = this.constructor.name
