@@ -9,11 +9,23 @@ import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 export abstract class Shaper<T> extends Cloneable<Shaper<T>> {
     public abstract shape(value: unknown): T
     
-    public isShape(value: unknown): [true, T] | [false, Error] {
+    public isShape(value: unknown): {
+        ok: true,
+        result: T,
+    } | {
+        ok: false,
+        result: Error,
+    } {
         try {
-            return [true, this.shape(value)]
+            return {
+                ok: true,
+                result: this.shape(value),
+            }
         } catch (e) {
-            return [false, e instanceof Error ? e : new Error(String(e))]
+            return {
+                ok: false,
+                result: e instanceof Error ? e : new Error(String(e)),
+            }
         }
     }
 
