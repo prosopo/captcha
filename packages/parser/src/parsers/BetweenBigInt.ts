@@ -42,6 +42,42 @@ export class BetweenBigInt extends Refiner<bigint> {
     public override clone(): BetweenBigInt {
         return new BetweenBigInt({...this.options})
     }
+
+    public override get name(): string {
+        if(this.options.min === undefined) {
+            if(this.options.max === undefined) {
+                return ``
+            } else {
+                if(this.options.maxInclusive) {
+                    return `<=${this.options.max}`
+                } else {
+                    return `<${this.options.max}`
+                }
+            }
+        } else {
+            if (this.options.max === undefined) {
+                if(this.options.minInclusive) {
+                    return `>=${this.options.min}`
+                } else {
+                    return `>${this.options.min}`
+                }
+            } else {
+                if(this.options.minInclusive) {
+                    if(this.options.maxInclusive) {
+                        return `${this.options.min}<=x<=${this.options.max}`
+                    } else {
+                        return `${this.options.min}<=x<${this.options.max}`
+                    }
+                } else {
+                    if (this.options.maxInclusive) {
+                        return `${this.options.min}<x<=${this.options.max}`
+                    } else {
+                        return `${this.options.min}<x<${this.options.max}`
+                    }
+                }
+            }
+        }
+    }
 }
 
 export const pBetweenBigInt = (options: Options) => new BetweenBigInt(options)
