@@ -1,3 +1,16 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 /**
  * Loading from json/js/ts has been disabled for now on the basis that it causes issues with loading config in docker/flux. Native env var support makes it super easy to load config from env vars, so this is the recommended approach atm. Unfortunately, this means no dynamic config via js/ts, and no complex config types via js/ts. This is a tradeoff for compatibility. See https://github.com/prosopo/captcha/pull/1136 for reasoning.
  *
