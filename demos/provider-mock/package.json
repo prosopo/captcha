@@ -10,7 +10,7 @@
         "npm": ">=9"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\"",
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
