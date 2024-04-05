@@ -88,3 +88,39 @@ export function removeSuffix(inputString: string, suffix: string): string {
     }
     return inputString;
 }
+
+export function aRun<T>(fn: () => Promise<T>): Promise<{
+    ok: true,
+    result: T,
+} | {
+    ok: false,
+    result: Error,
+}> {
+    return fn().then(result => ({
+        ok: true as true,
+        result,
+    })).catch(e => ({
+        ok: false as false,
+        result: e instanceof Error ? e : new Error(String(e)),
+    }))
+}
+
+export function run<T>(fn: () => T): {
+    ok: true,
+    result: T,
+} | {
+    ok: false,
+    result: Error,
+} {
+    try {
+        return {
+            ok: true,
+            result: fn(),
+        }
+    } catch (e) {
+        return {
+            ok: false,
+            result: e instanceof Error ? e : new Error(String(e)),
+        }
+    }
+}

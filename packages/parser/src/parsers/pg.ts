@@ -5,6 +5,7 @@ import { opt } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, NestedShaper, Shaper, ReadonlyProp, Shape } from "./Parser.js";
 import { ro } from "./ReadonlyParser.js";
 import { str } from "./StringParser.js";
+import { run } from "./utils.js";
 
 
 const a1 = obj({
@@ -174,7 +175,7 @@ const f1 = obj({
     }),
 })
 
-const [ok, result] = f1.isShape({})
+const {ok, result} = run(() => f1.shape({}))
 if (ok) {
     const value = result
 } else {
