@@ -1,0 +1,49 @@
+import { Refiner } from "./Refiner.js";
+
+export type Options = {
+        min?: bigint
+        max?: bigint
+        minInclusive?: boolean
+        maxInclusive?: boolean
+    }
+
+export class BetweenBigInt extends Refiner<bigint> {
+
+    constructor(public options: Options) {
+        super()
+    }
+
+    public override refine(value: bigint): bigint {
+        if (this.options.min !== undefined) {
+            if(this.options.minInclusive) {
+                if(value < this.options.min) {
+                    throw new Error(`Value ${value} is less than the minimum ${this.options.min}`)
+                }
+            } else {
+                if(value <= this.options.min) {
+                    throw new Error(`Value ${value} is less than or equal to the minimum ${this.options.min}`)
+                }
+            }
+        }
+        if (this.options.max !== undefined) {
+            if(this.options.maxInclusive) {
+                if(value > this.options.max) {
+                    throw new Error(`Value ${value} is greater than the maximum ${this.options.max}`)
+                }
+            } else {
+                if(value >= this.options.max) {
+                    throw new Error(`Value ${value} is greater than or equal to the maximum ${this.options.max}`)
+                }
+            }
+        }
+        return value
+    }
+
+    public override clone(): BetweenBigInt {
+        return new BetweenBigInt({...this.options})
+    }
+}
+
+export const pBetweenBigInt = (options: Options) => new BetweenBigInt(options)
+export const betweenBigInt = pBetweenBigInt
+export const betweenBi = pBetweenBigInt
