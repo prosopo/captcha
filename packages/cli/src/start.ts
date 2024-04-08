@@ -34,7 +34,7 @@ export const handleErrors = (
     try {
         message = JSON.parse(err.message)
     } catch {
-        console.debug('Invalid JSON error message')
+        console.error(err)
     }
     return response.status(code).json({
         message,

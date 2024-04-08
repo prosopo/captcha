@@ -11,10 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './block.js'
-export * from './interface.js'
-export * from './helpers.js'
-export * from './useWeight.js'
-export * from './deploy.js'
-export * from './batch.js'
-export * from './storage.js'
+import { z } from 'zod'
+
+export const ProsopoLocalStorageSchema = z.object({
+    account: z.string().optional(),
+    blockNumber: z.number().optional(),
+    providerUrl: z.string().optional(),
+})
+
+export type ProcaptchaLocalStorage = z.infer<typeof ProsopoLocalStorageSchema>
