@@ -19,6 +19,7 @@
     "types": "./dist/index.d.ts",
     "source": "./src/index.tsx",
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",

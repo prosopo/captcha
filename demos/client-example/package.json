@@ -32,6 +32,7 @@
         "typescript": "5.1.6"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "start": "vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
         "build": "tsc --build --verbose",
         "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
