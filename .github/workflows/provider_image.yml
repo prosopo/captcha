@@ -122,6 +122,7 @@ jobs:
                   platforms: linux/amd64,linux/arm64
                   push: false
                   tags: prosopo/provider:dev
+                  outputs: type=docker
 
             # Generate a mnemonic for the provider image
             - name: Generate mnemonic and add to env file
