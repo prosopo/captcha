@@ -37,6 +37,7 @@ export interface ProviderApiInterface {
     verifyDappUser(
         dapp: AccountId,
         userAccount: AccountId,
+        blockNumber: number,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse>

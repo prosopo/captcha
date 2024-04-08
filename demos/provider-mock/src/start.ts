@@ -27,8 +27,8 @@ async function startApi() {
     apiApp.use(express.json())
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter())
-
     apiApp.use(handleErrors)
+
     apiApp.listen(apiPort, () => {
         logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })

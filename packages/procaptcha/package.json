@@ -11,7 +11,6 @@
         "npm": ">=9"
     },
     "scripts": {
-        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
@@ -20,7 +19,8 @@
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+        "test": "NODE_ENV=test vitest --run --config vite.test.config.ts"
     },
     "exports": {
         ".": {
