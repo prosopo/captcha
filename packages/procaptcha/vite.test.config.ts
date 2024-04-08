@@ -12,6 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { defineConfig } from 'vitest/config'
+import dotenv from 'dotenv'
+import fs from 'fs'
+import path from 'path'
+process.env.NODE_ENV = 'test'
+// if .env.test exists at this level, use it, otherwise use the one at the root
+const envFile = `.env.${process.env.NODE_ENV || 'development'}`
+let envPath = envFile
+if (fs.existsSync(envFile)) {
+    envPath = path.resolve(envFile)
+} else if (fs.existsSync(`../../${envFile}`)) {
+    envPath = path.resolve(`../../${envFile}`)
+} else {
+    throw new Error(`No ${envFile} file found`)
+}
+
+dotenv.config({ path: envPath })
 
 export default defineConfig({
     test: {

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteTestConfig } from '@prosopo/config'
+import { defineConfig } from 'vitest/config'
 import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
@@ -29,4 +29,8 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath })
 
-export default ViteTestConfig
+export default defineConfig({
+    test: {
+        environment: 'jsdom',
+    },
+})
