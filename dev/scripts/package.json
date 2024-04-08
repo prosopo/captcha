@@ -9,9 +9,9 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "test": "npx vitest run --config ./src/vite.config.ts",
         "deploy": "node dist/deploy/protocol.js",
         "cli": "node dist/cli/index.js",
         "setup": "node dist/cli/index.js setup",

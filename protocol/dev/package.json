@@ -9,6 +9,7 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "build": "tsc",
         "cli": "f() { tsx src/cli.ts -- -- $@ ;}; f",
         "clean": "tsc --build --clean",

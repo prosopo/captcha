@@ -23,6 +23,7 @@
         "vite-plugin-node-polyfills": "^0.21.0"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "build": "tsc",
         "clean": "tsc --build --clean",
         "cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
