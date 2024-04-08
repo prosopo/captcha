@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/account",
-    "version": "0.3.5",
+    "version": "0.3.36",
     "description": "Services and Utils for Prosopo account gen and management",
     "main": "dist/index.js",
     "type": "module",
@@ -46,12 +46,12 @@
         "@polkadot/rpc-provider": "10.11.2",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/common": "0.3.5",
-        "@prosopo/types": "0.3.5",
-        "@prosopo/util": "0.3.5"
+        "@prosopo/common": "0.3.36",
+        "@prosopo/types": "0.3.36",
+        "@prosopo/util": "0.3.36"
     },
     "devDependencies": {
-        "@prosopo/config": "0.3.5",
+        "@prosopo/config": "0.3.36",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
