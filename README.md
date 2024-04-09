@@ -116,7 +116,7 @@ The output from the `onCaptchaVerified` function is the `procaptcha-response` JS
 data contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
-| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
+|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
 | commitmentId | string | The commitment ID of the captcha challenge. This is used to verify the user's response on-chain.                              |
 | providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
 | dapp         | string | The SITE_KEY of your application / website                                                                                    |
@@ -135,16 +135,39 @@ To verify that the token is indeed real and valid, you must now verify it at the
 
 https://api.prosopo.io/siteverify
 
-The endpoint expects a POST request with two parameters: your account secret and the `procaptcha-response` sent from
-your frontend HTML to your backend for verification. You can optionally include the user's IP address as an additional
-security check.
+The endpoint expects a POST request with the `procaptcha-response` sent from your frontend HTML to your backend for
+verification.
 
-A simple test will look like this:
+A simple test will look like this, where the contents in data is the `procaptcha-response` JSON data, after being
+parsed:
+
+```javascript
+// pseudocode
+// get the contents of the procaptcha-response JSON data
+data = req.body['procaptcha-response']
+
+// send a POST request to the API endpoint
+response = POST('https://api.prosopo.io/siteverify', {
+    providerUrl: data.providerUrl,
+    user: data.user,
+    dapp: YOUR_SITE_KEY,  // Make sure to replace YOUR_SITE_KEY with your actual site key
+    challenge: data.commitmentId,
+    blockNumber: data.blockNumber
+})
+```
+
+Or, as a CURL command:
 
 ```bash
-curl -X POST https://api.prosopo.io/siteverify \
--H "Content-Type: application/json" \
--d 'PROCAPTCHA_RESPONSE'
+curl --location 'https://api.prosopo.io/siteverify' \
+--header 'Content-Type: application/json' \
+--data '{
+    "providerUrl": "...",
+    "user": "...",
+    "dapp": "...",
+    "challenge": "...",
+    "blockNumber": ...
+}'
 ```
 
 Note that the endpoint expects the application/json Content-Type. You can see exactly what is sent
