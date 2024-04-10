@@ -31,7 +31,7 @@
     },
     "types": "./dist/index.d.ts",
     "dependencies": {
-        "@polkadot/util": "12.6.1",
+        "@polkadot/util": "12.6.2",
         "@prosopo/common": "0.3.36",
         "@prosopo/config": "0.3.36",
         "@prosopo/types": "0.3.36",
