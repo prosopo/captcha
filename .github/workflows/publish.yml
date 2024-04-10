@@ -536,11 +536,20 @@ jobs:
                     echo "Skipping flux redeploy notification."
                   fi
 
-            - name: Build and Push the Provider Bundle
-              id: publish_docker_provider
-              continue-on-error: true
-              if: steps.check_version_docker_provider.outputs.bump == 'true'
+            # Add support for more platforms with QEMU (optional)
+            # https://github.com/docker/setup-qemu-action
+            - name: Set up QEMU
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build the production CLI package
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
+                  echo "Building the production CLI package..."
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in cli package"
                   cp ./dev/scripts/env.production ./packages/cli/.env.production
@@ -548,20 +557,28 @@ jobs:
                   # Navigate to the provider CLI directory and build
                   echo "Navigating to 'packages/cli' and bundling..."
                   cd packages/cli
+                  NODE_ENV=production npm run build
                   NODE_ENV=production npm run bundle:prod
 
                   # Navigate back to the project root
                   echo "Navigating back to project root..."
                   cd ../..
 
-                  # Build and push the Docker image
-                  echo "Building Docker image..."
-                  echo '{ "features": { "containerd-snapshotter": true } }' > /etc/docker/daemon.json
-                  sudo apt-get install -y qemu qemu-user-static
-                  docker buildx build --platform linux/amd64,linux/arm64 -f ./docker/images/provider.dockerfile . t prosopo/provider:${{ steps.next_version.outputs.version }}
-                  echo "Pushing Docker image..."
-                  docker push prosopo/provider:${{ steps.next_version.outputs.version }}
+            - name: Build and push the Provider Container
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
+              id: publish_docker_provider
+              continue-on-error: true
+              uses: docker/build-push-action@v5
+              with:
+                  context: ${{github.workspace}}
+                  file: ${{github.workspace}}/docker/images/provider.dockerfile
+                  platforms: linux/amd64,linux/arm64
+                  push: true
+                  tags: prosopo/provider:${{ steps.next_version.outputs.version }}
 
+            - name: Push Provider Container to latest tag on docker
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
+              run: |
                   # Push latest
                   docker tag prosopo/provider:${{ steps.next_version.outputs.version }} prosopo/provider:latest
                   docker push prosopo/provider:latest
