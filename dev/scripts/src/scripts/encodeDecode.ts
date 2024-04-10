@@ -11,42 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at } from '@prosopo/util'
+import { BN, hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
+import { at, consoleTableWithWrapping } from '@prosopo/util'
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex, u8aToString } from '@polkadot/util'
-
-// https://stackoverflow.com/a/75872362/1178971
-function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
-    const isRemainingData = Object.values(item).find((value) => {
-        return value && value.length > 0
-    })
-
-    if (!isRemainingData) {
-        return []
-    }
-
-    const itemRow: { [key: string]: string } = {}
-    const remaining: { [key: string]: string } = {}
-    Object.entries(item).forEach(([key, value]) => {
-        itemRow[key] = value?.slice ? value.slice(0, maxCellWidth) : value
-        remaining[key] = value?.slice ? value.slice(maxCellWidth) : value
-    })
-
-    return [itemRow, ...wrapItemToMultipleRows(remaining, maxCellWidth)]
-}
-
-function consoleTableWithWrapping(data: { [key: string]: string }[], maxColWidth = 90) {
-    const tableItems = data.reduce<{ [key: string]: string }[]>((prev, item) => {
-        return [...prev, ...wrapItemToMultipleRows(item, maxColWidth)]
-    }, [])
-
-    console.table(tableItems)
-}
 
 function isJSON(arg: string): boolean {
     try {
         JSON.parse(arg)
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+function isBN(arg: string): boolean {
+    try {
+        new BN(`0x${arg}`)
         return true
     } catch (e) {
         return false
@@ -103,6 +84,10 @@ function main() {
         output.push({ name: `u8aToHex`, value: u8aToHex(padded) })
         output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
         output.push({ name: `u8aToString`, value: u8aToString(padded) })
+    }
+
+    if (isBN(arg)) {
+        output.push({ name: `BN`, value: new BN(arg).toString() })
     }
 
     console.log('\nTABLE OUTPUT\n')

@@ -11,6 +11,9 @@
             "path": "../../contracts/captcha"
         },
         {
+            "path": "../account"
+        },
+        {
             "path": "../api"
         },
         {
@@ -21,6 +24,9 @@
         },
         {
             "path": "../datasets"
+        },
+        {
+            "path": "../procaptcha-common"
         },
         {
             "path": "../types"

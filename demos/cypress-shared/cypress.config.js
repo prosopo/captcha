@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import vitePreprocessor from 'cypress-vite'
 export default defineConfig({
     headers: { 'Accept-Encoding': 'gzip, deflate' },
+    env: {
+        default_page: '/',
+    },
     e2e: {
         setupNodeEvents(on, config) {
             on(

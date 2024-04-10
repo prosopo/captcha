@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,23 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
+    Features,
+    FeaturesEnum,
     NetworkNamesSchema,
     ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
+    captchaType?: Features
     callback?: string
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
@@ -37,13 +42,10 @@ interface ProcaptchaRenderOptions {
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getCurrentScript = () =>
-    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
-        ? document.currentScript
-        : undefined
+const getProcaptchaScript = () => document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
 const extractParams = (name: string) => {
-    const script = getCurrentScript()
+    const script = getProcaptchaScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
         return {
@@ -70,7 +72,8 @@ const getConfig = (siteKey?: string) => {
             address: siteKey,
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        mongoAtlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 
@@ -156,7 +159,17 @@ const renderLogic = (
             config.challengeValidLength = parseInt(challengeValidLengthAttribute)
         }
 
-        createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+        switch (renderOptions?.captchaType) {
+            case 'pow':
+                createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
+                break
+            case 'frictionless':
+                createRoot(element).render(<ProcaptchaFrictionless config={config} callbacks={callbacks} />)
+                break
+            default:
+                createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+                break
+        }
     })
 }
 
@@ -167,17 +180,23 @@ const implicitRender = () => {
 
     // Set siteKey from renderOptions or from the first element's data-sitekey attribute
     if (elements.length) {
-        const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
-        const config = getConfig(siteKey)
+        const siteKey = at(elements, 0).getAttribute('data-sitekey')
+        if (!siteKey) {
+            console.error('No siteKey found')
+            return
+        }
+        const features = Object.values(FeaturesEnum)
+        const captchaType =
+            features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
+            ('frictionless' as const)
 
-        renderLogic(elements, config)
+        renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }
 }
 
 // Explicit render for targeting specific elements
 export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
     const siteKey = renderOptions.siteKey
-    const config = getConfig(siteKey)
     const element = document.getElementById(elementId)
 
     if (!element) {
@@ -185,7 +204,7 @@ export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions
         return
     }
 
-    renderLogic([element], config, renderOptions)
+    renderLogic([element], getConfig(siteKey), renderOptions)
 }
 
 export default function ready(fn: () => void) {
@@ -197,6 +216,16 @@ export default function ready(fn: () => void) {
         document.addEventListener('DOMContentLoaded', fn)
     }
 }
+
+// extend the global Window interface to include the procaptcha object
+declare global {
+    interface Window {
+        procaptcha: { ready: typeof ready; render: typeof render }
+    }
+}
+
+// set the procaptcha attribute on the window
+window.procaptcha = { ready, render }
 
 // onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 // onRenderExplicit takes values of either explicit or implicit
@@ -210,7 +239,7 @@ if (renderExplicit !== 'explicit') {
 if (onloadUrlCallback) {
     const onloadCallback = getWindowCallback(onloadUrlCallback)
     // Add event listener to the script tag to call the callback function when the script is loaded
-    getCurrentScript()?.addEventListener('load', () => {
+    getProcaptchaScript()?.addEventListener('load', () => {
         ready(onloadCallback)
     })
 }

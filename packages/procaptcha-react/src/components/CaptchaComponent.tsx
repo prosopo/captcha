@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CaptchaResponseBody } from '@prosopo/types'
 import { CaptchaWidget } from './CaptchaWidget.js'
-import { GetCaptchaResponse } from '@prosopo/api'
 import { Suspense, useMemo } from 'react'
 import { at } from '@prosopo/util'
-import { darkTheme, lightTheme } from './theme.js'
+import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useTranslation } from '@prosopo/common'
 import Button from './Button.js'
 import addDataAttr from '../util/index.js'
 
 export interface CaptchaComponentProps {
-    challenge: GetCaptchaResponse
+    challenge: CaptchaResponseBody
     index: number
     solutions: string[][]
     onSubmit: () => void

@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,6 +103,27 @@ export class Environment implements ProsopoEnvironment {
         return this.api
     }
 
+    getDb(): Database {
+        if (this.db === undefined) {
+            throw new ProsopoEnvError(new Error('db not setup! Please call isReady() first'))
+        }
+        return this.db
+    }
+
+    getAssetsResolver(): AssetsResolver {
+        if (this.assetsResolver === undefined) {
+            throw new ProsopoEnvError(new Error('assetsResolver not setup! Please call isReady() first'))
+        }
+        return this.assetsResolver
+    }
+
+    getPair(): KeyringPair {
+        if (this.pair === undefined) {
+            throw new ProsopoEnvError(new Error('pair not setup! Please call isReady() first'))
+        }
+        return this.pair
+    }
+
     async changeSigner(pair: KeyringPair): Promise<void> {
         await this.getApi().isReadyOrError
         this.pair = pair
@@ -134,12 +155,16 @@ export class Environment implements ProsopoEnvironment {
                 this.pair.unlock(this.config.account.password)
             }
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             }
             await this.getSigner()
             // make sure contract address is valid before trying to load contract interface
             if (isAddress(this.contractAddress)) {
                 this.contractInterface = await this.getContractApi()
+            } else {
+                // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
+                // just console logging for the time being!
+                console.warn('invalid contract address: ' + this.contractAddress)
             }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {

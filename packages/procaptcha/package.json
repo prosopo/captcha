@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha",
-    "version": "0.2.32",
+    "version": "0.3.36",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -19,7 +19,8 @@
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+        "test": "NODE_ENV=test vitest --run --config vite.test.config.ts"
     },
     "exports": {
         ".": {
@@ -35,22 +36,23 @@
     },
     "dependencies": {
         "@fingerprintjs/fingerprintjs": "^3.3.6",
-        "@polkadot/api": "10.11.1",
-        "@polkadot/api-contract": "10.11.1",
+        "@polkadot/api": "10.11.2",
+        "@polkadot/api-contract": "10.11.2",
         "@polkadot/extension-base": "0.46.6",
         "@polkadot/extension-dapp": "0.46.6",
         "@polkadot/extension-inject": "0.46.6",
-        "@polkadot/keyring": "12.6.1",
-        "@polkadot/rpc-provider": "10.11.1",
-        "@polkadot/types": "10.11.1",
-        "@polkadot/util": "12.6.1",
-        "@polkadot/util-crypto": "12.6.1",
-        "@prosopo/api": "0.2.32",
-        "@prosopo/common": "0.2.32",
-        "@prosopo/contract": "0.2.32",
-        "@prosopo/datasets": "0.2.32",
-        "@prosopo/types": "0.2.32",
-        "@prosopo/util": "0.2.32",
+        "@polkadot/keyring": "12.6.2",
+        "@polkadot/rpc-provider": "10.11.2",
+        "@polkadot/types": "10.11.2",
+        "@polkadot/util": "12.6.2",
+        "@polkadot/util-crypto": "12.6.2",
+        "@prosopo/account": "0.3.36",
+        "@prosopo/api": "0.3.36",
+        "@prosopo/common": "0.3.36",
+        "@prosopo/contract": "0.3.36",
+        "@prosopo/datasets": "0.3.36",
+        "@prosopo/types": "0.3.36",
+        "@prosopo/util": "0.3.36",
         "rxjs": "7.8.1"
     },
     "devDependencies": {

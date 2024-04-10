@@ -54,6 +54,9 @@ jobs:
                   echo "******************************"
             # checkout the repo
             - uses: actions/checkout@v3
+              with:
+                  # fetch all history + branches
+                  fetch-depth: 0
 
             - name: Dockerhub login
               run: |
@@ -72,14 +75,13 @@ jobs:
 
                   # use git to look for differences in package.json between the before and after state
                   # before and after git sha's are passed in as env vars by github
-                  # we use HEAD instead of after because after generated an error, don't know why!
                   diff=$(git show --pretty=format: --no-notes ${{ github.event.before }}..${{ github.event.after }} -- package.json | cat)
                   echo "diff:"
                   echo "$diff"
                   echo ""
 
                   # grep for the version line
-                  version_changes=$(echo "$diff" | grep -e "[-\+]\s*\"version\"")
+                  version_changes=$(echo "$diff" | grep -e "[-\+]\s*\"version\"" || true)
                   echo "version_changes:"
                   echo "$version_changes"
                   echo ""
@@ -89,11 +91,12 @@ jobs:
                   # subsequent steps can choose whether the version has been bumped or not. All we know at this stage is the version has been changed, i.e. new_version != old_version, but we don't know whether new_version > old_version or new_version < old_version
                   if [[ -n "$version_changes" ]]; then
                     echo "version has changed"
+                    echo "bump=true" >> $GITHUB_OUTPUT
                   else
                     echo "version has not changed"
-                    # fail here if the version has not changed, we don't want to publish anything if the version has not changed!
-                    echo "non-manual run, failing"
-                    exit 1
+                    # skip remaining steps which bump the version
+                    echo "bump=false" >> $GITHUB_OUTPUT
+                    exit 0
                   fi
 
                   VERSION=$(cat package.json | jq -r '.version' || echo "0.0.0")
@@ -115,7 +118,7 @@ jobs:
             # check for version bump against github release
             - name: Check version github
               id: check_version_github
-
+              if: steps.next_version.outputs.bump == 'true'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -152,6 +155,7 @@ jobs:
 
             - name: Check version npm
               id: check_version_npm
+              if: steps.next_version.outputs.bump == 'true'
               run: |
                   # get the current version number from latest release on npm (use procaptcha as the baseline, as workspace package is not published)
                   VERSION=$(npm view @prosopo/procaptcha version)
@@ -186,6 +190,7 @@ jobs:
 
             - name: Check version docker js_server
               id: check_version_docker_js_server
+              if: steps.next_version.outputs.bump == 'true'
               run: |
                   # get the current version number from latest release on docker
                   VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/js_server/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
@@ -220,6 +225,7 @@ jobs:
 
             - name: Check version docker provider
               id: check_version_docker_provider
+              if: steps.next_version.outputs.bump == 'true'
               run: |
                   # get the current version number from latest release on docker
                   VERSION=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/prosopo/provider/tags/' | jq ".results[].name" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
@@ -255,22 +261,30 @@ jobs:
             - name: Should bump?
               id: check_version_any
               run: |
+                  bump=false
                   # only bump if any of the version checks have detected a bump
                   if [[ "${{ steps.check_version_github.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                    bump=true
                     echo "github bump required"
-                  elif [[ "${{ steps.check_version_npm.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                  fi
+                  if [[ "${{ steps.check_version_npm.outputs.bump }}" == 'true' ]]; then
+                    bump=true
                     echo "npm bump required"
-                  elif [[ "${{ steps.check_version_docker_js_server.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                  fi
+                  if [[ "${{ steps.check_version_docker_js_server.outputs.bump }}" == 'true' ]]; then
+                    bump=true
                     echo "docker js_server bump required"
-                  elif [[ "${{ steps.check_version_docker_provider.outputs.bump }}" == 'true' ]]; then
-                    echo "bump=true" >> $GITHUB_OUTPUT
+                  fi
+                  if [[ "${{ steps.check_version_docker_provider.outputs.bump }}" == 'true' ]]; then
+                    bump=true
                     echo "docker provider bump required"
+                  fi
+                  if [[ "$bump" == 'true' ]]; then
+                    echo "bump=true" >> $GITHUB_OUTPUT
+                    echo "something needs bumping"
                   else
                     echo "bump=false" >> $GITHUB_OUTPUT
-                    echo "no bump required"
+                    echo "nothing needs bumping"
                   fi
 
             # setup node
@@ -322,7 +336,6 @@ jobs:
               if: steps.check_version_any.outputs.bump == 'true'
               run: |
                   npm install
-                  npm run removePolkadotJSWarnings
 
             # at this point there should be a build in the cache, so we can begin building artifacts for the release
 
@@ -343,6 +356,10 @@ jobs:
                   npm run cli -- clean --docker
                   npm run cli -- build --docker --release
 
+            - name: Typedoc
+              run: |
+                  npm run docs
+
             - name: Build JS bundle
               if: steps.check_version_any.outputs.bump == 'true'
               run: |
@@ -355,6 +372,55 @@ jobs:
                   cd packages/procaptcha-bundle
 
                   NODE_ENV=production npm run bundle:prod
+
+            - name: Build docker js_server
+              if: steps.check_version_any.outputs.bump == 'true'
+              run: |
+                  # Set the JS location in the container
+                  JS_FOLDER="/usr/share/nginx/html/js"
+
+                  # Get the most recent version of the js_server image
+                  docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }}
+
+                  # Create a temporary container from the latest image
+                  echo "Building Docker image..."
+                  OLD_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }})
+
+                  # Remove the old js temp folder
+                  rm -rf ./js_bundles_host_temp
+
+                  # Copy out the old files
+                  docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
+
+                  # Build the new image
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
+
+                  # Run the new image
+                  NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
+
+                  # Copy the legacy files across
+                  docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
+
+                  # Copy the new bundle files to the container into a folder with the version name
+                  docker cp packages/procaptcha-bundle/dist/bundle/. $NEW_CONTAINER_ID:$JS_FOLDER
+
+                  # Start the new container
+                  docker start $NEW_CONTAINER_ID
+
+                  # Move procaptcha.bundle.js
+                  docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
+
+                  # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
+                  docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
+
+                  # Commit the changes to the container
+                  docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                  # Check this new docker image works locally
+                  docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                  # Start the bundle demo & run the cypress tests against the new bundle
+                  npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
 
             - name: Github release
               continue-on-error: true
@@ -414,21 +480,6 @@ jobs:
               id: publish_docker_js_server
               if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
-                  docker pull prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }}
-
-                  # Create a temporary container from the latest image
-                  echo "Building Docker image..."
-                  CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.check_version_docker_js_server.outputs.version }})
-
-                  # Copy the bundle to the container and rename it to include the version
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
-
-                  # Copy the bundle to the container as the latest version, overwriting the existing bundle if one exists
-                  docker cp packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js $CONTAINER_ID:/usr/share/nginx/html/js/procaptcha.bundle.js
-
-                  # Commit the changes to the container
-                  docker commit $CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
-
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
                   docker push prosopo/js_server:${{ steps.next_version.outputs.version }}
@@ -459,11 +510,10 @@ jobs:
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
                   if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
-                    echo "Redeploying flux docker js_server."
-                    npx tsx ./dev/scripts/dist/scripts/fluxDeploy.js ProcaptchaJavascriptServer
+                    echo "Soft redeploying flux docker js_server."
+                    npx flux redeploy --app ProcaptchaJavascriptServer
                   else
                     echo "Skipping flux redeploy."
-                    exit 1
                   fi
 
             - name:
@@ -472,14 +522,18 @@ jobs:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
-                  if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
-                    echo "Redeployed flux docker js_server."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
-                    echo "Redeploying flux docker js_server failed."
-                    curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                    if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
+                        echo "Redeployed flux docker js_server."
+                        curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
+                        echo "Redeploying flux docker js_server failed."
+                        curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                    else
+                        echo "Redeploying flux docker js_server skipped / cancelled."
+                    fi
                   else
-                    echo "Redeploying flux docker js_server skipped / cancelled."
+                    echo "Skipping flux redeploy notification."
                   fi
 
             - name: Build and Push the Provider Bundle
@@ -502,7 +556,9 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.version }}
+                  echo '{ "features": { "containerd-snapshotter": true } }' > /etc/docker/daemon.json
+                  sudo apt-get install -y qemu qemu-user-static
+                  docker buildx build --platform linux/amd64,linux/arm64 -f ./docker/images/provider.dockerfile . t prosopo/provider:${{ steps.next_version.outputs.version }}
                   echo "Pushing Docker image..."
                   docker push prosopo/provider:${{ steps.next_version.outputs.version }}
 

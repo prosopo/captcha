@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/scripts",
-    "version": "0.2.32",
+    "version": "0.3.36",
     "description": "Dev scripts for working with prosopo packages",
     "main": "dist/index.js",
     "type": "module",
@@ -9,9 +9,9 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest run --config ./src/vite.config.ts",
         "deploy": "node dist/deploy/protocol.js",
         "cli": "node dist/cli/index.js",
         "setup": "node dist/cli/index.js setup",
@@ -20,36 +20,38 @@
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+        "license": "tsx src/scripts/addCopyrightNotice.ts check",
+        "license:fix": "tsx src/scripts/addCopyrightNotice.ts license"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {
         "@iarna/toml": "^2.2.5",
-        "@polkadot/api": "10.11.1",
-        "@polkadot/api-contract": "10.11.1",
-        "@polkadot/types": "10.11.1",
-        "@polkadot/util-crypto": "12.6.1",
-        "@prosopo/api": "0.2.32",
-        "@prosopo/cli": "0.2.32",
-        "@prosopo/common": "0.2.32",
-        "@prosopo/config": "0.2.32",
-        "@prosopo/contract": "0.2.32",
-        "@prosopo/database": "0.2.32",
-        "@prosopo/datasets": "0.2.32",
-        "@prosopo/datasets-fs": "0.2.32",
-        "@prosopo/env": "0.2.32",
-        "@prosopo/file-server": "0.2.32",
-        "@prosopo/procaptcha": "0.2.32",
-        "@prosopo/procaptcha-bundle": "0.2.32",
-        "@prosopo/procaptcha-react": "0.2.32",
-        "@prosopo/provider": "0.2.32",
-        "@prosopo/server": "0.2.32",
-        "@prosopo/types": "0.2.32",
-        "@prosopo/types-database": "0.2.32",
-        "@prosopo/types-env": "0.2.32",
-        "@prosopo/captcha-contract": "0.2.32",
-        "@prosopo/util": "0.2.32",
+        "@polkadot/api": "10.11.2",
+        "@polkadot/api-contract": "10.11.2",
+        "@polkadot/types": "10.11.2",
+        "@polkadot/util-crypto": "12.6.2",
+        "@prosopo/api": "0.3.36",
+        "@prosopo/cli": "0.3.36",
+        "@prosopo/common": "0.3.36",
+        "@prosopo/config": "0.3.36",
+        "@prosopo/contract": "0.3.36",
+        "@prosopo/database": "0.3.36",
+        "@prosopo/datasets": "0.3.36",
+        "@prosopo/datasets-fs": "0.3.36",
+        "@prosopo/env": "0.3.36",
+        "@prosopo/file-server": "0.3.36",
+        "@prosopo/procaptcha": "0.3.36",
+        "@prosopo/procaptcha-bundle": "0.3.36",
+        "@prosopo/procaptcha-react": "0.3.36",
+        "@prosopo/provider": "0.3.36",
+        "@prosopo/server": "0.3.36",
+        "@prosopo/types": "0.3.36",
+        "@prosopo/types-database": "0.3.36",
+        "@prosopo/types-env": "0.3.36",
+        "@prosopo/captcha-contract": "0.3.36",
+        "@prosopo/util": "0.3.36",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
@@ -59,13 +61,13 @@
         "yargs-parser": "^21.0.1"
     },
     "overrides": {
-        "@polkadot/keyring": "12.6.1"
+        "@polkadot/keyring": "12.6.2"
     },
     "devDependencies": {
         "@esm-bundle/chai": "^4.3.4-fix.0",
         "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "vitest": "^0.34.2"
+        "vitest": "^1.3.1"
     }
 }

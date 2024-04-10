@@ -10,7 +10,13 @@
             "path": "../../contracts/captcha"
         },
         {
+            "path": "../api"
+        },
+        {
             "path": "../common"
+        },
+        {
+            "path": "../../dev/config"
         },
         {
             "path": "../contract"

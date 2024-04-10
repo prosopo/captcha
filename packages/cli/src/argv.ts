@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import {
     commandBatchCommit,
-    commandCalculateCaptchaSolutions,
     commandDappAccounts,
     commandDappDetails,
     commandDappRegister,
@@ -52,7 +51,6 @@ export function processArgs(args: string[], pair: KeyringPair, config: ProsopoCo
         .command(commandProviderDetails(pair, config, { logger }))
         .command(commandProviderDataset(pair, config, { logger }))
         .command(commandDappDetails(pair, config, { logger }))
-        .command(commandCalculateCaptchaSolutions(pair, config, { logger }))
         .command(commandBatchCommit(pair, config, { logger }))
         .command(commandVersion(pair, config, { logger }))
         .parse()

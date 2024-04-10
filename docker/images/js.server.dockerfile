@@ -1,3 +1,2 @@
-FROM nginx:alpine
-
-COPY ./js_bundles_host_temp/ /usr/share/nginx/html/js/
+FROM nginx:latest
+COPY ./docker/images/js.server.nginx.conf /etc/nginx/conf.d/default.conf

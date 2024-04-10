@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,8 +73,8 @@ pub mod common {
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
             let env_git_commit_id: [u8; 20] = [
-                142, 171, 171, 69, 223, 162, 150, 49, 74, 130, 206, 161, 57, 40, 19, 169, 57, 150,
-                189, 72,
+                255, 92, 41, 64, 113, 47, 27, 179, 3, 209, 159, 143, 234, 206, 140, 50, 176, 206,
+                4, 124,
             ];
             env_git_commit_id
         }

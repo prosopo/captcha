@@ -1,6 +1,20 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
+import { version } from '@prosopo/util'
 
 export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.version')
@@ -9,8 +23,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
         command: 'version',
         describe: 'Return the version of the software',
         handler: async () => {
-            const version = JSON.stringify(process.env.PROSOPO_PACKAGE_VERSION) || 'dev'
-            logger.info(`Version: ${version}`)
+            logger.info(`Version: ${JSON.stringify(version)}`)
         },
     }
 }

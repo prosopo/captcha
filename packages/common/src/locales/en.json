@@ -1,4 +1,7 @@
 {
+    "ACCOUNT": {
+        "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
+    },
     "WIDGET": {
         "SELECT_ALL": "Select all images containing a",
         "NEXT": "Next",
@@ -17,7 +20,7 @@
         "JSON_LOAD_FAILED": "Failed to load JSON file",
         "CREATE_JSON_FILE_FAILED": "Failed to create JSON file",
         "ASSERT_ERROR": "AssertionError",
-        "GENERATE_CPATCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
+        "GENERATE_CAPTCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
         "MNEMONIC_UNDEFINED": "Mnemonic Undefined. Please set the mnemonic in environment variables",
         "NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
@@ -51,7 +54,8 @@
         "TOO_MANY_CALLS": "Too many calls",
         "UNKNOWN_ERROR": "Unknown error",
         "CHAIN_DECIMALS_UNDEFINED": "Chain decimals are not defined",
-        "INVALID_DATA_FORMAT": "Invalid data format"
+        "INVALID_DATA_FORMAT": "Invalid data format",
+        "INVALID_BLOCKHASH": "Invalid blockhash"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
@@ -91,6 +95,8 @@
         "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
         "SOLUTION_APPROVE_FAILED": "Failed to approve solution",
         "SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+        "TABLES_UNDEFINED": "Tables undefined",
+        "CONNECTION_UNDEFINED": "Connection undefined",
         "COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
     },
     "CAPTCHA": {
@@ -155,7 +161,6 @@
         "INVALID_DIR_FORMAT": "Invalid directory format"
     },
     "PROGUI": {
-        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider",
-        "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
+        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider"
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ export const handleErrors = (
     try {
         message = JSON.parse(err.message)
     } catch {
-        console.debug('Invalid JSON error message')
+        console.error(err)
     }
     return response.status(code).json({
         message,
@@ -51,11 +51,12 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+    apiApp.use(handleErrors)
+
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
     }
 
-    apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })

@@ -92,7 +92,6 @@ jobs:
               run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             # build all packages in workspace
             - run: npm run build:all
@@ -102,6 +101,7 @@ jobs:
               run: |
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
                   cp demos/client-example/env.development demos/client-example/.env.test
+                  cp dev/scripts/env.test .env.test
                   cp dev/scripts/env.test dev/scripts/.env.test
                   cp dev/scripts/env.test packages/cli/.env.test
                   cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
@@ -145,3 +145,7 @@ jobs:
             - name: Run the cypress tests on client-bundle-example
               run: |
                   npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
+
+            - name: Run the cypress tests on client-bundle-example explicit rendering
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others

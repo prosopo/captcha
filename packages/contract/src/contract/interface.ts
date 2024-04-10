@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
+import { AbiMetaDataSpec, AbiMetadata, ContractAbi, IProsopoCaptchaContract } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN } from '@polkadot/util/bn'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
@@ -24,8 +24,9 @@ import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
 import { default as Query } from '@prosopo/captcha-contract/query'
 import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
+import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
+import { getBlockTimeMs } from './block.js'
 import {
     getPrimitiveStorageFields,
     getPrimitiveStorageValue,
@@ -76,7 +77,7 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
         })
     }
 }
-export class ProsopoCaptchaContract extends Contract {
+export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaContract {
     api: ApiPromise
     contractName: string
     contract: ContractPromise
@@ -157,7 +158,7 @@ export class ProsopoCaptchaContract extends Contract {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
-        const expectedBlockTime = getExpectedBlockTime(this.api)
+        const expectedBlockTime = new BN(getBlockTimeMs(this.api))
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)

@@ -89,7 +89,6 @@ jobs:
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - run: npm install
-            - run: npm run removePolkadotJSWarnings
 
             # build the packages
             - name: Build packages

@@ -137,5 +137,8 @@ chain-data
 # ignore vite config timestamps
 vite.config.ts.timestamp*
 
-# ignore test results dir
-**/tests/**/test_results
+# ignore our cache dir
+.cache
+
+js_bundles_host_temp
+**/client-bundle-example/src/assets/**

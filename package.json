@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.2.32",
+    "version": "0.3.36",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -18,6 +18,7 @@
         "build:all": "npm run --workspaces --if-present build",
         "build:all:cjs": "npm run --workspaces --if-present build:cjs",
         "build:provider-gui": "npm run -w @prosopo/provider-gui build",
+        "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle:dev",
         "rebuild": "f() { npm run cmd -- \"npm run clean %s\" $@ ; npm run cmd -- \"npm run build %s\" $@ ;}; f",
         "rebuild:npm": "npm run clean:npm && npm i",
         "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
@@ -37,10 +38,13 @@
         "start:provider": "npm -w @prosopo/cli run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
+        "start:demo:pow": "npm -w @prosopo/client-pow-example run start",
+        "start:demo:frictionless": "npm -w @prosopo/client-frictionless-example run start",
         "start:bundle": "npm -w @prosopo/client-bundle-example run start",
         "start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
+        "start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
         "populate-data": "npm -w @prosopo/provider run populate-data",
-        "test": "npm -w @prosopo/scripts run test",
+        "test": "npm run --workspaces test",
         "test:all": "npm run --workspaces --if-present test",
         "eslint": "npm --workspaces run eslint && npm run eslint:workspace",
         "eslint:workspace": "npx eslint '.*.*' '*.*' .vscode .github --ignore-pattern README.md --ignore-pattern diagram.svg --ignore-path .eslintignore",
@@ -54,14 +58,15 @@
         "prettier:fix": "npm --workspaces run prettier:fix && npm run prettier:fix:workspace",
         "prettier:fix:workspace": "npm run prettier:workspace -- --write",
         "prettier:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run prettier:fix",
-        "lint": "npm --workspaces run lint && npm run lint:workspace",
+        "lint": "npm run -w @prosopo/scripts license && npm --workspaces run lint && npm run lint:workspace",
         "lint:workspace": "npm run eslint:workspace && npm run prettier:workspace",
         "lint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint",
-        "lint:fix": "npm --workspaces run lint:fix && npm run lint:fix:workspace",
+        "lint:fix": "npm run -w @prosopo/scripts license:fix && npm --workspaces run lint:fix && npm run lint:fix:workspace",
         "lint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
-        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js 2>/dev/null && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js 2>/dev/null || true",
-        "postinstall": "npm run removePolkadotJSWarnings"
+        "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
+        "postinstall": "npm run removePolkadotJSWarnings",
+        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
     },
     "private": true,
     "engines": {
@@ -76,6 +81,9 @@
         "demos/*",
         "provider-gui"
     ],
+    "dependencies": {
+        "@prosopo/flux": "0.3.36"
+    },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
@@ -83,9 +91,9 @@
         "@types/node": "^20.2.5",
         "@typescript-eslint/eslint-plugin": "^6.0.0",
         "@typescript-eslint/parser": "^6.0.0",
+        "@vitest/coverage-v8": "^1.3.1",
         "babel-plugin-import": "^1.13.6",
         "depcheck": "^1.4.7",
-        "esbuild": "0.17.19",
         "eslint": "^8.55.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-absolute-imports-only": "^1.0.1",
@@ -103,6 +111,10 @@
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "2.6.2",
+        "typedoc": "^0.25.8",
+        "typedoc-plugin-mdn-links": "^3.1.16",
+        "typedoc-plugin-missing-exports": "^2.2.0",
+        "typedoc-plugin-zod": "^1.1.2",
         "typescript": "5.1.6"
     },
     "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",

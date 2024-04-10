@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -242,7 +242,9 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
 
 /**
  * Parse the image items in a captcha and pass back a URI if they exist
+ * @param  {Item} item
+ * @param  {AssetsResolver} assetsResolver
  */
-export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined) {
-    return { ...item, path: assetsResolver?.resolveAsset(item.data).getURL() || item.data }
+export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined): Item {
+    return { ...item, data: assetsResolver?.resolveAsset(item.data).getURL() || item.data }
 }

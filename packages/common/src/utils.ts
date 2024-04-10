@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ export const translationKeys = getLeafFieldPath(translationEn) as TranslationKey
 // String utils
 
 export const trimProviderUrl = (url: string) => {
-    return hexToString(url).replace(/\0/g, '')
+    return hexToString(url)
 }
 
 export function snakeToCamelCase(str: string): string {

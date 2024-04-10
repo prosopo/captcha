@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     object({
         networks: ProsopoNetworksSchema.default(networks),
         database: DatabaseConfigSchema.optional(),
+        devOnlyWatchEvents: boolean().optional(),
     })
 )
 export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworksSchema>
@@ -115,7 +116,7 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
-        serverUrl: string().url(),
+        serverUrl: string().url().optional(),
     })
 )
 
@@ -145,7 +146,6 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
         challengeValidLength: number().positive().optional(),
-        devOnlyWatchEvents: boolean().optional(),
     })
 )
 
@@ -168,7 +168,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
             maxBatchExtrinsicPercentage: 59,
         }),
         server: ProsopoImageServerConfigSchema,
-        mongoAtlasUri: string().optional(),
+        mongoEventsUri: string().optional(),
     })
 )
 
