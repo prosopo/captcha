@@ -111,7 +111,10 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
-            # create the provider image
+            # We cannot create the images in a single step because the output of buildx is not compatible with
+            # `docker load`. https://stackoverflow.com/a/72952846/1178971
+
+            # create the provider image for AMD64
             - name: Build the Provider Container
               id: build_docker_provider
               continue-on-error: true
@@ -119,10 +122,27 @@ jobs:
               with:
                   context: ${{github.workspace}}
                   file: ${{github.workspace}}/docker/images/provider.dockerfile
-                  platforms: linux/amd64,linux/arm64
+                  platforms: linux/amd64
                   push: false
                   tags: prosopo/provider:dev
-                  outputs: type=docker
+                  outputs: type=docker,dest=provider-amd64.tar
+
+            # create the provider image for ARM64
+            - name: Build the Provider Container
+              id: build_docker_provider
+              continue-on-error: true
+              uses: docker/build-push-action@v5
+              with:
+                  context: ${{github.workspace}}
+                  file: ${{github.workspace}}/docker/images/provider.dockerfile
+                  platforms: linux/arm64
+                  push: false
+                  tags: prosopo/provider:dev
+                  outputs: type=docker,dest=provider-arm64.tar
+
+            # load the AMD64 image
+            - name: Load the Provider Container
+              run: docker load -i provider-amd64.tar
 
             # Generate a mnemonic for the provider image
             - name: Generate mnemonic and add to env file
