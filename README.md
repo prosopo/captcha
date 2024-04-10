@@ -114,7 +114,7 @@ The `Procaptcha.render()` function takes an options object as its second argumen
 following fields:
 
 | Key                    | Type   | Description                                                                                              | Required |
-|------------------------|--------|----------------------------------------------------------------------------------------------------------|----------|
+| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------- | -------- |
 | siteKey                | string | The site key of your application / website. This is required.                                            | ✓        |
 | callback               | string | The name of the window function that will be called when the CAPTCHA is verified.                        | ✗        |
 | theme                  | string | The theme of the CAPTCHA widget. The default is `light`. The other option is `dark`.                     | ✗        |
@@ -138,7 +138,7 @@ For example, to set the theme to dark, you would add `data-theme="dark"` to the 
 You can choose to implement any of the following types of captcha when rendering the Procaptcha component:
 
 | Type           | Description                                                                                                                                                                                                                                                                           |
-|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `frictionless` | The default CAPTCHA type is `frictionless`. This type of CAPTCHA is invisible to the user, only requiring them to complete an invisible [Proof of Work challenge](https://en.wikipedia.org/wiki/Proof_of_work) (`pow`). Suspected bots are served image captcha challenges (`image`). |
 | `pow`          | The `pow` CAPTCHA type requires the user to solve a cryptographic puzzle. This puzzle simply requires a small amount of computational work to solve, and slows down bots significantly, making it difficult for them to scrape in high volumes.                                       |
 | `image`        | The `image` CAPTCHA type requires the user to solve a simple image CAPTCHA. This is CAPTCHA type most people are familiar with, created by Google reCAPTCHA.                                                                                                                          |
@@ -149,7 +149,7 @@ The output from the `onCaptchaVerified` function is the `procaptcha-response` JS
 data contains the following fields:
 
 | Key          | Type   | Description                                                                                                                   |
-|--------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | commitmentId | string | The commitment ID of the captcha challenge. This is only available in image or Frictionless mode.                             |
 | challenge    | string | The Proof-of-Work challenge that the user solved. This is only available in PoW or Frictionless mode.                         |
 | providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
@@ -184,9 +184,9 @@ data = req.body['procaptcha-response']
 response = POST('https://api.prosopo.io/siteverify', {
     providerUrl: data.providerUrl,
     user: data.user,
-    dapp: YOUR_SITE_KEY,  // Make sure to replace YOUR_SITE_KEY with your actual site key
+    dapp: YOUR_SITE_KEY, // Make sure to replace YOUR_SITE_KEY with your actual site key
     challenge: data.commitmentId,
-    blockNumber: data.blockNumber
+    blockNumber: data.blockNumber,
 })
 ```
 
@@ -234,7 +234,7 @@ const payload = JSON.parse(event.body)
 // parse the procaptcha response, which is a JSON string
 const procaptchaResponse = JSON.parse(payload[ApiParams.procaptchaResponse])
 
-// send the 
+// send the
 if (await prosopoServer.isVerified(procaptchaResponse)) {
     // perform CAPTCHA protected action
 }
@@ -256,14 +256,14 @@ setting.
 
 #### Example of Frictionless CAPTCHA implicit rendering
 
-```html
+````html
 ```html
 <div class="procaptcha" data-sitekey="your_site_key"></div>
 
 <!-- or -->
 
 <div class="procaptcha" data-sitekey="your_site_key" data-captcha-type="frictionless"></div>
-```
+````
 
 #### Example of Frictionless CAPTCHA rendering
 
