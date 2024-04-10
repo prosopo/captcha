@@ -539,12 +539,15 @@ jobs:
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
             - name: Set up QEMU
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
               uses: docker/setup-qemu-action@v3
 
             - name: Set up Docker Buildx
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
               uses: docker/setup-buildx-action@v3
 
             - name: Build the production CLI package
+              if: steps.check_version_docker_js_server.outputs.bump == 'true'
               run: |
                   echo "Building the production CLI package..."
                   # Copy the rococo env file to production env file
