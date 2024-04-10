@@ -256,14 +256,13 @@ setting.
 
 #### Example of Frictionless CAPTCHA implicit rendering
 
-````html
 ```html
 <div class="procaptcha" data-sitekey="your_site_key"></div>
 
 <!-- or -->
 
 <div class="procaptcha" data-sitekey="your_site_key" data-captcha-type="frictionless"></div>
-````
+```
 
 #### Example of Frictionless CAPTCHA rendering
 
