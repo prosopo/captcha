@@ -66,7 +66,7 @@
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
-        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
+        "docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
     },
     "private": true,
     "engines": {
@@ -111,13 +111,13 @@
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "2.6.2",
-        "typedoc": "^0.25.8",
+        "typedoc": "^0.25.13",
         "typedoc-plugin-mdn-links": "^3.1.16",
         "typedoc-plugin-missing-exports": "^2.2.0",
         "typedoc-plugin-zod": "^1.1.2",
         "typescript": "5.1.6"
     },
-    "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
+    "description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
@@ -141,7 +141,18 @@
         "frontend-security",
         "open-source",
         "free",
-        "captcha-alternative"
+        "captcha-alternative",
+        "hcaptcha",
+        "google-recaptcha",
+        "recaptcha-alternative",
+        "recaptcha-v3",
+        "recaptcha-v2",
+        "cloudflare-turnstile-alternative",
+        "hcaptcha-alternative",
+        "prosopo-captcha",
+        "procaptcha",
+        "prosopo-procaptcha",
+        "web3-captcha"
     ],
     "license": "Apache-2.0"
 }
