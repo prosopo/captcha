@@ -54,9 +54,10 @@ describe('env', () => {
     })
 
     it('loads relative', () => {
+        process.chdir(__dirname)
         expect(
             config({
-                path: './src/tests/override/c.env',
+                path: './override/c.env',
             })
         ).to.deep.equal({
             C: 'true',
