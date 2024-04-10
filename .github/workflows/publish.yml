@@ -556,7 +556,9 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${{ steps.next_version.outputs.version }}
+                  echo '{ "features": { "containerd-snapshotter": true } }' > /etc/docker/daemon.json
+                  sudo apt-get install -y qemu qemu-user-static
+                  docker buildx build --platform linux/amd64,linux/arm64 -f ./docker/images/provider.dockerfile . t prosopo/provider:${{ steps.next_version.outputs.version }}
                   echo "Pushing Docker image..."
                   docker push prosopo/provider:${{ steps.next_version.outputs.version }}
 

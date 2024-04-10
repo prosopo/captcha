@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { defineConfig } from 'vitest/config'
-import { getRootDir } from '../projectInfo.js'
 import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
 import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
 
@@ -30,8 +29,8 @@ export default function () {
             },
         },
         test: {
-            root: getRootDir(),
-            include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+            //root: getRootDir(),
+            include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
             watch: false,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
             logHeapUsage: true,

@@ -76,15 +76,17 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     public verifyDappUser(
         dapp: AccountId,
         userAccount: AccountId,
+        blockNumber: number,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
         const payload: {
             [ApiParams.dapp]: AccountId
             [ApiParams.user]: AccountId
+            [ApiParams.blockNumber]: number
             [ApiParams.commitmentId]?: string
             [ApiParams.maxVerifiedTime]?: number
-        } = { dapp: dapp, user: userAccount }
+        } = { dapp: dapp, user: userAccount, blockNumber }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
