@@ -7,6 +7,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "start": "npx tsx src/index.ts",
+        "test": "echo 'No test specified'",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
