@@ -3,82 +3,55 @@ name: prosoponator_bot
 on: issue_comment
 
 jobs:
-  pr_commented:
+  comment:
     # This job only runs for pull request comments
-    name: PR comment
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
-        name: a
-        with:
-          github-token: ${{ secrets.PROSOPONATOR_PAT }}
-          script: |
-            const comment = context.payload.comment.body;
-            // print the payload
-            console.log(JSON.stringify(context.payload, null, 2));
-            // split comment by space
-            const words = comment.split(' ').map(word => word.toLowerCase().trim()).filter(word => word.length > 0);
-            // if first word is '@prosoponator'
-            const bot = 'prosoponator';
-            if (words[0] === '@' + bot) {
-              console.log(bot + ' called');
-              // if the next word is 'approve' then approve the pull request
-                if (words[1] === 'approve' || words[1] === 'accept') {
-                    console.log('reacting');
-                    // react to the comment with a thumbs up
-                    github.rest.reactions.createForIssueComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        comment_id: context.payload.comment.id,
-                        content: '+1'
-                    });
-                    console.log('approving');
-                    // approve the pull request
-                    github.rest.pulls.createReview({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        pull_number: context.payload.issue.number,
-                        event: 'APPROVE',
-                        body: 'Approved by @' + context.payload.comment.user.login
-                    });
-                } else if (words[1] === 'disapprove' || words[1] === 'reject') {
-                    console.log('reacting');
-                    // react to the comment with a thumbs down
-                    github.rest.reactions.createForIssueComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        comment_id: context.payload.comment.id,
-                        content: '+1'
-                    });
-                    console.log('disapproving');
-                    // request changes to the pull request
-                    github.rest.pulls.createReview({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        pull_number: context.payload.issue.number,
-                        event: 'REQUEST_CHANGES',
-                        body: 'Disapproved by @' + context.payload.comment.user.login
-                    });
-                } else {
-                    console.log('unknown command');
-                    console.log('reacting');
-                    // react with confused
-                    github.rest.reactions.createForIssueComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        comment_id: context.payload.comment.id,
-                        content: 'confused'
-                    });
-                    // quote reply
-                    console.log('replying');
-                    github.rest.issues.createComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        issue_number: context.payload.issue.number,
-                        body: '@' + context.payload.comment.user.login + '\n\n> ' + context.payload.comment.body + '\n\nDoes not compute! :robot:'
-                    });
-                }
-            } else {
-                console.log(bot + ' not called')
-            }
+      - name: Print contexts
+        env:
+            GITHUB_CONTEXT: ${{ toJson(github) }}
+            ENV_CONTEXT: ${{ toJson(env) }}
+            VARS_CONTEXT: ${{ toJson(vars) }}
+            JOB_CONTEXT: ${{ toJson(job) }}
+            STEPS_CONTEXT: ${{ toJson(steps) }}
+            RUNNER_CONTEXT: ${{ toJson(runner) }}
+            SECRETS_CONTEXT: ${{ toJson(secrets) }}
+            STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+            MATRIX_CONTEXT: ${{ toJson(matrix) }}
+            NEEDS_CONTEXT: ${{ toJson(needs) }}
+            INPUTS_CONTEXT: ${{ toJson(inputs) }}
+        run: |
+            echo "******************************"
+            echo "github:" "$GITHUB_CONTEXT"
+            echo "******************************"
+            echo "env:" "$ENV_CONTEXT"
+            echo "******************************"
+            echo "vars:" "$VARS_CONTEXT"
+            echo "******************************"
+            echo "job:" "$JOB_CONTEXT"
+            echo "******************************"
+            echo "steps:" "$STEPS_CONTEXT"
+            echo "******************************"
+            echo "runner:" "$RUNNER_CONTEXT"
+            echo "******************************"
+            echo "secrets:" "$SECRETS_CONTEXT"
+            echo "******************************"
+            echo "strategy:" "$STRATEGY_CONTEXT"
+            echo "******************************"
+            echo "matrix:" "$MATRIX_CONTEXT"
+            echo "******************************"
+            echo "needs:" "$NEEDS_CONTEXT"
+            echo "******************************"
+            echo "inputs:" "$INPUTS_CONTEXT"
+            echo "******************************"
+
+      - uses: actions/checkout@v3
+
+      - name: Run
+        env:
+            GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+        run: |
+            cd dev/prosoponator-bot
+            npm ci
+            npx tsx src/bot.ts
