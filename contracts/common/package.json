@@ -1,10 +1,11 @@
 {
     "name": "@prosopo/common-contract",
-    "version": "0.3.5",
+    "version": "0.3.36",
     "description": "The common contract",
     "main": "dist/index.js",
     "type": "module",
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
