@@ -1,10 +1,12 @@
+import { finite } from "./FiniteNumberParser.js";
 import { Validator } from "./Parser.js";
 
 export type Options = {
     min?: number
     max?: number
-    minInclusive?: boolean
-    maxInclusive?: boolean
+    minExclusive?: boolean
+    maxExclusive?: boolean
+    allowInfinite?: boolean
 }
 
 export class BetweenNumber extends Validator<number, number> {
@@ -14,8 +16,13 @@ export class BetweenNumber extends Validator<number, number> {
     }
 
     public override validate(value: number): number {
+        // NaN and Inf's cause issues with comparisons
+        // reject them by default
+        if (!this.options.allowInfinite) {
+            value = finite().validate(value)
+        }
         if (this.options.min !== undefined) {
-            if(this.options.minInclusive) {
+            if(!this.options.minExclusive) {
                 if(value < this.options.min) {
                     throw new Error(`Value ${value} is less than the minimum ${this.options.min}`)
                 }
@@ -26,7 +33,7 @@ export class BetweenNumber extends Validator<number, number> {
             }
         }
         if (this.options.max !== undefined) {
-            if(this.options.maxInclusive) {
+            if(!this.options.maxExclusive) {
                 if(value > this.options.max) {
                     throw new Error(`Value ${value} is greater than the maximum ${this.options.max}`)
                 }
@@ -48,7 +55,7 @@ export class BetweenNumber extends Validator<number, number> {
             if(this.options.max === undefined) {
                 return ``
             } else {
-                if(this.options.maxInclusive) {
+                if(!this.options.maxExclusive) {
                     return `<=${this.options.max}`
                 } else {
                     return `<${this.options.max}`
@@ -56,20 +63,20 @@ export class BetweenNumber extends Validator<number, number> {
             }
         } else {
             if (this.options.max === undefined) {
-                if(this.options.minInclusive) {
+                if(!this.options.minExclusive) {
                     return `>=${this.options.min}`
                 } else {
                     return `>${this.options.min}`
                 }
             } else {
-                if(this.options.minInclusive) {
-                    if(this.options.maxInclusive) {
+                if(!this.options.minExclusive) {
+                    if(!this.options.maxExclusive) {
                         return `${this.options.min}<=x<=${this.options.max}`
                     } else {
                         return `${this.options.min}<=x<${this.options.max}`
                     }
                 } else {
-                    if (this.options.maxInclusive) {
+                    if (!this.options.maxExclusive) {
                         return `${this.options.min}<x<=${this.options.max}`
                     } else {
                         return `${this.options.min}<x<${this.options.max}`
