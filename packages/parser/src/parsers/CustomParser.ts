@@ -1,56 +1,54 @@
 import { Validator } from "./Parser.js"
 import { Refiner } from "./Refiner.js"
 
-export type Options<T> = {
-    validator: Validator<T>
+export type Options<T, U = T> = {
     name?: string
-    refiner?: Refiner<T>
+    /**
+     * Transform a value, optionally converting to a new type.
+     * 
+     * E.g. an lowercase validator would transform a string to lowercase, refining the value but maintaining the type.
+     * E.g. an int validator would transform a string to an integer using parseInt(), converting the value to a new type entirely.
+     * 
+     * @param value value to transform
+     * @returns transformed value
+     */
+    transform: (value: T) => U
 }
 
-export class CustomParser<T> extends Validator<T> {
-    private _validator: Validator<T>
-    private _name?: string
-    private _refiner?: Refiner<T>
+/**
+ * A validator that transforms a value using a custom function.
+ */
+export class CustomValidator<T, U = T> extends Validator<U> {
 
-    constructor(private options: Options<T>) {
+    constructor(private _validator: Validator<T>, private _options: Options<T, U>) {
         super()
-        this._name = options.name
-        this._validator = options.validator
-        this._refiner = options.refiner
-
-        this._validator = this.validator // defensive clone
-        this._refiner = this.refiner // defensive clone
     }
 
-    public get validator(): Validator<T> {
-        return this.options.validator.clone() // defensive clone
+    get validator() {
+        return this._validator.clone()
     }
 
-    public get refiner(): Refiner<T> | undefined {
-        return this.options.refiner?.clone() // defensive clone
+    public override validate(value: unknown): U {
+        const validated = this._validator.validate(value)
+        try {
+            return this._options.transform(validated)
+        } catch (error) {
+            throw new Error(`Failed to transform value: ${error instanceof Error ? error.message : error}`)
+        }
     }
 
-    public override validate(value: unknown): T {
-        return this.options.validator.validate(value)
+    public override clone() {
+        return new CustomValidator<T, U>(this._validator, { ...this._options })
     }
 
     public override get name(): string {
-        if (this.options.name !== undefined) {
-            return this.options.name
-        }
-        const refinerName = this.options.refiner ? `(${this.options.refiner.name})` : ''
-        return `${this.options.validator.name}${refinerName}`
-    }
-
-    public override clone(): CustomParser<T> {
-        return new CustomParser({
-            validator: this.validator,
-            name: this.options.name,
-            refiner: this.refiner
-        })
+        return this._validator.name
     }
 }
 
-export const pCustom = <T>(options: Options<T>) => new CustomParser<T>(options)
+export const pCustom = <T, U = T>(validator: Validator<T>, options: Options<T, U>) {
+    return new CustomValidator<T, U>(validator, options)
+}
 export const custom = pCustom
+export const transform = pCustom
 export const extend = pCustom
