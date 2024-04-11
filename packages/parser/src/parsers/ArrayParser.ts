@@ -1,9 +1,7 @@
 import { inst } from "./InstanceParser.js"
-import { InferConfig, InferValidatorConfig, Validator, ValidatorConfig } from "./Parser.js"
+import { InferOutput, Validator } from "./Parser.js"
 
-export class ArrayParser<T extends Validator<any>> extends Validator<{
-    output: InferConfig<T>["output"][]
-}> {
+export class ArrayParser<T extends Validator<any, any>> extends Validator<unknown, InferOutput<T>[]> {
 
     constructor(private _parser: T, readonly length: number = -1) {
         super()
@@ -14,9 +12,9 @@ export class ArrayParser<T extends Validator<any>> extends Validator<{
         return this._parser.clone() as T
     }
 
-    public override validate(value: InferConfig<T>["input"]): InferConfig<T>["output"][] {
+    public override validate(value: unknown): InferOutput<T>[] {
         // value is definitely an array
-        const valueArray = inst(Array).validate(value)
+        let valueArray = inst(Array).validate(value)
         if (this.length >= 0) {
             // then expecting fixed length array
             if (valueArray.length !== this.length) {
@@ -27,7 +25,7 @@ export class ArrayParser<T extends Validator<any>> extends Validator<{
             // parse each element
             valueArray[i] = this._parser.validate(valueArray[i])
         }
-        return value as InferConfig<T>["output"][]
+        return value as InferOutput<T>[]
     }
 
     public override clone() {
@@ -39,7 +37,7 @@ export class ArrayParser<T extends Validator<any>> extends Validator<{
     }
 }
 
-export const pArray = <T extends Validator<any>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)
+export const pArray = <T extends Validator<any, any>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)
 export const arr = pArray
 export const list = pArray
 export const array = pArray
