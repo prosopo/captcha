@@ -14,7 +14,9 @@ function isValidIPv4(ip: string): boolean {
 
 async function checkIP(ipAddress: string) {
     const url = 'https://api.abuseipdb.com/api/v2/check'
-    const apiKey = '3bfb7f5ea54f285e0b274d3b9c63f99decfb501748500bf7b23128bfbd6a7e02aa68535847c5b6a6'
+    const apiKey =
+        process.env.ABUSEIPDB_API_KEY ||
+        '3bfb7f5ea54f285e0b274d3b9c63f99decfb501748500bf7b23128bfbd6a7e02aa68535847c5b6a6'
 
     console.log(apiKey)
 
