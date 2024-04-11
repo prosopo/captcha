@@ -29,7 +29,7 @@ export class PipeValidator<const T extends readonly Validator<any, any>[]> exten
     }
 
     public override get name(): string {
-        return this.name ?? this.validators.map(v => v.name).join(" -> ")
+        return this._name ?? this.validators.map(v => v.name).join(" -> ")
     }
 }
 
