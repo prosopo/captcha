@@ -5,9 +5,7 @@ import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 
-export class BoundBigInt extends Validator<{
-    output: bigint
-}> {
+export class BoundBigInt extends Validator<unknown, bigint> {
 
     constructor(public min?: bigint, public max?: bigint) {
         super()

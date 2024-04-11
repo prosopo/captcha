@@ -36,9 +36,7 @@ import { stringify } from "./utils.js"
 //    "3": "C",
 //    "y": "D"
 // }
-export class NativeEnumParser<T> extends Validator<{
-    output: T[keyof T]
-}> {
+export class NativeEnumParser<T> extends Validator<unknown, T[keyof T]> {
     // store a list of the variants
     readonly variants: readonly T[keyof T][]
 
