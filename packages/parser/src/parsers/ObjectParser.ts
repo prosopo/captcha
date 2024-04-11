@@ -219,10 +219,10 @@ export class ObjectParser<T extends Schema<any>> extends Validator<UnpackSchema<
         return this.handler.name
     }
 
-    public override shape(value: unknown): UnpackSchema<T> {
+    public override validate(value: unknown): UnpackSchema<T> {
         // if cloning enabled, the result should be an empty object
         // else the result should be the same object as the input
-        const result = this.options?.clone ? {} as any : inst(Object).shape(value) as any
+        const result = this.options?.clone ? {} as any : inst(Object).validate(value) as any
         // track the unhandled keys in the value
         const unhandledKeys = new Set(Object.keys(value as any))
         // iterate through all fields defined by the schema
@@ -232,7 +232,7 @@ export class ObjectParser<T extends Schema<any>> extends Validator<UnpackSchema<
             // get the field value from the input
             const val = (value as any)[key]
             // parse the field value
-            const output = parser.shape(val)
+            const output = parser.validate(val)
             // if cloning enabled, assign the field to the result
             if (this.options?.clone) {
                 result[key] = output

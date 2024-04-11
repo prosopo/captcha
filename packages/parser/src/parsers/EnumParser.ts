@@ -9,7 +9,7 @@ export class EnumParser<const T extends readonly any[]> extends Validator<Varian
         super()
     }
 
-    public override shape(value: unknown): Variant<T> {
+    public override validate(value: unknown): Variant<T> {
         for (const variant of this.variants) {
             if (variant === value) {
                 return variant

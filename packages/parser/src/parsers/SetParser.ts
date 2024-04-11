@@ -11,12 +11,12 @@ export class SetParser<T extends Validator<any>> extends Validator<Set<Shape<T>>
         return this._parser.clone() as T
     }
 
-    public override shape(value: unknown): Set<Shape<T>> {
-        const valueSet = inst(Set).shape(value)
+    public override validate(value: unknown): Set<Shape<T>> {
+        const valueSet = inst(Set).validate(value)
         const result = new Set<Shape<T>>()
         for (const value of valueSet) {
             // parse every value to ensure they are of the correct type
-            result.add(this._parser.shape(value))
+            result.add(this._parser.validate(value))
         }
         return result
     }

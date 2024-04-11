@@ -6,7 +6,7 @@ export class AnyParser extends Validator<any> {
         super()
     }
 
-    public override shape(value: unknown): any {
+    public override validate(value: unknown): any {
         // no-op parser
         return value
     }

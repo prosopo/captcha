@@ -6,7 +6,7 @@ export class UnknownParser extends Validator<unknown> {
         super()
     }
 
-    public override shape(value: unknown): unknown {
+    public override validate(value: unknown): unknown {
         // no-op parser
         return value
     }

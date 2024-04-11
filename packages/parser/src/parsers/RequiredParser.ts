@@ -11,11 +11,11 @@ export class RequiredParser<T extends Validator<any>> extends Validator<Exclude<
         return this._parser.clone() as T
     }
 
-    public override shape(value: unknown): Exclude<Shape<T>, undefined> {
+    public override validate(value: unknown): Exclude<Shape<T>, undefined> {
         if (value === undefined) {
             throw new Error(`Expected a value but got undefined`)
         }
-        return this._parser.shape(value)!
+        return this._parser.validate(value)!
     }
 
     public override clone() {

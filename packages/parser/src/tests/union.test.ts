@@ -10,41 +10,41 @@ describe("union", () => {
     })
 
     it("should error on no parsers", () => {
-        expect(() => union([]).shape(null)).toThrow();
+        expect(() => union([]).validate(null)).toThrow();
     })
 
     it("should return type never on no parsers", () => {
-        expectTypeOf(() => union([]).shape(null)).returns.toBeNever();
+        expectTypeOf(() => union([]).validate(null)).returns.toBeNever();
         const parser = union([]);
         const a: never = null!
-        const b: ReturnType<typeof parser.shape> = a;
+        const b: ReturnType<typeof parser.validate> = a;
     })
 
     it("should return union of types", () => {
-        assertType<(value: unknown) => number | string | boolean>(union([num(), str(), bool()]).shape)
+        assertType<(value: unknown) => number | string | boolean>(union([num(), str(), bool()]).validate)
         const parser = union([num(), str(), bool()]);
         const a: number = 1
-        const b: ReturnType<typeof parser.shape> = a;
+        const b: ReturnType<typeof parser.validate> = a;
         const c: string = ""
-        const d: ReturnType<typeof parser.shape> = c;
+        const d: ReturnType<typeof parser.validate> = c;
         const e: boolean = true
-        const f: ReturnType<typeof parser.shape> = e;
+        const f: ReturnType<typeof parser.validate> = e;
     })
 
     it("should parse number, string, or boolean", () => {
-        expect(union([num(), str(), bool()]).shape(1)).toBe(1);
-        expect(union([num(), str(), bool()]).shape("")).toBe("");
-        expect(union([num(), str(), bool()]).shape(true)).toBe(true);
+        expect(union([num(), str(), bool()]).validate(1)).toBe(1);
+        expect(union([num(), str(), bool()]).validate("")).toBe("");
+        expect(union([num(), str(), bool()]).validate(true)).toBe(true);
     })
 
     it("should error on incorrect type", () => {
-        expect(() => union([num(), str(), bool()]).shape({})).toThrow();
-        expect(() => union([num(), str(), bool()]).shape(undefined)).toThrow();
-        expect(() => union([num(), str(), bool()]).shape(null)).toThrow();
-        expect(() => union([num(), str(), bool()]).shape([])).toThrow();
+        expect(() => union([num(), str(), bool()]).validate({})).toThrow();
+        expect(() => union([num(), str(), bool()]).validate(undefined)).toThrow();
+        expect(() => union([num(), str(), bool()]).validate(null)).toThrow();
+        expect(() => union([num(), str(), bool()]).validate([])).toThrow();
     })
 
     it("should error on regex", () => {
-        expect(() => union([num(), str(), bool()]).shape(/./)).toThrow();
+        expect(() => union([num(), str(), bool()]).validate(/./)).toThrow();
     })
 });

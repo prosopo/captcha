@@ -7,9 +7,9 @@ import { run, stringify } from "./utils.js"
 
 export class VoidParser extends Validator<void> {
 
-    public override shape(value: unknown): void {
+    public override validate(value: unknown): void {
         // void === null or void === undefined
-        const { ok, result } = run(() => or(undef(), nul()).shape(value))
+        const { ok, result } = run(() => or(undef(), nul()).validate(value))
         if (!ok) {
             throw new Error(`Expected void but got ${stringify(value)}`)
         }
