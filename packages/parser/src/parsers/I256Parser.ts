@@ -1,11 +1,17 @@
-// import { boundBi } from "./BoundBigIntParser.js"
-// import { boundNum } from "./BoundNumberParser.js"
-// import { redefine } from "./CustomParser.js"
-// import { NumberParser, num } from "./NumberParser.js"
-// import { Validator } from "./Parser.js"
-// import { TypeofParser } from "./TypeofParser.js"
+import { betweenBigInt } from "./BetweenBigInt.js"
+import { bi } from "./BigIntParser.js"
+import { num } from "./NumberParser.js"
+import { pipe } from "./PipeValidator.js"
 
-// const min = BigInt(-Math.pow(2, 256)) + BigInt(Math.pow(2, 256) / 2)
-// const max = BigInt(Math.pow(2, 256)) - BigInt(Math.pow(2, 256) / 2) - 1n
-// export const pI256 = redefine(() => boundBi(min, max), "i256")
-// export const i256 = pI256
+export const pI256 = () => pipe([
+    bi(),
+    betweenBigInt({
+        min: -(2n**256n) + (2n**256n) / 2n,
+        max: (2n**256n) - (2n**256n) / 2n - 1n,
+    })
+], `i256`)
+export const i256 = pI256
+
+const a = i256()
+type b = ReturnType<typeof a.validate>
+type c = Parameters<typeof a.validate>[0]
