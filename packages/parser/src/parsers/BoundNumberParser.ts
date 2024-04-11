@@ -4,7 +4,9 @@ import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 import { Ctor } from "./utils.js"
 
-export class BoundNumber extends Validator<number> {
+export class BoundNumber extends Validator<{
+    output: number
+}> {
 
     constructor(public min?: number, public max?: number) {
         super()

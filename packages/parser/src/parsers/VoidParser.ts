@@ -5,7 +5,9 @@ import { undef } from "./UndefinedParser.js"
 import { or } from "./UnionParser.js"
 import { run, stringify } from "./utils.js"
 
-export class VoidParser extends Validator<void> {
+export class VoidParser extends Validator<{
+    output: void
+}> {
 
     public override validate(value: unknown): void {
         // void === null or void === undefined
@@ -18,6 +20,11 @@ export class VoidParser extends Validator<void> {
 
     public override clone() {
         return new VoidParser()
+    }
+
+    public override get name(): string {
+        return `void`
+    
     }
 }
 

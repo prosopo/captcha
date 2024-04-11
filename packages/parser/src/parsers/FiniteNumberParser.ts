@@ -2,7 +2,9 @@ import { NumberParser, num } from "./NumberParser.js"
 import { Validator } from "./Parser.js"
 import { TypeofParser } from "./TypeofParser.js"
 
-export class FiniteNumber extends Validator<number> {
+export class FiniteNumber extends Validator<{
+    output: number
+}> {
 
     public override validate(value: unknown): number {
         const v = num().validate(value)

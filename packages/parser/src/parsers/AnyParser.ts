@@ -1,6 +1,8 @@
 import { Validator } from "./Parser.js"
 
-export class AnyParser extends Validator<any> {
+export class AnyParser extends Validator<{
+    output: any
+}> {
 
     constructor() {
         super()

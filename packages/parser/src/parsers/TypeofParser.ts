@@ -1,7 +1,9 @@
 import { Validator } from "./Parser.js"
 import { stringify } from "./utils.js"
 
-export class TypeofParser<T, U extends string> extends Validator<T> {
+export class TypeofParser<T, U extends string> extends Validator<{
+    output: T
+}> {
 
     constructor(readonly typeName: U) {
         super()
