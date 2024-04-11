@@ -42,7 +42,7 @@ export class NativeEnumParser<T> extends Validator<T[keyof T]> {
 
     constructor(readonly nativeEnum: T) {
         super()
-        const nativeEnumObj = inst(Object).shape(nativeEnum)
+        const nativeEnumObj = inst(Object).validate(nativeEnum)
         // iterate over the enum key/value mapping (which is just an obj under the hood)
         const result: T[keyof T][] = []
         for (const [key, enumValue] of Object.entries(nativeEnumObj)) {
@@ -66,7 +66,7 @@ export class NativeEnumParser<T> extends Validator<T[keyof T]> {
         this.variants = result
     }
 
-    public override shape(value: unknown): T[keyof T] {
+    public override validate(value: unknown): T[keyof T] {
         for (const variant of this.variants) {
             if (variant === value) {
                 return variant

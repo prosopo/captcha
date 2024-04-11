@@ -16,12 +16,12 @@ export class MapParser<T extends Validator<any>, U extends Validator<any>> exten
         return this._valueParser.clone() as U
     }
 
-    public override shape(value: unknown): Map<Shape<T>, Shape<U>> {
-        const valueMap = inst(Map).shape(value)
+    public override validate(value: unknown): Map<Shape<T>, Shape<U>> {
+        const valueMap = inst(Map).validate(value)
         const result = new Map<Shape<T>, Shape<U>>()
         for (const [key, value] of valueMap) {
             // parse every key and value to ensure they are of the correct type
-            result.set(this._keyParser.shape(key), this._valueParser.shape(value))
+            result.set(this._keyParser.validate(key), this._valueParser.validate(value))
         }
         return result
     }

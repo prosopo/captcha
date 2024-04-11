@@ -26,24 +26,24 @@ describe("unknown", () => {
     })
 
     it("should parse to correct type", () => {
-        expectTypeOf(() => p().shape(null)).returns.toMatchTypeOf<any>();
+        expectTypeOf(() => p().validate(null)).returns.toMatchTypeOf<any>();
         const parser = p();
         const a: any = undefined
-        const b: ReturnType<typeof parser.shape> = a
+        const b: ReturnType<typeof parser.validate> = a
     })
 
     it("should pass-through", () => {
-        expect(p().shape(1)).toBe(1);
-        expect(p().shape("")).toBe("");
-        expect(p().shape({})).toEqual({});
-        expect(p().shape([])).toEqual([]);
-        expect(p().shape(null)).toBe(null);
-        expect(p().shape(undefined)).toBe(undefined);
-        expect(p().shape(NaN)).toBe(NaN);
+        expect(p().validate(1)).toBe(1);
+        expect(p().validate("")).toBe("");
+        expect(p().validate({})).toEqual({});
+        expect(p().validate([])).toEqual([]);
+        expect(p().validate(null)).toBe(null);
+        expect(p().validate(undefined)).toBe(undefined);
+        expect(p().validate(NaN)).toBe(NaN);
     })
 
     it("should allow any field lookup on an object", () => {
-        const a = p().shape({ a: 1, b: 2, c: 3 });
+        const a = p().validate({ a: 1, b: 2, c: 3 });
         expect(a.a).toBe(1);
         expect(a.b).toBe(2);
         expect(a.c).toBe(3);

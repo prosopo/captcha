@@ -30,8 +30,8 @@ export class CustomParser<T> extends Validator<T> {
         return this.options.refiner?.clone() // defensive clone
     }
 
-    public override shape(value: unknown): T {
-        return this.options.validator.shape(value)
+    public override validate(value: unknown): T {
+        return this.options.validator.validate(value)
     }
 
     public override get name(): string {

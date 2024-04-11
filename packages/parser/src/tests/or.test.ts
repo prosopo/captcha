@@ -10,21 +10,21 @@ describe("or", () => {
     })
     
     it("should return union of types", () => {
-        assertType<(value: unknown) => string | number>(or(num(), str()).shape);
+        assertType<(value: unknown) => string | number>(or(num(), str()).validate);
         const parser = or(num(), str());
-        const a: ReturnType<typeof parser.shape> = 1;
-        const b: ReturnType<typeof parser.shape> = "";
+        const a: ReturnType<typeof parser.validate> = 1;
+        const b: ReturnType<typeof parser.validate> = "";
     })
 
     it("should parse number or string", () => {
-        expect(or(num(), str()).shape(1)).toBe(1);
-        expect(or(num(), str()).shape("")).toBe("");
+        expect(or(num(), str()).validate(1)).toBe(1);
+        expect(or(num(), str()).validate("")).toBe("");
     })
 
     it("should error on incorrect type", () => {
-        expect(() => or(num(), str()).shape({})).toThrow();
-        expect(() => or(num(), str()).shape(undefined)).toThrow();
-        expect(() => or(num(), str()).shape(null)).toThrow();
-        expect(() => or(num(), str()).shape([])).toThrow();
+        expect(() => or(num(), str()).validate({})).toThrow();
+        expect(() => or(num(), str()).validate(undefined)).toThrow();
+        expect(() => or(num(), str()).validate(null)).toThrow();
+        expect(() => or(num(), str()).validate([])).toThrow();
     })
 });

@@ -18,15 +18,15 @@ export class TupleParser<const T extends Validator<any>[]> extends Validator<Sha
         return this._parsers.map(parser => parser.clone()) as T
     }
 
-    public override shape(value: unknown): ShapeArray<T> {
-        const valueArray = inst(Array).shape(value)
+    public override validate(value: unknown): ShapeArray<T> {
+        const valueArray = inst(Array).validate(value)
         if (valueArray.length !== this._parsers.length) {
             throw new Error(`Expected tuple with ${this._parsers.length} elements but got ${valueArray.length} elements`)
         }
         for (let i = 0; i < valueArray.length; i++) {
             // parse each element
             const parser = at(this._parsers, i)
-            valueArray[i] = parser.shape(valueArray[i])
+            valueArray[i] = parser.validate(valueArray[i])
         }
         return value as ShapeArray<T>
     }

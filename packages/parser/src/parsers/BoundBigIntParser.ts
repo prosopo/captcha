@@ -11,8 +11,8 @@ export class BoundBigInt extends Validator<bigint> {
         super()
     }
 
-    public override shape(value: unknown): bigint {
-        const v = bi().shape(value)
+    public override validate(value: unknown): bigint {
+        const v = bi().validate(value)
         if (this.min !== undefined) {
             if (v < this.min) {
                 throw new Error(`Expected a bigint greater than or equal to ${this.min}, but got ${v}`)

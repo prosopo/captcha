@@ -10,8 +10,8 @@ export class BoundNumber extends Validator<number> {
         super()
     }
 
-    public override shape(value: unknown): number {
-        const v = finiteNum().shape(value)
+    public override validate(value: unknown): number {
+        const v = finiteNum().validate(value)
         if (this.min !== undefined) {
             if (v < this.min) {
                 throw new Error(`Expected a number greater than or equal to ${this.min}, but got ${v}`)

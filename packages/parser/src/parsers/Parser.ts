@@ -7,26 +7,19 @@ import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 /**
  * A validator takes an unknown value and shapes it into a known type, or throws an error if it cannot. The value is then refined, or an error is thrown if it cannot be refined.
  */
-export abstract class Validator<T> extends Refiner<T> implements Cloneable<Validator<T>> {
-
-    /**
-     * Convert an unknown value into a known type, or throw an error if it cannot. E.g. a string parser would test whether the value is a string, and throw an error if it is not.
-     * @param value an unknown value to shape
-     */
-    public abstract shape(value: unknown): T
-
+export abstract class Validator<T> implements Cloneable<Validator<T>> {
     /**
      * Validating an unknown value is the process of shaping it into a known type, then refining it. If the value cannot be shaped, an error is thrown. If the value cannot be refined, an error is thrown. E.g. an email parser would first check if the value is a string (shape), then trim whitespace (transform) and check the string conforms to email address format (validation). Transforming and validating are both steps in refinement.
      * @param value the unknown value to validate
      * @returns a validated value
      */
-    public validate(value: unknown): T {
-        const shaped = this.shape(value)
-        const refined = this.refine(shaped)
-        return refined
-    }
+    public abstract validate(value: unknown): T
 
-    public abstract override clone(): Validator<T>
+    /**
+     * Clone this validator. Make sure to clone any state held by the validator to avoid sharing state between instances.
+     * @returns a new validator that is the same as this one
+     */
+    public abstract clone(): Validator<T>
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface

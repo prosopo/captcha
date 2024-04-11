@@ -10,8 +10,8 @@ export class ReadonlyParser<T extends Validator<any>> extends Validator<Shape<T>
         return this._parser.clone() as T
     }
 
-    public override shape(value: unknown): Shape<T> {
-        return this._parser.shape(value)
+    public override validate(value: unknown): Shape<T> {
+        return this._parser.validate(value)
     }
 
     public override clone() {

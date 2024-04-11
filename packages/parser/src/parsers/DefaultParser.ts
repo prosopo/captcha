@@ -12,12 +12,12 @@ export class DefaultParser<T> extends Validator<T> {
         return this._parser.clone()
     }
 
-    public override shape(value: unknown): T {
+    public override validate(value: unknown): T {
         // call fn to get default value if value is missing
         if (value === undefined) {
             return this.defaultFn()
         }
-        return this._parser.shape(value)
+        return this._parser.validate(value)
     }
 
     public override clone() {

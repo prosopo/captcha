@@ -7,7 +7,7 @@ export class TypeofParser<T, U extends string> extends Validator<T> {
         super()
     }
 
-    public override shape(value: unknown): T {
+    public override validate(value: unknown): T {
         if (typeof value !== this.typeName) {
             throw new Error(`Expected ${this.typeName} but got ${stringify(value)} of type ${stringify(typeof value)}`)
         }
