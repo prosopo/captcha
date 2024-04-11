@@ -1,5 +1,5 @@
 import { inst } from "./InstanceParser.js"
-import { InferOutput, Validator } from "./Parser.js"
+import { InferOutput, ValidateOptions, Validator } from "./Parser.js"
 
 export class ArrayParser<T extends Validator<any, any>> extends Validator<unknown, InferOutput<T>[]> {
 
@@ -12,14 +12,18 @@ export class ArrayParser<T extends Validator<any, any>> extends Validator<unknow
         return this._parser.clone() as T
     }
 
-    public override validate(value: unknown): InferOutput<T>[] {
+    public override validate(value: unknown, options?: ValidateOptions): InferOutput<T>[] {
         // value is definitely an array
-        let valueArray = inst(Array).validate(value)
+        let valueArray = inst(Array).validate(value, options)
         if (this.length >= 0) {
             // then expecting fixed length array
             if (valueArray.length !== this.length) {
                 throw new Error(`Expected array with ${this.length} elements but got ${valueArray.length} elements`)
             }
+        }
+        if (options?.disableInPlace) {
+            // shallow copy the array so we're not modifying the original
+            valueArray = [...valueArray]
         }
         for (let i = 0; i < valueArray.length; i++) {
             // parse each element
