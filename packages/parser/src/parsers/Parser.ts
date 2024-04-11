@@ -20,6 +20,15 @@ export abstract class Validator<T> implements Cloneable<Validator<T>> {
      * @returns a new validator that is the same as this one
      */
     public abstract clone(): Validator<T>
+
+    /**
+     * Get the name of the type output by this validator. This is used for debugging and error messages.
+     * 
+     * E.g. for a string parser, the name would be "string".
+     * 
+     * @returns the name of the type output by this validator 
+     */
+    public abstract get name(): string
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface
