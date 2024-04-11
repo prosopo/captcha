@@ -7,7 +7,9 @@ import { inst } from "./InstanceParser.js"
 
 export type ShapeArray<T> = T extends [infer A, ...infer B] ? [Shape<A>, ...ShapeArray<B>] : []
 
-export class TupleParser<const T extends Validator<any>[]> extends Validator<ShapeArray<T>> {
+export class TupleParser<const T extends Validator<any>[]> extends Validator<{
+    output: ShapeArray<T>
+}> {
 
     constructor(private _parsers: T) {
         super()

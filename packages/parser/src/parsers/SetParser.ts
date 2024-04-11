@@ -1,7 +1,9 @@
 import { inst } from "./InstanceParser.js"
 import { Validator, Shape } from "./Parser.js"
 
-export class SetParser<T extends Validator<any>> extends Validator<Set<Shape<T>>> {
+export class SetParser<T extends Validator<any>> extends Validator<{
+    output: Set<Shape<T>>
+}> {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser

@@ -1,7 +1,9 @@
 import { Validator } from "./Parser.js"
 import { Ctor, InferTypeFromCtor, stringify } from "./utils.js"
 
-export class InstanceParser<T extends Ctor<unknown>> extends Validator<InferTypeFromCtor<T>> {
+export class InstanceParser<T extends Ctor<unknown>> extends Validator<{
+    output: InferTypeFromCtor<T>
+}> {
     constructor(readonly clas: T) {
         super()
     }

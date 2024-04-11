@@ -1,5 +1,6 @@
 import { Validator } from "./Parser.js"
 import { Refiner } from "./Refiner.js"
+import { pString } from "./StringParser.js"
 
 export type Options<T, U = T> = {
     name?: string
@@ -17,6 +18,8 @@ export type Options<T, U = T> = {
 
 /**
  * A validator that transforms a value using a custom function.
+ * 
+ * T is the input type, U is the output type. By default, T and U are the same, i.e. transform does not change the type.
  */
 export class CustomValidator<T, U = T> extends Validator<U> {
 
@@ -46,9 +49,13 @@ export class CustomValidator<T, U = T> extends Validator<U> {
     }
 }
 
-export const pCustom = <T, U = T>(validator: Validator<T>, options: Options<T, U>) {
-    return new CustomValidator<T, U>(validator, options)
+export const pCustom = <T, U = T>(...args: ConstructorParameters<typeof CustomValidator<T, U>>) => {
+    return new CustomValidator<T, U>(...args)
 }
 export const custom = pCustom
 export const transform = pCustom
 export const extend = pCustom
+
+const a = pCustom<string, number>(pString(), {
+    transform: (value) => parseInt(value)
+})

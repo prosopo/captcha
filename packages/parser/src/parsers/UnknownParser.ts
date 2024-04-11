@@ -1,6 +1,8 @@
 import { Validator } from "./Parser.js"
 
-export class UnknownParser extends Validator<unknown> {
+export class UnknownParser extends Validator<{
+    output: unknown
+}> {
 
     constructor() {
         super()
@@ -13,6 +15,10 @@ export class UnknownParser extends Validator<unknown> {
 
     public override clone() {
         return new UnknownParser()
+    }
+
+    public override get name(): string {
+        return `unknown`
     }
 }
 

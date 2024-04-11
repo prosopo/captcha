@@ -1,7 +1,9 @@
 import { inst } from "./InstanceParser.js"
 import { Validator, Shape } from "./Parser.js"
 
-export class MapParser<T extends Validator<any>, U extends Validator<any>> extends Validator<Map<Shape<T>, Shape<U>>> {
+export class MapParser<T extends Validator<any>, U extends Validator<any>> extends Validator<{
+    output: Map<Shape<T>, Shape<U>>
+}> {
     constructor(private _keyParser: T, private _valueParser: U) {
         super()
         this._keyParser = this.keyParser // clone parser

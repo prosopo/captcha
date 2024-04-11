@@ -1,9 +1,10 @@
+import { C } from "vitest/dist/reporters-P7C2ytIv.js"
 import { InstanceParser } from "./InstanceParser.js"
-import { Validator } from "./Parser.js"
+import { Validator, ValidatorConfig } from "./Parser.js"
 import { Ctor } from "./utils.js"
 
-export class DefaultParser<T> extends Validator<T> {
-    constructor(private _parser: Validator<T>, public defaultFn: () => T) {
+export class DefaultParser<Config extends ValidatorConfig> extends Validator<Config> {
+    constructor(private _parser: Validator<Config>, public defaultFn: () => Config["output"]) {
         super()
         this._parser = this._parser.clone()
     }
@@ -12,7 +13,7 @@ export class DefaultParser<T> extends Validator<T> {
         return this._parser.clone()
     }
 
-    public override validate(value: unknown): T {
+    public override validate(value: unknown): Config["output"] {
         // call fn to get default value if value is missing
         if (value === undefined) {
             return this.defaultFn()
@@ -21,7 +22,7 @@ export class DefaultParser<T> extends Validator<T> {
     }
 
     public override clone() {
-        return new DefaultParser<T>(this.parser, this.defaultFn)
+        return new DefaultParser<Config>(this.parser, this.defaultFn)
     }
 
     public override get name(): string {
@@ -29,7 +30,7 @@ export class DefaultParser<T> extends Validator<T> {
     }
 }
 
-export const pDefault = <T>(parser: Validator<T>, defaultFn: () => T) => new DefaultParser<T>(parser, defaultFn)
+export const pDefault = <Config extends ValidatorConfig>(parser: Validator<Config>, defaultFn: () => Config["output"]) => new DefaultParser<Config>(parser, defaultFn)
 export const def = pDefault
 export const defaultTo = pDefault
 export const defaulted = pDefault

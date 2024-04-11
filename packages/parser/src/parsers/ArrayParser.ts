@@ -1,7 +1,9 @@
 import { inst } from "./InstanceParser.js"
 import { Validator, Shape } from "./Parser.js"
 
-export class ArrayParser<T extends Validator<any>> extends Validator<Shape<T>[]> {
+export class ArrayParser<T extends Validator<any>> extends Validator<{
+    output: Shape<T>[]
+}> {
 
     constructor(private _parser: T, readonly length: number = -1) {
         super()
