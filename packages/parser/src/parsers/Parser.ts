@@ -7,24 +7,25 @@ import { Cloneable, Resolve, removeSuffix, toCamelCase } from "./utils.js"
 /**
  * A validator takes an unknown value and shapes it into a known type, or throws an error if it cannot. The value is then refined, or an error is thrown if it cannot be refined.
  */
-export abstract class Validator<T> implements Cloneable<Validator<T>> {
+export abstract class Validator<T, U = unknown> implements Cloneable<Validator<T, U>> {
     /**
-     * Validating an unknown value is the process of shaping it into a known type, then refining it. If the value cannot be shaped, an error is thrown. If the value cannot be refined, an error is thrown. E.g. an email parser would first check if the value is a string (shape), then trim whitespace (transform) and check the string conforms to email address format (validation). Transforming and validating are both steps in refinement.
-     * @param value the unknown value to validate
+     * Validate a value, converting it from one type to another. By default, this is converting an unknown value to a known type, but it can also be used to convert between known types.
+     * @param value the value to validate
      * @returns a validated value
      */
-    public abstract validate(value: unknown): T
+    public abstract validate(value: U): T
 
     /**
      * Clone this validator. Make sure to clone any state held by the validator to avoid sharing state between instances.
      * @returns a new validator that is the same as this one
      */
-    public abstract clone(): Validator<T>
+    public abstract clone(): Validator<T, U>
 
     /**
      * Get the name of the type output by this validator. This is used for debugging and error messages.
      * 
-     * E.g. for a string parser, the name would be "string".
+     * E.g. for a string validator, the name would be "string".
+     * E.g. for an email validator, the name would be "email".
      * 
      * @returns the name of the type output by this validator 
      */
