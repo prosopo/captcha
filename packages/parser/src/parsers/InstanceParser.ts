@@ -1,4 +1,4 @@
-import { Validator } from "./Parser.js"
+import { ValidateOptions, Validator } from "./Parser.js"
 import { Ctor, InferTypeFromCtor, stringify } from "./utils.js"
 
 export class InstanceParser<T extends Ctor<unknown>> extends Validator<unknown, InferTypeFromCtor<T>> {
@@ -6,7 +6,7 @@ export class InstanceParser<T extends Ctor<unknown>> extends Validator<unknown, 
         super()
     }
 
-    validate(value: unknown): InferTypeFromCtor<T> {
+    validate(value: unknown, options?: ValidateOptions): InferTypeFromCtor<T> {
         if (value === null) {
             throw new Error(`Expected instance of ${JSON.stringify(this.clas)} but got null`)
         }
