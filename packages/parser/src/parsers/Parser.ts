@@ -1,5 +1,14 @@
 import { Cloneable } from "./utils.js"
 
+export type ValidateOptions = {
+    /**
+     * If true, the value will be validated in place, and the original value will be modified. If false, the original value will be left unchanged and a new value will be created.
+     * 
+     * E.g. given an array of [" a", "b ", " c "], with a trim validator, the array will be transformed to ["a", "b", "c"] if in place is true, and a new array ["a", "b", "c"] will be created if in place is false (meaning the original array of [" a", "b ", " c "] will be left unchanged).
+     */
+    disableInPlace?: boolean
+}
+
 /**
  * A validator takes an unknown value and shapes it into a known type, or throws an error if it cannot. The value is then refined, or an error is thrown if it cannot be refined.
  */
@@ -9,7 +18,7 @@ export abstract class Validator<I, O> implements Cloneable<Validator<I, O>> {
      * @param value the value to validate
      * @returns a validated value
      */
-    public abstract validate(value: I): O
+    public abstract validate(value: I, options?: ValidateOptions): O
 
     /**
      * Clone this validator. Make sure to clone any state held by the validator to avoid sharing state between instances.
