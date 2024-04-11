@@ -46,6 +46,9 @@ export type Extend<T, U> = Resolve<{
 
 export type Prop<T, U> = U extends keyof T ? U : never
 
+export type First<T> = T extends [] ? never : T extends [infer U] ? U : T extends [infer U, ...infer V] ? U : never
+
+export type Last<T> = T extends [] ? never : T extends [infer U] ? U : T extends [infer U, ...infer V] ? Last<V> : never
 
 export const keys = <T extends object>(obj: T): (keyof T)[] => {
     return Object.keys(obj) as (keyof T)[];
