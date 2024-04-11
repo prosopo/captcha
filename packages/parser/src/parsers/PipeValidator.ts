@@ -1,7 +1,7 @@
 import { InferInput, InferOutput, Validator } from "./Parser.js";
 import { First, Last } from "./utils.js";
 
-export type Pipe<T> = T extends [] ? never : T extends [Validator<infer I, infer O>] ? T : T extends [Validator<infer I, infer O>, ...infer R] ? (R extends [Validator<infer I2, infer O2>] ? (O extends I2 ? T : never) : (Pipe<R> extends never ? never : T)) : never
+export type Pipe<T> = T extends [] ? never : T extends readonly [Validator<unknown, unknown>] ? T : T extends readonly [Validator<unknown, infer O>, ...infer R] ? (R extends readonly [Validator<infer I, unknown>] ? (O extends I ? T : never) : (Pipe<R> extends never ? never : T)) : never
 export type PipeInput<T> = InferInput<First<Pipe<T>>>
 export type PipeOutput<T> = InferOutput<Last<Pipe<T>>>
 
