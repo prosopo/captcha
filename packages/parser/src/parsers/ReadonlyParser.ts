@@ -1,8 +1,6 @@
 import { NestedValidator, Validator, ReadonlyProp, Shape, optionalMarker, readonlyMarker } from "./Parser.js"
 
-export class ReadonlyParser<T extends Validator<any>> extends Validator<{
-    output: Shape<T>
-}> implements ReadonlyProp<true, T> {
+export class ReadonlyParser<T extends Validator<any, any>> extends Validator<unknown, Shape<T>> implements ReadonlyProp<true, T> {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -27,6 +25,6 @@ export class ReadonlyParser<T extends Validator<any>> extends Validator<{
     readonly [readonlyMarker] = true
 }
 
-export const pReadonly = <T extends Validator<any>>(parser: T) => new ReadonlyParser<T>(parser)
+export const pReadonly = <T extends Validator<any, any>>(parser: T) => new ReadonlyParser<T>(parser)
 export const ro = pReadonly
 export const readonly = pReadonly

@@ -1,8 +1,8 @@
 import { inst } from "./InstanceParser.js"
-import { Validator, Shape } from "./Parser.js"
+import { InferConfig, InferValidatorConfig, Validator, ValidatorConfig } from "./Parser.js"
 
 export class ArrayParser<T extends Validator<any>> extends Validator<{
-    output: Shape<T>[]
+    output: InferConfig<T>["output"][]
 }> {
 
     constructor(private _parser: T, readonly length: number = -1) {
@@ -14,7 +14,7 @@ export class ArrayParser<T extends Validator<any>> extends Validator<{
         return this._parser.clone() as T
     }
 
-    public override validate(value: unknown): Shape<T>[] {
+    public override validate(value: InferConfig<T>["input"]): InferConfig<T>["output"][] {
         // value is definitely an array
         const valueArray = inst(Array).validate(value)
         if (this.length >= 0) {
@@ -27,7 +27,7 @@ export class ArrayParser<T extends Validator<any>> extends Validator<{
             // parse each element
             valueArray[i] = this._parser.validate(valueArray[i])
         }
-        return value as Shape<T>[]
+        return value as InferConfig<T>["output"][]
     }
 
     public override clone() {
