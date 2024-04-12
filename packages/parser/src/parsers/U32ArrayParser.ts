@@ -1,4 +1,3 @@
-import { boundNum } from "./BoundNumberParser.js"
 import { InstanceParser } from "./InstanceParser.js"
 import { NumberParser, num } from "./NumberParser.js"
 import { Validator } from "./Parser.js"
