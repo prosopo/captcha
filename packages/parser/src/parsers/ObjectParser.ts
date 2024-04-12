@@ -160,6 +160,29 @@ export class SchemaHandler<T extends Schema<any>> {
         }) as any
     }
 
+    /**
+     * Clone the schema, making all fields readwrite (shallow, does not recurse into nested structs)
+     * @returns
+     */
+    public readwriteShallow(): ReadWriteSchema<T> {
+        return map(this.schema, (parser, key) => {
+            return new RequiredParser(parser)
+        }) as any
+    }
+
+    /**
+     * Clone the schema, making all fields readwrite (deep, recurses into nested structs)
+     * @returns
+     */
+    public readwriteDeep(): DeepReadWriteSchema<T> {
+        return map(this.schema, (parser, key) => {
+            if (parser instanceof ObjectParser) {
+                return new RequiredParser(parser.readwriteDeep())
+            }
+            return new RequiredParser(parser)
+        }) as any
+    }
+
     public pickPartial<U extends Mask<UnpackSchema<T>>>(mask: U): PickPartialSchema<T, U> {
         const result: any = {}
         for (const key in mask) {
@@ -386,6 +409,14 @@ export class ObjectParser<T extends Schema<any>> extends Validator<unknown, Unpa
 
     public requiredDeep() {
         return new ObjectParser(this.handler.requiredDeep())
+    }
+
+    public readwriteShallow() {
+        return new ObjectParser(this.handler.readwriteShallow())
+    }
+
+    public readwriteDeep() {
+        return new ObjectParser(this.handler.readwriteDeep())
     }
 }
 
