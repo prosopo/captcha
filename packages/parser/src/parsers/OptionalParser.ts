@@ -14,7 +14,7 @@ export class OptionalParser<T extends Validator<unknown, unknown>> extends Valid
         if (value === undefined) {
             return undefined
         }
-        return this._parser.validate(value)
+        return this._parser.validate(value) as Shape<T> | undefined
     }
 
     public override clone() {
