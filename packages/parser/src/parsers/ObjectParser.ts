@@ -6,7 +6,7 @@ import { DeepOmit, DeepPick, Extend, Mask, Prop, Resolve, keys, map } from "./ut
 import { get } from "@prosopo/util"
 
 export type Schema<T> = {
-    [K in keyof T]: Validator<T[K]>
+    [K in keyof T]: Validator<unknown, T[K]>
 }
 
 export type PartialSchema<T extends Schema<any>> = Resolve<{
