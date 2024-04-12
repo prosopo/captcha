@@ -1,6 +1,6 @@
 import { NestedValidator, Validator, ReadonlyProp, Shape, readonlyMarker } from "./Parser.js";
 
-export class ReadWriteParser<T extends Validator<any, any>> extends Validator<unknown, Shape<T>> implements ReadonlyProp<false, T> {
+export class ReadWriteParser<T extends Validator<unknown, unknown>> extends Validator<unknown, Shape<T>> implements ReadonlyProp<false, T> {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -11,7 +11,7 @@ export class ReadWriteParser<T extends Validator<any, any>> extends Validator<un
     }
 
     public override validate(value: unknown): Shape<T> {
-        return this._parser.validate(value)
+        return this._parser.validate(value) as Shape<T>
     }
 
     public override clone() {
@@ -25,6 +25,6 @@ export class ReadWriteParser<T extends Validator<any, any>> extends Validator<un
     readonly [readonlyMarker] = false
 }
 
-export const pReadWrite = <T extends Validator<any, any>>(parser: T) => new ReadWriteParser<T>(parser)
+export const pReadWrite = <T extends Validator<unknown, unknown>>(parser: T) => new ReadWriteParser<T>(parser)
 export const rw = pReadWrite
 export const readwrite = pReadWrite

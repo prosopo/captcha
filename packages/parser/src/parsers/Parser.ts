@@ -38,7 +38,7 @@ export abstract class Validator<I, O> implements Cloneable<Validator<I, O>> {
 }
 
 // nested parser wraps another parser. For types + parsing to work, we need access to the wrapped parser, exposed by this interface
-export interface NestedValidator<T extends Validator<any, any>> {
+export interface NestedValidator<T extends Validator<unknown, unknown>> {
     readonly parser: T
 }
 
@@ -54,12 +54,12 @@ export interface ReadonlyPropMarker<P> {
     readonly [readonlyMarker]: P
 }
 
-export interface OptionalProp<P, T extends Validator<any, any>> extends OptionalPropMarker<P>, NestedValidator<T> { }
-export interface ReadonlyProp<P, T extends Validator<any, any>> extends ReadonlyPropMarker<P>, NestedValidator<T> { }
+export interface OptionalProp<P, T extends Validator<unknown, unknown>> extends OptionalPropMarker<P>, NestedValidator<T> { }
+export interface ReadonlyProp<P, T extends Validator<unknown, unknown>> extends ReadonlyPropMarker<P>, NestedValidator<T> { }
 
-export type InferInput<T> = T extends Validator<infer I, any> ? I : never
+export type InferInput<T> = T extends Validator<infer I, unknown> ? I : never
 export type InferArrayInput<T> = T extends [] ? [] : T extends [infer U, ...infer R] ? [InferInput<U>, ...InferArrayInput<R>] : never
-export type InferOutput<T> = T extends Validator<any, infer O> ? O : never
+export type InferOutput<T> = T extends Validator<unknown, infer O> ? O : never
 export type InferArrayOutput<T> = T extends [] ? [] : T extends [infer U, ...infer R] ? [InferOutput<U>, ...InferArrayOutput<R>] : never
 export type Shape<T> = InferOutput<T>
 
