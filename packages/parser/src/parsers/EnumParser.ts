@@ -23,7 +23,16 @@ export class EnumParser<const T extends readonly any[]> extends Validator<unknow
     }
 
     public override get name(): string {
-        return `${this.variants.map(v => String(v)).join(" | ")}`
+        const strs: string[] = []
+        for (const variant of this.variants) {
+            if (typeof variant === 'string') {
+                // strings should be wrapped in speech marks
+                strs.push(`"${variant}"`)
+            } else {
+                strs.push(String(variant))
+            }   
+        }
+        return `${strs.join(" | ")}`
     }
 }
 
