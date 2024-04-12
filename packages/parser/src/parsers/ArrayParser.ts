@@ -1,7 +1,7 @@
 import { inst } from "./InstanceParser.js"
 import { InferOutput, ValidateOptions, Validator } from "./Parser.js"
 
-export class ArrayParser<T extends Validator<any, any>> extends Validator<unknown, InferOutput<T>[]> {
+export class ArrayParser<T extends Validator<unknown, unknown>> extends Validator<unknown, InferOutput<T>[]> {
 
     constructor(private _parser: T, readonly length: number = -1) {
         super()
@@ -41,7 +41,7 @@ export class ArrayParser<T extends Validator<any, any>> extends Validator<unknow
     }
 }
 
-export const pArray = <T extends Validator<any, any>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)
+export const pArray = <T extends Validator<unknown, unknown>>(parser: T, length: number = -1) => new ArrayParser<T>(parser)
 export const arr = pArray
 export const list = pArray
 export const array = pArray

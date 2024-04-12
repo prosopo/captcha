@@ -5,7 +5,7 @@ export type Pipe<T> = T extends [] ? never : T extends readonly [Validator<unkno
 export type PipeInput<T> = InferInput<First<Pipe<T>>>
 export type PipeOutput<T> = InferOutput<Last<Pipe<T>>>
 
-export class PipeValidator<const T extends readonly Validator<any, any>[]> extends Validator<PipeInput<T>, PipeOutput<T>> {
+export class PipeValidator<const T extends readonly Validator<unknown, unknown>[]> extends Validator<PipeInput<T>, PipeOutput<T>> {
     constructor(private _validators: T, private _name?: string) {
         super()
         this._validators = this.validators
@@ -16,12 +16,12 @@ export class PipeValidator<const T extends readonly Validator<any, any>[]> exten
     }
 
     public override validate(value: PipeInput<T>, options?: ValidateOptions): PipeOutput<T> {
-        let result = value as any
+        let result = value as unknown
         // validate in turn
         for (const validator of this.validators) {
             result = validator.validate(result, options)
         }
-        return result
+        return result as PipeOutput<T>
     }
 
     public override clone() {
@@ -33,5 +33,5 @@ export class PipeValidator<const T extends readonly Validator<any, any>[]> exten
     }
 }
 
-export const pPipe = <const T extends readonly Validator<any, any>[]>(validators: T, name?: string) => new PipeValidator<T>(validators, name)
+export const pPipe = <const T extends readonly Validator<unknown, unknown>[]>(validators: T, name?: string) => new PipeValidator<T>(validators, name)
 export const pipe = pPipe

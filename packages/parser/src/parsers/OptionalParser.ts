@@ -1,6 +1,6 @@
 import { NestedValidator, OptionalProp, Validator, Shape, optionalMarker } from "./Parser.js";
 
-export class OptionalParser<T extends Validator<any, any>> extends Validator<unknown, Shape<T> | undefined> implements OptionalProp<true, T>  {
+export class OptionalParser<T extends Validator<unknown, unknown>> extends Validator<unknown, Shape<T> | undefined> implements OptionalProp<true, T>  {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -28,6 +28,6 @@ export class OptionalParser<T extends Validator<any, any>> extends Validator<unk
     readonly [optionalMarker] = true
 }
 
-export const pOptional = <T extends Validator<any, any>>(parser: T) => new OptionalParser<T>(parser)
+export const pOptional = <T extends Validator<unknown, unknown>>(parser: T) => new OptionalParser<T>(parser)
 export const opt = pOptional
 export const optional = pOptional

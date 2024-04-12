@@ -1,7 +1,7 @@
 import { opt } from "./OptionalParser.js"
 import { NestedValidator, OptionalProp, Validator, Shape, optionalMarker } from "./Parser.js"
 
-export class RequiredParser<T extends Validator<any, any>> extends Validator<unknown, Exclude<Shape<T>, undefined>> implements OptionalProp<false, T> {
+export class RequiredParser<T extends Validator<unknown, unknown>> extends Validator<unknown, Exclude<Shape<T>, undefined>> implements OptionalProp<false, T> {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -15,7 +15,7 @@ export class RequiredParser<T extends Validator<any, any>> extends Validator<unk
         if (value === undefined) {
             throw new Error(`Expected a value but got undefined`)
         }
-        return this._parser.validate(value)!
+        return this._parser.validate(value) as Exclude<Shape<T>, undefined>
     }
 
     public override clone() {
@@ -29,6 +29,6 @@ export class RequiredParser<T extends Validator<any, any>> extends Validator<unk
     }
 }
 
-export const pRequired = <T extends Validator<any, any>>(parser: T) => new RequiredParser<T>(parser)
+export const pRequired = <T extends Validator<unknown, unknown>>(parser: T) => new RequiredParser<T>(parser)
 export const req = pRequired
 export const required = pRequired
