@@ -1,5 +1,5 @@
 import { describe, expect, test, it, expectTypeOf } from 'vitest'
-import { dat } from '../parsers/DateParser.js';
+import { date } from '../parsers/DateParser.js';
 
 enum Foo {
     A = 'x',
@@ -16,7 +16,7 @@ class Baz {
     readonly baz = 2;
 }
 
-const p = dat;
+const p = date;
 
 describe("date", () => {
     it("should have correct typename", () => {
