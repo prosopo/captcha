@@ -80,7 +80,16 @@ export class NativeEnumParser<T> extends Validator<unknown, T[keyof T]> {
     }
 
     public override get name(): string {
-        return `${this.variants.map(v => String(v)).join(" | ")}`
+        const strs: string[] = []
+        for (const variant of this.variants) {
+            if (typeof variant === 'string') {
+                // strings should be wrapped in speech marks
+                strs.push(`"${variant}"`)
+            } else {
+                strs.push(String(variant))
+            }
+        }
+        return `${strs.join(" | ")}`
     }
 }
 

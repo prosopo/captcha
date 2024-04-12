@@ -20,7 +20,7 @@ const p = () => nen(Foo);
 
 describe("native enum", () => {
     it("should have correct typename", () => {
-        expect(p().name).toBe(`${p().variants.join(" | ")}`)
+        expect(p().name).toBe(`"x" | 2 | 3 | "y"`)
     })
     
     it("should parse to correct type", () => {
