@@ -1,4 +1,4 @@
-import { InferInput, InferOutput, Validator } from "./Parser.js";
+import { InferInput, InferOutput, ValidateOptions, Validator } from "./Parser.js";
 import { First, Last } from "./utils.js";
 
 export type Pipe<T> = T extends [] ? never : T extends readonly [Validator<unknown, unknown>] ? T : T extends readonly [Validator<unknown, infer O>, ...infer R] ? (R extends readonly [Validator<infer I, unknown>] ? (O extends I ? T : never) : (Pipe<R> extends never ? never : T)) : never
@@ -15,11 +15,11 @@ export class PipeValidator<const T extends readonly Validator<any, any>[]> exten
         return this._validators.map(v => v.clone()) as unknown as T
     }
 
-    public override validate(value: PipeInput<T>): PipeOutput<T> {
+    public override validate(value: PipeInput<T>, options?: ValidateOptions): PipeOutput<T> {
         let result = value as any
         // validate in turn
         for (const validator of this.validators) {
-            result = validator.validate(result)
+            result = validator.validate(result, options)
         }
         return result
     }
