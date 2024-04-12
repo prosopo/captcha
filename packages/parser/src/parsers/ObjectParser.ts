@@ -91,18 +91,49 @@ export class SchemaHandler<T extends Schema<any>> {
         return `{\n\t${keys(this.schema).map(key => `${String(key)}: ${get(this.schema, key).name}`).join(",\n\t")}\n}`
     }
 
+    /**
+     * Clone the schema, making all fields optional (shallow, does not recurse into nested structs)
+     * @returns 
+     */
     public partialShallow(): PartialSchema<T> {
         return map(this.schema, (parser, key) => {
             return new OptionalParser(parser)
         }) as any
     }
 
+    /**
+     * Clone the schema, making all fields optional (deep, recurses into nested structs)
+     * @returns 
+     */
     public partialDeep(): DeepPartialSchema<T> {
         return map(this.schema, (parser, key) => {
             if (parser instanceof ObjectParser) {
                 return new OptionalParser(parser.partialDeep())
             }
             return new OptionalParser(parser)
+        }) as any
+    }
+
+    /**
+     * Clone the schema, making all fields readonly (shallow, does not recurse into nested structs)
+     * @returns 
+     */
+    public readonlyShallow(): ReadonlySchema<T> {
+        return map(this.schema, (parser, key) => {
+            return new ReadonlyParser(parser)
+        }) as any
+    }
+
+    /**
+     * Clone the schema, making all fields readonly (deep, recurses into nested structs)
+     * @returns 
+     */
+    public readonlyDeep(): DeepReadonlySchema<T> {
+        return map(this.schema, (parser, key) => {
+            if (parser instanceof ObjectParser) {
+                return new ReadonlyParser(parser.readonlyDeep())
+            }
+            return new ReadonlyParser(parser)
         }) as any
     }
 
@@ -130,21 +161,6 @@ export class SchemaHandler<T extends Schema<any>> {
             }
         }
         return result
-    }
-
-    public readonlyShallow(): ReadonlySchema<T> {
-        return map(this.schema, (parser, key) => {
-            return new ReadonlyParser(parser)
-        }) as any
-    }
-
-    public readonlyDeep(): DeepReadonlySchema<T> {
-        return map(this.schema, (parser, key) => {
-            if (parser instanceof ObjectParser) {
-                return new ReadonlyParser(parser.readonlyDeep())
-            }
-            return new ReadonlyParser(parser)
-        }) as any
     }
 
     public pickReadonly<U extends Mask<UnpackSchema<T>>>(mask: U): PickReadonlySchema<T, U> {
@@ -179,6 +195,11 @@ export class SchemaHandler<T extends Schema<any>> {
         return result
     }
 
+    /**
+     * Extend the schema with another schema, overriding existing fields
+     * @param schema 
+     * @returns 
+     */
     public extend<U>(schema: Schema<U>): Schema<Extend<T, U>> {
         const result: any = {}
         for (const key in this.schema) {
@@ -190,6 +211,11 @@ export class SchemaHandler<T extends Schema<any>> {
         return result
     }
 
+    /**
+     * Pick fields from the schema into a new schema
+     * @param mask 
+     * @returns 
+     */
     public pick<U extends Mask<UnpackSchema<T>>>(mask: U): Schema<DeepPick<UnpackSchema<T>, U>> {
         const result: any = {}
         for (const key in mask) {
@@ -202,6 +228,11 @@ export class SchemaHandler<T extends Schema<any>> {
         return result
     }
 
+    /**
+     * Omit fields from the schema, copying remaining fields into a new schema
+     * @param mask 
+     * @returns 
+     */
     public omit<U extends Mask<UnpackSchema<T>>>(mask: U): Schema<DeepOmit<UnpackSchema<T>, U>> {
         const result: any = {}
         for (const key in this.schema) {
