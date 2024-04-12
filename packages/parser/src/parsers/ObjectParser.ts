@@ -137,6 +137,29 @@ export class SchemaHandler<T extends Schema<any>> {
         }) as any
     }
 
+    /**
+     * Clone the schema, making all fields required (shallow, does not recurse into nested structs)
+     * @returns 
+     */
+    public requiredShallow(): RequiredSchema<T> {
+        return map(this.schema, (parser, key) => {
+            return new RequiredParser(parser)
+        }) as any
+    }
+
+    /**
+     * Clone the schema, making all fields required (deep, recurses into nested structs)
+     * @returns 
+     */
+    public requiredDeep(): DeepRequiredSchema<T> {
+        return map(this.schema, (parser, key) => {
+            if (parser instanceof ObjectParser) {
+                return new RequiredParser(parser.requiredDeep())
+            }
+            return new RequiredParser(parser)
+        }) as any
+    }
+
     public pickPartial<U extends Mask<UnpackSchema<T>>>(mask: U): PickPartialSchema<T, U> {
         const result: any = {}
         for (const key in mask) {
@@ -355,6 +378,14 @@ export class ObjectParser<T extends Schema<any>> extends Validator<unknown, Unpa
 
     public readonlyDeep() {
         return new ObjectParser(this.handler.readonlyDeep())
+    }
+
+    public requiredShallow() {
+        return new ObjectParser(this.handler.requiredShallow())
+    }
+
+    public requiredDeep() {
+        return new ObjectParser(this.handler.requiredDeep())
     }
 }
 
