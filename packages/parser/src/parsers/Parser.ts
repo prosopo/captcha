@@ -58,10 +58,16 @@ export interface OptionalProp<P, T extends Validator<any, any>> extends Optional
 export interface ReadonlyProp<P, T extends Validator<any, any>> extends ReadonlyPropMarker<P>, NestedValidator<T> { }
 
 export type InferInput<T> = T extends Validator<infer I, any> ? I : never
+export type InferArrayInput<T> = T extends [] ? [] : T extends [infer U, ...infer R] ? [InferInput<U>, ...InferArrayInput<R>] : never
 export type InferOutput<T> = T extends Validator<any, infer O> ? O : never
+export type InferArrayOutput<T> = T extends [] ? [] : T extends [infer U, ...infer R] ? [InferOutput<U>, ...InferArrayOutput<R>] : never
 export type Shape<T> = InferOutput<T>
 
 // optional if OptionalProp<P> is present. P determines if the prop is optional or not. If OptionalProp<P> is not present, the prop is not optional. However, if it is a nested parser then we need to look at the inner parser, as that may be optional itself, so recurse.
 export type IsOptional<T> = T extends OptionalPropMarker<infer P> ? P : T extends NestedValidator<infer U> ? IsOptional<U> : false
 // same for readonly
 export type IsReadonly<T> = T extends ReadonlyPropMarker<infer P> ? P : T extends NestedValidator<infer U> ? IsReadonly<U> : false
+
+type a = [Validator<string, boolean>, Validator<number, bigint>]
+type b = InferArrayInput<a>
+type c = InferArrayOutput<a>
