@@ -10,13 +10,13 @@ export class I8Validator extends Validator<unknown, number> {
         return pipe([
             num(),
             betweenNum({
-                min: -Math.pow(2, 8) + (Math.pow(2, 8) / 2),
-                max: Math.pow(2, 8) - (Math.pow(2, 8) / 2) - 1,
+                min: -(2**8) + (2**8 / 2),
+                max: 2**8 - (2**8 / 2) - 1,
             })
         ], this.name).validate(value, options)
     }
 
-    public override clone(): Validator<unknown, number> {
+    public override clone() {
         return new I8Validator()
     }
 
