@@ -1,18 +1,27 @@
 import { betweenNum } from "./BetweenNumber.js"
 import { num } from "./NumberParser.js"
+import { Validator, ValidateOptions } from "./Parser.js"
 import { pipe } from "./PipeValidator.js"
 
-const fn = () => pipe([
-    num(),
-    betweenNum({
-        min: -Math.pow(2, 32) + (Math.pow(2, 32) / 2),
-        max: Math.pow(2, 32) - (Math.pow(2, 32) / 2) - 1,
-    })
-], `i32`)
-export type I32Validator = ReturnType<typeof fn>
-export const pI32: () => I32Validator = fn
-export const i32 = pI32
+export class I32Validator extends Validator<unknown, number> {
+    public override validate(value: unknown, options?: ValidateOptions | undefined): number {
+        return pipe([
+            num(),
+            betweenNum({
+                min: -(2**32) + (2**32 / 2),
+                max: 2**32 - (2**32 / 2) - 1,
+            })
+        ], this.name).validate(value, options)
+    }
 
-const a = i32()
-type b = ReturnType<typeof a.validate>
-type c = Parameters<typeof a.validate>[0]
+    public override clone() {
+        return new I32Validator()
+    }
+
+    public override get name(): string {
+        return `i32`
+    }
+}
+
+export const pI32 = () => new I32Validator()
+export const i32 = pI32

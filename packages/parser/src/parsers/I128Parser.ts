@@ -1,17 +1,29 @@
-import { betweenBigInt } from "./BetweenBigInt.js"
+import { betweenBi, betweenBigInt } from "./BetweenBigInt.js"
 import { bi } from "./BigIntParser.js"
 import { num } from "./NumberParser.js"
+import { ValidateOptions, Validator } from "./Parser.js"
 import { pipe } from "./PipeValidator.js"
 
-export const pI128 = () => pipe([
-    bi(),
-    betweenBigInt({
-        min: -(2n**128n) + (2n**128n) / 2n,
-        max: (2n**128n) - (2n**128n) / 2n - 1n,
-    })
-], `i128`)
-export const i128 = pI128
 
-const a = i128()
-type b = ReturnType<typeof a.validate>
-type c = Parameters<typeof a.validate>[0]
+export class I128Validator extends Validator<unknown, bigint> {
+    public override validate(value: unknown, options?: ValidateOptions | undefined): bigint {
+        return pipe([
+            bi(),
+            betweenBi({
+                min: -(2n**128n) + (2n**128n / 2n),
+                max: 2n**128n - (2n**128n / 2n) - 1n,
+            })
+        ], this.name).validate(value, options)
+    }
+
+    public override clone() {
+        return new I128Validator()
+    }
+
+    public override get name(): string {
+        return `i128`
+    }
+}
+
+export const pI128 = () => new I128Validator()
+export const i128 = pI128
