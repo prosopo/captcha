@@ -127,3 +127,36 @@ export function run<T>(fn: () => T): {
         }
     }
 }
+
+/**
+ * Test whether types are equal.
+ * 
+ * Returns true if T === U, false otherwise.
+ */
+export type Eq<T, U> = T extends U ? (U extends T ? true : false) : false;
+export type EmptyArrays<T, U> = T extends [] ? U extends [] ? true : false : false;
+export type EqArray<T, U> = EmptyArrays<T, U> extends true ? true : T extends [infer V1, ...infer R1] ? U extends [infer V2, ...infer R2] ? Eq<V1, V2> extends true ? EqArray<R1, R2> : false : false : false
+export type EqMany<T> = T extends [] ? true : T extends [unknown] ? true : T extends [infer A, infer B, ...infer R] ? Eq<A, B> extends true ? EqMany<[B, ...R]> : false : false;
+
+type a = Eq<number, number>
+type b = Eq<number, string>
+class A { }
+class B extends A { x = 1 }
+class C { }
+type c = Eq<A, B>
+type d = Eq<A, C>
+type e = Eq<B, A>
+
+type f = EqArray<[1, 2, 3], [1, 2, 3]>
+type g = EqArray<[1, 2, 3], [1, 2, 4]>
+type h = EqArray<[1, 2, 3], [1, 2]>
+type i = EqArray<[1, 2, 3], [1, 2, 3, 4]>
+type j = EqArray<[], []>
+
+type k = EqMany<[1, 1, 1]>
+type l = EqMany<[1, 2, 3]>
+type m = EqMany<[1, 1, 2]>
+type n = EqMany<[]>
+type o = EqMany<[1]>
+type p = EqMany<[1, 2]>
+type q = EqMany<[1, 1]>
