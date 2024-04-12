@@ -20,7 +20,7 @@ const p = () => en(['a', 'b', 'c'])
 
 describe("enum", () => {
     it("should have correct typename", () => {
-        expect(p().name).toBe(`${['a', 'b', 'c'].join(' | ')}`)
+        expect(p().name).toBe(`"a" | "b" | "c"`)
     })
     
     it("should parse to correct type", () => {
