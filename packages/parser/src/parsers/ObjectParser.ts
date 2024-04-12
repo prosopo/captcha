@@ -2,6 +2,7 @@ import { inst } from "./InstanceParser.js";
 import { OptionalParser } from "./OptionalParser.js";
 import { IsOptional, IsReadonly, Validator, Shape, ValidateOptions } from "./Parser.js";
 import { ReadonlyParser } from "./ReadonlyParser.js";
+import { RequiredParser } from "./RequiredParser.js";
 import { DeepOmit, DeepPick, Extend, Mask, Prop, Resolve, keys, map } from "./utils.js";
 import { get } from "@prosopo/util"
 
@@ -17,12 +18,28 @@ export type DeepPartialSchema<T extends Schema<any>> = PartialSchema<{
     [K in keyof T]: T[K] extends ObjectParser<infer U> ? ObjectParser<DeepPartialSchema<U>> : T[K]
 }>
 
+export type ReadonlySchema<T extends Schema<any>> = Resolve<{
+    [K in keyof T]: ReadonlyParser<T[K]>
+}>
+
 export type DeepReadonlySchema<T extends Schema<any>> = ReadonlySchema<{
     [K in keyof T]: T[K] extends ObjectParser<infer U> ? ObjectParser<DeepReadonlySchema<U>> : T[K]
 }>
 
-export type ReadonlySchema<T extends Schema<any>> = Resolve<{
-    [K in keyof T]: ReadonlyParser<T[K]>
+export type RequiredSchema<T extends Schema<any>> = Resolve<{
+    [K in keyof T]: RequiredParser<T[K]>
+}>
+
+export type DeepRequiredSchema<T extends Schema<any>> = RequiredSchema<{
+    [K in keyof T]: T[K] extends ObjectParser<infer U> ? ObjectParser<DeepRequiredSchema<U>> : T[K]
+}>
+
+export type ReadWriteSchema<T extends Schema<any>> = Resolve<{
+    [K in keyof T]: RequiredParser<T[K]>
+}>
+
+export type DeepReadWriteSchema<T extends Schema<any>> = ReadWriteSchema<{
+    [K in keyof T]: T[K] extends ObjectParser<infer U> ? ObjectParser<DeepReadWriteSchema<U>> : T[K]
 }>
 
 export type PickPartialSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
@@ -33,12 +50,28 @@ export type PickReadonlySchema<T extends Schema<any>, U extends Mask<UnpackSchem
     [K in keyof T & keyof U]: T[K] extends ObjectParser<infer V> ? U[K] extends object ? ObjectParser<PickReadonlySchema<V, U[K]>> : ReadonlyParser<T[K]> : ReadonlyParser<T[K]>
 }>
 
+export type PickRequiredSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T & keyof U]: T[K] extends ObjectParser<infer V> ? U[K] extends object ? ObjectParser<PickRequiredSchema<V, U[K]>> : RequiredParser<T[K]> : RequiredParser<T[K]>
+}>
+
+export type PickReadWriteSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T & keyof U]: T[K] extends ObjectParser<infer V> ? U[K] extends object ? ObjectParser<PickReadWriteSchema<V, U[K]>> : RequiredParser<T[K]> : RequiredParser<T[K]>
+}>
+
 export type OmitPartialSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
     [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: T[K] extends ObjectParser<infer V> ? Prop<U, K> extends object ? ObjectParser<OmitPartialSchema<V, Prop<U, K>>> : never : OptionalParser<T[K]>
 }>
 
 export type OmitReadonlySchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
     [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: T[K] extends ObjectParser<infer V> ? Prop<U, K> extends object ? ObjectParser<OmitReadonlySchema<V, Prop<U, K>>> : never : ReadonlyParser<T[K]>
+}>
+
+export type OmitRequiredSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: T[K] extends ObjectParser<infer V> ? Prop<U, K> extends object ? ObjectParser<OmitRequiredSchema<V, Prop<U, K>>> : never : RequiredParser<T[K]>
+}>
+
+export type OmitReadWriteSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
+    [K in keyof T as K extends keyof U ? U[K] extends object ? K : never : K]: T[K] extends ObjectParser<infer V> ? Prop<U, K> extends object ? ObjectParser<OmitReadWriteSchema<V, Prop<U, K>>> : never : RequiredParser<T[K]>
 }>
 
 // export type DeepOmit<T, U extends Mask<T>> = Resolve<{
