@@ -1,7 +1,7 @@
 import { inst } from "./InstanceParser.js"
 import { Validator, Shape, InferInput, InferOutput } from "./Parser.js"
 
-export class SetParser<T extends Validator<unknown, unknown>> extends Validator<InferInput<T>, Set<InferOutput<T>>> {
+export class SetParser<T extends Validator<unknown, unknown>> extends Validator<unknown, Set<InferOutput<T>>> {
     constructor(private _parser: T) {
         super()
         this._parser = this.parser // clone parser
@@ -11,7 +11,7 @@ export class SetParser<T extends Validator<unknown, unknown>> extends Validator<
         return this._parser.clone() as T
     }
 
-    public override validate(value: InferInput<T>): Set<InferOutput<T>> {
+    public override validate(value: unknown): Set<InferOutput<T>> {
         const valueSet = inst(Set).validate(value)
         const result = new Set<InferOutput<T>>()
         for (const value of valueSet) {
