@@ -24,8 +24,9 @@ import { default as Methods } from '@prosopo/captcha-contract/mixed-methods'
 import { default as Query } from '@prosopo/captcha-contract/query'
 import { QueryReturnType, Result } from '@prosopo/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
+import { encodeStringArgs, getContractError, getOptions } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
+import { get } from '@prosopo/util'
 import { getBlockTimeMs } from './block.js'
 import {
     getPrimitiveStorageFields,
