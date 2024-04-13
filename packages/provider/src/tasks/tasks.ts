@@ -43,7 +43,7 @@ import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -353,7 +353,7 @@ export class Tasks {
         )
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
-        const blockNumber = (await getBlockNumber(this.contract.api)).toNumber()
+        const blockNumber = await getCurrentBlockNumber(this.contract.api)
         if (pendingRequest) {
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
@@ -535,10 +535,9 @@ export class Tasks {
 
         const currentTime = Date.now()
         const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
-
         const deadlineTs = timeLimit + currentTime
-        const currentBlockNumber = await getBlockNumber(this.contract.api)
-        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber.toNumber())
+        const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
+        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
         return { captchas, requestHash }
     }
 
@@ -697,21 +696,6 @@ export class Tasks {
     /** Get the dataset from the database */
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
-    }
-
-    /**
-     * Get the current block number
-     */
-    async getCurrentBlockNumber(): Promise<number> {
-        return (await getBlockNumber(this.contract.api)).toNumber()
-    }
-
-    /**
-     * Get the current block time in milliseconds
-     */
-    async getBlockTimeMs(): Promise<number> {
-        const blockTime = this.contract.api.consts.babe.expectedBlockTime
-        return blockTime.toNumber()
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {

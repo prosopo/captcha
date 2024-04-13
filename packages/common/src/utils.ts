@@ -62,7 +62,7 @@ export const translationKeys = getLeafFieldPath(translationEn) as TranslationKey
 // String utils
 
 export const trimProviderUrl = (url: string) => {
-    return hexToString(url).replace(/\0/g, '')
+    return hexToString(url)
 }
 
 export function snakeToCamelCase(str: string): string {
