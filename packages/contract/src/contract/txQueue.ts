@@ -143,7 +143,6 @@ export class TransactionQueue {
                         { nonce: -1 },
                         async (result: SubmittableResult) => {
                             // TODO handle contract reverted by creating a new ContractSubmittableResult from the result
-                            this.logger.debug(JSON.stringify(result))
                             if (result.status.isInBlock || result.status.isFinalized) {
                                 // run the callback for this extrinsic
                                 this.logger.debug('Running user callback')

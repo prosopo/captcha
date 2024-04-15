@@ -401,8 +401,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             if (error) {
                 throw new ProsopoContractError(new Error(error))
             }
-            this.logger.debug('Submitting TX to queue')
-            const txResult = await this.submitTx(tasks, 'dappRegister', [contractAddress, DappPayee.dapp], 0)
+            this.logger.debug('Submitting TX to queue using account', tasks.contract.pair.address)
+            const txResult = await this.submitTx(
+                tasks,
+                'dappRegister',
+                [contractAddress, DappPayee.dapp],
+                0,
+                tasks.contract.pair
+            )
             this.logger.info('App registered', contractAddress, txResult.toHuman())
 
             if (txResult.isError) {
@@ -431,8 +437,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         await this.changeSigner(account)
 
         const tasks = new Tasks(this.mockEnv)
-        this.logger.info('Funding app', accountAddress(account))
-        await this.submitTx(tasks, 'dappFund', [accountContract(account)], this.stakeAmount)
+        this.logger.info('Funding app', accountContract(account), 'from account', tasks.contract.pair.address)
+        await this.submitTx(tasks, 'dappFund', [accountContract(account)], this.stakeAmount, tasks.contract.pair)
         this.logger.info('App funded')
         return (await tasks.contract.query.getDapp(accountContract(account))).value.unwrap().unwrap()
     }
@@ -493,18 +499,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             ) {
                 try {
                     tasks.contract.dryRunContractMethod(method, args, value).then((extrinsic) => {
-                        this.transactionQueue
-                            .add(
-                                extrinsic,
-                                (result: ContractSubmittableResult) => {
-                                    resolve(result)
-                                },
-                                pair,
-                                method
-                            )
-                            .then((result) => {
-                                this.logger.debug('Transaction added to queue', result)
-                            })
+                        this.transactionQueue.add(
+                            extrinsic,
+                            (result: ContractSubmittableResult) => {
+                                resolve(result)
+                            },
+                            pair,
+                            method
+                        )
                     })
                 } catch (err) {
                     reject(err)
