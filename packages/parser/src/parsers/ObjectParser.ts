@@ -10,6 +10,9 @@ export type Schema<T> = {
     [K in keyof T]: Validator<unknown, T[K]>
 }
 
+// **************** Shallow+Deep schemas with partial/readonly/readwrite/required modifiers ****************
+// these modifiers apply to all fields in the schema, recursing into nested structs in deep mode
+
 export type PartialSchema<T extends Schema<any>> = Resolve<{
     [K in keyof T]: OptionalParser<T[K]>
 }>
@@ -41,6 +44,12 @@ export type ReadWriteSchema<T extends Schema<any>> = Resolve<{
 export type DeepReadWriteSchema<T extends Schema<any>> = ReadWriteSchema<{
     [K in keyof T]: T[K] extends ObjectParser<infer U> ? ObjectParser<DeepReadWriteSchema<U>> : T[K]
 }>
+
+// **************** Pick/omit variants of partial/readonly/readwrite/required modifiers ****************
+// these modifiers apply to a subset of fields in the schema, recursing into nested structs in deep mode
+// these allow users to pick/omit fields which have the modifiers applied
+// e.g. pick field 'a', 'b' and 'c' to be made readonly
+// e.g. omit field 'a', 'b' and 'c' from being made readonly, leaving them as is and making the rest of the fields readonly
 
 export type PickPartialSchema<T extends Schema<any>, U extends Mask<UnpackSchema<T>>> = Resolve<{
     [K in keyof T & keyof U]: T[K] extends ObjectParser<infer V> ? U[K] extends object ? ObjectParser<PickPartialSchema<V, U[K]>> : OptionalParser<T[K]> : OptionalParser<T[K]>

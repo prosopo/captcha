@@ -6,7 +6,8 @@ export type ValidateOptions = {
      * 
      * E.g. given an array of [" a", "b ", " c "], with a trim validator, the array will be transformed to ["a", "b", "c"] if in place is true, and a new array ["a", "b", "c"] will be created if in place is false (meaning the original array of [" a", "b ", " c "] will be left unchanged).
      */
-    disableInPlace?: boolean
+    disableInPlace?: boolean,
+    [key: string]: boolean | undefined
 }
 
 /**
