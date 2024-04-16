@@ -86,7 +86,7 @@ export function getContractError(response: ContractCallOutcome): string | undefi
             }
         }
     }
-    return undefined
+    return 'Error: Failed to get contract error'
 }
 
 /** Hash a string, padding with zeroes until its 32 bytes long
