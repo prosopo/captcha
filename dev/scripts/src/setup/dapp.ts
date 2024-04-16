@@ -59,7 +59,7 @@ async function submitTx(
                 reject(err)
             }
         } else {
-            reject(new ProsopoContractError('CONTRACT.INVALID_METHOD'))
+            reject(new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { failedFuncName: submitTx.name } }))
         }
     })
 }
