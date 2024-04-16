@@ -14,6 +14,7 @@
 import { BN } from '@polkadot/util/bn'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
 import { TestAccount } from '@prosopo/env'
@@ -25,7 +26,9 @@ export const accountContract = function (account: TestAccount): string {
     if (account.contractAddress) {
         return account.contractAddress
     }
-    throw new Error(`Account ${account} does not have a contract`)
+    throw new ProsopoError(`Account ${account} does not have a contract`, {
+        context: { failedFuncName: accountContract.name },
+    })
 }
 export type Account = [mnemonic: string, address: string, contractAddress?: string]
 
