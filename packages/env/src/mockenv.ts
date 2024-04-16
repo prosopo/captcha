@@ -12,14 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
+import { Dapp, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from './provider.js'
 import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
+
+export type TestAccount = {
+    mnemonic: string
+    address: string
+    contractAddress: string | undefined
+}
+
+export interface ProviderTestAccount extends TestAccount {
+    contractValue: Provider
+}
+
+export interface AppTestAccount extends TestAccount {
+    contractValue: Dapp
+}
+
 export class MockEnvironment extends ProviderEnvironment {
-    public createAccountAndAddToKeyring(): [string, string] {
+    public createAccountAndAddToKeyring(): TestAccount {
         const mnemonic: string = mnemonicGenerate()
         const account = this.keyring.addFromMnemonic(mnemonic)
         const { address } = account
-        return [mnemonic, address]
+        return { address, mnemonic, contractAddress: undefined }
     }
 }
 

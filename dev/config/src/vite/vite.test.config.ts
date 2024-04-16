@@ -30,6 +30,7 @@ export default function () {
         },
         test: {
             //root: getRootDir(),
+            reporters: ['basic'],
             include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
             watch: false,
             watchExclude: ['**/node_modules/**', '**/dist/**'],

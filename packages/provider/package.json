@@ -24,7 +24,6 @@
         "test": "npx vitest run --config ./vite.test.config.ts",
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
-        "populate-data": "ts-node ./tests/dataUtils/populateDatabase.ts",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
@@ -45,6 +44,7 @@
         "@prosopo/database": "0.3.36",
         "@prosopo/datasets": "0.3.36",
         "@prosopo/env": "0.3.36",
+        "@prosopo/tx": "0.3.36",
         "@prosopo/types": "0.3.36",
         "@prosopo/types-database": "0.3.36",
         "@prosopo/types-env": "0.3.36",
@@ -67,7 +67,6 @@
         "dotenv": "^16.0.1",
         "fs-extra": "^10.1.0",
         "sinon": "^15.2.0",
-        "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
@@ -75,7 +74,7 @@
         "type": "git",
         "url": "git+ssh://git@github.com/prosopo/provider.git"
     },
-    "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo/captcha/). The following instructions explain how to set up the repositories manually.",
+    "description": "The easiest way to deploy the Prosopo contract and run the Provider node is via the [captcha repository](https://github.com/prosopo/captcha/).",
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },

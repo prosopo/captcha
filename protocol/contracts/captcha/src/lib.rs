@@ -1452,6 +1452,25 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_default_provider() {
+            let contract = get_contract(0);
+            let provider = contract.default_provider();
+            assert_eq!(provider.payee, Payee::Dapp);
+            assert_eq!(provider.status, GovernanceStatus::Inactive);
+            assert_eq!(provider.fee, 0);
+            assert_eq!(provider.balance, 0);
+        }
+
+        #[ink::test]
+        fn test_default_dapp() {
+            let contract = get_contract(0);
+            let dapp = contract.default_dapp();
+            assert_eq!(dapp.payee, DappPayee::Any);
+            assert_eq!(dapp.status, GovernanceStatus::Inactive);
+            assert_eq!(dapp.balance, 0);
+        }
+
+        #[ink::test]
         fn test_ctor_guard_pass() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
