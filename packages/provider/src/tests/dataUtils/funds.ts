@@ -78,7 +78,7 @@ export async function sendFunds(
                     if (result.status.isInBlock || result.status.isFinalized) {
                         result.events
                             .filter(({ event: { section } }: any): boolean => section === 'system')
-                            .forEach((event): void => {
+                            .forEach((event) => {
                                 const {
                                     event: { method },
                                 } = event
