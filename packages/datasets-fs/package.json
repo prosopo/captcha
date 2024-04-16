@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/datasets-fs",
-    "version": "0.3.36",
+    "version": "0.3.37",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
@@ -32,10 +32,10 @@
     "types": "./dist/index.d.ts",
     "dependencies": {
         "@polkadot/util": "12.6.2",
-        "@prosopo/common": "0.3.36",
-        "@prosopo/config": "0.3.36",
-        "@prosopo/types": "0.3.36",
-        "@prosopo/util": "0.3.36",
+        "@prosopo/common": "0.3.37",
+        "@prosopo/config": "0.3.37",
+        "@prosopo/types": "0.3.37",
+        "@prosopo/util": "0.3.37",
         "bcrypt": "^5.1.0",
         "cli-progress": "^3.12.0",
         "fs": "^0.0.1-security",
