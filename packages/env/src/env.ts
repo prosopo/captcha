@@ -76,17 +76,23 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    async getSigner(): Promise<void> {
-        if (this.pair) {
-            await this.getApi().isReadyOrError
-            try {
-                this.pair = this.keyring.addPair(this.pair)
-            } catch (error) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
-                    context: { failedFuncName: this.getSigner.name, error },
-                })
-            }
+    async getSigner(): Promise<KeyringPair> {
+        if (!this.pair) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                context: { failedFuncName: this.getSigner.name },
+            })
         }
+
+        await this.getApi().isReadyOrError
+        try {
+            this.pair = this.keyring.addPair(this.pair)
+        } catch (error) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                context: { failedFuncName: this.getSigner.name, error },
+            })
+        }
+
+        return this.pair
     }
 
     getContractInterface(): ProsopoCaptchaContract {

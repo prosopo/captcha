@@ -23,7 +23,7 @@ import {
 } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
 import { CaptchaStatus, Commit, DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
-import { ContractDeployer, getCurrentBlockNumber, getDispatchError, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { ContractDeployer, getCurrentBlockNumber, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles.js'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
@@ -37,6 +37,7 @@ import { assert, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
 import { createType } from '@polkadot/types/create'
 import { datasetWithIndexSolutions } from '@prosopo/datasets'
+import { getDispatchError } from '@prosopo/tx'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
 import { getTestConfig } from '@prosopo/config'
 import { getUser } from '../getUser.js'
@@ -349,11 +350,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     }
 
     test('Provider registration', async function ({ env, providerStakeThreshold }) {
-        const [providerMnemonic, providerAddress] = env.createAccountAndAddToKeyring() || ['', '']
-        const tasks = await getSignedTasks(env, [providerMnemonic, providerAddress])
+        const providerAccount = env.createAccountAndAddToKeyring() || ['', '']
+        const tasks = await getSignedTasks(env, providerAccount)
         const stakeAmount = getStakeAmount(env, providerStakeThreshold)
         const sendAmount = getSendAmount(env, stakeAmount)
-        await sendFunds(env, providerAddress, 'ProsopoPayee', sendAmount)
+        await sendFunds(env, providerAccount.address, 'ProsopoPayee', sendAmount)
 
         const queryResult = await tasks.contract.query.providerRegister(
             Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),

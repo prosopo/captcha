@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { Environment } from './env.js'
-export { ProviderEnvironment } from './provider.js'
-export * from './mockenv.js'
+export default {
+    entryPoints: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.js', 'src/**/*.jsx', 'src/**/*.json'],
+    includes: 'src',
+    extends: '../../typedoc.base.config.js',
+    readme: 'README.md',
+}
