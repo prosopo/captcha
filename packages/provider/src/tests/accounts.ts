@@ -26,7 +26,7 @@ export const accountContract = function (account: TestAccount): string {
     if (account.contractAddress) {
         return account.contractAddress
     }
-    throw new ProsopoError(`Account ${account} does not have a contract`, {
+    throw new ProsopoError(new Error(`Account ${account} does not have a contract`), {
         context: { failedFuncName: accountContract.name },
     })
 }
