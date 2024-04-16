@@ -58,7 +58,10 @@ try {
     EmailsModel = mongoose.model('emails', EmailModelSchema)
 }
 
-export async function run(wasmPath: string | undefined, abiPath: string | undefined, atlasUri?: string) {
+export async function run(wasmPath: string | undefined, abiPath: string | undefined, atlasUri: string | undefined) {
+    if (!atlasUri) {
+        throw new Error('Atlas URI not found in env')
+    }
     // if wasmPath not provided then default to the captcha contract's wasm
     let wasm: Uint8Array
     if (wasmPath === undefined) {
@@ -80,9 +83,6 @@ export async function run(wasmPath: string | undefined, abiPath: string | undefi
         abi = await AbiJSON(path.resolve(abiPath))
     }
 
-    if (!atlasUri) {
-        throw new Error('Atlas URI not found in env')
-    }
     await mongoose.connect(atlasUri, { dbName: 'prosopo' })
 
     const dapps = await EmailsModel.find({}).exec()
