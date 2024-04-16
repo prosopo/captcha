@@ -167,13 +167,13 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     }
 
     private argDecoder(arg: any): string {
-        let decoded = arg.toString()
         if (Array.isArray(arg)) {
-            decoded = u8aToString(new Uint8Array(new Uint8ClampedArray(arg)))
+            return u8aToString(new Uint8Array(new Uint8ClampedArray(arg)))
         } else if (isHex(arg)) {
-            decoded = hexToString(arg)
+            return hexToString(arg)
+        } else {
+            return arg.toString()
         }
-        return decoded
     }
 
     /**
