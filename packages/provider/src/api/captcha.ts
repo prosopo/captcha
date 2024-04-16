@@ -33,6 +33,7 @@ import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
+import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
@@ -146,16 +147,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
-                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), verified: false })
+                return res.json({
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.verified]: false,
+                })
             }
 
             if (parsed.maxVerifiedTime) {
-                const currentBlockNumber = await tasks.getCurrentBlockNumber()
-                const blockTimeMs = await tasks.getBlockTimeMs()
+                const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
+                const blockTimeMs = getBlockTimeMs(tasks.contract.api)
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
                 const verificationResponse: VerificationResponse = {
-                    status: req.t('API.USER_NOT_VERIFIED'),
-                    verified: false,
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.verified]: false,
                 }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
                     return res.json(verificationResponse)
@@ -164,7 +168,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
             const isApproved = solution.status === CaptchaStatus.approved
             const response: ImageVerificationResponse = {
-                status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
+                [ApiParams.status]: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
                 [ApiParams.verified]: isApproved,
                 [ApiParams.commitmentId]: solution.id.toString(),
                 [ApiParams.blockNumber]: solution.requestedAt,

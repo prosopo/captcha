@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { getCurrentFileDirectory } from '@prosopo/util'
+import { getCliPkgDir, getRootDir } from '@prosopo/config'
 import { promisify } from 'util'
 import { spawn } from 'child_process'
 import fs from 'fs'
@@ -20,31 +20,40 @@ import path from 'path'
 
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
-        // get file location
-        const dir = getCurrentFileDirectory(import.meta.url)
-
-        // get root directory of this package
-        const rootDir = dir.split('/').slice(0, -2).join('/')
+        // check for the env file in either the root or the package directory
+        const envFile = `.env.${process.env.NODE_ENV || 'development'}`
+        console.log('env file ', envFile)
+        const rootDir = getRootDir()
+        const packageDir = getCliPkgDir()
+        const rootEnvPath = `${rootDir}/${envFile}`
+        const packageEnvPath = `${packageDir}/${envFile}`
+        let envPath = ''
+        if (fs.existsSync(rootEnvPath)) {
+            envPath = path.resolve(rootEnvPath)
+        } else if (fs.existsSync(packageEnvPath)) {
+            envPath = path.resolve(packageEnvPath)
+        } else {
+            throw new Error(`No ${envFile} file found`)
+        }
 
         const restoreEnv = async () => {
-            const envPath = path.resolve(`${rootDir}/.env.test`)
             const envContent = await promisify(fs.readFile)(envPath, 'utf8')
             const newEnvContent = envContent.replace('\nTEST=TEST', '')
             await promisify(fs.writeFile)(envPath, newEnvContent)
         }
 
         return new Promise<void>((resolve, reject) => {
-            console.log('rootDir', rootDir)
+            console.log('packageDir', packageDir)
 
             // run API
             const child = spawn(`npm`, ['run', 'cli', '--', '--api'], {
-                cwd: rootDir,
+                cwd: packageDir,
                 env: { ...process.env, NODE_ENV: 'test' },
             })
 
             let appended = false
             child.stdout.on('data', (data) =>
-                onData(data, rootDir, appended).then((result) => {
+                onData(data, packageDir, appended).then((result) => {
                     appended = result.appended
                     const kill = result.kill
                     // console.log('onData ran, appended', appended, 'kill', kill)

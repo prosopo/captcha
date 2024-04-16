@@ -11,10 +11,5 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteTestConfig } from '@prosopo/config'
-import { loadEnv } from '@prosopo/cli'
-import path from 'path'
-process.env.NODE_ENV = 'test'
-loadEnv(path.resolve())
-
-export default ViteTestConfig
+export * from './txQueue.js'
+export * from './getDispatchError.js'

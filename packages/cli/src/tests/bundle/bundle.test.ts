@@ -13,17 +13,14 @@
 // limitations under the License.
 import { assert, describe, test } from 'vitest'
 import { exec } from 'child_process'
-import { getCurrentFileDirectory } from '@prosopo/util'
+import { getCliPkgDir } from '@prosopo/config'
 import { promisify } from 'util'
 const execPromise = promisify(exec)
 
 describe('provider bundle', () => {
     test('bundle runs after bundling', async () => {
-        // get file location
-        const dir = getCurrentFileDirectory(import.meta.url)
-
         // get root directory of this package
-        const rootDir = dir.split('/').slice(0, -3).join('/')
+        const rootDir = getCliPkgDir()
 
         // build bundle
         await execPromise(`cd ${rootDir} && npm run bundle:prod`)

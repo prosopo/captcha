@@ -185,10 +185,10 @@ export function Manager(
             }
 
             // Check if there is a provider in local storage or get a random one from the contract
-            const providerUrlFromStorage = storage.getProviderUrl()
+            const procaptchaStorage = storage.getProcaptchaStorage()
             let providerApi: ProviderApi
-            if (providerUrlFromStorage) {
-                providerApi = await loadProviderApi(providerUrlFromStorage)
+            if (procaptchaStorage.providerUrl && procaptchaStorage.blockNumber) {
+                providerApi = await loadProviderApi(procaptchaStorage.providerUrl)
 
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
@@ -196,13 +196,14 @@ export function Manager(
                     const verifyDappUserResponse = await providerApi.verifyDappUser(
                         getDappAccount(),
                         account.account.address,
+                        procaptchaStorage.blockNumber,
                         undefined,
                         configOptional.challengeValidLength
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
                         const output: ProcaptchaOutput = {
-                            [ApiParams.providerUrl]: providerUrlFromStorage,
+                            [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
                             [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
@@ -214,7 +215,7 @@ export function Manager(
                     }
                 } catch (err) {
                     // if the provider is down, we should continue with the process of selecting a random provider
-                    console.error('Error contacting provider from storage', providerUrlFromStorage)
+                    console.error('Error contacting provider from storage', procaptchaStorage.providerUrl)
                     // continue as if the provider was not in storage
                 }
             }
@@ -328,11 +329,11 @@ export function Manager(
                 loading: false,
             })
             if (state.isHuman) {
-                const trimmedUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
+                const providerUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
                 // cache this provider for future use
-                storage.setProviderUrl(trimmedUrl)
+                storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
                 events.onHuman({
-                    providerUrl: trimmedUrl,
+                    providerUrl,
                     user: account.account.address,
                     dapp: getDappAccount(),
                     commitmentId: hashToHex(submission[1]),
@@ -541,7 +542,8 @@ export function Manager(
     }
 
     const exportData = async (events: StoredEvents) => {
-        const providerUrlFromStorage = storage.getProviderUrl()
+        const procaptchaStorage = storage.getProcaptchaStorage()
+        const providerUrlFromStorage = procaptchaStorage.providerUrl
         let providerApi: ProviderApi
 
         if (providerUrlFromStorage) {
@@ -556,7 +558,8 @@ export function Manager(
             providerApi = await loadProviderApi(providerUrl)
         }
 
-        const providerUrl = storage.getProviderUrl() || state.captchaApi?.provider.provider.url.toString()
+        const providerUrl =
+            storage.getProcaptchaStorage().providerUrl || state.captchaApi?.provider.provider.url.toString()
         if (!providerUrl) {
             return
         }

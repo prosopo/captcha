@@ -19,7 +19,8 @@ import { Logger, ProsopoContractError } from '@prosopo/common'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
-import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
+import { filterAndDecodeContractEvents, formatEvent } from './helpers.js'
+import { getDispatchError } from '@prosopo/tx'
 import { oneUnit } from '../balances/index.js'
 
 /**
