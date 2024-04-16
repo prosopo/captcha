@@ -17,10 +17,11 @@ import { Dapp, DappPayee } from '@prosopo/captcha-contract'
 import { IDappAccount } from '@prosopo/types'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel } from '@prosopo/common'
-import { ProsopoCaptchaContract, TransactionQueue, oneUnit, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, oneUnit, wrapQuery } from '@prosopo/contract'
 import { ProsopoContractError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
+import { TransactionQueue } from '@prosopo/tx'
 import { sendFunds } from './funds.js'
 
 const log = getLogger(LogLevel.enum.info, 'setupDapp')

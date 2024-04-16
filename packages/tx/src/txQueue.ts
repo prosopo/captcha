@@ -43,7 +43,7 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoContractError, ProsopoTxQueueError, getLogLevel, getLogger } from '@prosopo/common'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { SubmittableResult } from '@polkadot/api/submittable'
-import { getDispatchError } from './helpers.js'
+import { getDispatchError } from './getDispatchError.js'
 
 type TxCallbackFn = (result: ISubmittableResult) => void
 

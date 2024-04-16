@@ -44,6 +44,7 @@
         "@prosopo/database": "0.3.36",
         "@prosopo/datasets": "0.3.36",
         "@prosopo/env": "0.3.36",
+        "@prosopo/tx": "0.3.36",
         "@prosopo/types": "0.3.36",
         "@prosopo/types-database": "0.3.36",
         "@prosopo/types-env": "0.3.36",

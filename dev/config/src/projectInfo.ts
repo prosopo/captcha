@@ -164,6 +164,10 @@ export const getTypesPkgDir = () => {
     return `${getPackagesDir()}/types`
 }
 
+export const getTxPkgDir = () => {
+    return `${getPackagesDir()}/tx`
+}
+
 export const getWebComponentsPkgDir = () => {
     return `${getPackagesDir()}/web-components`
 }

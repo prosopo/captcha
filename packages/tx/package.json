@@ -1,5 +1,5 @@
 {
-    "name": "@prosopo/contract",
+    "name": "@prosopo/tx",
     "version": "0.3.36",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
@@ -29,12 +29,6 @@
         ".": {
             "import": "./dist/index.js",
             "require": "./dist/cjs/index.cjs"
-        },
-        "./contract/interface": {
-            "types": "./dist/contract/interface.d.ts",
-            "import": "./dist/contract/interface.js",
-            "require": "./dist/cjs/contract/interface.cjs",
-            "default": "./dist/contract/interface.js"
         }
     },
     "typesVersions": {
@@ -62,7 +56,6 @@
         "@prosopo/util": "0.3.36",
         "@prosopo/captcha-contract": "0.3.36",
         "@prosopo/typechain-types": "1.1.14",
-        "@prosopo/tx": "0.3.36",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {
