@@ -116,7 +116,7 @@ jobs:
 
             # create the provider image for AMD64
             - name: Build the Provider Container
-              id: build_docker_provider
+              id: build_docker_provider_amd64
               continue-on-error: true
               uses: docker/build-push-action@v5
               with:
@@ -129,7 +129,7 @@ jobs:
 
             # create the provider image for ARM64
             - name: Build the Provider Container
-              id: build_docker_provider
+              id: build_docker_provider_arm64
               continue-on-error: true
               uses: docker/build-push-action@v5
               with:
