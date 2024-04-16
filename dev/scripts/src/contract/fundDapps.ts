@@ -108,8 +108,6 @@ export async function run(wasmPath: string | undefined, abiPath: string | undefi
             .map((dappRecord) => setupDapp(env, { pair, secret, fundAmount }, dappRecord.account, queue))
     )
 }
-// run the script if the main process is running this file
-//if (typeof require !== 'undefined' && require.main === module) {
 log.info('Loading env from', path.resolve('.'))
 loadEnv(path.resolve('.'))
 run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH, process.env._DEV_ONLY_ATLAS_URI)
@@ -121,4 +119,3 @@ run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH,
         console.error(e)
         process.exit(1)
     })
-//}
