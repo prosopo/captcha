@@ -125,8 +125,6 @@ export async function sendFunds(
         })
     }
     if (submittableResult.status.isFuture) {
-        const block = await api.rpc.chain.getBlock()
-        console.log('Current block', JSON.stringify(block))
         env.logger.debug(who, 'sent amount', unitAmount, 'UNIT in FUTURE tx hash ', submittableResult.txHash.toHex())
     } else {
         env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', submittableResult.status.asInBlock.toHex())
