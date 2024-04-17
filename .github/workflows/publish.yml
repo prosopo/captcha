@@ -510,6 +510,8 @@ jobs:
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
                   if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                    echo "Installing @prosopo/flux..."
+                    npm i -g @prosopo/flux
                     echo "Soft redeploying flux docker js_server."
                     npx flux redeploy --app ProcaptchaJavascriptServer
                   else
@@ -574,14 +576,7 @@ jobs:
                   file: ${{github.workspace}}/docker/images/provider.dockerfile
                   platforms: linux/amd64,linux/arm64
                   push: true
-                  tags: prosopo/provider:${{ steps.next_version.outputs.version }}
-
-            - name: Push Provider Container to latest tag on docker
-              if: steps.check_version_docker_js_server.outputs.bump == 'true'
-              run: |
-                  # Push latest
-                  docker tag prosopo/provider:${{ steps.next_version.outputs.version }} prosopo/provider:latest
-                  docker push prosopo/provider:latest
+                  tags: prosopo/provider:${{ steps.next_version.outputs.version }},prosopo/provider:latest
 
             - name: Docker provider release notification
               if: always()
