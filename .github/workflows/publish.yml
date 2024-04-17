@@ -510,6 +510,8 @@ jobs:
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
                   if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                    echo "Installing @prosopo/flux..."
+                    npm i -g @prosopo/flux
                     echo "Soft redeploying flux docker js_server."
                     npx flux redeploy --app ProcaptchaJavascriptServer
                   else
