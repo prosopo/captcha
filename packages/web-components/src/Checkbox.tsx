@@ -13,7 +13,7 @@
 // limitations under the License.
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
-import React, { ButtonHTMLAttributes, CSSProperties, useId, useMemo, useState } from 'react'
+import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'
@@ -45,6 +45,12 @@ const baseStyle: CSSProperties = {
     borderWidth: '1px',
 }
 
+const ID_LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+const generateRandomId = () => {
+    return Array.from({ length: 8 }, () => ID_LETTERS[Math.floor(Math.random() * ID_LETTERS.length)]).join('')
+}
+
 export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checked, labelText }: CheckboxProps) => {
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
     const checkboxStyleBase: CSSProperties = {
@@ -59,14 +65,15 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
             borderColor: hover ? theme.palette.background.contrastText : theme.palette.grey[400],
             appearance: checked ? 'auto' : 'none',
             flex: 1,
-            margin: '0 15px',
+            margin: '15px',
         }
     }, [hover, theme, checked])
-    const id = useId()
+    const id = generateRandomId()
     return (
         <span style={{ display: 'inline-flex' }}>
             <input
                 name={id}
+                id={id}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
                 css={checkboxBefore}
@@ -84,7 +91,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
                     display: 'flex',
                     cursor: 'pointer',
                     userSelect: 'none',
-                    top: '4px',
+                    top: '18px',
                 }}
                 htmlFor={id}
             >
