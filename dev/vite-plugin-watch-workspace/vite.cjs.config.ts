@@ -15,5 +15,5 @@ import { ViteCommonJSConfig } from '@prosopo/config'
 import path from 'path'
 
 export default function () {
-    return ViteCommonJSConfig('vite-plugin-watch-external', path.resolve('./tsconfig.cjs.json'))
+    return ViteCommonJSConfig('vite-plugin-watch-workspace', path.resolve('./tsconfig.cjs.json'))
 }

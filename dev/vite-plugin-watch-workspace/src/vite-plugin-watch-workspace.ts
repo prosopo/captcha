@@ -39,7 +39,7 @@ type VitePluginWatchExternalOptions = {
     ignorePaths?: string[]
 }
 
-const log = debug(`vite-plugin-watch-external`)
+const log = debug(`vite-plugin-watch-workspace`)
 
 const FILE_TYPES = ['ts', 'tsx']
 
@@ -191,7 +191,7 @@ export const VitePluginWatchWorkspace = async (config: VitePluginWatchExternalOp
     )
     log('externalFiles', externalFiles)
     return {
-        name: 'vite-plugin-watch-external',
+        name: 'vite-plugin-watch-workspace',
         async buildStart() {
             Object.keys(externalFiles).map((file) => {
                 this.addWatchFile(file)
