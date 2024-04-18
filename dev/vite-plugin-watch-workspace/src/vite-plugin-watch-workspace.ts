@@ -28,7 +28,9 @@ type ExternalFile<Key extends PropertyKey, Value> = [Key, Value]
 type ExternalFiles = Record<FilePath, TsConfigPath>
 
 type VitePluginWatchExternalOptions = {
+    // path
     workspaceRoot: string
+    // path or glob
     currentPackage: string
     format: 'esm' | 'cjs'
     // file types to build
@@ -123,7 +125,6 @@ const getExternalFileLists = async (
 }
 
 const getLoader = (fileExtension: string) => {
-    // 'base64' | 'binary' | 'copy' | 'css' | 'dataurl' | 'default' | 'empty' | 'file' | 'js' | 'json' | 'jsx' | 'local-css' | 'text' | 'ts' | 'tsx'
     switch (fileExtension) {
         case '.ts':
         case '.tsx':
