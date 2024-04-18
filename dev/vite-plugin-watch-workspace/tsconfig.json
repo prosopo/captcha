@@ -6,12 +6,5 @@
         "types": ["vite/client"]
     },
     "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
-    "references": [
-        {
-            "path": "../../packages/common"
-        },
-        {
-            "path": "../../packages/types"
-        }
-    ]
+    "references": []
 }
