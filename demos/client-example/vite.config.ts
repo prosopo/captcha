@@ -13,6 +13,7 @@
 // limitations under the License.
 import * as path from 'path'
 import { VitePluginCloseAndCopy } from '@prosopo/config'
+import { VitePluginWatchWorkspace } from '@prosopo/vite-plugin-watch-workspace'
 import { defineConfig } from 'vite'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
@@ -21,7 +22,7 @@ const logger = getLogger(`Info`, `vite.config.js`)
 const dir = path.resolve('.')
 loadEnv(dir)
 // https://vitejs.dev/config/
-export default defineConfig(function ({ command, mode }) {
+export default defineConfig(async function ({ command, mode }) {
     logger.info(`Running at ${dir} in ${mode} mode`)
     // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
     // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
@@ -46,7 +47,6 @@ export default defineConfig(function ({ command, mode }) {
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
     }
     logger.debug('define', JSON.stringify(define))
-
     return {
         watch: false,
         mode: 'development',
@@ -69,6 +69,13 @@ export default defineConfig(function ({ command, mode }) {
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
+            // Watches external files (workspace packages) and rebuilds them when they change
+            await VitePluginWatchWorkspace({
+                workspaceRoot: path.resolve('../..'),
+                currentPackage: `${path.resolve('.')}/**/*`,
+                format: 'esm',
+                ignorePaths: [`${path.resolve('../..')}/demos/*`, `${path.resolve('../..')}/dev/*`],
+            }),
         ],
         server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230 },
     }

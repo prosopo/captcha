@@ -1,0 +1,44 @@
+{
+    "name": "@prosopo/vite-plugin-watch-workspace",
+    "version": "0.3.37",
+    "description": "Vite plugin for watching and rebuilding external files",
+    "main": "./dist/index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"No test specified\"",
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+    },
+    "engines": {
+        "node": ">=18",
+        "npm": ">=9"
+    },
+    "author": "Prosopo Limited",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "vite": "^5.1.7"
+    },
+    "devDependencies": {
+        "@types/debug": "^4.1.12",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "sideEffects": false
+}
