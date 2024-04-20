@@ -14,6 +14,7 @@
         "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
