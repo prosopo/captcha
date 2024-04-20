@@ -74,7 +74,7 @@ export default defineConfig(async function ({ command, mode }) {
                 workspaceRoot: path.resolve('../..'),
                 currentPackage: `${path.resolve('.')}/**/*`,
                 format: 'esm',
-                ignorePaths: [`${path.resolve('../..')}/demos/*`, `${path.resolve('../..')}/dev/*`],
+                ignorePaths: [`${path.resolve('../..')}/demos/*`, `${path.resolve('../..')}/dev/*`, `**/dist/**/*`],
             }),
         ],
         server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230 },

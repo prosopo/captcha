@@ -43,7 +43,7 @@ const log = debug(`vite-plugin-watch-workspace`)
 
 const FILE_TYPES = ['ts', 'tsx']
 
-const RELATIVE_PATH_REGEX = /(\.+\/)+/
+const RELATIVE_PATH_REGEX = /(\.+\/)*/
 
 const getTsConfigFollowExtends = (filename: string, rootDir?: string): { [key: string]: any } => {
     let extendedConfig: { [key: string]: any } = {}
@@ -127,11 +127,13 @@ const getExternalFileLists = async (
 const getLoader = (fileExtension: string) => {
     switch (fileExtension) {
         case '.ts':
-        case '.tsx':
             return 'ts'
+        case '.tsx':
+            return 'tsx'
         case '.js':
-        case '.jsx':
             return 'js'
+        case '.jsx':
+            return 'jsx'
         case '.css':
             return 'css'
         case '.json':
@@ -159,10 +161,8 @@ const getOutExtension = (fileExtension: string) => {
 }
 
 const getOutDir = (file: string, tsconfig: { [key: string]: any }) => {
-    const rootRelativePath = tsconfig.compilerOptions.rootDir.match(RELATIVE_PATH_REGEX)
-    const outDirRelativePath = tsconfig.compilerOptions.outDir.match(RELATIVE_PATH_REGEX)
-    const rootFolder = tsconfig.compilerOptions.rootDir.replace(rootRelativePath, '')
-    const outFolder = tsconfig.compilerOptions.outDir.replace(outDirRelativePath, '')
+    const rootFolder = tsconfig.compilerOptions.rootDir.replace(RELATIVE_PATH_REGEX, '')
+    const outFolder = tsconfig.compilerOptions.outDir.replace(RELATIVE_PATH_REGEX, '')
     return path.dirname(file).replace(rootFolder, outFolder)
 }
 
@@ -189,7 +189,7 @@ export const VitePluginWatchWorkspace = async (config: VitePluginWatchExternalOp
         config.fileTypes || FILE_TYPES,
         config.ignorePaths
     )
-    log('externalFiles', externalFiles)
+    log('externalFiles', Object.keys(externalFiles))
     return {
         name: 'vite-plugin-watch-workspace',
         async buildStart() {
@@ -210,7 +210,7 @@ export const VitePluginWatchWorkspace = async (config: VitePluginWatchExternalOp
             const loader = getLoader(fileExtension)
             const outdir = getOutDir(file, tsconfig)
             const outfile = getOutFile(outdir, file, fileExtension)
-            log(`Outfile ${outfile}`)
+            log(`Outfile ${outfile}, loader ${loader}`)
             const buildResult = await build({
                 tsconfig: tsconfigPath,
                 stdin: {
@@ -223,8 +223,17 @@ export const VitePluginWatchWorkspace = async (config: VitePluginWatchExternalOp
                 format: config.format || 'esm',
             })
             log(`buildResult', ${JSON.stringify(buildResult)}`)
+
             server.ws.send({
-                type: 'full-reload',
+                type: 'update',
+                updates: [
+                    {
+                        acceptedPath: file,
+                        type: 'js-update',
+                        path: file,
+                        timestamp: Date.now(),
+                    },
+                ],
             })
         },
     }
