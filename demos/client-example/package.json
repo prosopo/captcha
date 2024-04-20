@@ -15,6 +15,7 @@
         "@polkadot/extension-inject": "0.46.6",
         "@prosopo/common": "0.3.37",
         "@prosopo/procaptcha": "0.3.37",
+        "@prosopo/procaptcha-frictionless": "0.3.37",
         "@prosopo/procaptcha-react": "0.3.37",
         "@prosopo/types": "0.3.37",
         "@types/react-dom": "^18.2.4",

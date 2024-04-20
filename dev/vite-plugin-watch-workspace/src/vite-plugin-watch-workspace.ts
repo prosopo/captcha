@@ -77,7 +77,7 @@ const getFilesAndTsConfigs = async (
     const tsconfig = getTsConfigFollowExtends(tsConfigPath)
     const rootDir = tsconfig.compilerOptions.rootDir
     const files = await fg(path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join('|')})`), {
-        ignore: [currentPackageGlob, ...(ignorePaths || [])],
+        ignore: ['**/node_modules/**', currentPackageGlob, ...(ignorePaths || [])],
     })
     // keep the tsconfig path beside each file to avoid looking for file ids in arrays later
     return files.map((file: string) => [file, tsConfigPath])
@@ -189,7 +189,6 @@ export const VitePluginWatchWorkspace = async (config: VitePluginWatchExternalOp
         config.fileTypes || FILE_TYPES,
         config.ignorePaths
     )
-    log('externalFiles', Object.keys(externalFiles))
     return {
         name: 'vite-plugin-watch-workspace',
         async buildStart() {
