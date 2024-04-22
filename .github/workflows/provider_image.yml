@@ -153,7 +153,7 @@ jobs:
             - name: Check provider bundle runs
               run: |
                   CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
-                  sleep 10s
+                  sleep 20s
                   docker logs $CONTAINER >& provider.log
                   echo $(cat provider.log)
-                  grep -oE "Version: \".*\"" provider.log || exit 1
+                  grep -oE "Version: \".*\"" provider.log || echo $(cat provider.log) && exit 1
