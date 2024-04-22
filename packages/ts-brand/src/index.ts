@@ -1,4 +1,4 @@
-
+export type Ctor<T> = new (...args: any[]) => T
 
 const brandField = Symbol('brand') // keep this private!
 
