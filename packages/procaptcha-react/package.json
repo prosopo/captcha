@@ -36,8 +36,8 @@
     "dependencies": {
         "@emotion/react": "^11.11.4",
         "@emotion/styled": "^11.11.0",
-        "@polkadot/extension-dapp": "0.46.6",
-        "@polkadot/extension-inject": "0.46.6",
+        "@polkadot/extension-dapp": "0.46.9",
+        "@polkadot/extension-inject": "0.46.9",
         "@prosopo/api": "0.3.38",
         "@prosopo/common": "0.3.38",
         "@prosopo/procaptcha": "0.3.38",

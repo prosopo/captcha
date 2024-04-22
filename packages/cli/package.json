@@ -32,7 +32,7 @@
     },
     "dependencies": {
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/types": "10.11.2",
+        "@polkadot/types": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
         "@prosopo/captcha-contract": "0.3.38",

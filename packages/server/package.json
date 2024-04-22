@@ -38,10 +38,10 @@
     "homepage": "https://github.com/prosopo/captcha#readme",
     "sideEffects": false,
     "dependencies": {
-        "@polkadot/api": "10.11.2",
+        "@polkadot/api": "10.13.1",
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.11.2",
-        "@polkadot/types": "10.11.2",
+        "@polkadot/rpc-provider": "10.13.1",
+        "@polkadot/types": "10.13.1",
         "@prosopo/api": "0.3.38",
         "@prosopo/contract": "0.3.38",
         "@prosopo/captcha-contract": "0.3.38",
