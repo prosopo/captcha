@@ -224,12 +224,13 @@ export class ProsopoServer {
             // By requiring block number, we load balance requests to the providers by requiring that the random
             // provider selection should be repeatable. If we have a block number, we check the provider was selected
             // at that block.
-            const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
-            if (!randomProvider) {
-                this.logger.info('Random provider selection failed')
-                // We have not been able to repeat the provider selection
-                return false
-            }
+
+            // const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
+            // if (!randomProvider) {
+            //     this.logger.info('Random provider selection failed')
+            //     // We have not been able to repeat the provider selection
+            //     return false
+            // }
 
             // If we have a providerURL and a blockNumber, we verify with the provider
             return await this.verifyProvider(
