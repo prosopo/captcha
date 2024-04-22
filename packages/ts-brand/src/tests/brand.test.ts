@@ -1,5 +1,5 @@
 import { describe, test, it, expect, expectTypeOf } from 'vitest'
-import { Brand, brand, getBrand, unbrand } from '../index.js'
+import { Brand, brand, brandField, getBrand, unbrand } from '../index.js'
 
 export type IfEquals<X, Y, A = X, B = never> =
   (<T>() => T extends X ? 1 : 2) extends
@@ -98,6 +98,9 @@ describe("brand", () => {
 
         const a = new ABranded(1)
         const b = new BBranded(1)
+        
+        expect(a[brandField]).toBe('A')
+        expect(a[brandField]).toBe('B')
 
         expectTypeOf(a).not.toEqualTypeOf(b)
         type c = IfEquals<typeof a, typeof b, true, false>
