@@ -1,10 +1,12 @@
 export type Ctor<T> = new (...args: any[]) => T
+// resolve intersection types
+export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] };
 
-const brandField = Symbol('brand') // keep this private!
+export const brandField = Symbol('brand')
 
-export type Brand<T, U> = T & {
+export type Brand<T, U> = Resolve<T & {
     [brandField]: U
-}
+}>
 
 export type Unbrand<T> = T extends Brand<infer U, any> ? U : never
 
