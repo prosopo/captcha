@@ -156,4 +156,4 @@ jobs:
                   sleep 20s
                   docker logs $CONTAINER >& provider.log
                   echo $(cat provider.log)
-                  grep -oE "Version: \".*\"" provider.log || echo $(cat provider.log) && exit 1
+                  grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
