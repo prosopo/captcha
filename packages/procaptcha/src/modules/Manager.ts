@@ -84,12 +84,6 @@ export function Manager(
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) {
-    // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
-
-    const alertError = (error: ProsopoError) => {
-        alert(error.message)
-    }
-
     const events = getDefaultEvents(onStateUpdate, state, callbacks)
 
     const dispatchErrorEvent = (err: unknown) => {
