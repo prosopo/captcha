@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-common",
-    "version": "0.3.36",
+    "version": "0.3.37",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -34,9 +34,9 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@prosopo/common": "0.3.36",
-        "@prosopo/types": "0.3.36",
-        "@prosopo/util": "0.3.36"
+        "@prosopo/common": "0.3.37",
+        "@prosopo/types": "0.3.37",
+        "@prosopo/util": "0.3.37"
     },
     "devDependencies": {
         "tslib": "2.6.2",

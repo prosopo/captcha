@@ -1,0 +1,17 @@
+/node_modules/
+/src/
+/tests/
+/artifacts/
+tsconfig.json
+tsconfig.*.json
+tsconfig.tsbuildinfo
+env.production
+env.development
+env.test
+.env.*
+webpack.*
+*.ipynb
+captchas_*.json
+data.json
+stl10/*.json
+stl10

@@ -55,7 +55,7 @@ export const ExtensionAccountSelect = ({
                 }
             }}
             value={accounts.length > 0 && account ? account.address : undefined}
-            style={{ width: '550px' }}
+            style={{ width: '550px', borderRadius: '4px', padding: '16.5px 14px' }}
         >
             {accounts.map(({ address, meta: { name } }) => (
                 <option value={address}>{name}</option>

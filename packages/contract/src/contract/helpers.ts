@@ -74,20 +74,19 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
     return encodedArgs
 }
 
-/** Handle errors returned from contract queries by throwing them
+/** Get errors returned from contract queries
  */
-export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
+export function getContractError(response: ContractCallOutcome): string | undefined {
     if (response.output) {
         const out: any = response.output
         if (out.isOk) {
             const responseOk = out.asOk
             if (responseOk.isErr) {
-                throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                    context: { error: responseOk.toPrimitive().err.toString(), contractMethodName },
-                })
+                return responseOk.toPrimitive().err.toString()
             }
         }
     }
+    return 'Error: Failed to get contract error'
 }
 
 /** Hash a string, padding with zeroes until its 32 bytes long
@@ -194,26 +193,6 @@ export function getOptions(
             : null,
         value: value || BN_ZERO,
     } as ContractOptions
-}
-
-// Convert a dispatch error to a readable message
-export function getDispatchError(dispatchError: DispatchError): string {
-    let message: string = dispatchError.type
-
-    if (dispatchError.isModule) {
-        try {
-            const mod = dispatchError.asModule
-            const error = dispatchError.registry.findMetaError(mod)
-
-            message = `${error.section}.${error.name}`
-        } catch (error) {
-            // swallow
-        }
-    } else if (dispatchError.isToken) {
-        message = `${dispatchError.type}.${dispatchError.asToken.type}`
-    }
-
-    return message
 }
 
 export function filterAndDecodeContractEvents(result: SubmittableResult, abi: Abi, logger: Logger): DecodedEvent[] {
