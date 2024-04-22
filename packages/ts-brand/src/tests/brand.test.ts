@@ -1,6 +1,10 @@
 import { describe, test, it, expect, expectTypeOf } from 'vitest'
 import { Brand, brand, getBrand, unbrand } from '../index.js'
 
+export type IfEquals<X, Y, A = X, B = never> =
+  (<T>() => T extends X ? 1 : 2) extends
+  (<T>() => T extends Y ? 1 : 2) ? A : B;
+
 describe("brand", () => {
     test("type branding", () => {
         type A = Brand<{
@@ -19,6 +23,10 @@ describe("brand", () => {
         // expect the types to be true/false appropriately
         const c: b = false
         const d: a = true
+
+        // expect the types to be unequal
+        type e = IfEquals<A, B, true, false>
+        const f: e = false // expect false
     })
 
     test('branding classes', () => {
@@ -78,6 +86,22 @@ describe("brand", () => {
 
         expect(getBrand(a)).toBe('')
         expectTypeOf(a).toMatchTypeOf<A>()
+    })
+
+    test('branded classes are not equal', () => {
+        class A {
+            constructor(public x: number) {}
+        }
+
+        const ABranded = brand(A, 'A')
+        const BBranded = brand(A, 'B')
+
+        const a = new ABranded(1)
+        const b = new BBranded(1)
+
+        expectTypeOf(a).not.toEqualTypeOf(b)
+        type c = IfEquals<typeof a, typeof b, true, false>
+        const d: c = false // should not be equal
     })
 })
 
