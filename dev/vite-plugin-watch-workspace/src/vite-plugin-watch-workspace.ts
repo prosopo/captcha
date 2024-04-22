@@ -139,16 +139,18 @@ const getLoader = (fileExtension: string) => {
         case '.json':
             return 'json'
         default:
-            return 'text'
+            return 'ts'
     }
 }
 
 const getOutExtension = (fileExtension: string) => {
     switch (fileExtension) {
         case '.ts':
+            return '.js'
         case '.tsx':
             return '.js'
         case '.js':
+            return '.js'
         case '.jsx':
             return '.js'
         case '.css':
@@ -156,7 +158,7 @@ const getOutExtension = (fileExtension: string) => {
         case '.json':
             return '.json'
         default:
-            return '.txt'
+            return '.js'
     }
 }
 

@@ -44,7 +44,7 @@
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
-    "homepage": "https://github.com/prosopo/captcha#readme",
+    "homepage": "https://github.com/prosopo/captcha/blob/main/dev/vite-plugin-watch-workspace/README.md",
     "publishConfig": {
         "registry": "https://registry.npmjs.org"
     },
