@@ -1,25 +1,31 @@
 import { Brand, brand, brandClass, brandKey, getBrand, unbrand } from '../index.js'
 import { describe, expect, expectTypeOf, test } from 'vitest'
 
-export type IfEquals<X, Y, A = X, B = never> =
-  (<T>() => T extends X ? 1 : 2) extends
-  (<T>() => T extends Y ? 1 : 2) ? A : B;
+export type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
+    ? A
+    : B
 
-describe("brand", () => {
-    test("type branding", () => {
-        type A = Brand<{
-            c: true
-        }, 'A'>
+describe('brand', () => {
+    test('type branding', () => {
+        type A = Brand<
+            {
+                c: true
+            },
+            'A'
+        >
 
-        type B = Brand<{
-            c: true
-        }, 'B'>
+        type B = Brand<
+            {
+                c: true
+            },
+            'B'
+        >
 
         type C<T> = T extends A ? true : false
 
         type a = C<A>
         type b = C<B>
-        
+
         // expect the types to be true/false appropriately
         const c: b = false
         const d: a = true
@@ -39,7 +45,7 @@ describe("brand", () => {
         const aBrandedInst = new ABranded(1)
 
         expectTypeOf(aBrandedInst).toMatchTypeOf<{
-            x: number,
+            x: number
         }>()
 
         expectTypeOf(aBrandedInst).toMatchTypeOf<Brand<A, 'A'>>()
@@ -97,7 +103,7 @@ describe("brand", () => {
 
         const a = new ABranded(1)
         const b = new BBranded(1)
-        
+
         expectTypeOf(a[brandKey]).toMatchTypeOf<'A'>()
         expectTypeOf(b[brandKey]).toMatchTypeOf<'B'>()
 
@@ -118,4 +124,3 @@ describe("brand", () => {
         expectTypeOf(aBranded).toMatchTypeOf<Brand<A, 'A'>>()
     })
 })
-
