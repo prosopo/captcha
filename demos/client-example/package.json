@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-example",
-    "version": "0.3.37",
+    "version": "0.3.38",
     "private": true,
     "type": "module",
     "engines": {
@@ -13,10 +13,11 @@
         "@mui/material": "^5.9.1",
         "@polkadot/extension-dapp": "0.46.6",
         "@polkadot/extension-inject": "0.46.6",
-        "@prosopo/common": "0.3.37",
-        "@prosopo/procaptcha": "0.3.37",
-        "@prosopo/procaptcha-react": "0.3.37",
-        "@prosopo/types": "0.3.37",
+        "@prosopo/common": "0.3.38",
+        "@prosopo/procaptcha": "0.3.38",
+        "@prosopo/procaptcha-frictionless": "0.3.38",
+        "@prosopo/procaptcha-react": "0.3.38",
+        "@prosopo/types": "0.3.38",
         "@types/react-dom": "^18.2.4",
         "electron": "25.8.4",
         "react": "^18.2.0",
@@ -25,8 +26,9 @@
         "web-vitals": "^2.1.4"
     },
     "devDependencies": {
-        "@prosopo/cli": "0.3.37",
-        "@prosopo/config": "0.3.37",
+        "@prosopo/cli": "0.3.38",
+        "@prosopo/config": "0.3.38",
+        "@prosopo/vite-plugin-watch-workspace": "^0.3.38",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
         "eslint-config-react-app": "^7.0.1",

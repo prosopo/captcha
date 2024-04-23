@@ -1,13 +1,9 @@
 {
-    "name": "@prosopo/web-components",
+    "name": "@prosopo/vite-plugin-watch-workspace",
     "version": "0.3.38",
-    "description": "Non business logic utilities for web applications",
-    "main": "dist/index.js",
+    "description": "Vite plugin for watching and rebuilding external files",
+    "main": "./dist/index.js",
     "type": "module",
-    "engines": {
-        "node": ">=18",
-        "npm": ">=9"
-    },
     "exports": {
         ".": {
             "import": "./dist/index.js",
@@ -17,7 +13,7 @@
     "scripts": {
         "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose tsconfig.json",
+        "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
@@ -26,25 +22,31 @@
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+ssh://git@github.com/prosopo/types.git"
+    "engines": {
+        "node": ">=18",
+        "npm": ">=9"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
+    "dependencies": {
+        "debug": "^4.3.4",
+        "vite": "^5.1.7"
+    },
+    "devDependencies": {
+        "@types/debug": "^4.1.12",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
-    "homepage": "https://github.com/prosopo/captcha#readme",
-    "dependencies": {
-        "@emotion/react": "^11.11.1",
-        "@emotion/styled": "^11.11.0",
-        "react": "^18.2.0"
-    },
-    "devDependencies": {
-        "tslib": "2.6.2",
-        "typescript": "5.1.6",
-        "@prosopo/config": "0.3.38"
+    "homepage": "https://github.com/prosopo/captcha/blob/main/dev/vite-plugin-watch-workspace/README.md",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
     },
     "sideEffects": false
 }

@@ -71,7 +71,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 validateAddress(user, false, api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
-                await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
+                // await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {
