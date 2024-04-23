@@ -1,5 +1,5 @@
 import { describe, test, it, expect, expectTypeOf } from 'vitest'
-import { Brand, brand, brandKey, getBrand, unbrand } from '../index.js'
+import { Brand, brand, brandClass, brandKey, getBrand, unbrand } from '../index.js'
 
 export type IfEquals<X, Y, A = X, B = never> =
   (<T>() => T extends X ? 1 : 2) extends
@@ -34,7 +34,7 @@ describe("brand", () => {
             constructor(public x: number) {}
         }
 
-        const ABranded = brand(A, 'A')
+        const ABranded = brandClass(A, 'A')
 
         const aBrandedInst = new ABranded(1)
 
@@ -50,13 +50,12 @@ describe("brand", () => {
             constructor(public x: number) {}
         }
 
-        const ABranded = brand(A, 'A')
+        const ABranded = brandClass(A, 'A')
 
         const aBrandedInst = new ABranded(1)
 
         const brand2 = getBrand(aBrandedInst)
 
-        expect(brand2).toBe('A')
         expectTypeOf(brand2).toMatchTypeOf<'A'>()
     })
 
@@ -93,18 +92,30 @@ describe("brand", () => {
             constructor(public x: number) {}
         }
 
-        const ABranded = brand(A, 'A')
-        const BBranded = brand(A, 'B')
+        const ABranded = brandClass(A, 'A')
+        const BBranded = brandClass(A, 'B')
 
         const a = new ABranded(1)
         const b = new BBranded(1)
         
-        expect(a[brandKey]).toBe('A')
-        expect(a[brandKey]).toBe('B')
+        expectTypeOf(a[brandKey]).toMatchTypeOf<'A'>()
+        expectTypeOf(b[brandKey]).toMatchTypeOf<'B'>()
 
         expectTypeOf(a).not.toEqualTypeOf(b)
         type c = IfEquals<typeof a, typeof b, true, false>
         const d: c = false // should not be equal
+    })
+
+    test('instance branding', () => {
+        class A {
+            constructor(public x: number) {}
+        }
+
+        const a = new A(1)
+        const aBranded = brand(a, 'A')
+
+        expectTypeOf(getBrand(aBranded)).toMatchTypeOf<'A'>()
+        expectTypeOf(aBranded).toMatchTypeOf<Brand<A, 'A'>>()
     })
 })
 
