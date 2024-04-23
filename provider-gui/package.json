@@ -41,6 +41,18 @@
         "next": "14.0.1",
         "react": "18.2.0"
     },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
+    },
     "devDependencies": {
         "@types/react": "18.2.33",
         "bufferutil": "^4.0.1",
