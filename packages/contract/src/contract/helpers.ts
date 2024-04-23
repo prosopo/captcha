@@ -17,7 +17,6 @@ import { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ApiBase } from '@polkadot/api/types'
 import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
-import { Bytes } from '@polkadot/types-codec/extended'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
 import { Registry } from '@polkadot/types-codec/types/registry'
@@ -119,7 +118,7 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         })
         .map((record): DecodedEvent | null => {
             try {
-                return abi.decodeEvent(record.event.data.toU8a() as Bytes)
+                return abi.decodeEvent(record)
             } catch (error) {
                 console.error(error)
                 return null
@@ -203,7 +202,7 @@ export function filterAndDecodeContractEvents(result: SubmittableResult, abi: Ab
                 },
             } = eventRecord
             try {
-                return abi.decodeEvent(data as Bytes)
+                return abi.decodeEvent(eventRecord)
             } catch (error) {
                 logger.error(`Unable to decode contract event: ${(error as Error).message}`)
                 logger.error(eventRecord.event.toHuman())
