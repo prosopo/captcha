@@ -107,21 +107,16 @@ export function stringToHexPadded(data: string): string {
 // TODO add test for this
 export function decodeEvents(contractAddress: AccountId, records: EventRecord[], abi: Abi): DecodedEvent[] | undefined {
     return records
-        .filter(
-            ({ event }) =>
-                function () {
-                    const data = event.toPrimitive().data
-                    if (data instanceof Array) {
-                        return false
-                    }
-                    if (!(data instanceof Object)) {
-                        return false
-                    }
-                    return (
-                        event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
-                    )
-                }
-        )
+        .filter(({ event }) => {
+            const data = event.toPrimitive().data
+            if (data instanceof Array) {
+                return false
+            }
+            if (!(data instanceof Object)) {
+                return false
+            }
+            return event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
+        })
         .map((record): DecodedEvent | null => {
             try {
                 return abi.decodeEvent(record.event.data.toU8a() as Bytes)

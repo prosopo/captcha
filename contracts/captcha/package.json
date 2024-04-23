@@ -125,8 +125,8 @@
         "@polkadot/types-create": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/typechain-polkadot": "1.1.14",
-        "@prosopo/typechain-types": "1.1.14"
+        "@prosopo/typechain-polkadot": "1.1.15",
+        "@prosopo/typechain-types": "1.1.15"
     },
     "devDependencies": {
         "tslib": "2.6.2",
