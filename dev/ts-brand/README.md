@@ -109,6 +109,11 @@ const dogUnbranded = unbrand(dog) // of type Dog
 
 ## Get brand
 Given a unknown branded value
-```
+```ts
 const b = getBrand(dog) // b is 'Dog'
+```
+
+No brand set:
+```ts
+const b = getBrand(someValue) // b is '' - i.e. no brand
 ```
