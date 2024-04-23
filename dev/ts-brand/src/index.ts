@@ -10,8 +10,16 @@ export type Brand<T, U> = Resolve<T & {
 
 export type Unbrand<T> = T extends Brand<infer U, any> ? U : never
 
-export const brand = <T, const U>(ctor: Ctor<T>, name: U) => {
+export const brandClass = <T, const U>(ctor: Ctor<T>, name: U) => {
     return ctor as Ctor<Brand<T, typeof name>>
+}
+
+export const unbrandClass = <T>(ctor: Ctor<T>) => {
+    return ctor as Ctor<Unbrand<T>>
+}
+
+export const brand = <T, const U>(value: T, name: U) => {
+    return value as Brand<T, typeof name>
 }
 
 export const unbrand = <T>(value: T) => {
