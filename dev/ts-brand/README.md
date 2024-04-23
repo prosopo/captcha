@@ -110,10 +110,13 @@ const dogUnbranded = unbrand(dog) // of type Dog
 ## Get brand
 Given a unknown branded value
 ```ts
-const b = getBrand(dog) // b is 'Dog'
+const b = getBrand(dog) // b is of type 'Dog'
 ```
 
 No brand set:
 ```ts
-const b = getBrand(someValue) // b is '' - i.e. no brand
+const b = getBrand(someValue) // b is of type '' - i.e. no brand
 ```
+
+## Important note
+Branding is type only, so only available at compile time! This means using things like `getBrand()` will give you the brand as a type, not as a runtime variable!
