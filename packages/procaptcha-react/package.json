@@ -47,6 +47,18 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
+    },
     "devDependencies": {
         "tslib": "2.6.2",
         "typescript": "5.1.6",

@@ -95,7 +95,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                             checked={state.isHuman}
                                                             onChange={manager.start}
                                                             themeColor={themeColor}
-                                                            labelText={'I am so human'}
+                                                            labelText={'I am human'}
                                                         ></Checkbox>
                                                     )}
                                                 </div>

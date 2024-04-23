@@ -25,6 +25,18 @@
         "react-router-dom": "^6.22.3",
         "web-vitals": "^2.1.4"
     },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
+    },
     "devDependencies": {
         "@prosopo/cli": "0.3.38",
         "@prosopo/config": "0.3.38",
