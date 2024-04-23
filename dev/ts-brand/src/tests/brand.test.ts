@@ -1,5 +1,5 @@
-import { describe, test, it, expect, expectTypeOf } from 'vitest'
 import { Brand, brand, brandClass, brandKey, getBrand, unbrand } from '../index.js'
+import { describe, expect, expectTypeOf, test } from 'vitest'
 
 export type IfEquals<X, Y, A = X, B = never> =
   (<T>() => T extends X ? 1 : 2) extends
