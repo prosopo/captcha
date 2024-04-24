@@ -44,7 +44,7 @@
         "zod": "^3.22.4"
     },
     "overrides": {
-        "@polkadot/keyring": "12.6.1"
+        "@polkadot/keyring": "12.6.2"
     },
     "devDependencies": {
         "@esm-bundle/chai": "^4.3.4-fix.0",

@@ -11,8 +11,8 @@
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
-        "@polkadot/extension-dapp": "0.46.6",
-        "@polkadot/extension-inject": "0.46.6",
+        "@polkadot/extension-dapp": "0.46.9",
+        "@polkadot/extension-inject": "0.46.9",
         "@prosopo/common": "0.3.38",
         "@prosopo/procaptcha": "0.3.38",
         "@prosopo/procaptcha-frictionless": "0.3.38",
@@ -24,6 +24,18 @@
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.22.3",
         "web-vitals": "^2.1.4"
+    },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
     },
     "devDependencies": {
         "@prosopo/cli": "0.3.38",
