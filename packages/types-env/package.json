@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/types-env",
-    "version": "0.3.38",
+    "version": "0.3.39",
     "description": "Types for prosopo environment",
     "main": "dist/index.js",
     "type": "module",
@@ -39,9 +39,9 @@
     "dependencies": {
         "@polkadot/keyring": "12.6.2",
         "@polkadot/types": "10.13.1",
-        "@prosopo/common": "0.3.38",
-        "@prosopo/types": "0.3.38",
-        "@prosopo/types-database": "0.3.38"
+        "@prosopo/common": "0.3.39",
+        "@prosopo/types": "0.3.39",
+        "@prosopo/types-database": "0.3.39"
     },
     "devDependencies": {
         "tslib": "2.6.2",
