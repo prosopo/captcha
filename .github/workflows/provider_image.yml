@@ -184,7 +184,7 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider mock container runs
               run: |
-                  CONTAINER=$(docker run -p 9229:9229 prosopo/provider-mock:dev)
+                  CONTAINER=$(docker run -d -p 9229:9229 prosopo/provider-mock:dev)
                   sleep 10s
                   docker logs $CONTAINER >& provider-mock.log
                   echo $(cat provider.log)
