@@ -578,6 +578,12 @@ jobs:
                   push: true
                   tags: prosopo/provider:${{ steps.next_version.outputs.version }},prosopo/provider:latest
 
+            - name: Build the provider-mock package
+              id: build_provider_mock_package
+              run: |
+                  echo "Building the provider-mock package..."
+                  npm run -w @prosopo/provider-mock build
+
             - name: Build and push the Provider Mock Container
               if: steps.check_version_docker_js_server.outputs.bump == 'true'
               id: publish_docker_provider_mock
