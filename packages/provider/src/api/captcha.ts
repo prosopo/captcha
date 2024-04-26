@@ -142,27 +142,24 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { errorCode: 400, error: err } }))
         }
         try {
+            const failedVerificationResponse: VerificationResponse = {
+                [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                [ApiParams.verified]: false,
+            }
             const solution = await (parsed.commitmentId
                 ? tasks.getDappUserCommitmentById(parsed.commitmentId)
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
-                return res.json({
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
-                    [ApiParams.verified]: false,
-                })
+                return res.json(failedVerificationResponse)
             }
 
             if (parsed.maxVerifiedTime) {
                 const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
                 const blockTimeMs = getBlockTimeMs(tasks.contract.api)
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
-                const verificationResponse: VerificationResponse = {
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
-                    [ApiParams.verified]: false,
-                }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
-                    return res.json(verificationResponse)
+                    return res.json(failedVerificationResponse)
                 }
             }
 

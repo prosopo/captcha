@@ -11,7 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, ApiPaths, ImageVerificationResponse, VerifySolutionBody } from '@prosopo/types'
+import {
+    ApiParams,
+    ApiPaths,
+    ImageVerificationResponse,
+    VerificationResponse,
+    VerifySolutionBody,
+} from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
 import { VerifySolutionBodyType } from '@prosopo/types'
 import express, { Router } from 'express'
@@ -63,11 +69,11 @@ export function prosopoRouter(): Router {
                 }
                 return res.json(response)
             }
-
-            return res.json({
+            const verificationResponse: VerificationResponse = {
                 [ApiParams.status]: req.t(statusMessage),
                 [ApiParams.verified]: false,
-            })
+            }
+            return res.json(verificationResponse)
         } catch (err) {
             return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
         }
