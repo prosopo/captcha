@@ -634,7 +634,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
-     * @description Mark a pending requet as used
+     * @description Mark a pending request as used
      */
     async updateDappUserPendingStatus(requestHash: string): Promise<void> {
         if (!isHex(requestHash)) {
