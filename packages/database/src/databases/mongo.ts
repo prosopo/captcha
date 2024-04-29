@@ -634,9 +634,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
-     * @description Update a Dapp User's pending record
+     * @description Mark a pending requet as used
      */
-    async updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void> {
+    async updateDappUserPendingStatus(requestHash: string): Promise<void> {
         if (!isHex(requestHash)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', {
                 context: { failedFuncName: this.updateDappUserPendingStatus.name, requestHash },
@@ -647,10 +647,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             { requestHash: requestHash },
             {
                 $set: {
-                    accountId: userAccount,
                     pending: false,
-                    approved: approve,
-                    requestHash,
                 },
             },
             { upsert: true }

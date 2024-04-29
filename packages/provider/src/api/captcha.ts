@@ -147,6 +147,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
+                tasks.logger.debug('Not verified - no solution found')
                 return res.json({
                     [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
                     [ApiParams.verified]: false,
@@ -162,6 +163,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                     [ApiParams.verified]: false,
                 }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
+                    tasks.logger.debug('Not verified - time run out')
                     return res.json(verificationResponse)
                 }
             }
