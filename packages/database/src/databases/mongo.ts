@@ -791,7 +791,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord[]> {
         const docs: UserCommitmentRecord[] | null | undefined = await this.tables?.commitment
-            ?.find({ userAccount })
+            // sort by most recent first to avoid old solutions being used in development
+            ?.find({ userAccount }, { _id: 0 }, { sort: { _id: -1 } })
             .lean()
 
         return docs ? (docs as UserCommitmentRecord[]) : []
