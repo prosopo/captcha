@@ -98,9 +98,9 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
     function onCaptchaVerified(output) {
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
-    
+
     // Get the Element using elementId
-    const captchaContainer = document.getElementById('procaptcha-container');
+    const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
     window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
@@ -118,7 +118,7 @@ following fields:
 | Key                    | Type     | Description                                                                                              | Required |
 | ---------------------- | -------- | -------------------------------------------------------------------------------------------------------- | -------- |
 | siteKey                | string   | The site key of your application / website. This is required.                                            | ✓        |
-| callback               | function | The function that will be called when the CAPTCHA is verified.                        | ✗        |
+| callback               | function | The function that will be called when the CAPTCHA is verified.                                           | ✗        |
 | theme                  | string   | The theme of the CAPTCHA widget. The default is `light`. The other option is `dark`.                     | ✗        |
 | captchaType            | string   | The type of CAPTCHA to render. The default is `frictionless`. Other options are `image`, `pow`.          | ✗        |
 | chalexpired-callback   | string   | The name of the window function that will be called when the CAPTCHA challenge expires.                  | ✗        |
@@ -274,7 +274,7 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
     // Get the Element using elementId
-    const captchaContainer = document.getElementById('procaptcha-container');
+    const captchaContainer = document.getElementById('procaptcha-container')
     window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
@@ -304,7 +304,7 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
     // Get the Element using elementId
-    const captchaContainer = document.getElementById('procaptcha-container');
+    const captchaContainer = document.getElementById('procaptcha-container')
     window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
@@ -333,7 +333,7 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
     // Get the Element using elementId
-    const captchaContainer = document.getElementById('procaptcha-container');
+    const captchaContainer = document.getElementById('procaptcha-container')
     window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
