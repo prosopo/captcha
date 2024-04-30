@@ -115,7 +115,7 @@
         "typedoc-plugin-mdn-links": "^3.1.16",
         "typedoc-plugin-missing-exports": "^2.2.0",
         "typedoc-plugin-zod": "^1.1.2",
-        "typescript": "5.1.6"
+        "typescript": "^5.1.6"
     },
     "description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
     "bugs": {
