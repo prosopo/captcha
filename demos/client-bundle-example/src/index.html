@@ -36,15 +36,17 @@
             import { render } from './assets/procaptcha.bundle.js'
 
             // Define a callback function to be called when the CAPTCHA is verified
-            window.onCaptchaVerified = function (output) {
+            function onCaptchaVerified(output) {
                 console.log('Captcha verified, output: ' + JSON.stringify(output))
             }
 
+            // Get the Element using elementId
+            const captchaContainer = document.getElementById('procaptcha-container');
             // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
-            render('procaptcha-container', {
+            render(captchaContainer, {
                 siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
                 theme: 'dark',
-                callback: 'onCaptchaVerified',
+                callback: onCaptchaVerified,
             })
         </script>
     </body>
