@@ -111,7 +111,7 @@ const renderLogic = (
     config: ProcaptchaClientConfigInput,
     renderOptions?: ProcaptchaRenderOptions
 ) => {
-    elements.forEach((element) => { // || element.getAttribute('data-callback')
+    elements.forEach((element) => {
         const callbackName = renderOptions?.callback
         const chalExpiredCallbackName =
             renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
@@ -197,12 +197,6 @@ const implicitRender = () => {
 // Explicit render for targeting specific elements
 export const render = (element: Element, renderOptions: ProcaptchaRenderOptions) => {
     const siteKey = renderOptions.siteKey
-    // const element = document.getElementById(elementId)
-
-    if (!element) {
-        console.error('Element not found:', element)
-        return
-    }
 
     renderLogic([element], getConfig(siteKey), renderOptions)
 }
