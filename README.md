@@ -95,15 +95,17 @@ An `onload` event is added to the script tag to call the render function when th
 // A function that will call the render Procaptcha function when the procaptcha script has loaded
 document.getElementById('procaptcha-script').addEventListener('load', function () {
     // Define a callback function to be called when the CAPTCHA is verified
-    window.onCaptchaVerified = function (output) {
+    function onCaptchaVerified(output) {
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
 
+    // Get the Element using elementId
+    const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
-    window.procaptcha.render('procaptcha-container', {
+    window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
-        callback: 'onCaptchaVerified',
+        callback: onCaptchaVerified,
     })
 })
 ```
@@ -113,18 +115,18 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
 The `Procaptcha.render()` function takes an options object as its second argument. The options object can contain the
 following fields:
 
-| Key                    | Type   | Description                                                                                              | Required |
-| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------- | -------- |
-| siteKey                | string | The site key of your application / website. This is required.                                            | ✓        |
-| callback               | string | The name of the window function that will be called when the CAPTCHA is verified.                        | ✗        |
-| theme                  | string | The theme of the CAPTCHA widget. The default is `light`. The other option is `dark`.                     | ✗        |
-| captchaType            | string | The type of CAPTCHA to render. The default is `frictionless`. Other options are `image`, `pow`.          | ✗        |
-| chalexpired-callback   | string | The name of the window function that will be called when the CAPTCHA challenge expires.                  | ✗        |
-| error-callback         | string | The name of the window function that will be called when an error occurs.                                | ✗        |
-| close-callback         | string | The name of the window function that will be called when the CAPTCHA is closed.                          | ✗        |
-| open-callback          | string | The name of the window function that will be called when the CAPTCHA is opened.                          | ✗        |
-| expired-callback       | string | The name of the window function that will be called when the CAPTCHA solution expires.                   | ✗        |
-| challenge-valid-length | number | The amount of time, in milliseconds, a successful CAPTCHA challenge is valid for. Defaults to 2 minutes. | ✗        |
+| Key                    | Type     | Description                                                                                              | Required |
+| ---------------------- | -------- | -------------------------------------------------------------------------------------------------------- | -------- |
+| siteKey                | string   | The site key of your application / website. This is required.                                            | ✓        |
+| callback               | function | The function that will be called when the CAPTCHA is verified.                                           | ✗        |
+| theme                  | string   | The theme of the CAPTCHA widget. The default is `light`. The other option is `dark`.                     | ✗        |
+| captchaType            | string   | The type of CAPTCHA to render. The default is `frictionless`. Other options are `image`, `pow`.          | ✗        |
+| chalexpired-callback   | string   | The name of the window function that will be called when the CAPTCHA challenge expires.                  | ✗        |
+| error-callback         | string   | The name of the window function that will be called when an error occurs.                                | ✗        |
+| close-callback         | string   | The name of the window function that will be called when the CAPTCHA is closed.                          | ✗        |
+| open-callback          | string   | The name of the window function that will be called when the CAPTCHA is opened.                          | ✗        |
+| expired-callback       | string   | The name of the window function that will be called when the CAPTCHA solution expires.                   | ✗        |
+| challenge-valid-length | number   | The amount of time, in milliseconds, a successful CAPTCHA challenge is valid for. Defaults to 2 minutes. | ✗        |
 
 The same options can be passed to the implicit rendering method by adding them as data attributes to the `.procaptcha`.
 For example, to set the theme to dark, you would add `data-theme="dark"` to the `.procaptcha` container.
@@ -268,13 +270,15 @@ setting.
 
 ```javascript
 document.getElementById('procaptcha-script').addEventListener('load', function () {
-    window.onCaptchaVerified = function (output) {
+    function onCaptchaVerified(output) {
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
-    window.procaptcha.render('procaptcha-container', {
+    // Get the Element using elementId
+    const captchaContainer = document.getElementById('procaptcha-container')
+    window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
-        callback: 'onCaptchaVerified',
+        callback: onCaptchaVerified,
         captchaType: 'frictionless', // can also be omitted
     })
 })
@@ -296,13 +300,15 @@ the `captchaType` to `pow`.
 
 ```javascript
 document.getElementById('procaptcha-script').addEventListener('load', function () {
-    window.onCaptchaVerified = function (output) {
+    function onCaptchaVerified(output) {
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
-    window.procaptcha.render('procaptcha-container', {
+    // Get the Element using elementId
+    const captchaContainer = document.getElementById('procaptcha-container')
+    window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
-        callback: 'onCaptchaVerified',
+        callback: onCaptchaVerified,
         captchaType: 'pow',
     })
 })
@@ -323,13 +329,15 @@ to `image`.
 
 ```javascript
 document.getElementById('procaptcha-script').addEventListener('load', function () {
-    window.onCaptchaVerified = function (output) {
+    function onCaptchaVerified(output) {
         console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
-    window.procaptcha.render('procaptcha-container', {
+    // Get the Element using elementId
+    const captchaContainer = document.getElementById('procaptcha-container')
+    window.procaptcha.render(captchaContainer, {
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
-        callback: 'onCaptchaVerified',
+        callback: onCaptchaVerified,
         captchaType: 'image',
     })
 })
