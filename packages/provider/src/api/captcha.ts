@@ -151,6 +151,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
+                tasks.logger.debug('Not verified - no solution found')
                 return res.json(failedVerificationResponse)
             }
 
@@ -159,6 +160,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 const blockTimeMs = getBlockTimeMs(tasks.contract.api)
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
+                    tasks.logger.debug('Not verified - time run out')
                     return res.json(failedVerificationResponse)
                 }
             }
