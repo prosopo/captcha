@@ -77,6 +77,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         dapp: AccountId,
         userAccount: AccountId,
         blockNumber: number,
+        // dappSignature: string,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
@@ -93,6 +94,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         if (maxVerifiedTime) {
             payload['maxVerifiedTime'] = maxVerifiedTime
         }
+        console.log('------------------------------')
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 
@@ -106,6 +108,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         dappAccount: AccountId,
         randomProvider: RandomProvider,
         nonce: number
+        // dappSignature: string
     ): Promise<PowCaptchaSolutionResponse> {
         const { blockNumber } = randomProvider
         const body: SubmitPowCaptchaSolutionBodyType = {
@@ -118,6 +121,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             [ApiParams.dapp]: dappAccount.toString(),
             [ApiParams.nonce]: nonce,
         }
+        console.log('------------------------------')
         return this.post(ApiPaths.SubmitPowCaptchaSolution, body)
     }
 
