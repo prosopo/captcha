@@ -31,7 +31,7 @@ interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
     captchaType?: Features
-    callback?: string
+    callback?: (payload: ProcaptchaOutput) => void
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string
     'expired-callback'?: string
@@ -112,7 +112,7 @@ const renderLogic = (
     renderOptions?: ProcaptchaRenderOptions
 ) => {
     elements.forEach((element) => {
-        const callbackName = renderOptions?.callback || element.getAttribute('data-callback')
+        const callbackName = renderOptions?.callback
         const chalExpiredCallbackName =
             renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
         const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
@@ -141,7 +141,7 @@ const renderLogic = (
             },
         }
 
-        if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
+        if (callbackName) callbacks.onHuman = renderOptions?.callback as any // Assuming the callback is set correctly
         if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
         if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
         if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
@@ -195,14 +195,8 @@ const implicitRender = () => {
 }
 
 // Explicit render for targeting specific elements
-export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
+export const render = (element: Element, renderOptions: ProcaptchaRenderOptions) => {
     const siteKey = renderOptions.siteKey
-    const element = document.getElementById(elementId)
-
-    if (!element) {
-        console.error('Element not found:', elementId)
-        return
-    }
 
     renderLogic([element], getConfig(siteKey), renderOptions)
 }
