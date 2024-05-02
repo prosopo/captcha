@@ -6,17 +6,21 @@ import z from 'zod';
 const app = express();
 const port = 3000;
 
+app.get('/ok', (req: Request, res: Response) => {
+    res.sendStatus(418)
+})
+
 app.use((req: Request, res: Response, next) => {
     // check if the api key is set
     if (!req.headers['x-api-key']) {
-        res.status(401).send('Unauthorized');
+        res.sendStatus(401);
         return;
     }
     // get the api key from headers
     const apiKey = req.headers['x-api-key'];
     // check if the api key is valid
     if (apiKey !== '123456') { // TODO move to env
-        res.status(403).send('Forbidden');
+        res.sendStatus(403);
         return;
     }
 
