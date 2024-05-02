@@ -355,6 +355,8 @@ export class Tasks {
         const userSignature = hexToU8a(signature)
         const blockNumber = await getCurrentBlockNumber(this.contract.api)
         if (pendingRequest) {
+            // prevent this request hash from being used twice
+            await this.db.updateDappUserPendingStatus(requestHash)
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
                 userAccount: userAccount,

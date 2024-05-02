@@ -247,7 +247,7 @@ export interface Database {
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 
-    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>
+    updateDappUserPendingStatus(requestHash: string): Promise<void>
 
     getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>
 
