@@ -2,6 +2,9 @@ import express, { Request, Response } from 'express';
 import fs from 'fs';
 import bodyParser from 'body-parser';
 import z from 'zod';
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const app = express();
 const port = 3000;
