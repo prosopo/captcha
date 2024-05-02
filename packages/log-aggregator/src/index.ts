@@ -9,6 +9,17 @@ dotenv.config()
 const app = express();
 const port = 3000;
 
+const logDir = process.env.LOG_DIR || 'logs'
+let logFileStart = new Date()
+
+const nextLogFileName = () => {
+    // 
+}
+
+const rotateLogFile = () => {
+
+}
+
 app.get('/ok', (req: Request, res: Response) => {
     res.sendStatus(418)
 })
