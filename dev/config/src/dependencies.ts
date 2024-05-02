@@ -33,6 +33,10 @@ async function getPackageDir(packageName: string): Promise<string> {
         pkg = `@prosopo/${packageName}`
     }
     const pkgCommand = `npm list ${pkg} -ap`
+    // DEBUG
+    console.log(pkgCommand)
+    console.log(path.resolve('.'))
+    // END DEBUG
     logger.info(`Running command ${pkgCommand}`)
     // get package directory
     const { stdout: packageDir, stderr } = await exec(pkgCommand)
