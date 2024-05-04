@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { handleErrors } from '@prosopo/cli'
+import { handleErrors } from '@prosopo/provider'
 import { i18nMiddleware } from '@prosopo/common'
 import { prosopoRouter } from './api.js'
 import cors from 'cors'
