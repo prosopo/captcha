@@ -215,7 +215,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
         try {
-            console.log(req.body)
             const { user, dapp } = GetPowCaptchaChallengeRequestBody.parse(req.body)
 
             const origin = req.headers.origin
