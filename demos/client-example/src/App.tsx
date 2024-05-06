@@ -22,6 +22,7 @@ import {
 import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { getServerUrl } from '@prosopo/server'
 import { useState } from 'react'
 
 const corsHeaders = {
@@ -55,12 +56,11 @@ function App(props: AppProps) {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL
-            ? `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT || 9228}`
-            : 'http://localhost:9228',
+        serverUrl: getServerUrl(),
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
+    console.log(config)
 
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'

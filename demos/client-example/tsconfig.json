@@ -11,7 +11,13 @@
             "path": "../../packages/procaptcha-react"
         },
         {
+            "path": "../../packages/procaptcha-frictionless"
+        },
+        {
             "path": "../../packages/cli"
+        },
+        {
+            "path": "../../packages/types"
         },
         {
             "path": "../../dev/config"
