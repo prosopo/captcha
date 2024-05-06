@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from './components/Captcha.js'
 export * from './components/ProcaptchaPoW.js'
+export * from './Services/SolverService.js'

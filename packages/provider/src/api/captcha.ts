@@ -21,6 +21,7 @@ import {
     CaptchaSolutionResponse,
     CaptchaWithProof,
     DappUserSolutionResult,
+    GetPowCaptchaChallengeRequestBody,
     ImageVerificationResponse,
     PowCaptchaSolutionResponse,
     ServerPowCaptchaVerifyRequestBody,
@@ -214,13 +215,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
         try {
-            const { userAccount, dappAccount } = req.body
-            // Assert that the user and dapp accounts are strings
-            if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
-                throw new ProsopoApiError('API.BAD_REQUEST', {
-                    context: { code: 400, error: 'userAccount and dappAccount must be strings' },
-                })
-            }
+            console.log(req.body)
+            const { user, dapp } = GetPowCaptchaChallengeRequestBody.parse(req.body)
+
             const origin = req.headers.origin
 
             if (!origin) {
@@ -229,7 +226,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 })
             }
 
-            const challenge = await tasks.getPowCaptchaChallenge(userAccount, dappAccount, origin)
+            const challenge = await tasks.getPowCaptchaChallenge(user, dapp, origin)
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)

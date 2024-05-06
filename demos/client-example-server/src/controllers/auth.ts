@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams } from '@prosopo/types'
+import { ApiParams, ProcaptchaOutputSchema } from '@prosopo/types'
 import { Connection } from 'mongoose'
 import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
@@ -23,6 +23,8 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
+
+const PROSOPO_VERIFY_ENDPOINT = process.env.PROSOPO_VERIFY_ENDPOINT || 'https://api.prosopo.io/siteverify'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -54,7 +56,20 @@ const signup = async (
             return res.status(409).json({ message: 'email already exists' })
         }
         console.log('payload', payload)
-        if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+
+        // get the contents of the procaptcha-response JSON data
+        const data = ProcaptchaOutputSchema.parse(payload[ApiParams.procaptchaResponse])
+
+        console.log('sending data', data)
+
+        // send a POST application/json request to the API endpoint
+        const response = await fetch(PROSOPO_VERIFY_ENDPOINT, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        })
+        const jsonResponse = await response.json()
+
+        if (jsonResponse.verified) {
             // salt
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
