@@ -24,7 +24,18 @@ import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 
+enum ProsopoVerificationType {
+    api = 'api',
+    local = 'local',
+}
+
 const PROSOPO_VERIFY_ENDPOINT = process.env.PROSOPO_VERIFY_ENDPOINT || 'https://api.prosopo.io/siteverify'
+
+const PROSOPO_VERIFICATION_TYPE: ProsopoVerificationType = Object.keys(ProsopoVerificationType).includes(
+    process.env.PROSOPO_VERIFICATION_TYPE as string
+)
+    ? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
+    : ProsopoVerificationType.api
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -62,14 +73,21 @@ const signup = async (
 
         console.log('sending data', data)
 
-        // send a POST application/json request to the API endpoint
-        const response = await fetch(PROSOPO_VERIFY_ENDPOINT, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        })
-        const jsonResponse = await response.json()
+        let verified = false
 
-        if (jsonResponse.verified) {
+        if (PROSOPO_VERIFICATION_TYPE === ProsopoVerificationType.api) {
+            // send a POST application/json request to the API endpoint
+            const response = await fetch(PROSOPO_VERIFY_ENDPOINT, {
+                method: 'POST',
+                body: JSON.stringify(data),
+            })
+            verified = (await response.json()).verified
+        } else {
+            // verify using the TypeScript library
+            verified = await prosopoServer.isVerified(data)
+        }
+
+        if (verified) {
             // salt
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
