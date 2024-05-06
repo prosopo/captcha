@@ -52,7 +52,7 @@ export function getPair(
         return keyring.addFromAddress(account)
     } else if (secret) {
         if (mnemonicValidate(secret)) {
-            return keyring.addFromUri(secret)
+            return keyring.addFromMnemonic(secret)
         }
         if (isHex(secret)) {
             return keyring.addFromSeed(hexToU8a(secret))
