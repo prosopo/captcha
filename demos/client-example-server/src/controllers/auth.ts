@@ -76,7 +76,8 @@ const signup = async (
         let verified = false
 
         if (PROSOPO_VERIFICATION_TYPE === ProsopoVerificationType.api) {
-            // send a POST application/json request to the API endpoint
+            // verify using the API endpoint
+
             const response = await fetch(PROSOPO_VERIFY_ENDPOINT, {
                 method: 'POST',
                 body: JSON.stringify(data),
@@ -84,6 +85,7 @@ const signup = async (
             verified = (await response.json()).verified
         } else {
             // verify using the TypeScript library
+
             verified = await prosopoServer.isVerified(data)
         }
 

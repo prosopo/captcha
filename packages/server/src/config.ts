@@ -18,7 +18,6 @@ export const getServerConfig = () =>
         defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT, // enviromental variables
         defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
         serverUrl:
-            // https://github.com/prosopo/captcha/issues/701
             process.env.PROSOPO_SERVER_URL && process.env.PROSOPO_SERVER_PORT
                 ? `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT}`
                 : 'http://localhost:9228',
