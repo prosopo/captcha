@@ -69,6 +69,7 @@ async function main() {
     const config = getServerConfig()
 
     console.log('config', config)
+    console.log(config.networks[config.defaultNetwork])
     const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
     const prosopoServer = new ProsopoServer(config, pair)
 
