@@ -159,7 +159,7 @@ data contains the following fields:
 | user         | string | The user's account address                                                                                                    |
 | blockNumber  | number | The block number of the captcha challenge. This is used to verify that the contacted provider was randomly selected on-chain. |
 
-## Add the Procaptcha Widget to your site with React
+### Add the Procaptcha Widget to your site with React
 
 You must import Procaptcha, define a config with ProcaptchaConfigSchema, optionally define callbacks, and render via the Procaptcha component. A minimal example would be as follows:
 
