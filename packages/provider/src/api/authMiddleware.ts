@@ -81,7 +81,11 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
 }
 
 const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
+    console.log('----------------------- verifySignature ----------------------------')
+    console.log(verifySignature)
+    console.log(signature)
     const u8Sig = hexToU8a(signature)
+    console.log(u8Sig)
 
     if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {
         throw new ProsopoApiError('GENERAL.INVALID_SIGNATURE', { context: { error: 'Signature verification failed' } })

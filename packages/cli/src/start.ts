@@ -17,7 +17,7 @@ import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { i18nMiddleware } from '@prosopo/common'
 import { loadEnv } from './env.js'
-import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
+import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express from 'express'
 import getConfig from './prosopo.config.js'
@@ -31,6 +31,7 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+    apiApp.use(prosopoVerifyRouter(env))
 
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
@@ -53,6 +54,9 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
             solved: { count: 2 },
             unsolved: { count: 0 },
         })
+
+        console.log('----------------- secret -----------------')
+        console.log(secret)
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }

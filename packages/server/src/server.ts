@@ -199,14 +199,27 @@ export class ProsopoServer {
         commitmentId?: string,
         maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
     ) {
-        this.logger.info('Verifying with provider.')
+        const blockNumberString = blockNumber.toString()
+        const dappUserSignature = this.pair?.sign(blockNumberString)
+        if (!dappUserSignature) {
+            throw new Error('Failed to sign the block number')
+        }
+        const signatureHex = Buffer.from(dappUserSignature).toString('hex')
+
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
             const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
-        const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
+        const result = await providerApi.verifyDappUser(
+            dapp,
+            user,
+            blockNumber,
+            commitmentId,
+            maxVerifiedTime,
+            signatureHex
+        )
         const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
         return result.verified && verifyRecency
     }
@@ -233,6 +246,7 @@ export class ProsopoServer {
             // }
 
             // If we have a providerURL and a blockNumber, we verify with the provider
+
             return await this.verifyProvider(
                 providerUrl,
                 dapp,
