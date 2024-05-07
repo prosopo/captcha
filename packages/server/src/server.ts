@@ -166,17 +166,22 @@ export class ProsopoServer {
      * @param maxVerifiedTime
      */
     public async verifyContract(user: string, maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CONTRACT) {
-        const contractApi = await this.getContractApi()
-        this.logger.info('Provider URL not provided. Verifying with contract.')
-        const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-            .unwrap()
-            .unwrap()
-            .before.valueOf()
-        const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
-        const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-            .unwrap()
-            .unwrap()
-        return isHuman && verifyRecency
+        try {
+            const contractApi = await this.getContractApi()
+            this.logger.info('Provider URL not provided. Verifying with contract.')
+            const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+                .unwrap()
+                .unwrap()
+                .before.valueOf()
+            const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
+            const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+                .unwrap()
+                .unwrap()
+            return isHuman && verifyRecency
+        } catch (error) {
+            // if a user is not in the contract it errors, suppress this error and return false
+            return false
+        }
     }
 
     /**
