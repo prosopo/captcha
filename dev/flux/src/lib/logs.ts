@@ -86,19 +86,23 @@ export const main = async (
                 lineCount
             )
 
-            if (!callbacks) {
+            if (!callbacks || Object.keys(callbacks).length === 0) {
                 return {
                     url: ip.href,
                     logs,
                 }
             }
 
-            const customLogs = 
+            const customLogs: Record<string, string> = {}
+            for (const [key, callback] of Object.entries(callbacks)) {
+                customLogs[key] = callback(logs)
+            }
 
             // Get the logs for the app
             return {
                 url: ip.href,
                 logs,
+                ...customLogs,
             }
         })
 
