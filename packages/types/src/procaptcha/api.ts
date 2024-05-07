@@ -13,7 +13,7 @@
 // limitations under the License.
 import { CaptchaResponseBody } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
-import { IProsopoCaptchaContract } from '../contract/interface.js'
+import { IProsopoCaptchaContract } from '../contract/index.js'
 import { ProviderApiInterface } from '../api/index.js'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'

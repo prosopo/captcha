@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: ./docker/images/provider.dockerfile
     env_file:
-      - ../.env.rococo
+      - ../.env.production
     ports:
       - "9229:9229"
     tty: true
@@ -23,7 +23,7 @@ services:
     ports:
       - "27017:27017"
     env_file:
-      - ../.env.rococo
+      - ../.env.production
     networks:
       - internal
   caddy:
@@ -34,7 +34,7 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./docker/provider.Caddyfile:/etc/caddy/Caddyfile
+      - ./provider.Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
     networks:

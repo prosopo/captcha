@@ -147,6 +147,11 @@ export const Manager = (
 
         resetState()
 
+        // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+        updateState({
+            loading: true,
+        })
+
         const config = getConfig()
 
         // check if account exists in extension
@@ -155,9 +160,8 @@ export const Manager = (
         // use the passed in account (could be web3) or create a new account
         const userAccount = config.userAccountAddress || (await ext.getAccount(config)).account.address
 
-        // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+        // set the account created or injected by the extension
         updateState({
-            loading: true,
             account: { account: { address: userAccount } },
         })
 

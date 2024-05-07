@@ -32,6 +32,8 @@ export const EnvironmentTypesSchema = zEnum(['development', 'staging', 'producti
 
 export type EnvironmentTypes = zInfer<typeof EnvironmentTypesSchema>
 
+const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
+
 export const DatabaseConfigSchema = record(
     EnvironmentTypesSchema,
     object({
@@ -145,7 +147,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
     object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
-        challengeValidLength: number().positive().optional(),
+        challengeValidLength: number().positive().optional().default(DEFAULT_MAX_VERIFIED_TIME_CACHED),
     })
 )
 

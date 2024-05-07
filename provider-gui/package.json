@@ -1,12 +1,13 @@
 {
     "name": "@prosopo/provider-gui",
-    "version": "0.3.5",
+    "version": "0.3.39",
     "private": false,
     "engines": {
         "node": ">=18",
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "dev": "next dev -p 9231",
         "build": "next build",
         "clean": "rm -rf .next",
@@ -25,20 +26,32 @@
         "@mui/system": "^5.9.1",
         "@mui/x-data-grid": "^5.9.1",
         "@polkadot/util": "12.6.2",
-        "@polkadot/extension-dapp": "0.46.6",
-        "@polkadot/extension-inject": "0.46.6",
-        "@polkadot/api": "10.11.2",
-        "@prosopo/common": "0.3.5",
-        "@prosopo/contract": "0.3.5",
-        "@prosopo/util": "0.3.5",
-        "@prosopo/captcha-contract": "0.3.5",
-        "@prosopo/types": "0.3.5",
-        "@prosopo/api": "0.3.5",
-        "@prosopo/cli": "0.3.5",
-        "@prosopo/env": "0.3.5",
-        "@prosopo/provider": "0.3.5",
+        "@polkadot/extension-dapp": "0.46.9",
+        "@polkadot/extension-inject": "0.46.9",
+        "@polkadot/api": "10.13.1",
+        "@prosopo/common": "0.3.39",
+        "@prosopo/contract": "0.3.39",
+        "@prosopo/util": "0.3.39",
+        "@prosopo/captcha-contract": "0.3.39",
+        "@prosopo/types": "0.3.39",
+        "@prosopo/api": "0.3.39",
+        "@prosopo/cli": "0.3.39",
+        "@prosopo/env": "0.3.39",
+        "@prosopo/provider": "0.3.39",
         "next": "14.0.1",
         "react": "18.2.0"
+    },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
     },
     "devDependencies": {
         "@types/react": "18.2.33",

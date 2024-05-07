@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util'
 import {
     ContractAbi,
     NetworkConfig,
@@ -23,12 +22,15 @@ import {
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getBlockTimeMs, getCurrentBlockNumber, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
+
+export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
+export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
@@ -113,11 +115,6 @@ export class ProsopoServer {
         return this.contract
     }
 
-    async getViableHistoricBlockCount(maxVerifiedTime?: number): Promise<number> {
-        const expectedBlockTime = getExpectedBlockTime(this.getApi())
-        return new BN(maxVerifiedTime || 60000).div(expectedBlockTime).toNumber()
-    }
-
     /**
      * Check if the provider was actually chosen at blockNumber.
      * - If no blockNumber is provided, check the last `n` blocks where `n` is the number of blocks that fit in
@@ -127,41 +124,91 @@ export class ProsopoServer {
      * @param dapp
      * @param providerUrl
      * @param blockNumber
-     * @param maxVerifiedTime
      * @returns
      */
-    async checkRandomProvider(
-        user: string,
-        dapp: string,
-        providerUrl?: string,
-        blockNumber?: number,
-        maxVerifiedTime?: number
-    ) {
+    async checkRandomProvider(user: string, dapp: string, providerUrl: string, blockNumber: number) {
+        const block = await this.getApi().rpc.chain.getBlockHash(blockNumber)
         // Check if the provider was actually chosen at blockNumber
-        let blocksToCheck: number[] = []
-        if (blockNumber) {
-            blocksToCheck = [blockNumber]
-        } else {
-            const numberOfHistoricBlocksToCheck = await this.getViableHistoricBlockCount(maxVerifiedTime)
-            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
-            blocksToCheck = Array.from(
-                { length: numberOfHistoricBlocksToCheck },
-                (_, index) => currentBlockNumber - index
-            )
+        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
+            block,
+            'getRandomActiveProvider',
+            [user, dapp]
+        )
+        if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
+            return getRandomProviderResponse.provider
         }
 
-        while (blocksToCheck.length > 0) {
-            const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
-            const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
-                block,
-                'getRandomActiveProvider',
-                [user, dapp]
-            )
-            if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
-                return getRandomProviderResponse.provider
-            }
-        }
         return undefined
+    }
+
+    /**
+     * Verify the time since the blockNumber is equal to or less than the maxVerifiedTime.
+     * @param maxVerifiedTime
+     * @param blockNumber
+     */
+    public async verifyRecency(blockNumber: number, maxVerifiedTime: number) {
+        const contractApi = await this.getContractApi()
+        // Get the current block number
+        const currentBlock = await getCurrentBlockNumber(contractApi.api)
+        // Calculate how many blocks have passed since the blockNumber
+        const blocksPassed = currentBlock - blockNumber
+        // Get the expected block time
+        const blockTime = getBlockTimeMs(contractApi.api)
+        // Check if the time since the last correct captcha is within the limit
+        return blockTime * blocksPassed <= maxVerifiedTime
+    }
+
+    /**
+     * Verify the user with the contract. We check the contract to see if the user has completed a captcha in the
+     * past. If they have, we check the time since the last correct captcha is within the maxVerifiedTime and we check
+     * whether the user is marked as human within the contract.
+     * @param user
+     * @param maxVerifiedTime
+     */
+    public async verifyContract(user: string, maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CONTRACT) {
+        const contractApi = await this.getContractApi()
+        this.logger.info('Provider URL not provided. Verifying with contract.')
+        const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+            .unwrap()
+            .unwrap()
+            .before.valueOf()
+        const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
+        const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+            .unwrap()
+            .unwrap()
+        return isHuman && verifyRecency
+    }
+
+    /**
+     * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
+     * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
+     * @param providerUrl
+     * @param dapp
+     * @param user
+     * @param blockNumber
+     * @param challenge
+     * @param commitmentId
+     * @param maxVerifiedTime
+     */
+    public async verifyProvider(
+        providerUrl: string,
+        dapp: string,
+        user: string,
+        blockNumber: number,
+        challenge?: string,
+        commitmentId?: string,
+        maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
+    ) {
+        this.logger.info('Verifying with provider.')
+        const providerApi = await this.getProviderApi(providerUrl)
+        if (challenge) {
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
+            // We don't care about recency with PoW challenges as they are single use, so just return the verified result
+            return result.verified
+        }
+        const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
+        const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
+        return result.verified && verifyRecency
     }
 
     /**
@@ -172,41 +219,32 @@ export class ProsopoServer {
      */
     public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
-        const contractApi = await this.getContractApi()
 
-        const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
+        if (providerUrl && blockNumber) {
+            // By requiring block number, we load balance requests to the providers by requiring that the random
+            // provider selection should be repeatable. If we have a block number, we check the provider was selected
+            // at that block.
 
-        if (!randomProvider) {
-            this.logger.info('Random provider selection failed')
-            // We have not been able to repeat the provider selection
-            return false
-        }
+            // const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
+            // if (!randomProvider) {
+            //     this.logger.info('Random provider selection failed')
+            //     // We have not been able to repeat the provider selection
+            //     return false
+            // }
 
-        if (providerUrl) {
-            this.logger.info('Random provider is valid. Verifying with provider.')
-            // We can now trust the provider URL as it has been shown to have been randomly selected
-            const providerApi = await this.getProviderApi(providerUrl)
-            if (challenge) {
-                const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
-                return result.verified
-            }
-            const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
-            return result.verified
+            // If we have a providerURL and a blockNumber, we verify with the provider
+            return await this.verifyProvider(
+                providerUrl,
+                dapp,
+                user,
+                blockNumber,
+                challenge,
+                commitmentId,
+                maxVerifiedTime
+            )
         } else {
-            this.logger.info('Provider URL not provided. Verifying with contract.')
-            // Check the time since the last correct captcha is less than the maxVerifiedTime
-            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
-            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-                .unwrap()
-                .unwrap()
-                .before.valueOf()
-            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
-                return false
-            }
-
-            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-                .unwrap()
-                .unwrap()
+            // If we don't have a providerURL, we verify with the contract
+            return await this.verifyContract(user, maxVerifiedTime)
         }
     }
 

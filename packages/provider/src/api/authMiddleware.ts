@@ -16,6 +16,7 @@ import { NextFunction, Request, Response } from 'express'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
+import { getCurrentBlockNumber } from '@prosopo/contract'
 import { hexToU8a, isHex } from '@polkadot/util'
 
 export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
@@ -64,7 +65,7 @@ const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
 
 const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
     const parsedBlockNumber = parseInt(blockNumber)
-    const currentBlockNumber = await tasks.getCurrentBlockNumber()
+    const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
 
     if (
         isNaN(parsedBlockNumber) ||

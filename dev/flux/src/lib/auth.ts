@@ -14,13 +14,14 @@
 import { ProsopoError, getLogger } from '@prosopo/common'
 import { base64Encode } from '@polkadot/util-crypto'
 import { errorHandler } from '../errorHandler.js'
+import { getNodeAPIURL, prefixIPAddress } from './url.js'
 import { loadEnv } from '@prosopo/cli'
 import { sign } from './sep256k1Sign.js'
 import qs from 'qs'
 
 loadEnv()
 const log = getLogger(`Info`, `auth.js`)
-const FLUX_URL = 'https://api.runonflux.io/'
+export const FLUX_URL = new URL('https://api.runonflux.io/')
 
 interface ResponseLoginPhrase {
     status: string
@@ -126,23 +127,11 @@ export const verifyLogin = async (zelid: string, signature: string, loginPhrase:
     return await errorHandler(response)
 }
 
-const getLoginPhrase = async (url?: URL): Promise<string> => {
-    const apiURL = new URL(`${url || FLUX_URL}id/loginphrase`)
+const getLoginPhrase = async (url: URL): Promise<string> => {
+    const apiURL = new URL(`id/loginphrase`, url)
     log.info('Calling:', apiURL.href)
     const response = await fetch(apiURL.toString())
     return (await errorHandler<ResponseLoginPhrase>(response)).data
-}
-
-export const getNodeAPIURL = (nodeUIURL: string) => {
-    if (!nodeUIURL.startsWith('http')) {
-        nodeUIURL = `http://${nodeUIURL}`
-    }
-    const url = new URL(nodeUIURL)
-    if (url.port) {
-        const portLogin = Number(url.port) + 1
-        return new URL(`http://${url.hostname}:${portLogin}`)
-    }
-    return new URL(`http://${url.hostname}:${16187}`)
 }
 
 export const getIndividualFluxAppDetails = async (
@@ -162,9 +151,9 @@ const getFluxOSURLs = async (dappName: string, zelId: string, signature: string,
     return Object.values(data.nodes).map((node) => node.fluxos)
 }
 
-export const getAuth = async (secretKey: Uint8Array) => {
+export const getAuth = async (secretKey: Uint8Array, url: URL) => {
     // Get Flux login phrase
-    const loginPhrase = await getLoginPhrase()
+    const loginPhrase = await getLoginPhrase(url)
     log.info('Login Phrase:', loginPhrase)
 
     const signature = base64Encode(await sign(loginPhrase, { secretKey }))
@@ -185,25 +174,34 @@ const getNode = async (appName: string, zelId: string, signature: string, loginP
         })
     }
     log.info('Node:', node)
-    return node
+    // http as node is an IP address
+    return prefixIPAddress(node)
 }
 
 export async function main(publicKey: string, privateKey: Uint8Array, appName?: string, ip?: string) {
-    let nodeUIURL = ip
-    const { signature, loginPhrase } = await getAuth(privateKey)
+    let nodeUIURL = ip ? prefixIPAddress(ip) : FLUX_URL
 
-    if (appName) {
-        // Get a Flux node if one has not been supplied
-        nodeUIURL = await getNode(appName, publicKey, signature, loginPhrase)
+    if (!ip) {
+        //if a flux ip has not been supplied we will first authenticate with the main flux api
+        const { signature, loginPhrase } = await getAuth(privateKey, nodeUIURL)
+
+        if (appName) {
+            // if an app name has been specified then we are expecting to authenticate with a specific flux node
+            // Get a Flux node if one has not been supplied
+            nodeUIURL = await getNode(appName, publicKey, signature, loginPhrase)
+        } else {
+            // assume we only want authentication with main Flux API
+            return {
+                nodeUIURL: FLUX_URL,
+                nodeAPIURL: new URL(FLUX_URL),
+                nodeLoginPhrase: loginPhrase,
+                nodeSignature: signature,
+            }
+        }
     }
 
-    if (!nodeUIURL) {
-        // assume we only want authentication with main Flux API
-        return { nodeAPIURL: new URL(FLUX_URL), nodeLoginPhrase: loginPhrase, nodeSignature: signature }
-    }
-
-    // Get the admin API URL as it is different from the UI URL
-    const nodeAPIURL = getNodeAPIURL(nodeUIURL)
+    // Get the admin API URL as it is different from the UI URL. This function should only be called once.
+    const nodeAPIURL = getNodeAPIURL(nodeUIURL.href)
 
     // Get a login token from the node
     const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL)
@@ -213,5 +211,5 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName?: 
     const nodeSignature = base64Encode(await sign(nodeLoginPhrase, { secretKey: privateKey }))
     log.info('Node Signature:', nodeSignature)
 
-    return { nodeAPIURL, nodeLoginPhrase, nodeSignature }
+    return { nodeUIURL, nodeAPIURL, nodeLoginPhrase, nodeSignature }
 }
