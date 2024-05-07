@@ -1,6 +1,6 @@
 {
     "name": "tsconfig-checker",
-    "version": "0.3.39",
+    "version": "0.3.40",
     "description": "",
     "private": true,
     "scripts": {
@@ -30,6 +30,6 @@
         "npm": ">=9"
     },
     "dependencies": {
-        "@prosopo/util": "0.3.39"
+        "@prosopo/util": "0.3.40"
     }
 }
