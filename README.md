@@ -181,7 +181,7 @@ const MyApp = () => {
 export default MyApp
 ```
 
-Further example usage can be seen in demos/client-example
+Further example usage can be seen in [demos/client-example](https://github.com/prosopo/captcha/blob/main/demos/client-example/src/App.tsx#L220C1-L223C43)
 
 ### Verify the User `procaptcha-response` data Server Side
 
