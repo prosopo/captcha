@@ -86,7 +86,7 @@ export const main = async (
                 lineCount
             )
 
-            if (!callbacks || Object.keys(callbacks).length === 0) {
+            if (!callbacks) {
                 return {
                     url: ip.href,
                     logs,
