@@ -17,14 +17,20 @@ export const getServerConfig = () =>
     ProsopoServerConfigSchema.parse({
         defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT, // enviromental variables
         defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
-        serverUrl:
-            // https://github.com/prosopo/captcha/issues/701
-            process.env.PROSOPO_SERVER_URL && process.env.PROSOPO_SERVER_PORT
-                ? `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT}`
-                : 'http://localhost:9228',
+        serverUrl: getServerUrl(),
         dappName: process.env.PROSOPO_DAPP_NAME || 'client-example-server',
         account: {
             password: '',
             address: process.env.PROSOPO_SITE_KEY || '',
         },
     })
+
+export const getServerUrl = (): string => {
+    if (process.env.PROSOPO_SERVER_URL) {
+        if (process.env.PROSOPO_SERVER_URL.match(/:\d+/)) {
+            return process.env.PROSOPO_SERVER_URL
+        }
+        return `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT || 9228}`
+    }
+    return 'http://localhost:9228'
+}

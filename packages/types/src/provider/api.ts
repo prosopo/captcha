@@ -148,6 +148,11 @@ export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.dapp]: string(),
 })
 
+export const GetPowCaptchaChallengeRequestBody = object({
+    [ApiParams.user]: string(),
+    [ApiParams.dapp]: string(),
+})
+
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
 
 export const SubmitPowCaptchaSolutionBody = object({
