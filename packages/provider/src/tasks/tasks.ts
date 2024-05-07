@@ -44,7 +44,7 @@ import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Keyring } from '@polkadot/keyring'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery, getPairAsync } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -659,52 +659,21 @@ export class Tasks {
     }
 
     async isDappUserSigned(dappUserSignature: string, blockNumber: number) {
-        this.contract.pair = this.keyring.addPair(this.contract.pair)
-        const staticPublic = Uint8Array.of(
-            76,
-            171,
-            15,
-            219,
-            34,
-            119,
-            72,
-            104,
-            135,
-            66,
-            92,
-            192,
-            103,
-            98,
-            107,
-            236,
-            15,
-            227,
-            98,
-            207,
-            84,
-            171,
-            88,
-            172,
-            161,
-            111,
-            9,
-            72,
-            247,
-            217,
-            214,
-            114
-        )
+        const pair = await getPairAsync(this.config.networks[this.config.defaultNetwork], this.config.account.secret)
+        console.log(this.config.networks[this.config.defaultNetwork])
+        const updatedPair = this.keyring.addPair(pair)
         const blockNumberString = blockNumber.toString()
         const dappUserSignatureString = Buffer.from(dappUserSignature, 'hex')
         console.log('-------------------isDappUserSigned----------------')
-        const publicKey = this.contract.pair?.publicKey
+        const updatedpublicKey = updatedPair?.publicKey
+        const publicKeypair = pair?.publicKey
         console.log(dappUserSignature)
         console.log(blockNumber)
-        console.log(publicKey)
-        const isValidSignature = this.contract.pair?.verify(blockNumberString, dappUserSignatureString, publicKey)
-        console.log(isValidSignature)
+        console.log(updatedpublicKey)
+        console.log(publicKeypair)
+        // const isValidSignature = pair?.verify(blockNumberString, dappUserSignatureString, publicKey)
 
-        return isValidSignature
+        // return isValidSignature
     }
 
     /*

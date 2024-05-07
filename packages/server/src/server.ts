@@ -29,6 +29,8 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
+import { hexToU8a, isHex } from '@polkadot/util'
+
 export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
 export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
 
@@ -202,24 +204,38 @@ export class ProsopoServer {
         const blockNumberString = blockNumber.toString()
         const dappUserSignature = this.pair?.sign(blockNumberString)
         if (!dappUserSignature) {
-            throw new Error('Failed to sign the block number')
+            throw new Error('Failed to sign the block number');
         }
-        const signatureHex = Buffer.from(dappUserSignature).toString('hex')
+        const signatureHex = Buffer.from(dappUserSignature).toString('hex');
 
+        const signatureBase64 = Buffer.from(signatureHex, 'hex');
+
+
+        // console.log(dappUserSignature)
+        // console.log(signatureBase64)
+
+        // if (dappUserSignature) {
+        //     const isValidSignature = this.pair?.verify(blockNumberString, signatureBase64, this.pair.publicKey)
+        //     console.log("-------------------------isValidSignature-------------------")
+        //     console.log(isValidSignature)
+        //     if (!isValidSignature) {
+        //         throw new Error('Invalid signature')
+        //     }
+        // } else {
+        //     throw new Error('Failed to sign')
+        // }
+
+        console.log("--------------- publicKey --------------")
+        console.log(this.pair?.publicKey)
+
+        
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
             const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
-        const result = await providerApi.verifyDappUser(
-            dapp,
-            user,
-            blockNumber,
-            commitmentId,
-            maxVerifiedTime,
-            signatureHex
-        )
+        const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime, signatureHex)
         const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
         return result.verified && verifyRecency
     }

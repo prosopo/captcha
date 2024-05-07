@@ -52,12 +52,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
         }
         try {
-            console.log(env.pair?.publicKey)
-            const { dappUserSignature, blockNumber } = parsed
-
-            const isDappUserSigned = dappUserSignature
-                ? await tasks.isDappUserSigned(dappUserSignature, blockNumber)
-                : false
+            const { dappUserSignature, blockNumber, dapp } = parsed
+            const dappPair = env.keyring.addFromAddress(dapp).publicKey
+            console.log(dapp)
+            console.log(dappPair)
+            // const isDappUserSigned = dappUserSignature
+            //     ? await tasks.isDappUserSigned(dappUserSignature, blockNumber)
+            //     : false
 
             const solution = await (parsed.commitmentId
                 ? tasks.getDappUserCommitmentById(parsed.commitmentId)

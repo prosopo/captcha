@@ -55,8 +55,6 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
             unsolved: { count: 0 },
         })
 
-        console.log('----------------- secret -----------------')
-        console.log(secret)
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }
