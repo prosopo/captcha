@@ -41,32 +41,13 @@ async function getLogs(
     return await response.text()
 }
 
-// Helper function to parse logs and extract URLs
-function extractReferrersFromLogs(logsText: string) {
-    const urls = [
-        ...logsText.split('\n').reduce((accumulator, line) => {
-            // Regex to find strings starting with http or https
-            const matches = line.match(/"(https?:\/\/[^"]+)"/g)
-            if (matches) {
-                matches.forEach((match) => {
-                    // Removing the leading and trailing double quotes from the match
-                    const url = match.substring(1, match.length - 1)
-                    accumulator.add(url)
-                })
-            }
-            return accumulator
-        }, new Set()),
-    ]
-
-    return urls.join('           ')
-}
-
 export const main = async (
     publicKey: string,
     privateKey: Uint8Array,
     appName: string,
     ip?: string,
-    lineCount?: number
+    lineCount?: number,
+    callbacks?: Record<string, (logs: string) => string>
 ) => {
     try {
         const { signature, loginPhrase } = await getAuth(privateKey, FLUX_URL)
@@ -105,11 +86,19 @@ export const main = async (
                 lineCount
             )
 
+            if (!callbacks) {
+                return {
+                    url: ip.href,
+                    logs,
+                }
+            }
+
+            const customLogs = 
+
             // Get the logs for the app
             return {
                 url: ip.href,
                 logs,
-                uniqueReferrers: extractReferrersFromLogs(logs),
             }
         })
 
