@@ -42,6 +42,7 @@ import {
 import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { Keyring } from '@polkadot/keyring'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
@@ -74,6 +75,8 @@ export class Tasks {
 
     config: ProsopoConfigOutput
 
+    keyring: Keyring
+
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
             throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
@@ -86,6 +89,9 @@ export class Tasks {
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
         this.logger = getLogger(env.config.logLevel, 'Tasks')
+        this.keyring = new Keyring({
+            type: 'sr25519', // TODO get this from the chain
+        })
     }
 
     async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
@@ -650,6 +656,55 @@ export class Tasks {
             return null
         }
         return paymentInfo
+    }
+
+    async isDappUserSigned(dappUserSignature: string, blockNumber: number) {
+        this.contract.pair = this.keyring.addPair(this.contract.pair)
+        const staticPublic = Uint8Array.of(
+            76,
+            171,
+            15,
+            219,
+            34,
+            119,
+            72,
+            104,
+            135,
+            66,
+            92,
+            192,
+            103,
+            98,
+            107,
+            236,
+            15,
+            227,
+            98,
+            207,
+            84,
+            171,
+            88,
+            172,
+            161,
+            111,
+            9,
+            72,
+            247,
+            217,
+            214,
+            114
+        )
+        const blockNumberString = blockNumber.toString()
+        const dappUserSignatureString = Buffer.from(dappUserSignature, 'hex')
+        console.log('-------------------isDappUserSigned----------------')
+        const publicKey = this.contract.pair?.publicKey
+        console.log(dappUserSignature)
+        console.log(blockNumber)
+        console.log(publicKey)
+        const isValidSignature = this.contract.pair?.verify(blockNumberString, dappUserSignatureString, publicKey)
+        console.log(isValidSignature)
+
+        return isValidSignature
     }
 
     /*

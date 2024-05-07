@@ -45,6 +45,7 @@ export enum ApiParams {
     captchas = 'captchas',
     commitmentId = 'commitmentId',
     proof = 'proof',
+    dappUserSignature = 'dappUserSignature',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
@@ -98,6 +99,7 @@ export const VerifySolutionBody = object({
     [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number(),
+    [ApiParams.dappUserSignature]: string().optional(),
     [ApiParams.commitmentId]: string().optional(),
     [ApiParams.maxVerifiedTime]: number().optional(),
 })

@@ -69,7 +69,7 @@ async function main() {
     const config = getServerConfig()
 
     console.log('config', config)
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.PROSOPO_SITE_PRIVATE_KEY)
+    const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
     const prosopoServer = new ProsopoServer(config, pair)
 
     app.use(routesFactory(mongoose, prosopoServer))
