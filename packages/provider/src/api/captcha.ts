@@ -33,6 +33,8 @@ import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
+import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
+import { handleErrors } from './errorHandler.js'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
@@ -70,7 +72,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 validateAddress(user, false, api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
-                await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
+                // await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {
@@ -86,7 +88,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 return res.json(captchaResponse)
             } catch (err) {
                 tasks.logger.error(err)
-                return next(new ProsopoApiError('API.BAD_REQUEST', { context: { error: err, errorCode: 400 } }))
+                return next(new ProsopoApiError('API.BAD_REQUEST', { context: { error: err, code: 400 } }))
             }
         }
     )
@@ -104,7 +106,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
         }
 
         try {
@@ -122,7 +124,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json(returnValue)
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.UNKNOWN', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { code: 400, error: err } }))
         }
     })
 
@@ -138,7 +140,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
         }
         try {
             const solution = await (parsed.commitmentId
@@ -146,32 +148,37 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
             if (!solution) {
-                return res.json({ status: req.t('API.USER_NOT_VERIFIED'), verified: false })
+                tasks.logger.debug('Not verified - no solution found')
+                return res.json({
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.verified]: false,
+                })
             }
 
             if (parsed.maxVerifiedTime) {
-                const currentBlockNumber = await tasks.getCurrentBlockNumber()
-                const blockTimeMs = await tasks.getBlockTimeMs()
+                const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
+                const blockTimeMs = getBlockTimeMs(tasks.contract.api)
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
                 const verificationResponse: VerificationResponse = {
-                    status: req.t('API.USER_NOT_VERIFIED'),
-                    verified: false,
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.verified]: false,
                 }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
+                    tasks.logger.debug('Not verified - time run out')
                     return res.json(verificationResponse)
                 }
             }
 
             const isApproved = solution.status === CaptchaStatus.approved
             const response: ImageVerificationResponse = {
-                status: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
+                [ApiParams.status]: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
                 [ApiParams.verified]: isApproved,
                 [ApiParams.commitmentId]: solution.id.toString(),
                 [ApiParams.blockNumber]: solution.requestedAt,
             }
             return res.json(response)
         } catch (err) {
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
@@ -195,7 +202,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json(verificationResponse)
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
@@ -211,14 +218,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             // Assert that the user and dapp accounts are strings
             if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
                 throw new ProsopoApiError('API.BAD_REQUEST', {
-                    context: { errorCode: 400, error: 'userAccount and dappAccount must be strings' },
+                    context: { code: 400, error: 'userAccount and dappAccount must be strings' },
                 })
             }
             const origin = req.headers.origin
 
             if (!origin) {
                 throw new ProsopoApiError('API.BAD_REQUEST', {
-                    context: { errorCode: 400, error: 'origin header not found' },
+                    context: { code: 400, error: 'origin header not found' },
                 })
             }
 
@@ -226,7 +233,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
@@ -249,7 +256,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json(response)
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
@@ -266,7 +273,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json({ status: 'success' })
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
@@ -279,7 +286,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json({ status })
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
@@ -292,9 +299,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             return res.json({ version, ...details })
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
+
+    // Your error handler should always be at the end of your application stack. Apparently it means not only after all
+    // app.use() but also after all your app.get() and app.post() calls.
+    // https://stackoverflow.com/a/62358794/1178971
+    router.use(handleErrors)
 
     return router
 }

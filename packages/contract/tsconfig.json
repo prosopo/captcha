@@ -16,6 +16,9 @@
             "path": "../types"
         },
         {
+            "path": "../tx"
+        },
+        {
             "path": "../util"
         }
     ]

@@ -121,27 +121,25 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        console.log('solveCaptchaChallenge commitmentId', commitmentId)
         const tx: ContractSubmittableResult | undefined = undefined
 
         let signature: string | undefined = undefined
 
-        if (this.web2) {
-            if (!signer || !signer.signRaw) {
-                throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
-                    context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
-                })
-            }
-            // sign the request hash to prove account ownership
-            const signed = await signer.signRaw({
-                address: this.userAccount,
-                data: stringToHex(requestHash),
-                type: 'bytes',
+        if (!signer || !signer.signRaw) {
+            throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
+                context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
             })
-            signature = signed.signature
         }
 
         let result: CaptchaSolutionResponse
+
+        // sign the request hash to prove account ownership
+        const signed = await signer.signRaw({
+            address: this.userAccount,
+            data: stringToHex(requestHash),
+            type: 'bytes',
+        })
+        signature = signed.signature
 
         try {
             result = await this.providerApi.submitCaptchaSolution(

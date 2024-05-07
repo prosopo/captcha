@@ -43,7 +43,7 @@ import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -317,7 +317,7 @@ export class Tasks {
         dappAccount: string,
         requestHash: string,
         captchas: CaptchaSolution[],
-        signature: string // the signature to indicate ownership of account (web2 only)
+        signature: string // the signature to indicate ownership of account
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
@@ -325,7 +325,7 @@ export class Tasks {
             })
         }
 
-        // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
+        // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
@@ -353,8 +353,10 @@ export class Tasks {
         )
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
-        const blockNumber = (await getBlockNumber(this.contract.api)).toNumber()
+        const blockNumber = await getCurrentBlockNumber(this.contract.api)
         if (pendingRequest) {
+            // prevent this request hash from being used twice
+            await this.db.updateDappUserPendingStatus(requestHash)
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
                 userAccount: userAccount,
@@ -535,10 +537,9 @@ export class Tasks {
 
         const currentTime = Date.now()
         const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
-
         const deadlineTs = timeLimit + currentTime
-        const currentBlockNumber = await getBlockNumber(this.contract.api)
-        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber.toNumber())
+        const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
+        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
         return { captchas, requestHash }
     }
 
@@ -697,21 +698,6 @@ export class Tasks {
     /** Get the dataset from the database */
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
-    }
-
-    /**
-     * Get the current block number
-     */
-    async getCurrentBlockNumber(): Promise<number> {
-        return (await getBlockNumber(this.contract.api)).toNumber()
-    }
-
-    /**
-     * Get the current block time in milliseconds
-     */
-    async getBlockTimeMs(): Promise<number> {
-        const blockTime = this.contract.api.consts.babe.expectedBlockTime
-        return blockTime.toNumber()
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {

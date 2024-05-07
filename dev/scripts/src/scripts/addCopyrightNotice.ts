@@ -57,6 +57,7 @@ const files = glob
             '**/vite.cjs.config.ts.timestamp*',
             '**/js_bundles_host_temp/**',
             '**/client-bundle-example/src/assets/**',
+            '**/next-env.d.ts/**',
         ],
     })
     .filter((file) => fs.lstatSync(file).isFile())

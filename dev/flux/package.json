@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/flux",
-    "version": "0.3.5",
+    "version": "0.3.39",
     "description": "Tools for managing Flux deployment",
     "main": "dist/index.js",
     "bin": {
@@ -12,10 +12,10 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest run --config ./src/vite.config.ts",
         "cli": "node dist/index.js",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
@@ -28,11 +28,11 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@noble/curves": "^1.3.0",
-        "@polkadot/util": "12.6.1",
-        "@polkadot/util-crypto": "12.6.1",
-        "@prosopo/cli": "0.3.5",
-        "@prosopo/common": "0.3.5",
-        "@prosopo/util": "0.3.5",
+        "@polkadot/util": "12.6.2",
+        "@polkadot/util-crypto": "12.6.2",
+        "@prosopo/cli": "0.3.39",
+        "@prosopo/common": "0.3.39",
+        "@prosopo/util": "0.3.39",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
@@ -44,7 +44,7 @@
         "zod": "^3.22.4"
     },
     "overrides": {
-        "@polkadot/keyring": "12.6.1"
+        "@polkadot/keyring": "12.6.2"
     },
     "devDependencies": {
         "@esm-bundle/chai": "^4.3.4-fix.0",
