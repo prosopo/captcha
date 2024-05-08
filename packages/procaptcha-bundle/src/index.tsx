@@ -158,64 +158,54 @@ function setUserCallbacks(
     },
     element: Element
 ) {
-    if (renderOptions?.callback) {
-        if (typeof renderOptions.callback === 'function') {
-            callbacks.onHuman = renderOptions.callback
-        } else {
-            const callbackName =
-                typeof renderOptions?.callback === 'string'
-                    ? renderOptions?.callback
-                    : element.getAttribute('data-callback')
-            if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
-        }
+    if (typeof renderOptions?.callback === 'function') {
+        callbacks.onHuman = renderOptions.callback
+    } else {
+        const callbackName =
+            typeof renderOptions?.callback === 'string'
+                ? renderOptions?.callback
+                : element.getAttribute('data-callback')
+        if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
     }
 
-    if (renderOptions?.['chalexpired-callback']) {
-        if (typeof renderOptions['chalexpired-callback'] === 'function') {
-            callbacks.onChallengeExpired = renderOptions['chalexpired-callback']
-        } else {
-            const chalExpiredCallbackName =
-                typeof renderOptions?.['chalexpired-callback'] === 'string'
-                    ? renderOptions?.['chalexpired-callback']
-                    : element.getAttribute('data-chalexpired-callback')
-            if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
-        }
+    if (typeof renderOptions?.['chalexpired-callback'] === 'function') {
+        callbacks.onChallengeExpired = renderOptions['chalexpired-callback']
+    } else {
+        const chalExpiredCallbackName =
+            typeof renderOptions?.['chalexpired-callback'] === 'string'
+                ? renderOptions?.['chalexpired-callback']
+                : element.getAttribute('data-chalexpired-callback')
+        if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
     }
 
-    if (renderOptions?.['expired-callback']) {
-        if (typeof renderOptions['expired-callback'] === 'function') {
-            callbacks.onExpired = renderOptions['expired-callback']
-        } else {
-            const onExpiredCallbackName =
-                typeof renderOptions?.['expired-callback'] === 'string'
-                    ? renderOptions?.['expired-callback']
-                    : element.getAttribute('data-expired-callback')
-            if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
-        }
+    if (typeof renderOptions?.['expired-callback'] === 'function') {
+        callbacks.onExpired = renderOptions['expired-callback']
+    } else {
+        const onExpiredCallbackName =
+            typeof renderOptions?.['expired-callback'] === 'string'
+                ? renderOptions?.['expired-callback']
+                : element.getAttribute('data-expired-callback')
+        if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
     }
 
-    if (renderOptions?.['error-callback']) {
-        if (typeof renderOptions['error-callback'] === 'function') {
-            callbacks.onError = renderOptions['error-callback']
-        } else {
-            const errorCallbackName =
-                typeof renderOptions?.['error-callback'] === 'string'
-                    ? renderOptions?.['error-callback']
-                    : element.getAttribute('data-error-callback')
-            if (errorCallbackName) callbacks.onError = getWindowCallback(errorCallbackName)
-        }
+    if (typeof renderOptions?.['error-callback'] === 'function') {
+        callbacks.onError = renderOptions['error-callback']
+    } else {
+        const errorCallbackName =
+            typeof renderOptions?.['error-callback'] === 'string'
+                ? renderOptions?.['error-callback']
+                : element.getAttribute('data-error-callback')
+        if (errorCallbackName) callbacks.onError = getWindowCallback(errorCallbackName)
     }
 
-    if (renderOptions?.['close-callback']) {
-        if (typeof renderOptions['close-callback'] === 'function') {
-            callbacks.onClose = renderOptions['close-callback']
-        } else {
-            const onCloseCallbackName =
-                typeof renderOptions?.['close-callback'] === 'string'
-                    ? renderOptions?.['close-callback']
-                    : element.getAttribute('data-close-callback')
-            if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
-        }
+    if (typeof renderOptions?.['close-callback'] === 'function') {
+        callbacks.onClose = renderOptions['close-callback']
+    } else {
+        const onCloseCallbackName =
+            typeof renderOptions?.['close-callback'] === 'string'
+                ? renderOptions?.['close-callback']
+                : element.getAttribute('data-close-callback')
+        if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
     }
 
     if (renderOptions?.['open-callback']) {
