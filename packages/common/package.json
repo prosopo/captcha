@@ -38,7 +38,7 @@
         "@prosopo/util": "0.3.39",
         "consola": "^3.2.3",
         "i18next": "^21.9.2",
-        "i18next-browser-languagedetector": "^7.0.1",
+        "i18next-browser-languagedetector": "^7.2.1",
         "i18next-http-backend": "^1.4.4",
         "i18next-http-middleware": "^3.2.1",
         "react-i18next": "^11.18.6",
