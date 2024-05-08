@@ -26,7 +26,6 @@
                         class="procaptcha"
                         data-theme="light"
                         data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
-                        data-callback="onCaptchaVerified"
                     ></div>
                 </div>
                 <input type="submit" class="mui-btn mui-btn--raised" />
@@ -40,8 +39,6 @@
             function onCaptchaVerified(output) {
                 console.log('Captcha verified, output: ' + JSON.stringify(output))
             }
-
-            window.onCaptchaVerified = onCaptchaVerified
 
             // Get the Element using elementId
             const captchaContainer = document.getElementById('procaptcha-container')
