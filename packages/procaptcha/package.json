@@ -51,6 +51,7 @@
         "@prosopo/common": "0.3.39",
         "@prosopo/contract": "0.3.39",
         "@prosopo/datasets": "0.3.39",
+        "@prosopo/procaptcha-common": "0.3.39",
         "@prosopo/types": "0.3.39",
         "@prosopo/util": "0.3.39",
         "rxjs": "7.8.1"
