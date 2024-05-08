@@ -26,6 +26,7 @@
                         class="procaptcha"
                         data-theme="light"
                         data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                        data-callback="onCaptchaVerified"
                     ></div>
                 </div>
                 <input type="submit" class="mui-btn mui-btn--raised" />
@@ -40,13 +41,15 @@
                 console.log('Captcha verified, output: ' + JSON.stringify(output))
             }
 
+            window.onCaptchaVerified = onCaptchaVerified
+
             // Get the Element using elementId
             const captchaContainer = document.getElementById('procaptcha-container')
             // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
             render(captchaContainer, {
                 siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
                 theme: 'dark',
-                callback: onCaptchaVerified,
+                callback: 'onCaptchaVerified',
             })
         </script>
     </body>
