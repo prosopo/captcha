@@ -80,7 +80,7 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
     }
 }
 
-const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
+export const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
     console.log('----------------------- verifySignature ----------------------------')
     console.log(verifySignature)
     console.log(signature)
