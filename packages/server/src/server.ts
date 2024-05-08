@@ -201,14 +201,22 @@ export class ProsopoServer {
         commitmentId?: string,
         maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
     ) {
+        const dappPair = this.keyring.addFromAddress(dapp)
+        
+        console.log("------------------- dappPair --------------------")
+        console.log(dappPair.publicKey)
+        console.log(dappPair.address)
+        if (dappPair.isLocked) {
+            dappPair.unlock()
+        }
+
         const blockNumberString = blockNumber.toString()
-        const dappUserSignature = this.pair?.sign(blockNumberString)
+        const dappUserSignature = dappPair.sign(blockNumberString)
         if (!dappUserSignature) {
             throw new Error('Failed to sign the block number');
         }
         const signatureHex = Buffer.from(dappUserSignature).toString('hex');
-
-        const signatureBase64 = Buffer.from(signatureHex, 'hex');
+        // const signatureBase64 = Buffer.from(signatureHex, 'hex');
 
 
         // console.log(dappUserSignature)
@@ -225,8 +233,8 @@ export class ProsopoServer {
         //     throw new Error('Failed to sign')
         // }
 
-        console.log("--------------- publicKey --------------")
-        console.log(this.pair?.publicKey)
+        // console.log("--------------- publicKey --------------")
+        // console.log(this.pair?.publicKey)
 
         
         const providerApi = await this.getProviderApi(providerUrl)
