@@ -26,6 +26,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
 import express, { Router } from 'express'
+import { verifySignature } from './authMiddleware.js'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -53,12 +54,16 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         }
         try {
             const { dappUserSignature, blockNumber, dapp } = parsed
-            const dappPair = env.keyring.addFromAddress(dapp).publicKey
+
+            // Verify using the dapp pair passed in the request
+            const dappPair = env.keyring.addFromAddress(dapp)
+
             console.log(dapp)
             console.log(dappPair)
-            // const isDappUserSigned = dappUserSignature
-            //     ? await tasks.isDappUserSigned(dappUserSignature, blockNumber)
-            //     : false
+            console.log(dappUserSignature)
+
+            // Will throw an error if the signature is invalid
+            verifySignature(dappUserSignature, blockNumber.toString(), dappPair)
 
             const solution = await (parsed.commitmentId
                 ? tasks.getDappUserCommitmentById(parsed.commitmentId)
@@ -107,7 +112,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
         try {
-            const { challenge, dapp } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
+            const { challenge, dapp, dappUserSignature, blockNumber } = ServerPowCaptchaVerifyRequestBody.parse(
+                req.body
+            )
+
+            // Verify using the dapp pair passed in the request
+            const dappPair = env.keyring.addFromAddress(dapp)
+
+            console.log(dapp)
+            console.log(dappPair)
+
+            // Will throw an error if the signature is invalid
+            verifySignature(dappUserSignature, blockNumber.toString(), dappPair)
 
             const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge)
 
