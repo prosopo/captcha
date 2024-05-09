@@ -13,8 +13,8 @@
 // limitations under the License.
 import { Alias } from 'vite'
 import { getLogger } from '@prosopo/common'
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 
 // List of interfaces to replace with mock. The interface is required if commented out.
 const POLKADOT_INTERFACES = [
