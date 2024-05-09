@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { default as LanguageDetector } from 'i18next-browser-languagedetector'
 import { LanguageDetector as MiddlewareLanguageDetector } from 'i18next-http-middleware'
 import { initReactI18next } from 'react-i18next'
 import { isClientSide } from './utils.js'
 import Backend from 'i18next-http-backend'
-import { default as LanguageDetector } from 'i18next-browser-languagedetector'
 import i18n, { InitOptions } from 'i18next'
 import translationEn from './locales/en.json' assert { type: 'json' }
 
