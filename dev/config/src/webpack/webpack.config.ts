@@ -39,6 +39,7 @@ export default (mode: string) => {
         },
         externals: {
             'node:url': 'commonjs url',
+            url: 'commonjs url',
         },
         entry: './src/index.tsx',
         output: {
