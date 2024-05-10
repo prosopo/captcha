@@ -78,23 +78,27 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         userAccount: AccountId,
         blockNumber: number,
         commitmentId?: string,
-        maxVerifiedTime?: number
+        maxVerifiedTime?: number,
+        dappUserSignature?: string
     ): Promise<ImageVerificationResponse> {
         const payload: {
             [ApiParams.dapp]: AccountId
             [ApiParams.user]: AccountId
             [ApiParams.blockNumber]: number
+            [ApiParams.dappUserSignature]?: string
             [ApiParams.commitmentId]?: string
             [ApiParams.maxVerifiedTime]?: number
-        } = { dapp: dapp, user: userAccount, blockNumber }
+        } = { dapp: dapp, user: userAccount, blockNumber, dappUserSignature }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
         if (maxVerifiedTime) {
             payload['maxVerifiedTime'] = maxVerifiedTime
         }
+
         return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
+    
 
     public getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse> {
         return this.post(ApiPaths.GetPowCaptchaChallenge, { userAccount, dappAccount })
@@ -133,7 +137,8 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         return this.fetch(ApiPaths.GetProviderDetails)
     }
 
-    public submitPowCaptchaVerify(challenge: string, dapp: string): Promise<VerificationResponse> {
-        return this.post(ApiPaths.ServerPowCaptchaVerify, { [ApiParams.challenge]: challenge, [ApiParams.dapp]: dapp })
+    public submitPowCaptchaVerify(challenge: string, dapp: string, signatureHex: string, blockNumber: number): Promise<VerificationResponse> {
+        console.log("----------------- submitPowCaptchaVerify -------------------")
+        return this.post(ApiPaths.ServerPowCaptchaVerify, { [ApiParams.challenge]: challenge, [ApiParams.dapp]: dapp, [ApiParams.dappUserSignature]: signatureHex, [ApiParams.blockNumber]: blockNumber })
     }
 }

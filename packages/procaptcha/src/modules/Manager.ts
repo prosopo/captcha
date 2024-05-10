@@ -50,6 +50,8 @@ import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
+import { u8aToHex, stringToHex } from '@polkadot/util'
+
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
@@ -187,12 +189,23 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
+                    const signRaw = getExtension(account).signer.signRaw
+                    if (!signRaw) {
+                        throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
+                    }
+                    const { signature } = await signRaw({
+                        address: account.account.address,
+                        data: procaptchaStorage.blockNumber.toString(),
+                        type: 'bytes'
+                    });
+
                     const verifyDappUserResponse = await providerApi.verifyDappUser(
                         getDappAccount(),
                         account.account.address,
                         procaptchaStorage.blockNumber,
                         undefined,
-                        configOptional.challengeValidLength
+                        configOptional.challengeValidLength,
+                        signature,
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
@@ -299,6 +312,12 @@ export function Manager(
 
             const captchaApi = getCaptchaApi()
 
+            console.log(signer)
+            console.log(challenge.requestHash)
+            console.log(first.captcha.datasetId)
+            console.log(captchaSolution)
+            console.log(salt)
+
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
                 signer,
@@ -307,6 +326,8 @@ export function Manager(
                 captchaSolution,
                 salt
             )
+
+            console.log("--------------- submitCaptchaSolution -----------------")
 
             // mark as is human if solution has been approved
             const isHuman = submission[0].verified

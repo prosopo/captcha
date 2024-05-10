@@ -46,22 +46,16 @@ export async function processArgs(args: string[]) {
                 yargs
                     .option('update_env', {
                         type: 'boolean',
-                        demandOption: false,
+                        demand: false,
                         desc: 'Update env files with the new contract address',
                         default: false,
                     })
                     .option('deployer', {
                         type: 'string',
-                        demandOption: false,
+                        demand: false,
                         desc: `The account prefix that will deploy the contract. Specifying PROVIDER will cause the 
                         script to look for PROVIDER_JSON in the env file. Specifying DEPLOYER will cause the script to 
                         look for DEPLOYER_JSON in the env file. Defaults to undefined.`,
-                        default: undefined,
-                    })
-                    .option('cwd', {
-                        type: 'string',
-                        demandOption: false,
-                        desc: `The working directory from which env files will be updated`,
                         default: undefined,
                     }),
             async (argv) => {
@@ -76,8 +70,7 @@ export async function processArgs(args: string[]) {
                     await updateEnvFiles(
                         ['PROSOPO_CONTRACT_ADDRESS', 'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS'],
                         protocolContractAddress.toString(),
-                        log,
-                        argv.cwd
+                        log
                     )
                 }
             },

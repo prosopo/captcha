@@ -28,6 +28,7 @@ export function getSecret(who?: string): string | undefined {
     } else {
         who = who.toUpperCase()
     }
+
     return (
         process.env[`PROSOPO_${who}_MNEMONIC`] ||
         process.env[`PROSOPO_${who}_SEED`] ||

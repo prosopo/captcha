@@ -29,6 +29,8 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
+import { u8aToHex, hexToU8a } from '@polkadot/util'
+
 export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
 export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
 
@@ -101,6 +103,13 @@ export class ProsopoServer {
         }
     }
 
+    getPair(): KeyringPair {
+        if (this.pair === undefined) {
+            throw new ProsopoEnvError(new Error('pair undefined'))
+        }
+        return this.pair
+    }
+
     getApi(): ApiPromise {
         if (this.api === undefined) {
             throw new ProsopoEnvError(new Error('api undefined'))
@@ -166,22 +175,17 @@ export class ProsopoServer {
      * @param maxVerifiedTime
      */
     public async verifyContract(user: string, maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CONTRACT) {
-        try {
-            const contractApi = await this.getContractApi()
-            this.logger.info('Provider URL not provided. Verifying with contract.')
-            const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-                .unwrap()
-                .unwrap()
-                .before.valueOf()
-            const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
-            const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-                .unwrap()
-                .unwrap()
-            return isHuman && verifyRecency
-        } catch (error) {
-            // if a user is not in the contract it errors, suppress this error and return false
-            return false
-        }
+        const contractApi = await this.getContractApi()
+        this.logger.info('Provider URL not provided. Verifying with contract.')
+        const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+            .unwrap()
+            .unwrap()
+            .before.valueOf()
+        const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
+        const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+            .unwrap()
+            .unwrap()
+        return isHuman && verifyRecency
     }
 
     /**
@@ -204,14 +208,27 @@ export class ProsopoServer {
         commitmentId?: string,
         maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
     ) {
-        this.logger.info('Verifying with provider.')
+        const blockNumberString = blockNumber.toString()
+        const dappUserSignature = this.pair?.sign(blockNumberString)
+        if (!dappUserSignature) {
+            throw new Error('Failed to sign the block number')
+        }
+        const signatureHex = u8aToHex(dappUserSignature)
+
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, signatureHex, blockNumber)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
-        const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
+        const result = await providerApi.verifyDappUser(
+            dapp,
+            user,
+            blockNumber,
+            commitmentId,
+            maxVerifiedTime,
+            signatureHex
+        )
         const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
         return result.verified && verifyRecency
     }
@@ -238,6 +255,7 @@ export class ProsopoServer {
             // }
 
             // If we have a providerURL and a blockNumber, we verify with the provider
+
             return await this.verifyProvider(
                 providerUrl,
                 dapp,

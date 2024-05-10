@@ -30,7 +30,6 @@
     "license": "Apache-2.0",
     "dependencies": {
         "debug": "^4.3.4",
-        "fast-glob": "^3.3.2",
         "vite": "^5.1.7"
     },
     "devDependencies": {
