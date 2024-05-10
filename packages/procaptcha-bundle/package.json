@@ -58,13 +58,8 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
-        "@babel/preset-env": "^7.24.5",
-        "@originjs/vite-plugin-commonjs": "^1.0.3",
         "@prosopo/config": "0.3.39",
-        "@rollup/plugin-typescript": "^11.1.2",
-        "@vitejs/plugin-react": "^4.2.1",
         "tslib": "2.6.2",
         "typescript": "^5.1.6",
-        "webpack-merge": "^5.9.0"
     }
 }
