@@ -8,6 +8,9 @@
     "include": ["src", "src/**/*.json", "src/index.html"],
     "references": [
         {
+            "path": "../../dev/config/tsconfig.cjs.json",
+        },
+        {
             "path": "../procaptcha-react"
         },
         {

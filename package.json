@@ -109,7 +109,6 @@
         "npm-check-updates": "^15.3.4",
         "prettier": "3.0.3",
         "tsc-alias": "^1.8.6",
-        "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "2.6.2",
         "typedoc": "^0.25.13",
         "typedoc-plugin-mdn-links": "^3.1.16",

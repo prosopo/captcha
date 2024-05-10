@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './vite/index.js'
-export * from './dependencies.js'
-export * from './polkadot/index.js'
-export * from './provider/index.js'
-export * from './projectInfo.js'
-export * from './webpack/index.js'
+import { ViteCommonJSConfig } from './src/vite/index.js'
+import path from 'path'
+
+export default function () {
+    return ViteCommonJSConfig('config', path.resolve('./tsconfig.cjs.json'), 'src/index.ts')
+}

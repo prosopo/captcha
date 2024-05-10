@@ -25,6 +25,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "vite serve --mode development --host",
         "bundle:dev": "vite build --config vite.config.ts --mode development --debug",
+        "bundle:dev:webpack": "webpack build --config webpack.config.cjs --mode development",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
         "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
@@ -37,11 +38,11 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@prosopo/procaptcha-frictionless": "0.3.39",
+        "@prosopo/procaptcha-frictionless": "^0.3.39",
         "@prosopo/procaptcha-pow": "0.3.39",
         "@prosopo/procaptcha-react": "0.3.39",
         "@prosopo/types": "0.3.39",
-        "@prosopo/util": "0.3.39",
+        "@prosopo/util": "^0.3.39",
         "react-dom": "^18.3.1"
     },
     "repository": {
@@ -57,6 +58,7 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
+        "@babel/preset-env": "^7.24.5",
         "@originjs/vite-plugin-commonjs": "^1.0.3",
         "@prosopo/config": "0.3.39",
         "@rollup/plugin-typescript": "^11.1.2",

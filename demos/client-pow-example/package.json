@@ -13,14 +13,14 @@
         "@mui/material": "^5.9.1",
         "@prosopo/common": "0.3.39",
         "@prosopo/procaptcha": "0.3.39",
+        "@prosopo/procaptcha-pow": "0.3.39",
         "@prosopo/procaptcha-react": "0.3.39",
         "@prosopo/types": "0.3.39",
-        "@types/react-dom": "^18.2.4",
+        "@types/react-dom": "^18.3.0",
         "electron": "25.8.4",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "web-vitals": "^2.1.4",
-        "@prosopo/procaptcha-pow": "0.3.39"
+        "web-vitals": "^2.1.4"
     },
     "devDependencies": {
         "@prosopo/cli": "0.3.39",
