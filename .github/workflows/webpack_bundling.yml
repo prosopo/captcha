@@ -96,8 +96,6 @@ jobs:
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |
-          npm run build config
-          npm run -w @prosopo/config build:cjs
           npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
 
 
