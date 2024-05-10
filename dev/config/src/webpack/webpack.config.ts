@@ -24,10 +24,6 @@ export default (mode: string) => {
     const libraryName = 'react_app'
 
     return {
-        devServer: {
-            compress: true,
-            port: 9000,
-        },
         resolve: {
             extensions: ['.js', '.jsx', '.ts', '.tsx'],
             modules: moduleDirs,
