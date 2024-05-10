@@ -30,9 +30,8 @@ export function prosopoRouter(): Router {
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      */
-    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
+    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
         let parsed: VerifySolutionBodyType
-        console.log("--------------- demos ---------------")
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {

@@ -96,9 +96,34 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             payload['maxVerifiedTime'] = maxVerifiedTime
         }
 
-        return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+        return this.post(ApiPaths.VerifyCaptchaSolutionDapp, payload as VerifySolutionBodyType)
     }
-    
+
+    public verifyUser(
+        dapp: AccountId,
+        userAccount: AccountId,
+        blockNumber: number,
+        commitmentId?: string,
+        maxVerifiedTime?: number,
+        dappUserSignature?: string
+    ): Promise<ImageVerificationResponse> {
+        const payload: {
+            [ApiParams.dapp]: AccountId
+            [ApiParams.user]: AccountId
+            [ApiParams.blockNumber]: number
+            [ApiParams.dappUserSignature]?: string
+            [ApiParams.commitmentId]?: string
+            [ApiParams.maxVerifiedTime]?: number
+        } = { dapp: dapp, user: userAccount, blockNumber, dappUserSignature }
+        if (commitmentId) {
+            payload['commitmentId'] = commitmentId
+        }
+        if (maxVerifiedTime) {
+            payload['maxVerifiedTime'] = maxVerifiedTime
+        }
+
+        return this.post(ApiPaths.VerifyCaptchaSolutionUser, payload as VerifySolutionBodyType)
+    }
 
     public getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse> {
         return this.post(ApiPaths.GetPowCaptchaChallenge, { userAccount, dappAccount })
@@ -137,8 +162,17 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         return this.fetch(ApiPaths.GetProviderDetails)
     }
 
-    public submitPowCaptchaVerify(challenge: string, dapp: string, signatureHex: string, blockNumber: number): Promise<VerificationResponse> {
-        console.log("----------------- submitPowCaptchaVerify -------------------")
-        return this.post(ApiPaths.ServerPowCaptchaVerify, { [ApiParams.challenge]: challenge, [ApiParams.dapp]: dapp, [ApiParams.dappUserSignature]: signatureHex, [ApiParams.blockNumber]: blockNumber })
+    public submitPowCaptchaVerify(
+        challenge: string,
+        dapp: string,
+        signatureHex: string,
+        blockNumber: number
+    ): Promise<VerificationResponse> {
+        return this.post(ApiPaths.ServerPowCaptchaVerify, {
+            [ApiParams.challenge]: challenge,
+            [ApiParams.dapp]: dapp,
+            [ApiParams.dappUserSignature]: signatureHex,
+            [ApiParams.blockNumber]: blockNumber,
+        })
     }
 }

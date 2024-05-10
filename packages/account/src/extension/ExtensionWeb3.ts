@@ -39,7 +39,6 @@ export class ExtensionWeb3 extends Extension {
             const accounts = await extension.accounts.get()
             const account = accounts.find((account) => account.address === address)
             if (account) {
-                
                 return { account, extension }
             }
         }
