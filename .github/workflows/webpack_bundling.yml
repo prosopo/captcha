@@ -89,10 +89,9 @@ jobs:
 
       - run: npm install
 
-      # build the repo:
-      - run: |
-          cd captcha
-          npm -w @prosopo/procaptcha-bundle run build
+      # build all packages in workspace
+      - run: npm run build scripts
+      - run: npm run build:all:cjs
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
