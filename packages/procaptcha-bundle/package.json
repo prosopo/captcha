@@ -27,7 +27,7 @@
         "bundle:dev": "vite build --config vite.config.ts --mode development --debug",
         "bundle:dev:webpack": "webpack build --config webpack.config.cjs --mode development",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",

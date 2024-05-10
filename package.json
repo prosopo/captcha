@@ -47,7 +47,7 @@
         "test": "npm run --workspaces test",
         "test:all": "npm run --workspaces --if-present test",
         "eslint": "npm --workspaces run eslint && npm run eslint:workspace",
-        "eslint:workspace": "npx eslint '.*.*' '*.*' .vscode .github --ignore-pattern README.md --ignore-pattern code-of-conduct.md --ignore-pattern diagram.svg --ignore-path .eslintignore",
+        "eslint:workspace": "npx eslint '.*.*' '*.*' .vscode .github --ignore-pattern README.md --ignore-pattern code-of-conduct.md --ignore-pattern diagram.svg --ignore-path .eslintignore  --quiet",
         "eslint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run eslint",
         "eslint:fix": "npm --workspaces run eslint:fix && npm run eslint:fix:workspace",
         "eslint:fix:workspace": "npm run eslint:workspace -- --fix",
