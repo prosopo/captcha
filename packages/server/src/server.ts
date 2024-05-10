@@ -29,7 +29,7 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
 
-import { u8aToHex, hexToU8a } from '@polkadot/util'
+import { u8aToHex } from '@polkadot/util'
 
 export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
 export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000

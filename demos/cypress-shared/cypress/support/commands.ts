@@ -43,15 +43,8 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
             expect(response?.statusCode).to.equal(200)
             expect(response?.body).to.have.property('captchas')
             const captchas = response?.body.captchas.map(({ captcha }: { captcha: CaptchaWithProof }) => captcha)
-            console.log('-----------------------------captchas', captchas, 'length', captchas.length)
             expect(captchas).to.have.lengthOf(2)
             expect(captchas[0]).to.have.property('items')
-            console.log(
-                '-----------------------------captchas[0].items',
-                captchas[0].items,
-                'length',
-                captchas[0].items.length
-            )
             expect(captchas[0].items).to.have.lengthOf(9)
             return captchas
         })

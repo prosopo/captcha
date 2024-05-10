@@ -44,7 +44,7 @@ import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Keyring } from '@polkadot/keyring'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery, getPairAsync } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -657,24 +657,6 @@ export class Tasks {
             return null
         }
         return paymentInfo
-    }
-
-    async isDappUserSigned(dappUserSignature: string, blockNumber: number) {
-        const pair = await getPairAsync(this.config.networks[this.config.defaultNetwork], this.config.account.secret)
-        console.log(this.config.networks[this.config.defaultNetwork])
-        const updatedPair = this.keyring.addPair(pair)
-        const blockNumberString = blockNumber.toString()
-        const dappUserSignatureString = Buffer.from(dappUserSignature, 'hex')
-        console.log('-------------------isDappUserSigned----------------')
-        const updatedpublicKey = updatedPair?.publicKey
-        const publicKeypair = pair?.publicKey
-        console.log(dappUserSignature)
-        console.log(blockNumber)
-        console.log(updatedpublicKey)
-        console.log(publicKeypair)
-        // const isValidSignature = pair?.verify(blockNumberString, dappUserSignatureString, publicKey)
-
-        // return isValidSignature
     }
 
     /*

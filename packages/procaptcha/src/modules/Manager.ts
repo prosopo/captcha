@@ -50,8 +50,6 @@ import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
-import { u8aToHex, stringToHex } from '@polkadot/util'
-
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
@@ -196,16 +194,16 @@ export function Manager(
                     const { signature } = await signRaw({
                         address: account.account.address,
                         data: procaptchaStorage.blockNumber.toString(),
-                        type: 'bytes'
-                    });
+                        type: 'bytes',
+                    })
 
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(
+                    const verifyDappUserResponse = await providerApi.verifyUser(
                         getDappAccount(),
                         account.account.address,
                         procaptchaStorage.blockNumber,
                         undefined,
                         configOptional.challengeValidLength,
-                        signature,
+                        signature
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
@@ -312,12 +310,6 @@ export function Manager(
 
             const captchaApi = getCaptchaApi()
 
-            console.log(signer)
-            console.log(challenge.requestHash)
-            console.log(first.captcha.datasetId)
-            console.log(captchaSolution)
-            console.log(salt)
-
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
                 signer,
@@ -326,8 +318,6 @@ export function Manager(
                 captchaSolution,
                 salt
             )
-
-            console.log("--------------- submitCaptchaSolution -----------------")
 
             // mark as is human if solution has been approved
             const isHuman = submission[0].verified
