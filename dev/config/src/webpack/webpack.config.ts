@@ -13,9 +13,9 @@
 // limitations under the License.
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
 import path from 'path'
-import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
 const moduleDirs = [path.resolve('./node_modules')]
 

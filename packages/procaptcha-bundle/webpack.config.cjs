@@ -11,31 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-const getWebpackConfig = require('@prosopo/config/webpack/webpack.config');
-const path = require("path");
+/* eslint-disable @typescript-eslint/no-var-requires */
+const getWebpackConfig = require('@prosopo/config/webpack/webpack.config')
+const path = require('path')
 const args = process.argv.slice(2)
 const mode = args.indexOf('--mode') > -1 ? args[args.indexOf('--mode') + 1] : 'development'
-const webpackConfig= getWebpackConfig(mode);
+const webpackConfig = getWebpackConfig(mode)
 console.log({
     ...webpackConfig,
     resolve: {
         ...webpackConfig.resolve,
-        modules: [
-            path.resolve('node_modules'),
-            path.resolve('../node_modules'),
-            path.resolve('../../node_modules'),
-        ],
+        modules: [path.resolve('node_modules'), path.resolve('../node_modules'), path.resolve('../../node_modules')],
     },
-
 })
 module.exports = {
     ...webpackConfig,
     resolve: {
         ...webpackConfig.resolve,
-        modules: [
-            path.resolve('node_modules'),
-            path.resolve('../node_modules'),
-            path.resolve('../../node_modules'),
-        ],
+        modules: [path.resolve('node_modules'), path.resolve('../node_modules'), path.resolve('../../node_modules')],
     },
-};
+}
