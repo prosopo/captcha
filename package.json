@@ -82,8 +82,7 @@
         "provider-gui"
     ],
     "dependencies": {
-        "@prosopo/flux": "0.3.39",
-        "express-rate-limit": "^7.2.0"
+        "@prosopo/flux": "0.3.39"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
@@ -116,7 +115,8 @@
         "typedoc-plugin-mdn-links": "^3.1.16",
         "typedoc-plugin-missing-exports": "^2.2.0",
         "typedoc-plugin-zod": "^1.1.2",
-        "typescript": "5.1.6"
+        "typescript": "5.1.6",
+        "express-rate-limit": "^7.2.0"
     },
     "description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
     "bugs": {
