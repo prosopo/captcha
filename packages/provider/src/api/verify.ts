@@ -25,8 +25,9 @@ import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
-import { verifySignature } from './authMiddleware.js'
 import express, { Router } from 'express'
+import { verifySignature } from './authMiddleware.js'
+import rateLimit from 'express-rate-limit'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -37,6 +38,13 @@ import express, { Router } from 'express'
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
     const router = express.Router()
     const tasks = new Tasks(env)
+
+    // Define rate limiting options
+    const limiter = rateLimit({
+        windowMs: 60 * 1000, // 1 minute
+        max: 1000, // Max 10 requests per minute
+        message: 'Too many requests, please try again later.',
+    });
 
     /**
      * Verifies a user's solution as being approved or not
@@ -174,7 +182,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {string} dappAccount - Dapp User id
      * @param {string} challenge - The captcha solution to look up
      */
-    router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
+    router.post(ApiPaths.ServerPowCaptchaVerify, limiter, async (req, res, next) => {
         try {
             const { challenge, dapp, dappUserSignature, blockNumber } = ServerPowCaptchaVerifyRequestBody.parse(
                 req.body
