@@ -82,7 +82,8 @@
         "provider-gui"
     ],
     "dependencies": {
-        "@prosopo/flux": "0.3.39"
+        "@prosopo/flux": "0.3.39",
+        "express-rate-limit": "^7.2.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
