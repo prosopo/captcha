@@ -25,8 +25,8 @@ import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
-import express, { Router } from 'express'
 import { verifySignature } from './authMiddleware.js'
+import express, { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 
 /**
@@ -41,10 +41,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
     // Define rate limiting options
     const limiter = rateLimit({
-        windowMs: 60 * 1000, // 1 minute
-        max: 1000, // Max 10 requests per minute
+        windowMs: 60 * 1000,
+        max: 1000,
         message: 'Too many requests, please try again later.',
-    });
+    })
 
     /**
      * Verifies a user's solution as being approved or not
@@ -56,7 +56,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {string} commitmentId - The captcha solution to look up
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
-    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
+    router.post(ApiPaths.VerifyCaptchaSolutionDapp, limiter, async (req, res, next) => {
         let parsed: VerifySolutionBodyType
         try {
             parsed = VerifySolutionBody.parse(req.body)
@@ -121,7 +121,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {string} commitmentId - The captcha solution to look up
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
-    router.post(ApiPaths.VerifyCaptchaSolutionUser, async (req, res, next) => {
+    router.post(ApiPaths.VerifyCaptchaSolutionUser, limiter, async (req, res, next) => {
         let parsed: VerifySolutionBodyType
         try {
             parsed = VerifySolutionBody.parse(req.body)
