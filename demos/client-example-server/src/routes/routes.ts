@@ -18,15 +18,10 @@ import express from 'express'
 
 const router = express.Router()
 
-function getRoutes(
-    mongoose: Connection,
-    prosopoServer: ProsopoServer,
-    verifyEndpoint: string,
-    verifyType: string
-): express.Router {
-    router.post('/login', login.bind(null, mongoose, prosopoServer, verifyEndpoint, verifyType))
+function getRoutes(mongoose: Connection, prosopoServer: ProsopoServer): express.Router {
+    router.post('/login', login.bind(null, mongoose, prosopoServer))
 
-    router.post('/signup', signup.bind(null, mongoose, prosopoServer, verifyEndpoint, verifyType))
+    router.post('/signup', signup.bind(null, mongoose, prosopoServer))
 
     router.get('/private', isAuth)
 

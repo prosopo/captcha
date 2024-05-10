@@ -42,8 +42,9 @@ import {
 import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { Keyring } from '@polkadot/keyring'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery, getPairAsync } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -74,6 +75,8 @@ export class Tasks {
 
     config: ProsopoConfigOutput
 
+    keyring: Keyring
+
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
             throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
@@ -86,6 +89,9 @@ export class Tasks {
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
         this.logger = getLogger(env.config.logLevel, 'Tasks')
+        this.keyring = new Keyring({
+            type: 'sr25519', // TODO get this from the chain
+        })
     }
 
     async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
@@ -341,6 +347,7 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
+        console.log((await this.contract.methods.getProvider(this.contract.pair.address, {})).value)
         const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
             .unwrap()
             .unwrap()
@@ -650,6 +657,24 @@ export class Tasks {
             return null
         }
         return paymentInfo
+    }
+
+    async isDappUserSigned(dappUserSignature: string, blockNumber: number) {
+        const pair = await getPairAsync(this.config.networks[this.config.defaultNetwork], this.config.account.secret)
+        console.log(this.config.networks[this.config.defaultNetwork])
+        const updatedPair = this.keyring.addPair(pair)
+        const blockNumberString = blockNumber.toString()
+        const dappUserSignatureString = Buffer.from(dappUserSignature, 'hex')
+        console.log('-------------------isDappUserSigned----------------')
+        const updatedpublicKey = updatedPair?.publicKey
+        const publicKeypair = pair?.publicKey
+        console.log(dappUserSignature)
+        console.log(blockNumber)
+        console.log(updatedpublicKey)
+        console.log(publicKeypair)
+        // const isValidSignature = pair?.verify(blockNumberString, dappUserSignatureString, publicKey)
+
+        // return isValidSignature
     }
 
     /*

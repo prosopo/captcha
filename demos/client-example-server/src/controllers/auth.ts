@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, ProcaptchaOutput, ProcaptchaOutputSchema } from '@prosopo/types'
+import { ApiParams } from '@prosopo/types'
 import { Connection } from 'mongoose'
 import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
@@ -35,34 +35,9 @@ function hashPassword(password: string): string {
     return u8aToHex(blake2b(password))
 }
 
-const verify = async (
-    prosopoServer: ProsopoServer,
-    verifyType: string,
-    verifyEndpoint: string,
-    data: ProcaptchaOutput
-) => {
-    if (verifyType === 'api') {
-        // verify using the API endpoint
-        console.log('verifying using the API endpoint')
-
-        const response = await fetch(verifyEndpoint, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        })
-        return (await response.json()).verified
-    } else {
-        // verify using the TypeScript library
-        console.log('verifying using the TypeScript library')
-
-        return await prosopoServer.isVerified(data)
-    }
-}
-
 const signup = async (
     mongoose: Connection,
     prosopoServer: ProsopoServer,
-    verifyEndpoint: string,
-    verifyType: string,
     req: Request,
     res: Response,
     next: NextFunction
@@ -79,15 +54,7 @@ const signup = async (
             return res.status(409).json({ message: 'email already exists' })
         }
         console.log('payload', payload)
-
-        // get the contents of the procaptcha-response JSON data
-        const data = ProcaptchaOutputSchema.parse(payload[ApiParams.procaptchaResponse])
-
-        console.log('sending data', data)
-
-        const verified = await verify(prosopoServer, verifyType, verifyEndpoint, data)
-
-        if (verified) {
+        if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
             // salt
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
@@ -116,14 +83,7 @@ const signup = async (
     }
 }
 
-const login = async (
-    mongoose: Connection,
-    prosopoServer: ProsopoServer,
-    verifyEndpoint: string,
-    verifyType: string,
-    req: Request,
-    res: Response
-) => {
+const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response) => {
     const User = mongoose.model<UserInterface>('User')
     await prosopoServer.isReady()
     // checks if email exists
@@ -135,12 +95,7 @@ const login = async (
                 res.status(404).json({ message: 'user not found' })
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
-
-                const data = ProcaptchaOutputSchema.parse(payload[ApiParams.procaptchaResponse])
-
-                const verified = await verify(prosopoServer, verifyType, verifyEndpoint, data)
-
-                if (verified) {
+                if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
                     // password hash
                     // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
                     const passwordHash = hashPassword(`${req.body.password}${dbUser.salt}`)

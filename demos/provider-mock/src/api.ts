@@ -32,6 +32,7 @@ export function prosopoRouter(): Router {
      */
     router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
         let parsed: VerifySolutionBodyType
+        console.log("--------------- demos ---------------")
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {

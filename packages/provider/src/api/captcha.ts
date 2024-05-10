@@ -21,20 +21,12 @@ import {
     CaptchaSolutionResponse,
     CaptchaWithProof,
     DappUserSolutionResult,
-    GetPowCaptchaChallengeRequestBody,
-    ImageVerificationResponse,
     PowCaptchaSolutionResponse,
-    ServerPowCaptchaVerifyRequestBody,
     SubmitPowCaptchaSolutionBody,
-    VerificationResponse,
-    VerifySolutionBody,
-    VerifySolutionBodyType,
 } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
-import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
 import { handleErrors } from './errorHandler.js'
 import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
@@ -130,84 +122,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     })
 
     /**
-     * Verifies a user's solution as being approved or not
-     *
-     * @param {string} user - Dapp User id
-     * @param {string} commitmentId - The captcha solution to look up
-     * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
-     */
-    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
-        let parsed: VerifySolutionBodyType
-        try {
-            parsed = VerifySolutionBody.parse(req.body)
-        } catch (err) {
-            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
-        }
-        try {
-            const solution = await (parsed.commitmentId
-                ? tasks.getDappUserCommitmentById(parsed.commitmentId)
-                : tasks.getDappUserCommitmentByAccount(parsed.user))
-
-            if (!solution) {
-                tasks.logger.debug('Not verified - no solution found')
-                return res.json({
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
-                    [ApiParams.verified]: false,
-                })
-            }
-
-            if (parsed.maxVerifiedTime) {
-                const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
-                const blockTimeMs = getBlockTimeMs(tasks.contract.api)
-                const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
-                const verificationResponse: VerificationResponse = {
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
-                    [ApiParams.verified]: false,
-                }
-                if (timeSinceCompletion > parsed.maxVerifiedTime) {
-                    tasks.logger.debug('Not verified - time run out')
-                    return res.json(verificationResponse)
-                }
-            }
-
-            const isApproved = solution.status === CaptchaStatus.approved
-            const response: ImageVerificationResponse = {
-                [ApiParams.status]: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.verified]: isApproved,
-                [ApiParams.commitmentId]: solution.id.toString(),
-                [ApiParams.blockNumber]: solution.requestedAt,
-            }
-            return res.json(response)
-        } catch (err) {
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
-        }
-    })
-
-    /**
-     * Verifies a user's solution as being approved or not
-     *
-     * @param {string} dappAccount - Dapp User id
-     * @param {string} challenge - The captcha solution to look up
-     */
-    router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
-        try {
-            const { challenge, dapp } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
-
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge)
-
-            const verificationResponse: VerificationResponse = {
-                status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.verified]: approved,
-            }
-
-            return res.json(verificationResponse)
-        } catch (err) {
-            tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
-        }
-    })
-
-    /**
      * Supplies a PoW challenge to a Dapp User
      *
      * @param {string} userAccount - User address
@@ -215,8 +129,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
         try {
-            const { user, dapp } = GetPowCaptchaChallengeRequestBody.parse(req.body)
-
+            const { userAccount, dappAccount } = req.body
+            // Assert that the user and dapp accounts are strings
+            if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
+                throw new ProsopoApiError('API.BAD_REQUEST', {
+                    context: { code: 400, error: 'userAccount and dappAccount must be strings' },
+                })
+            }
             const origin = req.headers.origin
 
             if (!origin) {
@@ -225,7 +144,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 })
             }
 
-            const challenge = await tasks.getPowCaptchaChallenge(user, dapp, origin)
+            const challenge = await tasks.getPowCaptchaChallenge(userAccount, dappAccount, origin)
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)

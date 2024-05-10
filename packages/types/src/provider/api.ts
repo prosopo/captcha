@@ -45,6 +45,7 @@ export enum ApiParams {
     captchas = 'captchas',
     commitmentId = 'commitmentId',
     proof = 'proof',
+    dappUserSignature = 'dappUserSignature',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
@@ -98,6 +99,7 @@ export const VerifySolutionBody = object({
     [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number(),
+    [ApiParams.dappUserSignature]: string(),
     [ApiParams.commitmentId]: string().optional(),
     [ApiParams.maxVerifiedTime]: number().optional(),
 })
@@ -146,11 +148,8 @@ export interface PowCaptchaSolutionResponse {
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
-})
-
-export const GetPowCaptchaChallengeRequestBody = object({
-    [ApiParams.user]: string(),
-    [ApiParams.dapp]: string(),
+    [ApiParams.dappUserSignature]: string(),
+    [ApiParams.blockNumber]: number(),
 })
 
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>

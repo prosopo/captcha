@@ -54,7 +54,6 @@
         "@prosopo/util": "0.3.39",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
-        "fast-glob": "^3.3.2",
         "glob": "^10.0.0",
         "qs": "^6.11.2",
         "varuint-bitcoin": "^1.1.2",

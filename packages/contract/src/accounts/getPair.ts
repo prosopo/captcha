@@ -51,7 +51,9 @@ export function getPair(
     if (!secret && account) {
         return keyring.addFromAddress(account)
     } else if (secret) {
+        console.log(secret)
         if (mnemonicValidate(secret)) {
+            console.log(secret)
             return keyring.addFromMnemonic(secret)
         }
         if (isHex(secret)) {
