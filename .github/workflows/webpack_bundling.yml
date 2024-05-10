@@ -1,4 +1,4 @@
-name: webpack bundling
+name: webpack_bundling
 
 on:
   pull_request:
