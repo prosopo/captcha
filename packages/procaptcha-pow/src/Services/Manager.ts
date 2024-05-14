@@ -32,7 +32,7 @@ import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
-import { solvePoW } from './SolverService.js'
+import { solvePoW } from '@prosopo/util'
 
 export const Manager = (
     configInput: ProcaptchaClientConfigInput,
