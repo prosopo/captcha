@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account } from '../accounts.js'
+import { AppTestAccount, ProviderTestAccount, TestAccount } from '@prosopo/env'
 import { IDatabasePopulatorMethods } from './DatabasePopulator.js'
 import { at, get } from '@prosopo/util'
 import { readFile, writeFile } from 'fs'
@@ -27,17 +27,17 @@ export enum AccountKey {
 }
 
 export interface IDatabaseAccounts {
-    providers: Account[]
+    providers: ProviderTestAccount[]
 
-    providersWithStake: Account[]
+    providersWithStake: ProviderTestAccount[]
 
-    providersWithStakeAndDataset: Account[]
+    providersWithStakeAndDataset: ProviderTestAccount[]
 
-    dapps: Account[]
+    dapps: AppTestAccount[]
 
-    dappsWithStake: Account[]
+    dappsWithStake: AppTestAccount[]
 
-    dappUsers: Account[]
+    dappUsers: TestAccount[]
 }
 
 const keys = Object.keys(new IDatabasePopulatorMethods())
@@ -68,37 +68,37 @@ export async function exportDatabaseAccounts(database: IDatabaseAccounts) {
 }
 
 class DatabaseAccounts implements IDatabaseAccounts {
-    private _registeredProviders: Account[] = []
-    private _registeredProvidersWithStake: Account[] = []
-    private _registeredProvidersWithStakeAndDataset: Account[] = []
-    private _registeredDapps: Account[] = []
-    private _registeredDappsWithStake: Account[] = []
-    private _registeredDappUsers: Account[] = []
+    private _registeredProviders: ProviderTestAccount[] = []
+    private _registeredProvidersWithStake: ProviderTestAccount[] = []
+    private _registeredProvidersWithStakeAndDataset: ProviderTestAccount[] = []
+    private _registeredDapps: AppTestAccount[] = []
+    private _registeredDappsWithStake: AppTestAccount[] = []
+    private _registeredDappUsers: TestAccount[] = []
 
-    get providers(): Account[] {
+    get providers(): ProviderTestAccount[] {
         return this._registeredProviders
     }
-    get providersWithStake(): Account[] {
+    get providersWithStake(): ProviderTestAccount[] {
         return this._registeredProvidersWithStake
     }
-    get providersWithStakeAndDataset(): Account[] {
+    get providersWithStakeAndDataset(): ProviderTestAccount[] {
         return this._registeredProvidersWithStakeAndDataset
     }
-    get dapps(): Account[] {
+    get dapps(): AppTestAccount[] {
         return this._registeredDapps
     }
-    get dappsWithStake(): Account[] {
+    get dappsWithStake(): AppTestAccount[] {
         return this._registeredDappsWithStake
     }
 
-    get dappUsers(): Account[] {
+    get dappUsers(): TestAccount[] {
         return this._registeredDappUsers
     }
 
     public importDatabaseAccounts() {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self: {
-            [key: string]: Account[]
+            [key: string]: TestAccount[]
         } = this as any
         return new Promise((resolve) => {
             readFile(getPath('import'), { encoding: 'utf-8' }, function (err, stringData) {

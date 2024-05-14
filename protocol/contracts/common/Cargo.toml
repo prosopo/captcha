@@ -1,6 +1,6 @@
 [package]
 name = "common"
-version = "0.3.2"
+version = "0.3.39"
 authors = [
   "Chris Taylor <chris@prosopo.io>",
   "George Oastler <george@prosopo.io>",

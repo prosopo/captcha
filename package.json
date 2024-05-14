@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -39,13 +39,15 @@
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:demo:pow": "npm -w @prosopo/client-pow-example run start",
+        "start:demo:frictionless": "npm -w @prosopo/client-frictionless-example run start",
         "start:bundle": "npm -w @prosopo/client-bundle-example run start",
         "start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
+        "start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
         "populate-data": "npm -w @prosopo/provider run populate-data",
-        "test": "npm -w @prosopo/scripts run test",
+        "test": "npm run --workspaces test",
         "test:all": "npm run --workspaces --if-present test",
         "eslint": "npm --workspaces run eslint && npm run eslint:workspace",
-        "eslint:workspace": "npx eslint '.*.*' '*.*' .vscode .github --ignore-pattern README.md --ignore-pattern diagram.svg --ignore-path .eslintignore",
+        "eslint:workspace": "npx eslint '.*.*' '*.*' .vscode .github --ignore-pattern README.md --ignore-pattern code-of-conduct.md --ignore-pattern diagram.svg --ignore-path .eslintignore",
         "eslint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run eslint",
         "eslint:fix": "npm --workspaces run eslint:fix && npm run eslint:fix:workspace",
         "eslint:fix:workspace": "npm run eslint:workspace -- --fix",
@@ -64,7 +66,7 @@
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
-        "docs": "typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\""
+        "docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
     },
     "private": true,
     "engines": {
@@ -79,6 +81,9 @@
         "demos/*",
         "provider-gui"
     ],
+    "dependencies": {
+        "@prosopo/flux": "0.3.39"
+    },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
@@ -106,13 +111,13 @@
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "2.6.2",
-        "typedoc": "^0.25.8",
+        "typedoc": "^0.25.13",
         "typedoc-plugin-mdn-links": "^3.1.16",
         "typedoc-plugin-missing-exports": "^2.2.0",
         "typedoc-plugin-zod": "^1.1.2",
         "typescript": "5.1.6"
     },
-    "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
+    "description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
@@ -136,7 +141,18 @@
         "frontend-security",
         "open-source",
         "free",
-        "captcha-alternative"
+        "captcha-alternative",
+        "hcaptcha",
+        "google-recaptcha",
+        "recaptcha-alternative",
+        "recaptcha-v3",
+        "recaptcha-v2",
+        "cloudflare-turnstile-alternative",
+        "hcaptcha-alternative",
+        "prosopo-captcha",
+        "procaptcha",
+        "prosopo-procaptcha",
+        "web3-captcha"
     ],
     "license": "Apache-2.0"
 }

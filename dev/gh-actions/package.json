@@ -1,9 +1,10 @@
 {
     "name": "gh-actions",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "description": "",
     "private": true,
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "start": "npx tsx src/index.ts",

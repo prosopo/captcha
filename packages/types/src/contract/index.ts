@@ -13,5 +13,6 @@
 // limitations under the License.
 export * from './artifacts.js'
 export * from './contract.js'
+export * from './interface.js'
 export * from './useWeight.js'
 export * from './batch.js'

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/api",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "description": "Wrapper for the provider API",
     "main": "dist/index.js",
     "type": "module",
@@ -15,6 +15,7 @@
         }
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
@@ -36,11 +37,11 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@prosopo/types": "0.3.2"
+        "@prosopo/types": "0.3.39"
     },
     "devDependencies": {
-        "@prosopo/captcha-contract": "0.3.2",
-        "@prosopo/config": "0.3.2",
+        "@prosopo/captcha-contract": "0.3.39",
+        "@prosopo/config": "0.3.39",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

@@ -60,6 +60,7 @@ export default async function (
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
         'process.env.PROSOPO_MONGO_EVENTS_URI': JSON.stringify(process.env.PROSOPO_MONGO_EVENTS_URI),
         'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
+        'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(process.env.PROSOPO_PACKAGE_VERSION),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }
@@ -89,10 +90,10 @@ export default async function (
 
     // drop console logs if in production mode
     let drop: undefined | Drop[]
-    let pure: string[] | undefined
+    let pure: string[] = []
     if (isProduction) {
         drop = ['debugger']
-        pure = ['console.log', 'console.warn']
+        pure = ['console.log', 'console.warn', 'console.info', 'console.debug']
     }
 
     logger.info('Bundle name', bundleName)

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha-contract",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "description": "The captcha contract",
     "main": "dist/index.js",
     "type": "module",
@@ -93,6 +93,7 @@
         }
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
@@ -114,18 +115,18 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@polkadot/api": "10.11.2",
-        "@polkadot/api-contract": "10.11.2",
+        "@polkadot/api": "10.13.1",
+        "@polkadot/api-contract": "10.13.1",
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.11.2",
-        "@polkadot/typegen": "10.11.2",
-        "@polkadot/types": "10.11.2",
-        "@polkadot/types-codec": "10.11.2",
-        "@polkadot/types-create": "10.11.2",
+        "@polkadot/rpc-provider": "10.13.1",
+        "@polkadot/typegen": "10.13.1",
+        "@polkadot/types": "10.13.1",
+        "@polkadot/types-codec": "10.13.1",
+        "@polkadot/types-create": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/typechain-polkadot": "1.1.14",
-        "@prosopo/typechain-types": "1.1.14"
+        "@prosopo/typechain-polkadot": "1.1.15",
+        "@prosopo/typechain-types": "1.1.15"
     },
     "devDependencies": {
         "tslib": "2.6.2",

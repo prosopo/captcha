@@ -16,9 +16,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
 import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util/bn'
+import { calcInterval } from './useBlockInterval.js'
 import { convertWeight } from '@polkadot/api-contract/base/util'
-import type { BN } from '@polkadot/util/bn'
 import type { UseWeight } from '@prosopo/types'
 import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
 
@@ -115,4 +116,9 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN)
             weightV2,
         })
     })
+}
+
+export async function getWeight(api: ApiPromise): Promise<UseWeight> {
+    const expectedBlockTime = calcInterval(api)
+    return await useWeightImpl(api as ApiPromise, expectedBlockTime, new BN(10))
 }

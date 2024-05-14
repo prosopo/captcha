@@ -18,24 +18,30 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import { CaptchaSolution, CaptchaSolutionResponse, CaptchaWithProof, GetCaptchaResponse } from '@prosopo/types'
+import {
+    CaptchaResponseBody,
+    CaptchaSolution,
+    CaptchaSolutionResponse,
+    CaptchaWithProof,
+    ProsopoCaptchaApiInterface,
+} from '@prosopo/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
-import { TCaptchaSubmitResult } from '../types/client.js'
+import { TCaptchaSubmitResult } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { stringToHex } from '@polkadot/util/string'
 
-export class ProsopoCaptchaApi {
+export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
     userAccount: string
     contract: ProsopoCaptchaContract
     provider: RandomProvider
     providerApi: ProviderApi
     dappAccount: string
-    private web2: boolean
+    _web2: boolean
 
     constructor(
         userAccount: string,
@@ -49,11 +55,15 @@ export class ProsopoCaptchaApi {
         this.contract = contract
         this.provider = provider
         this.providerApi = providerApi
-        this.web2 = web2
+        this._web2 = web2
         this.dappAccount = dappAccount
     }
 
-    public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
+    get web2(): boolean {
+        return this._web2
+    }
+
+    public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
@@ -74,11 +84,10 @@ export class ProsopoCaptchaApi {
         }
     }
 
-    public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
+    public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: CaptchaResponseBody): void {
         // TODO make sure root is equal to root on the provider
         const first = at(captchaChallenge.captchas, 0)
         const proofLength = first.proof.length
-        console.log(provider.provider)
 
         const last = at(first.proof, proofLength - 1)
         if (provider.provider.datasetIdContent.toString() !== at(last, 0)) {
@@ -95,7 +104,6 @@ export class ProsopoCaptchaApi {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
         }
-        console.log('CAPTCHA.CHALLENGE_VERIFIED')
         return
     }
 
@@ -113,27 +121,25 @@ export class ProsopoCaptchaApi {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        console.log('solveCaptchaChallenge commitmentId', commitmentId)
         const tx: ContractSubmittableResult | undefined = undefined
 
         let signature: string | undefined = undefined
 
-        if (this.web2) {
-            if (!signer || !signer.signRaw) {
-                throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
-                    context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
-                })
-            }
-            // sign the request hash to prove account ownership
-            const signed = await signer.signRaw({
-                address: this.userAccount,
-                data: stringToHex(requestHash),
-                type: 'bytes',
+        if (!signer || !signer.signRaw) {
+            throw new ProsopoEnvError('GENERAL.CANT_FIND_KEYRINGPAIR', {
+                context: { error: 'Signer is not defined, cannot sign message to prove account ownership' },
             })
-            signature = signed.signature
         }
 
         let result: CaptchaSolutionResponse
+
+        // sign the request hash to prove account ownership
+        const signed = await signer.signRaw({
+            address: this.userAccount,
+            data: stringToHex(requestHash),
+            type: 'bytes',
+        })
+        signature = signed.signature
 
         try {
             result = await this.providerApi.submitCaptchaSolution(

@@ -37,7 +37,7 @@ export default class EventsClass {
                     const [address, data] = record.event.data
 
                     if (address.toString() === this.__nativeContract.address.toString()) {
-                        const { args, event } = this.__nativeContract.abi.decodeEvent(data)
+                        const { args, event } = this.__nativeContract.abi.decodeEvent(record)
 
                         if (filter(event.identifier.toString())) callback(args, event)
                     }

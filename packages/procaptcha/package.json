@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -19,7 +19,8 @@
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+        "test": "NODE_ENV=test vitest --run --config vite.test.config.ts"
     },
     "exports": {
         ".": {
@@ -35,24 +36,36 @@
     },
     "dependencies": {
         "@fingerprintjs/fingerprintjs": "^3.3.6",
-        "@polkadot/api": "10.11.2",
-        "@polkadot/api-contract": "10.11.2",
-        "@polkadot/extension-base": "0.46.6",
-        "@polkadot/extension-dapp": "0.46.6",
-        "@polkadot/extension-inject": "0.46.6",
+        "@polkadot/api": "10.13.1",
+        "@polkadot/api-contract": "10.13.1",
+        "@polkadot/extension-base": "0.46.9",
+        "@polkadot/extension-dapp": "0.46.9",
+        "@polkadot/extension-inject": "0.46.9",
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.11.2",
-        "@polkadot/types": "10.11.2",
+        "@polkadot/rpc-provider": "10.13.1",
+        "@polkadot/types": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/account": "0.3.2",
-        "@prosopo/api": "0.3.2",
-        "@prosopo/common": "0.3.2",
-        "@prosopo/contract": "0.3.2",
-        "@prosopo/datasets": "0.3.2",
-        "@prosopo/types": "0.3.2",
-        "@prosopo/util": "0.3.2",
+        "@prosopo/account": "0.3.39",
+        "@prosopo/api": "0.3.39",
+        "@prosopo/common": "0.3.39",
+        "@prosopo/contract": "0.3.39",
+        "@prosopo/datasets": "0.3.39",
+        "@prosopo/types": "0.3.39",
+        "@prosopo/util": "0.3.39",
         "rxjs": "7.8.1"
+    },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
     },
     "devDependencies": {
         "tslib": "2.6.2",

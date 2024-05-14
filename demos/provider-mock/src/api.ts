@@ -57,14 +57,14 @@ export function prosopoRouter(): Router {
                 statusMessage = 'API.USER_VERIFIED'
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: approved,
+                    verified: approved,
                     commitmentId: testCommitmentId,
                 })
             }
 
             return res.json({
                 status: req.t(statusMessage),
-                solutionApproved: false,
+                verified: false,
             })
         } catch (err) {
             return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))

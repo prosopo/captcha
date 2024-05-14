@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-bundle",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -19,6 +19,7 @@
     "types": "./dist/index.d.ts",
     "source": "./src/index.tsx",
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
@@ -36,12 +37,12 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@prosopo/procaptcha-frictionless": "0.3.2",
-        "@prosopo/procaptcha-pow": "0.3.2",
-        "@prosopo/procaptcha-react": "0.3.2",
-        "@prosopo/types": "0.3.2",
-        "@prosopo/util": "0.3.2",
-        "react-dom": "^18.2.0"
+        "@prosopo/procaptcha-frictionless": "0.3.39",
+        "@prosopo/procaptcha-pow": "0.3.39",
+        "@prosopo/procaptcha-react": "0.3.39",
+        "@prosopo/types": "0.3.39",
+        "@prosopo/util": "0.3.39",
+        "react-dom": "^18.3.1"
     },
     "repository": {
         "type": "git",
@@ -57,11 +58,11 @@
     },
     "devDependencies": {
         "@originjs/vite-plugin-commonjs": "^1.0.3",
-        "@prosopo/config": "0.3.2",
+        "@prosopo/config": "0.3.39",
         "@rollup/plugin-typescript": "^11.1.2",
         "@vitejs/plugin-react": "^4.2.1",
         "tslib": "2.6.2",
-        "typescript": "5.1.6",
+        "typescript": "^5.1.6",
         "webpack-merge": "^5.9.0"
     }
 }

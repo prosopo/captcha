@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 /// <reference types="cypress" />
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
@@ -31,6 +30,8 @@ describe('Captchas', () => {
                 context: { datasetWithSolutionHashes },
             })
         }
+
+        cy.intercept('/dummy').as('dummy')
 
         // visit the base URL specified on command line when running cypress
         return cy.visit(Cypress.env('default_page')).then(() => {

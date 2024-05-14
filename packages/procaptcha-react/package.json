@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-react",
-    "version": "0.3.2",
+    "version": "0.3.39",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -19,6 +19,7 @@
     "types": "./dist/index.d.ts",
     "source": "./src/index.ts",
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
@@ -35,16 +36,28 @@
     "dependencies": {
         "@emotion/react": "^11.11.4",
         "@emotion/styled": "^11.11.0",
-        "@polkadot/extension-dapp": "0.46.6",
-        "@polkadot/extension-inject": "0.46.6",
-        "@prosopo/api": "0.3.2",
-        "@prosopo/common": "0.3.2",
-        "@prosopo/procaptcha": "0.3.2",
-        "@prosopo/types": "0.3.2",
-        "@prosopo/util": "0.3.2",
-        "@prosopo/web-components": "0.3.2",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "@polkadot/extension-dapp": "0.46.9",
+        "@polkadot/extension-inject": "0.46.9",
+        "@prosopo/api": "0.3.39",
+        "@prosopo/common": "0.3.39",
+        "@prosopo/procaptcha": "0.3.39",
+        "@prosopo/types": "0.3.39",
+        "@prosopo/util": "0.3.39",
+        "@prosopo/web-components": "0.3.39",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    },
+    "overrides": {
+        "@polkadot/extension-inject": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        },
+        "@polkadot/extension-dapp": {
+            "@polkadot/api": {
+                "version": "10.13.1"
+            }
+        }
     },
     "devDependencies": {
         "tslib": "2.6.2",

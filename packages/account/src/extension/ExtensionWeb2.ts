@@ -27,6 +27,7 @@ import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
+import { version } from '@prosopo/util'
 import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
@@ -76,7 +77,7 @@ export class ExtensionWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.11',
+            version,
             signer,
         }
     }
@@ -97,7 +98,7 @@ export class ExtensionWeb2 extends Extension {
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
-        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false })
+        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false, noInitWarn: true })
         const type: KeypairType = 'ed25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         const keypair = keyring.addFromMnemonic(mnemonic)

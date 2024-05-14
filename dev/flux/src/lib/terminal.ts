@@ -13,15 +13,12 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { main as authMain, verifyLogin } from './auth.js'
+import { getSocketURL } from './url.js'
 import { io } from 'socket.io-client'
 import { loadEnv } from '@prosopo/cli'
+
 loadEnv()
 const logger = getLogger(LogLevel.enum.info, 'flux.lib.terminal')
-
-const getSockerURL = (nodeAPIURL: URL) => {
-    const urlPort = nodeAPIURL.port || 16127
-    return `https://${nodeAPIURL.hostname.replace(/\./g, '-')}-${urlPort}.node.api.runonflux.io`
-}
 
 export async function main(publicKey: string, privateKey: Uint8Array, appName: string, ip?: string) {
     let running = true
@@ -35,9 +32,9 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName: s
         const selectedIp = nodeAPIURL.toString()
         const url = selectedIp.split(':')[0]
         if (!url) throw new Error('No url')
-        const socketUrl = getSockerURL(nodeAPIURL)
+        const socketUrl = getSocketURL(nodeAPIURL)
 
-        const socket = io(socketUrl)
+        const socket = io(socketUrl.href)
         socket.on('connect', () => {
             logger.info('connected')
             logger.info(socket.id)
@@ -50,6 +47,7 @@ export async function main(publicKey: string, privateKey: Uint8Array, appName: s
         })
         socket.on('connect_error', (err) => {
             logger.info(`connect_error due to ${err.message}`)
+            console.error(err)
         })
         socket.on('disconnect', () => {
             logger.info('disconnected')

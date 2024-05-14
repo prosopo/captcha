@@ -19,20 +19,27 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { getServerUrl } from '@prosopo/server'
 import { useState } from 'react'
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
-function App() {
+interface AppProps {
+    captchaType?: string
+}
+
+function App(props: AppProps) {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
     const [account, setAccount] = useState<string>('')
-
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action
@@ -49,17 +56,19 @@ function App() {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        serverUrl: getServerUrl(),
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
+    console.log(config)
 
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
     const onLoggedIn = (token: string) => {
-        console.log('getting private resource with token ', token)
-        fetch(new URL('/private', config.serverUrl).href, {
+        const url = new URL('/private', config.serverUrl).href
+        console.log('getting private resource with token ', token, 'at', url)
+        fetch(url, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -93,7 +102,9 @@ function App() {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(new URL(urlPath, config.serverUrl).href, {
+        const url = new URL(urlPath, config.serverUrl).href
+        console.log('posting to', url, 'with payload', payload)
+        fetch(url, {
             method: 'POST',
             headers: {
                 ...corsHeaders,
@@ -157,15 +168,22 @@ function App() {
             >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
-                    {!config.web2 ? (
-                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
-                    ) : (
-                        <></>
-                    )}
+
                     <Box>
                         <h1>{label}</h1>
                         <form>
-                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
+                            <FormGroup sx={{ '& .MuiTextField-root,#select-account': { m: 1 } }}>
+                                {!config.web2 ? (
+                                    <FormControl>
+                                        <ExtensionAccountSelect
+                                            dappName={config.dappName}
+                                            value={account}
+                                            onChange={setAccount}
+                                        />
+                                    </FormControl>
+                                ) : (
+                                    <></>
+                                )}
                                 <FormControl>
                                     <TextField
                                         id="email"
@@ -200,7 +218,14 @@ function App() {
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
-                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    {props.captchaType === 'frictionless' ? (
+                                        <ProcaptchaFrictionless
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                        />
+                                    ) : (
+                                        <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    )}
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>

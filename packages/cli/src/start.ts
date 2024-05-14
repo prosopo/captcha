@@ -11,36 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
+import { i18nMiddleware } from '@prosopo/common'
 import { loadEnv } from './env.js'
 import { prosopoAdminRouter, prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
-import express, { NextFunction, Request, Response } from 'express'
+import express from 'express'
 import getConfig from './prosopo.config.js'
-
-// We need the unused params to make express recognise this function as an error handler
-export const handleErrors = (
-    err: ProsopoApiError | SyntaxError,
-    request: Request,
-    response: Response,
-    next: NextFunction
-) => {
-    const code = 'code' in err ? err.code : 400
-    let message = err.message
-    try {
-        message = JSON.parse(err.message)
-    } catch {
-        console.debug('Invalid JSON error message')
-    }
-    return response.status(code).json({
-        message,
-        name: err.name,
-    })
-}
 
 function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info(`Starting Prosopo API`)
@@ -51,11 +31,11 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
+
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
     }
 
-    apiApp.use(handleErrors)
     return apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })
