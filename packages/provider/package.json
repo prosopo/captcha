@@ -65,6 +65,7 @@
         "chai": "^4.3.6",
         "chai-as-promised": "^7.1.1",
         "dotenv": "^16.0.1",
+        "express-rate-limit": "^7.2.0",
         "fs-extra": "^10.1.0",
         "sinon": "^15.2.0",
         "tslib": "2.6.2",
