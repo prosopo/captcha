@@ -45,7 +45,6 @@
         "@prosopo/api": "0.3.39",
         "@prosopo/captcha-contract": "0.3.39",
         "@prosopo/common": "0.3.39",
-        "@prosopo/config": "0.3.39",
         "@prosopo/contract": "0.3.39",
         "@prosopo/datasets": "0.3.39",
         "@prosopo/procaptcha-common": "0.3.39",
