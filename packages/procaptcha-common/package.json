@@ -35,8 +35,7 @@
     ],
     "dependencies": {
         "@prosopo/common": "0.3.39",
-        "@prosopo/types": "0.3.39",
-        "@prosopo/util": "0.3.39"
+        "@prosopo/types": "0.3.39"
     },
     "devDependencies": {
         "tslib": "2.6.2",

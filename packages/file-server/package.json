@@ -28,6 +28,7 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
+        "@prosopo/util": "0.3.39",
         "dotenv": "^16.0.1",
         "express": "^4.18.2",
         "node-fetch": "^3.3.2",
