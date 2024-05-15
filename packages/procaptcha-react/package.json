@@ -35,17 +35,13 @@
     ],
     "dependencies": {
         "@emotion/react": "^11.11.4",
-        "@emotion/styled": "^11.11.0",
-        "@polkadot/extension-dapp": "0.46.9",
-        "@polkadot/extension-inject": "0.46.9",
-        "@prosopo/api": "0.3.39",
         "@prosopo/common": "0.3.39",
         "@prosopo/procaptcha": "0.3.39",
+        "@prosopo/procaptcha-common": "0.3.39",
         "@prosopo/types": "0.3.39",
         "@prosopo/util": "0.3.39",
         "@prosopo/web-components": "0.3.39",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1"
+        "react": "^18.3.1"
     },
     "overrides": {
         "@polkadot/extension-inject": {
@@ -60,9 +56,9 @@
         }
     },
     "devDependencies": {
+        "@prosopo/config": "0.3.39",
         "tslib": "2.6.2",
-        "typescript": "5.1.6",
-        "vite-plugin-dts": "^3.7.3"
+        "typescript": "5.1.6"
     },
     "repository": {
         "type": "git",

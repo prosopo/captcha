@@ -37,10 +37,12 @@
         "@fingerprintjs/botd": "^1.9.0",
         "@prosopo/procaptcha-pow": "0.3.39",
         "@prosopo/procaptcha-react": "0.3.39",
+        "@prosopo/types": "0.3.39",
         "@prosopo/web-components": "0.3.39",
         "react": "^18.3.1"
     },
     "devDependencies": {
+        "@prosopo/config": "0.3.39",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

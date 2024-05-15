@@ -51,13 +51,12 @@
         "@polkadot/api": "10.13.1",
         "@polkadot/api-contract": "10.13.1",
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.13.1",
-        "@polkadot/typegen": "10.13.1",
         "@polkadot/types": "10.13.1",
-        "@polkadot/types-create": "10.13.1",
+        "@polkadot/types-codec": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
         "@prosopo/common": "0.3.39",
+        "@prosopo/config": "0.3.39",
         "@prosopo/types": "0.3.39",
         "@prosopo/util": "0.3.39",
         "@prosopo/captcha-contract": "0.3.39",
@@ -67,7 +66,6 @@
     },
     "devDependencies": {
         "@polkadot/api-augment": "10.13.1",
-        "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

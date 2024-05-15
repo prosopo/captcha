@@ -43,6 +43,7 @@
         "@prosopo/procaptcha-react": "0.3.39",
         "@prosopo/types": "0.3.39",
         "@prosopo/util": "^0.3.39",
+        "react": "^18.3.1",
         "react-dom": "^18.3.1"
     },
     "repository": {
@@ -59,7 +60,9 @@
     },
     "devDependencies": {
         "@prosopo/config": "0.3.39",
+        "@prosopo/cli": "0.3.39",
         "tslib": "2.6.2",
+        "vite": "^5.1.7",
         "typescript": "^5.1.6"
     }
 }

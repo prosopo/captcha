@@ -35,12 +35,16 @@
     ],
     "dependencies": {
         "@emotion/react": "^11.11.1",
-        "@emotion/styled": "^11.11.0",
-        "@polkadot/extension-inject": "0.46.9",
         "@prosopo/account": "0.3.39",
+        "@polkadot/api": "10.13.1",
+        "@polkadot/keyring": "12.6.2",
+        "@polkadot/rpc-provider": "10.13.1",
         "@prosopo/api": "0.3.39",
+        "@prosopo/captcha-contract": "0.3.39",
         "@prosopo/common": "0.3.39",
+        "@prosopo/contract": "0.3.39",
         "@prosopo/procaptcha": "0.3.39",
+        "@prosopo/procaptcha-common": "0.3.39",
         "@prosopo/types": "0.3.39",
         "@prosopo/util": "0.3.39",
         "@prosopo/web-components": "0.3.39",
@@ -54,6 +58,7 @@
         }
     },
     "devDependencies": {
+        "@prosopo/config": "0.3.39",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

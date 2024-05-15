@@ -27,15 +27,20 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
+        "@polkadot/api": "10.13.1",
+        "@polkadot/keyring": "12.6.2",
+        "@polkadot/rpc-provider": "10.13.1",
+        "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
+        "@prosopo/captcha-contract": "0.3.39",
         "@prosopo/common": "0.3.39",
+        "@prosopo/config": "0.3.39",
         "@prosopo/contract": "0.3.39",
         "@prosopo/database": "0.3.39",
         "@prosopo/types": "0.3.39",
         "@prosopo/types-database": "0.3.39",
         "@prosopo/types-env": "0.3.39",
-        "@prosopo/util": "0.3.39",
-        "dotenv": "^16.0.1"
+        "@prosopo/util": "0.3.39"
     },
     "overrides": {
         "@polkadot/keyring": "12.6.2"
