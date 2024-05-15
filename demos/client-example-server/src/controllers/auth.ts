@@ -79,7 +79,6 @@ const signup = async (
             return res.status(409).json({ message: 'email already exists' })
         }
         console.log('payload', payload)
-        console.log('verifyEndpoint', verifyEndpoint)
 
         // get the contents of the procaptcha-response JSON data
         const data = ProcaptchaOutputSchema.parse(payload[ApiParams.procaptchaResponse])
