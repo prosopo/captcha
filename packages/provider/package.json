@@ -24,7 +24,7 @@
         "test": "npx vitest run --config ./vite.test.config.ts",
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",

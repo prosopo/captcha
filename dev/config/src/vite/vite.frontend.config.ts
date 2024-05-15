@@ -37,7 +37,8 @@ export default async function (
     command?: string,
     mode?: string,
     copyOptions?: ClosePluginOptions,
-    tsConfigPaths?: string[]
+    tsConfigPaths?: string[],
+    workspaceRoot?: string
 ): Promise<UserConfig> {
     logger.info(`Running at ${dir} in ${mode} mode`)
     const isProduction = mode === 'production'
@@ -81,7 +82,7 @@ export default async function (
         ...optionalPeerDependencies,
     ]
     logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-    const alias = getAliases(dir)
+    const alias = getAliases(workspaceRoot || dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any

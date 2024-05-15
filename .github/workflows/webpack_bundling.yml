@@ -1,11 +1,11 @@
-name: clippy
+name: webpack_bundling
 
 on:
     pull_request:
         branches: [main]
         paths:
-            - '**.rs'
-            - '.github/workflows/clippy.yml'
+            - 'src/**'
+            - 'package.json'
     workflow_dispatch:
 
 concurrency:
@@ -14,8 +14,8 @@ concurrency:
 
 env:
     CARGO_TERM_COLOR: always
-    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
+    NODE_ENV: test
 
 jobs:
     check:
@@ -58,7 +58,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-
+            # Checkout the repo
             - uses: actions/checkout@v3
 
             - run: mkdir -p protocol/cargo-cache
@@ -84,12 +84,16 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+            - name: Install npm
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
-            - run: npm ci
+            - run: npm install
 
-            - name: Clippy
+            # build all packages in workspace
+            - run: npm run build scripts
+            - run: npm run build:all:cjs
+
+            # bundle procaptcha-bundle using webpack
+            - name: Webpack Bundle procaptcha-bundle
               run: |
-                  cd protocol/dev
-                  npm run build
-                  npm run cli -- clippy --docker -- -- -D warnings
+                  npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
