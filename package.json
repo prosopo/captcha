@@ -36,6 +36,7 @@
         "setup": "npm -w @prosopo/scripts run setup",
         "setup:all": "npm run deploy_protocol && npm run setup",
         "start:provider": "npm -w @prosopo/cli run start",
+        "start:provider-gui": "npm -w @prosopo/provider-gui run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:demo:pow": "npm -w @prosopo/client-pow-example run start",
