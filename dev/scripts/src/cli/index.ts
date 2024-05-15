@@ -174,6 +174,23 @@ export async function processArgs(args: string[]) {
             handler: async (argv) => {
                 await setVersion(String(argv.v))
             },
+        })
+        .command({
+            command: 'migrate_new_contract',
+            describe: 'Use an old and new ABI path to migrate a contract',
+            builder: (yargs) =>
+                yargs
+                    .option('old', {
+                        type: 'string',
+                        demand: true,
+                        desc: 'The path to the old contract abi',
+                    })
+                    .option('new', {
+                        type: 'string',
+                        demand: true,
+                        desc: 'The path to the new contract abi',
+                    }),
+            handler: async (argv) => {},
         }).argv
 }
 processArgs(process.argv)
