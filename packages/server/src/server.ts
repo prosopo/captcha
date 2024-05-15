@@ -103,13 +103,6 @@ export class ProsopoServer {
         }
     }
 
-    getPair(): KeyringPair {
-        if (this.pair === undefined) {
-            throw new ProsopoEnvError(new Error('pair undefined'))
-        }
-        return this.pair
-    }
-
     getApi(): ApiPromise {
         if (this.api === undefined) {
             throw new ProsopoEnvError(new Error('api undefined'))
