@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { WIDGET_OUTER_HEIGHT } from './WidgetConstants.js'
-import styled from '@emotion/styled'
+import { default as styled } from '@emotion/styled'
 
 export const ContainerDiv = styled.div`
     container-type: inline-size;

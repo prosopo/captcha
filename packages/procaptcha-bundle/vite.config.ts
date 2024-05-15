@@ -35,6 +35,7 @@ const copyOptions = copyTo
     : undefined
 const tsConfigPaths = [path.resolve('./tsconfig.json')]
 const packagesDir = path.resolve('..')
+const workspaceRoot = path.resolve('../../')
 // Get all folders in packagesDir
 const packages = fs.readdirSync(packagesDir).filter((f) => fs.statSync(path.join(packagesDir, f)).isDirectory())
 for (const packageName of packages) {
@@ -51,7 +52,8 @@ export default defineConfig(async ({ command, mode }) => {
         command,
         mode,
         copyOptions,
-        tsConfigPaths
+        tsConfigPaths,
+        workspaceRoot
     )
     return {
         ...frontendConfig,

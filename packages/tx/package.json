@@ -8,7 +8,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
@@ -60,7 +60,6 @@
     },
     "devDependencies": {
         "@polkadot/api-augment": "10.13.1",
-        "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

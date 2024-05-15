@@ -20,6 +20,7 @@ import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
+import { default as Signer } from '@polkadot/extension-base/page/Signer'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
@@ -28,7 +29,6 @@ import { picassoCanvas } from '@prosopo/util'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 import { version } from '@prosopo/util'
-import Signer from '@polkadot/extension-base/page/Signer'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
