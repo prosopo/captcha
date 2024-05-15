@@ -20,6 +20,7 @@ import {
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
     CaptchaSolutionResponse,
+    GetPowCaptchaChallengeBodyType,
     GetPowCaptchaResponse,
     ImageVerificationResponse,
     NetworkConfig,
@@ -126,7 +127,11 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     }
 
     public getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse> {
-        return this.post(ApiPaths.GetPowCaptchaChallenge, { userAccount, dappAccount })
+        const GetPowCaptchaChallengeBody: GetPowCaptchaChallengeBodyType = {
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.dapp]: dappAccount.toString(),
+        }
+        return this.post(ApiPaths.GetPowCaptchaChallenge, GetPowCaptchaChallengeBody)
     }
 
     public submitPowCaptchaSolution(
