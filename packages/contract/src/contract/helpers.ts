@@ -161,10 +161,9 @@ export function getOptions(
     value?: number | BN,
     gasLimit?: WeightV2,
     storageDeposit?: StorageDeposit,
-    increaseGas?: boolean,
-    gasIncreaseFactor?: number
+    increaseGas?: boolean
 ): ContractOptions {
-    gasIncreaseFactor = increaseGas ? gasIncreaseFactor || GAS_INCREASE_FACTOR : 1
+    const gasIncreaseFactor = increaseGas ? GAS_INCREASE_FACTOR : 1
     const _gasLimit: WeightV2 | undefined = gasLimit
         ? api.registry.createType('WeightV2', {
               refTime: gasLimit.refTime.toBn().muln(gasIncreaseFactor),

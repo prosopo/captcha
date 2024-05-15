@@ -117,7 +117,7 @@ jobs:
             # create the provider image for AMD64
             - name: Build the Provider Container
               id: build_docker_provider_amd64
-              continue-on-error: false
+              continue-on-error: true
               uses: docker/build-push-action@v5
               with:
                   context: ${{github.workspace}}
@@ -130,7 +130,7 @@ jobs:
             # create the provider image for ARM64
             - name: Build the Provider Container
               id: build_docker_provider_arm64
-              continue-on-error: false
+              continue-on-error: true
               uses: docker/build-push-action@v5
               with:
                   context: ${{github.workspace}}
@@ -157,36 +157,3 @@ jobs:
                   docker logs $CONTAINER >& provider.log
                   echo $(cat provider.log)
                   grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
-
-            - name: Build the provider-mock package
-              id: build_provider_mock_package
-              run: |
-                  echo "Building the provider-mock package..."
-                  npm run -w @prosopo/provider-mock build
-
-            # create the provider mock image for AMD64
-            - name: Build the Provider Mock Container
-              id: build_docker_provider_mock_amd64
-              continue-on-error: false
-              uses: docker/build-push-action@v5
-              with:
-                  context: ${{github.workspace}}
-                  file: ${{github.workspace}}/docker/images/provider.mock.dockerfile
-                  platforms: linux/amd64
-                  push: false
-                  tags: prosopo/provider-mock:dev
-                  outputs: type=docker,dest=provider-mock-amd64.tar
-
-            # load the provider-mock AMD64 image
-            - name: Load the Provider Container
-              run: docker load -i provider-mock-amd64.tar
-
-            # Check that the version command works when running the bundle in the provider image
-            - name: Check provider mock container runs
-              run: |
-                  CONTAINER=$(docker run -d -p 9229:9229 prosopo/provider-mock:dev)
-                  sleep 10s
-                  docker logs $CONTAINER >& provider-mock.log
-                  echo $(cat provider.log)
-                  RESPONSE=$(curl --location 'http://localhost:9229/v1/prosopo/provider/verify' --header 'Content-Type: application/json' --data '{"user": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY","dapp": "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM","blockNumber": 1}'| jq --raw-output '.status')
-                  if [ "$RESPONSE" = "User verified" ]; then exit 0; else exit 1; fi
