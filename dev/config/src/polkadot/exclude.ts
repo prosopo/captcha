@@ -13,6 +13,7 @@
 // limitations under the License.
 import { Alias } from 'vite'
 import { getLogger } from '@prosopo/common'
+import fs from 'fs'
 import path from 'path'
 
 // List of interfaces to replace with mock. The interface is required if commented out.
@@ -130,14 +131,23 @@ const WASM_BYTES = ['./bytes.js', './cjs/bytes.js']
 
 const log = getLogger(`Info`, `config.polkadot.exclude.js`)
 
-export function getAliases(dir: string): Alias[] {
+export function getAliases(nodeModulesDir: string): Alias[] {
     const alias: Alias[] = []
 
-    const mockUpgrade = path.resolve(dir, '../../dev/config/dist/polkadot/mockUpgrade.js')
-    const mockInterface = path.resolve(dir, '../../dev/config/dist/polkadot/mockInterface.js')
-    const mockSubstrate = path.resolve(dir, '../../dev/config/dist/polkadot/mockSubstrateGenesis.js')
-    const mockAPIDerive = path.resolve(dir, '../../dev/config/dist/polkadot/mockApiDerive.js')
-    const slimmedWASM = path.resolve(dir, '../../dev/config/dist/polkadot/bytes.js')
+    // check if node_modules in dir
+    if (!fs.existsSync(path.resolve(nodeModulesDir, './node_modules'))) {
+        log.error(`node_modules not found in ${nodeModulesDir}`)
+        return alias
+    }
+
+    const mockUpgrade = path.resolve(nodeModulesDir, './node_modules/@prosopo/config/dist/polkadot/mockUpgrade.js')
+    const mockInterface = path.resolve(nodeModulesDir, './node_modules/@prosopo/config/dist/polkadot/mockInterface.js')
+    const mockSubstrate = path.resolve(
+        nodeModulesDir,
+        './node_modules/@prosopo/config/dist/polkadot/mockSubstrateGenesis.js'
+    )
+    const mockAPIDerive = path.resolve(nodeModulesDir, './node_modules/@prosopo/config/dist/polkadot/mockApiDerive.js')
+    const slimmedWASM = path.resolve(nodeModulesDir, './node_modules/@prosopo/config/dist/polkadot/bytes.js')
 
     POLKADOT_UPGRADES.forEach((file) => {
         log.debug(`resolving ${file} to ${mockUpgrade.split('/').slice(-1)}`)
