@@ -17,17 +17,12 @@ const path = require('path')
 const args = process.argv.slice(2)
 const mode = args.indexOf('--mode') > -1 ? args[args.indexOf('--mode') + 1] : 'development'
 const webpackConfig = getWebpackConfig(mode)
-console.log({
-    ...webpackConfig,
-    resolve: {
-        ...webpackConfig.resolve,
-        modules: [path.resolve('node_modules'), path.resolve('../node_modules'), path.resolve('../../node_modules')],
-    },
-})
-module.exports = {
+const bundleWebpackConfig = {
     ...webpackConfig,
     resolve: {
         ...webpackConfig.resolve,
         modules: [path.resolve('node_modules'), path.resolve('../node_modules'), path.resolve('../../node_modules')],
     },
 }
+console.log(bundleWebpackConfig)
+module.exports = bundleWebpackConfig
