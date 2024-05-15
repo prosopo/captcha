@@ -38,7 +38,7 @@
         "cypress:run:client-bundle-example:frictionless": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/frictionless.html'",
         "cypress:open:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/jsBundleTest.html'",
         "cypress:run:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/jsBundleTest.html' --spec 'cypress/e2e/captcha.cy.ts'",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",

@@ -46,7 +46,8 @@ export const main = async (
     privateKey: Uint8Array,
     appName: string,
     ip?: string,
-    lineCount?: number
+    lineCount?: number,
+    callbacks?: Record<string, (logs: string) => string>
 ) => {
     try {
         const { signature, loginPhrase } = await getAuth(privateKey, FLUX_URL)
@@ -75,18 +76,33 @@ export const main = async (
             // Login to the node
             await verifyLogin(publicKey, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
+            const logs = await getLogs(
+                publicKey,
+                nodeSignature,
+                nodeLoginPhrase,
+                nodeAPIURL,
+                appName,
+                appComponentName,
+                lineCount
+            )
+
+            if (!callbacks) {
+                return {
+                    url: ip.href,
+                    logs,
+                }
+            }
+
+            const customLogs: Record<string, string> = {}
+            for (const [key, callback] of Object.entries(callbacks)) {
+                customLogs[key] = callback(logs)
+            }
+
             // Get the logs for the app
             return {
                 url: ip.href,
-                logs: await getLogs(
-                    publicKey,
-                    nodeSignature,
-                    nodeLoginPhrase,
-                    nodeAPIURL,
-                    appName,
-                    appComponentName,
-                    lineCount
-                ),
+                logs,
+                ...customLogs,
             }
         })
 
