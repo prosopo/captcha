@@ -43,7 +43,6 @@
         "seedrandom": "^3.0.5"
     },
     "devDependencies": {
-        "@prosopo/config": "0.3.39",
         "@types/chai": "^4.3.5",
         "@types/lodash": "^4.14.198",
         "@types/seedrandom": "^3.0.5",
