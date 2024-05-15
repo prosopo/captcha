@@ -347,7 +347,6 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
-        console.log((await this.contract.methods.getProvider(this.contract.pair.address, {})).value)
         const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
             .unwrap()
             .unwrap()

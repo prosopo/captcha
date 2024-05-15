@@ -21,7 +21,7 @@ import {
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoContractError, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockTimeMs, getCurrentBlockNumber, getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
@@ -175,17 +175,22 @@ export class ProsopoServer {
      * @param maxVerifiedTime
      */
     public async verifyContract(user: string, maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CONTRACT) {
-        const contractApi = await this.getContractApi()
-        this.logger.info('Provider URL not provided. Verifying with contract.')
-        const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
-            .unwrap()
-            .unwrap()
-            .before.valueOf()
-        const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
-        const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-            .unwrap()
-            .unwrap()
-        return isHuman && verifyRecency
+        try {
+            const contractApi = await this.getContractApi()
+            this.logger.info('Provider URL not provided. Verifying with contract.')
+            const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+                .unwrap()
+                .unwrap()
+                .before.valueOf()
+            const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
+            const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+                .unwrap()
+                .unwrap()
+            return isHuman && verifyRecency
+        } catch (error) {
+            // if a user is not in the contract it errors, suppress this error and return false
+            return false
+        }
     }
 
     /**
@@ -211,7 +216,7 @@ export class ProsopoServer {
         const blockNumberString = blockNumber.toString()
         const dappUserSignature = this.pair?.sign(blockNumberString)
         if (!dappUserSignature) {
-            throw new Error('Failed to sign the block number')
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
         }
         const signatureHex = u8aToHex(dappUserSignature)
 
