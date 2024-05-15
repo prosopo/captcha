@@ -39,11 +39,13 @@
     "dependencies": {
         "@polkadot/api": "10.13.1",
         "@polkadot/api-contract": "10.13.1",
+        "@polkadot/extension-inject": "0.46.9",
+        "@polkadot/keyring": "12.6.2",
         "@polkadot/types": "10.13.1",
         "@polkadot/types-codec": "10.13.1",
+        "@polkadot/util": "12.6.2",
         "@prosopo/common": "0.3.39",
         "@prosopo/captcha-contract": "0.3.39",
-        "consola": "^3.2.3",
         "zod": "^3.22.3"
     },
     "devDependencies": {
