@@ -9,7 +9,7 @@
         "test": "echo \"No test specified\"",
         "start": "vite serve ./src --port 9232 --config vite.config.ts",
         "clean": "echo 'nothing to clean'",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
