@@ -21,6 +21,8 @@ import {
     CaptchaSolutionResponse,
     CaptchaWithProof,
     DappUserSolutionResult,
+    GetPowCaptchaChallengeBody,
+    GetPowCaptchaChallengeBodyType,
     PowCaptchaSolutionResponse,
     SubmitPowCaptchaSolutionBody,
 } from '@prosopo/types'
@@ -128,14 +130,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @param {string} dappAccount - Dapp address
      */
     router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
+        let parsed: GetPowCaptchaChallengeBodyType
         try {
-            const { userAccount, dappAccount } = req.body
-            // Assert that the user and dapp accounts are strings
-            if (typeof userAccount !== 'string' || typeof dappAccount !== 'string') {
-                throw new ProsopoApiError('API.BAD_REQUEST', {
-                    context: { code: 400, error: 'userAccount and dappAccount must be strings' },
-                })
-            }
+            parsed = GetPowCaptchaChallengeBody.parse(req.body)
+        } catch (err) {
+            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
+        }
+        try {
             const origin = req.headers.origin
 
             if (!origin) {
@@ -144,7 +145,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 })
             }
 
-            const challenge = await tasks.getPowCaptchaChallenge(userAccount, dappAccount, origin)
+            const challenge = await tasks.getPowCaptchaChallenge(parsed[ApiParams.user], parsed[ApiParams.dapp], origin)
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)
