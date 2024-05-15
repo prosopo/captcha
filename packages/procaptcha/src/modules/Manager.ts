@@ -194,7 +194,7 @@ export function Manager(
                         undefined,
                         configOptional.challengeValidLength
                     )
-                    if (verifyDappUserResponse.verified && verifyDappUserResponse.commitmentId) {
+                    if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
                         const output: ProcaptchaOutput = {
                             [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
