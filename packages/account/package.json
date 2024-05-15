@@ -41,6 +41,7 @@
         "@fingerprintjs/fingerprintjs": "^3.3.6",
         "@polkadot/api": "10.13.1",
         "@polkadot/extension-base": "0.46.9",
+        "@polkadot/extension-dapp": "0.46.9",
         "@polkadot/extension-inject": "0.46.9",
         "@polkadot/keyring": "12.6.2",
         "@polkadot/rpc-provider": "10.13.1",
