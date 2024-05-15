@@ -208,8 +208,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     async dryRunContractMethod<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | BN | undefined,
-        gasIncreaseFactor?: number
+        value?: number | BN | undefined
     ): Promise<SubmittableExtrinsic> {
         const message = this.getContractMethod(contractMethodName)
         if (!this.nativeContract.query[message.method]) {
@@ -225,7 +224,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
         )
 
         // Increase the gas required by a factor of 1.1 to make sure we don't hit contracts.StorageDepositLimitExhausted
-        const options = getOptions(this.api, true, value, gasRequired, storageDeposit, true, gasIncreaseFactor)
+        const options = getOptions(this.api, true, value, gasRequired, storageDeposit, true)
         const method = get(this.nativeContract.query, message.method)
         const extrinsic = method(this.pair.address, options, ...args)
         const secondResult = await extrinsic
@@ -258,9 +257,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     async getExtrinsicAndGasEstimates<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | BN | undefined,
-        increaseGas = false,
-        gasIncreaseFactor?: number
+        value?: number | BN | undefined
     ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
@@ -284,15 +281,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
 
         const response = (await extrinsic) as unknown as ContractCallOutcome
         if (response.result.isOk) {
-            let options = getOptions(
-                this.api,
-                message.isMutating,
-                value,
-                response.gasRequired,
-                response.storageDeposit,
-                increaseGas,
-                gasIncreaseFactor
-            )
+            let options = getOptions(this.api, message.isMutating, value, response.gasRequired, response.storageDeposit)
             let method = this.contract.tx[contractMethodName]
             if (method === undefined) {
                 throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
@@ -302,15 +291,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
             // increase the gas limit to make sure the tx succeeds
-            options = getOptions(
-                this.api,
-                message.isMutating,
-                value,
-                paymentInfo.weight,
-                response.storageDeposit,
-                true,
-                gasIncreaseFactor
-            )
+            options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
             // Will throw an error if the contract reverted
             this.getQueryResult(message, response, args)
 

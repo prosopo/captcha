@@ -204,7 +204,6 @@ export class ProsopoServer {
         commitmentId?: string,
         maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
     ) {
-        let verifyRecency = false
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
@@ -213,10 +212,7 @@ export class ProsopoServer {
             return result.verified
         }
         const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
-
-        if (result.blockNumber) {
-            verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
-        }
+        const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
         return result.verified && verifyRecency
     }
 

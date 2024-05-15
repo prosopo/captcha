@@ -11,13 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    ApiParams,
-    ApiPaths,
-    ImageVerificationResponse,
-    VerificationResponse,
-    VerifySolutionBody,
-} from '@prosopo/types'
+import { ApiPaths, VerifySolutionBody } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
 import { VerifySolutionBodyType } from '@prosopo/types'
 import express, { Router } from 'express'
@@ -61,19 +55,17 @@ export function prosopoRouter(): Router {
             ) {
                 approved = true
                 statusMessage = 'API.USER_VERIFIED'
-                const response: ImageVerificationResponse = {
-                    [ApiParams.status]: req.t(statusMessage),
-                    [ApiParams.verified]: approved,
-                    [ApiParams.commitmentId]: testCommitmentId,
-                    [ApiParams.blockNumber]: parsed.blockNumber,
-                }
-                return res.json(response)
+                return res.json({
+                    status: req.t(statusMessage),
+                    verified: approved,
+                    commitmentId: testCommitmentId,
+                })
             }
-            const verificationResponse: VerificationResponse = {
-                [ApiParams.status]: req.t(statusMessage),
-                [ApiParams.verified]: false,
-            }
-            return res.json(verificationResponse)
+
+            return res.json({
+                status: req.t(statusMessage),
+                verified: false,
+            })
         } catch (err) {
             return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
         }
