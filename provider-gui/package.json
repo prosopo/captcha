@@ -39,7 +39,7 @@
         "@prosopo/env": "0.3.39",
         "@prosopo/provider": "0.3.39",
         "next": "14.2.3",
-        "react-dom": "18.3.1"
+        "react-dom": "^18.3.1"
     },
     "overrides": {
         "@polkadot/extension-inject": {
@@ -58,7 +58,7 @@
         "bufferutil": "^4.0.1",
         "eslint": "8.44.0",
         "eslint-config-next": "13.4.9",
-        "react-dom": "18.3.1",
+        "react-dom": "^18.3.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "utf-8-validate": "5.0.2"
