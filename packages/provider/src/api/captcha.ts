@@ -21,8 +21,7 @@ import {
     CaptchaSolutionResponse,
     CaptchaWithProof,
     DappUserSolutionResult,
-    GetPowCaptchaChallengeBody,
-    GetPowCaptchaChallengeBodyType,
+    GetPowCaptchaChallengeRequestBody,
     PowCaptchaSolutionResponse,
     SubmitPowCaptchaSolutionBody,
 } from '@prosopo/types'
@@ -130,13 +129,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @param {string} dappAccount - Dapp address
      */
     router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
-        let parsed: GetPowCaptchaChallengeBodyType
         try {
-            parsed = GetPowCaptchaChallengeBody.parse(req.body)
-        } catch (err) {
-            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
-        }
-        try {
+            const { user, dapp } = GetPowCaptchaChallengeRequestBody.parse(req.body)
+
             const origin = req.headers.origin
 
             if (!origin) {
@@ -145,7 +140,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 })
             }
 
-            const challenge = await tasks.getPowCaptchaChallenge(parsed[ApiParams.user], parsed[ApiParams.dapp], origin)
+            const challenge = await tasks.getPowCaptchaChallenge(user, dapp, origin)
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)

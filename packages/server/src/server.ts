@@ -213,6 +213,7 @@ export class ProsopoServer {
         commitmentId?: string,
         maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
     ) {
+        this.logger.info('Verifying with provider.')
         const blockNumberString = blockNumber.toString()
         const dappUserSignature = this.pair?.sign(blockNumberString)
         if (!dappUserSignature) {

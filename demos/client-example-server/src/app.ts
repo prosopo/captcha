@@ -31,9 +31,22 @@ export function getEnvFile(filename = '.env', filepath = './') {
     return path.join(filepath, `${filename}.${env}`)
 }
 
+enum ProsopoVerificationType {
+    api = 'api',
+    local = 'local',
+}
+
 async function main() {
     const logger = getLoggerDefault()
     loadEnv()
+
+    const verifyEndpoint = process.env.PROSOPO_VERIFY_ENDPOINT || 'https://api.prosopo.io/siteverify'
+
+    const verifyType: ProsopoVerificationType = Object.keys(ProsopoVerificationType).includes(
+        process.env.PROSOPO_VERIFICATION_TYPE as string
+    )
+        ? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
+        : ProsopoVerificationType.api
 
     const app = express()
 
@@ -72,7 +85,7 @@ async function main() {
     const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
     const prosopoServer = new ProsopoServer(config, pair)
 
-    app.use(routesFactory(mongoose, prosopoServer))
+    app.use(routesFactory(mongoose, prosopoServer, verifyEndpoint, verifyType))
 
     app.listen(process.env.PROSOPO_SERVER_PORT)
 }

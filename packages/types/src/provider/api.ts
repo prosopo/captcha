@@ -96,13 +96,6 @@ export const CaptchaSolutionBody = object({
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
-export const GetPowCaptchaChallengeBody = object({
-    [ApiParams.user]: string(),
-    [ApiParams.dapp]: string(),
-})
-
-export type GetPowCaptchaChallengeBodyType = zInfer<typeof GetPowCaptchaChallengeBody>
-
 export const VerifySolutionBody = object({
     [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
@@ -159,6 +152,13 @@ export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.dappUserSignature]: string(),
     [ApiParams.blockNumber]: number(),
 })
+
+export const GetPowCaptchaChallengeRequestBody = object({
+    [ApiParams.user]: string(),
+    [ApiParams.dapp]: string(),
+})
+
+export type GetPowCaptchaChallengeRequestBodyType = zInfer<typeof GetPowCaptchaChallengeRequestBody>
 
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
 
