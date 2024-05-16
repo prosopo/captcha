@@ -88,6 +88,8 @@
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
         "@html-eslint/parser": "^0.22.0",
+        "@polkadot/x-textdecoder": "12.6.2",
+        "@polkadot/x-textencoder": "12.6.2",
         "@types/node": "^20.2.5",
         "@typescript-eslint/eslint-plugin": "^6.0.0",
         "@typescript-eslint/parser": "^6.0.0",
