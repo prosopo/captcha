@@ -187,10 +187,12 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const signRaw = getExtension(account).signer.signRaw
-                    if (!signRaw) {
+                    const extension = getExtension(account)
+                    if (!extension || !extension.signer || !extension.signer.signRaw) {
                         throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
                     }
+
+                    const signRaw = extension.signer.signRaw
                     const { signature } = await signRaw({
                         address: account.account.address,
                         data: procaptchaStorage.blockNumber.toString(),
@@ -201,9 +203,9 @@ export function Manager(
                         getDappAccount(),
                         account.account.address,
                         procaptchaStorage.blockNumber,
+                        signature,
                         undefined,
-                        configOptional.challengeValidLength,
-                        signature
+                        configOptional.challengeValidLength
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })

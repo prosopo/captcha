@@ -26,7 +26,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
 import { verifySignature } from './authMiddleware.js'
-import express, { Router } from 'express'
+import express, { NextFunction, Request, Response, Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -39,30 +39,22 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
     const tasks = new Tasks(env)
 
     /**
-     * Verifies a user's solution as being approved or not
-     *
-     * @param {string} user - Dapp User AccountId
-     * @param {string} dapp - Dapp Contract AccountId
-     * @param {string} blockNumber - The block number at which the captcha was requested
-     * @param {string} dappUserSignature - The signature fo dapp user
-     * @param {string} commitmentId - The captcha solution to look up
-     * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
+     * Verifies a solution and returns the verification response.
+     * @param {Response} res - Express response object.
+     * @param {Request} req - Express request object.
+     * @param {NextFunction} next - Express next function.
+     * @param {boolean} isDapp - Indicates whether the verification is for a dapp (true) or user (false).
      */
-    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
-        let parsed: VerifySolutionBodyType
+    async function verifySolution(res: Response, req: Request, next: NextFunction, isDapp: boolean) {
+        const parsed: VerifySolutionBodyType = VerifySolutionBody.parse(req.body)
         try {
-            parsed = VerifySolutionBody.parse(req.body)
-        } catch (err) {
-            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
-        }
-        try {
-            const { dappUserSignature, blockNumber, dapp } = parsed
+            const { dappUserSignature, blockNumber, user, dapp } = parsed
 
-            // Verify using the dapp pair passed in the request
-            const dappPair = env.keyring.addFromAddress(dapp)
+            // Verify using the appropriate pair based on isDapp flag
+            const keyPair = isDapp ? env.keyring.addFromAddress(dapp) : env.keyring.addFromAddress(user)
 
             // Will throw an error if the signature is invalid
-            verifySignature(dappUserSignature, blockNumber.toString(), dappPair)
+            verifySignature(dappUserSignature, blockNumber.toString(), keyPair)
 
             const solution = await (parsed.commitmentId
                 ? tasks.getDappUserCommitmentById(parsed.commitmentId)
@@ -100,6 +92,24 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             return res.json(response)
         } catch (err) {
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
+        }
+    }
+
+    /**
+     * Verifies a dapp's solution as being approved or not
+     *
+     * @param {string} user - Dapp User AccountId
+     * @param {string} dapp - Dapp Contract AccountId
+     * @param {string} blockNumber - The block number at which the captcha was requested
+     * @param {string} dappUserSignature - The signature fo dapp user
+     * @param {string} commitmentId - The captcha solution to look up
+     * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
+     */
+    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
+        try {
+            await verifySolution(res, req, next, true)
+        } catch (err) {
+            return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
         }
     })
 
@@ -114,62 +124,15 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
     router.post(ApiPaths.VerifyCaptchaSolutionUser, async (req, res, next) => {
-        let parsed: VerifySolutionBodyType
         try {
-            parsed = VerifySolutionBody.parse(req.body)
+            await verifySolution(res, req, next, false)
         } catch (err) {
             return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
-        }
-        try {
-            const { dappUserSignature, blockNumber, user } = parsed
-
-            // Verify using the dapp pair passed in the request
-            const dappPair = env.keyring.addFromAddress(user)
-
-            // Will throw an error if the signature is invalid
-            verifySignature(dappUserSignature, blockNumber.toString(), dappPair)
-
-            const solution = await (parsed.commitmentId
-                ? tasks.getDappUserCommitmentById(parsed.commitmentId)
-                : tasks.getDappUserCommitmentByAccount(parsed.user))
-
-            if (!solution) {
-                tasks.logger.debug('Not verified - no solution found')
-                return res.json({
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
-                    [ApiParams.verified]: false,
-                })
-            }
-
-            if (parsed.maxVerifiedTime) {
-                const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
-                const blockTimeMs = getBlockTimeMs(tasks.contract.api)
-                const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
-                const verificationResponse: VerificationResponse = {
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
-                    [ApiParams.verified]: false,
-                }
-                if (timeSinceCompletion > parsed.maxVerifiedTime) {
-                    tasks.logger.debug('Not verified - time run out')
-                    return res.json(verificationResponse)
-                }
-            }
-
-            const isApproved = solution.status === CaptchaStatus.approved
-            const response: ImageVerificationResponse = {
-                [ApiParams.status]: req.t(isApproved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
-                [ApiParams.verified]: isApproved,
-                [ApiParams.commitmentId]: solution.id.toString(),
-                [ApiParams.blockNumber]: solution.requestedAt,
-            }
-            return res.json(response)
-        } catch (err) {
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
 
     /**
-     * Verifies a user's solution as being approved or not
+     * Verifies a dapp's solution as being approved or not
      *
      * @param {string} dappAccount - Dapp User id
      * @param {string} challenge - The captcha solution to look up

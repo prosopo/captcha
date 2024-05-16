@@ -78,52 +78,40 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         dapp: AccountId,
         userAccount: AccountId,
         blockNumber: number,
+        dappUserSignature: string,
         commitmentId?: string,
-        maxVerifiedTime?: number,
-        dappUserSignature?: string
+        maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
-        const payload: {
-            [ApiParams.dapp]: AccountId
-            [ApiParams.user]: AccountId
-            [ApiParams.blockNumber]: number
-            [ApiParams.dappUserSignature]?: string
-            [ApiParams.commitmentId]?: string
-            [ApiParams.maxVerifiedTime]?: number
-        } = { dapp: dapp, user: userAccount, blockNumber, dappUserSignature }
-        if (commitmentId) {
-            payload['commitmentId'] = commitmentId
-        }
-        if (maxVerifiedTime) {
-            payload['maxVerifiedTime'] = maxVerifiedTime
+        const payload: VerifySolutionBodyType = {
+            [ApiParams.dapp]: dapp.toString(),
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.blockNumber]: blockNumber,
+            [ApiParams.dappUserSignature]: dappUserSignature,
+            ...(commitmentId && { [ApiParams.commitmentId]: commitmentId }),
+            ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
         }
 
-        return this.post(ApiPaths.VerifyCaptchaSolutionDapp, payload as VerifySolutionBodyType)
+        return this.post(ApiPaths.VerifyCaptchaSolutionDapp, payload)
     }
 
     public verifyUser(
         dapp: AccountId,
         userAccount: AccountId,
         blockNumber: number,
+        dappUserSignature: string,
         commitmentId?: string,
-        maxVerifiedTime?: number,
-        dappUserSignature?: string
+        maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
-        const payload: {
-            [ApiParams.dapp]: AccountId
-            [ApiParams.user]: AccountId
-            [ApiParams.blockNumber]: number
-            [ApiParams.dappUserSignature]?: string
-            [ApiParams.commitmentId]?: string
-            [ApiParams.maxVerifiedTime]?: number
-        } = { dapp: dapp, user: userAccount, blockNumber, dappUserSignature }
-        if (commitmentId) {
-            payload['commitmentId'] = commitmentId
-        }
-        if (maxVerifiedTime) {
-            payload['maxVerifiedTime'] = maxVerifiedTime
+        const payload: VerifySolutionBodyType = {
+            [ApiParams.dapp]: dapp.toString(),
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.blockNumber]: blockNumber,
+            [ApiParams.dappUserSignature]: dappUserSignature,
+            ...(commitmentId && { [ApiParams.commitmentId]: commitmentId }),
+            ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
         }
 
-        return this.post(ApiPaths.VerifyCaptchaSolutionUser, payload as VerifySolutionBodyType)
+        return this.post(ApiPaths.VerifyCaptchaSolutionUser, payload)
     }
 
     public getPowCaptchaChallenge(user: AccountId, dapp: AccountId): Promise<GetPowCaptchaResponse> {

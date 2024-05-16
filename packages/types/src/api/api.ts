@@ -38,17 +38,17 @@ export interface ProviderApiInterface {
         dapp: AccountId,
         userAccount: AccountId,
         blockNumber: number,
+        dappUserSignature: string,
         commitmentId?: string,
-        maxVerifiedTime?: number,
-        dappUserSignature?: string
+        maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse>
     verifyUser(
         dapp: AccountId,
         userAccount: AccountId,
         blockNumber: number,
+        dappUserSignature: string,
         commitmentId?: string,
-        maxVerifiedTime?: number,
-        dappUserSignature?: string
+        maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse>
     getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse>
     submitPowCaptchaSolution(

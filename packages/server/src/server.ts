@@ -28,7 +28,6 @@ import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
-
 import { u8aToHex } from '@polkadot/util'
 
 export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
@@ -224,9 +223,9 @@ export class ProsopoServer {
             dapp,
             user,
             blockNumber,
+            signatureHex,
             commitmentId,
-            maxVerifiedTime,
-            signatureHex
+            maxVerifiedTime
         )
         const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
         return result.verified && verifyRecency
