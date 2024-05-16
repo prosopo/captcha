@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ import { BN } from '@polkadot/util/bn'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
+import { TransactionQueue } from '@prosopo/tx'
 import { at } from '@prosopo/util'
 import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 
@@ -37,7 +38,8 @@ export async function sendFunds(
     env: ProsopoEnvironment,
     address: string,
     who: string,
-    amount: AnyNumber
+    amount: AnyNumber,
+    txQueue?: TransactionQueue
 ): Promise<void> {
     await env.getApi().isReady
     const mnemonic = getNextMnemonic()
@@ -47,10 +49,8 @@ export async function sendFunds(
         data: { free: previousFree },
     } = await env.getContractInterface().api.query.system.account(pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
-        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, undefined, {
-            mnemonic,
-            previousFree: previousFree.toString(),
-            amount: amount.toString(),
+        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
+            context: { mnemonic, previousFree: previousFree.toString(), amount: amount.toString() },
         })
     }
 
@@ -68,39 +68,67 @@ export async function sendFunds(
         previousFree.div(unit).toString(),
         '`UNIT'
     )
-    // eslint-disable-next-line no-async-promise-executor
-    const result = new Promise<ISubmittableResult>(async (resolve, reject) => {
-        const unsub = await api.tx.balances
-            .transfer(address, amount)
-            .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
-                if (result.status.isInBlock || result.status.isFinalized) {
-                    result.events
-                        .filter(({ event: { section } }: any): boolean => section === 'system')
-                        .forEach((event): void => {
-                            const {
-                                event: { method },
-                            } = event
+    let result: Promise<ISubmittableResult>
+    if (!txQueue) {
+        // eslint-disable-next-line no-async-promise-executor
+        result = new Promise<ISubmittableResult>(async (resolve, reject) => {
+            const unsub = await api.tx.balances
+                .transferAllowDeath(address, amount)
+                .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
+                    if (result.status.isInBlock || result.status.isFinalized) {
+                        result.events
+                            .filter(({ event: { section } }: any): boolean => section === 'system')
+                            .forEach((event) => {
+                                const {
+                                    event: { method },
+                                } = event
 
-                            if (method === 'ExtrinsicFailed') {
-                                unsub()
-                                reject(dispatchErrorHandler(api.registry, event))
-                            }
-                        })
-                    unsub()
-                    resolve(result)
-                } else if (result.isError) {
-                    unsub()
-                    reject(result)
-                }
-            })
-    })
-    await result
-        .then((result: ISubmittableResult) => {
-            env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
+                                if (method === 'ExtrinsicFailed') {
+                                    unsub()
+                                    reject(dispatchErrorHandler(api.registry, event))
+                                }
+                            })
+                        unsub()
+                        resolve(result)
+                    } else if (result.isError) {
+                        unsub()
+                        reject(result)
+                    }
+                })
         })
-        .catch((e) => {
-            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', undefined, undefined, { e })
+    } else {
+        result = new Promise((resolve, reject) => {
+            try {
+                const extrinsic = api.tx.balances.transferAllowDeath(address, amount)
+                txQueue.add(
+                    extrinsic,
+                    (txResult: ISubmittableResult) => {
+                        env.logger.info('In sendFunds call back')
+                        resolve(txResult)
+                    },
+                    pair
+                )
+            } catch (e) {
+                reject(e)
+            }
         })
+    }
+    const submittableResult = await result
+
+    if (submittableResult.isError) {
+        throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', {
+            context: {
+                error: submittableResult.dispatchError
+                    ? submittableResult.dispatchError.toHuman()
+                    : submittableResult.toHuman(),
+            },
+        })
+    }
+    if (submittableResult.status.isFuture) {
+        env.logger.debug(who, 'sent amount', unitAmount, 'UNIT in FUTURE tx hash ', submittableResult.txHash.toHex())
+    } else {
+        env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', submittableResult.status.asInBlock.toHex())
+    }
 }
 
 /**

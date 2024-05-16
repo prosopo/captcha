@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,40 +14,38 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
+    Features,
+    FeaturesEnum,
     NetworkNamesSchema,
+    ProcaptchaClientConfigInput,
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+
 interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
-    callback?: string
+    captchaType?: Features
+    callback?: string | ((payload: ProcaptchaOutput) => void)
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
-    'chalexpired-callback'?: string
-    'expired-callback'?: string
-    'open-callback'?: string
-    'close-callback'?: string
-    'error-callback'?: string
-}
-
-type ProcaptchaUrlParams = {
-    onloadUrlCallback: string | undefined
-    renderExplicit: string | undefined
+    'chalexpired-callback'?: string | (() => void)
+    'expired-callback'?: string | (() => void)
+    'open-callback'?: string | (() => void)
+    'close-callback'?: string | (() => void)
+    'error-callback'?: string | (() => void)
 }
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
 
-const getCurrentScript = () =>
-    document && document.currentScript && 'src' in document.currentScript && document.currentScript.src !== undefined
-        ? document.currentScript
-        : undefined
+const getProcaptchaScript = () => document.querySelector<HTMLScriptElement>(`script[src*="${BUNDLE_NAME}"]`)
 
-const extractParams = (name: string): ProcaptchaUrlParams => {
-    const script = getCurrentScript()
+const extractParams = (name: string) => {
+    const script = getProcaptchaScript()
     if (script && script.src.indexOf(`${name}`) !== -1) {
         const params = new URLSearchParams(script.src.split('?')[1])
         return {
@@ -58,7 +56,7 @@ const extractParams = (name: string): ProcaptchaUrlParams => {
     return { onloadUrlCallback: undefined, renderExplicit: undefined }
 }
 
-const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
+const getConfig = (siteKey?: string) => {
     if (!siteKey) {
         siteKey = process.env.PROSOPO_SITE_KEY || ''
     }
@@ -74,6 +72,8 @@ const getConfig = (siteKey?: string): ProcaptchaConfigOptional => {
             address: siteKey,
         },
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
 }
 
@@ -106,60 +106,144 @@ const customThemeSet = new Set(['light', 'dark'])
 const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
     customThemeSet.has(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
 
+const setValidChallengeLength = (
+    renderOptions: ProcaptchaRenderOptions | undefined,
+    element: Element,
+    config: ProcaptchaClientConfigInput
+) => {
+    const challengeValidLengthAttribute =
+        renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
+    if (challengeValidLengthAttribute) {
+        config.challengeValidLength = parseInt(challengeValidLengthAttribute)
+    }
+}
+
+const getDefaultCallbacks = (element: Element) => ({
+    onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
+    onChallengeExpired: () => {
+        console.log('Challenge expired')
+    },
+    onExpired: () => {
+        alert('Completed challenge has expired, please try again')
+    },
+    onError: (error: Error) => {
+        console.error(error)
+    },
+    onClose: () => {
+        console.log('Challenge closed')
+    },
+    onOpen: () => {
+        console.log('Challenge opened')
+    },
+})
+
+const setTheme = (
+    renderOptions: ProcaptchaRenderOptions | undefined,
+    element: Element,
+    config: ProcaptchaClientConfigInput
+) => {
+    const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
+    config.theme = validateTheme(themeAttribute)
+}
+
+function setUserCallbacks(
+    renderOptions: ProcaptchaRenderOptions | undefined,
+    callbacks: {
+        onHuman: (payload: ProcaptchaOutput) => void
+        onChallengeExpired: () => void
+        onExpired: () => void
+        onError: (error: Error) => void
+        onClose: () => void
+        onOpen: () => void
+    },
+    element: Element
+) {
+    if (typeof renderOptions?.callback === 'function') {
+        callbacks.onHuman = renderOptions.callback
+    } else {
+        const callbackName =
+            typeof renderOptions?.callback === 'string'
+                ? renderOptions?.callback
+                : element.getAttribute('data-callback')
+        if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
+    }
+
+    if (typeof renderOptions?.['chalexpired-callback'] === 'function') {
+        callbacks.onChallengeExpired = renderOptions['chalexpired-callback']
+    } else {
+        const chalExpiredCallbackName =
+            typeof renderOptions?.['chalexpired-callback'] === 'string'
+                ? renderOptions?.['chalexpired-callback']
+                : element.getAttribute('data-chalexpired-callback')
+        if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
+    }
+
+    if (typeof renderOptions?.['expired-callback'] === 'function') {
+        callbacks.onExpired = renderOptions['expired-callback']
+    } else {
+        const onExpiredCallbackName =
+            typeof renderOptions?.['expired-callback'] === 'string'
+                ? renderOptions?.['expired-callback']
+                : element.getAttribute('data-expired-callback')
+        if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
+    }
+
+    if (typeof renderOptions?.['error-callback'] === 'function') {
+        callbacks.onError = renderOptions['error-callback']
+    } else {
+        const errorCallbackName =
+            typeof renderOptions?.['error-callback'] === 'string'
+                ? renderOptions?.['error-callback']
+                : element.getAttribute('data-error-callback')
+        if (errorCallbackName) callbacks.onError = getWindowCallback(errorCallbackName)
+    }
+
+    if (typeof renderOptions?.['close-callback'] === 'function') {
+        callbacks.onClose = renderOptions['close-callback']
+    } else {
+        const onCloseCallbackName =
+            typeof renderOptions?.['close-callback'] === 'string'
+                ? renderOptions?.['close-callback']
+                : element.getAttribute('data-close-callback')
+        if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
+    }
+
+    if (renderOptions?.['open-callback']) {
+        if (typeof renderOptions['open-callback'] === 'function') {
+            callbacks.onOpen = renderOptions['open-callback']
+        } else {
+            const onOpenCallbackName =
+                typeof renderOptions?.['open-callback'] === 'string'
+                    ? renderOptions?.['open-callback']
+                    : element.getAttribute('data-open-callback')
+            if (onOpenCallbackName) callbacks.onOpen = getWindowCallback(onOpenCallbackName)
+        }
+    }
+}
+
 const renderLogic = (
     elements: Element[],
-    config: ProcaptchaConfigOptional,
+    config: ProcaptchaClientConfigInput,
     renderOptions?: ProcaptchaRenderOptions
 ) => {
     elements.forEach((element) => {
-        const callbackName = renderOptions?.callback || element.getAttribute('data-callback')
-        const chalExpiredCallbackName =
-            renderOptions?.['chalexpired-callback'] || element.getAttribute('data-chalexpired-callback')
-        const errorCallback = renderOptions?.['error-callback'] || element.getAttribute('data-error-callback')
-        const onCloseCallbackName = renderOptions?.['close-callback'] || element.getAttribute('data-close-callback')
-        const onOpenCallbackName = renderOptions?.['open-callback'] || element.getAttribute('data-open-callback')
-        const onExpiredCallbackName =
-            renderOptions?.['expired-callback'] || element.getAttribute('data-expired-callback')
+        const callbacks = getDefaultCallbacks(element)
 
-        // Setting up default callbacks object
-        const callbacks = {
-            onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
-            onChallengeExpired: () => {
-                console.log('Challenge expired')
-            },
-            onExpired: () => {
-                alert('Completed challenge has expired, please try again')
-            },
-            onError: (error: Error) => {
-                console.error(error)
-            },
-            onClose: () => {
-                console.log('Challenge closed')
-            },
-            onOpen: () => {
-                console.log('Challenge opened')
-            },
+        setUserCallbacks(renderOptions, callbacks, element)
+        setTheme(renderOptions, element, config)
+        setValidChallengeLength(renderOptions, element, config)
+
+        switch (renderOptions?.captchaType) {
+            case 'pow':
+                createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
+                break
+            case 'frictionless':
+                createRoot(element).render(<ProcaptchaFrictionless config={config} callbacks={callbacks} />)
+                break
+            default:
+                createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
+                break
         }
-
-        if (callbackName) callbacks.onHuman = getWindowCallback(callbackName)
-        if (chalExpiredCallbackName) callbacks.onChallengeExpired = getWindowCallback(chalExpiredCallbackName)
-        if (onExpiredCallbackName) callbacks.onExpired = getWindowCallback(onExpiredCallbackName)
-        if (errorCallback) callbacks.onError = getWindowCallback(errorCallback)
-        if (onCloseCallbackName) callbacks.onClose = getWindowCallback(onCloseCallbackName)
-        if (onOpenCallbackName) callbacks.onOpen = getWindowCallback(onOpenCallbackName)
-
-        // Getting and setting the theme
-        const themeAttribute = renderOptions?.theme || element.getAttribute('data-theme') || 'light'
-        config.theme = validateTheme(themeAttribute)
-
-        // Getting and setting the challenge valid length
-        const challengeValidLengthAttribute =
-            renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
-        if (challengeValidLengthAttribute) {
-            config.challengeValidLength = parseInt(challengeValidLengthAttribute)
-        }
-
-        createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
     })
 }
 
@@ -170,25 +254,25 @@ const implicitRender = () => {
 
     // Set siteKey from renderOptions or from the first element's data-sitekey attribute
     if (elements.length) {
-        const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
-        const config = getConfig(siteKey)
+        const siteKey = at(elements, 0).getAttribute('data-sitekey')
+        if (!siteKey) {
+            console.error('No siteKey found')
+            return
+        }
+        const features = Object.values(FeaturesEnum)
+        const captchaType =
+            features.find((feature) => feature === at(elements, 0).getAttribute('data-captcha-type')) ||
+            ('frictionless' as const)
 
-        renderLogic(elements, config)
+        renderLogic(elements, getConfig(siteKey), { captchaType, siteKey })
     }
 }
 
 // Explicit render for targeting specific elements
-export const render = (elementId: string, renderOptions: ProcaptchaRenderOptions) => {
+export const render = (element: Element, renderOptions: ProcaptchaRenderOptions) => {
     const siteKey = renderOptions.siteKey
-    const config = getConfig(siteKey)
-    const element = document.getElementById(elementId)
 
-    if (!element) {
-        console.error('Element not found:', elementId)
-        return
-    }
-
-    renderLogic([element], config, renderOptions)
+    renderLogic([element], getConfig(siteKey), renderOptions)
 }
 
 export default function ready(fn: () => void) {
@@ -200,6 +284,16 @@ export default function ready(fn: () => void) {
         document.addEventListener('DOMContentLoaded', fn)
     }
 }
+
+// extend the global Window interface to include the procaptcha object
+declare global {
+    interface Window {
+        procaptcha: { ready: typeof ready; render: typeof render }
+    }
+}
+
+// set the procaptcha attribute on the window
+window.procaptcha = { ready, render }
 
 // onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 // onRenderExplicit takes values of either explicit or implicit
@@ -213,7 +307,7 @@ if (renderExplicit !== 'explicit') {
 if (onloadUrlCallback) {
     const onloadCallback = getWindowCallback(onloadUrlCallback)
     // Add event listener to the script tag to call the callback function when the script is loaded
-    getCurrentScript()?.addEventListener('load', () => {
+    getProcaptchaScript()?.addEventListener('load', () => {
         ready(onloadCallback)
     })
 }

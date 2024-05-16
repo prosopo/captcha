@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,11 @@ import {
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
+    PoWCaptcha,
     ProsopoConfigOutput,
+    ProviderDetails,
     ProviderRegistered,
+    StoredEvents,
 } from '@prosopo/types'
 import {
     CaptchaMerkleTree,
@@ -39,16 +42,21 @@ import {
 import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
+import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { saveCaptchaEvent } from '@prosopo/database'
+import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
+import { u8aToHex } from '@polkadot/util'
+
+const POW_SEPARATOR = '___'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -68,12 +76,9 @@ export class Tasks {
 
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
-            throw new ProsopoEnvError(
-                'CONTRACT.CONTRACT_UNDEFINED',
-                this.constructor.name,
-                {},
-                { contractAddress: env.contractAddress }
-            )
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
+                context: { failedFuncName: this.constructor.name, contractAddress: env.contractAddress },
+            })
         }
         this.config = env.config
         this.contract = env.contractInterface
@@ -93,7 +98,9 @@ export class Tasks {
         // check that the number of captchas contained within dataset.captchas is greater than or equal to the total
         // number of captchas that must be served
         if (datasetRaw.captchas.length < this.config.captchas.solved.count + this.config.captchas.unsolved.count) {
-            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
 
         // check that the number of solutions contained within dataset.captchas is greater than or equal to the number
@@ -102,15 +109,21 @@ export class Tasks {
             .map((captcha): number => (captcha.solution ? 1 : 0))
             .reduce((partialSum, b) => partialSum + b, 0)
         if (solutions < this.config.captchas.solved.count) {
-            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
         if (solutions < this.config.captchas.unsolved.count) {
-            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
 
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId || !dataset.datasetContentId) {
-            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerSetDataset.name)
+            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', {
+                context: { failedFuncName: this.providerSetDataset.name },
+            })
         }
 
         await this.db?.storeDataset(dataset)
@@ -151,12 +164,143 @@ export class Tasks {
             }
             return captchas
         }
-        throw new ProsopoEnvError(
-            'DATABASE.CAPTCHA_GET_FAILED',
-            this.getCaptchaWithProof.name,
-            {},
-            { datasetId, solved, size }
-        )
+        throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
+            context: { failedFuncName: this.getCaptchaWithProof.name, datasetId, solved, size },
+        })
+    }
+
+    /**
+     * @description Generates a PoW Captcha for a given user and dapp
+     *
+     * @param {string} userAccount - user that is solving the captcha
+     * @param {string} dappAccount - dapp that is requesting the captcha
+     */
+    async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
+        // TODO: Verify that the origin matches the url of the dapp
+        const difficulty = 4
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        // Use blockhash, userAccount and dappAccount for string for challenge
+        const challenge = `${latestBlockNumber}___${userAccount}___${dappAccount}`
+        const signature = u8aToHex(this.contract.pair.sign(stringToHex(challenge)))
+
+        return { challenge, difficulty, signature }
+    }
+
+    /**
+     * @description Verifies a PoW Captcha for a given user and dapp
+     *
+     * @param {string} blockNumber - the block at which the Provider was selected
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {string} difficulty - how many leading zeroes the solution must have
+     * @param {string} signature - proof that the Provider provided the challenge
+     * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
+     */
+    async verifyPowCaptchaSolution(
+        blockNumber: number,
+        challenge: string,
+        difficulty: number,
+        signature: string,
+        nonce: number
+    ): Promise<boolean> {
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        if (blockNumber < latestBlockNumber - 5) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blockNumber,
+                    latestBlockNumber,
+                },
+            })
+        }
+
+        const signatureVerification = signatureVerify(stringToHex(challenge), signature, this.contract.pair.address)
+
+        if (!signatureVerification.isValid) {
+            throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
+                context: {
+                    ERROR: 'Provider signature is invalid for this message',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    signature,
+                },
+            })
+        }
+
+        const solutionValid = Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join('')
+            .startsWith('0'.repeat(difficulty))
+
+        if (!solutionValid) {
+            throw new ProsopoContractError('API.CAPTCHA_FAILED', {
+                context: {
+                    ERROR: 'Captcha solution is invalid',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    nonce,
+                    challenge,
+                    difficulty,
+                },
+            })
+        }
+
+        await this.db.storePowCaptchaRecord(challenge, false)
+
+        return true
+    }
+
+    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
+        const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
+        if (!challengeRecord) {
+            throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
+                context: { failedFuncName: this.serverVerifyPowCaptchaSolution.name, challenge },
+            })
+        }
+
+        if (challengeRecord.checked) {
+            return false
+        }
+
+        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
+
+        if (dappAccount !== challengeDappAccount) {
+            throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
+                context: {
+                    failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+                    dappAccount,
+                    challengeDappAccount,
+                },
+            })
+        }
+
+        const latestHeader = await this.contract.api.rpc.chain.getHeader()
+        const latestBlockNumber = latestHeader.number.toNumber()
+
+        if (!blocknumber) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
+                context: {
+                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    failedFuncName: this.verifyPowCaptchaSolution.name,
+                    blocknumber,
+                },
+            })
+        }
+
+        await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true)
+        return true
     }
 
     /**
@@ -173,22 +317,26 @@ export class Tasks {
         dappAccount: string,
         requestHash: string,
         captchas: CaptchaSolution[],
-        signature: string // the signature to indicate ownership of account (web2 only)
+        signature: string // the signature to indicate ownership of account
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
-            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', this.getPaymentInfo.name, {}, { dappAccount })
+            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
+                context: { failedFuncName: this.getPaymentInfo.name, dappAccount },
+            })
         }
 
-        // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
+        // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', this.dappUserSolution.name, {}, { userAccount })
+            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', {
+                context: { failedFuncName: this.dappUserSolution.name, userAccount },
+            })
         }
 
         let response: DappUserSolutionResult = {
             captchas: [],
-            solutionApproved: false,
+            verified: false,
         }
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
@@ -205,8 +353,10 @@ export class Tasks {
         )
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
-        const blockNumber = (await getBlockNumber(this.contract.api)).toNumber()
+        const blockNumber = await getCurrentBlockNumber(this.contract.api)
         if (pendingRequest) {
+            // prevent this request hash from being used twice
+            await this.db.updateDappUserPendingStatus(requestHash)
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
                 userAccount: userAccount,
@@ -227,7 +377,7 @@ export class Tasks {
                         captchaId: id,
                         proof: tree.proof(id),
                     })),
-                    solutionApproved: true,
+                    verified: true,
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
             } else {
@@ -236,7 +386,7 @@ export class Tasks {
                         captchaId: id,
                         proof: [[]],
                     })),
-                    solutionApproved: false,
+                    verified: false,
                 }
             }
         }
@@ -281,20 +431,21 @@ export class Tasks {
         const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.INVALID_CAPTCHA_ID',
-                this.validateReceivedCaptchasAgainstStoredCaptchas.name,
-                {},
-                captchas
-            )
+            throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_ID', {
+                context: {
+                    failedFuncName: this.validateReceivedCaptchasAgainstStoredCaptchas.name,
+
+                    captchas,
+                },
+            })
         }
         if (!storedCaptchas.every((captcha) => captcha.datasetId === at(storedCaptchas, 0).datasetId)) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.DIFFERENT_DATASET_IDS',
-                this.validateReceivedCaptchasAgainstStoredCaptchas.name,
-                {},
-                captchas
-            )
+            throw new ProsopoEnvError('CAPTCHA.DIFFERENT_DATASET_IDS', {
+                context: {
+                    failedFuncName: this.validateReceivedCaptchasAgainstStoredCaptchas.name,
+                    captchas,
+                },
+            })
         }
         return { storedCaptchas, receivedCaptchas, captchaIds }
     }
@@ -312,12 +463,12 @@ export class Tasks {
         tree.build(solutionsHashed)
         const commitmentId = tree.root?.hash
         if (!commitmentId) {
-            throw new ProsopoEnvError(
-                'CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST',
-                this.buildTreeAndGetCommitmentId.name,
-                {},
-                { commitmentId: commitmentId }
-            )
+            throw new ProsopoEnvError('CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST', {
+                context: {
+                    failedFuncName: this.buildTreeAndGetCommitmentId.name,
+                    commitmentId: commitmentId,
+                },
+            })
         }
 
         return { tree, commitmentId }
@@ -386,10 +537,9 @@ export class Tasks {
 
         const currentTime = Date.now()
         const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
-
         const deadlineTs = timeLimit + currentTime
-        const currentBlockNumber = await getBlockNumber(this.contract.api)
-        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber.toNumber())
+        const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
+        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
         return { captchas, requestHash }
     }
 
@@ -431,7 +581,9 @@ export class Tasks {
     ) {
         const contract = await this.contract.contract
         if (!contract) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', this.validateProviderWasRandomlyChosen.name)
+            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
+                context: { failedFuncName: this.validateProviderWasRandomlyChosen.name },
+            })
         }
 
         const header = await contract.api.rpc.chain.getHeader()
@@ -439,18 +591,16 @@ export class Tasks {
         const isBlockNoValid = await this.isRecentBlock(contract, header, blockNumber)
 
         if (!isBlockNoValid) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.INVALID_BLOCK_NO',
-                this.validateProviderWasRandomlyChosen.name,
-                {},
-                {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_BLOCK_NO', {
+                context: {
+                    failedFuncName: this.validateProviderWasRandomlyChosen.name,
                     userAccount,
                     dappContractAccount,
                     datasetId,
                     header,
                     blockNumber,
-                }
-            )
+                },
+            })
         }
 
         const block = (await contract.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
@@ -461,12 +611,12 @@ export class Tasks {
         )
 
         if (datasetId.toString().localeCompare(randomProviderAndBlockNo.provider.datasetId.toString())) {
-            throw new ProsopoEnvError(
-                'DATASET.INVALID_DATASET_ID',
-                this.validateProviderWasRandomlyChosen.name,
-                {},
-                randomProviderAndBlockNo
-            )
+            throw new ProsopoEnvError('DATASET.INVALID_DATASET_ID', {
+                context: {
+                    failedFuncName: this.validateProviderWasRandomlyChosen.name,
+                    randomProviderAndBlockNo,
+                },
+            })
         }
     }
 
@@ -508,12 +658,12 @@ export class Tasks {
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord> {
         const dappUserSolution = await this.db.getDappUserCommitmentById(commitmentId)
         if (!dappUserSolution) {
-            throw new ProsopoEnvError(
-                'CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND',
-                this.getDappUserCommitmentById.name,
-                {},
-                { commitmentId: commitmentId }
-            )
+            throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
+                context: {
+                    failedFuncName: this.getDappUserCommitmentById.name,
+                    commitmentId: commitmentId,
+                },
+            })
         }
         return dappUserSolution
     }
@@ -532,13 +682,29 @@ export class Tasks {
     }
 
     /* Returns public details of provider */
-    async getProviderDetails(): Promise<Provider> {
-        return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    async getProviderDetails(): Promise<ProviderDetails> {
+        const provider: Provider = await wrapQuery(
+            this.contract.query.getProvider,
+            this.contract.query
+        )(this.contract.pair.address)
+
+        const dbConnectionOk = await this.getCaptchaWithProof(provider.datasetId, true, 1)
+            .then(() => true)
+            .catch(() => false)
+
+        return { provider, dbConnectionOk }
     }
 
-    /** Get the dataset from the databse */
-
+    /** Get the dataset from the database */
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
+    }
+
+    async saveCaptchaEvent(events: StoredEvents, accountId: string) {
+        if (!this.config.devOnlyWatchEvents || !this.config.mongoEventsUri) {
+            this.logger.info('Dev watch events not set to true, not saving events')
+            return
+        }
+        await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
     }
 }

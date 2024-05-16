@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProsopoEnvError } from '@prosopo/common'
 import { exec } from '../util/index.js'
 import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
@@ -41,8 +42,11 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     const verbose = false
     pathToAbis = path.relative(process.cwd(), pathToAbis)
     pathToOutput = path.relative(process.cwd(), pathToOutput)
-    //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
-    if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
+    // TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
+    if (!fs.existsSync(pathToAbis))
+        throw new ProsopoEnvError('FS.FILE_NOT_FOUND', {
+            context: { error: `Path to ABIs does not exist: ${pathToAbis}` },
+        })
     await exec(`mkdir -p ${pathToOutput}`)
     const cmd = `npx typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
@@ -188,11 +192,13 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             // there will be a single file named after the contract
             const files = fs.readdirSync(dirPath)
             if (files.length !== 1) {
-                throw new Error(`Expected 1 file in ${dirPath}, found ${files.length}`)
+                throw new ProsopoEnvError('FS.INVALID_DIR_FORMAT', {
+                    context: { error: `Expected 1 file in ${dirPath}, found ${files.length}` },
+                })
             }
             file = files[0] || ''
             if (file === '') {
-                throw new Error(`No file found in ${dirPath}`)
+                throw new ProsopoEnvError('FS.FILE_NOT_FOUND', { context: { error: `No file found in ${dirPath}` } })
             }
             if (file.endsWith('.ts')) {
                 // rename extension from ts to js

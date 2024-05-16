@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,10 +47,12 @@ export async function sendFunds(
         data: { free: previousFree },
     } = await env.getContractInterface().api.query.system.account(pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
-        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, undefined, {
-            mnemonic,
-            previousFree: previousFree.toString(),
-            amount: amount.toString(),
+        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
+            context: {
+                mnemonic,
+                previousFree: previousFree.toString(),
+                amount: amount.toString(),
+            },
         })
     }
 
@@ -71,7 +73,7 @@ export async function sendFunds(
     // eslint-disable-next-line no-async-promise-executor
     const result = new Promise<ISubmittableResult>(async (resolve, reject) => {
         const unsub = await api.tx.balances
-            .transfer(address, amount)
+            .transferAllowDeath(address, amount)
             .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
                 if (result.status.isInBlock || result.status.isFinalized) {
                     result.events
@@ -95,11 +97,23 @@ export async function sendFunds(
             })
     })
     await result
-        .then((result: ISubmittableResult) => {
-            env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
+        .then(async (result: ISubmittableResult) => {
+            if (result.status.isFuture) {
+                const block = await api.rpc.chain.getBlock()
+                JSON.stringify(block)
+                env.logger.debug(
+                    who,
+                    'sent amount',
+                    unitAmount,
+                    'UNIT in FUTURE tx hash ',
+                    result.status.asInBlock.toHex()
+                )
+            } else {
+                env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.txHash.toHex())
+            }
         })
         .catch((e) => {
-            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', undefined, undefined, { e })
+            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error: e } })
         })
 }
 

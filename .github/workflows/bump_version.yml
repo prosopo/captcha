@@ -17,13 +17,45 @@ jobs:
     bump_version:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: 18
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+            - uses: actions/checkout@v3
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -50,17 +82,19 @@ jobs:
             - run: ls -la protocol/target/ink || true
             - run: ls -la node_modules || true
 
-            - name: Install dependencies
-              run: npm ci
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
-            - name: Build
-              run: |
-                  npm run build -w @prosopo/scripts
-                  npm run build -w @prosopo/protocol-dev
+            - run: npm ci
+
+            - run: npm run build -w @prosopo/scripts
+            - run: npm run build -w @prosopo/protocol-dev
 
             - name: Bump version
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                   # make a new branch for the version changes
                   git switch -c bump-version-${{ github.event.inputs.version }}
@@ -70,6 +104,9 @@ jobs:
 
                   # rebuild typechain
                   npm run build:typechain
+
+                  # lint
+                  npm run lint:fix
 
                   # set the author in git
                   git config user.name "prosoponator[bot]"
@@ -83,7 +120,4 @@ jobs:
                   git push --set-upstream origin bump-version-${{ github.event.inputs.version }}
 
                   # create a PR for the release
-                  ID=$(gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill 2>&1 | grep http | xargs -n1 basename)
-
-                  # enable auto-merge via squash merge
-                  gh pr merge $ID --auto --squash
+                  gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill

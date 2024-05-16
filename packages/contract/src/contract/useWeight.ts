@@ -1,10 +1,25 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Copyright 2017-2023 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
 import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util/bn'
+import { calcInterval } from './useBlockInterval.js'
 import { convertWeight } from '@polkadot/api-contract/base/util'
-import type { BN } from '@polkadot/util/bn'
 import type { UseWeight } from '@prosopo/types'
 import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
 
@@ -101,4 +116,9 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN)
             weightV2,
         })
     })
+}
+
+export async function getWeight(api: ApiPromise): Promise<UseWeight> {
+    const expectedBlockTime = calcInterval(api)
+    return await useWeightImpl(api as ApiPromise, expectedBlockTime, new BN(10))
 }

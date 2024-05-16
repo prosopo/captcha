@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,7 +89,8 @@ function getSelectors(captcha: Captcha) {
                     selectors = captcha.items
                         .filter((item) => solution.includes(item.hash))
                         // create a query selector for each image that is a solution
-                        .map((item) => `img[src="${item.data}"]`)
+                        // drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
+                        .map((item) => `img[src="${item.data.replace(/^http(s)*:\/\//, '//')}"]`)
                 } else {
                     console.log('Unsolved captcha or captcha with zero solutions')
                 }
@@ -103,7 +104,6 @@ function getSelectors(captcha: Captcha) {
 function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLElement>> {
     return cy.captchaImages().then(() => {
         cy.getSelectors(captcha).then((selectors: string[]) => {
-            ///throw new Error(selectors.join(', '))
             console.log('captchaId', captcha.captchaId, 'selectors', selectors)
             // Click the correct images
             return cy.get(selectors.join(', ')).then((elements) => {

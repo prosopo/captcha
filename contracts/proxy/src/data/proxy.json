@@ -39,7 +39,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -99,7 +100,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,
@@ -144,7 +146,8 @@
             "NotEnoughActiveProviders": null,
             "ProviderFeeTooHigh": null,
             "CommitAlreadyExists": null,
-            "NotAuthor": null
+            "NotAuthor": null,
+            "Math": null
         },
         "isResult": false,
         "isPrimitive": false,
@@ -302,7 +305,8 @@
                             "NotEnoughActiveProviders": null,
                             "ProviderFeeTooHigh": null,
                             "CommitAlreadyExists": null,
-                            "NotAuthor": null
+                            "NotAuthor": null,
+                            "Math": null
                         },
                         "isResult": false,
                         "isPrimitive": false,
@@ -395,7 +399,8 @@
                     "NotEnoughActiveProviders": null,
                     "ProviderFeeTooHigh": null,
                     "CommitAlreadyExists": null,
-                    "NotAuthor": null
+                    "NotAuthor": null,
+                    "Math": null
                 },
                 "isResult": false,
                 "isPrimitive": false,

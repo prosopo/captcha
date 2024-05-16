@@ -1,3 +1,16 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { Glob } from 'glob'
 import { ProjectReference } from 'typescript'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
@@ -13,6 +26,7 @@ const exec = util.promisify(child_process.exec)
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/
 const depsRegex = /\s+(@*[\w\-/.]+)@/
+
 async function getPackageDir(packageName: string): Promise<string> {
     let pkg = packageName
     if (packageName && !packageName.startsWith('@prosopo/')) {
@@ -23,9 +37,9 @@ async function getPackageDir(packageName: string): Promise<string> {
     // get package directory
     const { stdout: packageDir, stderr } = await exec(pkgCommand)
     if (stderr) {
-        throw new ProsopoEnvError(new Error(stderr))
+        throw new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: { stderr } })
     }
-    return packageDir.trim()
+    return packageDir.trim() || path.resolve()
 }
 
 /**
@@ -145,7 +159,7 @@ export async function getDependencies(
 
     const { stdout, stderr } = await exec(cmd)
     if (stderr) {
-        throw new ProsopoEnvError(new Error(stderr))
+        throw new ProsopoEnvError('CONFIG.INVALID_PACKAGE_DIR', { context: { stderr } })
     }
     const deps: string[] = []
     const peerDeps: string[] = []
@@ -216,12 +230,9 @@ export function getFilesInDirs(startDir: string, includePatterns: string[] = [],
     includePatterns.forEach((searchPattern) => {
         // get matching module directories
         const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf('.') > -1 ? '' : '/*'}`
-        //log.info(`globPattern: ${globPattern}`)
         const globResult = new Glob(globPattern, { recursive: true, ignore: ignorePatterns }).walkSync()
-        //log.info(`globResult: ${globResult}`)
         for (const filePath of globResult) {
             files.push(filePath)
-            //log.info(`ignoring ${filePath}`)
         }
     })
     return files

@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { AbiMetadata, AbiStorageField } from '@prosopo/types'
 import { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ProsopoContractError } from '../handlers.js'
+import { ProsopoContractError, reverseHexString } from '@prosopo/common'
 import { at, get } from '@prosopo/util'
 import { firstValueFrom } from 'rxjs'
 import { hexToNumber } from '@polkadot/util/hex'
-import { reverseHexString } from '@prosopo/common'
 
 const primitivesSizeInBytes: {
     [key: string]: number
@@ -147,7 +146,9 @@ export function getStorageKeyAndType(
             storageKey: rootKeyReversed,
         }
     }
-    throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', getStorageKeyAndType.name)
+    throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', {
+        context: { failedFuncName: getStorageKeyAndType.name },
+    })
 }
 
 /** Get the storage entry from the ABI given a storage name

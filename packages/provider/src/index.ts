@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,3 +15,5 @@ export * from './tasks/index.js'
 export * from './util.js'
 export * from './batch/index.js'
 export * from './api/captcha.js'
+export * from './api/admin.js'
+export * from './api/errorHandler.js'

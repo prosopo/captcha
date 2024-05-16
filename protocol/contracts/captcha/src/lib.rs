@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
+    use common::Math;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -366,7 +367,8 @@ pub mod captcha {
         /// the max age of a commit for a user before it is removed from the history, in seconds
         #[ink(message)]
         pub fn get_max_user_history_age_seconds(&self) -> u32 {
-            let env_max_user_history_age_seconds: u32 = 30 * 24 * 60 * 60; // 30 days in seconds
+            let env_max_user_history_age_seconds: u32 =
+                30_u32.wrapping_mul(24).wrapping_mul(60).wrapping_mul(60); // 30 days in seconds
             env_max_user_history_age_seconds
         }
 
@@ -380,8 +382,13 @@ pub mod captcha {
         /// the max age of a commit for a user before it is removed from the history, in blocks
         #[ink(message)]
         pub fn get_max_user_history_age_blocks(&self) -> u32 {
-            let env_max_user_history_age_blocks: u32 =
-                self.get_max_user_history_age_seconds() / (self.get_block_time() as u32) + 1;
+            let env_max_user_history_age_blocks: u32 = Math::add_panic(
+                Math::div_panic(
+                    self.get_max_user_history_age_seconds(),
+                    self.get_block_time() as u32,
+                ),
+                1,
+            );
             env_max_user_history_age_blocks
         }
 
@@ -815,7 +822,7 @@ pub mod captcha {
             } else {
                 self.get_max_user_history_age_blocks()
             };
-            let age_threshold = block_number - max_age;
+            let age_threshold = Math::sub_panic(block_number, max_age);
             let mut expired = Vec::new();
             // trim the history down to max length
             while history.len() > self.get_max_user_history_len().into() {
@@ -881,13 +888,13 @@ pub mod captcha {
                 }
             }
 
-            if summary.correct + summary.incorrect == 0 {
+            if Math::add(summary.correct, summary.incorrect)? == 0 {
                 summary.score = 0;
             } else {
                 // score is between 0 - 200, i.e. 0% - 100% in 0.5% increments
-                let total: u16 = summary.correct + summary.incorrect;
-                let correct: u16 = summary.correct * 200;
-                summary.score = (correct / total) as u8;
+                let total: u16 = Math::add(summary.correct, summary.incorrect)?;
+                let correct: u16 = Math::mul(summary.correct, 200)?;
+                summary.score = Math::div(correct, total)? as u8;
             }
 
             Ok(summary)
@@ -1013,7 +1020,7 @@ pub mod captcha {
             let last_correct_captcha = last_correct_captcha.unwrap();
 
             Ok(LastCorrectCaptcha {
-                before: self.env().block_number() - last_correct_captcha.completed_at,
+                before: Math::sub(self.env().block_number(), last_correct_captcha.completed_at)?,
                 dapp_contract: last_correct_captcha.dapp_contract,
             })
         }
@@ -1258,7 +1265,7 @@ pub mod captcha {
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
 
-            next % len
+            Math::rem_panic(next, len)
         }
 
         /// Terminate this contract and return any/all funds in this contract to the destination
@@ -1442,6 +1449,25 @@ pub mod captcha {
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
             contract
+        }
+
+        #[ink::test]
+        fn test_default_provider() {
+            let contract = get_contract(0);
+            let provider = contract.default_provider();
+            assert_eq!(provider.payee, Payee::Dapp);
+            assert_eq!(provider.status, GovernanceStatus::Inactive);
+            assert_eq!(provider.fee, 0);
+            assert_eq!(provider.balance, 0);
+        }
+
+        #[ink::test]
+        fn test_default_dapp() {
+            let contract = get_contract(0);
+            let dapp = contract.default_dapp();
+            assert_eq!(dapp.payee, DappPayee::Any);
+            assert_eq!(dapp.status, GovernanceStatus::Inactive);
+            assert_eq!(dapp.balance, 0);
         }
 
         #[ink::test]

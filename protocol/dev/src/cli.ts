@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,13 @@ const exec = (
     })
 
     if (pipe ?? true) {
+        // https://github.com/microsoft/TypeScript/issues/44605
+        // Building a second time fixes this issue
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         prc.stdout.pipe(process.stdout)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         prc.stderr.pipe(process.stderr)
     }
 

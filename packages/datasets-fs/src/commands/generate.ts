@@ -1,7 +1,20 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import * as z from 'zod'
 import { DataSchema, Item, LabelledDataSchema, LabelledItem, LabelsContainerSchema } from '@prosopo/types'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError } from '@prosopo/common'
 import { lodash, setSeedGlobal } from '@prosopo/util/lodash'
 import fs from 'fs'
 
@@ -68,17 +81,15 @@ export abstract class Generate<T extends ArgsSchemaType> extends OutputCliComman
         // if specified, check files exist
         const labelledMapFile: string | undefined = args.labelled
         if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-            throw new ProsopoEnvError(
-                new Error(`labelled map file does not exist: ${labelledMapFile}`),
-                'FS.FILE_NOT_FOUND'
-            )
+            throw new ProsopoDatasetError(new Error(`labelled map file does not exist: ${labelledMapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         const unlabelledMapFile: string | undefined = args.unlabelled
         if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-            throw new ProsopoEnvError(
-                new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`),
-                'FS.FILE_NOT_FOUND'
-            )
+            throw new ProsopoDatasetError(new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         this.labelledMapFile = labelledMapFile || ''
         this.unlabelledMapFile = unlabelledMapFile || ''
@@ -171,7 +182,9 @@ const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
 
 const addUnique = (all: Set<string>, entry: Item, dataType: string) => {
     if (all.has(entry.data)) {
-        throw new Error(`Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}`)
+        throw new ProsopoDatasetError('DATASET.DUPLICATE_IMAGE', {
+            context: { error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}` },
+        })
     }
     all.add(entry.data)
 }

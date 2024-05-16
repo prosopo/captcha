@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,20 +13,19 @@
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract/Abi'
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN, BN_ZERO } from '@polkadot/util/bn'
+import { BN_ZERO } from '@polkadot/util/bn'
 import { BlueprintOptions } from '@polkadot/api-contract/types'
 import { CodePromise } from '@polkadot/api-contract/promise'
 import { CodeSubmittableResult } from '@polkadot/api-contract/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers.js'
+import { LogLevel, Logger, ProsopoContractError, getLogger } from '@prosopo/common'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
+import { TransactionQueue } from '@prosopo/tx'
 import { UseWeight } from '@prosopo/types'
-import { calcInterval } from './useBlockInterval.js'
 import { dispatchErrorHandler } from './helpers.js'
-import { useWeightImpl } from './useWeight.js'
+import { getWeight } from './useWeight.js'
 
 interface DryRunResult {
     contract: null | SubmittableExtrinsic<'promise'>
@@ -44,6 +43,7 @@ export class ContractDeployer {
     private readonly value: number
     private readonly logger: Logger
     private readonly salt: string | undefined
+    private readonly transactionQueue: TransactionQueue | undefined
 
     constructor(
         api: ApiPromise,
@@ -54,7 +54,8 @@ export class ContractDeployer {
         value = 0,
         constructorIndex = 0,
         salt?: string,
-        logLevel?: LogLevel
+        logLevel?: LogLevel,
+        transactionQueue?: TransactionQueue
     ) {
         this.api = api
         this.abi = abi
@@ -66,6 +67,7 @@ export class ContractDeployer {
         this.salt = salt
         this.logger = getLogger(logLevel || LogLevel.enum.info, 'ContractDeployer')
         this.code = new CodePromise(api, abi, wasm)
+        this.transactionQueue = transactionQueue
     }
 
     async deploy(): Promise<CodeSubmittableResult<any>> {
@@ -80,48 +82,63 @@ export class ContractDeployer {
             this.value,
             weight,
             this.constructorIndex,
-            this.salt
+            this.salt,
+            this.logger.getLogLevel()
         )
         this.logger.debug('Weight', weight.weightV2?.toHuman())
 
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
 
         if (contract) {
-            // eslint-disable-next-line no-async-promise-executor
-            return new Promise(async (resolve, reject) => {
-                const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
-                    if (result.status.isFinalized || result.status.isInBlock) {
-                        result.events
-                            .filter(({ event: { section } }: any): boolean => section === 'system')
-                            .forEach((event): void => {
-                                const {
-                                    event: { method },
-                                } = event
-
-                                if (method === 'ExtrinsicFailed') {
-                                    unsub()
-                                    reject(dispatchErrorHandler(this.api.registry, event))
-                                }
-                            })
-
-                        // ContractEmitted is the current generation, ContractExecution is the previous generation
-                        unsub()
-                        resolve(new ContractSubmittableResult(result))
-                    } else if (result.isError) {
-                        unsub()
-                        reject(new ProsopoContractError(result.status.type))
-                    }
+            if (this.transactionQueue) {
+                return new Promise((resolve, reject) => {
+                    this.transactionQueue?.add(
+                        contract,
+                        (result: ISubmittableResult) => {
+                            this.logger.info('Contract deployed by', this.pair.address)
+                            resolve(new CodeSubmittableResult(result))
+                        },
+                        this.pair,
+                        contract.method.method.toString()
+                    )
                 })
-            })
+            } else {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve, reject) => {
+                    const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
+                        if (result.status.isFinalized || result.status.isInBlock) {
+                            result.events
+                                .filter(({ event: { section } }): boolean => section === 'system')
+                                .forEach((event): void => {
+                                    const {
+                                        event: { method },
+                                    } = event
+
+                                    if (method === 'ExtrinsicFailed') {
+                                        unsub()
+                                        reject(dispatchErrorHandler(this.api.registry, event))
+                                    }
+                                })
+
+                            // ContractEmitted is the current generation, ContractExecution is the previous generation
+                            unsub()
+                            resolve(new ContractSubmittableResult(result))
+                        } else if (result.isError) {
+                            unsub()
+                            reject(
+                                new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
+                                    context: { error: result.status.type },
+                                    logLevel: this.logger.getLogLevel(),
+                                })
+                            )
+                        }
+                    })
+                })
+            }
         } else {
-            throw new ProsopoContractError(error || 'Unknown error')
+            throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error } })
         }
     }
-}
-
-async function getWeight(api: ApiPromise): Promise<UseWeight> {
-    const expectedBlockTime = calcInterval(api)
-    return await useWeightImpl(api as ApiPromise, expectedBlockTime, new BN(10))
 }
 
 // Taken from apps/packages/page-contracts/src/Codes/Upload.tsx
@@ -135,9 +152,11 @@ export async function dryRunDeploy(
     value = 0,
     weight: UseWeight,
     constructorIndex = 0,
-    salt?: string
+    salt?: string,
+    logLevel?: LogLevel
 ): Promise<DryRunResult> {
     const accountId = pair.address
+    const logger = getLogger(logLevel || LogLevel.Values.info, 'dryRunDeploy')
     let contract: SubmittableExtrinsic<'promise'> | null = null
     let error: string | null = null
     const saltOrNull = salt ? salt : null
@@ -145,7 +164,10 @@ export async function dryRunDeploy(
     try {
         const message = contractAbi?.constructors[constructorIndex]
         if (message === undefined) {
-            throw new Error('Unable to find constructor')
+            throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED', {
+                context: { reason: 'Unable to find constructor' },
+                logLevel: logger.getLogLevel(),
+            })
         }
         const method = message.method
         if (code && message && accountId) {
@@ -164,12 +186,11 @@ export async function dryRunDeploy(
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
             const func = code.tx[method]
             if (func === undefined) {
-                throw new Error('Unable to find method')
+                throw new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { func } })
             }
             const options: BlueprintOptions = {
                 gasLimit: dryRunResult.gasRequired,
                 storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
-                //storageDepositLimit: null,
                 salt: saltOrNull,
             }
             if (value !== undefined) {

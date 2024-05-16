@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,31 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevels as ConsolaLogLevels, createConsola } from 'consola'
+import { LogLevels as ConsolaLogLevels, createConsola } from 'consola/browser'
 import { ProsopoEnvError } from './error.js'
 import { enum as zEnum, infer as zInfer } from 'zod'
 
-export interface Logger {
-    log(message: unknown, ...args: unknown[]): void
+// allows access to log levels via index, e.g. myLogger[LogLevel.enum.debug](...) or myLogger['error'](...), etc
+type LoggerLevelFns = {
+    [key in LogLevel]: (message: unknown, ...args: unknown[]) => void
+}
 
-    info(message: unknown, ...args: unknown[]): void
-
-    debug(message: unknown, ...args: unknown[]): void
-
-    trace(message: unknown, ...args: unknown[]): void
-
-    warn(message: unknown, ...args: unknown[]): void
-
-    error(message: unknown, ...args: unknown[]): void
-
-    fatal(message: unknown, ...args: unknown[]): void
-
+export type Logger = {
     setLogLevel(level: LogLevel | string): void
 
     getLogLevel(): LogLevel
-}
+} & LoggerLevelFns
 
-export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+export const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 export type LogLevel = zInfer<typeof LogLevel>
 
 // Create a new logger with the given level and scope
@@ -50,7 +41,7 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    const logger = createConsola({}).withTag(scope)
+    const logger = createConsola({ formatOptions: { colors: true, date: true } }).withTag(scope)
     let currentLevel = logLevel
     const result = {
         log: logger.log,
@@ -82,8 +73,13 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
                 case LogLevel.enum.fatal:
                     logLevel = ConsolaLogLevels.fatal
                     break
+                case LogLevel.enum.log:
+                    logLevel = ConsolaLogLevels.log
+                    break
                 default:
-                    throw new Error('LOG.INVALID_LOG_LEVEL')
+                    // this cannot be a ProsopoEnvError. The default logger calls this method, which creates a new ProsopoEnvError, which requires the default logger, which hasn't been constructed yet, leading to ts not being able to find getLoggerDefault() during runtime as it has not completed yet (I think).
+                    // Either way, this should never happen in runtime, this error is just an edge case, every log level should be translated properly.
+                    throw new Error(`Invalid log level translation to consola's log level: ${level}`)
             }
             logger.level = logLevel
             currentLevel = level
@@ -106,7 +102,7 @@ export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
     try {
         return LogLevel.parse(logLevel)
     } catch (e) {
-        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', logLevel)
+        throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
     }
 }
 

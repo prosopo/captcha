@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,40 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import { IKeyringPair } from '@polkadot/types/types'
-// import { ContractOptions } from '@polkadot/api-contract/types'
-// import { Logger } from '@prosopo/common'
-//
-//
-// export interface IProsopoCaptchaContract {
-//     contractName: string
-//     pair: IKeyringPair
-//     options: ContractOptions
-//     nonce: number
-//     logger: Logger
-//
-//     Generic contract functions
-//
-//     getContract(): IProsopoContractApi
-//
-//     buildExtrinsic<T>(
-//         contractMethodName: string,
-//         args: T[],
-//         value?: number | BN | undefined
-//     ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }>
-//
-//     contractTx<T>(
-//         contractMethodName: string,
-//         args: T[],
-//         value?: number | BN | undefined
-//     ): Promise<ContractSubmittableResult>
-//
-//     contractQuery(
-//         contractMethodName: string,
-//         args: any[],
-//         value?: number | BN | undefined,
-//         atBlock?: string | Uint8Array
-//     ): Promise<ContractCallOutcome>
-//
-//     getStorage<T>(name: string): Promise<T>
-// }
+import { AbiMetadata } from './artifacts.js'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN } from '@polkadot/util/bn'
+import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
+import { ContractOptions } from '@polkadot/api-contract/types'
+import { ContractPromise } from '@polkadot/api-contract'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { Logger } from '@prosopo/common'
+import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
+
+export interface IProsopoCaptchaContract {
+    api: ApiPromise
+    contractName: string
+    contract: ContractPromise
+    pair: KeyringPair
+    options: ContractOptions | undefined
+    nonce: number
+    logger: Logger
+    json: AbiMetadata
+    queryAtBlock<T>(blockHash: BlockHash, methodName: string, args?: any[]): Promise<T>
+    getExtrinsicAndGasEstimates<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }>
+    getStorage<T>(name: string): Promise<T>
+}

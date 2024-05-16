@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN } from '@polkadot/util/bn'
+import { ProsopoApiError } from '@prosopo/common'
 
 export function oneUnit(api: ApiPromise): BN {
     if (api.registry.chainDecimals[0] === undefined) {
-        throw new Error('Chain decimals are not defined')
+        throw new ProsopoApiError('CONTRACT.CHAIN_DECIMALS_UNDEFINED')
     }
     const chainDecimals = new BN(api.registry.chainDecimals[0])
     return new BN((10 ** chainDecimals.toNumber()).toString())

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-bundle",
-    "version": "0.2.17",
+    "version": "0.3.39",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -19,13 +19,15 @@
     "types": "./dist/index.d.ts",
     "source": "./src/index.tsx",
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "vite serve --mode development --host",
         "bundle:dev": "vite build --config vite.config.ts --mode development --debug",
+        "bundle:dev:webpack": "webpack build --config webpack.config.cjs --mode development",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
@@ -36,15 +38,13 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@emotion/react": "^11.11.1",
-        "@emotion/styled": "^11.11.0",
-        "@mui/icons-material": "^5.14.3",
-        "@mui/material": "^5.14.5",
-        "@prosopo/common": "0.2.17",
-        "@prosopo/procaptcha": "0.2.17",
-        "@prosopo/procaptcha-react": "0.2.17",
-        "@prosopo/types": "0.2.17",
-        "@prosopo/util": "0.2.17"
+        "@prosopo/procaptcha-frictionless": "^0.3.39",
+        "@prosopo/procaptcha-pow": "0.3.39",
+        "@prosopo/procaptcha-react": "0.3.39",
+        "@prosopo/types": "0.3.39",
+        "@prosopo/util": "^0.3.39",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
     },
     "repository": {
         "type": "git",
@@ -59,12 +59,10 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
-        "@originjs/vite-plugin-commonjs": "^1.0.3",
-        "@prosopo/config": "0.2.17",
-        "@rollup/plugin-typescript": "^11.1.2",
-        "@vitejs/plugin-react": "^4.0.4",
+        "@prosopo/config": "0.3.39",
+        "@prosopo/cli": "0.3.39",
         "tslib": "2.6.2",
-        "typescript": "5.1.6",
-        "webpack-merge": "^5.9.0"
+        "vite": "^5.1.7",
+        "typescript": "^5.1.6"
     }
 }

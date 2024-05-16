@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 // TODO use the .contract file instead of the .json and .wasm files. Polkadot-JS apps is also erroring out when using
 //   the .wasm and .json files. The .contract file works but I don't know why.
 import { Abi } from '@polkadot/api-contract'
+import { ProsopoError } from '@prosopo/common'
 import { hexToU8a, isWasm } from '@polkadot/util'
 import fse from 'fs-extra'
 import path from 'path'
@@ -32,7 +33,7 @@ export async function AbiJSON(filePath: string): Promise<Abi> {
         )
         return new Abi(json)
     } else {
-        throw new Error(`File ${filePath} does not exist`)
+        throw new ProsopoError('FS.FILE_NOT_FOUND', { context: { error: `File ${filePath} does not exist` } })
     }
 }
 
@@ -51,6 +52,6 @@ export async function Wasm(filePath: string): Promise<Uint8Array> {
             process.exit(1)
         }
     } else {
-        throw new Error(`File ${filePath} does not exist`)
+        throw new ProsopoError('FS.FILE_NOT_FOUND', { context: { error: `File ${filePath} does not exist` } })
     }
 }

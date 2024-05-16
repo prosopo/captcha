@@ -1,4 +1,7 @@
 {
+    "ACCOUNT": {
+        "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
+    },
     "WIDGET": {
         "SELECT_ALL": "Select all images containing a",
         "NEXT": "Next",
@@ -8,7 +11,8 @@
         "NO_ACCOUNTS_FOUND": "No accounts found",
         "ACCOUNT_NOT_FOUND": "Account not found",
         "NO_EXTENSION_FOUND": "No extension found",
-        "EXTENSION_NOT_FOUND": "Extension not found"
+        "EXTENSION_NOT_FOUND": "Extension not found",
+        "CANVAS": "Error with Captcha canvas"
     },
     "GENERAL": {
         "BAD_SURI": "Bad SURI",
@@ -16,9 +20,9 @@
         "JSON_LOAD_FAILED": "Failed to load JSON file",
         "CREATE_JSON_FILE_FAILED": "Failed to create JSON file",
         "ASSERT_ERROR": "AssertionError",
-        "GENERATE_CPATCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
+        "GENERATE_CAPTCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
-        "MNEMONIC_UNDEFINED": "Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables",
+        "MNEMONIC_UNDEFINED": "Mnemonic Undefined. Please set the mnemonic in environment variables",
         "NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
         "ASYNC_FACTORY_CREATE": "Use `create` factory method",
         "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
@@ -45,23 +49,35 @@
         "INVALID_TYPE": "Invalid type",
         "INVALID_ABI": "Invalid ABI",
         "NOT_HANDLED": "Not handled",
-        "INVALID_STORAGE_TYPE": "Invalid storage type"
+        "INVALID_STORAGE_TYPE": "Invalid storage type",
+        "INTERRUPTED_EVENT": "Event interrupted",
+        "TOO_MANY_CALLS": "Too many calls",
+        "UNKNOWN_ERROR": "Unknown error",
+        "CHAIN_DECIMALS_UNDEFINED": "Chain decimals are not defined",
+        "INVALID_DATA_FORMAT": "Invalid data format",
+        "INVALID_BLOCKHASH": "Invalid blockhash",
+        "TX_QUEUE_ERROR": "Error in Transaction Queue",
+        "DISPATCH_ERROR": "Error dispatching transaction"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
         "INVALID_CAPTCHA_NUMBER": "Please configure captchas configurations correctly",
         "CONFIGURATIONS_LOAD_FAILED": "Prosopo configurations load failed",
-        "INVALID_LOG_LEVEL": "Invalid log level"
+        "INVALID_LOG_LEVEL": "Invalid log level",
+        "INVALID_PACKAGE_DIR": "Invalid package directory"
     },
     "DATASET": {
-        "PARSE_ERROR": "Error parsing dataset",
+        "DATASET_PARSE_ERROR": "Error parsing dataset",
+        "SOLUTION_PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
         "INVALID_DATASET_ID": "Invalid dataset id",
         "DATASET_ID_UNDEFINED": "Dataset id undefined",
         "NOT_ENOUGH_LABELS": "Not enough labels",
         "NOT_ENOUGH_IMAGES": "Not enough images",
         "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
-        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions"
+        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions",
+        "DUPLICATE_IMAGE": "duplicate image detected",
+        "MERKLE_ERROR": "Error creating merkle tree"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
@@ -72,6 +88,8 @@
         "DATASET_LOAD_FAILED": "Data set load failed",
         "DATASET_GET_FAILED": "Failed to get dataset",
         "CAPTCHA_GET_FAILED": "Failed to get captcha",
+        "CAPTCHA_UPDATE_FAILED": "Failed to update captcha",
+        "IMAGE_GET_FAILED": "Failed to get image",
         "NO_CAPTCHAS_FOUND": "No captcha matching datasetId",
         "PENDING_RECORD_NOT_FOUND": "No pending record found",
         "INVALID_HASH": "Invalid hash",
@@ -79,6 +97,8 @@
         "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
         "SOLUTION_APPROVE_FAILED": "Failed to approve solution",
         "SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+        "TABLES_UNDEFINED": "Tables undefined",
+        "CONNECTION_UNDEFINED": "Connection undefined",
         "COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
     },
     "CAPTCHA": {
@@ -96,7 +116,8 @@
         "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
         "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id",
         "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-        "INVALID_PROVIDER_URL": "Invalid provider url"
+        "INVALID_PROVIDER_URL": "Invalid provider url",
+        "NO_CAPTCHA": "No captcha found"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",
@@ -107,7 +128,8 @@
         "BAD_REQUEST": "BadRequest",
         "PAYMENT_INFO_NOT_FOUND": "Payment info not found for given block and transaction hashes",
         "USER_VERIFIED": "User verified",
-        "USER_NOT_VERIFIED": "User not verified"
+        "USER_NOT_VERIFIED": "User not verified",
+        "UNKNOWN": "Unknown API error"
     },
     "CLI": {
         "PARAMETER_ERROR": "Invalid parameter"
@@ -118,18 +140,29 @@
         "CAPTCHA_ID_MISSING": "Cannot find captcha data id",
         "COMMITMENT_ID_MISSING": "Commitment id missing",
         "PROVIDER_NOT_FOUND": "Provider not found",
+        "PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
         "CREATE_ACCOUNT_FAILED": "Could not create an account!",
         "CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS": "Could not create an account as there are no funds. Restart the substrate node.",
         "NO_MOCK_ENV": "MockEnvironment not set up",
         "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator",
         "FUNDING_FAILED": "Funding failed",
-        "MISSING_PROVIDER_PAIR": "Missing provider pair"
+        "MISSING_PROVIDER_PAIR": "Missing provider pair",
+        "NETWORK_NOT_FOUND": "Network not found",
+        "MISSING_ENV_VARIABLE": "Missing environment variable",
+        "GENERAL": "General Dev Error, see context",
+        "MISSING_SECRET_KEY": "Missing secret key",
+        "KEY_ERROR": "Key error",
+        "METHOD_NOT_IMPLEMENTED": "Method not implemented"
     },
     "FS": {
         "DIRECTORY_NOT_FOUND": "Directory not found",
         "FILE_NOT_FOUND": "File not found",
         "FILE_ALREADY_EXISTS": "File already exists",
         "DIRECTORY_ALREADY_EXISTS": "Directory already exists",
-        "SAME_FILE": "Same file"
+        "SAME_FILE": "Same file",
+        "INVALID_DIR_FORMAT": "Invalid directory format"
+    },
+    "PROGUI": {
+        "NO_STATE_PROVIDER": "useGlobalState must be used within a GlobalStateProvider"
     }
 }

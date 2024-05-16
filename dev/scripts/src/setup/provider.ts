@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,13 +52,13 @@ export async function registerProvider(env: ProviderEnvironment, account: IProvi
 
         await setupProvider(env, account)
     } else {
-        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
+        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED', { context: { account } })
     }
 }
 
 export async function setupProvider(env: ProviderEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
-        throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', undefined, undefined, { provider })
+        throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', { context: { provider } })
     }
     await env.changeSigner(provider.pair)
     const logger = env.logger

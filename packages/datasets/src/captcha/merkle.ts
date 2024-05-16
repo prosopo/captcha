@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
+import { ProsopoError, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'
-import { hexHashArray } from '@prosopo/common'
 
 class MerkleNode implements MerkleNodeInterface {
     hash: string
@@ -68,7 +68,7 @@ export class CaptchaMerkleTree {
         while (leafIndex < numLeaves) {
             const leftChild = leaves[leafIndex]
             if (leftChild === undefined) {
-                throw new Error('leftChild undefined')
+                throw new ProsopoError('DEVELOPER.GENERAL', { context: { error: 'leftChild undefined' } })
             }
             const rightChild = leafIndex + 1 < numLeaves ? at(leaves, leafIndex + 1) : leftChild
             const parentNode = this.createParent(leftChild, rightChild)
@@ -94,7 +94,9 @@ export class CaptchaMerkleTree {
         while (layerNum < this.layers.length - 1) {
             const layer = this.layers[layerNum]
             if (layer === undefined) {
-                throw new Error('layer undefined')
+                throw new ProsopoError('DATASET.MERKLE_ERROR', {
+                    context: { error: 'layer undefined', failedFuncName: this.proof.name, layerNum },
+                })
             }
             const leafIndex = layer.indexOf(leafHash)
             // if layer 0 leaf index is 3, it should be partnered with 2: [L0,L1],[L2,L3],[L3,L4],...

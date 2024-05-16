@@ -1,0 +1,53 @@
+{
+    "name": "@prosopo/vite-plugin-watch-workspace",
+    "version": "0.3.39",
+    "description": "Vite plugin for watching and rebuilding external files",
+    "main": "./dist/index.js",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        }
+    },
+    "scripts": {
+        "test": "echo \"No test specified\"",
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint:fix": "npm run eslint -- --fix",
+        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier:fix": "npm run prettier -- --write",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+    },
+    "engines": {
+        "node": ">=18",
+        "npm": ">=9"
+    },
+    "author": "Prosopo Limited",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "debug": "^4.3.4",
+        "fast-glob": "^3.3.2",
+        "vite": "^5.1.7"
+    },
+    "devDependencies": {
+        "@types/debug": "^4.1.12",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha/blob/main/dev/vite-plugin-watch-workspace/README.md",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "sideEffects": false
+}

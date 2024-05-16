@@ -1,13 +1,28 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { Plugin } from 'vite'
 import { getLogger } from '@prosopo/common'
 import fs from 'node:fs'
 import path from 'path'
-const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
+
 export interface ClosePluginOptions {
     srcDir: string
-    destDir: string
-    bundleName: string
+    destDir: string[]
 }
+
+const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
+
 /**
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.
  *   @param { ClosePluginOptions } options - The options object
@@ -28,17 +43,30 @@ export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Pl
         },
         closeBundle() {
             if (options) {
-                for (const file of fs.readdirSync(path.resolve(__dirname, options.srcDir))) {
-                    if (file.startsWith(options.bundleName) && file.endsWith('js')) {
-                        const src = path.resolve(__dirname, options.srcDir, file)
-                        const dest = path.resolve(__dirname, options.destDir, file)
-                        fs.copyFileSync(src, dest)
-                        log.info(`Copied ${src} to ${dest}`)
-                    }
-                }
+                options.destDir.forEach((destDir) => {
+                    clearOutputDirJS(__dirname, destDir)
+                    log.info(`Bundle cleared from ${options.destDir}`)
+                    copyBundle(__dirname, options.srcDir, destDir)
+                    log.info(`Bundle copied to ${options.destDir}`)
+                })
             }
             log.info('Bundle closed')
-            process.exit(0)
         },
     }
 }
+
+const clearOutputDirJS = (__dirname: string, destDir: string) =>
+    fs
+        .readdirSync(path.resolve(__dirname, destDir))
+        .filter((file) => file.endsWith('js'))
+        .map((file) => {
+            fs.rmSync(path.resolve(__dirname, destDir, file))
+        })
+
+const copyBundle = (__dirname: string, srcDir: string, destDir: string) =>
+    fs
+        .readdirSync(path.resolve(__dirname, srcDir))
+        .filter((file) => file.endsWith('js'))
+        .map((file) => {
+            fs.copyFileSync(path.resolve(__dirname, srcDir, file), path.resolve(__dirname, destDir, file))
+        })

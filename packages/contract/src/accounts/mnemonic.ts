@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
-import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
+import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto/mnemonic'
 
 /** Generate a mnemonic, returning the mnemonic and associated address
  * @param keyring
@@ -28,4 +28,13 @@ export async function generateMnemonic(keyring?: Keyring, pairType?: KeypairType
     const mnemonic = mnemonicGenerate()
     const account = keyring.addFromMnemonic(mnemonic)
     return [mnemonic, account.address]
+}
+
+/** Generate a secret, returning the secret and associated address
+ * @param keyring
+ * @param pairType
+ */
+export async function generateSecret(keyring?: Keyring, pairType?: KeypairType): Promise<[Uint8Array, string]> {
+    const [mnemonic, address] = await generateMnemonic(keyring, pairType)
+    return [mnemonicToMiniSecret(mnemonic), address]
 }

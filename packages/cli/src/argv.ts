@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import {
     commandBatchCommit,
-    commandCalculateCaptchaSolutions,
     commandDappAccounts,
     commandDappDetails,
     commandDappRegister,
@@ -33,11 +32,14 @@ import {
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
+export type AwaitedProcessedArgs = { [x: string]: unknown; api: boolean; _: (string | number)[]; $0: string }
+
 export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfigOutput) {
     const logger = getLogger(LogLevel.enum.info, 'CLI')
     return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', { demand: false, default: false, type: 'boolean' } as const)
+        .option('adminApi', { demand: false, default: false, type: 'boolean' } as const)
         .command(commandProviderRegister(pair, config, { logger }))
         .command(commandProviderUpdate(pair, config, { logger }))
         .command(commandProviderDeregister(pair, config, { logger }))
@@ -49,7 +51,6 @@ export function processArgs(args: string[], pair: KeyringPair, config: ProsopoCo
         .command(commandProviderDetails(pair, config, { logger }))
         .command(commandProviderDataset(pair, config, { logger }))
         .command(commandDappDetails(pair, config, { logger }))
-        .command(commandCalculateCaptchaSolutions(pair, config, { logger }))
         .command(commandBatchCommit(pair, config, { logger }))
         .command(commandVersion(pair, config, { logger }))
         .parse()

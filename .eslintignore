@@ -1,4 +1,6 @@
 **/*bundle*.js
+**/ProcaptchaWidget-*.js
+**/index-*.js
 **/typechain/*
 .yarn
 node_modules
@@ -31,3 +33,12 @@ typings/
 build/
 protocol/target
 .next
+.eslintignore
+.dockerignore
+.gitignore
+.npmignore
+.nvmrc
+diagram.svg
+.env.*
+**/assets/*.js
+*.min.js

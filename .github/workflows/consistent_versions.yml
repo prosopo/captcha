@@ -1,0 +1,82 @@
+name: consistent_versions
+
+on:
+    pull_request:
+        branches: [main]
+        paths:
+            - '**/package.json'
+            - 'package.json'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+env:
+    CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
+    GH_TOKEN: ${{ github.token }}
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            - uses: actions/checkout@v3
+
+            - name: Check versions are consistent amongst packages
+              run: |
+                  # for each package, get the version then filter to unique versions
+                  versions=$(npx --workspaces npm pkg get version | grep "@" | awk '{print $2}' | uniq)
+                  # if more than one version is detected, fail
+                  if [ $(echo "$versions" | wc -l) -gt 1 ]; then
+                      echo "Versions are not consistent amongst packages:"
+                      echo "$versions"
+                      exit 1
+                  fi
+                  # if version doesn't match the root workspace version, fail
+                  root_version=$(npm pkg get version)
+                  if [ "$versions" != "$root_version" ]; then
+                      echo "Version is not consistent with root workspace version:"
+                      echo "$versions"
+                      echo "$root_version"
+                      exit 1
+                  fi
+                  # else versions are consistent, pass
