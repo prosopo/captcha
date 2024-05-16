@@ -23,6 +23,7 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix",
         "license": "tsx src/scripts/addCopyrightNotice.ts check",
         "license:fix": "tsx src/scripts/addCopyrightNotice.ts license"
+
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
@@ -33,6 +34,7 @@
         "@polkadot/types": "10.13.1",
         "@polkadot/util-crypto": "12.6.2",
         "@prosopo/api": "0.3.39",
+        "@prosopo/captcha-contract": "0.3.39",
         "@prosopo/cli": "0.3.39",
         "@prosopo/common": "0.3.39",
         "@prosopo/config": "0.3.39",
@@ -50,13 +52,13 @@
         "@prosopo/types": "0.3.39",
         "@prosopo/types-database": "0.3.39",
         "@prosopo/types-env": "0.3.39",
-        "@prosopo/captcha-contract": "0.3.39",
         "@prosopo/util": "0.3.39",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "fast-glob": "^3.3.2",
         "glob": "^10.0.0",
         "qs": "^6.11.2",
+        "scale-ts": "^1.6.0",
         "varuint-bitcoin": "^1.1.2",
         "yargs": "^17.5.1",
         "yargs-parser": "^21.0.1"
