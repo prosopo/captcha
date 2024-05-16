@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,21 +22,18 @@ export function getPairType(): KeypairType {
     return (process.env.PROSOPO_PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
 }
 
-export function getSecret(who?: string): string {
+export function getSecret(who?: string): string | undefined {
     if (!who) {
         who = 'PROVIDER'
     } else {
         who = who.toUpperCase()
     }
-    const secret =
+    return (
         process.env[`PROSOPO_${who}_MNEMONIC`] ||
         process.env[`PROSOPO_${who}_SEED`] ||
         process.env[`PROSOPO_${who}_URI`] ||
         process.env[`PROSOPO_${who}_JSON`]
-    if (!secret) {
-        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
-    }
-    return secret
+    )
 }
 
 export function getDB(): string {

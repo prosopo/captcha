@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { ProsopoServer, getServerConfig } from '@prosopo/server'
 import { getPairAsync } from '@prosopo/contract'
 import connectionFactory from './utils/connection.js'
@@ -30,8 +31,22 @@ export function getEnvFile(filename = '.env', filepath = './') {
     return path.join(filepath, `${filename}.${env}`)
 }
 
+enum ProsopoVerificationType {
+    api = 'api',
+    local = 'local',
+}
+
 async function main() {
+    const logger = getLoggerDefault()
     loadEnv()
+
+    const verifyEndpoint = process.env.PROSOPO_VERIFY_ENDPOINT || 'https://api.prosopo.io/siteverify'
+
+    const verifyType: ProsopoVerificationType = Object.keys(ProsopoVerificationType).includes(
+        process.env.PROSOPO_VERIFICATION_TYPE as string
+    )
+        ? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
+        : ProsopoVerificationType.api
 
     const app = express()
 
@@ -56,7 +71,12 @@ async function main() {
     console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
     if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
-        throw new Error('No private key found')
+        const mnemonicError = new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
+            context: { missingParams: ['PROSOPO_SITE_PRIVATE_KEY'] },
+            logger,
+        })
+
+        logger.error(mnemonicError)
     }
 
     const config = getServerConfig()
@@ -65,7 +85,7 @@ async function main() {
     const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.PROSOPO_SITE_PRIVATE_KEY)
     const prosopoServer = new ProsopoServer(config, pair)
 
-    app.use(routesFactory(mongoose, prosopoServer))
+    app.use(routesFactory(mongoose, prosopoServer, verifyEndpoint, verifyType))
 
     app.listen(process.env.PROSOPO_SERVER_PORT)
 }

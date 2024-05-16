@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,10 +41,10 @@ export function calcInterval(api: ApiPromise): BN {
                       ? // Default minimum period config
                         api.consts.timestamp.minimumPeriod.mul(BN_TWO)
                       : api.query.parachainSystem
-                        ? // default guess for a parachain
-                          DEFAULT_TIME.mul(BN_TWO)
-                        : // default guess for others
-                          DEFAULT_TIME)
+                      ? // default guess for a parachain
+                        DEFAULT_TIME.mul(BN_TWO)
+                      : // default guess for others
+                        DEFAULT_TIME)
             : DEFAULT_TIME
     )
 }

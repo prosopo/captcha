@@ -1,0 +1,19 @@
+{
+    "extends": "../../tsconfig.cjs.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist/cjs"
+    },
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "references": [
+        {
+            "path": "../../packages/cli"
+        },
+        {
+            "path": "../../packages/common"
+        },
+        {
+            "path": "../../packages/util"
+        }
+    ]
+}

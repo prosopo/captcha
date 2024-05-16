@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,5 +13,6 @@
 // limitations under the License.
 export * from './artifacts.js'
 export * from './contract.js'
+export * from './interface.js'
 export * from './useWeight.js'
 export * from './batch.js'

@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-import { darkTheme, lightTheme } from './theme.js'
+import { CaptchaWithProof } from '@prosopo/types'
+import { ProsopoDatasetError } from '@prosopo/common'
+import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
 export interface CaptchaWidgetProps {
-    challenge: CaptchaResponseCaptcha
+    challenge: CaptchaWithProof
     solution: string[]
     onClick: (hash: string) => void
     themeColor: 'light' | 'dark'
@@ -24,7 +25,7 @@ export interface CaptchaWidgetProps {
 
 const getHash = (item: any) => {
     if (!item.hash) {
-        throw new Error('item.hash is undefined')
+        throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', { context: { item } })
     }
     return item.hash
 }
@@ -79,6 +80,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                         display: 'block', // removes whitespace below imgs
                                         objectFit: 'contain', // contain the entire image in the img tag
                                         aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
+                                        height: 'auto', // make the img tag responsive to its container
                                     }}
                                     src={item.data}
                                     alt={`Captcha image ${index + 1}`}

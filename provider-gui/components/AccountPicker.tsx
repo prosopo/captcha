@@ -1,3 +1,16 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 'use client'
 
 import { FormControl, FormGroup, MenuItem, Select } from '@mui/material'
@@ -18,13 +31,14 @@ const AccountPicker: React.FC = () => {
             await web3Enable('Prosopo Provider GUI')
             const accounts = await web3Accounts()
             setAccounts(accounts)
-            if (accounts.length > 0) setCurrentAccount(accounts[0]?.address ?? '')
+            if (accounts.length > 0 && accounts[0]) setCurrentAccount(accounts[0])
         }
         enableExtension()
     }, [])
 
-    const handleAccountChange = (event: SelectChangeEvent<string>) => {
-        setCurrentAccount(event.target.value)
+    const handleAccountChange = (event: SelectChangeEvent<InjectedAccountWithMeta>) => {
+        const account = accounts.find((account) => account.address === event.target.value)
+        if (account) setCurrentAccount(account)
     }
 
     const handleNetworkChange = (event: SelectChangeEvent<'rococo' | 'development'>) => {

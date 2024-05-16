@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@ import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { DispatchError, Event } from '@polkadot/types/interfaces'
 import { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
-import { Logger } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers.js'
+import { Logger, ProsopoContractError } from '@prosopo/common'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
-import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
+import { filterAndDecodeContractEvents, formatEvent } from './helpers.js'
+import { getDispatchError } from '@prosopo/tx'
 import { oneUnit } from '../balances/index.js'
 
 /**
@@ -72,14 +72,14 @@ export async function batch(
                 logger.error('Too many calls')
                 const item = at(tooManyCallsEvent, 0)
                 const message = formatEvent(item.event)
-                reject(new ProsopoContractError(message))
+                reject(new ProsopoContractError('CONTRACT.TOO_MANY_CALLS', { context: { message } }))
             }
 
             if (batchInterruptedEvent.length > 0) {
                 logger.error('Batch interrupted')
                 const item = at(batchInterruptedEvent, 0)
                 const message = formatBatchInterruptedEvent(item.event)
-                reject(new ProsopoContractError(message))
+                reject(new ProsopoContractError('CONTRACT.INTERRUPTED_EVENT', { context: { message } }))
             }
 
             if (result.status.isFinalized || result.status.isInBlock) {
@@ -98,7 +98,12 @@ export async function batch(
                 resolve()
             } else if (result.isError) {
                 unsub()
-                reject(new ProsopoContractError(result.status.type))
+                reject(
+                    new ProsopoContractError('CONTRACT.TX_ERROR', {
+                        context: { resultType: result.status.type },
+                        logger,
+                    })
+                )
             }
         })
     })

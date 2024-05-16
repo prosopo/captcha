@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProsopoError } from './error.js'
 import { TFunction } from 'i18next'
 import { hexToString } from '@polkadot/util/hex'
 import translationEn from './locales/en.json' assert { type: 'json' }
@@ -43,7 +44,7 @@ function getLeafFieldPath(obj: Node): string[] {
     return Object.keys(obj).reduce((arr, key) => {
         const value = obj[key]
         if (value === undefined) {
-            throw new Error(`Undefined value for key ${key}`)
+            throw new ProsopoError('DEVELOPER.KEY_ERROR', { context: { error: `Undefined value for key ${key}` } })
         }
         const children = getLeafFieldPath(value)
 
@@ -61,7 +62,7 @@ export const translationKeys = getLeafFieldPath(translationEn) as TranslationKey
 // String utils
 
 export const trimProviderUrl = (url: string) => {
-    return hexToString(url).replace(/\0/g, '')
+    return hexToString(url)
 }
 
 export function snakeToCamelCase(str: string): string {

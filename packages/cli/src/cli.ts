@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,22 +13,18 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProviderEnvironment } from '@prosopo/env'
 import { getPairAsync } from '@prosopo/contract'
-import { getSecret } from './process.env.js'
 import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
-import { start } from './start.js'
+import ReloadingAPI from './reloader.js'
 import getConfig from './prosopo.config.js'
 import process from 'process'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
 
 async function main() {
-    loadEnv()
-
-    const secret = getSecret()
+    const envPath = loadEnv()
 
     // quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
     const config: ProsopoConfigOutput = getConfig(undefined, undefined, undefined, {
@@ -36,18 +32,31 @@ async function main() {
         unsolved: { count: 0 },
     })
 
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
+    if (config.devOnlyWatchEvents) {
+        log.warn(
+            `
+        ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
+        EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
+        ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
+            `
+        )
+    }
+
+    const pair = await getPairAsync(
+        config.networks[config.defaultNetwork],
+        config.account.secret,
+        config.account.address
+    )
 
     log.info(`Pair address: ${pair.address}`)
 
     log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`)
 
     const processedArgs = await processArgs(process.argv, pair, config)
+
+    log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`)
     if (processedArgs.api) {
-        const env = new ProviderEnvironment(config, pair)
-        await env.isReady()
-        log.info('Starting API')
-        await start(env)
+        await new ReloadingAPI(envPath, config, pair, processedArgs).start()
     } else {
         process.exit(0)
     }

@@ -1,7 +1,20 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import * as z from 'zod'
 import { CaptchaTypes, CaptchaWithoutId, Captchas, CaptchasContainerSchema, Item, RawSolution } from '@prosopo/types'
 import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError } from '@prosopo/common'
 import { at, get } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto/blake2'
 import { lodash } from '@prosopo/util/lodash'
@@ -74,10 +87,9 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
     private setupTarget(i: number) {
         const _ = lodash()
         if (this.targets.length <= 1) {
-            throw new ProsopoEnvError(
-                new Error(`not enough different labels in labelled data`),
-                'DATASET.NOT_ENOUGH_LABELS'
-            )
+            throw new ProsopoDatasetError(new Error(`not enough different labels in labelled data`), {
+                translationKey: 'DATASET.NOT_ENOUGH_LABELS',
+            })
         }
 
         // uniformly sample targets
@@ -95,19 +107,19 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
         const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
 
         if (nUnlabelled > this.unlabelled.length) {
-            throw new ProsopoEnvError(new Error(`not enough unlabelled data`), 'DATASET.NOT_ENOUGH_IMAGES')
+            throw new ProsopoDatasetError(new Error(`not enough unlabelled data`), {
+                translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+            })
         }
         if (nCorrect > targetItems.length) {
-            throw new ProsopoEnvError(
-                new Error(`not enough images for target (${target})`),
-                'DATASET.NOT_ENOUGH_IMAGES'
-            )
+            throw new ProsopoDatasetError(new Error(`not enough images for target (${target})`), {
+                translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+            })
         }
         if (nIncorrect > notTargetItems.length) {
-            throw new ProsopoEnvError(
-                new Error(`not enough non-matching images for target (${target})`),
-                'DATASET.NOT_ENOUGH_IMAGES'
-            )
+            throw new ProsopoDatasetError(new Error(`not enough non-matching images for target (${target})`), {
+                translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
+            })
         }
 
         this.#nCorrect = nCorrect

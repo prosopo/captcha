@@ -3,7 +3,7 @@
     <head>
         <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
         <title>Procaptcha demo: Simple page</title>
-        <script id="procaptchaScript" src="procaptcha.bundle.js" async defer></script>
+        <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
     </head>
     <body>
         <div class="mui-container">
@@ -17,30 +17,36 @@
                     <label>Password</label>
                     <input type="password" required />
                 </div>
-                <div id="procaptcha-container"></div>
-                <!-- Dev sitekey -->
-                <div
-                    class="procaptcha"
-                    data-theme="light"
-                    data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
-                ></div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <div id="procaptcha-container"></div>
+                </div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <!-- Dev sitekey -->
+                    <div
+                        class="procaptcha"
+                        data-theme="light"
+                        data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                    ></div>
+                </div>
                 <input type="submit" class="mui-btn mui-btn--raised" />
             </form>
         </div>
-        <script>
-            // A function that will call the render Procaptcha function when the procaptcha script has loaded
-            document.getElementById('procaptchaScript').addEventListener('load', function () {
-                // Define a callback function to be called when the CAPTCHA is verified
-                window.onCaptchaVerified = function (output) {
-                    console.log('Captcha verified, output: ' + JSON.stringify(output))
-                }
+        <script type="module">
+            // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
+            import { render } from './assets/procaptcha.bundle.js'
 
-                // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
-                window.procaptcha.render('procaptcha-container', {
-                    siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
-                    theme: 'dark',
-                    callback: 'onCaptchaVerified',
-                })
+            // Define a callback function to be called when the CAPTCHA is verified
+            function onCaptchaVerified(output) {
+                console.log('Captcha verified, output: ' + JSON.stringify(output))
+            }
+
+            // Get the Element using elementId
+            const captchaContainer = document.getElementById('procaptcha-container')
+            // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
+            render(captchaContainer, {
+                siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
+                theme: 'dark',
+                callback: onCaptchaVerified,
             })
         </script>
     </body>

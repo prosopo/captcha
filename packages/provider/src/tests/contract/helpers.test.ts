@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import { MockEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create/types'
 import { ViteTestContext } from '@prosopo/env'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { at } from '@prosopo/util'
+import { beforeEach, describe, expect, test } from 'vitest'
 import { encodeStringArgs, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 import { hexToU8a } from '@polkadot/util/hex'
@@ -37,22 +37,22 @@ describe('CONTRACT HELPERS', function () {
         const config = getTestConfig()
         const network = config.networks[config.defaultNetwork]
         const alicePair = await getPairAsync(network, '//Alice')
-        context.env = new MockEnvironment(getTestConfig(), alicePair)
+        const env = new MockEnvironment(getTestConfig(), alicePair)
         try {
-            await context.env.isReady()
+            await env.isReady()
         } catch (e) {
             // TODO fix error handling
             throw new ProsopoEnvError(e as Error)
         }
+        context.env = env
         const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
             context.env.getContractInterface().query.getProviderStakeThreshold,
             context.env.getContractInterface().query
         )()
         context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
-    })
-
-    afterEach(async ({ env }): Promise<void> => {
-        if (env && 'db' in env) await env.db?.close()
+        return () => {
+            env.db?.close()
+        }
     })
 
     test('Properly encodes `Hash` arguments when passed unhashed', async function ({ env }) {

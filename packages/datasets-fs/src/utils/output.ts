@@ -1,5 +1,18 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { CliCommand } from '../cli/cliCommand.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvError, ProsopoError } from '@prosopo/common'
 import { boolean, object, string, infer as zInfer } from 'zod'
 import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'
@@ -19,10 +32,10 @@ export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliComm
     }
 
     public override getArgSchema(): T {
-        throw new Error('Method not implemented.')
+        throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
     public override getDescription(): string {
-        throw new Error('Method not implemented.')
+        throw new ProsopoError('DEVELOPER.METHOD_NOT_IMPLEMENTED')
     }
     public override getOptions() {
         return lodash().merge(super.getOptions(), {
@@ -49,10 +62,9 @@ export class OutputCliCommand<T extends typeof OutputArgsSchema> extends CliComm
         // output must not exist, unless overwrite is true
         if (this.outputExists()) {
             if (!args.overwrite) {
-                throw new ProsopoEnvError(
-                    new Error(`output path already exists: ${args.output}`),
-                    'FS.FILE_ALREADY_EXISTS'
-                )
+                throw new ProsopoEnvError(new Error(`output path already exists: ${args.output}`), {
+                    translationKey: 'FS.FILE_ALREADY_EXISTS',
+                })
             }
         }
     }

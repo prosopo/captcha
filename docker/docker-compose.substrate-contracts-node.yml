@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   substrate:
-    image: prosopo/substrate-contracts-node:v0.29
+    image: prosopo/substrate-contracts-node:v0.35
     build:
       context: .
       dockerfile: ./images/substrate-contracts-node.build.dockerfile

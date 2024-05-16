@@ -1,7 +1,20 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import * as z from 'zod'
 import { Data, DataSchema, Item } from '@prosopo/types'
 import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util/lodash'
 import { u8aToHex } from '@polkadot/util/u8a'
@@ -51,12 +64,16 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 
         const mapFile: string = args.input
         if (!fs.existsSync(mapFile)) {
-            throw new ProsopoEnvError(new Error(`Map file does not exist: ${mapFile}`), 'FS.FILE_NOT_FOUND')
+            throw new ProsopoDatasetError(new Error(`Map file does not exist: ${mapFile}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
         const outDir: string = args.output
         const overwrite = args.overwrite || false
         if (!overwrite && fs.existsSync(outDir)) {
-            throw new ProsopoEnvError(new Error(`Output directory already exists: ${outDir}`), 'FS.FILE_NOT_FOUND')
+            throw new ProsopoEnvError(new Error(`Output directory already exists: ${outDir}`), {
+                translationKey: 'FS.FILE_NOT_FOUND',
+            })
         }
 
         // create the output directory

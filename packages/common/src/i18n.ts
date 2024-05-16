@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,14 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { default as LanguageDetector } from 'i18next-browser-languagedetector'
 import { LanguageDetector as MiddlewareLanguageDetector } from 'i18next-http-middleware'
 import { initReactI18next } from 'react-i18next'
 import { isClientSide } from './utils.js'
 import Backend from 'i18next-http-backend'
-import LanguageDetector from 'i18next-browser-languagedetector'
 import i18n, { InitOptions } from 'i18next'
 import translationEn from './locales/en.json' assert { type: 'json' }
-import translationSr from './locales/sr.json' assert { type: 'json' }
 
 const commonOptions: InitOptions = {
     debug: false,
@@ -26,9 +25,6 @@ const commonOptions: InitOptions = {
     resources: {
         en: {
             translation: translationEn,
-        },
-        sr: {
-            translation: translationSr,
         },
     },
 }
@@ -42,11 +38,11 @@ const reactOptions: InitOptions = {
 const nodeOptions: InitOptions = {}
 
 if (isClientSide()) {
-    i18n.use(LanguageDetector as unknown as any)
+    i18n.use(LanguageDetector)
         .use(initReactI18next)
         .init({ ...commonOptions, ...reactOptions })
 } else {
-    i18n.use(Backend)
+    i18n.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
         .use(MiddlewareLanguageDetector)
         .init({ ...commonOptions, ...nodeOptions })
 }

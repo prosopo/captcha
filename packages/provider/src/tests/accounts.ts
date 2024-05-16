@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,21 @@
 import { BN } from '@polkadot/util/bn'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
+import { TestAccount } from '@prosopo/env'
 import { getPairAsync } from '@prosopo/contract'
 
-export const accountMnemonic = (account: Account) => account[0]
-export const accountAddress = (account: Account) => account[1]
-export const accountContract = function (account: Account): string {
-    if (account[2]) {
-        return account[2]
+export const accountMnemonic = (account: TestAccount) => account.mnemonic
+export const accountAddress = (account: TestAccount) => account.address
+export const accountContract = function (account: TestAccount): string {
+    if (account.contractAddress) {
+        return account.contractAddress
     }
-    throw new Error(`Account ${account[1]} does not have a contract`)
+    throw new ProsopoError(new Error(`Account ${account} does not have a contract`), {
+        context: { failedFuncName: accountContract.name },
+    })
 }
 export type Account = [mnemonic: string, address: string, contractAddress?: string]
 
@@ -44,7 +48,7 @@ export const DAPP: IDappAccount = {
     fundAmount: new BN(1000000000000000),
 }
 
-export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
+export async function getSignedTasks(env: ProviderEnvironment, account: TestAccount): Promise<Tasks> {
     const pair = await getPairAsync(env.config.networks[env.config.defaultNetwork], accountMnemonic(account), '')
     await env.changeSigner(pair)
     return new Tasks(env)

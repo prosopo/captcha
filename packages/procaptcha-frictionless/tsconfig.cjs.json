@@ -1,0 +1,24 @@
+{
+    "extends": "../../tsconfig.cjs.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist/cjs",
+        "lib": ["es6", "dom"],
+        "jsxImportSource": "@emotion/react"
+    },
+    "include": ["src/index.tsx", "src/index.html"],
+    "references": [
+        {
+            "path": "../../dev/config"
+        },
+        {
+            "path": "../procaptcha/tsconfig.cjs.json"
+        },
+        {
+            "path": "../procaptcha-react/tsconfig.cjs.json"
+        },
+        {
+            "path": "../util/tsconfig.cjs.json"
+        }
+    ]
+}

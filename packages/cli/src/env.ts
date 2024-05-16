@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,11 +27,12 @@ export function getEnv() {
     return 'development'
 }
 
-export function loadEnv(rootDir?: string, filename?: string, filePath?: string) {
+export function loadEnv(rootDir?: string, filename?: string, filePath?: string): string {
     const envPath = getEnvFile(path.resolve(rootDir || '.'), filename, filePath)
     const args = { path: envPath }
     logger.info(`Loading env from ${envPath}`)
     dotenv.config(args)
+    return envPath
 }
 
 export function getEnvFile(rootDir?: string, filename = '.env', filepath = path.join(__dirname, '../..')) {

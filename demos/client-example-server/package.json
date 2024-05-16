@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-example-server",
-    "version": "0.2.17",
+    "version": "0.3.39",
     "description": "Backend for client-example",
     "main": "dist/app.js",
     "type": "module",
@@ -9,6 +9,7 @@
         "npm": ">=9"
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "dev": "vite serve --mode=development --config ./vite.config.ts --host",
         "start": "node ./dist/app.js",
         "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
@@ -16,8 +17,7 @@
         "bundle:prod": "vite build --mode=production --config ./vite.config.ts",
         "bundle:dev": "vite build --mode=development --config ./vite.config.ts",
         "clean": "tsc --build --clean",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
@@ -36,13 +36,13 @@
     "homepage": "https://github.com/prosopo/client-example-server#readme",
     "dependencies": {
         "@noble/hashes": "^1.3.1",
-        "@polkadot/util": "12.6.1",
-        "@polkadot/util-crypto": "12.6.1",
-        "@prosopo/api": "0.2.17",
-        "@prosopo/contract": "0.2.17",
-        "@prosopo/procaptcha": "0.2.17",
-        "@prosopo/server": "0.2.17",
-        "@prosopo/types": "0.2.17",
+        "@polkadot/util": "12.6.2",
+        "@polkadot/util-crypto": "12.6.2",
+        "@prosopo/api": "0.3.39",
+        "@prosopo/contract": "0.3.39",
+        "@prosopo/procaptcha": "0.3.39",
+        "@prosopo/server": "0.3.39",
+        "@prosopo/types": "0.3.39",
         "@typegoose/auto-increment": "3.3.0",
         "cors": "^2.8.5",
         "jsonwebtoken": "^9.0.0",
@@ -52,11 +52,9 @@
     "devDependencies": {
         "@types/jsonwebtoken": "^9.0.2",
         "nodemon": "^2.0.22",
-        "ts-loader": "^9.4.3",
-        "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
-        "vite": "^4.5.0",
-        "@prosopo/config": "0.2.17"
+        "vite": "^5.1.7",
+        "@prosopo/config": "0.3.39"
     }
 }

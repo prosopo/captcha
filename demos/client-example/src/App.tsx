@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@ import {
     ApiParams,
     EnvironmentTypes,
     EnvironmentTypesSchema,
+    ProcaptchaConfigSchema,
     ProcaptchaOutput,
-    ProsopoClientConfigSchema,
 } from '@prosopo/types'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { getServerUrl } from '@prosopo/server'
 import { useState } from 'react'
 
 const corsHeaders = {
@@ -28,12 +31,15 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
-function App() {
+interface AppProps {
+    captchaType?: string
+}
+
+function App(props: AppProps) {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
     const [account, setAccount] = useState<string>('')
-
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action
@@ -41,7 +47,7 @@ function App() {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const config = ProsopoClientConfigSchema.parse({
+    const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
         account: {
             address: process.env.PROSOPO_SITE_KEY || '',
@@ -50,15 +56,19 @@ function App() {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        serverUrl: getServerUrl(),
+        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
+    console.log(config)
 
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
     const onLoggedIn = (token: string) => {
-        console.log('getting private resource with token ', token)
-        fetch(`${config.serverUrl}/private`, {
+        const url = new URL('/private', config.serverUrl).href
+        console.log('getting private resource with token ', token, 'at', url)
+        fetch(url, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -92,7 +102,9 @@ function App() {
             password,
             [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
-        fetch(`${config.serverUrl}/${urlPath}`, {
+        const url = new URL(urlPath, config.serverUrl).href
+        console.log('posting to', url, 'with payload', payload)
+        fetch(url, {
             method: 'POST',
             headers: {
                 ...corsHeaders,
@@ -144,10 +156,6 @@ function App() {
         alert(error.message)
     }
 
-    const onAccountNotFound = (address: string) => {
-        alert(`Account ${address} not found`)
-    }
-
     const onExpired = () => {
         alert('Challenge has expired')
     }
@@ -160,15 +168,22 @@ function App() {
             >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
-                    {!config.web2 ? (
-                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
-                    ) : (
-                        <></>
-                    )}
+
                     <Box>
                         <h1>{label}</h1>
                         <form>
-                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
+                            <FormGroup sx={{ '& .MuiTextField-root,#select-account': { m: 1 } }}>
+                                {!config.web2 ? (
+                                    <FormControl>
+                                        <ExtensionAccountSelect
+                                            dappName={config.dappName}
+                                            value={account}
+                                            onChange={setAccount}
+                                        />
+                                    </FormControl>
+                                ) : (
+                                    <></>
+                                )}
                                 <FormControl>
                                     <TextField
                                         id="email"
@@ -202,28 +217,35 @@ function App() {
                                     />
                                 </FormControl>
 
-                                <Procaptcha
-                                    config={config}
-                                    callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
-                                />
-
-                                <Box sx={{ p: 1 }}>
-                                    <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={onActionHandler}
-                                            disabled={!procaptchaOutput}
-                                        >
-                                            {isLogin ? 'Login' : 'Sign up'}
-                                        </Button>
-                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                            <Box>
-                                                <Typography>- or -</Typography>
+                                <FormControl sx={{ m: 1 }}>
+                                    {props.captchaType === 'frictionless' ? (
+                                        <ProcaptchaFrictionless
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                        />
+                                    ) : (
+                                        <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    )}
+                                </FormControl>
+                                <FormControl>
+                                    <Box sx={{ p: 1 }}>
+                                        <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={onActionHandler}
+                                                disabled={!procaptchaOutput}
+                                            >
+                                                {isLogin ? 'Login' : 'Sign up'}
+                                            </Button>
+                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                <Box>
+                                                    <Typography>- or -</Typography>
+                                                </Box>
                                             </Box>
-                                        </Box>
-                                        <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
-                                    </Stack>
-                                </Box>
+                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                        </Stack>
+                                    </Box>
+                                </FormControl>
                             </FormGroup>
                         </form>
                     </Box>

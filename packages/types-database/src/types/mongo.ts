@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import {
     DatasetBase,
     DatasetWithIds,
     Item,
+    PowCaptcha,
 } from '@prosopo/types'
 import { CaptchaStatus, Commit } from '@prosopo/captcha-contract/types-returns'
 import { Connection, Model, Schema } from 'mongoose'
@@ -57,6 +58,7 @@ export interface SolutionRecord extends CaptchaSolution {
 
 export interface Tables {
     captcha: typeof Model<Captcha>
+    powCaptcha: typeof Model<PowCaptcha>
     dataset: typeof Model<DatasetWithIds>
     solution: typeof Model<SolutionRecord>
     usersolution: typeof Model<UserSolutionRecord>
@@ -90,6 +92,13 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 })
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 })
+
+export const PowCaptchaRecordSchema = new Schema<PowCaptcha>({
+    challenge: { type: String, required: true },
+    checked: { type: Boolean, required: true },
+})
+// Set an index on the captchaId field, ascending
+PowCaptchaRecordSchema.index({ captchaId: 1 })
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userAccount: { type: String, required: true },
@@ -202,6 +211,10 @@ export interface Database {
     connection?: Connection
     logger: Logger
 
+    getTables(): Tables
+
+    getConnection(): Connection
+
     connect(): Promise<void>
 
     close(): Promise<void>
@@ -234,7 +247,7 @@ export interface Database {
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 
-    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>
+    updateDappUserPendingStatus(requestHash: string): Promise<void>
 
     getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>
 
@@ -285,4 +298,10 @@ export interface Database {
         status: ScheduledTaskStatus,
         result?: ScheduledTaskResult
     ): Promise<void>
+
+    storePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
+
+    getPowCaptchaRecordByChallenge(challenge: string): Promise<PowCaptcha | null>
+
+    updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>
 }

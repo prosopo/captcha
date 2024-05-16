@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { ProsopoError } from '../index.js'
+
 export class UrlConverter {
     private readonly symbols = [
         '', // empty string == termination symbol / noop. This may occur at the end of a byte array where the first 2 bits are used in the final symbol and the remaining 6 bits are ignored. But, because of the spacing, the remaining 6 bits appear to be a symbol. These 6 bits will be set to 000000. Thus we map 000000 (decimal number 0) to the empty string here.
@@ -100,19 +103,26 @@ export class UrlConverter {
         }, 0)
         const maxSymbols = Math.pow(2, this.symbolNBits)
         if (this.symbols.length > maxSymbols) {
-            // only built to encode 64 symbols. Need to adjust the encoding and decoding scheme for more symbols
-            throw new Error(`Cannot encode more than ${maxSymbols} symbols`)
+            throw new ProsopoError('DEVELOPER.GENERAL', {
+                context: {
+                    error: `Cannot encode more than ${maxSymbols} symbols`,
+                    context:
+                        'only built to encode 64 symbols. Need to adjust the encoding and decoding scheme for more symbols',
+                },
+            })
         }
         const symbols = this.getSymbols()
         if (symbols.length !== new Set(symbols).size) {
-            throw new Error(`Symbols must be unique`)
+            throw new ProsopoError('DEVELOPER.GENERAL', { context: { error: 'Symbols must be unique' } })
         }
     }
 
     public symbolToNum(symb: string): number | undefined {
         const num = this.symbolToNumNull(symb)
         if (num === undefined) {
-            throw new Error(`Could not find number for symbol '${symb}'`)
+            throw new ProsopoError('DEVELOPER.GENERAL', {
+                context: { error: `Could not find number for symbol '${symb}'` },
+            })
         }
         return num
     }
@@ -126,7 +136,9 @@ export class UrlConverter {
     public numToSymbol(num: number): string {
         const symb = this.numToSymbolNull(num)
         if (symb === undefined) {
-            throw new Error(`Could not find symbol for number ${num}`)
+            throw new ProsopoError('DEVELOPER.GENERAL', {
+                context: { error: `Could not find symbol for number ${num}` },
+            })
         }
         return symb
     }
@@ -157,7 +169,9 @@ export class UrlConverter {
             }
             // check if couldn't find matching symbol
             if (num === undefined) {
-                throw new Error(`Could not find symbol at '${url}' of '${origUrl}'`)
+                throw new ProsopoError('DEVELOPER.GENERAL', {
+                    context: { error: `Could not find symbol at '${url}' of '${origUrl}'` },
+                })
             }
             // record the number of the symbol and slice the symbol from the url
             nums.push(num)
@@ -183,7 +197,9 @@ export class UrlConverter {
             const numIndex = (bitCount / this.symbolNBits) | 0
             const num = nums[numIndex]
             if (num === undefined) {
-                throw new Error(`Could not find number at index ${numIndex} of '${nums}'`)
+                throw new ProsopoError('DEVELOPER.GENERAL', {
+                    context: { error: `Could not find number at index ${numIndex} of '${nums}'` },
+                })
             }
             const byteIndex = (bitCount / this.byteNBits) | 0
             const usedBitsInByte = bitCount % this.byteNBits
@@ -225,7 +241,9 @@ export class UrlConverter {
             const byteIndex = (bitCount / this.byteNBits) | 0
             const byte = bytes[byteIndex]
             if (byte === undefined) {
-                throw new Error(`Could not find byte at index ${byteIndex} of '${bytes}'`)
+                throw new ProsopoError('DEVELOPER.GENERAL', {
+                    context: { error: `Could not find byte at index ${byteIndex} of '${bytes}'` },
+                })
             }
             const usedBitsInByte = bitCount % this.byteNBits
             const unusedBitsInByte = this.byteNBits - usedBitsInByte

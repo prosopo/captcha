@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,6 +127,19 @@ describe('util', () => {
             const v5: number | undefined = at([1, 2, 3], 0, { optional: true })
             const v6: string = at('abc', 0, { optional: false })
             const v7: number = at([1, 2, 3], 0, { optional: false })
+
+            const a3: number = at([1, 2, 3], 0)
+            const a4: number | undefined = at([1, 2, 3, undefined], 0)
+            const a6: number | undefined = at([1, 2, 3], 0, { optional: true })
+            const a7: number = at([1, 2, 3], 0, { optional: false })
+            const a8: number = at([1, 2, 3], 0, {})
+            const a9: number = at([1, 2, 3], 0, { noWrap: true })
+            const a5: string = at('abc', 0)
+            const a10: string = at('abc', 0, { optional: false })
+            const a11: string | undefined = at('abc', 0, { optional: true })
+            const a12: undefined = at([undefined, undefined, undefined], 0)
+            const a13: undefined = at([undefined, undefined, undefined], 0, { optional: true })
+            const a14: undefined = at([undefined, undefined, undefined], 0, { optional: false })
         })
 
         test('compatible with string', () => {
@@ -185,15 +198,6 @@ describe('util', () => {
             expect(at([undefined, undefined, undefined], 0, { optional: true })).to.equal(undefined)
             expect(at([undefined, undefined, undefined], 1, { optional: true })).to.equal(undefined)
             expect(at([undefined, undefined, undefined], 2, { optional: true })).to.equal(undefined)
-        })
-
-        test('allow undefined out of bounds', () => {
-            expect(at([undefined, undefined, undefined], 3, { optional: true, noBoundsCheck: true })).to.equal(
-                undefined
-            )
-            expect(at([undefined, undefined, undefined], -1, { optional: true, noBoundsCheck: true })).to.equal(
-                undefined
-            )
         })
     })
 

@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.cjs.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "types": ["vite/client"]
+    },
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "references": [
+        {
+            "path": "../../packages/common/tsconfig.cjs.json"
+        },
+        {
+            "path": "../../packages/types/tsconfig.cjs.json"
+        }
+    ]
+}

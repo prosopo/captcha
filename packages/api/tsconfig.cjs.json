@@ -7,10 +7,10 @@
     "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
-            "path": "../types/tsconfig.cjs.json"
+            "path": "../util/tsconfig.cjs.json"
         },
         {
-            "path": "../util/tsconfig.cjs.json"
+            "path": "../types/tsconfig.cjs.json"
         },
         {
             "path": "../../contracts/captcha/tsconfig.cjs.json"

@@ -9,10 +9,7 @@ This project is a _minimal_ example demonstrating how to include the Prosopo Pro
 Run these commands from the root of the [captcha](https://github.com/prosopo/captcha) repo:
 
 ```bash
-cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
-cp demos/client-example/env.development demos/client-example/.env.development && \
 cp dev/scripts/env.development dev/scripts/.env.development && \
-cp dev/scripts/env.development packages/cli/.env.development && \
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development && \
 docker compose --file ./docker/docker-compose.development.yml up -d && \
 npm i && \

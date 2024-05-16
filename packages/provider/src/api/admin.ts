@@ -1,69 +1,122 @@
-// import { Keyring } from '@polkadot/keyring'
-// import { ProviderEnvironment } from '@prosopo/types-env'
-// import express, { Router } from 'express'
-// import jwt from 'jsonwebtoken'
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import * as z from 'zod'
+import { AdminApiPaths } from '@prosopo/types'
+import { BatchCommitmentsTask, Tasks } from '../index.js'
+import { Payee } from '@prosopo/captcha-contract/types-returns'
+import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
+import { ProviderEnvironment } from '@prosopo/types-env'
+import { Router } from 'express'
+import { authMiddleware } from './authMiddleware.js'
+import { wrapQuery } from '@prosopo/contract'
 
-// /**
-//  * Admin router with auth, temp example
-//  *
-//  * @return {Router} - router stuff
-//  * @param {Environment} env - env stuff
-//  */
-// export function adminRouter(env: ProviderEnvironment): Router {
-//     const keyring = new Keyring({ type: 'sr25519' })
+// Setting batch commit interval to 0 for API calls
+const apiBatchCommitConfig = {
+    interval: 0,
+    maxBatchExtrinsicPercentage: 59,
+}
 
-//     const router = express.Router()
+export function prosopoAdminRouter(env: ProviderEnvironment): Router {
+    const router = Router()
+    const tasks = new Tasks(env)
 
-//     // Middleware to verify auth token
-//     const authMiddleware = (req, res, next) => {
-//         const authHeader = req.headers.authorization
+    // Use the authMiddleware for all routes in this router
+    router.use(authMiddleware(tasks, env))
 
-//         if (authHeader) {
-//             const token = authHeader.split(' ')[1]
+    router.post(AdminApiPaths.BatchCommit, async (req, res, next) => {
+        if (env.db) {
+            try {
+                const batchCommitter = new BatchCommitmentsTask(
+                    apiBatchCommitConfig,
+                    env.getContractInterface(),
+                    env.db,
+                    0n,
+                    env.logger
+                )
+                const result = await batchCommitter.run()
 
-//             // Verify token using the public key
-//             jwt.verify(token, env.config.account.address, (err, user) => {
-//                 if (err) {
-//                     return res.sendStatus(403)
-//                 }
+                console.info(`Batch commit complete: ${result}`)
+                res.status(200).send(result)
+            } catch (err) {
+                console.error(err)
+                res.status(500).send(err)
+            }
+        } else {
+            console.error('No database configured')
+            res.status(500).send('No database configured')
+        }
+    })
 
-//                 req.user = user
-//                 next()
-//             })
-//         } else {
-//             res.sendStatus(401)
-//         }
-//     }
+    router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
+        try {
+            const result = await tasks.providerSetDataset(req.body)
 
-//     // Endpoint to authenticate user using Polkadot network for signing messages
-//     router.post('/auth', async (req, res) => {
-//         const { message, signature } = req.body
+            console.info(`Dataset update complete: ${result}`)
+            res.status(200).send(result)
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
+        }
+    })
 
-//         try {
-//             const address = env.config.account.address
-//             const pair = keyring.addFromAddress(env.config.account.address)
-//             const isValid = pair.verify(message, signature, address)
+    router.post(AdminApiPaths.ProviderDeregister, async (req, res, next) => {
+        try {
+            const address = env.pair?.address
+            if (!address) {
+                throw new ProsopoEnvError('DEVELOPER.MISSING_ENV_VARIABLE', { context: { error: 'No address' } })
+            }
+            await tasks.contract.tx.providerDeregister()
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
+        }
+    })
 
-//             if (isValid) {
-//                 const user = { address }
+    router.post(AdminApiPaths.ProviderUpdate, async (req, res, next) => {
+        try {
+            const { url, fee, payee, value, address } = z
+                .object({
+                    url: z.string(),
+                    fee: z.number().optional(),
+                    payee: z.nativeEnum(Payee).optional(),
+                    value: z.number().optional(),
+                    address: z.string(),
+                })
+                .parse(req.body)
+            const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
+            if (provider && (url || fee || payee || value)) {
+                const urlConverted = url ? Array.from(new UrlConverter().encode(url.toString())) : provider.url
+                await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
+                    urlConverted,
+                    fee || provider.fee,
+                    payee || provider.payee,
+                    { value: value || 0 }
+                )
+                const result = await tasks.contract.tx.providerUpdate(
+                    urlConverted,
+                    fee || provider.fee,
+                    payee || provider.payee,
+                    { value: value || 0 }
+                )
 
-//                 // temp jwt, need to verify usage with correct imports and types
-//                 const accessToken = jwt.sign(user, env.config.account.secret, { expiresIn: '1h' })
+                console.info(JSON.stringify(result, null, 2))
+            }
+        } catch (err) {
+            console.error(err)
+            res.status(500).send(err)
+        }
+    })
 
-//                 return res.json({ accessToken })
-//             } else {
-//                 return res.status(401).json({ message: 'bad auth' })
-//             }
-//         } catch (err) {
-//             // todo needs proper prosopo error handling
-//             return res.status(500).json({ message: 'An error occurred' })
-//         }
-//     })
-
-//     // Secure endpoint which requires auth token to access
-//     router.get('/secure', authMiddleware, (req, res) => {
-//         res.json({ message: 'correct auth' })
-//     })
-
-//     return router
-// }
+    return router
+}

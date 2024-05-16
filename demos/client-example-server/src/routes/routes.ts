@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,15 @@ import express from 'express'
 
 const router = express.Router()
 
-function getRoutes(mongoose: Connection, prosopoServer: ProsopoServer): express.Router {
-    router.post('/login', login.bind(null, mongoose, prosopoServer))
+function getRoutes(
+    mongoose: Connection,
+    prosopoServer: ProsopoServer,
+    verifyEndpoint: string,
+    verifyType: string
+): express.Router {
+    router.post('/login', login.bind(null, mongoose, prosopoServer, verifyEndpoint, verifyType))
 
-    router.post('/signup', signup.bind(null, mongoose, prosopoServer))
+    router.post('/signup', signup.bind(null, mongoose, prosopoServer, verifyEndpoint, verifyType))
 
     router.get('/private', isAuth)
 

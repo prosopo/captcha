@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import express, { Router } from 'express'
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
  */
 export function prosopoRouter(): Router {
     const router = express.Router()
@@ -36,35 +35,39 @@ export function prosopoRouter(): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            // TODO fix error handling
-            console.log('parsing error')
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(
+                new ProsopoApiError('CAPTCHA.PARSE_ERROR', {
+                    context: { error: err, errorCode: 400 },
+                    logLevel: 'info',
+                })
+            )
         }
         try {
             const testCommitmentId = '0x123456789test'
             const testAccount = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+            const testDapp = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
             let statusMessage = 'API.USER_NOT_VERIFIED'
             let approved = false
             if (
                 (parsed.user && parsed.user === testAccount) ||
-                (parsed.commitmentId && parsed.commitmentId === testCommitmentId)
+                (parsed.commitmentId && parsed.commitmentId === testCommitmentId) ||
+                (parsed.dapp && parsed.dapp === testDapp)
             ) {
                 approved = true
                 statusMessage = 'API.USER_VERIFIED'
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: approved,
+                    verified: approved,
                     commitmentId: testCommitmentId,
                 })
             }
 
             return res.json({
                 status: req.t(statusMessage),
-                solutionApproved: false,
+                verified: false,
             })
         } catch (err) {
-            // TODO fix error handling
-            return next(new ProsopoApiError(err as Error, undefined, 400))
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
         }
     })
 

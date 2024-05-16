@@ -19,7 +19,7 @@ See the [client example](https://github.com/prosopo/client-example) for a minima
 in a frontend app.
 
 ```jsx
-<Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }} />
+<Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
 ```
 
 ### Callbacks
@@ -34,7 +34,6 @@ The captcha event callbacks are defined as follows:
  */
 export interface ProcaptchaEvents {
     onError: (error: Error) => void
-    onAccountNotFound: (address: string) => void
     onHuman: (output: ProcaptchaOutput) => void
     onExtensionNotFound: () => void
     onExpired: () => void
@@ -60,11 +59,6 @@ object contains the following fields:
 The `onError` callback is called when an error occurs during the captcha process. The `Error` object is a standard
 JavaScript error.
 
-### onAccountNotFound
-
-The `onAccountNotFound` callback is called when the user's account is not found in the Procaptcha config in
-the [`userAccountAddress`](https://github.com/prosopo/captcha/blob/0bb4850adfe2b995dc16f7dd18e6ea844a0b6997/packages/types/src/config/config.ts#L116) field.
-
 ### onExpired
 
 The `onExpired` callback is called when the captcha challenge has expired. This can occur if the user takes too long to
@@ -83,7 +77,7 @@ our [React Demo](https://github.com/prosopo/captcha/blob/main/demos/client-examp
 The Procaptcha component is called as follows:
 
 ```tsx
-<Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }} />
+<Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
 ```
 
 A config object is required and must contain your SITE_KEY. The callbacks are optional and can be used to handle the
@@ -91,7 +85,7 @@ various Procaptcha events. The following config demonstrates the `PROSOPO_SITE_K
 environment variables.
 
 ```tsx
-const config: ProcaptchaConfigOptional = {
+const config: ProcaptchaClientConfigInput = {
     account: {
         address: process.env.PROSOPO_SITE_KEY || undefined,
     },

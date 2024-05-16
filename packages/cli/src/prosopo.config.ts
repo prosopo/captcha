@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,6 +64,12 @@ export default function getConfig(
                 dbname: process.env.PROSOPO_DATABASE_NAME || '',
                 authSource: 'admin',
             },
+            production: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                authSource: 'admin',
+            },
         },
         server: {
             baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
@@ -73,5 +79,7 @@ export default function getConfig(
         captchaSolutions: captchaSolutionsConfig,
         batchCommit: batchCommitConfig,
         captchas: captchaServeConfig,
+        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true',
+        mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
     } as ProsopoConfigInput)
 }

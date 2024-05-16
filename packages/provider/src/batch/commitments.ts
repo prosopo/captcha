@@ -1,4 +1,4 @@
-// Copyright 2021-2023 Prosopo (UK) Ltd.
+// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@ import { BN } from '@polkadot/util/bn'
 import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger } from '@prosopo/common'
-import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { Logger, ProsopoContractError } from '@prosopo/common'
+import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
@@ -45,7 +45,7 @@ export class BatchCommitmentsTask {
         this.logger = logger
         this.nonce = startNonce
     }
-    async run(): Promise<void> {
+    async run(): Promise<any> {
         // create a task id
         const taskId = randomAsHex(32)
         const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, this.db)
@@ -84,6 +84,7 @@ export class BatchCommitmentsTask {
                             }
                         )
                     }
+                    return commitments
                 } catch (e) {
                     const err = e as Error
                     this.logger.error(e)
@@ -95,6 +96,7 @@ export class BatchCommitmentsTask {
                             error: JSON.stringify(e && err.message ? err.message : e),
                         }
                     )
+                    return err.message
                 }
             }
         }
@@ -173,7 +175,7 @@ export class BatchCommitmentsTask {
             }
         }
         if (!extrinsic) {
-            throw new ProsopoContractError('No extrinsics created')
+            throw new ProsopoContractError('CONTRACT.TX_ERROR', { context: { error: 'No extrinsics created' } })
         }
         txs.push(extrinsic)
         this.logger.info(`${txs.length} transactions will be batched`)

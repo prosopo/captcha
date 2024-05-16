@@ -25,7 +25,44 @@ jobs:
     check:
         runs-on: ubuntu-latest
         steps:
-            # Checkout the repo
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
             - uses: actions/checkout@v3
 
             - run: mkdir -p protocol/cargo-cache
@@ -48,9 +85,12 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - run: npm install -g npm@8.9
-            - run: npm install
-            - run: npm run removePolkadotJSWarnings
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: npm ci
 
             # build all packages in workspace
             - run: npm run build:all
@@ -60,6 +100,7 @@ jobs:
               run: |
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
                   cp demos/client-example/env.development demos/client-example/.env.test
+                  cp dev/scripts/env.test .env.test
                   cp dev/scripts/env.test dev/scripts/.env.test
                   cp dev/scripts/env.test packages/cli/.env.test
                   cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
@@ -73,7 +114,7 @@ jobs:
 
             # deploy protocol and run the unit tests
             - run: npm run deploy_protocol
-            - run: npm run test -- --watch=false
+            - run: npm run test
 
             # restart the docker images to drop any changes made by the unit tests to the contract(s) before running cypress tests
             - name: Reset the docker containers
@@ -103,3 +144,7 @@ jobs:
             - name: Run the cypress tests on client-bundle-example
               run: |
                   npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
+
+            - name: Run the cypress tests on client-bundle-example explicit rendering
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others

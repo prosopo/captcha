@@ -1,4 +1,19 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 // sleep for some milliseconds
+import { u8aToHex } from '@polkadot/util'
+
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // create a generator that yields the permutations for a set of options
@@ -49,49 +64,6 @@ export function* permutations(
     }
 }
 
-// Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
-// Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
-export type AtOptions = {
-    optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
-    noBoundsCheck?: boolean // whether to check the index against the bounds of the array (true == no bounds check, false == bounds check)
-    noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
-}
-export function at(
-    str: string,
-    i: number,
-    options: {
-        optional: true
-        noBoundsCheck?: boolean
-        noWrap?: boolean
-    }
-): string | undefined
-export function at(str: string, i: number, options?: AtOptions): string
-export function at<T>(arr: T[], i: number, options?: AtOptions): T
-export function at<T>(arr: T[] | string, i: number, options?: AtOptions): T | undefined {
-    if (!options?.noWrap) {
-        if (arr.length !== 0) {
-            i %= arr.length
-        }
-        if (i < 0) {
-            i += arr.length
-        }
-    }
-    if (!options?.noBoundsCheck) {
-        if (i >= arr.length || i < 0) {
-            throw new Error(
-                `Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
-            )
-        }
-    }
-    const el = arr[i]
-    if (!options?.optional && el === undefined) {
-        throw new Error(
-            `Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
-        )
-    }
-    return el as T
-}
-
 export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
 export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
 export function get<T>(obj: unknown, key: string | number | symbol, required?: true): Exclude<T, undefined>
@@ -104,39 +76,65 @@ export function get<T, V>(obj: T, key: unknown, required = true): V {
     return value as V
 }
 
-export const choice = <T>(
-    items: T[],
-    n: number,
-    random: () => number,
-    options?: {
-        withReplacement?: boolean
+export type AtOptions = {
+    optional?: boolean // whether to allow undefined elements in the array (true == optional, false == mandatory)
+    noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
+}
+// Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null (can be overridden with the options)
+export function at(str: string, index: number, options: AtOptions & { optional: true }): string | undefined
+export function at(str: string, index: number, options?: AtOptions): string
+export function at<T>(items: T[] | string, index: number, options: AtOptions & { optional: false }): T
+export function at<T>(
+    items: (T | undefined)[] | string,
+    index: number,
+    options: AtOptions & { optional: true }
+): T | undefined
+export function at<T>(items: T[], index: number, options?: AtOptions): T
+export function at<T>(items: T[] | string, index: number, options?: AtOptions): T {
+    if (items.length === 0) {
+        throw new Error('Array is empty')
     }
-): {
-    choices: T[]
-    indices: number[]
-} => {
-    if (n > items.length) {
-        throw new Error(`n (${n}) cannot be greater than items.length (${items.length})`)
-    }
-    options = options || {}
 
-    const indicesSet = new Set<number>()
-    const indices: number[] = []
-    const choices: T[] = []
-    while (indices.length < n) {
-        const index = Math.abs(Math.round(random())) % items.length
-        // with replacement == allow duplicates
-        // without replacement == don't allow duplicates
-        if (options.withReplacement || indicesSet.add(index)) {
-            indices.push(index)
-            choices.push(at(items, index, { optional: true }))
+    if (!options?.noWrap) {
+        if (index > 0) {
+            index = index % items.length
+        } else {
+            // negative index, so index wraps in reverse
+            // e.g. say the index is -25 and the items length is 10
+            // ceil(25 / 10) = 3 * 10 = 30 + -25 = 5
+            index = Math.ceil(Math.abs(index) / items.length) * items.length + index
         }
     }
 
-    return {
-        choices,
-        indices,
+    if (index >= items.length) {
+        throw new Error(`Index ${index} larger than array length ${items.length}`)
     }
+    if (index < 0) {
+        throw new Error(`Index ${index} smaller than 0`)
+    }
+
+    return items[index] as unknown as T
+}
+
+type ChoiceOptions = {
+    withReplacement?: boolean
+}
+function choice<T>(items: T[], n: number, random: () => number, options?: ChoiceOptions): T[] {
+    if (n > items.length) {
+        throw new Error(`Cannot choose ${n} items from array of length ${items.length}`)
+    }
+
+    const result: T[] = []
+    const indices: number[] = []
+    for (let i = 0; i < n; i++) {
+        let index: number
+        do {
+            index = Math.floor(Math.abs(random()) * items.length) % items.length
+        } while (options?.withReplacement === false && indices.includes(index))
+        indices.push(index)
+        result.push(items[index] as T)
+    }
+    return result
 }
 
 export function getCurrentFileDirectory(url: string) {
@@ -259,4 +257,15 @@ export const isArray = (value: unknown): boolean => {
 
 export const isObject = (value: unknown): boolean => {
     return value instanceof Object && !isArray(value)
+}
+
+export type Hash = string | number[]
+
+export const hashToHex = (hash: Hash) => {
+    if (isArray(hash)) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return u8aToHex(new Uint8Array(hash))
+    }
+    return hash.toString()
 }
