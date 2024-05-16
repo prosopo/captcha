@@ -1,0 +1,6 @@
+{
+  "rococoContracts": {
+    "wsUrl": "wss://rococo-contracts-rpc.polkadot.io:443",
+    "metadata": "rococoContracts.scale"
+  }
+}
