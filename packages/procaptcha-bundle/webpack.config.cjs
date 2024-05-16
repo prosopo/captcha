@@ -22,6 +22,10 @@ const bundleWebpackConfig = {
     resolve: {
         ...webpackConfig.resolve,
         modules: [path.resolve('node_modules'), path.resolve('../node_modules'), path.resolve('../../node_modules')],
+        alias: {
+            '@polkadot/x-textdecoder': path.resolve('../../node_modules/@polkadot/x-textdecoder'),
+            '@polkadot/x-textencoder': path.resolve('../../node_modules/@polkadot/x-textencoder'),
+        },
     },
 }
 console.log(bundleWebpackConfig)

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/tx",
-    "version": "0.3.39",
+    "version": "0.3.40",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
@@ -45,7 +45,7 @@
         "@polkadot/api": "10.13.1",
         "@polkadot/keyring": "12.6.2",
         "@polkadot/types": "10.13.1",
-        "@prosopo/common": "0.3.39"
+        "@prosopo/common": "0.3.40"
     },
     "devDependencies": {
         "tslib": "2.6.2",
