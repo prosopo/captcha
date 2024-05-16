@@ -1,6 +1,6 @@
 [package]
 name = "dapp"
-version = "0.3.39"
+version = "0.3.40"
 authors = [ "Chris Taylor chris@prosopo.io" ]
 edition = "2021"
 
