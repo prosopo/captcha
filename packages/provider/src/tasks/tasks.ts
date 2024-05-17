@@ -57,7 +57,8 @@ import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
 
 const POW_SEPARATOR = '___'
-export const DEFAULT_POW_VERIFICATION_TIME = 60 * 1000
+const DEFAULT_POW_VERIFICATION_TIME = 60 * 1000
+
 /**
  * @description Tasks that are shared by the API and CLI
  */
