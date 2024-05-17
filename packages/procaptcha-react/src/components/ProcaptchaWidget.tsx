@@ -18,7 +18,6 @@ import {
     LoadingSpinner,
     WIDGET_BORDER,
     WIDGET_BORDER_RADIUS,
-    WIDGET_DIMENSIONS,
     WIDGET_INNER_HEIGHT,
     WIDGET_PADDING,
     WIDGET_URL,
@@ -45,7 +44,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
 
     return (
-        <div>
+        <div style={{ flex: 'auto' }}>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <Modal show={state.showModal}>
                     {state.challenge ? (
@@ -65,7 +64,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                 </Modal>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
+                        <div data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
