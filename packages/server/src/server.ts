@@ -22,7 +22,13 @@ import {
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockTimeMs, getCurrentBlockNumber, getZeroAddress } from '@prosopo/contract'
+import {
+    ProsopoCaptchaContract,
+    getBlockTimeMs,
+    getCurrentBlockNumber,
+    getZeroAddress,
+    verifyRecency,
+} from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -142,23 +148,6 @@ export class ProsopoServer {
     }
 
     /**
-     * Verify the time since the blockNumber is equal to or less than the maxVerifiedTime.
-     * @param maxVerifiedTime
-     * @param blockNumber
-     */
-    public async verifyRecency(blockNumber: number, maxVerifiedTime: number) {
-        const contractApi = await this.getContractApi()
-        // Get the current block number
-        const currentBlock = await getCurrentBlockNumber(contractApi.api)
-        // Calculate how many blocks have passed since the blockNumber
-        const blocksPassed = currentBlock - blockNumber
-        // Get the expected block time
-        const blockTime = getBlockTimeMs(contractApi.api)
-        // Check if the time since the last correct captcha is within the limit
-        return blockTime * blocksPassed <= maxVerifiedTime
-    }
-
-    /**
      * Verify the user with the contract. We check the contract to see if the user has completed a captcha in the
      * past. If they have, we check the time since the last correct captcha is within the maxVerifiedTime and we check
      * whether the user is marked as human within the contract.
@@ -173,11 +162,15 @@ export class ProsopoServer {
                 .unwrap()
                 .unwrap()
                 .before.valueOf()
-            const verifyRecency = await this.verifyRecency(correctCaptchaBlockNumber, maxVerifiedTime)
+            const recent = await verifyRecency(
+                (await this.getContractApi()).api,
+                correctCaptchaBlockNumber,
+                maxVerifiedTime
+            )
             const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
                 .unwrap()
                 .unwrap()
-            return isHuman && verifyRecency
+            return isHuman && recent
         } catch (error) {
             // if a user is not in the contract it errors, suppress this error and return false
             return false
@@ -207,13 +200,13 @@ export class ProsopoServer {
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp)
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, maxVerifiedTime)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
         const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
-        const verifyRecency = await this.verifyRecency(result.blockNumber, maxVerifiedTime)
-        return result.verified && verifyRecency
+        const recent = await verifyRecency((await this.getContractApi()).api, result.blockNumber, maxVerifiedTime)
+        return result.verified && recent
     }
 
     /**

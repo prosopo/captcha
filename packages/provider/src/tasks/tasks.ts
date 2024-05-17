@@ -43,7 +43,7 @@ import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery, verifyRecency } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -57,7 +57,7 @@ import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
 
 const POW_SEPARATOR = '___'
-
+export const DEFAULT_POW_VERIFICATION_TIME = 60 * 1000
 /**
  * @description Tasks that are shared by the API and CLI
  */
@@ -252,7 +252,11 @@ export class Tasks {
         return true
     }
 
-    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
+    async serverVerifyPowCaptchaSolution(
+        dappAccount: string,
+        challenge: string,
+        maxVerifiedTime?: number
+    ): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
         if (!challengeRecord) {
             throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
@@ -277,7 +281,6 @@ export class Tasks {
         }
 
         const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
 
         if (!blocknumber) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
@@ -288,11 +291,12 @@ export class Tasks {
                 },
             })
         }
-
-        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+        maxVerifiedTime = maxVerifiedTime || DEFAULT_POW_VERIFICATION_TIME
+        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), maxVerifiedTime)
+        if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: `Block must be within the last ${maxVerifiedTime / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },

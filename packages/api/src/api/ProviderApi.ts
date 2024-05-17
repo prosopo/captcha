@@ -26,6 +26,7 @@ import {
     NetworkConfig,
     PowCaptchaSolutionResponse,
     ProviderRegistered,
+    ServerPowCaptchaVerifyRequestBodyType,
     StoredEvents,
     SubmitPowCaptchaSolutionBodyType,
     VerificationResponse,
@@ -138,7 +139,16 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         return this.fetch(ApiPaths.GetProviderDetails)
     }
 
-    public submitPowCaptchaVerify(challenge: string, dapp: string): Promise<VerificationResponse> {
-        return this.post(ApiPaths.ServerPowCaptchaVerify, { [ApiParams.challenge]: challenge, [ApiParams.dapp]: dapp })
+    public submitPowCaptchaVerify(
+        challenge: string,
+        dapp: string,
+        maxVerifiedTime: number
+    ): Promise<VerificationResponse> {
+        const body: ServerPowCaptchaVerifyRequestBodyType = {
+            [ApiParams.challenge]: challenge,
+            [ApiParams.dapp]: dapp,
+            [ApiParams.maxVerifiedTime]: maxVerifiedTime,
+        }
+        return this.post(ApiPaths.ServerPowCaptchaVerify, body)
     }
 }

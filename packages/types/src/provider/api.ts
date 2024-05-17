@@ -146,6 +146,7 @@ export interface PowCaptchaSolutionResponse {
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
+    [ApiParams.maxVerifiedTime]: number().optional(),
 })
 
 export const GetPowCaptchaChallengeRequestBody = object({
