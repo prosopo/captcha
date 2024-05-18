@@ -15,10 +15,11 @@ import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
-// The timeframe in which a user must complete an image captcha (60s)
+// The timeframe in which a user must complete an image captcha (1 minute)
 export const DEFAULT_IMAGE_CAPTCHA_TIMEOUT = 60 * 1000
-// The time in milliseconds since a Provider is selected to provide a PoW captcha, to the point where the solution is
-// being verified by the server (60s)
+// The timeframe in which a captcha remains valid on the page before timing out (2 minutes)
+export const DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT = 60 * 2 * 1000
+// The time in ms since a Provider is selected to provide a PoW captcha, to the point where the solution is verified (60s)
 export const DEFAULT_POW_CAPTCHA_TIMEOUT = 60 * 1000
 // The time in milliseconds that a cached image captcha solution is valid for (15 minutes)
 export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 15 * 1000
