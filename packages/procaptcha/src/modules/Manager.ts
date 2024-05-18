@@ -17,6 +17,7 @@ import {
     CaptchaResponseBody,
     CaptchaSolution,
     CaptchaWithProof,
+    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
@@ -236,7 +237,7 @@ export function Manager(
 
             // setup timeout
             const timeMillis: number = challenge.captchas
-                .map((captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || 30 * 1000)
+                .map((captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
                 .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
                 events.onChallengeExpired()

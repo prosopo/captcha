@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { DEFAULT_MAX_VERIFIED_TIME_CACHED } from '../provider/index.js'
 import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { boolean } from 'zod'
 import { input } from 'zod'
@@ -23,7 +24,6 @@ import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
-import { DEFAULT_MAX_VERIFIED_TIME_CACHED } from '../provider/index.js'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 

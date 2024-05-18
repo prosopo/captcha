@@ -16,11 +16,14 @@ import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
 // The time in milliseconds since a Provider is selected to provide a PoW captcha, to the point where the solution is
-// being verified by the server
+// being verified by the server (60s)
 export const DEFAULT_POW_RECENCY_LIMIT = 60 * 1000
 // The time in milliseconds that an image captcha solution is valid for (15 minutes)
 export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 15 * 1000
-export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
+// The time in milliseconds since the last correct captcha recorded in the contract (15 minutes)
+export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 60 * 15 * 1000
+// The timeframe in which a user must complete an image captcha (30s)
+export const DEFAULT_IMAGE_CAPTCHA_TIMEOUT = 30 * 1000
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',

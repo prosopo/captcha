@@ -22,7 +22,7 @@ import {
     DatasetBase,
     DatasetRaw,
     DatasetWithIds,
-    DEFAULT_POW_RECENCY_LIMIT,
+    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     Hash,
     PendingCaptchaRequest,
     PoWCaptcha,
@@ -44,7 +44,7 @@ import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery, verifyRecency } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, verifyRecency, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -197,24 +197,23 @@ export class Tasks {
      * @param {string} difficulty - how many leading zeroes the solution must have
      * @param {string} signature - proof that the Provider provided the challenge
      * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
+     * @param {number} recencyLimit - the time in milliseconds since the Provider was selected to provide the PoW captcha
      */
     async verifyPowCaptchaSolution(
         blockNumber: number,
         challenge: string,
         difficulty: number,
         signature: string,
-        nonce: number
+        nonce: number,
+        recencyLimit: number
     ): Promise<boolean> {
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
-
-        if (blockNumber < latestBlockNumber - 5) {
+        const recent = verifyRecency(this.contract.api, blockNumber, recencyLimit)
+        if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: `Block must be within the last ${recencyLimit / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blockNumber,
-                    latestBlockNumber,
                 },
             })
         }
@@ -284,7 +283,7 @@ export class Tasks {
         if (!blocknumber) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: 'Block number not provided',
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },
@@ -538,7 +537,9 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
-        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
+        const timeLimit = captchas
+            .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
+            .reduce((a, b) => a + b, 0)
         const deadlineTs = timeLimit + currentTime
         const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
