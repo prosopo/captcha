@@ -23,6 +23,7 @@ import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
+import { DEFAULT_MAX_VERIFIED_TIME_CACHED } from '../provider/index.js'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 
@@ -31,8 +32,6 @@ export const DatabaseTypes = zEnum(['mongo', 'mongoMemory'])
 export const EnvironmentTypesSchema = zEnum(['development', 'staging', 'production'])
 
 export type EnvironmentTypes = zInfer<typeof EnvironmentTypesSchema>
-
-const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
 
 export const DatabaseConfigSchema = record(
     EnvironmentTypesSchema,

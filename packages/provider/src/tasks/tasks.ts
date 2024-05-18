@@ -22,6 +22,7 @@ import {
     DatasetBase,
     DatasetRaw,
     DatasetWithIds,
+    DEFAULT_POW_RECENCY_LIMIT,
     Hash,
     PendingCaptchaRequest,
     PoWCaptcha,
@@ -57,7 +58,6 @@ import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
 
 const POW_SEPARATOR = '___'
-const DEFAULT_POW_VERIFICATION_TIME = 60 * 1000
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -256,7 +256,7 @@ export class Tasks {
     async serverVerifyPowCaptchaSolution(
         dappAccount: string,
         challenge: string,
-        maxVerifiedTime?: number
+        recencyLimit: number
     ): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
         if (!challengeRecord) {
@@ -281,8 +281,6 @@ export class Tasks {
             })
         }
 
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-
         if (!blocknumber) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
@@ -292,12 +290,11 @@ export class Tasks {
                 },
             })
         }
-        maxVerifiedTime = maxVerifiedTime || DEFAULT_POW_VERIFICATION_TIME
-        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), maxVerifiedTime)
+        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), recencyLimit)
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: `Block must be within the last ${maxVerifiedTime / 1000} seconds`,
+                    ERROR: `Block must be within the last ${recencyLimit / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },

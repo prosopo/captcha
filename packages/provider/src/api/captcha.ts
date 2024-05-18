@@ -151,7 +151,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             if (!solution) {
                 tasks.logger.debug('Not verified - no solution found')
                 return res.json({
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED_NO_SOLUTION'),
                     [ApiParams.verified]: false,
                 })
             }
@@ -161,7 +161,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 const blockTimeMs = getBlockTimeMs(tasks.contract.api)
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
                 const verificationResponse: VerificationResponse = {
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED_TIME_EXPIRED'),
                     [ApiParams.verified]: false,
                 }
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
@@ -191,9 +191,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
         try {
-            const { challenge, dapp, maxVerifiedTime } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
+            const { challenge, dapp, recencyLimit } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
 
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, maxVerifiedTime)
+            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, recencyLimit)
 
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),

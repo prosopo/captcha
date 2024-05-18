@@ -15,6 +15,13 @@ import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
+// The time in milliseconds since a Provider is selected to provide a PoW captcha, to the point where the solution is
+// being verified by the server
+export const DEFAULT_POW_RECENCY_LIMIT = 60 * 1000
+// The time in milliseconds that an image captcha solution is valid for (15 minutes)
+export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 15 * 1000
+export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
+
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
     GetPowCaptchaChallenge = '/v1/prosopo/provider/captcha/pow',
@@ -48,6 +55,7 @@ export enum ApiParams {
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     maxVerifiedTime = 'maxVerifiedTime',
+    recencyLimit = 'recencyLimit',
     verified = 'verified',
     status = 'status',
     challenge = 'challenge',
@@ -99,7 +107,7 @@ export const VerifySolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number(),
     [ApiParams.commitmentId]: string().optional(),
-    [ApiParams.maxVerifiedTime]: number().optional(),
+    [ApiParams.maxVerifiedTime]: number().optional().default(DEFAULT_MAX_VERIFIED_TIME_CACHED),
 })
 
 export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
@@ -143,10 +151,16 @@ export interface PowCaptchaSolutionResponse {
     [ApiParams.verified]: boolean
 }
 
+/**
+ * Request body for the server to verify a PoW captcha solution
+ * @param {string} challenge - The challenge string
+ * @param {string} dapp - The dapp account (site key)
+ * @param {number} recencyLimit - The maximum time in milliseconds since the Provider was selected at `blockNumber`
+ */
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
-    [ApiParams.maxVerifiedTime]: number().optional(),
+    [ApiParams.recencyLimit]: number().optional().default(DEFAULT_POW_RECENCY_LIMIT),
 })
 
 export const GetPowCaptchaChallengeRequestBody = object({

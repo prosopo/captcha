@@ -14,6 +14,9 @@
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import {
     ContractAbi,
+    DEFAULT_MAX_VERIFIED_TIME_CACHED,
+    DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
+    DEFAULT_POW_RECENCY_LIMIT,
     NetworkConfig,
     NetworkNamesSchema,
     ProcaptchaOutput,
@@ -22,21 +25,12 @@ import {
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import {
-    ProsopoCaptchaContract,
-    getBlockTimeMs,
-    getCurrentBlockNumber,
-    getZeroAddress,
-    verifyRecency,
-} from '@prosopo/contract'
+import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
-
-export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 1000
-export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 5 * 60 * 1000
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
@@ -187,6 +181,7 @@ export class ProsopoServer {
      * @param challenge
      * @param commitmentId
      * @param maxVerifiedTime
+     * @param recencyLimit
      */
     public async verifyProvider(
         providerUrl: string,
@@ -195,12 +190,13 @@ export class ProsopoServer {
         blockNumber: number,
         challenge?: string,
         commitmentId?: string,
-        maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED
+        maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED,
+        recencyLimit = DEFAULT_POW_RECENCY_LIMIT
     ) {
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, maxVerifiedTime)
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, recencyLimit)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
