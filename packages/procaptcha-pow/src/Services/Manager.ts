@@ -200,7 +200,8 @@ export const Manager = (
             getAccount().account.address,
             getDappAccount(),
             getRandomProviderResponse,
-            solution
+            solution,
+            config.PoWchallengeTimeout
         )
         if (verifiedSolution[ApiParams.verified]) {
             updateState({

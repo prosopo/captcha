@@ -183,6 +183,7 @@ export const SubmitPowCaptchaSolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.dapp]: string(),
     [ApiParams.nonce]: number(),
+    [ApiParams.timeout]: number().optional().default(DEFAULT_POW_CAPTCHA_TIMEOUT),
 })
 
 export type SubmitPowCaptchaSolutionBodyType = zInfer<typeof SubmitPowCaptchaSolutionBody>

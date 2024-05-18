@@ -197,7 +197,7 @@ export class Tasks {
      * @param {string} difficulty - how many leading zeroes the solution must have
      * @param {string} signature - proof that the Provider provided the challenge
      * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
-     * @param {number} recencyLimit - the time in milliseconds since the Provider was selected to provide the PoW captcha
+     * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
      */
     async verifyPowCaptchaSolution(
         blockNumber: number,
@@ -205,13 +205,13 @@ export class Tasks {
         difficulty: number,
         signature: string,
         nonce: number,
-        recencyLimit: number
+        timeout: number
     ): Promise<boolean> {
-        const recent = verifyRecency(this.contract.api, blockNumber, recencyLimit)
+        const recent = verifyRecency(this.contract.api, blockNumber, timeout)
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: `Block must be within the last ${recencyLimit / 1000} seconds`,
+                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blockNumber,
                 },

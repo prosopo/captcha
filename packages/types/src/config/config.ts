@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { DEFAULT_MAX_VERIFIED_TIME_CACHED } from '../provider/index.js'
+import { DEFAULT_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_TIMEOUT } from '../provider/index.js'
 import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { boolean } from 'zod'
 import { input } from 'zod'
@@ -147,6 +147,8 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
         challengeValidLength: number().positive().optional().default(DEFAULT_MAX_VERIFIED_TIME_CACHED),
+        PoWchallengeTimeout: number().positive().optional(),
+        imageChallengeTimeout: number().positive().optional(),
     })
 )
 

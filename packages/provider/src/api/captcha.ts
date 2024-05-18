@@ -244,10 +244,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { blockNumber, challenge, difficulty, signature, nonce } = SubmitPowCaptchaSolutionBody.parse(
-                req.body
+            const { blockNumber, challenge, difficulty, signature, nonce, timeout } =
+                SubmitPowCaptchaSolutionBody.parse(req.body)
+            const verified = await tasks.verifyPowCaptchaSolution(
+                blockNumber,
+                challenge,
+                difficulty,
+                signature,
+                nonce,
+                timeout
             )
-            const verified = await tasks.verifyPowCaptchaSolution(blockNumber, challenge, difficulty, signature, nonce)
             const response: PowCaptchaSolutionResponse = { verified }
             return res.json(response)
         } catch (err) {

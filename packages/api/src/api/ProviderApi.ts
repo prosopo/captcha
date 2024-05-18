@@ -28,6 +28,7 @@ import {
     ProviderRegistered,
     ServerPowCaptchaVerifyRequestBodyType,
     StoredEvents,
+    SubmitPowCaptchaSolutionBody,
     SubmitPowCaptchaSolutionBodyType,
     VerificationResponse,
     VerifySolutionBodyType,
@@ -111,10 +112,11 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         userAccount: AccountId,
         dappAccount: AccountId,
         randomProvider: RandomProvider,
-        nonce: number
+        nonce: number,
+        timeout?: number
     ): Promise<PowCaptchaSolutionResponse> {
         const { blockNumber } = randomProvider
-        const body: SubmitPowCaptchaSolutionBodyType = {
+        const body = SubmitPowCaptchaSolutionBody.parse({
             [ApiParams.blockNumber]: blockNumber,
             [ApiParams.challenge]: challenge.challenge,
             [ApiParams.difficulty]: challenge.difficulty,
@@ -123,7 +125,8 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             [ApiParams.user]: userAccount.toString(),
             [ApiParams.dapp]: dappAccount.toString(),
             [ApiParams.nonce]: nonce,
-        }
+            [ApiParams.timeout]: timeout,
+        })
         return this.post(ApiPaths.SubmitPowCaptchaSolution, body)
     }
 
