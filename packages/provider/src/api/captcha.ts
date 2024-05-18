@@ -191,9 +191,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
         try {
-            const { challenge, dapp, recencyLimit } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
+            const { challenge, dapp, timeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
 
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, recencyLimit)
+            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, timeout)
 
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),

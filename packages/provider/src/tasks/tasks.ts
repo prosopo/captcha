@@ -252,11 +252,7 @@ export class Tasks {
         return true
     }
 
-    async serverVerifyPowCaptchaSolution(
-        dappAccount: string,
-        challenge: string,
-        recencyLimit: number
-    ): Promise<boolean> {
+    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
         if (!challengeRecord) {
             throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
@@ -289,11 +285,11 @@ export class Tasks {
                 },
             })
         }
-        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), recencyLimit)
+        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), timeout)
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: `Block must be within the last ${recencyLimit / 1000} seconds`,
+                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },

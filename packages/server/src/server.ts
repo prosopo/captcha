@@ -16,7 +16,7 @@ import {
     ContractAbi,
     DEFAULT_MAX_VERIFIED_TIME_CACHED,
     DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
-    DEFAULT_POW_RECENCY_LIMIT,
+    DEFAULT_POW_CAPTCHA_TIMEOUT,
     NetworkConfig,
     NetworkNamesSchema,
     ProcaptchaOutput,
@@ -191,7 +191,7 @@ export class ProsopoServer {
         challenge?: string,
         commitmentId?: string,
         maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED,
-        recencyLimit = DEFAULT_POW_RECENCY_LIMIT
+        recencyLimit = DEFAULT_POW_CAPTCHA_TIMEOUT
     ) {
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)

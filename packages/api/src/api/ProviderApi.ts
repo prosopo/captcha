@@ -147,7 +147,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         const body: ServerPowCaptchaVerifyRequestBodyType = {
             [ApiParams.challenge]: challenge,
             [ApiParams.dapp]: dapp,
-            [ApiParams.recencyLimit]: recencyLimit,
+            [ApiParams.timeout]: recencyLimit,
         }
         return this.post(ApiPaths.ServerPowCaptchaVerify, body)
     }
