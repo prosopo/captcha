@@ -149,7 +149,7 @@ export interface PowCaptchaSolutionResponse {
  * Request body for the server to verify a PoW captcha solution
  * @param {string} challenge - The challenge string
  * @param {string} dapp - The dapp account (site key)
- * @param {number} recencyLimit - The maximum time in milliseconds since the Provider was selected at `blockNumber`
+ * @param {number} timeout - The maximum time in milliseconds since the Provider was selected at `blockNumber`
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
