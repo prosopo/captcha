@@ -17,7 +17,6 @@ import {
     CaptchaResponseBody,
     CaptchaSolution,
     CaptchaWithProof,
-    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
@@ -193,7 +192,7 @@ export function Manager(
                         account.account.address,
                         procaptchaStorage.blockNumber,
                         undefined,
-                        configOptional.challengeValidLength
+                        configOptional.captchas.image.cachedTimeout
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
@@ -237,7 +236,9 @@ export function Manager(
 
             // setup timeout, taking the timeout from the individual captcha or the global default
             const timeMillis: number = challenge.captchas
-                .map((captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || config.imageChallengeTimeout)
+                .map(
+                    (captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || config.captchas.image.challengeTimeout
+                )
                 .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
                 events.onChallengeExpired()
@@ -432,7 +433,7 @@ export function Manager(
     }
 
     const setValidChallengeTimeout = () => {
-        const timeMillis: number = configOptional.challengeValidLength
+        const timeMillis: number = configOptional.captchas.image.solutionTimeout
         const successfullChallengeTimeout = setTimeout(() => {
             // Human state expired, disallow user's claim to be human
             updateState({ isHuman: false })

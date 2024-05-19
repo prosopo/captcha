@@ -29,7 +29,6 @@ import {
     ServerPowCaptchaVerifyRequestBodyType,
     StoredEvents,
     SubmitPowCaptchaSolutionBody,
-    SubmitPowCaptchaSolutionBodyType,
     VerificationResponse,
     VerifySolutionBodyType,
 } from '@prosopo/types'

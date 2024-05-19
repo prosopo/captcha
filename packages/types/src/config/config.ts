@@ -12,12 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-    DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
-    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
-    DEFAULT_MAX_VERIFIED_TIME_CACHED,
-    DEFAULT_POW_CAPTCHA_TIMEOUT,
-} from '../provider/index.js'
 import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
 import { boolean } from 'zod'
 import { input } from 'zod'
@@ -37,6 +31,20 @@ export const DatabaseTypes = zEnum(['mongo', 'mongoMemory'])
 export const EnvironmentTypesSchema = zEnum(['development', 'staging', 'production'])
 
 export type EnvironmentTypes = zInfer<typeof EnvironmentTypesSchema>
+
+// The timeframe in which a user must complete an image captcha (1 minute)
+export const DEFAULT_IMAGE_CAPTCHA_TIMEOUT = 60 * 1000
+// The timeframe in which an image captcha solution remains valid on the page before timing out (2 minutes)
+export const DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT = 60 * 2 * 1000
+// The time in milliseconds that a cached image captcha solution is valid for (15 minutes)
+export const DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED = 60 * 15 * 1000
+// The timeframe in which a pow captcha must be completed and verified (2 minutes)
+export const DEFAULT_POW_CAPTCHA_TIMEOUT = 60 * 2 * 1000
+// The timeframe in which a pow captcha solution remains valid on the page before timing out (1 minute)
+export const DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT = 60 * 1000
+// The time in milliseconds since the last correct captcha recorded in the contract (15 minutes), after which point, the
+// user will be required to complete another captcha
+export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 60 * 15 * 1000
 
 export const DatabaseConfigSchema = record(
     EnvironmentTypesSchema,
@@ -120,9 +128,29 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
     })
 )
 
+export const CaptchaTimeoutSchema = object({
+    image: object({
+        // Set this to a default value for the frontend
+        challengeTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_TIMEOUT),
+        // Set this to a default value for the frontend
+        solutionTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT),
+        cachedTimeout: number().positive().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
+    }),
+    pow: object({
+        challengeTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_TIMEOUT),
+        solutionTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
+    }),
+    contract: object({
+        maxVerifiedTime: number().positive().optional().default(DEFAULT_MAX_VERIFIED_TIME_CONTRACT),
+    }),
+})
+
+export type CaptchaTimeoutOutput = output<typeof CaptchaTimeoutSchema>
+
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
         serverUrl: string().url().optional(),
+        captchas: CaptchaTimeoutSchema,
     })
 )
 
@@ -151,9 +179,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
     object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
-        challengeValidLength: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT),
-        PoWchallengeTimeout: number().positive().optional(),
-        imageChallengeTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_TIMEOUT),
+        captchas: CaptchaTimeoutSchema,
     })
 )
 

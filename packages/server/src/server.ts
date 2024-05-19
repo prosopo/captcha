@@ -13,10 +13,8 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import {
+    CaptchaTimeoutOutput,
     ContractAbi,
-    DEFAULT_MAX_VERIFIED_TIME_CACHED,
-    DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
-    DEFAULT_POW_CAPTCHA_TIMEOUT,
     NetworkConfig,
     NetworkNamesSchema,
     ProcaptchaOutput,
@@ -148,7 +146,7 @@ export class ProsopoServer {
      * @param user
      * @param maxVerifiedTime
      */
-    public async verifyContract(user: string, maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CONTRACT) {
+    public async verifyContract(user: string, maxVerifiedTime: number) {
         try {
             const contractApi = await this.getContractApi()
             this.logger.info('Provider URL not provided. Verifying with contract.')
@@ -178,40 +176,50 @@ export class ProsopoServer {
      * @param dapp
      * @param user
      * @param blockNumber
+     * @param timeouts
      * @param challenge
      * @param commitmentId
-     * @param maxVerifiedTime
-     * @param recencyLimit
      */
     public async verifyProvider(
         providerUrl: string,
         dapp: string,
         user: string,
         blockNumber: number,
+        timeouts: CaptchaTimeoutOutput,
         challenge?: string,
-        commitmentId?: string,
-        maxVerifiedTime = DEFAULT_MAX_VERIFIED_TIME_CACHED,
-        recencyLimit = DEFAULT_POW_CAPTCHA_TIMEOUT
+        commitmentId?: string
     ) {
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, recencyLimit)
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, timeouts.pow.challengeTimeout)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
-        const result = await providerApi.verifyDappUser(dapp, user, blockNumber, commitmentId, maxVerifiedTime)
-        const recent = await verifyRecency((await this.getContractApi()).api, result.blockNumber, maxVerifiedTime)
-        return result.verified && recent
+        const recent = await verifyRecency((await this.getContractApi()).api, blockNumber, timeouts.image.cachedTimeout)
+
+        if (!recent) {
+            // bail early if the block is too old. This saves us calling the Provider.
+            return false
+        }
+
+        const result = await providerApi.verifyDappUser(
+            dapp,
+            user,
+            blockNumber,
+            commitmentId,
+            timeouts.image.cachedTimeout
+        )
+
+        return result.verified
     }
 
     /**
      *
      * @param payload Info output by procaptcha on completion of the captcha process
-     * @param maxVerifiedTime Maximum time in milliseconds since the blockNumber
      * @returns
      */
-    public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
+    public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
 
         if (providerUrl && blockNumber) {
@@ -232,13 +240,13 @@ export class ProsopoServer {
                 dapp,
                 user,
                 blockNumber,
+                this.config.captchas,
                 challenge,
-                commitmentId,
-                maxVerifiedTime
+                commitmentId
             )
         } else {
             // If we don't have a providerURL, we verify with the contract
-            return await this.verifyContract(user, maxVerifiedTime)
+            return await this.verifyContract(user, this.config.captchas.contract.maxVerifiedTime)
         }
     }
 

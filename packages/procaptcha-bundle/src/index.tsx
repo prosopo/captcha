@@ -106,6 +106,13 @@ const customThemeSet = new Set(['light', 'dark'])
 const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
     customThemeSet.has(themeAttribute) ? (themeAttribute as 'light' | 'dark') : 'light'
 
+/**
+ * Set the timeout for a solved captcha, after which point the captcha will be considered invalid and the captcha widget
+ * will re-render. The same value is used for PoW and image captcha.
+ * @param renderOptions
+ * @param element
+ * @param config
+ */
 const setValidChallengeLength = (
     renderOptions: ProcaptchaRenderOptions | undefined,
     element: Element,
@@ -114,7 +121,8 @@ const setValidChallengeLength = (
     const challengeValidLengthAttribute =
         renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
     if (challengeValidLengthAttribute) {
-        config.challengeValidLength = parseInt(challengeValidLengthAttribute)
+        config.captchas.image.solutionTimeout = parseInt(challengeValidLengthAttribute)
+        config.captchas.pow.solutionTimeout = parseInt(challengeValidLengthAttribute)
     }
 }
 

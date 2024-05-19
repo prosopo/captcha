@@ -12,19 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
-
-// The timeframe in which a user must complete an image captcha (1 minute)
-export const DEFAULT_IMAGE_CAPTCHA_TIMEOUT = 60 * 1000
-// The timeframe in which a captcha remains valid on the page before timing out (2 minutes)
-export const DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT = 60 * 2 * 1000
-// The time in ms since a Provider is selected to provide a PoW captcha, to the point where the solution is verified (60s)
-export const DEFAULT_POW_CAPTCHA_TIMEOUT = 60 * 1000
-// The time in milliseconds that a cached image captcha solution is valid for (15 minutes)
-export const DEFAULT_MAX_VERIFIED_TIME_CACHED = 60 * 15 * 1000
-// The time in milliseconds since the last correct captcha recorded in the contract (15 minutes)
-export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = 60 * 15 * 1000
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
@@ -111,7 +101,7 @@ export const VerifySolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number(),
     [ApiParams.commitmentId]: string().optional(),
-    [ApiParams.maxVerifiedTime]: number().optional().default(DEFAULT_MAX_VERIFIED_TIME_CACHED),
+    [ApiParams.maxVerifiedTime]: number().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 })
 
 export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>

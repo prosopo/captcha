@@ -40,6 +40,8 @@ export const Manager = (
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) => {
+    const events = getDefaultEvents(onStateUpdate, state, callbacks)
+
     const defaultState = (): Partial<ProcaptchaState> => {
         return {
             // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
@@ -137,6 +139,18 @@ export const Manager = (
         updateState(defaultState())
     }
 
+    const setValidChallengeTimeout = () => {
+        const timeMillis: number = getConfig().captchas.pow.solutionTimeout
+        const successfullChallengeTimeout = setTimeout(() => {
+            // Human state expired, disallow user's claim to be human
+            updateState({ isHuman: false })
+
+            events.onExpired()
+        }, timeMillis)
+
+        updateState({ successfullChallengeTimeout })
+    }
+
     const start = async () => {
         if (state.loading) {
             return
@@ -201,7 +215,7 @@ export const Manager = (
             getDappAccount(),
             getRandomProviderResponse,
             solution,
-            config.PoWchallengeTimeout
+            config.captchas.pow.challengeTimeout
         )
         if (verifiedSolution[ApiParams.verified]) {
             updateState({
