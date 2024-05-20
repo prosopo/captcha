@@ -78,7 +78,7 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
 export function Manager(
-    configOptional: ProcaptchaClientConfigInput,
+    configOptional: ProcaptchaClientConfigOutput,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
@@ -191,7 +191,7 @@ export function Manager(
                         account.account.address,
                         procaptchaStorage.blockNumber,
                         undefined,
-                        configOptional.challengeValidLength
+                        configOptional.captchas.image.cachedTimeout
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
@@ -233,9 +233,11 @@ export function Manager(
                 throw new ProsopoDatasetError('DEVELOPER.PROVIDER_NO_CAPTCHA')
             }
 
-            // setup timeout
+            // setup timeout, taking the timeout from the individual captcha or the global default
             const timeMillis: number = challenge.captchas
-                .map((captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || 30 * 1000)
+                .map(
+                    (captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || config.captchas.image.challengeTimeout
+                )
                 .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
                 events.onChallengeExpired()
@@ -430,7 +432,7 @@ export function Manager(
     }
 
     const setValidChallengeTimeout = () => {
-        const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
+        const timeMillis: number = configOptional.captchas.image.solutionTimeout
         const successfullChallengeTimeout = setTimeout(() => {
             // Human state expired, disallow user's claim to be human
             updateState({ isHuman: false })

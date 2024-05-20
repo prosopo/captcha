@@ -129,6 +129,8 @@
         "PAYMENT_INFO_NOT_FOUND": "Payment info not found for given block and transaction hashes",
         "USER_VERIFIED": "User verified",
         "USER_NOT_VERIFIED": "User not verified",
+        "USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
+        "USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
         "UNKNOWN": "Unknown API error"
     },
     "CLI": {

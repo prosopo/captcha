@@ -260,7 +260,10 @@ const payload = JSON.parse(event.body)
 // parse the procaptcha response, which is a JSON string
 const procaptchaResponse = JSON.parse(payload[ApiParams.procaptchaResponse])
 
-// send the
+// initialise the `ProsopoServer` class
+const prosopoServer = new ProsopoServer(config, pair)
+
+// check if the captcha response is verified
 if (await prosopoServer.isVerified(procaptchaResponse)) {
     // perform CAPTCHA protected action
 }
@@ -268,6 +271,50 @@ if (await prosopoServer.isVerified(procaptchaResponse)) {
 
 There is an example TypeScript server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
+
+#### Specifying timeouts
+
+Custom timeouts can be specified for the length of time in which a user has to solve the CAPTCHA challenge. The defaults are as follows:
+
+```typescript
+const defaultCaptchaTimeouts = {
+    image: {
+        // The timeframe in which a user must complete an image captcha (1 minute)
+        challengeTimeout: 60000,
+        // The timeframe in which an image captcha solution remains valid on the page before timing out (2 minutes)
+        solutionTimeout: 60000 * 2,
+        // The timeframe in which an image captcha solution must be verified server side (3 minutes)
+        verifiedTimeout: 60000 * 3,
+        // The time in milliseconds that a cached, verified, image captcha solution is valid for (15 minutes)
+        cachedTimeout: 60000 * 15,
+    },
+    pow: {
+        // The timeframe in which a pow captcha solution remains valid on the page before timing out (1 minute)
+        challengeTimeout: 60000,
+        // The timeframe in which a pow captcha must be completed and verified (2 minutes)
+        solutionTimeout: 60000 * 2,
+        // The time in milliseconds that a Provider cached, verified, pow captcha solution is valid for (3 minutes)
+        cachedTimeout: 60000 * 3,
+    },
+}
+```
+
+To specify timeouts using API verification, pass the above object in a field called `timeouts`, implementing one or more of the timeouts.
+
+```typescript
+// send a POST application/json request to the API endpoint
+response = POST('https://api.prosopo.io/siteverify', {
+    ...
+    timeouts: defaultCaptchaTimeouts, // add timeouts object here
+})
+```
+
+To specify timeouts using the verification package, pass the above object in the `timeouts` field of the `ProsopoServer` config, implementing one or more of the timeouts.
+
+```typescript
+config = { timeouts: defaultCaptchaTimeouts, ...config }
+const prosopoServer = new ProsopoServer(config, pair)
+```
 
 ## Rendering different CAPTCHA types with Procaptcha
 
