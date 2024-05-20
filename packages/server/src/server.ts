@@ -159,11 +159,17 @@ export class ProsopoServer {
                 correctCaptchaBlockNumber,
                 maxVerifiedTime
             )
+            if (!recent) {
+                this.logger.info('User has not completed a captcha recently')
+                return false
+            }
             const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
                 .unwrap()
                 .unwrap()
-            return isHuman && recent
+            this.logger.info('isHuman', isHuman)
+            return isHuman
         } catch (error) {
+            this.logger.error(error)
             // if a user is not in the contract it errors, suppress this error and return false
             return false
         }
