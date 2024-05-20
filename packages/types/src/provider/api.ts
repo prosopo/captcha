@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
-import {
-    DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
-    DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
-    DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-} from '../config/index.js'
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
