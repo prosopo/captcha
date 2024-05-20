@@ -19,7 +19,7 @@ export async function streamToJson(stream: ReadableStream<Uint8Array>): Promise<
 export const errorHandler = async <T>(response: Response) => {
     if (!response.ok) {
         throw new ProsopoApiError('API.BAD_REQUEST', {
-            context: { error: `HTTP error! status: ${response.status}`, status: response.status },
+            context: { error: `HTTP error! status: ${response.status}`, code: response.status },
         })
     }
     if (response.body && !response.bodyUsed) {
@@ -27,7 +27,7 @@ export const errorHandler = async <T>(response: Response) => {
 
         if (data.status === 'error') {
             throw new ProsopoApiError('API.BAD_REQUEST', {
-                context: { error: `HTTP error! status: ${data.data.message} `, status: response.status },
+                context: { error: `HTTP error! status: ${data.data.message} `, code: response.status },
             })
         }
         return data as T
