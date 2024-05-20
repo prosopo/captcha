@@ -117,7 +117,7 @@ const validateTheme = (themeAttribute: string): 'light' | 'dark' =>
 const setValidChallengeLength = (
     renderOptions: ProcaptchaRenderOptions | undefined,
     element: Element,
-    config: ProcaptchaClientConfigInput
+    config: ProcaptchaClientConfigOutput
 ) => {
     const challengeValidLengthAttribute =
         renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
