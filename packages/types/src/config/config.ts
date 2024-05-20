@@ -133,21 +133,27 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
     })
 )
 
+const defaultImageCaptchaTimeouts = {
+    challengeTimeout: DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
+    solutionTimeout: DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
+    verifiedTimeout: DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
+    cachedTimeout: DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
+}
+
+const defaultPoWCaptchaTimeouts = {
+    challengeTimeout: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+    solutionTimeout: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+    cachedTimeout: DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
+}
+
+const defaultContractCaptchaTimeouts = {
+    maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
+}
+
 const defaultCaptchaTimeouts = {
-    image: {
-        challengeTimeout: DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
-        solutionTimeout: DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
-        verifiedTimeout: DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
-        cachedTimeout: DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
-    },
-    pow: {
-        challengeTimeout: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-        solutionTimeout: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
-        cachedTimeout: DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
-    },
-    contract: {
-        maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
-    },
+    image: defaultImageCaptchaTimeouts,
+    pow: defaultPoWCaptchaTimeouts,
+    contract: defaultContractCaptchaTimeouts,
 }
 
 export const CaptchaTimeoutSchema = object({
@@ -158,15 +164,15 @@ export const CaptchaTimeoutSchema = object({
         solutionTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT),
         verifiedTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT),
         cachedTimeout: number().positive().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
-    }),
+    }).default(defaultImageCaptchaTimeouts),
     pow: object({
         verifiedTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
         solutionTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
         cachedTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT),
-    }),
+    }).default(defaultPoWCaptchaTimeouts),
     contract: object({
         maxVerifiedTime: number().positive().optional().default(DEFAULT_MAX_VERIFIED_TIME_CONTRACT),
-    }),
+    }).default(defaultContractCaptchaTimeouts),
 }).default(defaultCaptchaTimeouts)
 
 export type CaptchaTimeoutInput = input<typeof CaptchaTimeoutSchema>
