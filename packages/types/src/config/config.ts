@@ -145,12 +145,29 @@ export const CaptchaTimeoutSchema = object({
     }),
 })
 
+export type CaptchaTimeoutInput = input<typeof CaptchaTimeoutSchema>
+
+const defaultCaptchaTimeouts: CaptchaTimeoutInput = {
+    image: {
+        challengeTimeout: DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
+        solutionTimeout: DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
+        cachedTimeout: DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
+    },
+    pow: {
+        challengeTimeout: DEFAULT_POW_CAPTCHA_TIMEOUT,
+        solutionTimeout: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+    },
+    contract: {
+        maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
+    },
+}
+
 export type CaptchaTimeoutOutput = output<typeof CaptchaTimeoutSchema>
 
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
         serverUrl: string().url().optional(),
-        captchas: CaptchaTimeoutSchema,
+        captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
     })
 )
 
@@ -179,7 +196,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
     object({
         accountCreator: AccountCreatorConfigSchema.optional(),
         theme: ThemeType.optional(),
-        captchas: CaptchaTimeoutSchema,
+        captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
     })
 )
 
