@@ -18,7 +18,6 @@ import {
     Logo,
     WIDGET_BORDER,
     WIDGET_BORDER_RADIUS,
-    WIDGET_DIMENSIONS,
     WIDGET_INNER_HEIGHT,
     WIDGET_PADDING,
     WIDGET_URL,
@@ -43,11 +42,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const manager = Manager(config, state, updateState, callbacks)
 
     return (
-        <div>
+        <div style={{ flex: 'auto' }}>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
+                        <div data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
