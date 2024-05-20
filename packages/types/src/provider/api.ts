@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
-import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_TIMEOUT } from '../config/index.js'
+import {
+    DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
+    DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
+    DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
@@ -48,8 +52,8 @@ export enum ApiParams {
     proof = 'proof',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
+    verifiedTimeout = 'verifiedTimeout',
     maxVerifiedTime = 'maxVerifiedTime',
-    timeout = 'timeout',
     verified = 'verified',
     status = 'status',
     challenge = 'challenge',
@@ -154,7 +158,7 @@ export interface PowCaptchaSolutionResponse {
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
-    [ApiParams.timeout]: number().optional().default(DEFAULT_POW_CAPTCHA_TIMEOUT),
+    [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 })
 
 export const GetPowCaptchaChallengeRequestBody = object({
@@ -174,7 +178,7 @@ export const SubmitPowCaptchaSolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.dapp]: string(),
     [ApiParams.nonce]: number(),
-    [ApiParams.timeout]: number().optional().default(DEFAULT_POW_CAPTCHA_TIMEOUT),
+    [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 })
 
 export type SubmitPowCaptchaSolutionBodyType = zInfer<typeof SubmitPowCaptchaSolutionBody>

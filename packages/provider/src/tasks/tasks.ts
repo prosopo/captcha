@@ -534,6 +534,7 @@ export class Tasks {
 
         const currentTime = Date.now()
         const timeLimit = captchas
+            // if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
             .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
             .reduce((a, b) => a + b, 0)
         const deadlineTs = timeLimit + currentTime

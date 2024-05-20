@@ -124,7 +124,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             [ApiParams.user]: userAccount.toString(),
             [ApiParams.dapp]: dappAccount.toString(),
             [ApiParams.nonce]: nonce,
-            [ApiParams.timeout]: timeout,
+            [ApiParams.verifiedTimeout]: timeout,
         })
         return this.post(ApiPaths.SubmitPowCaptchaSolution, body)
     }
@@ -149,7 +149,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         const body: ServerPowCaptchaVerifyRequestBodyType = {
             [ApiParams.challenge]: challenge,
             [ApiParams.dapp]: dapp,
-            [ApiParams.timeout]: recencyLimit,
+            [ApiParams.verifiedTimeout]: recencyLimit,
         }
         return this.post(ApiPaths.ServerPowCaptchaVerify, body)
     }

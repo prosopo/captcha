@@ -95,7 +95,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     )
 
     /**
-     * Receives solved CAPTCHA challenges, store to database, and check against solution commitment
+     * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
      *
      * @param {string} userAccount - Dapp User id
      * @param {string} dappAccount - Dapp Contract AccountId
@@ -111,6 +111,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         }
 
         try {
+            // TODO allow the dapp to override the length of time that the request hash is valid for
             const result: DappUserSolutionResult = await tasks.dappUserSolution(
                 parsed[ApiParams.user],
                 parsed[ApiParams.dapp],
@@ -148,25 +149,38 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 ? tasks.getDappUserCommitmentById(parsed.commitmentId)
                 : tasks.getDappUserCommitmentByAccount(parsed.user))
 
+            // No solution exists
             if (!solution) {
                 tasks.logger.debug('Not verified - no solution found')
-                return res.json({
+                const noSolutionResponse: VerificationResponse = {
                     [ApiParams.status]: req.t('API.USER_NOT_VERIFIED_NO_SOLUTION'),
                     [ApiParams.verified]: false,
-                })
+                }
+                return res.json(noSolutionResponse)
             }
 
+            // A solution exists but is disapproved
+            if (solution.status === CaptchaStatus.disapproved) {
+                const disapprovedResponse: VerificationResponse = {
+                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED'),
+                    [ApiParams.verified]: false,
+                }
+                return res.json(disapprovedResponse)
+            }
+
+            // Check if solution was completed recently
             if (parsed.maxVerifiedTime) {
                 const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
                 const blockTimeMs = getBlockTimeMs(tasks.contract.api)
                 const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
-                const verificationResponse: VerificationResponse = {
-                    [ApiParams.status]: req.t('API.USER_NOT_VERIFIED_TIME_EXPIRED'),
-                    [ApiParams.verified]: false,
-                }
+                // A solution exists but has timed out
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
+                    const expiredResponse: VerificationResponse = {
+                        [ApiParams.status]: req.t('API.USER_NOT_VERIFIED_TIME_EXPIRED'),
+                        [ApiParams.verified]: false,
+                    }
                     tasks.logger.debug('Not verified - time run out')
-                    return res.json(verificationResponse)
+                    return res.json(expiredResponse)
                 }
             }
 
@@ -191,9 +205,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
         try {
-            const { challenge, dapp, timeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
+            const { challenge, dapp, verifiedTimeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
 
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, timeout)
+            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, verifiedTimeout)
 
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
@@ -244,7 +258,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { blockNumber, challenge, difficulty, signature, nonce, timeout } =
+            const { blockNumber, challenge, difficulty, signature, nonce, verifiedTimeout } =
                 SubmitPowCaptchaSolutionBody.parse(req.body)
             const verified = await tasks.verifyPowCaptchaSolution(
                 blockNumber,
@@ -252,7 +266,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 difficulty,
                 signature,
                 nonce,
-                timeout
+                verifiedTimeout
             )
             const response: PowCaptchaSolutionResponse = { verified }
             return res.json(response)

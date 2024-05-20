@@ -198,7 +198,7 @@ export class ProsopoServer {
         this.logger.info('Verifying with provider.')
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, timeouts.pow.challengeTimeout)
+            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, timeouts.pow.cachedTimeout)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }

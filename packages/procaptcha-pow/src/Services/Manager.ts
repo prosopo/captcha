@@ -122,14 +122,6 @@ export const Manager = (
         return dappAccount
     }
 
-    const getBlockNumber = () => {
-        if (!state.blockNumber) {
-            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
-        }
-        const blockNumber: number = state.blockNumber
-        return blockNumber
-    }
-
     // get the state update mechanism
     const updateState = buildUpdateState(state, onStateUpdate)
 
@@ -215,7 +207,7 @@ export const Manager = (
             getDappAccount(),
             getRandomProviderResponse,
             solution,
-            config.captchas.pow.challengeTimeout
+            config.captchas.pow.verifiedTimeout
         )
         if (verifiedSolution[ApiParams.verified]) {
             updateState({
@@ -229,6 +221,7 @@ export const Manager = (
                 [ApiParams.challenge]: challenge.challenge,
                 [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
             })
+            setValidChallengeTimeout()
         }
     }
 

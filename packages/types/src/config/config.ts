@@ -37,12 +37,16 @@ const ONE_MINUTE = 60 * 1000
 export const DEFAULT_IMAGE_CAPTCHA_TIMEOUT = ONE_MINUTE
 // The timeframe in which an image captcha solution remains valid on the page before timing out (2 minutes)
 export const DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT = DEFAULT_IMAGE_CAPTCHA_TIMEOUT * 2
-// The time in milliseconds that a cached image captcha solution is valid for (15 minutes)
+// The timeframe in which an image captcha solution must be verified within (3 minutes)
+export const DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT = DEFAULT_IMAGE_CAPTCHA_TIMEOUT * 3
+// The time in milliseconds that a cached, verified, image captcha solution is valid for (15 minutes)
 export const DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED = DEFAULT_IMAGE_CAPTCHA_TIMEOUT * 15
 // The timeframe in which a pow captcha solution remains valid on the page before timing out (1 minute)
 export const DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE
 // The timeframe in which a pow captcha must be completed and verified (2 minutes)
-export const DEFAULT_POW_CAPTCHA_TIMEOUT = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT * 2
+export const DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT * 2
+// The time in milliseconds that a Provider cached, verified, pow captcha solution is valid for (3 minutes)
+export const DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT * 3
 // The time in milliseconds since the last correct captcha recorded in the contract (15 minutes), after which point, the
 // user will be required to complete another captcha
 export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = ONE_MINUTE * 15
@@ -133,11 +137,13 @@ const defaultCaptchaTimeouts = {
     image: {
         challengeTimeout: DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
         solutionTimeout: DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
+        verifiedTimeout: DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
         cachedTimeout: DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
     },
     pow: {
-        challengeTimeout: DEFAULT_POW_CAPTCHA_TIMEOUT,
+        challengeTimeout: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
         solutionTimeout: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+        cachedTimeout: DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
     },
     contract: {
         maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
@@ -150,11 +156,13 @@ export const CaptchaTimeoutSchema = object({
         challengeTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_TIMEOUT),
         // Set this to a default value for the frontend
         solutionTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT),
+        verifiedTimeout: number().positive().optional().default(DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT),
         cachedTimeout: number().positive().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
     }),
     pow: object({
-        challengeTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_TIMEOUT),
+        verifiedTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
         solutionTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
+        cachedTimeout: number().positive().optional().default(DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT),
     }),
     contract: object({
         maxVerifiedTime: number().positive().optional().default(DEFAULT_MAX_VERIFIED_TIME_CONTRACT),
