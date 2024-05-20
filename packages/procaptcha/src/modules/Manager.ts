@@ -30,15 +30,14 @@ import {
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { Keyring } from '@polkadot/keyring'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import {
-    ProsopoApiError,
     ProsopoContractError,
     ProsopoDatasetError,
     ProsopoEnvError,
     ProsopoError,
     trimProviderUrl,
 } from '@prosopo/common'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -231,7 +230,7 @@ export function Manager(
             const challenge = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
-                throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
+                throw new ProsopoDatasetError('DEVELOPER.PROVIDER_NO_CAPTCHA')
             }
 
             // setup timeout
@@ -450,7 +449,9 @@ export function Manager(
 
     const getCaptchaApi = () => {
         if (!state.captchaApi) {
-            throw new ProsopoApiError('API.UNKNOWN', { context: { error: 'Captcha api not set', state } })
+            throw new ProsopoEnvError('API.UNKNOWN', {
+                context: { error: 'Captcha api not set', state },
+            })
         }
         return state.captchaApi
     }
