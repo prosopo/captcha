@@ -176,7 +176,7 @@ export type CaptchaTimeoutOutput = output<typeof CaptchaTimeoutSchema>
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     object({
         serverUrl: string().url().optional(),
-        captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+        timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
     })
 )
 

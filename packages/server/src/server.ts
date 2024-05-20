@@ -246,13 +246,13 @@ export class ProsopoServer {
                 dapp,
                 user,
                 blockNumber,
-                this.config.captchas,
+                this.config.timeouts,
                 challenge,
                 commitmentId
             )
         } else {
             // If we don't have a providerURL, we verify with the contract
-            return await this.verifyContract(user, this.config.captchas.contract.maxVerifiedTime)
+            return await this.verifyContract(user, this.config.timeouts.contract.maxVerifiedTime)
         }
     }
 
