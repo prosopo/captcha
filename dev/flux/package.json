@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/flux",
-    "version": "0.3.40",
+    "version": "0.3.41",
     "description": "Tools for managing Flux deployment",
     "main": "dist/index.js",
     "bin": {
@@ -30,9 +30,9 @@
         "@noble/curves": "^1.3.0",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/cli": "0.3.40",
-        "@prosopo/common": "0.3.40",
-        "@prosopo/util": "0.3.40",
+        "@prosopo/cli": "0.3.41",
+        "@prosopo/common": "0.3.41",
+        "@prosopo/util": "0.3.41",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
