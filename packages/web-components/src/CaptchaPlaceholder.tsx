@@ -17,6 +17,7 @@ import { LoadingSpinner } from './LoadingSpinner.js'
 import {
     WIDGET_BORDER,
     WIDGET_BORDER_RADIUS,
+    WIDGET_DIMENSIONS,
     WIDGET_INNER_HEIGHT,
     WIDGET_PADDING,
     WIDGET_URL,
@@ -35,7 +36,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
-                        <div data-cy={'button-human'}>
+                        <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
                             {' '}
                             <div
                                 style={{
