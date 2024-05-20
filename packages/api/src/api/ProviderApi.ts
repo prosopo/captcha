@@ -26,8 +26,9 @@ import {
     NetworkConfig,
     PowCaptchaSolutionResponse,
     ProviderRegistered,
+    ServerPowCaptchaVerifyRequestBodyType,
     StoredEvents,
-    SubmitPowCaptchaSolutionBodyType,
+    SubmitPowCaptchaSolutionBody,
     VerificationResponse,
     VerifySolutionBodyType,
 } from '@prosopo/types'
@@ -110,10 +111,11 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         userAccount: AccountId,
         dappAccount: AccountId,
         randomProvider: RandomProvider,
-        nonce: number
+        nonce: number,
+        timeout?: number
     ): Promise<PowCaptchaSolutionResponse> {
         const { blockNumber } = randomProvider
-        const body: SubmitPowCaptchaSolutionBodyType = {
+        const body = SubmitPowCaptchaSolutionBody.parse({
             [ApiParams.blockNumber]: blockNumber,
             [ApiParams.challenge]: challenge.challenge,
             [ApiParams.difficulty]: challenge.difficulty,
@@ -122,7 +124,8 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             [ApiParams.user]: userAccount.toString(),
             [ApiParams.dapp]: dappAccount.toString(),
             [ApiParams.nonce]: nonce,
-        }
+            [ApiParams.verifiedTimeout]: timeout,
+        })
         return this.post(ApiPaths.SubmitPowCaptchaSolution, body)
     }
 
@@ -138,7 +141,16 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         return this.fetch(ApiPaths.GetProviderDetails)
     }
 
-    public submitPowCaptchaVerify(challenge: string, dapp: string): Promise<VerificationResponse> {
-        return this.post(ApiPaths.ServerPowCaptchaVerify, { [ApiParams.challenge]: challenge, [ApiParams.dapp]: dapp })
+    public submitPowCaptchaVerify(
+        challenge: string,
+        dapp: string,
+        recencyLimit: number
+    ): Promise<VerificationResponse> {
+        const body: ServerPowCaptchaVerifyRequestBodyType = {
+            [ApiParams.challenge]: challenge,
+            [ApiParams.dapp]: dapp,
+            [ApiParams.verifiedTimeout]: recencyLimit,
+        }
+        return this.post(ApiPaths.ServerPowCaptchaVerify, body)
     }
 }
