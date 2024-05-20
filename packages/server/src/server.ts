@@ -209,7 +209,6 @@ export class ProsopoServer {
             return false
         }
 
-        // TODO should the timeout here be for the challenge or the cached challenge?
         const result = await providerApi.verifyDappUser(
             dapp,
             user,
