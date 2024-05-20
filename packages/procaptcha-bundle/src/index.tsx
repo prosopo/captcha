@@ -18,6 +18,7 @@ import {
     FeaturesEnum,
     NetworkNamesSchema,
     ProcaptchaClientConfigInput,
+    ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
     ProcaptchaOutput,
 } from '@prosopo/types'
@@ -56,7 +57,7 @@ const extractParams = (name: string) => {
     return { onloadUrlCallback: undefined, renderExplicit: undefined }
 }
 
-const getConfig = (siteKey?: string) => {
+const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
     if (!siteKey) {
         siteKey = process.env.PROSOPO_SITE_KEY || ''
     }
@@ -231,7 +232,7 @@ function setUserCallbacks(
 
 const renderLogic = (
     elements: Element[],
-    config: ProcaptchaClientConfigInput,
+    config: ProcaptchaClientConfigOutput,
     renderOptions?: ProcaptchaRenderOptions
 ) => {
     elements.forEach((element) => {
