@@ -42,3 +42,7 @@ diagram.svg
 .env.*
 **/assets/*.js
 *.min.js
+**/Readme.md
+**/README.md
+code-of-conduct.md
+diagram.svg
