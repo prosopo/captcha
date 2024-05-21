@@ -30,8 +30,9 @@ import {
 import { Logo } from '@prosopo/web-components'
 import { Manager } from '@prosopo/procaptcha'
 import { ProcaptchaProps } from '@prosopo/types'
+import { ProsopoError } from '@prosopo/common'
+import { useEffect, useRef, useState } from 'react'
 import { useProcaptcha } from '@prosopo/procaptcha-common'
-import { useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
 import Collector from './collector.js'
 import Modal from './Modal.js'
@@ -44,9 +45,41 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
 
+    const [honeypotValue, setHoneypotValue] = useState(false)
+
+    const handleSubmit = () => {
+        if (honeypotValue !== false) {
+            throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
+                context: { error: 'detected a bot' },
+            })
+        }
+
+        manager.start()
+    }
+
+    useEffect(() => {
+        const captchaContainer = document.getElementById('captchaContainer')
+        if (captchaContainer) {
+            const honeypotField = document.createElement('input')
+            honeypotField.type = 'checkbox'
+            honeypotField.name = 'honeypot'
+            honeypotField.id = 'honeypot'
+            honeypotField.style.display = 'none'
+            honeypotField.autocomplete = 'off'
+            honeypotField.onchange = (e: Event) => {
+                const target = e.target as HTMLInputElement
+                setHoneypotValue(target.checked)
+            }
+
+            captchaContainer.appendChild(honeypotField)
+        } else {
+            console.error('Captcha container not found')
+        }
+    }, [])
+
     return (
         <div>
-            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
+            <div id="captchaContainer" style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <Modal show={state.showModal}>
                     {state.challenge ? (
                         <CaptchaComponent
@@ -105,7 +138,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                             >
                                                 <Checkbox
                                                     themeColor={themeColor}
-                                                    onChange={manager.start}
+                                                    onChange={handleSubmit}
                                                     checked={state.isHuman}
                                                     labelText="I am human"
                                                 />
