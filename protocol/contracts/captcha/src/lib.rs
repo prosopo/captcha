@@ -1798,7 +1798,9 @@ pub mod captcha {
             set_account_balance(provider_account, 1);
             let url: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
-            contract.provider_register(url, fee, Payee::Dapp).unwrap();
+            contract
+                .provider_register_unguarded(url, fee, Payee::Dapp)
+                .unwrap();
             assert!(contract.providers.get(provider_account).is_some());
             println!(
                 "{}",
@@ -1833,7 +1835,9 @@ pub mod captcha {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let url: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
-            contract.provider_register(url, fee, Payee::Dapp).unwrap();
+            contract
+                .provider_register_unguarded(url, fee, Payee::Dapp)
+                .unwrap();
             assert!(contract.providers.get(provider_account).is_some());
             contract.provider_deactivate().unwrap();
             let provider_record = contract.providers.get(provider_account).unwrap();
@@ -1851,7 +1855,9 @@ pub mod captcha {
             let url: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_register(url, fee, Payee::Dapp).unwrap();
+            contract
+                .provider_register_unguarded(url, fee, Payee::Dapp)
+                .unwrap();
             let registered_provider_account = contract.providers.get(provider_account);
             assert!(registered_provider_account.is_some());
             let returned_list = contract
@@ -1926,7 +1932,9 @@ pub mod captcha {
             let mut contract = get_contract(0);
             let (provider_account, url, fee) = generate_provider_data(0x2, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_register(url, fee, Payee::Dapp).unwrap();
+            contract
+                .provider_register_unguarded(url, fee, Payee::Dapp)
+                .unwrap();
             assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
@@ -1972,14 +1980,14 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // try creating the second provider and make sure the error is correct and that it doesn't exist
             let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             println!("{:?}", contract.providers.get(provider_account));
-            match contract.provider_register(url, fee, Payee::Dapp) {
+            match contract.provider_register_unguarded(url, fee, Payee::Dapp) {
                 Result::Err(Error::ProviderUrlUsed) => {}
                 _ => {
                     unreachable!();
@@ -2007,11 +2015,15 @@ pub mod captcha {
 
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_register(url, fee, Payee::Dapp).unwrap();
+            contract
+                .provider_register_unguarded(url, fee, Payee::Dapp)
+                .unwrap();
 
             let (provider_account, url, fee) = generate_provider_data(0x3, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_register(url, fee, Payee::Dapp).unwrap();
+            contract
+                .provider_register_unguarded(url, fee, Payee::Dapp)
+                .unwrap();
 
             let (_, url, fee) = generate_provider_data(0x3, "4242", 100);
 
@@ -2047,7 +2059,7 @@ pub mod captcha {
             let balance: u128 = 10;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -2070,7 +2082,7 @@ pub mod captcha {
             let balance: u128 = 2000000000000;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -2311,7 +2323,7 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2409,7 +2421,7 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2475,7 +2487,7 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2571,7 +2583,7 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2663,7 +2675,7 @@ pub mod captcha {
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
@@ -2705,7 +2717,7 @@ pub mod captcha {
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Provider)
+                .provider_register_unguarded(url.clone(), fee, Payee::Provider)
                 .unwrap();
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
@@ -2772,7 +2784,7 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2858,7 +2870,7 @@ pub mod captcha {
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2890,7 +2902,7 @@ pub mod captcha {
             let (provider_account2, url, fee) = generate_provider_data(0x5, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
             contract
-                .provider_register(url.clone(), fee, Payee::Dapp)
+                .provider_register_unguarded(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
