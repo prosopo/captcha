@@ -29,7 +29,7 @@ import {
 } from '@prosopo/web-components'
 import { Logo } from '@prosopo/web-components'
 import { Manager } from '@prosopo/procaptcha'
-import { ProcaptchaProps } from '@prosopo/types'
+import { ProcaptchaConfigSchema, ProcaptchaProps } from '@prosopo/types'
 import { ProsopoError } from '@prosopo/common'
 import { useEffect, useRef, useState } from 'react'
 import { useProcaptcha } from '@prosopo/procaptcha-common'
@@ -38,7 +38,7 @@ import Collector from './collector.js'
 import Modal from './Modal.js'
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
-    const config = props.config
+    const config = ProcaptchaConfigSchema.parse(props.config)
     const callbacks = props.callbacks || {}
     const [state, updateState] = useProcaptcha(useState, useRef)
     const manager = Manager(config, state, updateState, callbacks)

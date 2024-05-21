@@ -25,7 +25,7 @@ import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2 } from '@prosopo/account'
 import { Keyring } from '@polkadot/keyring'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoContractError, ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -40,6 +40,8 @@ export const Manager = (
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) => {
+    const events = getDefaultEvents(onStateUpdate, state, callbacks)
+
     const defaultState = (): Partial<ProcaptchaState> => {
         return {
             // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
@@ -120,14 +122,6 @@ export const Manager = (
         return dappAccount
     }
 
-    const getBlockNumber = () => {
-        if (!state.blockNumber) {
-            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
-        }
-        const blockNumber: number = state.blockNumber
-        return blockNumber
-    }
-
     // get the state update mechanism
     const updateState = buildUpdateState(state, onStateUpdate)
 
@@ -135,6 +129,18 @@ export const Manager = (
         // clear timeout just in case a timer is still active (shouldn't be)
         clearTimeout()
         updateState(defaultState())
+    }
+
+    const setValidChallengeTimeout = () => {
+        const timeMillis: number = getConfig().captchas.pow.solutionTimeout
+        const successfullChallengeTimeout = setTimeout(() => {
+            // Human state expired, disallow user's claim to be human
+            updateState({ isHuman: false })
+
+            events.onExpired()
+        }, timeMillis)
+
+        updateState({ successfullChallengeTimeout })
     }
 
     const start = async () => {
@@ -200,7 +206,8 @@ export const Manager = (
             getAccount().account.address,
             getDappAccount(),
             getRandomProviderResponse,
-            solution
+            solution,
+            config.captchas.pow.verifiedTimeout
         )
         if (verifiedSolution[ApiParams.verified]) {
             updateState({
@@ -214,6 +221,7 @@ export const Manager = (
                 [ApiParams.challenge]: challenge.challenge,
                 [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
             })
+            setValidChallengeTimeout()
         }
     }
 
