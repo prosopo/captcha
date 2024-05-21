@@ -424,9 +424,6 @@ pub mod captcha {
 
         /// Configure a provider
         fn provider_configure(&mut self, config: ProviderConfig) -> Result<(), Error> {
-            // TODO remove this to re-enable public provider registration / mutation - currently locked to admin only!
-            self.check_caller_admin()?;
-
             let provider_account = self.env().caller();
 
             let lookup = self.providers.get(provider_account);
