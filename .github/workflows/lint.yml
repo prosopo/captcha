@@ -86,7 +86,7 @@ jobs:
 
             - run: npm ci
 
-            - run: npm -w @prosopo/scripts build
+            - run: npm run -w @prosopo/scripts build
 
             - name: license
               run: npm run -w @prosopo/scripts license
