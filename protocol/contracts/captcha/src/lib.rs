@@ -583,6 +583,7 @@ pub mod captcha {
         }
 
         /// Version of provider register without the admin check. This is only temporary to get the tests passing
+        #[allow(dead_code)]
         fn provider_register_unguarded(
             &mut self,
             url: Vec<u8>,
