@@ -31,6 +31,7 @@ async function disapprove(args: string[]) {
         repo: github.context.repo.repo,
         pull_number: github.context.payload.issue!.number,
         event: 'REQUEST_CHANGES',
+        body: `Disapproved by @${github.context.actor}`
     })
     console.log('done')
 }
@@ -52,6 +53,7 @@ async function approve(args: string[]) {
         repo: github.context.repo.repo,
         pull_number: github.context.payload.issue!.number,
         event: 'APPROVE',
+        body: `Approved by @${github.context.actor}`
     })
     console.log('done')
 }
