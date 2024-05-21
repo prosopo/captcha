@@ -32,7 +32,7 @@ export const WidthBasedStylesDiv = styled.div`
             display: none;
         }
     }
-    @container (min-width: 244px) and (max-width: 339px) {
+    @container (max-width: 339px) {
         #logo-without-text {
             display: inherit;
         }
