@@ -86,6 +86,11 @@ jobs:
 
             - run: npm ci
 
+            - run: npm -w @prosopo/scripts build
+
+            - name: license
+              run: npm run -w @prosopo/scripts license
+
             - name: lint
               run: |
                 # get the files which have changed in the PR
