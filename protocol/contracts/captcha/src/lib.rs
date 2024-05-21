@@ -570,6 +570,25 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
+            // TODO remove this to re-enable public provider registration / mutation - currently locked to admin only!
+            self.check_caller_admin()?;
+
+            self.provider_configure(ProviderConfig {
+                url: Some(url),
+                fee: Some(fee),
+                payee: Some(payee),
+                should_exist: false,
+                ..Default::default()
+            })
+        }
+
+        /// Version of provider register without the admin check. This is only temporary to get the tests passing
+        fn provider_register_unguarded(
+            &mut self,
+            url: Vec<u8>,
+            fee: u32,
+            payee: Payee,
+        ) -> Result<(), Error> {
             self.provider_configure(ProviderConfig {
                 url: Some(url),
                 fee: Some(fee),
