@@ -166,7 +166,7 @@ function App(props: AppProps) {
                 className={'App'}
                 sx={{ width: '100%', maxWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
             >
-                <Box>
+                <Box sx={{ width: '100%' }}>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
 
                     <Box>
