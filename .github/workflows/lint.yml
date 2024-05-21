@@ -94,7 +94,9 @@ jobs:
             - name: lint
               run: |
                 # get the files which have changed in the PR
-                files=$(curl -L -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "${PR_URL}/files" | jq -r '.[] | .filename')
+                files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${PR_URL}/files" | jq -r '.[] | .filename')
+
+                echo "files: $files"
 
                 # feed those files into eslint + prettier, as we only need to lint the files that have changed
                 npx eslint -- $files --ignore-path .eslintignore --quiet --no-error-on-unmatched-pattern
