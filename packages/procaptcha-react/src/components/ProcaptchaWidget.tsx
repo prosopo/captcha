@@ -31,7 +31,7 @@ import { Logo } from '@prosopo/web-components'
 import { Manager } from '@prosopo/procaptcha'
 import { ProcaptchaConfigSchema, ProcaptchaProps } from '@prosopo/types'
 import { useProcaptcha } from '@prosopo/procaptcha-common'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
 import Collector from './collector.js'
 import Modal from './Modal.js'
@@ -40,9 +40,40 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
     const config = ProcaptchaConfigSchema.parse(props.config)
     const callbacks = props.callbacks || {}
     const [state, updateState] = useProcaptcha(useState, useRef)
-    const manager = Manager(config, state, updateState, callbacks)
+    const [honeypotValue, setHoneypotValue] = useState('')
+    const commonFields = ['firstname', 'lastname', 'name', 'email', 'password', 'age', 'birthday']
+    const manager = Manager(config, state, updateState, callbacks, honeypotValue)
     const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
     const theme = props.config.theme === 'light' ? lightTheme : darkTheme
+
+    useEffect(() => {
+        const addHoneypotField = (form: HTMLFormElement, honeypotName: string) => {
+            const honeypotField = document.createElement('input')
+            honeypotField.type = 'text'
+            honeypotField.name = honeypotName
+            honeypotField.id = honeypotName
+            honeypotField.style.display = 'none'
+            honeypotField.autocomplete = 'off'
+            honeypotField.onchange = (e) => {
+                const target = e.target as HTMLInputElement
+                setHoneypotValue(target.value)
+            }
+
+            form.appendChild(honeypotField)
+        }
+
+        const processForm = (form: HTMLFormElement) => {
+            const inputArray = Array.from(form.querySelectorAll('input'))
+            for (const commonField of commonFields) {
+                if (!inputArray.some((input) => input.name === commonField || input.id === commonField)) {
+                    addHoneypotField(form, commonField)
+                    break
+                }
+            }
+        }
+
+        Array.from(document.getElementsByTagName('form')).forEach(processForm)
+    }, [])
 
     return (
         <div>
