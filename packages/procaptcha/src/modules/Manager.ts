@@ -81,7 +81,8 @@ export function Manager(
     configOptional: ProcaptchaClientConfigOutput,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
-    callbacks: ProcaptchaCallbacks
+    callbacks: ProcaptchaCallbacks,
+    honeypotValue: string
 ) {
     const events = getDefaultEvents(onStateUpdate, state, callbacks)
 
@@ -180,7 +181,7 @@ export function Manager(
             // Check if there is a provider in local storage or get a random one from the contract
             const procaptchaStorage = storage.getProcaptchaStorage()
             let providerApi: ProviderApi
-            if (procaptchaStorage.providerUrl && procaptchaStorage.blockNumber) {
+            if (procaptchaStorage.providerUrl && procaptchaStorage.blockNumber && honeypotValue === '') {
                 providerApi = await loadProviderApi(procaptchaStorage.providerUrl)
 
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
