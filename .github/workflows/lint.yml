@@ -86,6 +86,18 @@ jobs:
 
             - run: npm ci
 
-            - run: npm run build -w @prosopo/scripts
+            - run: npm run -w @prosopo/scripts build
 
-            - run: npm run lint
+            - name: license
+              run: npm run -w @prosopo/scripts license
+
+            - name: lint
+              run: |
+                  # get the files which have changed in the PR
+                  files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
+
+                  echo "files: $files"
+
+                  # feed those files into eslint + prettier, as we only need to lint the files that have changed
+                  npx eslint --ignore-path .eslintignore --no-error-on-unmatched-pattern -- $files
+                  npx prettier --check --ignore-path .eslintignore --no-error-on-unmatched-pattern -- $files
