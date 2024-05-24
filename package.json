@@ -106,6 +106,7 @@
         "eslint-plugin-unused-imports": "^3.0.0",
         "eslint-plugin-workspaces": "^0.9.0",
         "eslint-plugin-yaml": "^0.5.0",
+        "husky": "^9.0.11",
         "node-loader": "^2.0.0",
         "nodemon": "^3.0.1",
         "npm-check-updates": "^15.3.4",
