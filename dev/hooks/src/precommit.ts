@@ -1,4 +1,3 @@
-type A = string
+console.log('running precommit hook')
 
-console.log('B')
-console.log('C')
+// this currently does nothing :)
