@@ -7,6 +7,5 @@
         "lib": ["dom", "dom.iterable", "esnext"]
     },
     "include": ["src", "src/**/*.json"],
-    "references": [
-    ]
+    "references": []
 }
