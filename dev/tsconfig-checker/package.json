@@ -1,5 +1,5 @@
 {
-    "name": "tsconfig-checker",
+    "name": "@prosopo/tsconfig-checker",
     "version": "0.3.41",
     "description": "",
     "private": true,
