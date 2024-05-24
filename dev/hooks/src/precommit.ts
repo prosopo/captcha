@@ -1,3 +1,3 @@
 type A = string
 
-console.log('A')
+console.log('B')

@@ -1,1 +1,1 @@
-npx tsx .husky/pre-commit.ts
+npm run -w "@prosopo/hooks" hook:precommit
