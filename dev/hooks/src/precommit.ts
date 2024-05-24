@@ -1,4 +1,17 @@
-import { exec } from 'child_process';
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { exec } from 'child_process'
 
 const main = async () => {
     console.log('running precommit hook')
@@ -16,7 +29,7 @@ const main = async () => {
 
     // get the name of the default branch (usually 'main')
     const defaultBranch = await new Promise<string>((resolve, reject) => {
-        exec('git remote show origin | grep \'HEAD branch\'', (err, stdout, stderr) => {
+        exec("git remote show origin | grep 'HEAD branch'", (err, stdout, stderr) => {
             if (err) {
                 reject(err)
             } else {
@@ -29,9 +42,11 @@ const main = async () => {
             }
         })
     })
-    
+
     if (branch === defaultBranch) {
-        throw new Error(`Commits to the default branch (${defaultBranch}) are not allowed. Please create a branch and submit a pull request.`)
+        throw new Error(
+            `Commits to the default branch (${defaultBranch}) are not allowed. Please create a branch and submit a pull request.`
+        )
     }
 }
 
