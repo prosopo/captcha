@@ -23,7 +23,7 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "author": "Prosopo Limited",
