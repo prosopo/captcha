@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "target": "ES2018",
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["dom", "dom.iterable", "esnext"]
+    },
+    "include": ["src", "src/**/*.json"],
+    "references": [
+    ]
+}
