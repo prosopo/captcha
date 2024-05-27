@@ -382,7 +382,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const providerAccount = await getUser(env, AccountKey.providers)
         const tasks = await getSignedTasks(env, providerAccount)
 
-        const value = new BN((await tasks.contract.query.getProviderStakeThreshold()).value.unwrap().toNumber())
+        const value = (await tasks.contract.query.getProviderStakeThreshold()).value.unwrap().rawNumber
         const result = (
             await tasks.contract.tx.providerUpdate(
                 Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),
@@ -676,7 +676,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const result = (await tasks.contract.tx.dappFund(dappContractAddress, { value })).result
         expect(result?.isError).to.be.false
         const dappAfter = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
-        expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance.toNumber())
+        expect(dappBefore.balance.rawNumber.add(value)).to.equal(dappAfter.balance)
     })
 
     test('Captchas are correctly formatted before being passed to the API layer', async ({ env }): Promise<void> => {
