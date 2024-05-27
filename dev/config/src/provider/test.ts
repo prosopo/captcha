@@ -25,7 +25,7 @@ export default function getTestConfig() {
     return ProsopoConfigSchema.parse({
         logLevel,
         defaultEnvironment: EnvironmentTypesSchema.Values.development,
-        defaultNetwork: [NetworkNamesSchema.Values.development],
+        defaultNetwork: NetworkNamesSchema.Values.development,
         account: {
             password: '',
             address: '',
@@ -40,7 +40,7 @@ export default function getTestConfig() {
         },
         networks: {
             development: {
-                endpoint: 'ws://localhost:9944',
+                endpoint: ['ws://localhost:9944'],
                 contract: {
                     address: process.env.PROSOPO_CONTRACT_ADDRESS || '',
                     name: 'prosopo',
