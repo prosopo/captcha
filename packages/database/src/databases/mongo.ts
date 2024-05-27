@@ -47,7 +47,7 @@ import {
     UserSolutionSchema,
 } from '@prosopo/types-database'
 import { CaptchaStatus, Hash } from '@prosopo/captcha-contract/types-returns'
-import { DeleteResult, ServerApiVersion } from 'mongodb'
+import { DeleteResult } from 'mongodb'
 import { isHex } from '@polkadot/util/is'
 import mongoose, { Connection } from 'mongoose'
 
@@ -118,7 +118,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         this.connection = await new Promise((resolve, reject) => {
             const connection = mongoose.createConnection(this.url, {
                 dbName: this.dbname,
-                serverApi: ServerApiVersion.v1,
+                // serverApi: ServerApiVersion.v1,
             })
 
             connection.on('open', () => {
