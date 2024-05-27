@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { enumMap } from './enumMap.js'
-import { literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
+import { array, literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
 export const NetworkNamesSchema = zEnum(['development', 'rococo', 'shiden', 'astar'])
 
 export type NetworkNames = zInfer<typeof NetworkNamesSchema>
@@ -24,7 +24,7 @@ export const NetworkPairTypeSchema = union([
     literal('ethereum'),
 ])
 export const NetworkConfigSchema = object({
-    endpoint: string().url(),
+    endpoint: array(string().url()),
     contract: object({
         address: string(),
         name: string(),
