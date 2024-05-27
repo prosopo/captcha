@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { NetworkNames } from '@prosopo/types'
+
 export interface GuiContract {
     contractAddress: string
-    network: 'development' | 'rococo' | 'shiden'
+    network: NetworkNames
     providers: {
         status: string
         balance: number
