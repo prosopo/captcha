@@ -332,14 +332,14 @@ pub mod captcha {
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_threshold(&self) -> Balance {
-            let env_provider_stake_threshold: Balance = 1000000000;
+            let env_provider_stake_threshold: Balance = 1000000000000000000;
             env_provider_stake_threshold
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
         pub fn get_dapp_stake_threshold(&self) -> Balance {
-            let env_dapp_stake_threshold: Balance = 1000000000;
+            let env_dapp_stake_threshold: Balance = 1000000000000000000;
             env_dapp_stake_threshold
         }
 
