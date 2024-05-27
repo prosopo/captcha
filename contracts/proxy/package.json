@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/proxy-contract",
-    "version": "0.3.39",
+    "version": "0.3.41",
     "description": "The proxy contract",
     "main": "dist/index.js",
     "type": "module",
