@@ -52,7 +52,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                     get(DappPayee, z.string().parse(argv.payee)),
                     z.string().parse(argv.owner),
                     {
-                        value: stakeThreshold.toNumber(),
+                        value: stakeThreshold.toString(),
                     },
                 ]
                 await wrapQuery(tasks.contract.query.dappUpdate, tasks.contract.query)(...dappRegisterArgs)
