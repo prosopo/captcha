@@ -45,11 +45,6 @@ describe('CONTRACT HELPERS', function () {
             throw new ProsopoEnvError(e as Error)
         }
         context.env = env
-        const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
-            context.env.getContractInterface().query.getProviderStakeThreshold,
-            context.env.getContractInterface().query
-        )()
-        context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
         return () => {
             env.db?.close()
         }

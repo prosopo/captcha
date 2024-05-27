@@ -97,7 +97,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             context.env.getContractInterface().query.getProviderStakeThreshold,
             context.env.getContractInterface().query
         )()
-        context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
+        context.providerStakeThreshold = new BN((await promiseStakeDefault).rawNumber)
         return () => {
             env.db?.close()
         }
