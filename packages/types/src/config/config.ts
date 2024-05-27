@@ -75,7 +75,7 @@ export type DatabaseConfigOutput = output<typeof DatabaseConfigSchema>
 export const ProsopoBaseConfigSchema = object({
     logLevel: LogLevel.optional().default(LogLevel.enum.info),
     defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.production),
-    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.rococo),
+    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.astar),
     // The account with which to query the contract.merge sign transactions
     account: object({
         address: string().optional(),
