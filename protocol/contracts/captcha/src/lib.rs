@@ -1502,7 +1502,10 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // ctor params should be set
-            assert_eq!(contract.get_provider_stake_threshold(), PROVIDER_STAKE_THRESHOLD);
+            assert_eq!(
+                contract.get_provider_stake_threshold(),
+                PROVIDER_STAKE_THRESHOLD
+            );
             assert_eq!(contract.get_dapp_stake_threshold(), DAPP_STAKE_THRESHOLD);
             assert_eq!(contract.get_admin(), get_admin_account(0));
             assert_eq!(contract.get_max_user_history_len(), 10);
@@ -2290,7 +2293,8 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // Register the provider
-            let (provider_account, url, fee) = generate_provider_data(0x2, "4242", DEFAULT_FEE.try_into().unwrap());
+            let (provider_account, url, fee) =
+                generate_provider_data(0x2, "4242", DEFAULT_FEE.try_into().unwrap());
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
                 .provider_register(url.clone(), fee, Payee::Dapp)
@@ -2454,7 +2458,8 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // Register the provider
-            let (provider_account, url, fee) = generate_provider_data(0x2, "4242", DEFAULT_FEE.try_into().unwrap());
+            let (provider_account, url, fee) =
+                generate_provider_data(0x2, "4242", DEFAULT_FEE.try_into().unwrap());
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
                 .provider_register(url.clone(), fee, Payee::Dapp)
