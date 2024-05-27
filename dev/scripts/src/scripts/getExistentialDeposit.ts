@@ -13,10 +13,13 @@
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { oneUnit } from '@prosopo/contract'
-async function run() {
+import { NetworkNames, networks } from '@prosopo/types'
+import { get } from '@prosopo/util'
+
+async function run(defaultNetwork: NetworkNames) {
+    const defaultNetworks = networks()
     // Construct
-    const provider = 'ws://localhost:9944'
-    // const provider = 'wss://shiden.public.blastapi.io'
+    const provider = get(defaultNetworks, defaultNetwork).endpoint
     const wsProvider = new WsProvider(provider)
     const api = await ApiPromise.create({ provider: wsProvider })
 
@@ -32,7 +35,8 @@ async function run() {
     return existentialDeposit
 }
 
-run()
+const defaultNetwork = process.argv[2] as NetworkNames
+run(defaultNetwork)
     .then(() => process.exit(0))
     .catch((error) => {
         console.error(error)
