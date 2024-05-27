@@ -118,7 +118,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                     tasks.contract.query
                 )()
                 return promiseStakeDefault.then((res) => {
-                    this.providerStakeDefault = new BN(res.toNumber())
+                    this.providerStakeDefault = new BN(res.rawNumber)
                     this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
                     this.sendAmount = getSendAmount(env, this.stakeAmount)
                 })
