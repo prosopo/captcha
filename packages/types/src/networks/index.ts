@@ -49,5 +49,14 @@ export default (): ProsopoNetworksSchemaInput => {
             pairType: pairTypeSr25519,
             ss58Format: 5,
         },
+        [NetworkNamesSchema.Values.astar]: {
+            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT || 'wss://rpc.astar.network',
+            contract: {
+                address: getContractAddress('CONTRACT_NOT_DEPLOYED'),
+                name: 'captcha',
+            },
+            pairType: pairTypeSr25519,
+            ss58Format: 5,
+        },
     }
 }
