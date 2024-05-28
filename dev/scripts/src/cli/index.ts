@@ -12,22 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
+import { NetworkConfigSchema, networks as getNetworks } from '@prosopo/types'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
+import { run as fundDapps } from '../contract/fundDapps.js'
+import { get } from '@prosopo/util'
 import { getContractNames, getContractsDir, getProtocolDistDir, getScriptsPkgDir } from '@prosopo/config'
 import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { setup } from '../setup/index.js'
+import { run as transferContract } from '../contract/transferContract.js'
 import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
 import setVersion from '../scripts/setVersion.js'
 import yargs from 'yargs'
-
+import z from 'zod'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
+
+const TransferNetworkSchema = z.object({
+    network: z.string(),
+    address: z.string(),
+})
 
 export async function processArgs(args: string[]) {
     const parsed = await yargs(hideBin(args)).option('logLevel', {
@@ -165,6 +174,63 @@ export async function processArgs(args: string[]) {
                         `node dist/cli/index.js import_contract --in=${inDir} --out=${getContractsDir()}/${contract}/src`
                     )
                 }
+            },
+        })
+        .command({
+            command: 'fund_dapps',
+            describe: 'Fund the dapps if they are unfunded',
+            builder: (yargs) => yargs,
+            handler: async (argv) => {
+                const atlasUri = process.env._DEV_ONLY_ATLAS_URI
+                fundDapps(atlasUri)
+                    .then((result) => {
+                        log.info(result)
+                        process.exit(0)
+                    })
+                    .catch((e) => {
+                        console.error(e)
+                        process.exit(1)
+                    })
+            },
+        })
+        .command({
+            command: 'transfer_contract',
+            describe: 'Transfer dapps and providers from one contract to another',
+            builder: (yargs) =>
+                yargs
+                    .option('transfer-from', {
+                        type: 'string',
+                        demandOption: true,
+                        desc: 'The name of the network and the contract address to transfer from `{ network, address }`',
+                    })
+                    .option('transfer-providers', {
+                        type: 'boolean',
+                        demandOption: true,
+                        desc: 'Whether to transfer providers or not',
+                        default: false,
+                    })
+                    .option('transfer-dapps', {
+                        type: 'boolean',
+                        demandOption: true,
+                        desc: 'Whether to transfer dapps or not',
+                        default: false,
+                    }),
+            handler: async (argv) => {
+                console.log(argv)
+                const atlasUri = process.env._DEV_ONLY_ATLAS_URI
+                const transferFrom = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
+                const networks = getNetworks()
+                const transferFromNetwork = NetworkConfigSchema.parse(get(networks, transferFrom.network))
+                transferFromNetwork.contract.address = transferFrom.address
+                let transferToNetwork = undefined
+                // Defaults to transferring to the network defined by env
+                if (argv.transferFrom !== undefined) {
+                    const transferTo = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
+                    transferToNetwork = NetworkConfigSchema.parse(get(networks, transferTo.network))
+                    transferToNetwork.contract.address = transferFrom.address
+                }
+                const transferConfig = { dapps: argv.transferDapps, providers: argv.transferProviders }
+                await transferContract(transferFromNetwork, transferConfig, transferToNetwork, atlasUri)
             },
         })
         .command({

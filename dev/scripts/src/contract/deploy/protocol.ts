@@ -20,10 +20,9 @@ import { ContractFile } from '@prosopo/captcha-contract/contract-info'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, getSecret } from '@prosopo/cli'
+import { defaultConfig } from '@prosopo/cli'
 import { get } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util'
-import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
@@ -79,18 +78,4 @@ export async function run(
     const contractAddress = String(get(instantiateEvent?.event.data, 'contract'))
 
     return contractAddress
-}
-// run the script if the main process is running this file
-if (typeof require !== 'undefined' && require.main === module) {
-    log.info('Loading env from', path.resolve('.'))
-    loadEnv(path.resolve('.'))
-    run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH)
-        .then((deployResult) => {
-            log.info('Deployed with address', deployResult)
-            process.exit(0)
-        })
-        .catch((e) => {
-            console.error(e)
-            process.exit(1)
-        })
 }

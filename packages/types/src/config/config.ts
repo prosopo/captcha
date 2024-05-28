@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
+import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
 import { boolean } from 'zod'
 import { input } from 'zod'
 import { literal } from 'zod'
@@ -86,13 +86,13 @@ export const ProsopoBaseConfigSchema = object({
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     object({
-        networks: ProsopoNetworksSchema.default(networks),
+        networks: ProsopoNetworkSchema.default(networks),
         database: DatabaseConfigSchema.optional(),
         devOnlyWatchEvents: boolean().optional(),
     })
 )
-export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworksSchema>
-export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworksSchema>
+export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworkSchema>
+export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworkSchema>
 
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>

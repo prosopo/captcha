@@ -223,7 +223,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             ...args
         )
 
-        // Increase the gas required by a factor of 1.1 to make sure we don't hit contracts.StorageDepositLimitExhausted
+        // Increase the gas required by a factor to make sure we don't hit contracts.StorageDepositLimitExhausted
         const options = getOptions(this.api, true, value, gasRequired, storageDeposit, true)
         const method = get(this.nativeContract.query, message.method)
         const extrinsic = method(this.pair.address, options, ...args)

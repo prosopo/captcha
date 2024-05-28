@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from './txQueue.js'
 export * from './getDispatchError.js'
+export * from './submitTx.js'
