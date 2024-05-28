@@ -208,7 +208,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     async dryRunContractMethod<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | BN | undefined
+        value?: BN | undefined
     ): Promise<SubmittableExtrinsic> {
         const message = this.getContractMethod(contractMethodName)
         if (!this.nativeContract.query[message.method]) {
@@ -257,7 +257,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     async getExtrinsicAndGasEstimates<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | BN | undefined
+        value?: BN | undefined
     ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
