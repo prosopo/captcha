@@ -216,7 +216,7 @@ export async function processArgs(args: string[]) {
                         default: false,
                     }),
             handler: async (argv) => {
-                console.log(argv)
+                log.debug(argv)
                 const atlasUri = process.env._DEV_ONLY_ATLAS_URI
                 const transferFrom = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
                 const networks = getNetworks()
