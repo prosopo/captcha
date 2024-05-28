@@ -130,6 +130,7 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         solutionThreshold: number().positive().max(100).optional().default(80),
         dappName: string().optional().default('ProsopoClientDapp'),
         serverUrl: string().optional(),
+        honeypotFlag: boolean().optional().default(false),
     })
 )
 

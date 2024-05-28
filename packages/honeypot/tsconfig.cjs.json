@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.cjs.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist/cjs",
+        "lib": ["es6", "dom"],
+        "jsxImportSource": "@emotion/react"
+    },
+    "include": ["src/index.tsx"],
+    "references": []
+}
