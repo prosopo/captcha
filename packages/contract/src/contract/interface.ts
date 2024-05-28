@@ -240,6 +240,8 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
                     failedFuncName: this.dryRunContractMethod.name,
                     failedContractMethod: message.method,
                     args: args.map(this.argDecoder), // TODO decode args using AbiMessage
+                    gasLimit: options.gasLimit?.toString(),
+                    storageDepositLimit: options.storageDepositLimit?.toString(),
                 },
                 logLevel: this.logger.getLogLevel(),
             })
@@ -306,7 +308,12 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             }
         } else {
             throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
+                context: {
+                    error: response.result.asErr,
+                    failedFuncName: this.getExtrinsicAndGasEstimates.name,
+                    gasLimit: initialOptions.gasLimit?.toString(),
+                    storageDepositLimit: initialOptions.storageDepositLimit?.toString(),
+                },
             })
         }
     }
