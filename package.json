@@ -57,7 +57,7 @@
         "eslint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run eslint:fix",
         "prettier": "npm run ws -- prettier && npm run prettier:workspace",
         "prettier:workspace": "npm run prettier:cmd -- '.*.*' '*.*' .vscode .github",
-        "prettier:cmd": "npx prettier --no-error-on-unmatched-pattern --check --ignore-path .eslintignore",
+        "prettier:cmd": "npx prettier --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --ignore-unknown",
         "prettier:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run prettier",
         "prettier:fix": "npm run ws -- prettier:fix && npm run prettier:fix:workspace",
         "prettier:fix:workspace": "npm run prettier:workspace -- --write",
