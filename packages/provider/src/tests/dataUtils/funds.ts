@@ -151,8 +151,11 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 
     // We don't want to stake any more than MAX_ACCOUNT_FUND * existentialDeposit UNIT per provider as the test account
     // funds will be depleted too quickly
-    const maxStake = env.getApi().consts.balances.existentialDeposit.toBn().muln(MAX_ACCOUNT_FUND)
-
+    const existentialDeposit = env.getApi().consts.balances.existentialDeposit.toBn()
+    const maxStake = BN.max(
+        env.getApi().consts.balances.existentialDeposit.toBn().muln(MAX_ACCOUNT_FUND),
+        unit.muln(MAX_ACCOUNT_FUND)
+    )
     if (stake100.lt(maxStake)) {
         env.logger.debug('Setting stake amount to', stake100.div(unit).toString(), 'UNIT')
         return stake100
