@@ -5,6 +5,9 @@
         "outDir": "./dist"
     },
     "include": ["src", "src/**/*.json"],
+    "exclude": [
+        "dist",
+    ],
     "references": [
         {
             "path": "../common"

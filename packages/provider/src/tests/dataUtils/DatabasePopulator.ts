@@ -16,17 +16,15 @@ import { AnyNumber } from '@polkadot/types-codec/types'
 import { AppTestAccount, ProviderTestAccount } from '@prosopo/env'
 import { BN } from '@polkadot/util/bn'
 import { ContractDeployer, getPairAsync, wrapQuery } from '@prosopo/contract'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
 import { DatasetWithIdsAndTree } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts.js'
-import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoContractError, ProsopoEnvError, getLogLevel, getLogger } from '@prosopo/common'
 import { ProviderEnvironment, TestAccount } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '../../tasks/index.js'
-import { TransactionQueue } from '@prosopo/tx'
+import { TransactionQueue, submitTx } from '@prosopo/tx'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds.js'
 import { accountAddress, accountContract, accountMnemonic } from '../accounts.js'
 import { createType } from '@polkadot/types/create'
@@ -256,7 +254,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const tasks = new Tasks(this.mockEnv)
             const args = [_url, PROVIDER_FEE, PROVIDER_PAYEE]
-            const result = await this.submitTx(tasks, 'providerRegister', args, this.stakeAmount, pair)
+            const result = await submitTx(
+                this.transactionQueue,
+                tasks.contract,
+                'providerRegister',
+                args,
+                this.stakeAmount,
+                pair
+            )
             this.logger.info(
                 'Provider registered with account',
                 accountAddress(account),
@@ -289,7 +294,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 PROVIDER_PAYEE,
             ]
             this.logger.info('Updating provider', account.address, account.contractValue)
-            await this.submitTx(tasks, 'providerUpdate', args, new BN(0), pair)
+            await submitTx(this.transactionQueue, tasks.contract, 'providerUpdate', args, new BN(0), pair)
             this.logger.info('Provider updated', account.address)
             return (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
         } catch (e) {
@@ -383,7 +388,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const deployResult = await deployer.deploy()
 
             const instantiateEvent: EventRecord | undefined = deployResult.events.find(
-                (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
+                (event: { event: { section: string; method: string } }) =>
+                    event.event.section === 'contracts' && event.event.method === 'Instantiated'
             )
             const contractAddress = String(get<unknown>(instantiateEvent?.event.data, 'contract'))
 
@@ -401,8 +407,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 throw new ProsopoContractError(new Error(error))
             }
             this.logger.debug('Submitting TX to queue using account', tasks.contract.pair.address)
-            const txResult = await this.submitTx(
-                tasks,
+            const txResult = await submitTx(
+                this.transactionQueue,
+                tasks.contract,
                 'dappRegister',
                 [contractAddress, DappPayee.dapp],
                 new BN(0),
@@ -437,7 +444,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
         this.logger.info('Funding app', accountContract(account), 'from account', tasks.contract.pair.address)
-        await this.submitTx(tasks, 'dappFund', [accountContract(account)], this.stakeAmount, tasks.contract.pair)
+        await submitTx(
+            this.transactionQueue,
+            tasks.contract,
+            'dappFund',
+            [accountContract(account)],
+            this.stakeAmount,
+            tasks.contract.pair
+        )
         this.logger.info('App funded')
         return (await tasks.contract.query.getDapp(accountContract(account))).value.unwrap().unwrap()
     }
@@ -481,39 +495,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         // Add the URL immediately to avoid duplicate url issues
         this._registeredProviderUrls.add(url)
         return url
-    }
-
-    private async submitTx(
-        tasks: Tasks,
-        method: string,
-        args: any[],
-        value: BN,
-        pair?: KeyringPair
-    ): Promise<ContractSubmittableResult> {
-        return new Promise((resolve, reject) => {
-            if (
-                tasks.contract.nativeContract.tx &&
-                method in tasks.contract.nativeContract.tx &&
-                tasks.contract.nativeContract.tx[method] !== undefined
-            ) {
-                try {
-                    tasks.contract.dryRunContractMethod(method, args, value).then((extrinsic) => {
-                        this.transactionQueue.add(
-                            extrinsic,
-                            (result: ContractSubmittableResult) => {
-                                resolve(result)
-                            },
-                            pair,
-                            method
-                        )
-                    })
-                } catch (err) {
-                    reject(err)
-                }
-            } else {
-                reject(new ProsopoContractError('CONTRACT.INVALID_METHOD'))
-            }
-        })
     }
 
     createError(err: Error, functionName: string): ProsopoEnvError {

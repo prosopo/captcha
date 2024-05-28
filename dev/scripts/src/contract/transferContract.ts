@@ -1,39 +1,32 @@
-import { DappPayee } from '@prosopo/captcha-contract'
+import { EmailModelSchema, Emails } from './fundDapps.js'
+import { LogLevel, getLogger } from '@prosopo/common'
+import { NetworkConfig } from '@prosopo/types'
+import { DappPayee, Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/env'
+import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '@prosopo/provider'
-import { defaultConfig, loadEnv } from '@prosopo/cli'
-import { exit } from 'process'
-import { getPairAsync } from '@prosopo/contract'
-import mongoose from 'mongoose'
-import path from 'path'
+import { TransactionQueue } from '@prosopo/tx'
+import { defaultConfig } from '@prosopo/cli'
+import { getPairAsync, wrapQuery } from '@prosopo/contract'
+import { submitTx } from '@prosopo/tx'
+import mongoose, { Model } from 'mongoose'
 
-interface iDapp {
-    email: string
-    name: string
-    url: string
-    account: string
-    marketingPreferences: boolean
-    createdAt: number
+const log = getLogger(LogLevel.enum.info, 'scripts.transferContract')
+
+let EmailsModel: typeof Model<Emails>
+try {
+    EmailsModel = mongoose.model('emails')
+} catch (error) {
+    EmailsModel = mongoose.model('emails', EmailModelSchema)
 }
-
-const dappSchema: mongoose.Schema<iDapp> = new mongoose.Schema({
-    email: String,
-    name: String,
-    url: String,
-    account: String,
-    marketingPreferences: Boolean,
-    createdAt: Number,
-})
-
-const Dapp = mongoose.model('Dapp', dappSchema, 'emails')
 
 const getAllMongoDapps = async (atlasUri: string) => {
     await mongoose
-        .connect(atlasUri)
+        .connect(atlasUri, { dbName: 'prosopo' })
         .then(() => console.log('Connected to MongoDB Atlas'))
         .catch((err) => console.error('Error connecting to MongoDB:', err))
 
-    return await Dapp.find({})
+    return await EmailsModel.find({}).exec()
 }
 
 // Doesn't work
@@ -52,37 +45,85 @@ const getAllMongoDapps = async (atlasUri: string) => {
 // }
 
 // Function to register all dapps in contract
-const registerDapps = async (addresses: string[]) => {
-    const config = defaultConfig()
-    const network = config.networks[config.defaultNetwork]
+const registerDapps = async (addresses: string[], transferTo?: NetworkConfig, accountPrefix?: string) => {
+    const config = defaultConfig(undefined, undefined, undefined, undefined, accountPrefix)
+    const network = transferTo || config.networks[config.defaultNetwork]
     const secret = config.account.secret
+
     const pair = await getPairAsync(network, secret)
+
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
+    const queue = new TransactionQueue(env.getApi(), pair, config.logLevel)
     const tasks = new Tasks(env)
+    const dappStakeDefaultPromise: Promise<ReturnNumber> = wrapQuery(
+        env.getContractInterface().query.getDappStakeThreshold,
+        env.getContractInterface().query
+    )()
+    const dappStakeDefault = (await dappStakeDefaultPromise).rawNumber
 
-    addresses.forEach(async (address) => {
-        await tasks.contract.query.dappRegister(address, DappPayee.dapp)
-    })
+    for (const addressToRegister of addresses) {
+        await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], dappStakeDefault)
+    }
 }
 
 // Function to get all provider details
 
 // Function to register all providers in contract
+const registerProviders = async (addresses: string[], transferTo?: NetworkConfig, accountPrefix?: string) => {
+    const config = defaultConfig(undefined, undefined, undefined, undefined, accountPrefix)
+    const network = transferTo || config.networks[config.defaultNetwork]
+    const secret = config.account.secret
 
-const run = async () => {
-    const atlasUri = process.env._DEV_ONLY_ATLAS_URI
+    const pair = await getPairAsync(network, secret)
 
+    const env = new ProviderEnvironment(config, pair)
+    await env.isReady()
+    const queue = new TransactionQueue(env.getApi(), pair, config.logLevel)
+    const tasks = new Tasks(env)
+    const providerStakeDefaultPromise: Promise<ReturnNumber> = wrapQuery(
+        env.getContractInterface().query.getProviderStakeThreshold,
+        env.getContractInterface().query
+    )()
+    const providerStakeDefault = (await providerStakeDefaultPromise).rawNumber
+
+    for (const addressToRegister of addresses) {
+        await submitTx(queue, tasks.contract, 'providerRegister', [addressToRegister, Payee.dapp], providerStakeDefault)
+    }
+}
+
+export const run = async (
+    transferFrom: NetworkConfig,
+    transferConfig: {
+        dapps: boolean
+        providers: boolean
+    },
+    transferTo?: NetworkConfig,
+    atlasUri?: string
+) => {
     if (!atlasUri) {
         throw new Error('Atlas URI not found in env')
     }
+    if (transferConfig.dapps) {
+        const dapps = await getAllMongoDapps(atlasUri)
 
-    const dapps = await getAllMongoDapps(atlasUri)
-    console.log(dapps)
+        log.info(dapps)
 
-    await registerDapps(dapps.map((dapp: any) => dapp.account))
-    exit(0)
+        await registerDapps(
+            dapps.map((dapp: any) => dapp.account),
+            transferTo,
+            'DEPLOYER'
+        )
+    }
+    if (transferConfig.providers) {
+        const providers: unknown[] = [] // TODO
+
+        log.info(providers)
+
+        await registerProviders(
+            providers.map((dapp: any) => dapp.account),
+            transferTo,
+            'DEPLOYER'
+        )
+    }
 }
-
-loadEnv(path.resolve('.'))
-run()

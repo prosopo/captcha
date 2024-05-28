@@ -21,48 +21,10 @@ import { ProsopoCaptchaContract, oneUnit, wrapQuery } from '@prosopo/contract'
 import { ProsopoContractError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { TransactionQueue } from '@prosopo/tx'
+import { submitTx, TransactionQueue } from '@prosopo/tx'
 import { sendFunds } from './funds.js'
 
 const log = getLogger(LogLevel.enum.info, 'setupDapp')
-
-async function submitTx(
-    transactionQueue: TransactionQueue,
-    contract: ProsopoCaptchaContract,
-    method: string,
-    args: any[],
-    value: BN,
-    pair?: KeyringPair
-): Promise<ContractSubmittableResult> {
-    return new Promise((resolve, reject) => {
-        if (
-            contract.nativeContract.tx &&
-            method in contract.nativeContract.tx &&
-            contract.nativeContract.tx[method] !== undefined
-        ) {
-            try {
-                contract.dryRunContractMethod(method, args, value).then((extrinsic) => {
-                    transactionQueue
-                        .add(
-                            extrinsic,
-                            (result: ContractSubmittableResult) => {
-                                resolve(result)
-                            },
-                            pair,
-                            method
-                        )
-                        .then((result) => {
-                            log.debug('Transaction added to queue', result)
-                        })
-                })
-            } catch (err) {
-                reject(err)
-            }
-        } else {
-            reject(new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { failedFuncName: submitTx.name } }))
-        }
-    })
-}
 
 export async function setupDapp(
     env: ProviderEnvironment,
