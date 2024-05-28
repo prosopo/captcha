@@ -1,18 +1,18 @@
 version: '3.8'
 services:
-  substrate:
-    image: prosopo/substrate-contracts-node:v0.35
-    ports:
-      - "9615:9615"
-      - "9944:9944"
-      - "9933:9933"
-  database:
-    image: mongo:5.0.4
-    # volumes:
-    #   - ./db:/data/db
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
-      - MONGO_INITDB_DATABASE=prosopo
+    substrate:
+        image: prosopo/substrate-contracts-node:v0.35
+        ports:
+            - '9615:9615'
+            - '9944:9944'
+            - '9933:9933'
+    database:
+        image: mongo:5.0.4
+        # volumes:
+        #   - ./db:/data/db
+        ports:
+            - '27017:27017'
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=root
+            - MONGO_INITDB_DATABASE=prosopo
