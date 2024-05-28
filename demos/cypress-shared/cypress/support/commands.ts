@@ -26,6 +26,8 @@ declare global {
             clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>
             getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
             clickNextButton(): Cypress.Chainable<JQuery<Node>>
+            checkHoneypot(): Chainable<boolean>
+            // stubBotdDetect(): Chainable<void>
         }
     }
 }
@@ -123,11 +125,24 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLEleme
     })
 }
 
+function checkHoneypot(): Chainable<boolean> {
+    return cy.get('input#firstname').then((input) => {
+        const value = input.val() as string;
+        return value.trim() !== '';
+    });
+}
+
+
 function clickNextButton() {
     cy.intercept('POST', '**/prosopo/provider/solution').as('postSolution')
     // Go to the next captcha or submit solution
     return cy.get('[data-cy="button-next"]').click()
 }
+
+// function stubBotdDetect(): void {
+
+// }
+
 
 Cypress.Commands.addAll({
     clickIAmHuman,
@@ -135,4 +150,6 @@ Cypress.Commands.addAll({
     clickCorrectCaptchaImages,
     getSelectors,
     clickNextButton,
+    checkHoneypot,
+    // stubBotdDetect,
 })
