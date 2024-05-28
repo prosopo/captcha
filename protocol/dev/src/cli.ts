@@ -16,15 +16,15 @@ import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import chalk from 'chalk'
+import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
-import dotenv from 'dotenv'
 
 const config = {} as Record<string, string>
 dotenv.config({
-    processEnv: config
+    processEnv: config,
 })
 
 const contractSrcFileExtension = '.rs'
