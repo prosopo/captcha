@@ -26,6 +26,7 @@ import { setupDapp } from './dapp.js'
 import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
+import { BN } from '@polkadot/util'
 
 const logger = getLogger(LogLevel.enum.info, 'setup')
 const __dirname = path.resolve()
@@ -49,7 +50,7 @@ function getDefaultProvider(): IProviderAccount {
         url: process.env.PROSOPO_API_PORT ? `http://${host}:${process.env.PROSOPO_API_PORT}` : `http://${host}:9229`,
         fee: 10,
         payee: Payee.dapp,
-        stake: Math.pow(10, 13),
+        stake: new BN(Math.pow(10, 13)),
         datasetFile: getDatasetFilePath(),
         address: process.env.PROSOPO_PROVIDER_ADDRESS || '',
         secret: getSecret(),
@@ -60,7 +61,7 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        fundAmount: Math.pow(10, 12),
+        fundAmount: new BN(Math.pow(10, 12)),
     }
 }
 

@@ -90,10 +90,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     private _registeredProviderUrls: Set<string> = new Set<string>()
 
-    private providerStakeDefault: number | BN = 0
-
-    private stakeAmount: number | BN = 0
-    private sendAmount: number | BN = 0
+    private providerStakeDefault: BN = new BN(0)
+    private stakeAmount: BN = new BN(0)
+    private sendAmount: BN = new BN(0)
     private dappAbiMetadata: Abi
     private dappWasm: Uint8Array
     private logger: Logger
@@ -105,7 +104,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         this.dappAbiMetadata = dappAbiMetadata
         this.dappWasm = dappWasm
         this.logger = getLogger(getLogLevel(logLevel), 'DatabasePopulator')
-        this._isReady = this.mockEnv.isReady().then(() => {
+        this._isReady = this.mockEnv.isReady().then(async () => {
             try {
                 this._transactionQueue = new TransactionQueue(
                     this.mockEnv.getApi(),
@@ -117,11 +116,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                     tasks.contract.query.getProviderStakeThreshold,
                     tasks.contract.query
                 )()
-                return promiseStakeDefault.then((res) => {
-                    this.providerStakeDefault = new BN(res.rawNumber)
-                    this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
-                    this.sendAmount = getSendAmount(env, this.stakeAmount)
-                })
+                const res = await promiseStakeDefault
+                this.providerStakeDefault = new BN(res.rawNumber)
+                this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
+                this.sendAmount = getSendAmount(env, this.stakeAmount)
             } catch (e) {
                 throw new Error(String(e))
             }
@@ -291,7 +289,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 PROVIDER_PAYEE,
             ]
             this.logger.info('Updating provider', account.address, account.contractValue)
-            await this.submitTx(tasks, 'providerUpdate', args, 0, pair)
+            await this.submitTx(tasks, 'providerUpdate', args, new BN(0), pair)
             this.logger.info('Provider updated', account.address)
             return (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
         } catch (e) {
@@ -407,7 +405,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 tasks,
                 'dappRegister',
                 [contractAddress, DappPayee.dapp],
-                0,
+                new BN(0),
                 tasks.contract.pair
             )
             this.logger.info('App registered', contractAddress, txResult.toHuman())
@@ -489,7 +487,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         tasks: Tasks,
         method: string,
         args: any[],
-        value: number | BN,
+        value: BN,
         pair?: KeyringPair
     ): Promise<ContractSubmittableResult> {
         return new Promise((resolve, reject) => {
