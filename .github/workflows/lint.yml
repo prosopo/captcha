@@ -86,6 +86,13 @@ jobs:
 
             - run: npm ci
 
-            - run: npm run build -w @prosopo/scripts
+            - run: npm run -w @prosopo/scripts build
 
-            - run: npm run lint
+            - name: lint
+              run: |
+                  # get the files which have changed in the PR
+                  files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
+
+                  echo "files: $files"
+
+                  npm run lint:cmd -- $files
