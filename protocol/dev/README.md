@@ -15,3 +15,9 @@ Run the above commands using `npm run cli -- <command> <args>`. E.g. to build th
 ```
 npm run cli -- build --package captcha --release
 ```
+
+
+
+
+# Build the contract
+` npm run cli -- build --docker`
