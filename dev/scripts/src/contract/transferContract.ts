@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DappPayee, GovernanceStatus, Payee, Provider } from '@prosopo/captcha-contract'
+import { Dapp, DappPayee, GovernanceStatus, Payee, Provider } from '@prosopo/captcha-contract'
 import { EmailModelSchema, Emails } from './fundDapps.js'
 import { LogLevel, getLogger } from '@prosopo/common'
 import { NetworkConfig } from '@prosopo/types'
@@ -75,7 +75,13 @@ const registerDapps = async (addresses: string[], transferTo?: NetworkConfig, ac
     const dappStakeDefault = (await dappStakeDefaultPromise).rawNumber
 
     for (const addressToRegister of addresses) {
-        await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], dappStakeDefault)
+        try {
+            // errors if the dapp does not exist
+            await wrapQuery(tasks.contract.query.getDapp, tasks.contract.query)(addressToRegister)
+        } catch (e) {
+            log.info('   - dappRegister', addressToRegister)
+            await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], dappStakeDefault)
+        }
     }
 }
 
