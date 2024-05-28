@@ -27,13 +27,12 @@ import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
-const log = getLogger(LogLevel.enum.info, 'dev.deploy')
+const log = getLogger(LogLevel.enum.info, 'scripts.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
-    const config = defaultConfig()
+    const config = defaultConfig(undefined, undefined, undefined, undefined, deployerPrefix)
     const network = config.networks[config.defaultNetwork]
-    const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
-    const pair = await getPairAsync(network, secret)
+    const pair = await getPairAsync(network, config.account.secret)
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     log.debug(reverseHexString(env.getApi().createType('u16', 10).toHex().toString()), 'max_user_history_len')
