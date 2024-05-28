@@ -14,7 +14,7 @@
 import { Abi } from '@polkadot/api-contract/Abi'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { AppTestAccount, ProviderTestAccount } from '@prosopo/env'
-import { BN } from '@polkadot/util/bn'
+import { BN, BN_ZERO } from '@polkadot/util/bn'
 import { ContractDeployer, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/captcha-contract/types-returns'
 import { DatasetWithIdsAndTree } from '@prosopo/types'
@@ -88,9 +88,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     private _registeredProviderUrls: Set<string> = new Set<string>()
 
-    private providerStakeDefault: BN = new BN(0)
-    private stakeAmount: BN = new BN(0)
-    private sendAmount: BN = new BN(0)
+    private providerStakeDefault: BN = BN_ZERO
+    private stakeAmount: BN = BN_ZERO
+    private sendAmount: BN = BN_ZERO
     private dappAbiMetadata: Abi
     private dappWasm: Uint8Array
     private logger: Logger
@@ -294,7 +294,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 PROVIDER_PAYEE,
             ]
             this.logger.info('Updating provider', account.address, account.contractValue)
-            await submitTx(this.transactionQueue, tasks.contract, 'providerUpdate', args, new BN(0), pair)
+            await submitTx(this.transactionQueue, tasks.contract, 'providerUpdate', args, BN_ZERO, pair)
             this.logger.info('Provider updated', account.address)
             return (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
         } catch (e) {
@@ -412,7 +412,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 tasks.contract,
                 'dappRegister',
                 [contractAddress, DappPayee.dapp],
-                new BN(0),
+                BN_ZERO,
                 tasks.contract.pair
             )
             this.logger.info('App registered', contractAddress, txResult.toHuman())

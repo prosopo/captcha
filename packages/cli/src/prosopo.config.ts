@@ -24,8 +24,8 @@ import {
     ProsopoConfigSchema,
     ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
-import { getLogLevel } from '@prosopo/common'
 import { getAddress, getPassword, getSecret } from './process.env.js'
+import { getLogLevel } from '@prosopo/common'
 
 function getMongoURI(): string {
     const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || 'mongodb'

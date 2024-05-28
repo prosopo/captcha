@@ -11,17 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { BN_ZERO } from '@polkadot/util/bn'
 import { Dapp, DappPayee } from '@prosopo/captcha-contract'
 import { IDappAccount } from '@prosopo/types'
-import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel } from '@prosopo/common'
-import { ProsopoCaptchaContract, oneUnit, wrapQuery } from '@prosopo/contract'
-import { ProsopoContractError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { submitTx, TransactionQueue } from '@prosopo/tx'
+import { TransactionQueue, submitTx } from '@prosopo/tx'
+import { getLogger } from '@prosopo/common'
+import { oneUnit, wrapQuery } from '@prosopo/contract'
 import { sendFunds } from './funds.js'
 
 const log = getLogger(LogLevel.enum.info, 'setupDapp')
@@ -64,7 +62,7 @@ export async function setupDapp(
 
             await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(addressToRegister, DappPayee.dapp)
             if (queue) {
-                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], new BN(0))
+                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], BN_ZERO)
             } else {
                 await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
             }
