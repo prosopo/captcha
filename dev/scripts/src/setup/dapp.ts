@@ -31,7 +31,7 @@ async function submitTx(
     contract: ProsopoCaptchaContract,
     method: string,
     args: any[],
-    value: number | BN,
+    value: BN,
     pair?: KeyringPair
 ): Promise<ContractSubmittableResult> {
     return new Promise((resolve, reject) => {
@@ -102,7 +102,7 @@ export async function setupDapp(
 
             await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(addressToRegister, DappPayee.dapp)
             if (queue) {
-                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], 0)
+                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], new BN(0))
             } else {
                 await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
             }
@@ -130,7 +130,7 @@ async function dappSendFunds(env: ProviderEnvironment, dapp: IDappAccount) {
         const {
             data: { free: previousFree },
         } = await env.getContractInterface().api.query.system.account(dapp.pair.address)
-        if (previousFree.lt(new BN(sendAmount.toString()))) {
+        if (previousFree.lt(sendAmount)) {
             // send enough funds to cover the tx fees
             await sendFunds(env, dapp.pair.address, 'Dapp', sendAmount)
         }

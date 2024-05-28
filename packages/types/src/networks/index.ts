@@ -23,7 +23,9 @@ const getContractAddress = (defaultAddress?: string) => {
 export default (): ProsopoNetworksSchemaInput => {
     return {
         [NetworkNamesSchema.Values.development]: {
-            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT || 'ws://127.0.0.1:9944',
+            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT
+                ? [process.env.PROSOPO_SUBSTRATE_ENDPOINT]
+                : ['ws://127.0.0.1:9944'],
             contract: {
                 name: 'captcha',
                 address: getContractAddress('CONTRACT_NOT_DEPLOYED'),
@@ -32,7 +34,9 @@ export default (): ProsopoNetworksSchemaInput => {
             ss58Format: 42,
         },
         [NetworkNamesSchema.Values.rococo]: {
-            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT || 'wss://rococo-contracts-rpc.polkadot.io:443',
+            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT
+                ? [process.env.PROSOPO_SUBSTRATE_ENDPOINT]
+                : ['wss://rococo-contracts-rpc.polkadot.io:443'],
             contract: {
                 name: 'captcha',
                 address: getContractAddress('5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u'),
@@ -41,9 +45,27 @@ export default (): ProsopoNetworksSchemaInput => {
             ss58Format: 42,
         },
         [NetworkNamesSchema.Values.shiden]: {
-            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT || 'wss://shiden.public.blastapi.io',
+            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT
+                ? [process.env.PROSOPO_SUBSTRATE_ENDPOINT]
+                : ['wss://shiden.public.blastapi.io'],
             contract: {
                 address: getContractAddress('XpRox5bNg6YV8BHafsuHQ3b8i7gSq3GKPeYLA1b8EZwrDb3'),
+                name: 'captcha',
+            },
+            pairType: pairTypeSr25519,
+            ss58Format: 5,
+        },
+        [NetworkNamesSchema.Values.astar]: {
+            endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT
+                ? [process.env.PROSOPO_SUBSTRATE_ENDPOINT]
+                : [
+                      'wss://rpc.astar.network',
+                      'wss://1rpc.io/astr',
+                      'wss://astar.public.blastapi.io',
+                      'wss://astar.public.curie.radiumblock.co/ws',
+                  ],
+            contract: {
+                address: getContractAddress('CONTRACT_NOT_DEPLOYED'),
                 name: 'captcha',
             },
             pairType: pairTypeSr25519,

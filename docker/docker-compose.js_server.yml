@@ -1,19 +1,19 @@
 version: '3'
 # for testing only
 services:
-  https-portal:
-    image: prosopo/js_server:latest
-    ports:
-      - '80:80'
-      - '443:443'
-    environment:
-      #configure DOMAINS: 'mysite.lvh.me in docker-compose.yml instead of example.com (lvh.me is a wildcard DNS entry
-      # that resolves any second level name to 127.0.0.1) so than you can access https://mysite.lvh.me.
-      DOMAINS: 'mysite.lvh.me'
-      STAGE: local
-      # STAGE: 'production' # Don't use production until staging works
-    volumes:
-      - https-portal-data:/var/lib/https-portal
+    https-portal:
+        image: prosopo/js_server:latest
+        ports:
+            - '80:80'
+            - '443:443'
+        environment:
+            #configure DOMAINS: 'mysite.lvh.me in docker-compose.yml instead of example.com (lvh.me is a wildcard DNS entry
+            # that resolves any second level name to 127.0.0.1) so than you can access https://mysite.lvh.me.
+            DOMAINS: 'mysite.lvh.me'
+            STAGE: local
+            # STAGE: 'production' # Don't use production until staging works
+        volumes:
+            - https-portal-data:/var/lib/https-portal
 
 volumes:
-  https-portal-data: # Recommended, to avoid re-signing when upgrading HTTPS-PORTAL
+    https-portal-data: # Recommended, to avoid re-signing when upgrading HTTPS-PORTAL

@@ -158,7 +158,7 @@ export const GAS_INCREASE_FACTOR = 1.1
 export function getOptions(
     api: ApiBase<'promise'>,
     isMutating?: boolean,
-    value?: number | BN,
+    value?: BN,
     gasLimit?: WeightV2,
     storageDeposit?: StorageDeposit,
     increaseGas?: boolean
@@ -185,7 +185,7 @@ export function getOptions(
                 ? storageDeposit.asRefund
                 : null
             : null,
-        value: value || BN_ZERO,
+        value: value ? value.toString() : BN_ZERO,
     } as ContractOptions
 }
 
