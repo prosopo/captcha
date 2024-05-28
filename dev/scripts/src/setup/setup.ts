@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
@@ -26,7 +27,6 @@ import { setupDapp } from './dapp.js'
 import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
-import { BN } from '@polkadot/util'
 
 const logger = getLogger(LogLevel.enum.info, 'setup')
 const __dirname = path.resolve()

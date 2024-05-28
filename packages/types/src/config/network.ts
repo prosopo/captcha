@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { enumMap } from './enumMap.js'
 import { array, literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
+import { enumMap } from './enumMap.js'
 export const NetworkNamesSchema = zEnum(['development', 'rococo', 'shiden', 'astar'])
 
 export type NetworkNames = zInfer<typeof NetworkNamesSchema>

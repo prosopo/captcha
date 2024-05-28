@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { oneUnit } from '@prosopo/contract'
 import { NetworkNames, networks } from '@prosopo/types'
 import { get } from '@prosopo/util'
+import { oneUnit } from '@prosopo/contract'
 
 async function run(defaultNetwork: NetworkNames) {
     const defaultNetworks = networks()
