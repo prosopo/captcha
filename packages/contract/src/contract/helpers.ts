@@ -175,11 +175,10 @@ export function getOptions(
               refTime: MAX_CALL_WEIGHT,
           }) as WeightV2)
         : undefined
-
     return {
         gasLimit: _gasLimit,
         storageDepositLimit: storageDeposit
-            ? storageDeposit.isCharge
+            ? storageDeposit.isCharge && storageDeposit.asCharge.gt(BN_ZERO)
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
                 ? storageDeposit.asRefund

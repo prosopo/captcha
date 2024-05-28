@@ -1,14 +1,26 @@
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { DappPayee, GovernanceStatus, Payee, Provider } from '@prosopo/captcha-contract'
 import { EmailModelSchema, Emails } from './fundDapps.js'
 import { LogLevel, getLogger } from '@prosopo/common'
 import { NetworkConfig } from '@prosopo/types'
-import { DappPayee, Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '@prosopo/provider'
-import { TransactionQueue } from '@prosopo/tx'
+import { TransactionQueue, submitTx } from '@prosopo/tx'
 import { defaultConfig } from '@prosopo/cli'
 import { getPairAsync, wrapQuery } from '@prosopo/contract'
-import { submitTx } from '@prosopo/tx'
 import mongoose, { Model } from 'mongoose'
 
 const log = getLogger(LogLevel.enum.info, 'scripts.transferContract')
@@ -68,6 +80,19 @@ const registerDapps = async (addresses: string[], transferTo?: NetworkConfig, ac
 }
 
 // Function to get all provider details
+const getAllProviders = async () => {
+    const config = defaultConfig()
+    const network = config.networks[config.defaultNetwork]
+    const secret = config.account.secret
+    const pair = await getPairAsync(network, secret)
+    const env = new ProviderEnvironment(config, pair)
+    await env.isReady()
+    const providers: Promise<Provider[]> = wrapQuery(
+        env.getContractInterface().query.listProvidersByStatus,
+        env.getContractInterface().query
+    )([GovernanceStatus.active])
+    return providers
+}
 
 // Function to register all providers in contract
 const registerProviders = async (addresses: string[], transferTo?: NetworkConfig, accountPrefix?: string) => {
@@ -116,14 +141,16 @@ export const run = async (
         )
     }
     if (transferConfig.providers) {
-        const providers: unknown[] = [] // TODO
+        const providers = await getAllProviders()
 
         log.info(providers)
 
-        await registerProviders(
-            providers.map((dapp: any) => dapp.account),
-            transferTo,
-            'DEPLOYER'
-        )
+        return
+
+        // await registerProviders(
+        //     providers.map((dapp: any) => dapp.account),
+        //     transferTo,
+        //     'DEPLOYER'
+        // )
     }
 }
