@@ -672,7 +672,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result).to.have.a.property('status')
     })
 
-    test.only('Dapp fund', async ({ env, dappStakeThreshold }): Promise<void> => {
+    test('Dapp fund', async ({ env, dappStakeThreshold }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(env, dappAccount)
         const dappContractAddress = accountContract(dappAccount)
