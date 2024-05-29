@@ -82,8 +82,8 @@ pub mod common {
         /// the admin which can control this contract. set to author/instantiator by default
         pub fn get_admin() -> AccountId {
             let env_admin_bytes: [u8; 32] = [
-                0, 127, 207, 164, 169, 158, 94, 205, 13, 86, 11, 24, 71, 28, 58, 218, 38, 74, 198,
-                198, 97, 246, 223, 15, 232, 77, 26, 153, 131, 4, 247, 90,
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
             ];
             AccountId::from(env_admin_bytes)
         }
