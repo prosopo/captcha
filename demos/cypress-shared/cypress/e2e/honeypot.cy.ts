@@ -50,7 +50,7 @@ describe('Honeypot Field Tests', () => {
         }
 
         cy.intercept('/dummy').as('dummy')
-
+        cy.stubBotdDetect()
         // visit the base URL specified on command line when running cypress
         return cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
@@ -87,7 +87,7 @@ describe('Honeypot Field Tests', () => {
         //     detectBotSpy.withArgs().resolves(false);
         // })
 
-        cy.stubBotdDetect()
+        cy.wait('@mockBotDetection')
 
         cy.get('input#firstname').type('I am a bot', {force: true})
         cy.checkHoneypot().then((isHoneypotFilled) => {
@@ -111,7 +111,7 @@ describe('Honeypot Field Tests', () => {
     });
 
     it('Not caught by BotD or honeypot (mock BotD, do not fill honeypot)', () => {
-        
+
     });
 
 });

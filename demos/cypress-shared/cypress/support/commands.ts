@@ -30,7 +30,7 @@ declare global {
             checkHoneypot(): Chainable<boolean>
             stubBotdDetect(): Chainable<void>
         }
-            
+
 
     }
 }
@@ -143,7 +143,15 @@ function clickNextButton() {
 }
 
 function stubBotdDetect(): void {
-    cy.stub(botDetection, "detectBot").resolves(false)
+    // Passing a fixture .js filed does not work as cypress does not know how to interpret it
+    // https://github.com/cypress-io/cypress/issues/1271
+    cy.intercept('GET', '**/procaptcha-frictionless/dist/botDetection.js*',
+        {
+            headers: {
+                'content-type': 'application/javascript'
+            },
+            body: 'export const botDetection = { detectBot: async () => { return false }};//# sourceMappingURL=botDetection.js.map' }
+    ).as("mockBotDetection")
 }
 
 
