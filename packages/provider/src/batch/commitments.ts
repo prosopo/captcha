@@ -21,8 +21,8 @@ import { ProsopoCaptchaContract, batch, encodeStringArgs } from '@prosopo/contra
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
-import { randomAsHex } from '@polkadot/util-crypto/random'
 import { oneUnit } from '@prosopo/tx'
+import { randomAsHex } from '@polkadot/util-crypto/random'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'

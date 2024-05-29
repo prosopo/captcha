@@ -19,13 +19,12 @@ import { NetworkConfig, NetworkNames, PolkadotSecretJSONSpec } from '@prosopo/ty
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { Tasks } from '@prosopo/provider'
-import { TransactionQueue, submitTx, send, getBalance, oneUnit } from '@prosopo/tx'
+import { TransactionQueue, getBalance, oneUnit, send, submitTx } from '@prosopo/tx'
 import { defaultConfig } from '@prosopo/cli'
+import { encodeAddress } from '@polkadot/keyring'
 import { getPairAsync, wrapQuery } from '@prosopo/contract'
 import mongoose, { Model } from 'mongoose'
 import z from 'zod'
-import { sendFunds } from '../setup/index.js'
-import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 
 const log = getLogger(LogLevel.enum.info, 'Scripts.transferContract')
 
