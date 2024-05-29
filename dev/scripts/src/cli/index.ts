@@ -203,6 +203,11 @@ export async function processArgs(args: string[]) {
                         demandOption: true,
                         desc: 'The name of the network and the contract address to transfer from `{ network, address }`',
                     })
+                    .option('transfer-to', {
+                        type: 'string',
+                        demandOption: false,
+                        desc: 'The name of the network and the contract address to transfer to `{ network, address }`',
+                    })
                     .option('transfer-providers', {
                         type: 'boolean',
                         demandOption: true,
