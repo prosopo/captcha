@@ -18,12 +18,12 @@ cd captcha
 npm i
 npm run build:all
 docker compose --file docker/docker-compose.development.yml up -d
-cp demos/client-example-server/env.development demos/client-example-server/.env.test
-cp demos/client-example/env.development demos/client-example/.env.test
-cp dev/scripts/env.test .env.test
-cp dev/scripts/env.test dev/scripts/.env.test
-cp dev/scripts/env.test packages/cli/.env.test
-cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+cp demos/client-example-server/env.development demos/client-example-server/.env.development
+cp demos/client-example/env.development demos/client-example/.env.development
+cp dev/scripts/env.development .env.development
+cp dev/scripts/env.development dev/scripts/.env.development
+cp dev/scripts/env.development packages/cli/.env.development
+cp dev/scripts/env.development packages/procaptcha-bundle/.env.development
 npm run setup:all
 ```
 
@@ -126,9 +126,68 @@ npm run test
 
 ## CLI
 
+The development scripts package contains a CLI tool that can be used for various development tasks.
+
+### Deploy Protocol Contract
+
+From the root of the `captcha` workspace run:
+
+```bash
+npm run deploy_protocol
+```
+
+This is shorthand for the following command:
+
+```bash
+npm run -w @prosopo/scripts cli deploy_protocol --update_env
+```
+Specify the current working directory if you are running from a different location.
+
+```bash
+npm run -w @prosopo/scripts cli deploy_protocol --update_env --cwd $(pwd)
+```
+
+The default environment is `development`. To deploy to a different environment, set the `NODE_ENV` environment variable.
+
+```bash
+NODE_ENV=test npm run -w @prosopo/scripts cli deploy_protocol --update_env
+```
+
+### Create env files
+
+TODO
+
+### Setup the Protocol Contract
+
+```bash
+npm run setup
+```
+
+### Import Contracts using Typechain
+
+```bash
+...
+```
+
+### Import All Contracts
+
+```bash
+...
+```
+
+### Fund Dapps
+
+Maintenance script to fund dapps in contract that are not `Active`.
+
+```bash
+npm run -w @prosopo/scripts -- cli fund_dapps
+```
+
 ### Transfer Contract between networks
 
-```typescript
+By default, the current `.env` setup will be used as the `--transfer-to` network.
+
+```bash
 Transfer dapps and providers from one contract to another
 
 Options:
@@ -144,6 +203,16 @@ Options:
                                            [boolean] [required] [default: false]
 ```
 
+From the root of the workspace run:
+
 ```bash
-NODE_ENV=production npm run -w @prosopo/scripts -- cli transfer_contract --transfer-from '{"network":"rococo", "address":"..."}' --transfer-dapps=true --transfer-providers=true
+npm run -w @prosopo/scripts -- cli transfer_contract --transfer-from '{"network":"rococo", "address":"..."}' --transfer-dapps=true --transfer-providers=true
+```
+
+### Display Version
+
+From the root of the workspace run:
+
+```bash
+npm run -w @prosopo/scripts -- cli --version
 ```
