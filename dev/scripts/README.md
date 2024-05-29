@@ -60,16 +60,6 @@ the [scripts](https://github.com/prosopo/scripts) repository.
 docker compose --file ./docker/docker-compose.development.yml up -d
 ```
 
-##### Substrate Container Details
-
-| Container Name                                                      | Description                                                                                   |
-|---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| prosopo/substrate-contracts-node:v0.41.18dp                         | Substrate contracts node version 0.41.18dp with no contracts. 18 decimal places.              |
-| prosopo/substrate-contracts-node:v0.35                              | Substrate contracts node version 0.35 with no contracts.                                      |
-| prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000 | Substrate node with pre-deployed protocol at commit aadbbed50ede27817158c7517f13f6f61c9cf000. |
-| prosopo/substrate-contracts-node:v0.25                              | Substrate contracts node version 0.25 with no contracts.                                      |
-| prosopo/substrate-contracts-node:v0.24                              | Substrate contracts node version 0.24 with no contracts.                                      |
-
 #### Install node modules
 
 Install the node modules by running the following command from the root of the captcha workspace.
