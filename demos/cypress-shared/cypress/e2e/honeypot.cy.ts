@@ -17,24 +17,24 @@ import { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { checkboxClass } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
-import { load } from '@fingerprintjs/botd'
+import { botDetection } from '@prosopo/procaptcha-frictionless'
 
-function stubBotdDetect() {
-    return load().then((botd) => {
-        cy.stub(botd, 'detect').returns({ bot: false })
-        const result = botd.detect()
-        console.log("------------------- stubBotdDetect --------------------")
-        console.log(result)
-    });
-}
+// function stubBotdDetect() {
+//     return load().then((botd) => {
+//         cy.stub(botd, 'detect').returns({ bot: false })
+//         const result = botd.detect()
+//         console.log("------------------- stubBotdDetect --------------------")
+//         console.log(result)
+//     });
+// }
 
-function checkbot() {
-    return load().then((botd) => {
-        const result = botd.detect()
-        console.log("------------------- checkbot --------------------")
-        console.log(result)
-    })
-}
+// function checkbot() {
+//     return load().then((botd) => {
+//         const result = botd.detect()
+//         console.log("------------------- checkbot --------------------")
+//         console.log(result)
+//     })
+// }
 
 describe('Honeypot Field Tests', () => {
     beforeEach(() => {
@@ -81,7 +81,14 @@ describe('Honeypot Field Tests', () => {
     });
 
     it('Not bot from BotD but caught by honeypot (mock BotD, fill honeypot)', () => {
-        stubBotdDetect()
+        // cy.stub(botDetection, "detectBot").resolves(false)
+        // cy.window().then((win) => {
+        //     const detectBotSpy = cy.spy(win.botDetection, "detectBot");
+        //     detectBotSpy.withArgs().resolves(false);
+        // })
+
+        cy.stubBotdDetect()
+
         cy.get('input#firstname').type('I am a bot', {force: true})
         cy.checkHoneypot().then((isHoneypotFilled) => {
             if (isHoneypotFilled) {
@@ -100,7 +107,7 @@ describe('Honeypot Field Tests', () => {
             }
         });
 
-        checkbot()
+        // checkbot()
     });
 
     it('Not caught by BotD or honeypot (mock BotD, do not fill honeypot)', () => {

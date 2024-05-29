@@ -2,7 +2,7 @@
     "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "lib": ["ES2021", "dom"],
-        "types": ["cypress", "node", "jest"],
+        "types": ["cypress", "node"],
         "noEmit": true,
         "noEmitOnError": true,
         "sourceMap": false
@@ -14,6 +14,9 @@
         },
         {
             "path": "../../packages/util"
+        },
+        {
+            "path": "../../packages/procaptcha-frictionless"
         }
     ]
 }

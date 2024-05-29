@@ -16,7 +16,7 @@ import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { Honeypot } from '@prosopo/honeypot'
 import { ProcaptchaProps } from '@prosopo/types'
-import { load } from '@fingerprintjs/botd'
+import { botDetection } from './botDetection.js'
 import { useEffect, useState } from 'react'
 
 export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
@@ -25,14 +25,13 @@ export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) =
     const honeypotDetected = Honeypot();
 
     useEffect(() => {
-        const detectBot = async () => {
+        const detect = async () => {
             try {
-                const botd = await load()
-                const result = botd.detect()
+                const botDetected = await botDetection.detectBot();
 
-                console.log(result)
+                console.log(botDetected)
 
-                if (result.bot || (honeypotDetected && config.honeypotFlag)) {
+                if (botDetected || (honeypotDetected && config.honeypotFlag)) {
                     setComponentToRender(<Procaptcha config={config} callbacks={callbacks} honeypotDetected={honeypotDetected != ''} />)
                 } else {
                     setComponentToRender(<ProcaptchaPow config={config} callbacks={callbacks} />)
@@ -42,7 +41,7 @@ export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) =
             }
         }
 
-        detectBot()
+        detect()
     }, [config, callbacks, honeypotDetected])
 
     return componentToRender
