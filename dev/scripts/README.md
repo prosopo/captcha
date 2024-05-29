@@ -128,6 +128,21 @@ npm run test
 
 ### Transfer Contract between networks
 
+```typescript
+Transfer dapps and providers from one contract to another
+
+Options:
+  --help                Show help                                      [boolean]
+  --version             Show version number                            [boolean]
+  --transfer-from       The name of the network and the contract address to tran
+                        sfer from `{ network, address }`     [string] [required]
+  --transfer-providers  Whether to transfer providers or not
+                                           [boolean] [required] [default: false]
+  --transfer-dapps      Whether to transfer dapps or not
+                                           [boolean] [required] [default: false]
+
+```
+
 ```bash
 NODE_ENV=production npm run -w @prosopo/scripts -- cli transfer_contract --transfer-from '{"network":"rococo", "address":"..."}' --transfer-dapps=true --transfer-providers=true
 ```
