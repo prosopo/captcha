@@ -34,7 +34,6 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const network = config.networks[config.defaultNetwork]
     const secret = config.defaultEnvironment === 'development' ? '//Alice' : config.account.secret
     const pair = await getPairAsync(network, secret)
-    console.log(pair.address)
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     const params: any[] = []
