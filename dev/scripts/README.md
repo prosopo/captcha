@@ -136,11 +136,12 @@ Options:
   --version             Show version number                            [boolean]
   --transfer-from       The name of the network and the contract address to tran
                         sfer from `{ network, address }`     [string] [required]
+  --transfer-to         The name of the network and the contract address to tran
+                        sfer to `{ network, address }`                  [string]
   --transfer-providers  Whether to transfer providers or not
                                            [boolean] [required] [default: false]
   --transfer-dapps      Whether to transfer dapps or not
                                            [boolean] [required] [default: false]
-
 ```
 
 ```bash
