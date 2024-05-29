@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0xf6d4d87363e3790cd2259e10a0c19ace45830054637d313e0c0951191fb56861",
+        "hash": "0x2f5b31fbb3aaf959e78eda6b69f9703a51681727f57174dab17453159cb8fdd8",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
