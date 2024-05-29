@@ -17,9 +17,9 @@ import { BN } from '@polkadot/util/bn'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { TransactionQueue } from '@prosopo/tx'
+import { TransactionQueue, oneUnit } from '@prosopo/tx'
 import { at } from '@prosopo/util'
-import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
+import { dispatchErrorHandler } from '@prosopo/contract'
 
 const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1

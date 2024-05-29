@@ -242,6 +242,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
                     args: args.map(this.argDecoder), // TODO decode args using AbiMessage
                     gasLimit: options.gasLimit?.toString(),
                     storageDepositLimit: options.storageDepositLimit?.toString(),
+                    value: options.value ? options.value.toString() : 0,
                 },
                 logLevel: this.logger.getLogLevel(),
             })

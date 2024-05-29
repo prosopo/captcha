@@ -181,7 +181,9 @@ export function getOptions(
             ? storageDeposit.isCharge && storageDeposit.asCharge.gt(BN_ZERO)
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                ? storageDeposit.asRefund
+                ? storageDeposit.asRefund && storageDeposit.asRefund.gt(BN_ZERO)
+                    ? storageDeposit.asRefund.toBn().muln(gasIncreaseFactor)
+                    : null
                 : null
             : null,
         value: value ? value.toString() : BN_ZERO,

@@ -13,9 +13,9 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { TransactionQueue } from '@prosopo/tx'
+import { oneUnit, TransactionQueue } from '@prosopo/tx'
 import { defaultConfig } from '@prosopo/cli'
-import { getPairAsync, oneUnit } from '@prosopo/contract'
+import { getPairAsync } from '@prosopo/contract'
 import { setupDapp } from '../setup/index.js'
 import mongoose, { Model } from 'mongoose'
 
