@@ -6,8 +6,8 @@ export const botDetection = {
             const botd = await load();
             const result = botd.detect();
 
-            console.log(result)
-            
+            console.log(JSON.stringify(result))
+
             return result.bot; // Return true if bot is detected, false otherwise
         } catch (error) {
             console.error('Error detecting bot:', error);
