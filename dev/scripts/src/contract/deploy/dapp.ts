@@ -23,13 +23,14 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
-    const network = defaultConfig().networks[defaultConfig().defaultNetwork]
+    const config = defaultConfig()
+    const network = config.networks[defaultConfig().defaultNetwork]
     const pair = await getPairAsync(network, '//Alice')
     const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
     const params = ['1000000000000000', 1000, process.env.PROSOPO_CONTRACT_ADDRESS, 50, 1000000]
-    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex())
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex(), config.logLevel)
     return await deployer.deploy()
 }
 export async function run(): Promise<AccountId> {

@@ -144,7 +144,7 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
             // swallow
         }
     }
-    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message } })
+    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message, event: event.toHuman() } })
 }
 
 // 4_999_999_999_999
