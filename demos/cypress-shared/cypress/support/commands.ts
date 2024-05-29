@@ -16,6 +16,7 @@ import { Captcha, CaptchaWithProof } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import Chainable = Cypress.Chainable
 import { SolutionRecord } from '@prosopo/types-database'
+import { botDetection } from '@prosopo/procaptcha-frictionless'
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -27,8 +28,10 @@ declare global {
             getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
             clickNextButton(): Cypress.Chainable<JQuery<Node>>
             checkHoneypot(): Chainable<boolean>
-            // stubBotdDetect(): Chainable<void>
+            stubBotdDetect(): Chainable<void>
         }
+            
+
     }
 }
 
@@ -139,9 +142,9 @@ function clickNextButton() {
     return cy.get('[data-cy="button-next"]').click()
 }
 
-// function stubBotdDetect(): void {
-
-// }
+function stubBotdDetect(): void {
+    cy.stub(botDetection, "detectBot").resolves(false)
+}
 
 
 Cypress.Commands.addAll({
@@ -151,5 +154,5 @@ Cypress.Commands.addAll({
     getSelectors,
     clickNextButton,
     checkHoneypot,
-    // stubBotdDetect,
+    stubBotdDetect,
 })
