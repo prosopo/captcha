@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
-import z, { boolean } from 'zod'
 import { input } from 'zod'
 import { literal } from 'zod'
 import { number } from 'zod'
@@ -23,6 +22,7 @@ import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
+import z, { boolean } from 'zod'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 
