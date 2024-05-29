@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
-import { boolean } from 'zod'
+import z, { boolean } from 'zod'
 import { input } from 'zod'
 import { literal } from 'zod'
 import { number } from 'zod'
@@ -83,6 +83,22 @@ export const ProsopoBaseConfigSchema = object({
         password: string().optional(),
     }),
 })
+export const PolkadotSecretJSONSpec = z.object({
+    encoded: z.string(),
+    encoding: z.object({
+        content: z.array(z.string()),
+        type: z.array(z.string()),
+        version: z.string(),
+    }),
+    address: z.string(),
+    meta: z.object({
+        genesisHash: z.string(),
+        name: z.string(),
+        whenCreated: z.number(),
+    }),
+})
+
+export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     object({

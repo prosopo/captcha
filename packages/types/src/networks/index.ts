@@ -65,7 +65,7 @@ export default (): ProsopoNetworksSchemaInput => {
                       'wss://astar.public.curie.radiumblock.co/ws',
                   ],
             contract: {
-                address: getContractAddress('CONTRACT_NOT_DEPLOYED'),
+                address: getContractAddress('X2NLPj49L4UKWAzX8tS1LHTwioMHNyVurCsvTyUNYxcPuWA'),
                 name: 'captcha',
             },
             pairType: pairTypeSr25519,

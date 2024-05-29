@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { NetworkConfigSchema, networks as getNetworks } from '@prosopo/types'
+import { NetworkConfigSchema, NetworkNamesSchema, networks as getNetworks } from '@prosopo/types'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { run as fundDapps } from '../contract/fundDapps.js'
@@ -220,17 +220,27 @@ export async function processArgs(args: string[]) {
                 const atlasUri = process.env._DEV_ONLY_ATLAS_URI
                 const transferFrom = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
                 const networks = getNetworks()
+                const transferFromNetworkName = NetworkNamesSchema.parse(transferFrom.network)
                 const transferFromNetwork = NetworkConfigSchema.parse(get(networks, transferFrom.network))
                 transferFromNetwork.contract.address = transferFrom.address
                 let transferToNetwork = undefined
+                let transferToNetworkName = undefined
                 // Defaults to transferring to the network defined by env
-                if (argv.transferFrom !== undefined) {
+                if (argv.transferTo !== undefined) {
                     const transferTo = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
                     transferToNetwork = NetworkConfigSchema.parse(get(networks, transferTo.network))
                     transferToNetwork.contract.address = transferFrom.address
+                    transferToNetworkName = NetworkNamesSchema.parse(transferToNetworkName)
                 }
                 const transferConfig = { dapps: argv.transferDapps, providers: argv.transferProviders }
-                await transferContract(transferFromNetwork, transferConfig, transferToNetwork, atlasUri)
+                await transferContract(
+                    transferFromNetworkName,
+                    transferFromNetwork,
+                    transferConfig,
+                    transferToNetworkName,
+                    transferToNetwork,
+                    atlasUri
+                )
             },
         })
         .command({

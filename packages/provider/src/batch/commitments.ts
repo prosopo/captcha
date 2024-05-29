@@ -17,11 +17,12 @@ import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledT
 import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError } from '@prosopo/common'
-import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { ProsopoCaptchaContract, batch, encodeStringArgs } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
 import { randomAsHex } from '@polkadot/util-crypto/random'
+import { oneUnit } from '@prosopo/tx'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'

@@ -17,9 +17,9 @@ import { IDappAccount } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { TransactionQueue, submitTx } from '@prosopo/tx'
+import { TransactionQueue, submitTx, oneUnit } from '@prosopo/tx'
 import { getLogger } from '@prosopo/common'
-import { oneUnit, wrapQuery } from '@prosopo/contract'
+import { wrapQuery } from '@prosopo/contract'
 import { sendFunds } from './funds.js'
 
 const log = getLogger(LogLevel.enum.info, 'setupDapp')
