@@ -157,7 +157,7 @@ export class Environment implements ProsopoEnvironment {
 
     async isReady() {
         try {
-            if (this.pair && this.config.account.password) {
+            if (this.pair && this.pair.isLocked && this.config.account.password) {
                 this.pair.unlock(this.config.account.password)
             }
             if (!this.api) {
