@@ -38,7 +38,7 @@ export type NetworkConfig = zInfer<typeof NetworkConfigSchema>
 // Force all enum keys to be present in record: https://github.com/colinhacks/zod/issues/1092.
 // Unfortunately there doesn't seem to be a way to force at least one key, but not all keys, to be present. See attempt
 // below using refine / transform and reported issue: https://github.com/colinhacks/zod/issues/2528
-export const ProsopoNetworksSchema = enumMap(
+export const ProsopoNetworkSchema = enumMap(
     NetworkNamesSchema,
     NetworkConfigSchema.required({
         endpoint: true,

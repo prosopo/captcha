@@ -223,7 +223,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             ...args
         )
 
-        // Increase the gas required by a factor of 1.1 to make sure we don't hit contracts.StorageDepositLimitExhausted
+        // Increase the gas required by a factor to make sure we don't hit contracts.StorageDepositLimitExhausted
         const options = getOptions(this.api, true, value, gasRequired, storageDeposit, true)
         const method = get(this.nativeContract.query, message.method)
         const extrinsic = method(this.pair.address, options, ...args)
@@ -240,6 +240,9 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
                     failedFuncName: this.dryRunContractMethod.name,
                     failedContractMethod: message.method,
                     args: args.map(this.argDecoder), // TODO decode args using AbiMessage
+                    gasLimit: options.gasLimit?.toString(),
+                    storageDepositLimit: options.storageDepositLimit?.toString(),
+                    value: options.value ? options.value.toString() : 0,
                 },
                 logLevel: this.logger.getLogLevel(),
             })
@@ -306,7 +309,12 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             }
         } else {
             throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
+                context: {
+                    error: response.result.asErr,
+                    failedFuncName: this.getExtrinsicAndGasEstimates.name,
+                    gasLimit: initialOptions.gasLimit?.toString(),
+                    storageDepositLimit: initialOptions.storageDepositLimit?.toString(),
+                },
             })
         }
     }
