@@ -57,6 +57,6 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
-                  cd dev/prosoponator-bot
                   npm ci
+                  cd dev/prosoponator-bot
                   npx tsx src/bot.ts
