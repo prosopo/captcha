@@ -14,7 +14,7 @@
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { NetworkNames, networks } from '@prosopo/types'
 import { get } from '@prosopo/util'
-import { oneUnit } from '@prosopo/contract'
+import { oneUnit } from '@prosopo/tx'
 
 async function run(defaultNetwork: NetworkNames) {
     const defaultNetworks = networks()

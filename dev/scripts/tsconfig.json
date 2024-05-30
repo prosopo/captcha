@@ -74,6 +74,9 @@
             "path": "../../packages/types-env"
         },
         {
+            "path": "../../packages/tx"
+        },
+        {
             "path": "../../packages/web-components"
         },
         {

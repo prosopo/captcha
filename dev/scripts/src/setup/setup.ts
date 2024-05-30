@@ -182,12 +182,3 @@ export async function setup(force: boolean) {
         throw new ProsopoEnvError(`GENERAL.NO_MNEMONIC_OR_SEED`)
     }
 }
-
-//if main process
-// if (typeof require !== 'undefined' && require.main === module) {
-//     console.info('Running setup as main process')
-//
-//     setup()
-//         .then((r) => logger.debug('Setup done'))
-//         .catch((e) => console.error(e))
-// }

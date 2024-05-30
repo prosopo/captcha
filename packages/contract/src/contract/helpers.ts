@@ -144,7 +144,7 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
             // swallow
         }
     }
-    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message } })
+    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message, event: event.toHuman() } })
 }
 
 // 4_999_999_999_999
@@ -153,7 +153,7 @@ const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 // The values returned by the dry run transactions are sometimes not large enough
 // to guarantee that the transaction will succeed. This is a safety margin to ensure
 // that the transaction will succeed.
-export const GAS_INCREASE_FACTOR = 1.1
+export const GAS_INCREASE_FACTOR = 2
 
 export function getOptions(
     api: ApiBase<'promise'>,
@@ -175,14 +175,15 @@ export function getOptions(
               refTime: MAX_CALL_WEIGHT,
           }) as WeightV2)
         : undefined
-
     return {
         gasLimit: _gasLimit,
         storageDepositLimit: storageDeposit
-            ? storageDeposit.isCharge
+            ? storageDeposit.isCharge && storageDeposit.asCharge.gt(BN_ZERO)
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                ? storageDeposit.asRefund
+                ? storageDeposit.asRefund && storageDeposit.asRefund.gt(BN_ZERO)
+                    ? storageDeposit.asRefund.toBn().muln(gasIncreaseFactor)
+                    : null
                 : null
             : null,
         value: value ? value.toString() : BN_ZERO,
