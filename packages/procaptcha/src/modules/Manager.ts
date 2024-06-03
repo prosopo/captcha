@@ -82,7 +82,7 @@ export function Manager(
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks,
-    honeypotDetected: Boolean
+    honeypotDetected: boolean
 ) {
     const events = getDefaultEvents(onStateUpdate, state, callbacks)
 
