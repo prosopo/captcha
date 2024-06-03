@@ -17,24 +17,18 @@ import { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { checkboxClass } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
-import { botDetection } from '@prosopo/procaptcha-frictionless'
 
-// function stubBotdDetect() {
-//     return load().then((botd) => {
-//         cy.stub(botd, 'detect').returns({ bot: false })
-//         const result = botd.detect()
-//         console.log("------------------- stubBotdDetect --------------------")
-//         console.log(result)
-//     });
-// }
-
-// function checkbot() {
-//     return load().then((botd) => {
-//         const result = botd.detect()
-//         console.log("------------------- checkbot --------------------")
-//         console.log(result)
-//     })
-// }
+const checkAndClickCaptchas = () => {
+    cy.captchaImages().then(() => {
+        cy.get('@captchas')
+            .each((captcha: Captcha) => {
+                cy.clickCorrectCaptchaImages(captcha);
+            })
+            .then(() => {
+                cy.get("input[type='checkbox']").first().should('be.checked');
+            });
+    });
+};
 
 describe('Honeypot Field Tests', () => {
     beforeEach(() => {
@@ -50,68 +44,54 @@ describe('Honeypot Field Tests', () => {
         }
 
         cy.intercept('/dummy').as('dummy')
-        cy.stubBotdDetect()
-        // visit the base URL specified on command line when running cypress
-        return cy.visit(Cypress.env('default_page')).then(() => {
-            cy.get(checkboxClass).should('be.visible')
-            // wrap the solutions to make them available to the tests
-            cy.wrap(solutions).as('solutions')
-        })
+        cy.wrap(solutions).as('solutions')
     })
 
     it('BotD catch (no mocks, do not fill honeypot)', () => {
-        cy.clickIAmHuman().then(() => {
-        // Make sure the images are loaded
-            cy.captchaImages().then(() => {
-                // Solve the captchas
-                cy.get('@captchas')
-                    .each((captcha: Captcha) => {
-                        cy.log('in each function')
-                        // Click correct images and submit the solution
-                        cy.clickCorrectCaptchaImages(captcha)
-                    })
-                    .then(() => {
-                        // Get inputs of type checkbox
-                        cy.get("input[type='checkbox']").then((checkboxes) => {
-                            cy.wrap(checkboxes).first().should('be.checked')
-                        })
-                    })
-            })
-        })
+        cy.visit(Cypress.env('default_page')).then(() => {
+            cy.get(checkboxClass).should('be.visible');
+            cy.clickIAmHuman().then(checkAndClickCaptchas);
+        });
     });
 
     it('Not bot from BotD but caught by honeypot (mock BotD, fill honeypot)', () => {
-        // cy.stub(botDetection, "detectBot").resolves(false)
-        // cy.window().then((win) => {
-        //     const detectBotSpy = cy.spy(win.botDetection, "detectBot");
-        //     detectBotSpy.withArgs().resolves(false);
-        // })
-
-        cy.wait('@mockBotDetection')
-
-        cy.get('input#firstname').type('I am a bot', {force: true})
-        cy.checkHoneypot().then((isHoneypotFilled) => {
-            if (isHoneypotFilled) {
-                cy.log('Honeypot filled, displaying captcha');
-                cy.clickIAmHuman().then(() => {
-                    cy.captchaImages().then(() => {
-                        cy.get('@captchas')
-                            .each((captcha: Captcha) => {
-                                cy.clickCorrectCaptchaImages(captcha);
-                            })
-                            .then(() => {
-                                cy.get("input[type='checkbox']").first().should('be.checked');
-                            });
-                    });
-                });
-            }
+        cy.stubBotdDetect()
+        cy.visit(Cypress.env('default_page')).then(() => {
+            cy.get(checkboxClass).should('be.visible')
+            cy.honeypotExists().then((isHoneypotExists) => {
+                cy.wait('@mockBotDetection')
+                if (isHoneypotExists) {
+                    cy.get('input#firstname').type('I am a bot', { force: true })
+                    cy.get(checkboxClass, { timeout: 12000 }).first().click()
+                    cy.checkHoneypot().then((isHoneypotFilled) => {
+                        if (isHoneypotFilled) {
+                            cy.clickIAmHuman().then(checkAndClickCaptchas);
+                        } else
+                            cy.get(checkboxClass, { timeout: 12000 }).first().click()        
+                    })
+                } else 
+                    cy.get(checkboxClass, { timeout: 12000 }).first().click()
+            });
         });
-
-        // checkbot()
     });
 
     it('Not caught by BotD or honeypot (mock BotD, do not fill honeypot)', () => {
-
+        cy.stubBotdDetect()
+        cy.visit(Cypress.env('default_page')).then(() => {
+            cy.get(checkboxClass).should('be.visible')
+            cy.honeypotExists().then((isHoneypotExists) => {
+                cy.wait('@mockBotDetection')
+                if (isHoneypotExists) {
+                    cy.checkHoneypot().then((isHoneypotFilled) => {
+                        if (isHoneypotFilled) {
+                            cy.clickIAmHuman().then(checkAndClickCaptchas);
+                        } else
+                            cy.get(checkboxClass, { timeout: 12000 }).first().click()        
+                    })
+                } else 
+                    cy.get(checkboxClass, { timeout: 12000 }).first().click()
+            });
+        });
     });
 
 });

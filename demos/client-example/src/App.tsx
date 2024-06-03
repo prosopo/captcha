@@ -59,7 +59,7 @@ function App(props: AppProps) {
         serverUrl: getServerUrl(),
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
-        honeypotFlag: false,
+        honeypotFlag: true,
     })
     console.log(config)
 

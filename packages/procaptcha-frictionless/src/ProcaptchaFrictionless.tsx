@@ -16,22 +16,19 @@ import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { Honeypot } from '@prosopo/honeypot'
 import { ProcaptchaProps } from '@prosopo/types'
-import { botDetection } from './botDetection.js'
+import { botDetection } from '@prosopo/procaptcha-frictionless'
 import { useEffect, useState } from 'react'
 
 export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
     // Use state to manage which component to render
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
-    const honeypotDetected = Honeypot();
+    const honeypotDetected = config.honeypotFlag && Honeypot();
 
     useEffect(() => {
         const detect = async () => {
             try {
                 const botDetected = await botDetection.detectBot();
-
-                console.log(botDetected)
-
-                if (botDetected || (honeypotDetected && config.honeypotFlag)) {
+                if (botDetected || honeypotDetected) {
                     setComponentToRender(<Procaptcha config={config} callbacks={callbacks} honeypotDetected={honeypotDetected != ''} />)
                 } else {
                     setComponentToRender(<ProcaptchaPow config={config} callbacks={callbacks} />)
