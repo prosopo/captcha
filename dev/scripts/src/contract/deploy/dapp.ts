@@ -19,18 +19,18 @@ import { EventRecord } from '@polkadot/types/interfaces'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig } from '@prosopo/cli'
 import { get } from '@prosopo/util'
-import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
-    const network = defaultConfig().networks[defaultConfig().defaultNetwork]
+    const config = defaultConfig()
+    const network = config.networks[defaultConfig().defaultNetwork]
     const pair = await getPairAsync(network, '//Alice')
     const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
     const params = ['1000000000000000', 1000, process.env.PROSOPO_CONTRACT_ADDRESS, 50, 1000000]
-    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex())
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex(), config.logLevel)
     return await deployer.deploy()
 }
 export async function run(): Promise<AccountId> {
@@ -45,17 +45,4 @@ export async function run(): Promise<AccountId> {
     const contractAddress = String(get(instantiateEvent?.event.data, 'contract'))
 
     return contractAddress
-}
-// run the script if the main process is running this file
-if (typeof require !== 'undefined' && require.main === module) {
-    loadEnv(path.resolve('../..'))
-    run()
-        .then((deployResult) => {
-            console.log('Deployed with address', deployResult)
-            process.exit(0)
-        })
-        .catch((e) => {
-            console.error(e)
-            process.exit(1)
-        })
 }
