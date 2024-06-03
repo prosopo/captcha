@@ -1,11 +1,11 @@
 name: post_pr
 
-# on push to main, or manually triggered
-# we do this because any branch can use caches built on main, whereas caches built on other branches are only available to that branch and its children
+# on push to dev, or manually triggered
+# we do this because any branch can use caches built on dev, whereas caches built on other branches are only available to that branch and its children
 on:
     push:
         branches:
-            - 'main'
+            - 'dev'
     workflow_dispatch:
 
 concurrency:
