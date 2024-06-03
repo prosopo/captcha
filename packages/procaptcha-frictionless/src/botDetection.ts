@@ -21,10 +21,10 @@ export const botDetection = {
 
             console.log(JSON.stringify(result))
 
-            return result.bot // Return true if bot is detected, false otherwise
+            return result.bot
         } catch (error) {
             console.error('Error detecting bot:', error)
-            return false // Return false in case of error
+            return false
         }
     },
 }

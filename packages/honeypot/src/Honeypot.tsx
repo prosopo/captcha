@@ -22,7 +22,7 @@ const addHoneypotField = (form: HTMLFormElement, honeypotName: string, setHoneyp
     honeypotField.style.left = '-9999px'
     honeypotField.style.width = '70px'
     honeypotField.style.height = '20px'
-    honeypotField.autocomplete = 'on'
+    honeypotField.autocomplete = 'off'
     honeypotField.tabIndex = -1
     honeypotField.onchange = (e) => {
         const target = e.target as HTMLInputElement
