@@ -2,7 +2,7 @@ name: provider_image
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
         paths:
             - 'docker/**'
             - 'dev/**'
