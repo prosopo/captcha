@@ -16,7 +16,6 @@ import { Captcha, CaptchaWithProof } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import Chainable = Cypress.Chainable
 import { SolutionRecord } from '@prosopo/types-database'
-import { botDetection } from '@prosopo/procaptcha-frictionless'
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -27,17 +26,17 @@ declare global {
             clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>
             getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
             clickNextButton(): Cypress.Chainable<JQuery<Node>>
+            honeypotExists(): Chainable<boolean>
             checkHoneypot(): Chainable<boolean>
             stubBotdDetect(): Chainable<void>
         }
-
-
     }
 }
 
 export const checkboxClass = '[type="checkbox"]'
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
+    cy.log('Clicking I am human checkbox');
     cy.get(checkboxClass, { timeout: 12000 }).first().click()
 
     return cy
@@ -127,12 +126,21 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLEleme
         })
     })
 }
-
+    
 function checkHoneypot(): Chainable<boolean> {
     return cy.get('input#firstname').then((input) => {
         const value = input.val() as string;
         return value.trim() !== '';
     });
+}
+
+function honeypotExists(): Chainable<boolean> {
+    return cy.document().then((doc) => {
+        return cy.window().should('have.property', 'document').then(() => {
+            const elementExists = doc.querySelector('input#firstname') !== null;
+            return elementExists;
+        });
+    })
 }
 
 
@@ -150,7 +158,7 @@ function stubBotdDetect(): void {
             headers: {
                 'content-type': 'application/javascript'
             },
-            body: 'export const botDetection = { detectBot: async () => { return false }};//# sourceMappingURL=botDetection.js.map' }
+            body: 'export const botDetection = { detectBot: async () => { return false }};' }
     ).as("mockBotDetection")
 }
 
@@ -163,4 +171,5 @@ Cypress.Commands.addAll({
     clickNextButton,
     checkHoneypot,
     stubBotdDetect,
+    honeypotExists,
 })
