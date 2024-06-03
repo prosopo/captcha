@@ -39,6 +39,7 @@
         "@prosopo/procaptcha-react": "0.3.42",
         "@prosopo/types": "0.3.42",
         "@prosopo/web-components": "0.3.42",
+        "@prosopo/honeypot": "0.3.42",
         "react": "^18.3.1"
     },
     "devDependencies": {
