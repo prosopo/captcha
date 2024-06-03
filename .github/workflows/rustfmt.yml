@@ -2,7 +2,7 @@ name: rustfmt
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
         paths:
             - '**.rs'
             - '.github/workflows/rustfmt.yml'
