@@ -2,7 +2,7 @@ name: consistent_workflow_names
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
         # only when workflow file is changed
         paths: ['.github/workflows/**']
 
