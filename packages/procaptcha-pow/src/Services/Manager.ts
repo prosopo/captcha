@@ -30,9 +30,10 @@ import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
+import { buildUpdateState, encodeOutput, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
 import { solvePoW } from '@prosopo/util'
+import { u8aToHex } from '@polkadot/util'
 
 export const Manager = (
     configInput: ProcaptchaClientConfigInput,
@@ -214,13 +215,15 @@ export const Manager = (
                 isHuman: true,
                 loading: false,
             })
-            events.onHuman({
-                providerUrl,
-                [ApiParams.user]: getAccount().account.address,
-                [ApiParams.dapp]: getDappAccount(),
-                [ApiParams.challenge]: challenge.challenge,
-                [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
-            })
+            events.onHuman(
+                encodeOutput({
+                    [ApiParams.providerUrl]: providerUrl,
+                    [ApiParams.user]: getAccount().account.address,
+                    [ApiParams.dapp]: getDappAccount(),
+                    [ApiParams.challenge]: challenge.challenge,
+                    [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
+                })
+            )
             setValidChallengeTimeout()
         }
     }

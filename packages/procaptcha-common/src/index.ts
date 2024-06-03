@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from './events.js'
 export * from './state/builder.js'
+export * from './token.js'

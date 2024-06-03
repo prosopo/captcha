@@ -16,7 +16,7 @@ import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/t
 import { ProsopoCaptchaApiInterface } from './api.js'
 import { TCaptchaSubmitResult } from './client.js'
 import { number, object, string, infer as zInfer } from 'zod'
-
+import { u32, str, Codec, Struct, Option } from 'scale-ts'
 /**
  * House the account and associated extension.
  */
@@ -41,6 +41,17 @@ export const ProcaptchaOutputSchema = object({
  */
 export type ProcaptchaOutput = zInfer<typeof ProcaptchaOutputSchema>
 
+export const ProcaptchaTokenCodec = Struct({
+    commitmentId: Option(str),
+    providerUrl: Option(str),
+    dapp: str,
+    user: str,
+    blockNumber: Option(u32),
+    challenge: Option(str),
+})
+
+export type ProcaptchaToken = string
+
 export const ProcaptchaResponse = object({
     [ApiParams.procaptchaResponse]: ProcaptchaOutputSchema,
 })
@@ -56,7 +67,7 @@ export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
  */
 export interface ProcaptchaEvents {
     onError: (error: Error) => void
-    onHuman: (output: ProcaptchaOutput) => void
+    onHuman: (output: ProcaptchaToken) => void
     onExtensionNotFound: () => void
     onChallengeExpired: () => void
     onExpired: () => void

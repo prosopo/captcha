@@ -24,6 +24,7 @@ import {
     ProcaptchaOutput,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    ProcaptchaTokenCodec,
     StoredEvents,
     TCaptchaSubmitResult,
 } from '@prosopo/types'
@@ -43,11 +44,12 @@ import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at, hashToHex } from '@prosopo/util'
-import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
+import { buildUpdateState, encodeOutput, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
+import { u8aToHex } from '@polkadot/util'
 
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -169,10 +171,18 @@ export function Manager(
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
-                events.onHuman({
-                    user: account.account.address,
-                    dapp: getDappAccount(),
-                })
+                events.onHuman(
+                    u8aToHex(
+                        ProcaptchaTokenCodec.enc({
+                            user: account.account.address,
+                            dapp: getDappAccount(),
+                            commitmentId: undefined,
+                            blockNumber: undefined,
+                            providerUrl: undefined,
+                            challenge: undefined,
+                        })
+                    )
+                )
                 setValidChallengeTimeout()
                 return
             }
@@ -195,14 +205,14 @@ export function Manager(
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
-                        const output: ProcaptchaOutput = {
+                        const output = {
                             [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
                             [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
                             [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         }
-                        events.onHuman(output)
+                        events.onHuman(encodeOutput(output))
                         setValidChallengeTimeout()
                         return
                     }
@@ -327,13 +337,15 @@ export function Manager(
                 const providerUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
                 // cache this provider for future use
                 storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
-                events.onHuman({
-                    providerUrl,
-                    user: account.account.address,
-                    dapp: getDappAccount(),
-                    commitmentId: hashToHex(submission[1]),
-                    blockNumber,
-                })
+                events.onHuman(
+                    encodeOutput({
+                        [ApiParams.providerUrl]: providerUrl,
+                        [ApiParams.user]: account.account.address,
+                        [ApiParams.dapp]: getDappAccount(),
+                        [ApiParams.commitmentId]: hashToHex(submission[1]),
+                        [ApiParams.blockNumber]: blockNumber,
+                    })
+                )
                 setValidChallengeTimeout()
             }
         })
