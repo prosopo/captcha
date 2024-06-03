@@ -179,6 +179,7 @@ function App(props: AppProps) {
                                             dappName={config.dappName}
                                             value={account}
                                             onChange={setAccount}
+                                            aria-label="Select account"
                                         />
                                     </FormControl>
                                 ) : (
@@ -189,9 +190,10 @@ function App(props: AppProps) {
                                         id="email"
                                         label="Email"
                                         type="text"
-                                        autoComplete="Email"
+                                        autoComplete="email"
                                         autoCapitalize="none"
                                         onChange={(e) => setEmail(e.target.value)}
+                                        aria-label="Email"
                                     />
                                 </FormControl>
 
@@ -201,8 +203,9 @@ function App(props: AppProps) {
                                             id="name"
                                             label="Name"
                                             type="text"
-                                            autoComplete="Name"
+                                            autoComplete="name"
                                             onChange={(e) => setName(e.target.value)}
+                                            aria-label="Name"
                                         />
                                     </FormControl>
                                 )}
@@ -212,8 +215,9 @@ function App(props: AppProps) {
                                         id="password"
                                         label="Password"
                                         type="password"
-                                        autoComplete="Password"
+                                        autoComplete="password"
                                         onChange={(e) => setPassword(e.target.value)}
+                                        aria-label="Password"
                                     />
                                 </FormControl>
 
@@ -222,9 +226,14 @@ function App(props: AppProps) {
                                         <ProcaptchaFrictionless
                                             config={config}
                                             callbacks={{ onError, onHuman, onExpired }}
+                                            aria-label="Frictionless captcha"
                                         />
                                     ) : (
-                                        <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                        <Procaptcha
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                            aria-label="Captcha"
+                                        />
                                     )}
                                 </FormControl>
                                 <FormControl>
@@ -234,6 +243,7 @@ function App(props: AppProps) {
                                                 variant="contained"
                                                 onClick={onActionHandler}
                                                 disabled={!procaptchaOutput}
+                                                aria-label={isLogin ? 'Login' : 'Sign up'}
                                             >
                                                 {isLogin ? 'Login' : 'Sign up'}
                                             </Button>
@@ -242,7 +252,12 @@ function App(props: AppProps) {
                                                     <Typography>- or -</Typography>
                                                 </Box>
                                             </Box>
-                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                            <Button
+                                                onClick={onChangeHandler}
+                                                aria-label={isLogin ? 'Sign up' : 'Login'}
+                                            >
+                                                {isLogin ? 'Sign up' : 'Login'}
+                                            </Button>
                                         </Stack>
                                     </Box>
                                 </FormControl>
