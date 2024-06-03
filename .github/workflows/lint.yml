@@ -88,9 +88,6 @@ jobs:
 
             - run: npm run -w @prosopo/scripts build
 
-            - name: license
-              run: npm run -w @prosopo/scripts license
-
             - name: lint
               run: |
                   # get the files which have changed in the PR
@@ -98,6 +95,4 @@ jobs:
 
                   echo "files: $files"
 
-                  # feed those files into eslint + prettier, as we only need to lint the files that have changed
-                  npx eslint --ignore-path .eslintignore --no-error-on-unmatched-pattern -- $files
-                  npx prettier --check --ignore-path .eslintignore --no-error-on-unmatched-pattern -- $files
+                  npm run lint:cmd -- $files

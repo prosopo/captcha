@@ -42,4 +42,5 @@ export class MockEnvironment extends ProviderEnvironment {
 export interface ViteTestContext {
     env: MockEnvironment
     providerStakeThreshold: BN
+    dappStakeThreshold: BN
 }

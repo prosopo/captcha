@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util/bn'
+import { BN, BN_ZERO } from '@polkadot/util/bn'
 import { BatchCommitConfigOutput, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Commit, Hash } from '@prosopo/captcha-contract/types-returns'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError } from '@prosopo/common'
-import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { ProsopoCaptchaContract, batch, encodeStringArgs } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
 import { checkIfTaskIsRunning } from '../util.js'
+import { oneUnit } from '@prosopo/tx'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 
 const BN_TEN_THOUSAND = new BN(10_000)
@@ -106,9 +107,9 @@ export class BatchCommitmentsTask {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contract.abi.findMessage(CONTRACT_METHOD_NAME)
         const batchedCommitmentIds: Hash[] = []
-        let totalRefTime = new BN(0)
-        let totalProofSize = new BN(0)
-        let totalFee = new BN(0)
+        let totalRefTime = BN_ZERO
+        let totalProofSize = BN_ZERO
+        let totalFee = BN_ZERO
         const maxBlockWeight = this.contract.api.consts.system.blockWeights.maxBlock
         const commitmentArray: Commit[] = []
         let extrinsic: SubmittableExtrinsic<'promise'> | undefined
@@ -132,7 +133,7 @@ export class BatchCommitmentsTask {
                 this.logger.debug(`${CONTRACT_METHOD_NAME} paymentInfo:`, paymentInfo.toNumber())
             } catch (e) {
                 // TODO https://github.com/polkadot-js/api/issues/5504
-                paymentInfo = new BN(0)
+                paymentInfo = BN_ZERO
             }
             //totalEncodedLength += extrinsic.encodedLength
             totalRefTime = totalRefTime.add(

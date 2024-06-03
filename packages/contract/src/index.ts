@@ -13,5 +13,4 @@
 // limitations under the License.
 import '@polkadot/api-augment/substrate'
 export * from './accounts/index.js'
-export * from './balances/index.js'
 export * from './contract/index.js'
