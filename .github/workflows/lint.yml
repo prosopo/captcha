@@ -2,7 +2,7 @@ name: lint
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
     workflow_dispatch:
 
 concurrency:
