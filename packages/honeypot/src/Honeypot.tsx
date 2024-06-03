@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 
 const addHoneypotField = (form: HTMLFormElement, honeypotName: string, setHoneypotValue: (value: string) => void) => {
     const honeypotField = document.createElement('input')
@@ -26,15 +26,27 @@ const addHoneypotField = (form: HTMLFormElement, honeypotName: string, setHoneyp
     honeypotField.tabIndex = -1
     honeypotField.onchange = (e) => {
         const target = e.target as HTMLInputElement
-        setHoneypotValue(target.value);
+        setHoneypotValue(target.value)
     }
 
     form.appendChild(honeypotField)
 }
 
 export const Honeypot = () => {
-    const [honeypotValue, setHoneypotValue] = useState<string>('');
-    const commonFields = ['firstname', 'lastname', 'fullname', 'name', 'email', 'password', 'age', 'birthday', 'date', 'address', 'tel_number', ]
+    const [honeypotValue, setHoneypotValue] = useState<string>('')
+    const commonFields = [
+        'firstname',
+        'lastname',
+        'fullname',
+        'name',
+        'email',
+        'password',
+        'age',
+        'birthday',
+        'date',
+        'address',
+        'tel_number',
+    ]
 
     const processForm = (form: HTMLFormElement) => {
         const inputArray = Array.from(form.querySelectorAll('input'))
@@ -49,7 +61,7 @@ export const Honeypot = () => {
     useEffect(() => {
         const forms = Array.from(document.getElementsByTagName('form'))
         forms.forEach(processForm)
-    }, []);
+    }, [])
 
-    return honeypotValue;
-};
+    return honeypotValue
+}

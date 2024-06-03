@@ -36,7 +36,7 @@ declare global {
 export const checkboxClass = '[type="checkbox"]'
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
-    cy.log('Clicking I am human checkbox');
+    cy.log('Clicking I am human checkbox')
     cy.get(checkboxClass, { timeout: 12000 }).first().click()
 
     return cy
@@ -126,23 +126,25 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLEleme
         })
     })
 }
-    
+
 function checkHoneypot(): Chainable<boolean> {
     return cy.get('input#firstname').then((input) => {
-        const value = input.val() as string;
-        return value.trim() !== '';
-    });
+        const value = input.val() as string
+        return value.trim() !== ''
+    })
 }
 
 function honeypotExists(): Chainable<boolean> {
     return cy.document().then((doc) => {
-        return cy.window().should('have.property', 'document').then(() => {
-            const elementExists = doc.querySelector('input#firstname') !== null;
-            return elementExists;
-        });
+        return cy
+            .window()
+            .should('have.property', 'document')
+            .then(() => {
+                const elementExists = doc.querySelector('input#firstname') !== null
+                return elementExists
+            })
     })
 }
-
 
 function clickNextButton() {
     cy.intercept('POST', '**/prosopo/provider/solution').as('postSolution')
@@ -153,15 +155,13 @@ function clickNextButton() {
 function stubBotdDetect(): void {
     // Passing a fixture .js filed does not work as cypress does not know how to interpret it
     // https://github.com/cypress-io/cypress/issues/1271
-    cy.intercept('GET', '**/procaptcha-frictionless/dist/botDetection.js*',
-        {
-            headers: {
-                'content-type': 'application/javascript'
-            },
-            body: 'export const botDetection = { detectBot: async () => { return false }};' }
-    ).as("mockBotDetection")
+    cy.intercept('GET', '**/procaptcha-frictionless/dist/botDetection.js*', {
+        headers: {
+            'content-type': 'application/javascript',
+        },
+        body: 'export const botDetection = { detectBot: async () => { return false }};',
+    }).as('mockBotDetection')
 }
-
 
 Cypress.Commands.addAll({
     clickIAmHuman,

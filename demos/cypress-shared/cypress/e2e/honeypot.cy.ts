@@ -22,13 +22,13 @@ const checkAndClickCaptchas = () => {
     cy.captchaImages().then(() => {
         cy.get('@captchas')
             .each((captcha: Captcha) => {
-                cy.clickCorrectCaptchaImages(captcha);
+                cy.clickCorrectCaptchaImages(captcha)
             })
             .then(() => {
-                cy.get("input[type='checkbox']").first().should('be.checked');
-            });
-    });
-};
+                cy.get("input[type='checkbox']").first().should('be.checked')
+            })
+    })
+}
 
 describe('Honeypot Field Tests', () => {
     beforeEach(() => {
@@ -49,10 +49,10 @@ describe('Honeypot Field Tests', () => {
 
     it('BotD catch (no mocks, do not fill honeypot)', () => {
         cy.visit(Cypress.env('default_page')).then(() => {
-            cy.get(checkboxClass).should('be.visible');
-            cy.clickIAmHuman().then(checkAndClickCaptchas);
-        });
-    });
+            cy.get(checkboxClass).should('be.visible')
+            cy.clickIAmHuman().then(checkAndClickCaptchas)
+        })
+    })
 
     it('Not bot from BotD but caught by honeypot (mock BotD, fill honeypot)', () => {
         cy.stubBotdDetect()
@@ -65,15 +65,13 @@ describe('Honeypot Field Tests', () => {
                     cy.get(checkboxClass, { timeout: 12000 }).first().click()
                     cy.checkHoneypot().then((isHoneypotFilled) => {
                         if (isHoneypotFilled) {
-                            cy.clickIAmHuman().then(checkAndClickCaptchas);
-                        } else
-                            cy.get(checkboxClass, { timeout: 12000 }).first().click()        
+                            cy.clickIAmHuman().then(checkAndClickCaptchas)
+                        } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
                     })
-                } else 
-                    cy.get(checkboxClass, { timeout: 12000 }).first().click()
-            });
-        });
-    });
+                } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
+            })
+        })
+    })
 
     it('Not caught by BotD or honeypot (mock BotD, do not fill honeypot)', () => {
         cy.stubBotdDetect()
@@ -84,14 +82,11 @@ describe('Honeypot Field Tests', () => {
                 if (isHoneypotExists) {
                     cy.checkHoneypot().then((isHoneypotFilled) => {
                         if (isHoneypotFilled) {
-                            cy.clickIAmHuman().then(checkAndClickCaptchas);
-                        } else
-                            cy.get(checkboxClass, { timeout: 12000 }).first().click()        
+                            cy.clickIAmHuman().then(checkAndClickCaptchas)
+                        } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
                     })
-                } else 
-                    cy.get(checkboxClass, { timeout: 12000 }).first().click()
-            });
-        });
-    });
-
-});
+                } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
+            })
+        })
+    })
+})

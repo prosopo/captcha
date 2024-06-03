@@ -23,5 +23,5 @@ export interface ProcaptchaProps {
     // optional set of callbacks for various captcha events
     callbacks?: Partial<ProcaptchaCallbacks>
     // the flag checking honeypot field
-    honeypotDetected?: Boolean
+    honeypotDetected?: boolean
 }

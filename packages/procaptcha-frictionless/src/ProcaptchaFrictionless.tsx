@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Honeypot } from '@prosopo/honeypot'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { Honeypot } from '@prosopo/honeypot'
 import { ProcaptchaProps } from '@prosopo/types'
 import { botDetection } from '@prosopo/procaptcha-frictionless'
 import { useEffect, useState } from 'react'
@@ -22,14 +22,16 @@ import { useEffect, useState } from 'react'
 export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
     // Use state to manage which component to render
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
-    const honeypotDetected = config.honeypotFlag && Honeypot();
+    const honeypotDetected = config.honeypotFlag && Honeypot()
 
     useEffect(() => {
         const detect = async () => {
             try {
-                const botDetected = await botDetection.detectBot();
+                const botDetected = await botDetection.detectBot()
                 if (botDetected || honeypotDetected) {
-                    setComponentToRender(<Procaptcha config={config} callbacks={callbacks} honeypotDetected={honeypotDetected != ''} />)
+                    setComponentToRender(
+                        <Procaptcha config={config} callbacks={callbacks} honeypotDetected={honeypotDetected != ''} />
+                    )
                 } else {
                     setComponentToRender(<ProcaptchaPow config={config} callbacks={callbacks} />)
                 }
