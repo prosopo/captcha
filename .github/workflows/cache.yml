@@ -4,8 +4,7 @@ name: post_pr
 # we do this because any branch can use caches built on dev, whereas caches built on other branches are only available to that branch and its children
 on:
     push:
-        branches:
-            - 'dev'
+        branches: [dev]
     workflow_dispatch:
 
 concurrency:
