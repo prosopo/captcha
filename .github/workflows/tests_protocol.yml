@@ -2,8 +2,7 @@ name: tests_protocol
 
 on:
     pull_request:
-        branches:
-            - 'main'
+        branches: [main, dev, release/*]
         paths:
             - 'protocol/**'
             - '.github/workflows/tests_protocol.yml'
