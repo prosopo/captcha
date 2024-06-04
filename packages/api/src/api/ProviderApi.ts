@@ -30,7 +30,7 @@ import {
     StoredEvents,
     SubmitPowCaptchaSolutionBody,
     VerificationResponse,
-    VerifySolutionBodyType,
+    VerifySolutionBodyTypeInput,
 } from '@prosopo/types'
 import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
@@ -79,23 +79,44 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         dapp: AccountId,
         userAccount: AccountId,
         blockNumber: number,
+        dappUserSignature: string,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
-        const payload: {
-            [ApiParams.dapp]: AccountId
-            [ApiParams.user]: AccountId
-            [ApiParams.blockNumber]: number
-            [ApiParams.commitmentId]?: string
-            [ApiParams.maxVerifiedTime]?: number
-        } = { dapp: dapp, user: userAccount, blockNumber }
+        const payload: VerifySolutionBodyTypeInput = {
+            [ApiParams.dapp]: dapp.toString(),
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.blockNumber]: blockNumber,
+            [ApiParams.dappUserSignature]: dappUserSignature,
+        }
         if (commitmentId) {
-            payload['commitmentId'] = commitmentId
+            payload[ApiParams.commitmentId] = commitmentId
         }
         if (maxVerifiedTime) {
-            payload['maxVerifiedTime'] = maxVerifiedTime
+            payload[ApiParams.maxVerifiedTime] = maxVerifiedTime
         }
-        return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+
+        return this.post(ApiPaths.VerifyCaptchaSolutionDapp, payload)
+    }
+
+    public verifyUser(
+        dapp: AccountId,
+        userAccount: AccountId,
+        blockNumber: number,
+        dappUserSignature: string,
+        commitmentId?: string,
+        maxVerifiedTime?: number
+    ): Promise<ImageVerificationResponse> {
+        const payload: VerifySolutionBodyTypeInput = {
+            [ApiParams.dapp]: dapp.toString(),
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.blockNumber]: blockNumber,
+            [ApiParams.dappUserSignature]: dappUserSignature,
+            ...(commitmentId && { [ApiParams.commitmentId]: commitmentId }),
+            ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
+        }
+
+        return this.post(ApiPaths.VerifyCaptchaSolutionUser, payload)
     }
 
     public getPowCaptchaChallenge(user: AccountId, dapp: AccountId): Promise<GetPowCaptchaResponse> {
@@ -144,13 +165,19 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     public submitPowCaptchaVerify(
         challenge: string,
         dapp: string,
+        signatureHex: string,
+        blockNumber: number,
         recencyLimit: number
     ): Promise<VerificationResponse> {
         const body: ServerPowCaptchaVerifyRequestBodyType = {
             [ApiParams.challenge]: challenge,
             [ApiParams.dapp]: dapp,
+            [ApiParams.dappUserSignature]: signatureHex,
+            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.verifiedTimeout]: recencyLimit,
         }
-        return this.post(ApiPaths.ServerPowCaptchaVerify, body)
+        return this.post(ApiPaths.ServerPowCaptchaVerify, {
+            body,
+        })
     }
 }
