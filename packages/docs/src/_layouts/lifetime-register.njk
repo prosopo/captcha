@@ -1,0 +1,11 @@
+{% extends "base.njk" %} Content!
+{% block content %}
+    <section aria-labelledby="register" id="register" class="bg-gray-100">
+        <script type="text/javascript" src="/assets/scripts/formSignup.js"></script>
+        <script type="text/javascript" src="/assets/scripts/formValidation.js"></script>
+        <div class="pt-12 sm:pt-16 lg:pt-20">
+            {% include "register-lifetime-header.njk" %}
+            {% include "register-form.njk" %}
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% macro tooltip(text) %}
+    <style>
+        .tooltip {
+            position: absolute;
+            background-color: transparent;
+            overflow: hidden;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        @media screen and (min-width: 568px) {
+            .tooltip-break {
+                display: none;
+            }
+        }
+
+        /* Force the tooltip onto a new line on small screens */
+        @media screen and (max-width: 567px) {
+            .tooltip-break {
+                display: inline-block;
+            }
+        }
+    </style>
+    <br class="tooltip-break">
+    <span class="group inline-block items-center text-center justify-center">
+        <svg class="flex justify-center" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16"
+             viewBox="0 0 50 50">
+            <path d="M 25 2 C 12.264481 2 2 12.264481 2 25 C 2 37.735519 12.264481 48 25 48 C 37.735519 48 48 37.735519 48 25 C 48 12.264481 37.735519 2 25 2 z M 25 4 C 36.664481 4 46 13.335519 46 25 C 46 36.664481 36.664481 46 25 46 C 13.335519 46 4 36.664481 4 25 C 4 13.335519 13.335519 4 25 4 z M 25 11 A 3 3 0 0 0 25 17 A 3 3 0 0 0 25 11 z M 21 21 L 21 23 L 23 23 L 23 36 L 21 36 L 21 38 L 29 38 L 29 36 L 27 36 L 27 21 L 21 21 z"></path>
+        </svg>
+        <span class="hidden group-hover:block group-active:block tooltip m-4 mx-auto">
+            <span class="bg-blue-100 border border-blue-500 text-blue-700 rounded-lg px-4 py-3 text-center w-200 text-sm flex"
+                 role="alert">
+                ℹ️ {{ text }}
+            </span>
+        </span>
+    </span>
+{% endmacro %}

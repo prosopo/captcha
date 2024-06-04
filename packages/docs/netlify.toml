@@ -1,0 +1,30 @@
+[dev]
+    targetPort = 8081
+    command = "npm run start"
+
+[context.production.environment]
+    MONGO_AUTH="REPLACE WITH USER:PASSWORD"
+    MONGO_AT="REPLACE WITH MONGO URL"
+    SUBSTRATE_NODE_URL="REPLACE WITH SUBSTRATE URL"
+    PROTOCOL_CONTRACT_ADDRESS=''
+    SERVER_PASSWORD=''
+    SERVER_ACCOUNT_ADDRESS=''
+    SERVER_ACCOUNT_SECRET=''
+    DEFAULT_ENVIRONMENT="production"
+
+[functions]
+    directory = "netlify/functions"
+
+# netlify proxy for plausible
+[[redirects]]
+    from = "/js/script.kairee5buy1chae8eit0so8ahphae9Oo.js"
+    to = "https://plausible.io/js/script.tagged-events.js"
+    status = 200
+[[redirects]]
+    from ="/api/event"
+    to = "https://plausible.io/api/event"
+    status = 200
+[[redirects]]
+    from = "/news"
+    to = "/blog"
+    status = 200

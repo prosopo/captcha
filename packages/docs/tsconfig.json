@@ -1,0 +1,48 @@
+{
+    "exclude": [
+        "node_modules",
+        "build",
+        "dist"
+    ],
+    "include": [
+        "./src/_assets/scripts/**/*.ts",
+    ],
+    "compilerOptions": {
+        "rootDir": "./src/_assets/scripts",
+        "outDir": "./src/_assets/scripts",
+        "module": "commonjs",
+        "target": "esnext",
+        "moduleResolution": "node",
+        "composite": false,
+        "allowJs": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": true,
+        "declaration": false,
+        "declarationMap": false,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "forceConsistentCasingInFileNames": true,
+        "strictPropertyInitialization": false,
+        "useUnknownInCatchVariables": false,
+        "resolveJsonModule": true,
+        "noImplicitAny": false,
+        "noImplicitOverride": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strict": true,
+        "importHelpers": true,
+        "skipLibCheck": true,
+        "types": [
+            "node"
+        ],
+        "lib": [
+          "esnext",
+          "dom"
+        ]
+    },
+}

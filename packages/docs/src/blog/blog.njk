@@ -1,0 +1,72 @@
+---
+layout: blog.njk
+title: Prosopo Blog
+description: Latest news from Prosopo
+---
+
+<section class="bg-gray-100">
+    <div class="relative items-center w-full px-5 py-12 mx-auto md:px-12 lg:px-20 max-w-7xl">
+        <h1 class="text-2xl font-medium tracking-tight text-black sm:text-4xl">Blog</h1>
+        <hr>
+            <ol class="relative grid grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-2" role="list">
+                {% for article in collections.releasedArticles | reverse %}
+                    <!-- only show article if it has a date greater than today's date and if it has a title -->
+                    <li class="space-y-3 px-3 py-2.5 lg:px-6 lg:py-5 bg-white rounded-lg shadow hover:shadow-2xl transition-shadow duration-150
+                            ease-in">
+                        <a class="group" href="{{ article.url }}">
+                            <div>
+                                <div class="py-3">
+                                    <div class="flex-shrink-0 block">
+                                        <div class="flex items-center">
+                                            <div>
+                                                <img alt="{{ article.data.title }}" class="inline-block object-cover rounded-xl h-9 w-9" src={{ article.data.image }}></div>
+                                                <div class="ml-3">
+                                                    <p class="text-sm text-black group-hover:text-blue-500">
+                                                        {{ article.data.author }}
+                                                        <br>
+                                                            {{ article.data.category }}
+                                                            <span class="text-gray-500">
+                                                                {{ article.data.date | htmlDateString }}
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h3 class=" text-lg font-medium leading-6 text-black group-hover:text-blue-500">
+                                            {{ article.data.title }}
+                                        </h3>
+                                    </div>
+                                    <p class="mt-5 text-base text-gray-500 line-clamp-3">
+                                        {{ article.data.description }}
+                                    </p>
+                                    <div class="py-3">
+                                        <div>
+                                            <div class="inline-flex items-center justify-between w-full">
+                                                <div>
+                                                    <p class="text-sm text-black group-hover:text-blue-500">
+                                                        {{ article.data.category }}
+                                                        <span class="text-gray-500">
+                                                            ·
+                                                        </span>
+                                                        {{ article.data.length }} min read
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <span>
+                                                        <ion-icon
+                                                            name="bookmark-outline"
+                                                            class="w-5 text-blue-500 group-hover:text-black md hydrated"
+                                                            role="img"
+                                                            aria-label="bookmark outline"></ion-icon>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </section>

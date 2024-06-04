@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% include "head.njk" %}
+        <title>{{ title }}</title>
+        <link
+        rel="stylesheet" href="/static/styles.min.css"> <!-- Try and serve Google Fonts in the most efficent way possible -->
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link
+            rel="preload"
+            href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
+            as="style"
+            onload="this.onload=null;this.rel='stylesheet'"/>
+        <noscript>
+            <link
+                href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
+                rel="stylesheet"
+                type="text/css"/>
+        </noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
+    <body>
+        {% include "navbar.njk" %}
+        <!-- Blog -->
+        <ul class="list-none">
+            {{ content | safe }}
+        </ul>
+        <div class="px-4 pb-16 mx-auto max-w-screen-xl sm:px-6 lg:pb-24 lg:px-8">
+            <h3 class="text-3xl font-extrabold tracking-tight text-gray-900 leading-9 sm:text-4xl sm:leading-10">
+                Ready to ditch Google reCAPTCHA?
+                    <br>
+                <span class="text-indigo-800">Start your free trial today. No credit card required.</span>
+            </h3>
+            <div class="flex mt-8 lg:flex-shrink-0 lg:mt-0">
+                <div class="inline-flex shadow rounded-md">
+                    <a
+                        href="/register"
+                        class="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-white bg-indigo-800 border
+                            border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition
+                            duration-150 ease-in-out plausible-event-name=Footer+Signup">
+                        Get started
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% include "footer.njk" %}
+    </body>
+</html>

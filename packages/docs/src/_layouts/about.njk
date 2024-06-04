@@ -1,0 +1,99 @@
+{% extends "baseNav.njk" %} Content!
+{% block content %}
+    <main>
+        <article class="container  mx-auto px-4 max-w-screen-sm sm:px-6 lg:px-8 z-0 pb-32">
+            <header>
+                <h1 class="text-3xl tracking-tight leading-10 font-extrabold text-gray-900 sm:text-4xl sm:leading-none md:text-5xl">
+                    About Prosopo
+                </h1>
+            </header>
+            <div class="prose mt-8">
+                <p>
+                    Prosopo is an open source project dedicated to creating a community powerered bot detection network. Existing bot
+                    detection services are either privacy invasive or expensive. We aim to change that by creating a network of websites
+                    that can detect bots without compromising user privacy. The more websites that join the network, the more powerful the
+                    bot detection becomes.
+                </p>
+                <p>Our approach to bot detection stems from traditional CAPTCHA systems, but with a twist. We collect as little
+                    information on the user as possible, with most detection being run in the browser. Cryptographic proofs are used to send
+                    the minimum amount of information to the server, and the server can verify the proof without needing to know anything
+                    about the user.
+                </p>
+                <h2>
+                    Trusted by the Web3 Foundation
+                </h2>
+                <p>
+                    Prosopo started after receiving a
+                    <a href="https://grants.web3.foundation/applications/prosopo" target="_blank">grant from the Web3 Foundation</a>. The
+                        Web3 Foundation is a Swiss foundation that nurtures and stewards technologies and applications in the fields of
+                        decentralized web software protocols. The foundation is dedicated to building an internet where users are in control of
+                        their own data, identity and destiny.
+                </p>
+                <img alt="Web 3 Foundation Logo" src="/static/web3-foundation-trimmed.svg" class="w-1/2 h-1/2 mx-auto"></div>
+            </article>
+            {# the team #}
+            <section class="pb-32 z-40">
+                <div class="container mx-auto px-4 mx-auto max-w-7xl sm:px-6 lg:px-8 z-0">
+                    <h3 class="text-center text-3xl font-extrabold text-gray-900 leading-9 sm:text-4xl sm:leading-10 lg:text-5xl lg:leading-none">
+                        Our Team
+                    </h3>
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12">
+                        <!-- Card 1 -->
+                        <div class="bg-white rounded-lg p-4 shadow-xl hover:shadow-2xl transition-shadow duration-150 ease-in">
+                            <div class="text-center">
+                                <img class="object-cover w-20 h-20 mx-auto rounded-full mb-4 " src="/static/chris.jpg" alt="Chris Taylor">
+                                    <h4 class="text-lg font-medium text-black">Chris Taylor</h4>
+                                    <p class="text-base text-gray-500 mb-2">Founder</p>
+                                    <p class="text-sm text-black m-6">14 years product & technology experience across a variety of companies including
+                                        several startups in advertising and tech.</p>
+                                    <!-- Social Links -->
+                                    <div class="flex justify-center space-x-4  mb-4">
+                                        <a href="https://www.linkedin.com/in/chris-taylor-6272032a/" target="_blank" class="w-8"><img src="/static/linkedin_icon.svg" alt="Linkedin Icon"/>
+                                        </a>
+                                        <a href="https://github.com/forgetso" target="_blank" class="w-8"><img src="/static/github_icon.svg" alt="Github Icon"/>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="bg-white rounded-lg p-4 shadow-xl hover:shadow-2xl transition-shadow duration-150 ease-in">
+                                <div class="text-center">
+                                    <img class="object-cover w-20 h-20 mx-auto rounded-full mb-4" src="/static/george.jpg" alt="George Oastler">
+                                        <h4 class="text-lg font-medium text-black">George Oastler</h4>
+                                        <p class="text-base text-gray-500 mb-2">Founding Software Engineer</p>
+                                        <p class="text-sm text-black m-6">Published machine learning researcher and bitcoin miner since the early days. A
+                                            skilled developer who is able to build complex web architectures with an understanding of where the technology is
+                                            moving.</p>
+                                        <!-- Social Links -->
+                                        <div class="flex justify-center space-x-4 mb-4">
+                                            <a href="https://www.linkedin.com/in/goastler/" target="_blank" class="w-8"><img src="/static/linkedin_icon.svg" alt="Linkedin Icon"/>
+                                            </a>
+                                            <a href="https://github.com/goastler" target="_blank" class="w-8"><img src="/static/github_icon.svg" alt="Github Icon"/>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Card 3 -->
+                                <div class="bg-white rounded-lg p-4 shadow-xl hover:shadow-2xl transition-shadow duration-150 ease-in">
+                                    <div class="text-center">
+                                        <img class="object-cover w-20 h-20 mx-auto rounded-full mb-4" src="/static/hugh.jpg" alt="Hugh Parry">
+                                            <h4 class="text-lg font-medium text-black">Hugh Parry</h4>
+                                            <p class="text-base text-gray-500 mb-6">Founding Software Engineer</p>
+                                            <p class="text-sm text-black m-6">Mathematician and computer scientist with a deep understanding of data structures,
+                                                algorithms, and cryptography. Blockchain payments advocate and one of the first employees worldwide to be paid in stable
+                                                coin.</p>
+                                            <!-- Social Links -->
+                                            <div class="flex justify-center space-x-4  mb-4">
+                                                <a href="https://www.linkedin.com/in/hughparry/" target="_blank" class="w-8"><img src="/static/linkedin_icon.svg" alt="Linkedin Icon"/>
+                                                </a>
+                                                <a href="https://github.com/HughParry" target="_blank" class="w-8"><img src="/static/github_icon.svg" alt="Github Icon"/>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                {% endblock %}

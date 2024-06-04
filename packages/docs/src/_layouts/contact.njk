@@ -1,0 +1,102 @@
+{% extends "baseNav.njk" %} Content!
+{% block content %}
+    <script src="/assets/scripts/formContact.js"></script>
+    <script src="/assets/scripts/formValidation.js"></script>
+    <script type="text/javascript">
+        document.getElementById('procaptchaScript').addEventListener('load', function () {
+            const onContactHuman = function (payload) {
+                onCaptchaHuman(payload, 'contact-form');
+            }
+            window.onCaptchaVerified = function (output) {
+                console.log('Captcha verified, output: ' + JSON.stringify(output))
+            }
+            const container = document.getElementById('#procaptcha-container');
+            window.procaptcha.render(container, {
+                siteKey: '5HUBceb4Du6dvMA9BiwN5VzUrzUsX9Zp7z7nSR2cC1TCv5jg',
+                theme: 'light',
+                callback: onContactHuman,
+
+                captchaType: 'frictionless'
+            })
+        })
+    </script>
+    <section class="bg-white overflow-hidden z-10 w-full mt-12 m-auto">
+        <div class="container mx-auto">
+            <div class="flex flex-col items-center justify-center">
+                <h1>Contact</h1>
+                <p id="contact-header" class="mb-2">Get in touch with us</p>
+                <div class="max-w-4xl px-4">
+                    <div class="relative rounded-lg p-8 sm:p-12 bg-gray-100">
+                        <form id="contact-form">
+                            <div id="contact-error" class="flex text-red-500 text-center invisible h-0">
+                                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative w-full" role="alert">
+                                    <strong class="font-bold">Error!</strong>
+                                    <span class="block sm:inline"></span>
+                                </div>
+                            </div>
+                            <div id="contact-success" class="flex text-gray-800 invisible h-0">
+                                <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative w-full" role="alert">
+                                    <strong class="font-bold">Info</strong>
+                                    <span class="block sm:inline"></span>
+                                </div>
+                            </div>
+                            <div class="mb-6 mt-6">
+                                <input
+                                    name="name"
+                                    type="text"
+                                    placeholder="Your Name"
+                                    id="name"
+                                    class="w-full rounded py-3 px-[14px] text-body-color text-base border border-[f0f0f0] outline-none
+                                        focus-visible:shadow-none focus:border-primary"/>
+                            </div>
+                            <div class="mb-6">
+                                <input
+                                    name="email"
+                                    type="email"
+                                    placeholder="Your Email"
+                                    id="email"
+                                    class="w-full rounded py-3 px-[14px] text-body-color text-base border border-[f0f0f0] outline-none
+                                        focus-visible:shadow-none focus:border-primary"/>
+                            </div>
+                            <div class="mb-6">
+                                <input
+                                    name="phone"
+                                    type="text"
+                                    placeholder="Your Phone"
+                                    id="phone"
+                                    class="w-full rounded py-3 px-[14px] text-body-color text-base border border-[f0f0f0] outline-none
+                                        focus-visible:shadow-none focus:border-primary"/>
+                            </div>
+                            <div class="mb-6">
+                                <textarea
+                                    name="message"
+                                    rows="6"
+                                    placeholder="Your Message"
+                                    id="message"
+                                    class="w-full rounded py-3 px-[14px] text-body-color text-base border border-[f0f0f0] resize-none outline-none
+                                        focus-visible:shadow-none focus:border-primary"></textarea>
+                            </div>
+                            <div class="mb-6">
+                                <div id="#procaptcha-container" data-minwidth="100%"></div>
+                            </div>
+                            <div id="contact-loader" class="mt-4 flex h-full items-center justify-center text-center invisible" style="display:none;">
+                                <div role="status" class="inline-flex items-center justify-center">
+                                    <div class="loading-spinner-black"></div>
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button
+                                    type="submit"
+                                    class="w-full  text-black  bg-primary  rounded  border  border-primary  p-3  transition  hover:bg-opacity-90  ">
+                                    Send Message
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

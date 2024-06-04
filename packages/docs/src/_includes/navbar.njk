@@ -1,0 +1,62 @@
+<!-- Navigation -->
+<div class="navbar w-full mx-auto bg-white 2xl:max-w-7xl z-20">
+    <div class="relative flex flex-col w-full p-5 mx-auto bg-white md:items-center md:justify-between md:flex-row md:px-6 lg:px-8">
+        <div class="flex flex-row items-center justify-between lg:justify-start">
+            <a href="/" class="flex items-center mb-4 sm:mb-0">
+                <img src="/static/prosopo-logo-black.svg" class="h-8" alt="Prosopo Logo"/>
+            </a>
+            <button
+                id="menuButton"
+                class="inline-flex items-center justify-center p-2 text-gray-400 hover:text-black focus:outline-none focus:text-black
+                    md:hidden">
+                <svg class="w-6 h-6" stroke="currentColor" fill="none" viewbox="0 0 24 24">
+                    <path class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        <nav
+            id="menuList"
+            :class="{'flex': open, 'hidden': !open}"
+            class="flex-col items-center flex-grow hidden md:pb-0 md:flex md:justify-end md:flex-row">
+            <a
+                    class="px-2 py-2 text-medium text-gray-500 lg:px-6 md:px-3 hover:text-blue-600 lg:ml-auto plausible-event-name=Nav+Pricing"
+                    href="/pricing">
+                Pricing
+            </a>
+
+            <a
+                    class="px-2 py-2 text-medium text-gray-500 lg:px-6 md:px-3 hover:text-blue-600 plausible-event-name=Nav+About"
+                href="/about">
+                About
+            </a>
+
+            <a
+                class="px-2 py-2 text-medium text-gray-500 lg:px-6 md:px-3 hover:text-blue-600 plausible-event-name=Nav+Blog"
+                href="/blog">
+                Blog
+            </a>
+
+            <a
+                class="px-2 py-2 text-medium text-gray-500 lg:px-6 md:px-3 hover:text-blue-600 plausible-event-name=Nav+Blog"
+                href="/docs">
+                Docs
+            </a>
+            <div class="inline-flex items-center gap-2 list-none lg:ml-auto">
+                <a
+                    href="/pricing"
+                    class="flex items-center justify-center w-full px-2 py-2 text-base font-medium text-white bg-black border
+                        border-transparent leading-6 rounded-md hover:bg-indigo-800 focus:outline-none focus:shadow-outline-gray transition
+                        duration-150 ease-in-out md:py-2 md:px-4 plausible-event-name=Nav+Signup">
+                    Sign Up for Free
+                </a>
+            </div>
+        </nav>
+    </div>
+</div>
+<script>
+    // JavaScript to toggle menu on small screens
+    document.getElementById('menuButton').addEventListener('click', function () {
+        const menuList = document.getElementById('menuList');
+        menuList.classList.toggle('hidden');
+    });
+</script>
