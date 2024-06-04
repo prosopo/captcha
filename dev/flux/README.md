@@ -159,3 +159,12 @@ Use this command to get the logs of the app from a specific node.
 # get logs of a specific dapp and save them to a file. The log format will be `host | log` with the logs separated by a newline
 npx flux getLogs --app <app_name> --file <file_name>
 ```
+
+#### Sign a Message
+
+Use this command to sign a message with the private key of the node.
+
+```bash
+# sign a message
+npx flux sign --msg <message>
+```

@@ -18,30 +18,26 @@ import { ContractAbi } from '@prosopo/captcha-contract/contract-info'
 import { ContractDeployer, getPairAsync } from '@prosopo/contract'
 import { ContractFile } from '@prosopo/captcha-contract/contract-info'
 import { EventRecord } from '@polkadot/types/interfaces'
-import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
+import { LogLevel, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, getSecret } from '@prosopo/cli'
+import { defaultConfig } from '@prosopo/cli'
 import { get } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util'
-import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
-const log = getLogger(LogLevel.enum.info, 'dev.deploy')
+const log = getLogger(LogLevel.enum.info, 'scripts.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
-    const config = defaultConfig()
+    const config = defaultConfig(undefined, undefined, undefined, undefined, deployerPrefix)
+    log.setLogLevel(config.logLevel)
     const network = config.networks[config.defaultNetwork]
-    const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
+    const secret = config.defaultEnvironment === 'development' ? '//Alice' : config.account.secret
     const pair = await getPairAsync(network, secret)
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
-    log.debug(reverseHexString(env.getApi().createType('u16', 10).toHex().toString()), 'max_user_history_len')
-    log.debug(reverseHexString(env.getApi().createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
-    log.debug(reverseHexString(env.getApi().createType('u16', 1).toHex().toString()), 'min_num_active_providers')
     const params: any[] = []
-
-    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex())
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex(), config.logLevel)
     return await deployer.deploy()
 }
 
@@ -80,18 +76,4 @@ export async function run(
     const contractAddress = String(get(instantiateEvent?.event.data, 'contract'))
 
     return contractAddress
-}
-// run the script if the main process is running this file
-if (typeof require !== 'undefined' && require.main === module) {
-    log.info('Loading env from', path.resolve('.'))
-    loadEnv(path.resolve('.'))
-    run(process.env.PROSOPO_CAPTCHA_WASM_PATH, process.env.PROSOPO_CAPTCHA_ABI_PATH)
-        .then((deployResult) => {
-            log.info('Deployed with address', deployResult)
-            process.exit(0)
-        })
-        .catch((e) => {
-            console.error(e)
-            process.exit(1)
-        })
 }

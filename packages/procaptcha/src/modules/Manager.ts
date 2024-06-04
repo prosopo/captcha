@@ -30,15 +30,14 @@ import {
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { Keyring } from '@polkadot/keyring'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import {
-    ProsopoApiError,
     ProsopoContractError,
     ProsopoDatasetError,
     ProsopoEnvError,
     ProsopoError,
     trimProviderUrl,
 } from '@prosopo/common'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -79,7 +78,7 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
 export function Manager(
-    configOptional: ProcaptchaClientConfigInput,
+    configOptional: ProcaptchaClientConfigOutput,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
@@ -205,7 +204,7 @@ export function Manager(
                         procaptchaStorage.blockNumber,
                         signature,
                         undefined,
-                        configOptional.challengeValidLength
+                        configOptional.captchas.image.cachedTimeout
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
@@ -244,12 +243,14 @@ export function Manager(
             const challenge = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
-                throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
+                throw new ProsopoDatasetError('DEVELOPER.PROVIDER_NO_CAPTCHA')
             }
 
-            // setup timeout
+            // setup timeout, taking the timeout from the individual captcha or the global default
             const timeMillis: number = challenge.captchas
-                .map((captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || 30 * 1000)
+                .map(
+                    (captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || config.captchas.image.challengeTimeout
+                )
                 .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
                 events.onChallengeExpired()
@@ -444,7 +445,7 @@ export function Manager(
     }
 
     const setValidChallengeTimeout = () => {
-        const timeMillis: number = configOptional.challengeValidLength || 120 * 1000 // default to 2 minutes
+        const timeMillis: number = configOptional.captchas.image.solutionTimeout
         const successfullChallengeTimeout = setTimeout(() => {
             // Human state expired, disallow user's claim to be human
             updateState({ isHuman: false })
@@ -463,7 +464,9 @@ export function Manager(
 
     const getCaptchaApi = () => {
         if (!state.captchaApi) {
-            throw new ProsopoApiError('API.UNKNOWN', { context: { error: 'Captcha api not set', state } })
+            throw new ProsopoEnvError('API.UNKNOWN', {
+                context: { error: 'Captcha api not set', state },
+            })
         }
         return state.captchaApi
     }

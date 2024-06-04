@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { array, number, object, string, infer as zInfer } from 'zod'
 
@@ -49,6 +50,7 @@ export enum ApiParams {
     dappUserSignature = 'dappUserSignature',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
+    verifiedTimeout = 'verifiedTimeout',
     maxVerifiedTime = 'maxVerifiedTime',
     verified = 'verified',
     status = 'status',
@@ -102,7 +104,7 @@ export const VerifySolutionBody = object({
     [ApiParams.blockNumber]: number(),
     [ApiParams.dappUserSignature]: string(),
     [ApiParams.commitmentId]: string().optional(),
-    [ApiParams.maxVerifiedTime]: number().optional(),
+    [ApiParams.maxVerifiedTime]: number().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 })
 
 export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
@@ -146,9 +148,16 @@ export interface PowCaptchaSolutionResponse {
     [ApiParams.verified]: boolean
 }
 
+/**
+ * Request body for the server to verify a PoW captcha solution
+ * @param {string} challenge - The challenge string
+ * @param {string} dapp - The dapp account (site key)
+ * @param {number} timeout - The maximum time in milliseconds since the Provider was selected at `blockNumber`
+ */
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
+    [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
     [ApiParams.dappUserSignature]: string(),
     [ApiParams.blockNumber]: number(),
 })
@@ -170,6 +179,7 @@ export const SubmitPowCaptchaSolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.dapp]: string(),
     [ApiParams.nonce]: number(),
+    [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 })
 
 export type SubmitPowCaptchaSolutionBodyType = zInfer<typeof SubmitPowCaptchaSolutionBody>

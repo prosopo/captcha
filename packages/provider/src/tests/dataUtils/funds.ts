@@ -17,9 +17,9 @@ import { BN } from '@polkadot/util/bn'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { TransactionQueue } from '@prosopo/tx'
+import { TransactionQueue, oneUnit } from '@prosopo/tx'
 import { at } from '@prosopo/util'
-import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
+import { dispatchErrorHandler } from '@prosopo/contract'
 
 const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
@@ -151,13 +151,16 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 
     // We don't want to stake any more than MAX_ACCOUNT_FUND * existentialDeposit UNIT per provider as the test account
     // funds will be depleted too quickly
-    const maxStake = env.getApi().consts.balances.existentialDeposit.toBn().muln(MAX_ACCOUNT_FUND)
-
+    const existentialDeposit = env.getApi().consts.balances.existentialDeposit.toBn()
+    const maxStake = BN.max(
+        env.getApi().consts.balances.existentialDeposit.toBn().muln(MAX_ACCOUNT_FUND),
+        unit.muln(MAX_ACCOUNT_FUND)
+    )
     if (stake100.lt(maxStake)) {
-        env.logger.debug('Setting stake amount to', stake100.div(unit).toNumber(), 'UNIT')
+        env.logger.debug('Setting stake amount to', stake100.div(unit).toString(), 'UNIT')
         return stake100
     }
-    env.logger.debug('Setting stake amount to', maxStake.div(unit).toNumber(), 'UNIT')
+    env.logger.debug('Setting stake amount to', maxStake.div(unit).toString(), 'UNIT')
     return maxStake
 }
 

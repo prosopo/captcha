@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-pow-example",
-    "version": "0.3.39",
+    "version": "0.3.42",
     "private": true,
     "type": "module",
     "engines": {
@@ -11,11 +11,11 @@
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
-        "@prosopo/common": "0.3.39",
-        "@prosopo/procaptcha": "0.3.39",
-        "@prosopo/procaptcha-pow": "0.3.39",
-        "@prosopo/procaptcha-react": "0.3.39",
-        "@prosopo/types": "0.3.39",
+        "@prosopo/common": "0.3.42",
+        "@prosopo/procaptcha": "0.3.42",
+        "@prosopo/procaptcha-pow": "0.3.42",
+        "@prosopo/procaptcha-react": "0.3.42",
+        "@prosopo/types": "0.3.42",
         "@types/react-dom": "^18.3.0",
         "electron": "25.8.4",
         "react": "^18.3.1",
@@ -23,11 +23,10 @@
         "web-vitals": "^2.1.4"
     },
     "devDependencies": {
-        "@prosopo/cli": "0.3.39",
-        "@prosopo/config": "0.3.39",
+        "@prosopo/cli": "0.3.42",
+        "@prosopo/config": "0.3.42",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
-        "eslint-config-react-app": "^7.0.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
