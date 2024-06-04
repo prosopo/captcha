@@ -55,6 +55,7 @@ export enum ApiParams {
     challenge = 'challenge',
     difficulty = 'difficulty',
     nonce = 'nonce',
+    timeouts = 'timeouts',
 }
 
 export interface DappUserSolutionResult {

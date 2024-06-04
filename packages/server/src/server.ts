@@ -17,18 +17,21 @@ import {
     ContractAbi,
     NetworkConfig,
     NetworkNamesSchema,
-    ProcaptchaOutput,
+    ProcaptchaOutputSchema,
+    ProcaptchaToken,
     ProsopoServerConfigOutput,
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoEnvError, ProsopoError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { decodeOutput } from '@prosopo/procaptcha-common'
 import { get } from '@prosopo/util'
+import { isHex } from '@polkadot/util/is'
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
@@ -222,11 +225,17 @@ export class ProsopoServer {
 
     /**
      *
-     * @param payload Info output by procaptcha on completion of the captcha process
      * @returns
+     * @param token
      */
-    public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
-        const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
+    public async isVerified(token: ProcaptchaToken): Promise<boolean> {
+        if (!isHex(token)) {
+            throw new ProsopoError('CAPTCHA.INVALID_TOKEN', { context: { token } })
+        }
+
+        const payload = decodeOutput(token)
+
+        const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
 
         if (providerUrl && blockNumber) {
             // By requiring block number, we load balance requests to the providers by requiring that the random

@@ -1,5 +1,5 @@
-import { u8aToHex } from '@polkadot/util'
 import { ApiParams, ProcaptchaOutput, ProcaptchaToken, ProcaptchaTokenCodec } from '@prosopo/types'
+import { hexToU8a, u8aToHex } from '@polkadot/util'
 
 export const encodeOutput = (procaptchaOutput: ProcaptchaOutput): ProcaptchaToken => {
     return u8aToHex(
@@ -12,4 +12,8 @@ export const encodeOutput = (procaptchaOutput: ProcaptchaOutput): ProcaptchaToke
             ...procaptchaOutput,
         })
     )
+}
+
+export const decodeOutput = (procaptchaToken: ProcaptchaToken): ProcaptchaOutput => {
+    return ProcaptchaTokenCodec.dec(hexToU8a(procaptchaToken))
 }

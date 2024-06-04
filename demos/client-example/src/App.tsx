@@ -17,7 +17,7 @@ import {
     EnvironmentTypes,
     EnvironmentTypesSchema,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
+    ProcaptchaToken,
 } from '@prosopo/types'
 import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
 import { Procaptcha } from '@prosopo/procaptcha-react'
@@ -45,7 +45,7 @@ function App(props: AppProps) {
     // whether the form is doing a login or a signup action
     const [isLogin, setIsLogin] = useState(true)
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
-    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
+    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaToken | undefined>(undefined)
 
     const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
@@ -139,9 +139,9 @@ function App(props: AppProps) {
         setMessage('')
     }
 
-    const onHuman = async (procaptchaOutput: ProcaptchaOutput) => {
-        console.log('onHuman', procaptchaOutput)
-        setProcaptchaOutput(procaptchaOutput)
+    const onHuman = async (procaptchaToken: ProcaptchaToken) => {
+        console.log('onHuman', procaptchaToken)
+        setProcaptchaOutput(procaptchaToken)
     }
 
     const getMessage = () => {

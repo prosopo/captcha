@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams, CaptchaResponseBody } from '../provider/index.js'
+import { HexString } from '@polkadot/util/types'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { Option, Struct, str, u32 } from 'scale-ts'
 import { ProsopoCaptchaApiInterface } from './api.js'
 import { TCaptchaSubmitResult } from './client.js'
-import { number, object, string, infer as zInfer } from 'zod'
-import { u32, str, Codec, Struct, Option } from 'scale-ts'
+import { literal, number, object, string, infer as zInfer } from 'zod'
 /**
  * House the account and associated extension.
  */
@@ -50,10 +51,10 @@ export const ProcaptchaTokenCodec = Struct({
     challenge: Option(str),
 })
 
-export type ProcaptchaToken = string
+export type ProcaptchaToken = HexString
 
 export const ProcaptchaResponse = object({
-    [ApiParams.procaptchaResponse]: ProcaptchaOutputSchema,
+    [ApiParams.procaptchaResponse]: literal(`0x${string()}`),
 })
 
 /**

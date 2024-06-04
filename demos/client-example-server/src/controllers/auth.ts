@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, ProcaptchaOutput, ProcaptchaOutputSchema } from '@prosopo/types'
+import { ApiParams, ProcaptchaToken } from '@prosopo/types'
 import { Connection } from 'mongoose'
 import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
@@ -39,7 +39,7 @@ const verify = async (
     prosopoServer: ProsopoServer,
     verifyType: string,
     verifyEndpoint: string,
-    data: ProcaptchaOutput
+    token: ProcaptchaToken
 ) => {
     if (verifyType === 'api') {
         // verify using the API endpoint
@@ -47,14 +47,14 @@ const verify = async (
 
         const response = await fetch(verifyEndpoint, {
             method: 'POST',
-            body: JSON.stringify(data),
+            body: JSON.stringify({ [ApiParams.procaptchaResponse]: token }),
         })
         return (await response.json()).verified
     } else {
         // verify using the TypeScript library
         console.log('verifying using the TypeScript library')
 
-        return await prosopoServer.isVerified(data)
+        return await prosopoServer.isVerified(token)
     }
 }
 
@@ -80,12 +80,12 @@ const signup = async (
         }
         console.log('payload', payload)
 
-        // get the contents of the procaptcha-response JSON data
-        const data = ProcaptchaOutputSchema.parse(payload[ApiParams.procaptchaResponse])
+        // get the procaptcha-response token
+        const token = payload[ApiParams.procaptchaResponse]
 
-        console.log('sending data', data)
+        console.log('sending data', token)
 
-        const verified = await verify(prosopoServer, verifyType, verifyEndpoint, data)
+        const verified = await verify(prosopoServer, verifyType, verifyEndpoint, token)
 
         if (verified) {
             // salt
@@ -136,9 +136,9 @@ const login = async (
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
 
-                const data = ProcaptchaOutputSchema.parse(payload[ApiParams.procaptchaResponse])
+                const token = payload[ApiParams.procaptchaResponse]
 
-                const verified = await verify(prosopoServer, verifyType, verifyEndpoint, data)
+                const verified = await verify(prosopoServer, verifyType, verifyEndpoint, token)
 
                 if (verified) {
                     // password hash
