@@ -1,0 +1,8 @@
+[sources.track]
+type = "file"
+include = ["/var/log/nginx/access.log"]
+read_from = "end"
+[sinks.track]
+type = "http"
+inputs = [ "track" ]
+uri = "https://10.22.212.22:9000/endpoint"
