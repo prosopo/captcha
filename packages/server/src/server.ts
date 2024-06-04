@@ -23,7 +23,7 @@ import {
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, ProsopoError, getLogger, trimProviderUrl } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
@@ -230,7 +230,8 @@ export class ProsopoServer {
      */
     public async isVerified(token: ProcaptchaToken): Promise<boolean> {
         if (!isHex(token)) {
-            throw new ProsopoError('CAPTCHA.INVALID_TOKEN', { context: { token } })
+            this.logger.error('Invalid token - not hex', token)
+            return false
         }
 
         const payload = decodeOutput(token)
