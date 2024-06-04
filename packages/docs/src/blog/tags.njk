@@ -1,0 +1,23 @@
+---
+layout: blog.njk
+pagination:
+    data: collections
+    size: 1
+    alias: tag
+permalink: /tags/{{ tag }}/
+---
+<section class="bg-gray-100">
+    <div class="relative items-center w-full px-5 py-12 mx-auto md:px-12 lg:px-20 max-w-7xl">
+        <h1 class="text-2xl font-medium tracking-tight text-black sm:text-4xl">{{ tag }}</h1>
+        <hr>
+        <ol class="relative grid grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-2" role="list">
+            <ol class="relative grid grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-2" role="list">
+                {% set taglist = collections[ tag ] %}
+                {% for post in taglist | reverse %}
+                    <li class="mt-2"><a class="text-blue-700" href="{{ post.url }}">{{ post.data.title }}</a></li>
+                {% endfor %}
+            </ol>
+        </ol>
+    </div>
+</section>
+

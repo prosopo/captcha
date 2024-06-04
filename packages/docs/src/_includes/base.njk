@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% include "head.njk" %} <link rel="stylesheet" href="/static/styles.min.css">
+        <script src="/assets/scripts/formValidation.js"></script>
+        <script id="procaptchaScript" type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js"></script>
+        <link
+        rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <!-- Try and serve Google Fonts in the most efficent way possible -->
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link
+            rel="preload"
+            href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
+            as="style"
+            onload="this.onload=null;this.rel='stylesheet'"/>
+        <noscript>
+            <link
+                href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
+                rel="stylesheet"
+                type="text/css"/>
+        </noscript>
+    </head>
+    <body class="flex flex-col h-full max-h-screen max-w-screen">
+        <div>
+            {% include "navbarClean.njk" %}
+            {% block content %}{% endblock %}
+        </div>
+        {% include "footer.njk" %}
+        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    </body>
+</html>

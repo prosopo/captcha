@@ -1,0 +1,27 @@
+{% extends "baseNav.njk" %} Content!
+{% block content %}
+    <div>
+        <!-- Header -->
+        <header id="header" class="py-6 bg-gray-50">
+            <div class="container mx-auto">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="text-center">
+                        <h1 class="text-5xl font-bold">{{ title }}</h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Details 2 -->
+        <div class="container mx-auto">
+            <div class="flex flex-col items-center justify-center">
+                <div class="w-full lg:w-3/4 bg-white p-8">
+                    <div class="prose prose-lg">
+                        {{ content | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "start-for-free.njk" %}
+
+    </div>
+{% endblock %}

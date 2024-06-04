@@ -1,0 +1,10 @@
+<div class="team" id="team">
+    {% for team_member in site.team -%}
+        <div class="img-team">
+            <a href="{{ team_member.url }}" title="{{ team_member.name }}">
+                <img class="img-fluid" src="{{ team_member.image }}" alt="{{ team_member.name }}">
+                    <span class="caption">{{ team_member.name }}</span>
+                </a>
+            </div>
+        {% endfor -%}
+    </div>
