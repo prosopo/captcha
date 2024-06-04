@@ -30,7 +30,7 @@ import {
     StoredEvents,
     SubmitPowCaptchaSolutionBody,
     VerificationResponse,
-    VerifySolutionBodyType,
+    VerifySolutionBodyTypeInput,
 } from '@prosopo/types'
 import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
@@ -83,13 +83,17 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
-        const payload: VerifySolutionBodyType = {
+        const payload: VerifySolutionBodyTypeInput = {
             [ApiParams.dapp]: dapp.toString(),
             [ApiParams.user]: userAccount.toString(),
             [ApiParams.blockNumber]: blockNumber,
             [ApiParams.dappUserSignature]: dappUserSignature,
-            ...(commitmentId && { [ApiParams.commitmentId]: commitmentId }),
-            ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
+        }
+        if (commitmentId) {
+            payload[ApiParams.commitmentId] = commitmentId
+        }
+        if (maxVerifiedTime) {
+            payload[ApiParams.maxVerifiedTime] = maxVerifiedTime
         }
 
         return this.post(ApiPaths.VerifyCaptchaSolutionDapp, payload)
@@ -103,7 +107,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
-        const payload: VerifySolutionBodyType = {
+        const payload: VerifySolutionBodyTypeInput = {
             [ApiParams.dapp]: dapp.toString(),
             [ApiParams.user]: userAccount.toString(),
             [ApiParams.blockNumber]: blockNumber,
@@ -162,16 +166,18 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         challenge: string,
         dapp: string,
         signatureHex: string,
-        blockNumber: number
+        blockNumber: number,
+        recencyLimit: number
     ): Promise<VerificationResponse> {
         const body: ServerPowCaptchaVerifyRequestBodyType = {
             [ApiParams.challenge]: challenge,
             [ApiParams.dapp]: dapp,
             [ApiParams.dappUserSignature]: signatureHex,
+            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.verifiedTimeout]: recencyLimit,
         }
         return this.post(ApiPaths.ServerPowCaptchaVerify, {
-            body
+            body,
         })
     }
 }

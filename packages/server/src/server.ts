@@ -206,7 +206,13 @@ export class ProsopoServer {
 
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, signatureHex, blockNumber, timeouts.pow.cachedTimeout)
+            const result = await providerApi.submitPowCaptchaVerify(
+                challenge,
+                dapp,
+                signatureHex,
+                blockNumber,
+                timeouts.pow.cachedTimeout
+            )
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
@@ -215,7 +221,8 @@ export class ProsopoServer {
         if (!recent) {
             // bail early if the block is too old. This saves us calling the Provider.
             return false
-        }const result = await providerApi.verifyDappUser(
+        }
+        const result = await providerApi.verifyDappUser(
             dapp,
             user,
             blockNumber,
