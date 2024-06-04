@@ -33,6 +33,7 @@ export const ProcaptchaOutputSchema = object({
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number().optional(),
     [ApiParams.challenge]: string().optional(),
+    [ApiParams.nonce]: number().optional(),
 })
 
 /**
@@ -49,6 +50,7 @@ export const ProcaptchaTokenCodec = Struct({
     user: str,
     blockNumber: Option(u32),
     challenge: Option(str),
+    nonce: Option(u32),
 })
 
 export type ProcaptchaToken = HexString

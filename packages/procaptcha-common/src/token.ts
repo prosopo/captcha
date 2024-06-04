@@ -8,6 +8,7 @@ export const encodeOutput = (procaptchaOutput: ProcaptchaOutput): ProcaptchaToke
             [ApiParams.providerUrl]: undefined,
             [ApiParams.blockNumber]: undefined,
             [ApiParams.challenge]: undefined,
+            [ApiParams.nonce]: undefined,
             // override any optional fields by spreading the procaptchaOutput
             ...procaptchaOutput,
         })

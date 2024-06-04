@@ -221,6 +221,7 @@ export const Manager = (
                     [ApiParams.dapp]: getDappAccount(),
                     [ApiParams.challenge]: challenge.challenge,
                     [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
+                    [ApiParams.nonce]: solution,
                 })
             )
             setValidChallengeTimeout()
