@@ -33,7 +33,6 @@ import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { buildUpdateState, encodeOutput, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
 import { solvePoW } from '@prosopo/util'
-import { u8aToHex } from '@polkadot/util'
 
 export const Manager = (
     configInput: ProcaptchaClientConfigInput,
