@@ -21,10 +21,8 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
-    ProcaptchaTokenCodec,
     StoredEvents,
     TCaptchaSubmitResult,
 } from '@prosopo/types'
@@ -49,7 +47,6 @@ import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
-import { u8aToHex } from '@polkadot/util'
 
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -172,16 +169,10 @@ export function Manager(
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
                 events.onHuman(
-                    u8aToHex(
-                        ProcaptchaTokenCodec.enc({
-                            user: account.account.address,
-                            dapp: getDappAccount(),
-                            commitmentId: undefined,
-                            blockNumber: undefined,
-                            providerUrl: undefined,
-                            challenge: undefined,
-                        })
-                    )
+                    encodeOutput({
+                        user: account.account.address,
+                        dapp: getDappAccount(),
+                    })
                 )
                 setValidChallengeTimeout()
                 return

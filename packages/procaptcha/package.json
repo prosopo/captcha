@@ -49,8 +49,7 @@
         "@prosopo/datasets": "0.3.42",
         "@prosopo/procaptcha-common": "0.3.42",
         "@prosopo/types": "0.3.42",
-        "@prosopo/util": "0.3.42",
-        "scale-ts": "^1.6.0"
+        "@prosopo/util": "0.3.42"
     },
     "overrides": {
         "@polkadot/extension-inject": {
