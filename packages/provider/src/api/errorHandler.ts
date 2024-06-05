@@ -27,11 +27,7 @@ export const handleErrors = (
     while (err instanceof ProsopoBaseError && err.context && err.context.error) {
         err = err.context.error
     }
-    let message = err.message
+    const message = err.message
 
-    if (typeof message !== 'string') {
-        message = JSON.stringify(message)
-    }
-
-    response.writeHead(code, message, { 'content-type': 'application/json' }).end()
+    response.writeHead(code, JSON.stringify(message), { 'content-type': 'application/json' }).end()
 }

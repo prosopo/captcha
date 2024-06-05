@@ -19,13 +19,13 @@ import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import { array, input, number, object, output, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
-    GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
+    GetImageCaptchaChallenge = '/v1/prosopo/provider/captcha/image',
     GetPowCaptchaChallenge = '/v1/prosopo/provider/captcha/pow',
-    SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
+    SubmitImageCaptchaSolution = '/v1/prosopo/provider/solution',
     SubmitPowCaptchaSolution = '/v1/prosopo/provider/pow/solution',
-    ServerPowCaptchaVerify = '/v1/prosopo/provider/pow/server-verify',
-    VerifyCaptchaSolutionDapp = '/v1/prosopo/provider/dapp-verify',
-    VerifyCaptchaSolutionUser = '/v1/prosopo/provider/user-verify',
+    VerifyPowCaptchaSolution = '/v1/prosopo/provider/pow/verify',
+    VerifyImageCaptchaSolutionDapp = `/v1/prosopo/provider/image/${ApiParams.dapp}/verify`,
+    VerifyImageCaptchaSolutionUser = `/v1/prosopo/provider/image/${ApiParams.user}/verify`,
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
     SubmitUserEvents = '/v1/prosopo/provider/events',
@@ -133,7 +133,7 @@ export interface PowCaptchaSolutionResponse {
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.token]: ProcaptchaTokenSpec,
-    [ApiParams.dappUserSignature]: string(),
+    [ApiParams.dappSignature]: string(),
     [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 })
 

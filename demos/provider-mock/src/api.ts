@@ -30,14 +30,14 @@ export function prosopoRouter(): Router {
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      */
-    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
+    router.post(ApiPaths.VerifyImageCaptchaSolutionDapp, async (req, res, next) => {
         let body: VerifySolutionBodyTypeOutput
         try {
             body = VerifySolutionBody.parse(req.body)
         } catch (err) {
             return next(
                 new ProsopoApiError('CAPTCHA.PARSE_ERROR', {
-                    context: { error: err, errorCode: 400 },
+                    context: { error: err, code: 400 },
                     logLevel: 'info',
                 })
             )
@@ -69,7 +69,7 @@ export function prosopoRouter(): Router {
                 verified: false,
             })
         } catch (err) {
-            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, code: 500 } }))
         }
     })
 

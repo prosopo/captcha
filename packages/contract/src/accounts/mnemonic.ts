@@ -34,7 +34,7 @@ export async function generateMnemonic(keyring?: Keyring, pairType?: KeypairType
  * @param keyring
  * @param pairType
  */
-export async function generateSecret(keyring?: Keyring, pairType?: KeypairType): Promise<[Uint8Array, string]> {
+export async function generateMiniSecret(keyring?: Keyring, pairType?: KeypairType): Promise<[Uint8Array, string]> {
     const [mnemonic, address] = await generateMnemonic(keyring, pairType)
     return [mnemonicToMiniSecret(mnemonic), address]
 }

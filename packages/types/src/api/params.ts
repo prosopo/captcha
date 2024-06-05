@@ -22,6 +22,7 @@ export enum ApiParams {
     captchas = 'captchas',
     commitmentId = 'commitmentId',
     proof = 'proof',
+    dappSignature = 'dappSignature',
     dappUserSignature = 'dappUserSignature',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',

@@ -53,7 +53,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @return {Captcha} - The Captcha data
      */
     router.get(
-        `${ApiPaths.GetCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
+        `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
         async (req, res, next) => {
             try {
                 const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
@@ -95,7 +95,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @param {Captcha[]} captchas - The Captcha solutions
      * @return {DappUserSolutionResult} - The Captcha solution result and proof
      */
-    router.post(ApiPaths.SubmitCaptchaSolution, async (req, res, next) => {
+    router.post(ApiPaths.SubmitImageCaptchaSolution, async (req, res, next) => {
         let parsed: CaptchaSolutionBodyType
         try {
             parsed = CaptchaSolutionBody.parse(req.body)

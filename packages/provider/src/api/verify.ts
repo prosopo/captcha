@@ -46,7 +46,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {NextFunction} next - Express next function.
      * @param {boolean} isDapp - Indicates whether the verification is for a dapp (true) or user (false).
      */
-    async function verifySolution(res: Response, req: Request, next: NextFunction, isDapp: boolean) {
+    async function verifyImageSolution(res: Response, req: Request, next: NextFunction, isDapp: boolean) {
         const parsed = VerifySolutionBody.parse(req.body)
         try {
             const { dappUserSignature, token } = parsed
@@ -120,9 +120,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {string} commitmentId - The captcha solution to look up
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
-    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
+    router.post(ApiPaths.VerifyImageCaptchaSolutionDapp, async (req, res, next) => {
         try {
-            await verifySolution(res, req, next, true)
+            await verifyImageSolution(res, req, next, true)
         } catch (err) {
             return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
         }
@@ -138,9 +138,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {string} commitmentId - The captcha solution to look up
      * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
      */
-    router.post(ApiPaths.VerifyCaptchaSolutionUser, async (req, res, next) => {
+    router.post(ApiPaths.VerifyImageCaptchaSolutionUser, async (req, res, next) => {
         try {
-            await verifySolution(res, req, next, false)
+            await verifyImageSolution(res, req, next, false)
         } catch (err) {
             return next(new ProsopoApiError('CAPTCHA.PARSE_ERROR', { context: { code: 400, error: err } }))
         }
@@ -152,9 +152,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      * @param {string} dappAccount - Dapp User id
      * @param {string} challenge - The captcha solution to look up
      */
-    router.post(ApiPaths.ServerPowCaptchaVerify, async (req, res, next) => {
+    router.post(ApiPaths.VerifyPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { token, dappUserSignature, verifiedTimeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
+            const { token, dappSignature, verifiedTimeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
 
             const { dapp, blockNumber, challenge } = decodeProcaptchaOutput(token)
 
@@ -170,10 +170,15 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             const dappPair = env.keyring.addFromAddress(dapp)
 
             // Will throw an error if the signature is invalid
-            verifySignature(dappUserSignature, blockNumber.toString(), dappPair)
-
+            verifySignature(dappSignature, blockNumber.toString(), dappPair)
+            console.log({
+                dapp,
+                blockNumber,
+                challenge,
+                verifiedTimeout,
+            })
             const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, verifiedTimeout)
-
+            console.log('approved', approved)
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
                 [ApiParams.verified]: approved,
