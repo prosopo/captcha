@@ -45,7 +45,7 @@ function App(props: AppProps) {
     // whether the form is doing a login or a signup action
     const [isLogin, setIsLogin] = useState(true)
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
-    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaToken | undefined>(undefined)
+    const [procaptchaToken, setProcaptchaToken] = useState<ProcaptchaToken | undefined>(undefined)
 
     const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
@@ -93,14 +93,14 @@ function App(props: AppProps) {
     }
 
     const onActionHandler = () => {
-        if (!procaptchaOutput) {
+        if (!procaptchaToken) {
             alert('Must complete captcha')
         }
         const payload = {
             email,
             name,
             password,
-            [ApiParams.procaptchaResponse]: procaptchaOutput,
+            [ApiParams.procaptchaResponse]: procaptchaToken,
         }
         const url = new URL(urlPath, config.serverUrl).href
         console.log('posting to', url, 'with payload', payload)
@@ -141,7 +141,7 @@ function App(props: AppProps) {
 
     const onHuman = async (procaptchaToken: ProcaptchaToken) => {
         console.log('onHuman', procaptchaToken)
-        setProcaptchaOutput(procaptchaToken)
+        setProcaptchaToken(procaptchaToken)
     }
 
     const getMessage = () => {
@@ -233,7 +233,7 @@ function App(props: AppProps) {
                                             <Button
                                                 variant="contained"
                                                 onClick={onActionHandler}
-                                                disabled={!procaptchaOutput}
+                                                disabled={!procaptchaToken}
                                             >
                                                 {isLogin ? 'Login' : 'Sign up'}
                                             </Button>

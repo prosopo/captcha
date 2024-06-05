@@ -20,6 +20,7 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2 } from '@prosopo/account'
@@ -30,7 +31,7 @@ import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { buildUpdateState, encodeOutput, getDefaultEvents } from '@prosopo/procaptcha-common'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
 import { solvePoW } from '@prosopo/util'
 
@@ -215,7 +216,7 @@ export const Manager = (
                 loading: false,
             })
             events.onHuman(
-                encodeOutput({
+                encodeProcaptchaOutput({
                     [ApiParams.providerUrl]: providerUrl,
                     [ApiParams.user]: getAccount().account.address,
                     [ApiParams.dapp]: getDappAccount(),

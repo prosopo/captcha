@@ -13,7 +13,7 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { NetworkConfigSchema, NetworkNamesSchema, networks as getNetworks } from '@prosopo/types'
-import { decodeOutput } from '@prosopo/procaptcha-common'
+import { decodeProcaptchaOutput } from '@prosopo/types'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { run as fundDapps } from '../contract/fundDapps.js'
@@ -272,7 +272,7 @@ export async function processArgs(args: string[]) {
                     log.error('Token must be a hex string')
                     process.exit(1)
                 }
-                log.info(decodeOutput(argv.tokenHex))
+                log.info(decodeProcaptchaOutput(argv.tokenHex))
             },
         }).argv
 }

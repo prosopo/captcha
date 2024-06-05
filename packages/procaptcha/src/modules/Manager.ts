@@ -25,6 +25,7 @@ import {
     ProcaptchaStateUpdateFn,
     StoredEvents,
     TCaptchaSubmitResult,
+    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
@@ -42,7 +43,7 @@ import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at, hashToHex } from '@prosopo/util'
-import { buildUpdateState, encodeOutput, getDefaultEvents } from '@prosopo/procaptcha-common'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
@@ -169,9 +170,10 @@ export function Manager(
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
                 events.onHuman(
-                    encodeOutput({
-                        user: account.account.address,
-                        dapp: getDappAccount(),
+                    encodeProcaptchaOutput({
+                        [ApiParams.user]: account.account.address,
+                        [ApiParams.dapp]: getDappAccount(),
+                        [ApiParams.blockNumber]: getBlockNumber(),
                     })
                 )
                 setValidChallengeTimeout()
@@ -187,11 +189,25 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(
-                        getDappAccount(),
-                        account.account.address,
-                        procaptchaStorage.blockNumber,
-                        undefined,
+                    const extension = getExtension(account)
+                    if (!extension || !extension.signer || !extension.signer.signRaw) {
+                        throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
+                    }
+
+                    const signRaw = extension.signer.signRaw
+                    const { signature } = await signRaw({
+                        address: account.account.address,
+                        data: procaptchaStorage.blockNumber.toString(),
+                        type: 'bytes',
+                    })
+                    const token = encodeProcaptchaOutput({
+                        [ApiParams.user]: account.account.address,
+                        [ApiParams.dapp]: getDappAccount(),
+                        [ApiParams.blockNumber]: procaptchaStorage.blockNumber,
+                    })
+                    const verifyDappUserResponse = await providerApi.verifyUser(
+                        token,
+                        signature,
                         configOptional.captchas.image.cachedTimeout
                     )
                     if (verifyDappUserResponse.verified) {
@@ -203,7 +219,7 @@ export function Manager(
                             [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
                             [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         }
-                        events.onHuman(encodeOutput(output))
+                        events.onHuman(encodeProcaptchaOutput(output))
                         setValidChallengeTimeout()
                         return
                     }
@@ -329,7 +345,7 @@ export function Manager(
                 // cache this provider for future use
                 storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
                 events.onHuman(
-                    encodeOutput({
+                    encodeProcaptchaOutput({
                         [ApiParams.providerUrl]: providerUrl,
                         [ApiParams.user]: account.account.address,
                         [ApiParams.dapp]: getDappAccount(),

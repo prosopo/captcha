@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, CaptchaResponseBody } from '../provider/index.js'
-import { HexString } from '@polkadot/util/types'
+import { ApiParams } from '../api/index.js'
+import { CaptchaResponseBody } from '../provider/index.js'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { Option, Struct, str, u32 } from 'scale-ts'
+import { ProcaptchaToken, ProcaptchaTokenSpec } from './token.js'
 import { ProsopoCaptchaApiInterface } from './api.js'
 import { TCaptchaSubmitResult } from './client.js'
-import { literal, number, object, string, infer as zInfer } from 'zod'
+import { object } from 'zod'
 /**
  * House the account and associated extension.
  */
@@ -26,37 +26,8 @@ export interface Account {
     extension?: InjectedExtension
 }
 
-export const ProcaptchaOutputSchema = object({
-    [ApiParams.commitmentId]: string().optional(),
-    [ApiParams.providerUrl]: string().optional(),
-    [ApiParams.dapp]: string(),
-    [ApiParams.user]: string(),
-    [ApiParams.blockNumber]: number().optional(),
-    [ApiParams.challenge]: string().optional(),
-    [ApiParams.nonce]: number().optional(),
-})
-
-/**
- * The information produced by procaptcha on completion of the captcha process,
- * whether verified by smart contract, a pending commitment in the cache of a
- * provider or a captcha challenge.
- */
-export type ProcaptchaOutput = zInfer<typeof ProcaptchaOutputSchema>
-
-export const ProcaptchaTokenCodec = Struct({
-    commitmentId: Option(str),
-    providerUrl: Option(str),
-    dapp: str,
-    user: str,
-    blockNumber: Option(u32),
-    challenge: Option(str),
-    nonce: Option(u32),
-})
-
-export type ProcaptchaToken = HexString
-
 export const ProcaptchaResponse = object({
-    [ApiParams.procaptchaResponse]: literal(`0x${string()}`),
+    [ApiParams.procaptchaResponse]: ProcaptchaTokenSpec,
 })
 
 /**
