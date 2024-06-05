@@ -17,7 +17,7 @@ import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { i18nMiddleware } from '@prosopo/common'
 import { loadEnv } from './env.js'
-import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter } from '@prosopo/provider'
+import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter, storeCaptchasExternally } from '@prosopo/provider'
 import cors from 'cors'
 import express from 'express'
 import getConfig from './prosopo.config.js'
@@ -59,6 +59,13 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
+
+    // Start the scheduled job
+    if (env.pair) {
+        storeCaptchasExternally(env.pair, env.config).catch((err) => {
+            env.logger.error('Failed to start scheduler:', err)
+        })
+    }
 
     return startApi(env, admin)
 }
