@@ -16,9 +16,9 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Tasks } from './tasks/tasks.js'
+import { Tasks } from '../tasks/tasks.js'
 
-export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfigOutput) {
+export async function storeCaptchasExternally(pair: KeyringPair, config: ProsopoConfigOutput) {
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
     if (env.db === undefined) {
