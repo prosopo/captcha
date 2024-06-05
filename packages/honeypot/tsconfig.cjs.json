@@ -3,13 +3,8 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist/cjs",
-        "lib": ["es6", "dom"],
-        "jsxImportSource": "@emotion/react"
+        "lib": ["es6", "dom"]
     },
     "include": ["src/index.tsx"],
-    "references": [
-        {
-            "path": "../util/tsconfig.cjs.json"
-        }
-    ]
+    "references": []
 }

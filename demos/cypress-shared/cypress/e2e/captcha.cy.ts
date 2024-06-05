@@ -16,7 +16,7 @@ import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { at } from '@prosopo/util'
-import { checkboxClass } from '../support/commands.js'
+import { checkboxClass, honeypotSelector } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 describe('Captchas', () => {
@@ -39,6 +39,10 @@ describe('Captchas', () => {
             // wrap the solutions to make them available to the tests
             cy.wrap(solutions).as('solutions')
         })
+    })
+
+    it('Should not have honeypot detected', () => {
+        cy.get(honeypotSelector).should('not.exist')
     })
 
     it("Captchas load when 'I am human' is pressed", () => {

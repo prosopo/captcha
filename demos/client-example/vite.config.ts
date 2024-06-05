@@ -45,6 +45,7 @@ export default defineConfig(async function ({ command, mode }) {
         'process.env.PROSOPO_SERVER_PORT': JSON.stringify(process.env.PROSOPO_SERVER_PORT),
         'process.env.PROSOPO_PORT': JSON.stringify(process.env.PROSOPO_PORT),
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
+        'process.env.PROSOPO_HONEYPOT': JSON.stringify(process.env.PROSOPO_HONEYPOT),
     }
     logger.debug('define', JSON.stringify(define))
     return {
