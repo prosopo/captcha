@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { NetworkConfigSchema, NetworkNamesSchema, networks as getNetworks } from '@prosopo/types'
-import { decodeProcaptchaOutput } from '@prosopo/types'
+import {
+    NetworkConfigSchema,
+    NetworkNamesSchema,
+    decodeProcaptchaOutput,
+    networks as getNetworks,
+} from '@prosopo/types'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { run as fundDapps } from '../contract/fundDapps.js'

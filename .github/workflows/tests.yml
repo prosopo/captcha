@@ -65,17 +65,12 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
-            - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
                       node_modules
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard

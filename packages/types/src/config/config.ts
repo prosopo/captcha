@@ -79,7 +79,7 @@ export const ProsopoBaseConfigSchema = object({
     // The account with which to query the contract.merge sign transactions
     account: object({
         address: string().optional(),
-        secret: string().optional(),
+        secret: string(),
         password: string().optional(),
     }),
 })
