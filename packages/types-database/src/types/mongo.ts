@@ -35,6 +35,7 @@ export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' 
     userSignature: number[]
     processed: boolean
     batched: boolean
+    stored?: boolean
 }
 
 export const UserCommitmentSchema = object({
@@ -112,6 +113,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userSignature: { type: [Number], required: true },
     processed: { type: Boolean, required: true },
     batched: { type: Boolean, required: true },
+    stored: { type: Boolean, required: false },
 })
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 })
