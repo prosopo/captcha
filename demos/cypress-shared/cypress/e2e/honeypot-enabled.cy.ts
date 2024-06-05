@@ -15,7 +15,7 @@
 import '@cypress/xpath'
 import { Captcha } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
-import { checkboxClass } from '../support/commands.js'
+import { checkboxClass, honeypotSelector } from '../support/commands.js'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
 const checkAndClickCaptchas = () => {
@@ -50,6 +50,8 @@ describe('Honeypot Field Tests', () => {
     it('BotD catch (no mocks, do not fill honeypot)', () => {
         cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
+            cy.get(honeypotSelector).should('have.value', '')
+            cy.window().its('__botDetected').should('be.true')
             cy.clickIAmHuman().then(checkAndClickCaptchas)
         })
     })
@@ -58,18 +60,12 @@ describe('Honeypot Field Tests', () => {
         cy.stubBotdDetect()
         cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
-            cy.honeypotExists().then((isHoneypotExists) => {
-                cy.wait('@mockBotDetection')
-                if (isHoneypotExists) {
-                    cy.get('input#firstname').type('I am a bot', { force: true })
-                    cy.get(checkboxClass, { timeout: 12000 }).first().click()
-                    cy.checkHoneypot().then((isHoneypotFilled) => {
-                        if (isHoneypotFilled) {
-                            cy.clickIAmHuman().then(checkAndClickCaptchas)
-                        } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
-                    })
-                } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
-            })
+            cy.wait('@mockBotDetection')
+            cy.window().its('__botDetected').should('be.false')
+            cy.get(honeypotSelector).type('I am a bot', { force: true })
+            cy.get(checkboxClass, { timeout: 12000 }).first().click()
+            cy.get(honeypotSelector).should('have.value', 'I am a bot')
+            cy.clickIAmHuman().then(checkAndClickCaptchas)
         })
     })
 
@@ -77,16 +73,10 @@ describe('Honeypot Field Tests', () => {
         cy.stubBotdDetect()
         cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
-            cy.honeypotExists().then((isHoneypotExists) => {
-                cy.wait('@mockBotDetection')
-                if (isHoneypotExists) {
-                    cy.checkHoneypot().then((isHoneypotFilled) => {
-                        if (isHoneypotFilled) {
-                            cy.clickIAmHuman().then(checkAndClickCaptchas)
-                        } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
-                    })
-                } else cy.get(checkboxClass, { timeout: 12000 }).first().click()
-            })
+            cy.wait('@mockBotDetection')
+            cy.window().its('__botDetected').should('be.false')
+            cy.get(honeypotSelector).should('have.value', '')
+            cy.get(checkboxClass, { timeout: 12000 }).first().click()
         })
     })
 })

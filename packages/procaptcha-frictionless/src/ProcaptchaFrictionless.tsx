@@ -22,12 +22,17 @@ import { useEffect, useState } from 'react'
 export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
     // Use state to manage which component to render
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
-    const honeypotDetected = config.honeypotFlag && Honeypot()
+    const honeypotDetected = config.createHoneypot && Honeypot()
 
     useEffect(() => {
         const detect = async () => {
             try {
                 const botDetected = await botDetection.detectBot()
+
+                if (process.env.NODE_ENV === 'development') {
+                    window.__botDetected = botDetected
+                }
+
                 if (botDetected || honeypotDetected) {
                     setComponentToRender(
                         <Procaptcha config={config} callbacks={callbacks} honeypotDetected={honeypotDetected != ''} />

@@ -11,18 +11,4 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { load } from '@fingerprintjs/botd'
-
-export const botDetection = {
-    detectBot: async () => {
-        try {
-            const botd = await load()
-            const result = botd.detect()
-
-            return result.bot
-        } catch (error) {
-            console.error('Error detecting bot:', error)
-            return false
-        }
-    },
-}
+export * from './globals.js'

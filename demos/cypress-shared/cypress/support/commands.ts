@@ -26,14 +26,13 @@ declare global {
             clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>
             getSelectors(captcha: Captcha): Cypress.Chainable<string[]>
             clickNextButton(): Cypress.Chainable<JQuery<Node>>
-            honeypotExists(): Chainable<boolean>
-            checkHoneypot(): Chainable<boolean>
             stubBotdDetect(): Chainable<void>
         }
     }
 }
 
 export const checkboxClass = '[type="checkbox"]'
+export const honeypotSelector = 'input#firstname'
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
     cy.intercept('GET', '**/prosopo/provider/captcha/**').as('getCaptcha')
     cy.log('Clicking I am human checkbox')
@@ -127,25 +126,6 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLEleme
     })
 }
 
-function checkHoneypot(): Chainable<boolean> {
-    return cy.get('input#firstname').then((input) => {
-        const value = input.val() as string
-        return value.trim() !== ''
-    })
-}
-
-function honeypotExists(): Chainable<boolean> {
-    return cy.document().then((doc) => {
-        return cy
-            .window()
-            .should('have.property', 'document')
-            .then(() => {
-                const elementExists = doc.querySelector('input#firstname') !== null
-                return elementExists
-            })
-    })
-}
-
 function clickNextButton() {
     cy.intercept('POST', '**/prosopo/provider/solution').as('postSolution')
     // Go to the next captcha or submit solution
@@ -169,7 +149,5 @@ Cypress.Commands.addAll({
     clickCorrectCaptchaImages,
     getSelectors,
     clickNextButton,
-    checkHoneypot,
     stubBotdDetect,
-    honeypotExists,
 })

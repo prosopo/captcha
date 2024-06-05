@@ -22,6 +22,10 @@ const getWeb2 = (): boolean | undefined => {
     return process.env.PROSOPO_WEB2 === 'true' ? true : process.env.PROSOPO_WEB2 === 'false' ? false : undefined
 }
 
+const getHoneypot = (): boolean | undefined => {
+    return process.env.PROSOPO_HONEYPOT === 'true' ? true : process.env.PROSOPO_HONEYPOT === 'false' ? false : undefined
+}
+
 const config: ProsopoClientConfigInput = {
     account: {
         address: process.env.PROSOPO_SITE_KEY || '',
@@ -36,6 +40,7 @@ const config: ProsopoClientConfigInput = {
         : NetworkNamesSchema.enum.development,
     dappName: 'client-example',
     serverUrl: process.env.PROSOPO_SERVER_URL || '',
+    createHoneypot: getHoneypot(),
 }
 
 export default config

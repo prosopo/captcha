@@ -14,9 +14,6 @@
         },
         {
             "path": "../../packages/util"
-        },
-        {
-            "path": "../../packages/procaptcha-frictionless"
         }
     ]
 }
