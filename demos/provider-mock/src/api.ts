@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ApiPaths, VerifySolutionBody } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
-import { VerifySolutionBodyType } from '@prosopo/types'
+import { VerifySolutionBodyTypeOutput } from '@prosopo/types'
 import express, { Router } from 'express'
 
 /**
@@ -30,8 +30,8 @@ export function prosopoRouter(): Router {
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      */
-    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
-        let parsed: VerifySolutionBodyType
+    router.post(ApiPaths.VerifyCaptchaSolutionDapp, async (req, res, next) => {
+        let parsed: VerifySolutionBodyTypeOutput
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {

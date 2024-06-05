@@ -14,7 +14,7 @@
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
-import { array, number, object, string, infer as zInfer } from 'zod'
+import { array, input, number, object, output, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
@@ -22,7 +22,8 @@ export enum ApiPaths {
     SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
     SubmitPowCaptchaSolution = '/v1/prosopo/provider/pow/solution',
     ServerPowCaptchaVerify = '/v1/prosopo/provider/pow/server-verify',
-    VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
+    VerifyCaptchaSolutionDapp = '/v1/prosopo/provider/dapp-verify',
+    VerifyCaptchaSolutionUser = '/v1/prosopo/provider/user-verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
     SubmitUserEvents = '/v1/prosopo/provider/events',
@@ -46,6 +47,7 @@ export enum ApiParams {
     captchas = 'captchas',
     commitmentId = 'commitmentId',
     proof = 'proof',
+    dappUserSignature = 'dappUserSignature',
     providerUrl = 'providerUrl',
     procaptchaResponse = 'procaptcha-response',
     verifiedTimeout = 'verifiedTimeout',
@@ -100,11 +102,13 @@ export const VerifySolutionBody = object({
     [ApiParams.dapp]: string(),
     [ApiParams.user]: string(),
     [ApiParams.blockNumber]: number(),
+    [ApiParams.dappUserSignature]: string(),
     [ApiParams.commitmentId]: string().optional(),
     [ApiParams.maxVerifiedTime]: number().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 })
 
-export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
+export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>
+export type VerifySolutionBodyTypeOutput = output<typeof VerifySolutionBody>
 
 export interface PendingCaptchaRequest {
     accountId: string
@@ -155,6 +159,8 @@ export const ServerPowCaptchaVerifyRequestBody = object({
     [ApiParams.challenge]: string(),
     [ApiParams.dapp]: string(),
     [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+    [ApiParams.dappUserSignature]: string(),
+    [ApiParams.blockNumber]: number(),
 })
 
 export const GetPowCaptchaChallengeRequestBody = object({
