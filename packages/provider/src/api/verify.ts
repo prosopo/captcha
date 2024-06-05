@@ -171,14 +171,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
             // Will throw an error if the signature is invalid
             verifySignature(dappSignature, blockNumber.toString(), dappPair)
-            console.log({
-                dapp,
-                blockNumber,
-                challenge,
-                verifiedTimeout,
-            })
+
             const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, verifiedTimeout)
-            console.log('approved', approved)
+
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),
                 [ApiParams.verified]: approved,
