@@ -11,25 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { UserCommitmentRecord } from '@prosopo/types-database'
+import { UserCommitmentRecord, UserCommitmentRecordSchema } from '@prosopo/types-database'
 import { getLoggerDefault } from '@prosopo/common'
 import mongoose from 'mongoose'
 const logger = getLoggerDefault()
 
-const storedCaptchaSchema = new mongoose.Schema({
-    userAccount: String,
-    dappContract: String,
-    datasetId: String,
-    providerAccount: String,
-    id: String,
-    status: String,
-    userSignature: Array,
-    completedAt: Number,
-    requestedAt: Number,
-    processed: Boolean,
-    batched: Boolean,
-})
-const StoredCaptcha = mongoose.model('StoredCaptcha', storedCaptchaSchema)
+const StoredCaptcha = mongoose.model('StoredCaptcha', UserCommitmentRecordSchema)
 
 export const saveCaptchas = async (events: UserCommitmentRecord[], atlasUri: string) => {
     await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
