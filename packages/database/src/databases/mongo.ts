@@ -565,6 +565,23 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
     }
 
+    /** @description Get Dapp User captcha commitments from the commitments table that have not been batched on-chain
+     */
+    async getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        const docs = await this.tables?.commitment.find({ stored: false }).lean()
+        return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
+    }
+
+    /** @description Mark a list of captcha commits as stored
+     */
+    async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
+        await this.tables?.commitment.updateMany(
+            { id: { $in: commitmentIds } },
+            { $set: { stored: true } },
+            { upsert: false }
+        )
+    }
+
     /** @description Get Dapp User captcha commitments from the commitments table that have been batched on-chain
      */
     async getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {

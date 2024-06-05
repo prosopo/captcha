@@ -275,6 +275,10 @@ export interface Database {
 
     getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>
 
+    getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]>
+
+    markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>
+
     getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>
 
     flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>

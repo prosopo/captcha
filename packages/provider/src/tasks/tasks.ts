@@ -50,7 +50,7 @@ import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
-import { saveCaptchaEvent } from '@prosopo/database'
+import { saveCaptchaEvent, saveCaptchas } from '@prosopo/database'
 import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
@@ -706,5 +706,20 @@ export class Tasks {
             return
         }
         await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
+    }
+
+    async storeCommitmentsExternal(): Promise<void> {
+        if (!this.config.mongoCaptchaUri) {
+            this.logger.info('Mongo env not set')
+            return
+        }
+        //Get all unstored commitments
+        const commitments = await this.db.getUnstoredDappUserCommitments()
+
+        await saveCaptchas(commitments, this.config.mongoCaptchaUri)
+
+        const commitIds = commitments.map((commitment) => commitment.id)
+
+        await this.db.markDappUserCommitmentsStored(commitIds)
     }
 }

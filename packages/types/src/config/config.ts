@@ -251,6 +251,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         }),
         server: ProsopoImageServerConfigSchema,
         mongoEventsUri: string().optional(),
+        mongoCaptchaUri: string().optional(),
     })
 )
 
