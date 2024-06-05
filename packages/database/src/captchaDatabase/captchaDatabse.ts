@@ -29,10 +29,10 @@ const storedCaptchaSchema = new mongoose.Schema({
     processed: Boolean,
     batched: Boolean,
 })
-const CaptchaEvent = mongoose.model('CaptchaEvent', storedCaptchaSchema)
+const StoredCaptcha = mongoose.model('StoredCaptcha', storedCaptchaSchema)
 
 export const saveCaptchas = async (events: UserCommitmentRecord[], atlasUri: string) => {
     await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
-    await CaptchaEvent.insertMany(events)
+    await StoredCaptcha.insertMany(events)
     logger.info('Mongo Saved Events')
 }
