@@ -25,7 +25,6 @@ import {
     ImageVerificationResponse,
     NetworkConfig,
     PowCaptchaSolutionResponse,
-    ProcaptchaToken,
     ProviderRegistered,
     ServerPowCaptchaVerifyRequestBodyType,
     StoredEvents,
@@ -77,13 +76,21 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     }
 
     public verifyDappUser(
-        token: ProcaptchaToken,
+        dapp: AccountId,
+        userAccount: AccountId,
+        blockNumber: number,
         dappUserSignature: string,
+        commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
         const payload: VerifySolutionBodyTypeInput = {
-            [ApiParams.token]: token,
+            [ApiParams.dapp]: dapp.toString(),
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.dappUserSignature]: dappUserSignature,
+        }
+        if (commitmentId) {
+            payload[ApiParams.commitmentId] = commitmentId
         }
         if (maxVerifiedTime) {
             payload[ApiParams.maxVerifiedTime] = maxVerifiedTime
@@ -93,13 +100,19 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     }
 
     public verifyUser(
-        token: ProcaptchaToken,
+        dapp: AccountId,
+        userAccount: AccountId,
+        blockNumber: number,
         dappUserSignature: string,
+        commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
         const payload: VerifySolutionBodyTypeInput = {
-            [ApiParams.token]: token,
+            [ApiParams.dapp]: dapp.toString(),
+            [ApiParams.user]: userAccount.toString(),
+            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.dappUserSignature]: dappUserSignature,
+            ...(commitmentId && { [ApiParams.commitmentId]: commitmentId }),
             ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
         }
 
@@ -150,13 +163,17 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     }
 
     public submitPowCaptchaVerify(
-        token: string,
+        challenge: string,
+        dapp: string,
         signatureHex: string,
+        blockNumber: number,
         recencyLimit: number
     ): Promise<VerificationResponse> {
         const body: ServerPowCaptchaVerifyRequestBodyType = {
-            [ApiParams.token]: token,
+            [ApiParams.challenge]: challenge,
+            [ApiParams.dapp]: dapp,
             [ApiParams.dappUserSignature]: signatureHex,
+            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.verifiedTimeout]: recencyLimit,
         }
         return this.post(ApiPaths.ServerPowCaptchaVerify, {

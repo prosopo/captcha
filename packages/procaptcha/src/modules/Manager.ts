@@ -21,11 +21,11 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
+    ProcaptchaOutput,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
     StoredEvents,
     TCaptchaSubmitResult,
-    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
@@ -169,13 +169,10 @@ export function Manager(
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
-                events.onHuman(
-                    encodeProcaptchaOutput({
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.blockNumber]: getBlockNumber(),
-                    })
-                )
+                events.onHuman({
+                    user: account.account.address,
+                    dapp: getDappAccount(),
+                })
                 setValidChallengeTimeout()
                 return
             }
@@ -200,26 +197,25 @@ export function Manager(
                         data: procaptchaStorage.blockNumber.toString(),
                         type: 'bytes',
                     })
-                    const token = encodeProcaptchaOutput({
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.blockNumber]: procaptchaStorage.blockNumber,
-                    })
+
                     const verifyDappUserResponse = await providerApi.verifyUser(
-                        token,
+                        getDappAccount(),
+                        account.account.address,
+                        procaptchaStorage.blockNumber,
                         signature,
+                        undefined,
                         configOptional.captchas.image.cachedTimeout
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
-                        const output = {
+                        const output: ProcaptchaOutput = {
                             [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
                             [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
                             [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         }
-                        events.onHuman(encodeProcaptchaOutput(output))
+                        events.onHuman(output)
                         setValidChallengeTimeout()
                         return
                     }
@@ -344,15 +340,13 @@ export function Manager(
                 const providerUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
                 // cache this provider for future use
                 storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
-                events.onHuman(
-                    encodeProcaptchaOutput({
-                        [ApiParams.providerUrl]: providerUrl,
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.commitmentId]: hashToHex(submission[1]),
-                        [ApiParams.blockNumber]: blockNumber,
-                    })
-                )
+                events.onHuman({
+                    providerUrl,
+                    user: account.account.address,
+                    dapp: getDappAccount(),
+                    commitmentId: hashToHex(submission[1]),
+                    blockNumber,
+                })
                 setValidChallengeTimeout()
             }
         })
