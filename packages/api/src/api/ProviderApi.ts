@@ -159,8 +159,6 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             [ApiParams.dappUserSignature]: signatureHex,
             [ApiParams.verifiedTimeout]: recencyLimit,
         }
-        return this.post(ApiPaths.ServerPowCaptchaVerify, {
-            body,
-        })
+        return this.post(ApiPaths.ServerPowCaptchaVerify, body)
     }
 }

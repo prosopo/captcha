@@ -25,6 +25,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { decodeProcaptchaOutput } from '@prosopo/types'
 import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
+import { handleErrors } from './errorHandler.js'
 import { verifySignature } from './authMiddleware.js'
 import express, { NextFunction, Request, Response, Router } from 'express'
 
@@ -181,9 +182,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             return res.json(verificationResponse)
         } catch (err) {
             tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { errorCode: 400, error: err } }))
+            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
         }
     })
+
+    // Your error handler should always be at the end of your application stack. Apparently it means not only after all
+    // app.use() but also after all your app.get() and app.post() calls.
+    // https://stackoverflow.com/a/62358794/1178971
+    router.use(handleErrors)
 
     return router
 }

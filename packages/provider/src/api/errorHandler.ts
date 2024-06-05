@@ -14,9 +14,10 @@
 // We need the unused params to make express recognise this function as an error handler
 import { NextFunction, Request, Response } from 'express'
 import { ProsopoApiError, ProsopoBaseError } from '@prosopo/common'
+import { ZodError } from 'zod'
 
 export const handleErrors = (
-    err: ProsopoApiError | SyntaxError,
+    err: ProsopoApiError | SyntaxError | ZodError,
     request: Request,
     response: Response,
     next: NextFunction
@@ -27,10 +28,10 @@ export const handleErrors = (
         err = err.context.error
     }
     let message = err.message
-    try {
-        message = JSON.parse(err.message)
-    } catch {
-        console.error(err)
+
+    if (typeof message !== 'string') {
+        message = JSON.stringify(message)
     }
+
     response.writeHead(code, message, { 'content-type': 'application/json' }).end()
 }
