@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -87,7 +87,7 @@
         "provider-gui"
     ],
     "dependencies": {
-        "@prosopo/flux": "1.0.0"
+        "@prosopo/flux": "1.0.1"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
