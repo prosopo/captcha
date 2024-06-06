@@ -50,7 +50,7 @@ const verify = async (
 
         const response = await fetch(verifyEndpoint, {
             method: 'POST',
-            body: JSON.stringify({ [ApiParams.procaptchaResponse]: token, [ApiParams.secret]: secret }),
+            body: JSON.stringify({ [ApiParams.token]: token, [ApiParams.secret]: secret }),
         })
         return (await response.json()).verified
     } else {
