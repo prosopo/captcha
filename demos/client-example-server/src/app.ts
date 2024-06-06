@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { ProsopoServer, getServerConfig } from '@prosopo/server'
-import { getPairAsync } from '@prosopo/contract'
+import { getServerConfig } from '@prosopo/server'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -82,10 +81,8 @@ async function main() {
     const config = getServerConfig()
 
     console.log('config', config)
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
-    const prosopoServer = new ProsopoServer(config, pair)
 
-    app.use(routesFactory(mongoose, prosopoServer, verifyEndpoint, verifyType))
+    app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType))
 
     app.listen(process.env.PROSOPO_SERVER_PORT)
 }
