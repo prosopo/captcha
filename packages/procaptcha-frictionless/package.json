@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-frictionless",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -35,10 +35,10 @@
     ],
     "dependencies": {
         "@fingerprintjs/botd": "^1.9.0",
-        "@prosopo/procaptcha-pow": "1.0.0",
-        "@prosopo/procaptcha-react": "1.0.0",
-        "@prosopo/types": "1.0.0",
-        "@prosopo/web-components": "1.0.0",
+        "@prosopo/procaptcha-pow": "1.0.1",
+        "@prosopo/procaptcha-react": "1.0.1",
+        "@prosopo/types": "1.0.1",
+        "@prosopo/web-components": "1.0.1",
         "react": "^18.3.1"
     },
     "devDependencies": {
