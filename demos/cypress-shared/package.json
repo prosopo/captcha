@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/cypress-shared",
-    "version": "0.3.42",
+    "version": "1.0.0",
     "private": true,
     "type": "module",
     "engines": {
@@ -8,8 +8,8 @@
         "npm": ">=9"
     },
     "dependencies": {
-        "@prosopo/types": "0.3.42",
-        "@prosopo/util": "0.3.42"
+        "@prosopo/types": "1.0.0",
+        "@prosopo/util": "1.0.0"
     },
     "devDependencies": {
         "@cypress/xpath": "^2.0.3",
