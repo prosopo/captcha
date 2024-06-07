@@ -23,8 +23,16 @@ import {
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoContractError, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
+import {
+    LogLevel,
+    Logger,
+    ProsopoApiError,
+    ProsopoContractError,
+    ProsopoEnvError,
+    getLogger,
+    trimProviderUrl,
+} from '@prosopo/common'
+import { ProsopoCaptchaContract, getPairAsync, getZeroAddress, verifyRecency } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -51,6 +59,7 @@ export class ProsopoServer {
     constructor(config: ProsopoServerConfigOutput, pair?: KeyringPair) {
         this.config = config
         this.pair = pair
+        console.log(this.config)
         this.defaultEnvironment = this.config.defaultEnvironment
         const networkName = NetworkNamesSchema.parse(this.config.defaultNetwork)
         this.network = get(this.config.networks, networkName)
@@ -77,29 +86,36 @@ export class ProsopoServer {
     }
 
     async isReady() {
-        try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
-            await this.getSigner()
-            await this.getContractApi()
-        } catch (error) {
-            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error } })
-        }
-    }
-
-    async getSigner(): Promise<void> {
-        if (this.pair) {
-            if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
-            }
-            await this.api.isReadyOrError
-            try {
-                this.pair = this.keyring.addPair(this.pair)
-            } catch (error) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
-                    context: { failedFuncName: this.getSigner.name, error },
+        this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
+        if (!this.pair) {
+            if (!this.config.account.secret) {
+                throw new ProsopoEnvError('CONTRACT.CANNOT_FIND_KEYPAIR', {
+                    context: { failedFuncName: this.isReady.name },
                 })
             }
         }
+        if (!this.api) {
+            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
+        }
+        await this.api.isReadyOrError
+        try {
+            const pair = this.pair || (await getPairAsync(this.network, this.config.account.secret))
+            this.pair = this.keyring.addPair(pair)
+        } catch (error) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
+                context: { failedFuncName: this.isReady.name, error },
+            })
+        }
+        await this.getContractApi()
+    }
+
+    getPair(): KeyringPair {
+        if (!this.pair) {
+            throw new ProsopoEnvError('CONTRACT.CANNOT_FIND_KEYPAIR', {
+                context: { failedFuncName: this.getPair.name },
+            })
+        }
+        return this.pair
     }
 
     getApi(): ApiPromise {
@@ -196,11 +212,13 @@ export class ProsopoServer {
     ) {
         this.logger.info('Verifying with provider.')
         const blockNumberString = blockNumber.toString()
-        const dappUserSignature = this.pair?.sign(blockNumberString)
-        if (!dappUserSignature) {
+        this.logger.info('Block number', blockNumberString)
+        this.logger.info('Site key', this.getPair().address)
+        const dappSignature = this.getPair().sign(blockNumberString)
+        if (!dappSignature) {
             throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
         }
-        const signatureHex = u8aToHex(dappUserSignature)
+        const signatureHex = u8aToHex(dappSignature)
 
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
@@ -226,7 +244,7 @@ export class ProsopoServer {
      */
     public async isVerified(token: ProcaptchaToken): Promise<boolean> {
         if (!isHex(token)) {
-            this.logger.error('Invalid token - not hex', token)
+            this.logger.error(new ProsopoApiError('CAPTCHA.INVALID_TOKEN', { context: { token } }))
             return false
         }
 
