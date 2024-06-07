@@ -18,6 +18,7 @@ export default defineConfig({
     headers: { 'Accept-Encoding': 'gzip, deflate' },
     env: {
         default_page: '/',
+        PROSOPO_HONEYPOT: true,
     },
     e2e: {
         setupNodeEvents(on, config) {

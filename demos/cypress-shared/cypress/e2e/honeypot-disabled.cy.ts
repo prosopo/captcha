@@ -47,43 +47,25 @@ describe('Honeypot Field Tests', () => {
         cy.wrap(solutions).as('solutions')
     })
 
-    it('BotD catch (no mocks, do not fill honeypot)', () => {
+    it('BotD catch (no mocks, do not exist honeypot)', () => {
         cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
-            const honeypotEnabled = Cypress.env('PROSOPO_HONEYPOT')
-            expect(honeypotEnabled).to.be.true
-            cy.get(honeypotSelector).should('have.value', '')
+            Cypress.env('PROSOPO_HONEYPOT').should('be.false')
+            cy.get(honeypotSelector).should('not.exist')
             cy.window().its('__botDetected').should('be.true')
             cy.clickIAmHuman().then(checkAndClickCaptchas)
         })
     })
 
-    it('Not bot from BotD but caught by honeypot (mock BotD, fill honeypot)', () => {
+    it('Not bot from BotD and do not exist honeypot (mock BotD, do not fill honeypot)', () => {
         cy.stubBotdDetect()
         cy.visit(Cypress.env('default_page')).then(() => {
             cy.get(checkboxClass).should('be.visible')
             cy.wait('@mockBotDetection')
             cy.window().its('__botDetected').should('be.false')
-            const honeypotEnabled = Cypress.env('PROSOPO_HONEYPOT')
-            expect(honeypotEnabled).to.be.true
-            cy.get(honeypotSelector).type('I am a bot', { force: true })
+            Cypress.env('PROSOPO_HONEYPOT').should('be.false')
+            cy.get(honeypotSelector).should('not.exist')
             cy.get(checkboxClass, { timeout: 12000 }).first().click()
-            cy.get(honeypotSelector).should('have.value', 'I am a bot')
-            cy.clickIAmHuman().then(checkAndClickCaptchas)
-        })
-    })
-
-    it('Not caught by BotD or honeypot (mock BotD, do not fill honeypot)', () => {
-        cy.stubBotdDetect()
-        cy.visit(Cypress.env('default_page')).then(() => {
-            cy.get(checkboxClass).should('be.visible')
-            cy.wait('@mockBotDetection')
-            cy.window().its('__botDetected').should('be.false')
-            const honeypotEnabled = Cypress.env('PROSOPO_HONEYPOT')
-            expect(honeypotEnabled).to.be.true
-            cy.get(honeypotSelector).should('have.value', '')
-            cy.get(checkboxClass, { timeout: 12000 }).first().click()
-            cy.get("input[type='checkbox']").first().should('be.checked')
         })
     })
 })

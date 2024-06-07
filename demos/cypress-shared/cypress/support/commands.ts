@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
+import * as path from 'path'
 import { Captcha, CaptchaWithProof } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import Chainable = Cypress.Chainable
@@ -133,14 +134,20 @@ function clickNextButton() {
 }
 
 function stubBotdDetect(): void {
-    // Passing a fixture .js filed does not work as cypress does not know how to interpret it
-    // https://github.com/cypress-io/cypress/issues/1271
-    cy.intercept('GET', '**/procaptcha-frictionless/dist/botDetection.js*', {
-        headers: {
-            'content-type': 'application/javascript',
-        },
-        body: 'export const botDetection = { detectBot: async () => { return false }};',
-    }).as('mockBotDetection')
+    const fixturesFolder = Cypress.config('fixturesFolder');
+    if (typeof fixturesFolder === 'string') {
+        const fixturePath = path.join(fixturesFolder, 'botDetectionStub.js')
+        cy.readFile(fixturePath).then((fileContents) => {
+            cy.intercept('GET', '**/procaptcha-frictionless/dist/botDetection.js*', {
+            headers: {
+                'content-type': 'application/javascript',
+            },
+            body: fileContents,
+            }).as('mockBotDetection');
+        });
+    } else {
+        throw new Error('The fixtures folder path is not valid.');
+    }
 }
 
 Cypress.Commands.addAll({
