@@ -7,7 +7,7 @@
         "noEmitOnError": true,
         "sourceMap": false
     },
-    "include": ["**/*.ts"],
+    "include": ["**/*.ts", "cypress/fixtures/botDetectionStub.js"],
     "references": [
         {
             "path": "../../packages/types"

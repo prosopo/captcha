@@ -40,7 +40,6 @@ const config: ProsopoClientConfigInput = {
         : NetworkNamesSchema.enum.development,
     dappName: 'client-example',
     serverUrl: process.env.PROSOPO_SERVER_URL || '',
-    createHoneypot: getHoneypot(),
 }
 
 export default config
