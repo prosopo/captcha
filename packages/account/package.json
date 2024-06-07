@@ -52,7 +52,7 @@
         "@prosopo/util": "1.0.1"
     },
     "devDependencies": {
-        "@prosopo/config": "1.0.1",
+        "@prosopo/dev-config": "1.0.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

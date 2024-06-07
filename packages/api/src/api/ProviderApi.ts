@@ -154,6 +154,11 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         signatureHex: string,
         recencyLimit: number
     ): Promise<VerificationResponse> {
+        console.log('Submitting to provider', {
+            [ApiParams.token]: token,
+            [ApiParams.dappSignature]: signatureHex,
+            [ApiParams.verifiedTimeout]: recencyLimit,
+        })
         const body: ServerPowCaptchaVerifyRequestBodyType = {
             [ApiParams.token]: token,
             [ApiParams.dappSignature]: signatureHex,

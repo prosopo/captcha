@@ -118,7 +118,10 @@
         "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
         "INVALID_PROVIDER_URL": "Invalid provider url",
         "NO_CAPTCHA": "No captcha found",
-        "INVALID_TOKEN": "Invalid token"
+        "INVALID_TOKEN": "Invalid token",
+        "INVALID_SECRET": "Invalid secret",
+        "MISSING_TOKEN": "Missing token",
+        "MISSING_SECRET": "Missing secret"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",

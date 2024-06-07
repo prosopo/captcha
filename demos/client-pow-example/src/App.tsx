@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
+import { ProsopoClientConfigSchema } from '@prosopo/types'
+import { getAddress, getDevOnlyWatchEventsFlag, getMongoAtlasURI, getServerUrl, getWeb2 } from '@prosopo/config'
 import { useState } from 'react'
 
 function App() {
@@ -21,14 +22,13 @@ function App() {
     const config = ProsopoClientConfigSchema.parse({
         userAccountAddress: account,
         account: {
-            address: process.env.PROSOPO_SITE_KEY || '',
+            address: getAddress(),
         },
-        web2: process.env.PROSOPO_WEB2 === 'true',
+        web2: getWeb2(),
         dappName: 'client-example',
-        defaultEnvironment:
-            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        serverUrl: getServerUrl(),
+        mongoAtlasUri: getMongoAtlasURI(),
+        devOnlyWatchEvents: getDevOnlyWatchEventsFlag(),
     })
     return (
         <div style={{ height: '100%', display: 'block', justifyContent: 'center', alignItems: 'center' }}>

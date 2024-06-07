@@ -19,6 +19,7 @@ import { EventRecord } from '@polkadot/types/interfaces'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig } from '@prosopo/cli'
 import { get } from '@prosopo/util'
+import { getContract } from '@prosopo/config'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
@@ -29,7 +30,7 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const env = new ProviderEnvironment(defaultConfig(), pair)
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
-    const params = ['1000000000000000', 1000, process.env.PROSOPO_CONTRACT_ADDRESS, 50, 1000000]
+    const params = ['1000000000000000', 1000, getContract(), 50, 1000000]
     const deployer = new ContractDeployer(env.getApi(), abi, wasm, pair, params, 0, 0, randomAsHex(), config.logLevel)
     return await deployer.deploy()
 }

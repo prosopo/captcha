@@ -15,9 +15,9 @@ import { defineConfig } from 'vitest/config'
 import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
-process.env.NODE_ENV = 'test'
+
 // if .env.test exists at this level, use it, otherwise use the one at the root
-const envFile = `.env.${process.env.NODE_ENV || 'development'}`
+const envFile = 'env.test'
 let envPath = envFile
 if (fs.existsSync(envFile)) {
     envPath = path.resolve(envFile)

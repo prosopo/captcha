@@ -18,12 +18,9 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoDBError } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
-
 import { get } from '@prosopo/util'
-import { getLogger } from '@prosopo/common'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
 
-const logger = getLogger(process.env.PROSOPO_LOG_LEVEL || LogLevel.Values.info, 'populateDatabase.ts')
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
 export type UserCount = {

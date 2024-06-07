@@ -12,17 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import {
-    ApiParams,
-    EnvironmentTypes,
-    EnvironmentTypesSchema,
-    ProcaptchaConfigSchema,
-    ProcaptchaToken,
-} from '@prosopo/types'
+import { ApiParams, ProcaptchaConfigSchema, ProcaptchaToken } from '@prosopo/types'
 import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
-import { getServerUrl } from '@prosopo/server'
+import { getAddress, getDevOnlyWatchEventsFlag, getMongoAtlasURI, getServerUrl, getWeb2 } from '@prosopo/config'
 import { useState } from 'react'
 
 const corsHeaders = {
@@ -50,15 +44,13 @@ function App(props: AppProps) {
     const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
         account: {
-            address: process.env.PROSOPO_SITE_KEY || '',
+            address: getAddress(),
         },
-        web2: process.env.PROSOPO_WEB2 === 'true',
+        web2: getWeb2(),
         dappName: 'client-example',
-        defaultEnvironment:
-            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         serverUrl: getServerUrl(),
-        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
-        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        mongoAtlasUri: getMongoAtlasURI(),
+        devOnlyWatchEvents: getDevOnlyWatchEventsFlag(),
     })
     console.log(config)
 

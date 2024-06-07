@@ -13,12 +13,11 @@
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
+import { getContract, getDefaultConfig, loadEnv } from '@prosopo/config'
 import { getPairAsync } from '@prosopo/contract'
 import { isMain } from '@prosopo/util'
-import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import ReloadingAPI from './reloader.js'
-import getConfig from './prosopo.config.js'
 import process from 'process'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
@@ -27,7 +26,7 @@ async function main() {
     const envPath = loadEnv()
 
     // quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-    const config: ProsopoConfigOutput = getConfig(undefined, undefined, undefined, {
+    const config: ProsopoConfigOutput = getDefaultConfig(undefined, undefined, undefined, {
         solved: { count: 2 },
         unsolved: { count: 0 },
     })
@@ -50,7 +49,7 @@ async function main() {
 
     log.info(`Pair address: ${pair.address}`)
 
-    log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`)
+    log.info(`Contract address: ${getContract()}`)
 
     const processedArgs = await processArgs(process.argv, pair, config)
 

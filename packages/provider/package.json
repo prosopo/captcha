@@ -43,7 +43,7 @@
         "@polkadot/util-crypto": "12.6.2",
         "@prosopo/captcha-contract": "1.0.1",
         "@prosopo/common": "1.0.1",
-        "@prosopo/config": "1.0.1",
+        "@prosopo/dev-config": "1.0.1",
         "@prosopo/contract": "1.0.1",
         "@prosopo/database": "1.0.1",
         "@prosopo/datasets": "1.0.1",

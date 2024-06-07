@@ -10,10 +10,13 @@
             "path": "../../contracts/captcha/tsconfig.cjs.json"
         },
         {
-            "path": "../../dev/config"
+            "path": "../../dev/dev-config"
         },
         {
             "path": "../common/tsconfig.cjs.json"
+        },
+        {
+            "path": "../config/tsconfig.cjs.json"
         },
         {
             "path": "../contract/tsconfig.cjs.json"

@@ -1,7 +1,7 @@
 {
-    "name": "@prosopo/config",
+    "name": "@prosopo/dev-config",
     "version": "1.0.1",
-    "description": "Prosopo config library",
+    "description": "Prosopo dev config library",
     "main": "./dist/index.js",
     "type": "module",
     "exports": {

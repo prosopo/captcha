@@ -14,28 +14,22 @@
 // ../.env | .env.local | .env.development >>
 // PROSOPO_API_BASE_URL=http://localhost
 // PROSOPO_SITE_KEY=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
-
-import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
-import { ProsopoClientConfigInput } from '@prosopo/types'
+import { ProsopoClientConfigInput, ProsopoClientConfigSchema } from '@prosopo/types'
+import { getAddress, getEnv, getNetwork, getServerUrl } from '@prosopo/config'
 
 const getWeb2 = (): boolean | undefined => {
     return process.env.PROSOPO_WEB2 === 'true' ? true : process.env.PROSOPO_WEB2 === 'false' ? false : undefined
 }
 
-const config: ProsopoClientConfigInput = {
+const config: ProsopoClientConfigInput = ProsopoClientConfigSchema.parse({
     account: {
-        address: process.env.PROSOPO_SITE_KEY || '',
+        address: getAddress(),
     },
-    userAccountAddress: '',
     web2: getWeb2(),
-    defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
-        ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
-        : EnvironmentTypesSchema.enum.development,
-    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-        ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-        : NetworkNamesSchema.enum.development,
+    defaultEnvironment: getEnv(),
+    defaultNetwork: getNetwork(),
     dappName: 'client-example',
-    serverUrl: process.env.PROSOPO_SERVER_URL || '',
-}
+    serverUrl: getServerUrl(),
+})
 
 export default config

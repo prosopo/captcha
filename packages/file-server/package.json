@@ -28,6 +28,8 @@
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "dependencies": {
+        "@prosopo/common": "1.0.1",
+        "@prosopo/config": "1.0.1",
         "@prosopo/util": "1.0.1",
         "dotenv": "^16.0.1",
         "express": "^4.18.2",

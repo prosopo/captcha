@@ -13,10 +13,8 @@
 // limitations under the License.
 import {
     ApiParams,
-    EnvironmentTypesSchema,
     Features,
     FeaturesEnum,
-    NetworkNamesSchema,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
@@ -27,6 +25,7 @@ import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
+import { getAddress, getDevOnlyWatchEventsFlag, getMongoAtlasURI, getServerUrl } from '@prosopo/config'
 
 interface ProcaptchaRenderOptions {
     siteKey: string
@@ -59,22 +58,15 @@ const extractParams = (name: string) => {
 
 const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
     if (!siteKey) {
-        siteKey = process.env.PROSOPO_SITE_KEY || ''
+        siteKey = getAddress()
     }
     return ProcaptchaConfigSchema.parse({
-        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
-            : EnvironmentTypesSchema.enum.development,
-        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-            ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-            : NetworkNamesSchema.enum.development,
-        userAccountAddress: '',
         account: {
             address: siteKey,
         },
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
-        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
+        serverUrl: getServerUrl(),
+        mongoAtlasUri: getMongoAtlasURI(),
+        devOnlyWatchEvents: getDevOnlyWatchEventsFlag(),
     })
 }
 

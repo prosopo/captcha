@@ -38,6 +38,7 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
+        "@prosopo/config": "1.0.1",
         "@prosopo/procaptcha-frictionless": "1.0.1",
         "@prosopo/procaptcha-pow": "1.0.1",
         "@prosopo/procaptcha-react": "1.0.1",
@@ -59,7 +60,7 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
-        "@prosopo/config": "1.0.1",
+        "@prosopo/dev-config": "1.0.1",
         "@prosopo/cli": "1.0.1",
         "tslib": "2.6.2",
         "vite": "^5.1.7",

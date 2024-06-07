@@ -15,8 +15,6 @@
 import {
     BatchCommitConfigSchema,
     DatabaseTypes,
-    EnvironmentTypesSchema,
-    NetworkNamesSchema,
     ProsopoCaptchaCountConfigSchemaInput,
     ProsopoCaptchaSolutionConfigSchema,
     ProsopoConfigInput,
@@ -24,7 +22,18 @@ import {
     ProsopoConfigSchema,
     ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
-import { getAddress, getPassword, getSecret } from './process.env.js'
+import {
+    getAddress,
+    getApiBaseUrl,
+    getApiPort,
+    getDatabaseName,
+    getDevOnlyWatchEventsFlag,
+    getEnvironment,
+    getMongoAtlasURI,
+    getNetwork,
+    getPassword,
+    getSecret,
+} from './process.env.js'
 import { getLogLevel } from '@prosopo/common'
 
 function getMongoURI(): string {
@@ -47,12 +56,8 @@ export default function getConfig(
 ): ProsopoConfigOutput {
     return ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
-        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
-            ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
-            : EnvironmentTypesSchema.enum.development,
-        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-            ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-            : NetworkNamesSchema.enum.development,
+        defaultEnvironment: getEnvironment(),
+        defaultNetwork: getNetwork(),
         account: {
             address: getAddress(who),
             password: getPassword(who),
@@ -62,25 +67,25 @@ export default function getConfig(
             development: {
                 type: DatabaseTypes.enum.mongo,
                 endpoint: getMongoURI(),
-                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                dbname: getDatabaseName(),
                 authSource: 'admin',
             },
             production: {
                 type: DatabaseTypes.enum.mongo,
                 endpoint: getMongoURI(),
-                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                dbname: getDatabaseName(),
                 authSource: 'admin',
             },
         },
         server: {
-            baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
-            port: process.env.PROSOPO_API_PORT ? parseInt(process.env.PROSOPO_API_PORT) : 9229,
+            baseURL: getApiBaseUrl(),
+            port: getApiPort(),
         },
         networks: networksConfig,
         captchaSolutions: captchaSolutionsConfig,
         batchCommit: batchCommitConfig,
         captchas: captchaServeConfig,
-        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true',
-        mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        devOnlyWatchEvents: getDevOnlyWatchEventsFlag(),
+        mongoEventsUri: getMongoAtlasURI(),
     } as ProsopoConfigInput)
 }

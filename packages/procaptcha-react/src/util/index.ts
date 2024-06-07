@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { getEnv } from '@prosopo/config'
+
 function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
     return Object.keys(data).reduce((prev, curr) => ({ ...prev, [`data-${curr}`]: data[curr] }), {})
 }
@@ -29,6 +31,6 @@ export default function addDataAttr({
 }) {
     return {
         ...renameKeysForDataAttr(general),
-        ...(process.env.NODE_ENV === 'development' ? renameKeysForDataAttr(dev) : {}),
+        ...(getEnv() === 'development' ? renameKeysForDataAttr(dev) : {}),
     }
 }

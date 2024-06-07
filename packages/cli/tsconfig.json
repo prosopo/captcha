@@ -11,10 +11,13 @@
             "path": "../../contracts/captcha"
         },
         {
-            "path": "../../dev/config"
+            "path": "../../dev/dev-config"
         },
         {
             "path": "../common"
+        },
+        {
+            "path": "../config"
         },
         {
             "path": "../contract"

@@ -20,6 +20,7 @@ import { ReturnNumber } from '@prosopo/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'
 import { generateMnemonic, getPairAsync, wrapQuery } from '@prosopo/contract'
 import { get } from '@prosopo/util'
+import { getEnv } from '@prosopo/config'
 import { getEnvFile } from '@prosopo/cli'
 import { isAddress } from '@polkadot/util-crypto'
 import { registerProvider } from './provider.js'
@@ -108,7 +109,7 @@ export async function setup(force: boolean) {
     const defaultDapp = getDefaultDapp()
     if (defaultProvider.secret) {
         const hasProviderAccount = defaultProvider.address && defaultProvider.secret
-        logger.debug('ENVIRONMENT', process.env.NODE_ENV)
+        logger.debug('ENVIRONMENT', getEnv())
 
         const [mnemonic, address] = !hasProviderAccount
             ? await generateMnemonic()

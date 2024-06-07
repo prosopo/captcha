@@ -9,7 +9,7 @@
     "include": ["src/index.tsx", "src/index.html"],
     "references": [
         {
-            "path": "../../dev/config"
+            "path": "../../dev/dev-config"
         },
         {
             "path": "../procaptcha/tsconfig.cjs.json"

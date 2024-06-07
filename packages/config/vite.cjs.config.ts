@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteCommonJSConfig } from './src/vite/index.js'
+import { ViteCommonJSConfig } from '@prosopo/config'
 import path from 'path'
 
 export default function () {
-    return ViteCommonJSConfig('config', path.resolve('./tsconfig.cjs.json'), 'src/index.ts')
+    return ViteCommonJSConfig('util', path.resolve('./tsconfig.cjs.json'))
 }

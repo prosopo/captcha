@@ -13,6 +13,14 @@
 // limitations under the License.
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import {
+    getFileServerPaths,
+    getFileServerPort,
+    getFileServerRemotePaths,
+    getFileServerResize,
+    getLogLevel,
+    getEnv as getNodeEnv,
+} from '@prosopo/config'
 import { isMain } from '@prosopo/util'
 import dotenv from 'dotenv'
 import express, { Request, Response } from 'express'
@@ -42,14 +50,15 @@ const toInt = (value: string | number | undefined) => {
 }
 
 const getEnv = () => {
-    const path = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
+    const nodeEnv = getNodeEnv()
+    const path = nodeEnv ? `.env.${nodeEnv}` : '.env'
     dotenv.config({ path })
     return {
-        port: process.env.PROSOPO_FILE_SERVER_PORT || 3000,
-        paths: parseArray(process.env.PROSOPO_FILE_SERVER_PATHS || '[]'),
-        resize: toInt(process.env.PROSOPO_FILE_SERVER_RESIZE) || undefined, // the size to resize images to, undefined means no resize
-        remotes: parseArray(process.env.PROSOPO_FILE_SERVER_REMOTES || '[]'), // the remote servers to proxy to
-        logLevel: process.env.PROSOPO_LOG_LEVEL || 'info',
+        port: getFileServerPort(),
+        paths: parseArray(getFileServerPaths()),
+        resize: toInt(getFileServerResize()) || undefined, // the size to resize images to, undefined means no resize
+        remotes: parseArray(getFileServerRemotePaths()), // the remote servers to proxy to
+        logLevel: getLogLevel() || 'info',
     }
 }
 
