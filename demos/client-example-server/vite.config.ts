@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as path from 'path'
-import { ViteBackendConfig } from '@prosopo/config'
+import { ViteBackendConfig } from '@prosopo/dev-config'
 import { defineConfig } from 'vite'
+import { getServerPort } from '@prosopo/config'
 import { loadEnv } from '@prosopo/cli'
 import { version } from './package.json'
 
@@ -34,6 +35,6 @@ export default defineConfig(async ({ command, mode }) => {
     const backendConfig = await ViteBackendConfig(packageName, packageVersion, bundleName, dir, entry, command, mode)
     return defineConfig({
         ...backendConfig,
-        server: { port: process.env.PROSOPO_SERVER_PORT },
+        server: { port: getServerPort() },
     })
 })

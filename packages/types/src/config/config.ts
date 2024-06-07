@@ -21,7 +21,7 @@ import { output } from 'zod'
 import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import { infer as zInfer } from 'zod'
-import networks from '../networks/index.js'
+import defaultNetworks from '../networks/index.js'
 import z, { boolean } from 'zod'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
@@ -102,7 +102,7 @@ export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     object({
-        networks: ProsopoNetworkSchema.default(networks),
+        networks: ProsopoNetworkSchema.default(defaultNetworks),
         database: DatabaseConfigSchema.optional(),
         devOnlyWatchEvents: boolean().optional(),
     })

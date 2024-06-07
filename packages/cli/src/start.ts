@@ -13,14 +13,12 @@
 // limitations under the License.
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'node:net'
-import { getDB, getSecret } from './process.env.js'
+import { getDB, getDefaultConfig, getSecret, loadEnv } from '@prosopo/config'
 import { getPairAsync } from '@prosopo/contract'
 import { i18nMiddleware } from '@prosopo/common'
-import { loadEnv } from './env.js'
 import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express from 'express'
-import getConfig from './prosopo.config.js'
 
 function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info(`Starting Prosopo API`)
@@ -50,7 +48,7 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
         getDB()
 
         const secret = getSecret()
-        const config = getConfig(undefined, undefined, undefined, {
+        const config = getDefaultConfig(undefined, undefined, undefined, {
             solved: { count: 2 },
             unsolved: { count: 0 },
         })

@@ -8,7 +8,7 @@
     "include": ["src", "src/**/*.json", "src/index.html"],
     "references": [
         {
-            "path": "../../dev/config"
+            "path": "../../dev/dev-config"
         },
         {
             "path": "../procaptcha-react"

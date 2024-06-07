@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { getCliPkgDir, getRootDir } from '@prosopo/config'
+import { getCliPkgDir, getRootDir } from '@prosopo/dev-config'
+import { getEnvironment } from '@prosopo/config'
 import { promisify } from 'util'
 import { spawn } from 'child_process'
 import fs from 'fs'
@@ -21,7 +22,7 @@ import path from 'path'
 describe('reloading api', () => {
     test('api reloads after changing .env file', () => {
         // check for the env file in either the root or the package directory
-        const envFile = `.env.${process.env.NODE_ENV || 'development'}`
+        const envFile = `.env.${getEnvironment()}`
         console.log('env file ', envFile)
         const rootDir = getRootDir()
         const packageDir = getCliPkgDir()

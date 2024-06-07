@@ -40,7 +40,7 @@
         "@polkadot/util": "12.6.2",
         "@prosopo/captcha-contract": "1.0.1",
         "@prosopo/common": "1.0.1",
-        "@prosopo/config": "1.0.1",
+        "@prosopo/dev-config": "1.0.1",
         "@prosopo/types": "1.0.1",
         "@prosopo/types-database": "1.0.1",
         "mongodb": "5.8.0",

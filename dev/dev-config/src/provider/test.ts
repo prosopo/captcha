@@ -18,6 +18,7 @@ import {
     NetworkPairTypeSchema,
     ProsopoConfigSchema,
 } from '@prosopo/types'
+import { getContract } from '@prosopo/config'
 import { getLogLevel } from '@prosopo/common'
 
 const logLevel = getLogLevel()
@@ -42,7 +43,7 @@ export default function getTestConfig() {
             development: {
                 endpoint: ['ws://localhost:9944'],
                 contract: {
-                    address: process.env.PROSOPO_CONTRACT_ADDRESS || '',
+                    address: getContract(),
                     name: 'prosopo',
                 },
                 pairType: NetworkPairTypeSchema.parse('sr25519'),

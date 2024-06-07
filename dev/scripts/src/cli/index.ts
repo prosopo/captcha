@@ -22,7 +22,13 @@ import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { run as fundDapps } from '../contract/fundDapps.js'
 import { get } from '@prosopo/util'
-import { getContractNames, getContractsDir, getProtocolDistDir, getScriptsPkgDir } from '@prosopo/config'
+import {
+    getContractNames,
+    getContractsDir,
+    getMongoAtlasURI,
+    getProtocolDistDir,
+    getScriptsPkgDir,
+} from '@prosopo/config'
 import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
@@ -187,7 +193,7 @@ export async function processArgs(args: string[]) {
             describe: 'Fund the dapps if they are unfunded',
             builder: (yargs) => yargs,
             handler: async () => {
-                const atlasUri = process.env._DEV_ONLY_ATLAS_URI
+                const atlasUri = getMongoAtlasURI()
                 fundDapps(atlasUri)
                     .then((result) => {
                         log.info(result)

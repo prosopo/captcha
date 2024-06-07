@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as path from 'path'
-import { VitePluginCloseAndCopy } from '@prosopo/config'
+import { VitePluginCloseAndCopy } from '@prosopo/dev-config'
 import { defineConfig } from 'vite'
+import { getEnv } from '@prosopo/config'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import react from '@vitejs/plugin-react'
@@ -26,7 +27,7 @@ export default defineConfig(function ({ command, mode }) {
     // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
     // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
     // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
-    logger.info(`NODE_ENV: ${process.env.NODE_ENV}`)
+    logger.info(`NODE_ENV: ${getEnv()}`)
 
     // Set the env vars that we want to be available in the browser
     const define = {
