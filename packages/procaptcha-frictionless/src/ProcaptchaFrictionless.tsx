@@ -29,10 +29,6 @@ export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) =
             try {
                 const botDetected = await botDetection.detectBot()
 
-                if (process.env.NODE_ENV === 'development') {
-                    window.__botDetected = botDetected
-                }
-
                 if (botDetected || honeypotDetected) {
                     setComponentToRender(
                         <Procaptcha config={config} callbacks={callbacks} honeypotDetected={honeypotDetected != ''} />
