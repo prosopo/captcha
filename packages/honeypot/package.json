@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/honeypot",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",

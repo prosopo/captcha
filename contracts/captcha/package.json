@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha-contract",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "description": "The captcha contract",
     "main": "dist/index.js",
     "type": "module",
