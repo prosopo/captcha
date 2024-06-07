@@ -12,26 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoServerConfigSchema } from '@prosopo/types'
+import { getAddress, getPassword, getSecret } from '@prosopo/config'
 
-export const getServerConfig = () =>
+export const getServerConfig = (who = 'SITE') =>
     ProsopoServerConfigSchema.parse({
-        defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT, // enviromental variables
-        defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
-        serverUrl: getServerUrl(),
-        dappName: process.env.PROSOPO_DAPP_NAME || 'client-example-server',
         account: {
-            password: '',
-            address: process.env.PROSOPO_SITE_KEY || '',
-            secret: process.env.PROSOPO_SITE_PRIVATE_KEY || '',
+            password: getPassword(who),
+            address: getAddress(who),
+            secret: getSecret(who),
         },
     })
-
-export const getServerUrl = (): string => {
-    if (process.env.PROSOPO_SERVER_URL) {
-        if (process.env.PROSOPO_SERVER_URL.match(/:\d+/)) {
-            return process.env.PROSOPO_SERVER_URL
-        }
-        return `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT || 9228}`
-    }
-    return 'http://localhost:9228'
-}
