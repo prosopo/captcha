@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "lib": ["es6", "dom"]
     },
-    "include": ["src", "src/**/*.json", "src/index.html", "../../demos/cypress-shared/cypress/types"],
+    "include": ["src", "src/**/*.json", "src/index.html"],
     "references": [
         {
             "path": "../../dev/config"

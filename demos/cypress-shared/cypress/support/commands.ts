@@ -134,19 +134,19 @@ function clickNextButton() {
 }
 
 function stubBotdDetect(): void {
-    const fixturesFolder = Cypress.config('fixturesFolder');
+    const fixturesFolder = Cypress.config('fixturesFolder')
     if (typeof fixturesFolder === 'string') {
         const fixturePath = path.join(fixturesFolder, 'botDetectionStub.js')
         cy.readFile(fixturePath).then((fileContents) => {
             cy.intercept('GET', '**/procaptcha-frictionless/dist/botDetection.js*', {
-            headers: {
-                'content-type': 'application/javascript',
-            },
-            body: fileContents,
-            }).as('mockBotDetection');
-        });
+                headers: {
+                    'content-type': 'application/javascript',
+                },
+                body: fileContents,
+            }).as('mockBotDetection')
+        })
     } else {
-        throw new Error('The fixtures folder path is not valid.');
+        throw new Error('The fixtures folder path is not valid.')
     }
 }
 
