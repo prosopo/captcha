@@ -208,7 +208,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     async dryRunContractMethod<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | BN | undefined
+        value?: BN | undefined
     ): Promise<SubmittableExtrinsic> {
         const message = this.getContractMethod(contractMethodName)
         if (!this.nativeContract.query[message.method]) {
@@ -223,7 +223,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             ...args
         )
 
-        // Increase the gas required by a factor of 1.1 to make sure we don't hit contracts.StorageDepositLimitExhausted
+        // Increase the gas required by a factor to make sure we don't hit contracts.StorageDepositLimitExhausted
         const options = getOptions(this.api, true, value, gasRequired, storageDeposit, true)
         const method = get(this.nativeContract.query, message.method)
         const extrinsic = method(this.pair.address, options, ...args)
@@ -240,6 +240,9 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
                     failedFuncName: this.dryRunContractMethod.name,
                     failedContractMethod: message.method,
                     args: args.map(this.argDecoder), // TODO decode args using AbiMessage
+                    gasLimit: options.gasLimit?.toString(),
+                    storageDepositLimit: options.storageDepositLimit?.toString(),
+                    value: options.value ? options.value.toString() : 0,
                 },
                 logLevel: this.logger.getLogLevel(),
             })
@@ -257,7 +260,7 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
     async getExtrinsicAndGasEstimates<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | BN | undefined
+        value?: BN | undefined
     ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
@@ -306,7 +309,12 @@ export class ProsopoCaptchaContract extends Contract implements IProsopoCaptchaC
             }
         } else {
             throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                context: { error: response.result.asErr, failedFuncName: this.getExtrinsicAndGasEstimates.name },
+                context: {
+                    error: response.result.asErr,
+                    failedFuncName: this.getExtrinsicAndGasEstimates.name,
+                    gasLimit: initialOptions.gasLimit?.toString(),
+                    storageDepositLimit: initialOptions.storageDepositLimit?.toString(),
+                },
             })
         }
     }

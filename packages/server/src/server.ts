@@ -17,18 +17,21 @@ import {
     ContractAbi,
     NetworkConfig,
     NetworkNamesSchema,
-    ProcaptchaOutput,
+    ProcaptchaOutputSchema,
+    ProcaptchaToken,
     ProsopoServerConfigOutput,
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoContractError, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
 import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { decodeProcaptchaOutput } from '@prosopo/types'
 import { get } from '@prosopo/util'
+import { isHex, u8aToHex } from '@polkadot/util'
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
@@ -178,27 +181,30 @@ export class ProsopoServer {
     /**
      * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
      * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
-     * @param providerUrl
-     * @param dapp
-     * @param user
+     * @param token
      * @param blockNumber
      * @param timeouts
+     * @param providerUrl
      * @param challenge
-     * @param commitmentId
      */
     public async verifyProvider(
-        providerUrl: string,
-        dapp: string,
-        user: string,
+        token: string,
         blockNumber: number,
         timeouts: CaptchaTimeoutOutput,
-        challenge?: string,
-        commitmentId?: string
+        providerUrl: string,
+        challenge?: string
     ) {
         this.logger.info('Verifying with provider.')
+        const blockNumberString = blockNumber.toString()
+        const dappUserSignature = this.pair?.sign(blockNumberString)
+        if (!dappUserSignature) {
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
+        }
+        const signatureHex = u8aToHex(dappUserSignature)
+
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            const result = await providerApi.submitPowCaptchaVerify(challenge, dapp, timeouts.pow.cachedTimeout)
+            const result = await providerApi.submitPowCaptchaVerify(token, signatureHex, timeouts.pow.cachedTimeout)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
@@ -208,25 +214,25 @@ export class ProsopoServer {
             // bail early if the block is too old. This saves us calling the Provider.
             return false
         }
-
-        const result = await providerApi.verifyDappUser(
-            dapp,
-            user,
-            blockNumber,
-            commitmentId,
-            timeouts.image.cachedTimeout
-        )
+        const result = await providerApi.verifyDappUser(token, signatureHex, timeouts.image.cachedTimeout)
 
         return result.verified
     }
 
     /**
      *
-     * @param payload Info output by procaptcha on completion of the captcha process
      * @returns
+     * @param token
      */
-    public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
-        const { user, dapp, providerUrl, commitmentId, blockNumber, challenge } = payload
+    public async isVerified(token: ProcaptchaToken): Promise<boolean> {
+        if (!isHex(token)) {
+            this.logger.error('Invalid token - not hex', token)
+            return false
+        }
+
+        const payload = decodeProcaptchaOutput(token)
+
+        const { user, providerUrl, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
 
         if (providerUrl && blockNumber) {
             // By requiring block number, we load balance requests to the providers by requiring that the random
@@ -241,15 +247,8 @@ export class ProsopoServer {
             // }
 
             // If we have a providerURL and a blockNumber, we verify with the provider
-            return await this.verifyProvider(
-                providerUrl,
-                dapp,
-                user,
-                blockNumber,
-                this.config.timeouts,
-                challenge,
-                commitmentId
-            )
+
+            return await this.verifyProvider(token, blockNumber, this.config.timeouts, providerUrl, challenge)
         } else {
             // If we don't have a providerURL, we verify with the contract
             return await this.verifyContract(user, this.config.timeouts.contract.maxVerifiedTime)

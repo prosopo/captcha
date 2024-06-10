@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0xbfe7f2a04175eab8ac722a0fba13127cd3904a193a28ce19889fa891ac71f596",
+        "hash": "0x6f5c1914b86e7ad67eb116f384483c16255fa3341991a41cbc7f27ee2d4cb5b0",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -15,7 +15,7 @@
     },
     "contract": {
         "name": "common",
-        "version": "0.3.41",
+        "version": "1.0.1",
         "authors": [
             "Chris Taylor <chris@prosopo.io>",
             "George Oastler <george@prosopo.io>",
@@ -32,43 +32,63 @@
                 "label": "new",
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink_primitives", "ConstructorResult"],
+                    "displayName": [
+                        "ink_primitives",
+                        "ConstructorResult"
+                    ],
                     "type": 0
                 },
                 "selector": "0x9bae9d5e"
             }
         ],
-        "docs": [" An ink contract must be defined in order to import functions into another contract"],
+        "docs": [
+            " An ink contract must be defined in order to import functions into another contract"
+        ],
         "environment": {
             "accountId": {
-                "displayName": ["AccountId"],
+                "displayName": [
+                    "AccountId"
+                ],
                 "type": 4
             },
             "balance": {
-                "displayName": ["Balance"],
+                "displayName": [
+                    "Balance"
+                ],
                 "type": 10
             },
             "blockNumber": {
-                "displayName": ["BlockNumber"],
+                "displayName": [
+                    "BlockNumber"
+                ],
                 "type": 13
             },
             "chainExtension": {
-                "displayName": ["ChainExtension"],
+                "displayName": [
+                    "ChainExtension"
+                ],
                 "type": 14
             },
             "hash": {
-                "displayName": ["Hash"],
+                "displayName": [
+                    "Hash"
+                ],
                 "type": 11
             },
             "maxEventTopics": 4,
             "timestamp": {
-                "displayName": ["Timestamp"],
+                "displayName": [
+                    "Timestamp"
+                ],
                 "type": 12
             }
         },
         "events": [],
         "lang_error": {
-            "displayName": ["ink", "LangError"],
+            "displayName": [
+                "ink",
+                "LangError"
+            ],
             "type": 2
         },
         "messages": [
@@ -83,7 +103,10 @@
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 3
                 },
                 "selector": "0x8dd15f8f"
@@ -99,7 +122,10 @@
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 7
                 },
                 "selector": "0x0a7ff7cd"
@@ -109,7 +135,9 @@
                     {
                         "label": "account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 4
                         }
                     }
@@ -123,7 +151,10 @@
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 7
                 },
                 "selector": "0xf2f184d4"
@@ -131,12 +162,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get the git commit id from when this contract was built"],
+                "docs": [
+                    " Get the git commit id from when this contract was built"
+                ],
                 "label": "get_git_commit_id",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 8
                 },
                 "selector": "0x3685e994"
@@ -192,7 +228,9 @@
                         "type": 2
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -216,7 +254,10 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "LangError"]
+                "path": [
+                    "ink_primitives",
+                    "LangError"
+                ]
             }
         },
         {
@@ -256,7 +297,9 @@
                         "type": 2
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -272,7 +315,11 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "types", "AccountId"]
+                "path": [
+                    "ink_primitives",
+                    "types",
+                    "AccountId"
+                ]
             }
         },
         {
@@ -331,7 +378,9 @@
                         "type": 2
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -371,7 +420,9 @@
                         "type": 2
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -406,7 +457,11 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "types", "Hash"]
+                "path": [
+                    "ink_primitives",
+                    "types",
+                    "Hash"
+                ]
             }
         },
         {
@@ -431,7 +486,11 @@
                 "def": {
                     "variant": {}
                 },
-                "path": ["ink_env", "types", "NoChainExtension"]
+                "path": [
+                    "ink_env",
+                    "types",
+                    "NoChainExtension"
+                ]
             }
         }
     ],

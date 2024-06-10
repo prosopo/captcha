@@ -31,7 +31,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const env = new ProviderEnvironment(config, pair)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const result = await (tasks.contract.contract as any)['providerAccounts']()
+                const result = (await tasks.contract.query.getAllProviderAccounts()).value.unwrap().unwrap()
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {
                 logger.error(err)

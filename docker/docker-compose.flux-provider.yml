@@ -1,18 +1,18 @@
 version: '3.8'
 services:
-  provider:
-    image: prosopo/fluxprovider:${PROVIDER_IMAGE_VERSION}
-    build:
-      context: ..
-      dockerfile: ./docker/images/provider/flux-provider.dockerfile
-    env_file:
-      - ../.env.rococo
-    ports:
-      - "9229:9229"
-    tty: true
-    networks:
-      - internal
-      - external
+    provider:
+        image: prosopo/fluxprovider:${PROVIDER_IMAGE_VERSION}
+        build:
+            context: ..
+            dockerfile: ./docker/images/provider/flux-provider.dockerfile
+        env_file:
+            - ../.env.rococo
+        ports:
+            - '9229:9229'
+        tty: true
+        networks:
+            - internal
+            - external
 networks:
     internal:
         name: internal

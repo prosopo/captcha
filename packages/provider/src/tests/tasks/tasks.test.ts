@@ -35,7 +35,6 @@ import { UserCommitmentRecord } from '@prosopo/types-database'
 import { ViteTestContext } from '@prosopo/env'
 import { assert, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
-import { createType } from '@polkadot/types/create'
 import { datasetWithIndexSolutions } from '@prosopo/datasets'
 import { getDispatchError } from '@prosopo/tx'
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds.js'
@@ -97,7 +96,13 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             context.env.getContractInterface().query.getProviderStakeThreshold,
             context.env.getContractInterface().query
         )()
-        context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
+
+        const dappStakeDefault: Promise<ReturnNumber> = wrapQuery(
+            context.env.getContractInterface().query.getDappStakeThreshold,
+            context.env.getContractInterface().query
+        )()
+        context.providerStakeThreshold = (await promiseStakeDefault).rawNumber
+        context.dappStakeThreshold = (await promiseStakeDefault).rawNumber
         return () => {
             env.db?.close()
         }
@@ -378,11 +383,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result?.error).to.be.undefined
     })
 
-    test('Provider update', async ({ env }): Promise<void> => {
+    test('Provider update', async ({ env, providerStakeThreshold }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providers)
         const tasks = await getSignedTasks(env, providerAccount)
 
-        const value = new BN((await tasks.contract.query.getProviderStakeThreshold()).value.unwrap().toNumber())
+        const value = providerStakeThreshold
         const result = (
             await tasks.contract.tx.providerUpdate(
                 Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),
@@ -615,7 +620,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result).to.be.an('array')
     })
 
-    test('Dapp registration', async ({ env, providerStakeThreshold }): Promise<void> => {
+    test('Dapp registration', async ({ env, providerStakeThreshold, dappStakeThreshold }): Promise<void> => {
         const newAccount = env.createAccountAndAddToKeyring() || ['', '']
         const tasks = await getSignedTasks(env, newAccount)
         const stakeAmount = getStakeAmount(env, providerStakeThreshold)
@@ -667,16 +672,17 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result).to.have.a.property('status')
     })
 
-    test('Dapp fund', async ({ env }): Promise<void> => {
+    test('Dapp fund', async ({ env, dappStakeThreshold }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(env, dappAccount)
-        const value = createType(env.getContractInterface().abi.registry, 'u128', '10')
         const dappContractAddress = accountContract(dappAccount)
         const dappBefore = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
-        const result = (await tasks.contract.tx.dappFund(dappContractAddress, { value })).result
+        const result = (await tasks.contract.tx.dappFund(dappContractAddress, { value: dappStakeThreshold })).result
         expect(result?.isError).to.be.false
         const dappAfter = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
-        expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance.toNumber())
+        expect(dappBefore.balance.rawNumber.add(dappStakeThreshold).toString()).to.equal(
+            dappAfter.balance.rawNumber.toString()
+        )
     })
 
     test('Captchas are correctly formatted before being passed to the API layer', async ({ env }): Promise<void> => {

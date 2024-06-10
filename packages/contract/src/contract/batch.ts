@@ -21,7 +21,7 @@ import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { filterAndDecodeContractEvents, formatEvent } from './helpers.js'
 import { getDispatchError } from '@prosopo/tx'
-import { oneUnit } from '../balances/index.js'
+import { oneUnit } from '@prosopo/tx'
 
 /**
  * Batch commits an array of transactions to the contract

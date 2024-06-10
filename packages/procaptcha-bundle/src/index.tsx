@@ -20,7 +20,7 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
+    ProcaptchaToken,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
@@ -32,7 +32,7 @@ interface ProcaptchaRenderOptions {
     siteKey: string
     theme?: 'light' | 'dark'
     captchaType?: Features
-    callback?: string | ((payload: ProcaptchaOutput) => void)
+    callback?: string | ((token: ProcaptchaToken) => void)
     'challenge-valid-length'?: string // seconds for successful challenge to be valid
     'chalexpired-callback'?: string | (() => void)
     'expired-callback'?: string | (() => void)
@@ -88,7 +88,7 @@ const getWindowCallback = (callbackName: string) => {
     return fn
 }
 
-const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
+const handleOnHuman = (element: Element, token: ProcaptchaToken) => {
     const form = getParentForm(element)
 
     if (!form) {
@@ -99,7 +99,7 @@ const handleOnHuman = (element: Element, payload: ProcaptchaOutput) => {
     const input = document.createElement('input')
     input.type = 'hidden'
     input.name = ApiParams.procaptchaResponse
-    input.value = JSON.stringify(payload)
+    input.value = token
     form.appendChild(input)
 }
 
@@ -128,7 +128,7 @@ const setValidChallengeLength = (
 }
 
 const getDefaultCallbacks = (element: Element) => ({
-    onHuman: (payload: ProcaptchaOutput) => handleOnHuman(element, payload),
+    onHuman: (token: ProcaptchaToken) => handleOnHuman(element, token),
     onChallengeExpired: () => {
         console.log('Challenge expired')
     },
@@ -158,7 +158,7 @@ const setTheme = (
 function setUserCallbacks(
     renderOptions: ProcaptchaRenderOptions | undefined,
     callbacks: {
-        onHuman: (payload: ProcaptchaOutput) => void
+        onHuman: (token: ProcaptchaToken) => void
         onChallengeExpired: () => void
         onExpired: () => void
         onError: (error: Error) => void

@@ -46,12 +46,14 @@ const extractHeaders = (req: Request) => {
 
     if (!signature || !blocknumber) {
         throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', {
-            context: { error: 'Missing signature or block number' },
+            context: { error: 'Missing signature or block number', code: 400 },
         })
     }
 
     if (Array.isArray(signature) || Array.isArray(blocknumber) || !isHex(signature)) {
-        throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', { context: { error: 'Invalid header format' } })
+        throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', {
+            context: { error: 'Invalid header format', code: 400 },
+        })
     }
 
     return { signature, blocknumber }
@@ -75,15 +77,18 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
         throw new ProsopoApiError('API.BAD_REQUEST', {
             context: {
                 error: `Invalid block number ${parsedBlockNumber}, current block number is ${currentBlockNumber}`,
+                code: 400,
             },
         })
     }
 }
 
-const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
+export const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
     const u8Sig = hexToU8a(signature)
 
     if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {
-        throw new ProsopoApiError('GENERAL.INVALID_SIGNATURE', { context: { error: 'Signature verification failed' } })
+        throw new ProsopoApiError('GENERAL.INVALID_SIGNATURE', {
+            context: { error: 'Signature verification failed', code: 401 },
+        })
     }
 }

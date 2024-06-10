@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
@@ -49,7 +50,7 @@ function getDefaultProvider(): IProviderAccount {
         url: process.env.PROSOPO_API_PORT ? `http://${host}:${process.env.PROSOPO_API_PORT}` : `http://${host}:9229`,
         fee: 10,
         payee: Payee.dapp,
-        stake: Math.pow(10, 13),
+        stake: new BN(Math.pow(10, 13)),
         datasetFile: getDatasetFilePath(),
         address: process.env.PROSOPO_PROVIDER_ADDRESS || '',
         secret: getSecret(),
@@ -60,7 +61,7 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        fundAmount: Math.pow(10, 12),
+        fundAmount: new BN(Math.pow(10, 12)),
     }
 }
 
@@ -181,12 +182,3 @@ export async function setup(force: boolean) {
         throw new ProsopoEnvError(`GENERAL.NO_MNEMONIC_OR_SEED`)
     }
 }
-
-//if main process
-// if (typeof require !== 'undefined' && require.main === module) {
-//     console.info('Running setup as main process')
-//
-//     setup()
-//         .then((r) => logger.debug('Setup done'))
-//         .catch((e) => console.error(e))
-// }

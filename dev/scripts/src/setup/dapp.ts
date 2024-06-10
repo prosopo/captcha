@@ -11,58 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { BN_ZERO } from '@polkadot/util/bn'
 import { Dapp, DappPayee } from '@prosopo/captcha-contract'
 import { IDappAccount } from '@prosopo/types'
-import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel } from '@prosopo/common'
-import { ProsopoCaptchaContract, oneUnit, wrapQuery } from '@prosopo/contract'
-import { ProsopoContractError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { TransactionQueue } from '@prosopo/tx'
+import { TransactionQueue, oneUnit, submitTx } from '@prosopo/tx'
+import { getLogger } from '@prosopo/common'
 import { sendFunds } from './funds.js'
+import { wrapQuery } from '@prosopo/contract'
 
 const log = getLogger(LogLevel.enum.info, 'setupDapp')
-
-async function submitTx(
-    transactionQueue: TransactionQueue,
-    contract: ProsopoCaptchaContract,
-    method: string,
-    args: any[],
-    value: number | BN,
-    pair?: KeyringPair
-): Promise<ContractSubmittableResult> {
-    return new Promise((resolve, reject) => {
-        if (
-            contract.nativeContract.tx &&
-            method in contract.nativeContract.tx &&
-            contract.nativeContract.tx[method] !== undefined
-        ) {
-            try {
-                contract.dryRunContractMethod(method, args, value).then((extrinsic) => {
-                    transactionQueue
-                        .add(
-                            extrinsic,
-                            (result: ContractSubmittableResult) => {
-                                resolve(result)
-                            },
-                            pair,
-                            method
-                        )
-                        .then((result) => {
-                            log.debug('Transaction added to queue', result)
-                        })
-                })
-            } catch (err) {
-                reject(err)
-            }
-        } else {
-            reject(new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { failedFuncName: submitTx.name } }))
-        }
-    })
-}
 
 export async function setupDapp(
     env: ProviderEnvironment,
@@ -102,7 +62,7 @@ export async function setupDapp(
 
             await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(addressToRegister, DappPayee.dapp)
             if (queue) {
-                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], 0)
+                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], BN_ZERO)
             } else {
                 await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
             }
@@ -130,7 +90,7 @@ async function dappSendFunds(env: ProviderEnvironment, dapp: IDappAccount) {
         const {
             data: { free: previousFree },
         } = await env.getContractInterface().api.query.system.account(dapp.pair.address)
-        if (previousFree.lt(new BN(sendAmount.toString()))) {
+        if (previousFree.lt(sendAmount)) {
             // send enough funds to cover the tx fees
             await sendFunds(env, dapp.pair.address, 'Dapp', sendAmount)
         }

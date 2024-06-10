@@ -22,6 +22,24 @@ export function getPairType(): KeypairType {
     return (process.env.PROSOPO_PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
 }
 
+export function getAddress(who?: string): string | undefined {
+    if (!who) {
+        who = 'PROVIDER'
+    } else {
+        who = who.toUpperCase()
+    }
+    return process.env[`PROSOPO_${who}_ADDRESS`]
+}
+
+export function getPassword(who?: string): string | undefined {
+    if (!who) {
+        who = 'PROVIDER'
+    } else {
+        who = who.toUpperCase()
+    }
+    return process.env[`PROSOPO_${who}_ACCOUNT_PASSWORD`]
+}
+
 export function getSecret(who?: string): string | undefined {
     if (!who) {
         who = 'PROVIDER'

@@ -1,33 +1,33 @@
 # https://docs.docker.com/cloud/ecs-integration/
 version: '3.8'
 services:
-  substrate:
-    image: prosopo/substrate:demo-v1.0.4
-    ports:
-      - "9615:9615"
-      - "9944:9944"
-      - "9933:9933"
-    command: substrate-contracts-node --dev -d ./chain-data --unsafe-rpc-external --rpc-external --prometheus-external -lerror,runtime::contracts=debug
-  database:
-    image: mongo:5.0.4
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
-      - MONGO_INITDB_DATABASE=prosopo
-  provider:
-    # TODO update provider image
-    image: prosopo/provider:v1.0.5
-    environment:
-      - NODE_ENV=production
-      - PROSOPO_SITE_KEY=5GoHpdidCX62uE3wuQagVWhf4Un1gVten4NZ6k72Hd74WYYr
-      - PROSOPO_DATABASE_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
-    ports:
-      - "3000:3000"
-    depends_on:
-      - substrate
-      - database
+    substrate:
+        image: prosopo/substrate:demo-v1.0.4
+        ports:
+            - '9615:9615'
+            - '9944:9944'
+            - '9933:9933'
+        command: substrate-contracts-node --dev -d ./chain-data --unsafe-rpc-external --rpc-external --prometheus-external -lerror,runtime::contracts=debug
+    database:
+        image: mongo:5.0.4
+        ports:
+            - '27017:27017'
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
+            - MONGO_INITDB_DATABASE=prosopo
+    provider:
+        # TODO update provider image
+        image: prosopo/provider:v1.0.5
+        environment:
+            - NODE_ENV=production
+            - PROSOPO_SITE_KEY=5GoHpdidCX62uE3wuQagVWhf4Un1gVten4NZ6k72Hd74WYYr
+            - PROSOPO_DATABASE_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
+        ports:
+            - '3000:3000'
+        depends_on:
+            - substrate
+            - database
 
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data-secrets.html
 # secrets:
@@ -38,22 +38,22 @@ services:
 x-aws-vpc: vpc-0d475f14c1385d682
 x-aws-loadbalancer: arn:aws:elasticloadbalancing:eu-west-1:333775583992:loadbalancer/net/demo-net/c964b999910c2e7d
 x-aws-cloudformation:
-  Resources:
-    SubstrateTCP9944Listener:
-      Properties:
-        Certificates:
-          - CertificateArn: "arn:aws:acm:eu-west-1:333775583992:certificate/4566efed-fb66-498b-82d0-73be97a42191"
-        Protocol: TLS
-        Port: 9944
-    SubstrateTCP9933Listener:
-      Properties:
-        Certificates:
-          - CertificateArn: "arn:aws:acm:eu-west-1:333775583992:certificate/4566efed-fb66-498b-82d0-73be97a42191"
-        Protocol: TLS
-        Port: 9933
-    ProviderTCP3000Listener:
-      Properties:
-        Certificates:
-          - CertificateArn: "arn:aws:acm:eu-west-1:333775583992:certificate/4566efed-fb66-498b-82d0-73be97a42191"
-        Protocol: TLS
-        Port: 3000
+    Resources:
+        SubstrateTCP9944Listener:
+            Properties:
+                Certificates:
+                    - CertificateArn: 'arn:aws:acm:eu-west-1:333775583992:certificate/4566efed-fb66-498b-82d0-73be97a42191'
+                Protocol: TLS
+                Port: 9944
+        SubstrateTCP9933Listener:
+            Properties:
+                Certificates:
+                    - CertificateArn: 'arn:aws:acm:eu-west-1:333775583992:certificate/4566efed-fb66-498b-82d0-73be97a42191'
+                Protocol: TLS
+                Port: 9933
+        ProviderTCP3000Listener:
+            Properties:
+                Certificates:
+                    - CertificateArn: 'arn:aws:acm:eu-west-1:333775583992:certificate/4566efed-fb66-498b-82d0-73be97a42191'
+                Protocol: TLS
+                Port: 3000

@@ -19,6 +19,7 @@ import {
     commandGetDapps,
     commandLogs,
     commandRedeploy,
+    commandSign,
     commandTerminal,
 } from './commands/index.js'
 import { hideBin } from 'yargs/helpers'
@@ -34,6 +35,7 @@ export default async function processArgs(args: string[]) {
         .command(commandGetDapp({ logger }))
         .command(commandGetDapps({ logger }))
         .command(commandLogs({ logger }))
+        .command(commandSign({ logger }))
         .command(commandTerminal({ logger }))
         .parse()
 }

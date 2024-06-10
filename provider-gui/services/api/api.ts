@@ -17,7 +17,7 @@ import { ProsopoApiError } from '@prosopo/common'
 async function handleResponse(response: Response) {
     if (!response.ok) {
         const errorMessage = await response.text()
-        throw new ProsopoApiError('API.BAD_REQUEST', { context: { error: errorMessage } })
+        throw new ProsopoApiError('API.BAD_REQUEST', { context: { error: errorMessage, code: 400 } })
     }
     return response.json()
 }

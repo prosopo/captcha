@@ -84,6 +84,8 @@ function main() {
         output.push({ name: `u8aToHex`, value: u8aToHex(padded) })
         output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
         output.push({ name: `u8aToString`, value: u8aToString(padded) })
+
+        output.push({ name: `stringToHex`, value: stringToHex(arg) })
     }
 
     if (isBN(arg)) {

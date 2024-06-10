@@ -60,6 +60,7 @@ export default async function (
         'process.env.WS_NO_BUFFER_UTIL': 'true',
         'process.env.WS_NO_UTF_8_VALIDATE': 'true',
         'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(packageVersion),
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || mode),
         ...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
             'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
         }),

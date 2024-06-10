@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 
 export async function downloadImage(url: string): Promise<Uint8Array> {
     try {
         const response = await fetch(url)
         if (!response.ok) {
-            throw new ProsopoApiError('API.BAD_REQUEST', {
+            throw new ProsopoDatasetError('API.BAD_REQUEST', {
                 context: { error: `Network response was not ok, status: ${response.status}`, url },
             })
         }

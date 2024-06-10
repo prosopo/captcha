@@ -1,46 +1,46 @@
 version: '3.8'
 services:
-  provider:
-    image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
-    build:
-      context: ..
-      dockerfile: ./docker/images/provider.dockerfile
-    env_file:
-      - ../dev/scripts/.env.development
-    ports:
-      - "9229:9229"
-    tty: true
-    depends_on:
-      - database
-      - substrate
-    networks:
-      - internal
-      - external
-  substrate:
-    image: prosopo/substrate-contracts-node:v0.35
-    ports:
-      - "9615:9615"
-      - "9944:9944"
-      - "9933:9933"
-      - "30333:30333"
-    networks:
-      - internal
-      - external
-  database:
-    image: mongo:5.0.4
-    # volumes:
-    #   - ./db:/data/db
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
-      - MONGO_INITDB_DATABASE=prosopo
-    networks:
-      - internal
+    provider:
+        image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+        build:
+            context: ..
+            dockerfile: ./docker/images/provider.dockerfile
+        env_file:
+            - ../dev/scripts/.env.development
+        ports:
+            - '9229:9229'
+        tty: true
+        depends_on:
+            - database
+            - substrate
+        networks:
+            - internal
+            - external
+    substrate:
+        image: prosopo/substrate-contracts-node:v0.35
+        ports:
+            - '9615:9615'
+            - '9944:9944'
+            - '9933:9933'
+            - '30333:30333'
+        networks:
+            - internal
+            - external
+    database:
+        image: mongo:5.0.4
+        # volumes:
+        #   - ./db:/data/db
+        ports:
+            - '27017:27017'
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=root
+            - MONGO_INITDB_DATABASE=prosopo
+        networks:
+            - internal
 networks:
-  internal:
-    name: internal
-    internal: true
-  external:
-    name: external
+    internal:
+        name: internal
+        internal: true
+    external:
+        name: external

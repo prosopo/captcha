@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { NetworkNamesSchema, ProsopoNetworksSchema } from './network.js'
-import { boolean } from 'zod'
+import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
 import { input } from 'zod'
 import { literal } from 'zod'
 import { number } from 'zod'
@@ -23,6 +22,7 @@ import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
+import z, { boolean } from 'zod'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 
@@ -75,7 +75,7 @@ export type DatabaseConfigOutput = output<typeof DatabaseConfigSchema>
 export const ProsopoBaseConfigSchema = object({
     logLevel: LogLevel.optional().default(LogLevel.enum.info),
     defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.production),
-    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.rococo),
+    defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.astar),
     // The account with which to query the contract.merge sign transactions
     account: object({
         address: string().optional(),
@@ -83,16 +83,32 @@ export const ProsopoBaseConfigSchema = object({
         password: string().optional(),
     }),
 })
+export const PolkadotSecretJSONSpec = z.object({
+    encoded: z.string(),
+    encoding: z.object({
+        content: z.array(z.string()),
+        type: z.array(z.string()),
+        version: z.string(),
+    }),
+    address: z.string(),
+    meta: z.object({
+        genesisHash: z.string(),
+        name: z.string(),
+        whenCreated: z.number(),
+    }),
+})
+
+export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     object({
-        networks: ProsopoNetworksSchema.default(networks),
+        networks: ProsopoNetworkSchema.default(networks),
         database: DatabaseConfigSchema.optional(),
         devOnlyWatchEvents: boolean().optional(),
     })
 )
-export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworksSchema>
-export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworksSchema>
+export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworkSchema>
+export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworkSchema>
 
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>

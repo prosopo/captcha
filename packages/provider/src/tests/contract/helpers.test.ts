@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
-import { BN } from '@polkadot/util/bn'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@prosopo/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create/types'
 import { ViteTestContext } from '@prosopo/env'
 import { at } from '@prosopo/util'
 import { beforeEach, describe, expect, test } from 'vitest'
-import { encodeStringArgs, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { encodeStringArgs, getPairAsync } from '@prosopo/contract'
 import { getTestConfig } from '@prosopo/config'
 import { hexToU8a } from '@polkadot/util/hex'
 
@@ -45,11 +43,6 @@ describe('CONTRACT HELPERS', function () {
             throw new ProsopoEnvError(e as Error)
         }
         context.env = env
-        const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
-            context.env.getContractInterface().query.getProviderStakeThreshold,
-            context.env.getContractInterface().query
-        )()
-        context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
         return () => {
             env.db?.close()
         }

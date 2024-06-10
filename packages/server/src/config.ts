@@ -22,6 +22,7 @@ export const getServerConfig = () =>
         account: {
             password: '',
             address: process.env.PROSOPO_SITE_KEY || '',
+            secret: process.env.PROSOPO_SITE_PRIVATE_KEY || '',
         },
     })
 

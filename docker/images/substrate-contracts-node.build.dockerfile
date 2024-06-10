@@ -1,6 +1,6 @@
-FROM docker.io/paritytech/ci-linux:production AS builder
+FROM docker.io/paritytech/ci-unified:latest AS builder
 
-RUN git clone --depth 1 https://github.com/prosopo-io/substrate-contracts-node
+RUN git clone --depth 1 -b astar https://github.com/prosopo-io/substrate-contracts-node
 
 WORKDIR /builds/substrate-contracts-node
 

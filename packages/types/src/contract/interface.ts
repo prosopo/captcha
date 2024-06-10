@@ -25,11 +25,17 @@ export interface IProsopoCaptchaContract {
     api: ApiPromise
     contractName: string
     contract: ContractPromise
+    nativeContract: ContractPromise
     pair: KeyringPair
     options: ContractOptions | undefined
     nonce: number
     logger: Logger
     json: AbiMetadata
+    dryRunContractMethod<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: BN | undefined
+    ): Promise<SubmittableExtrinsic>
     queryAtBlock<T>(blockHash: BlockHash, methodName: string, args?: any[]): Promise<T>
     getExtrinsicAndGasEstimates<T>(
         contractMethodName: string,

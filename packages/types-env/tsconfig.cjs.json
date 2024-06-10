@@ -10,6 +10,9 @@
             "path": "../common/tsconfig.cjs.json"
         },
         {
+            "path": "../contract/tsconfig.cjs.json"
+        },
+        {
             "path": "../types/tsconfig.cjs.json"
         },
         {

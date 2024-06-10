@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { array, literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
 import { enumMap } from './enumMap.js'
-import { literal, number, object, string, union, enum as zEnum, infer as zInfer } from 'zod'
-export const NetworkNamesSchema = zEnum(['development', 'rococo', 'shiden'])
+export const NetworkNamesSchema = zEnum(['development', 'rococo', 'shiden', 'astar'])
 
 export type NetworkNames = zInfer<typeof NetworkNamesSchema>
 
@@ -24,7 +24,7 @@ export const NetworkPairTypeSchema = union([
     literal('ethereum'),
 ])
 export const NetworkConfigSchema = object({
-    endpoint: string().url(),
+    endpoint: array(string().url()),
     contract: object({
         address: string(),
         name: string(),
@@ -38,7 +38,7 @@ export type NetworkConfig = zInfer<typeof NetworkConfigSchema>
 // Force all enum keys to be present in record: https://github.com/colinhacks/zod/issues/1092.
 // Unfortunately there doesn't seem to be a way to force at least one key, but not all keys, to be present. See attempt
 // below using refine / transform and reported issue: https://github.com/colinhacks/zod/issues/2528
-export const ProsopoNetworksSchema = enumMap(
+export const ProsopoNetworkSchema = enumMap(
     NetworkNamesSchema,
     NetworkConfigSchema.required({
         endpoint: true,
