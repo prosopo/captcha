@@ -1,6 +1,6 @@
 {
     "source": {
-        "hash": "0xedcbb17b6cfc4d160cfdac692ca253e009fc0b7651e348c0e0382441667271da",
+        "hash": "0xcc59363fa4cd47a1a3116bd7c29b77bf0198f53c008c4359cd7568c5f015e6cd",
         "language": "ink! 4.3.0",
         "compiler": "rustc 1.69.0",
         "build_info": {
@@ -15,7 +15,7 @@
     },
     "contract": {
         "name": "captcha",
-        "version": "0.3.41",
+        "version": "1.0.1",
         "authors": [
             "Chris Taylor <chris@prosopo.io>",
             "George Oastler <george@prosopo.io>",
@@ -28,11 +28,16 @@
             {
                 "args": [],
                 "default": false,
-                "docs": ["Constructor"],
+                "docs": [
+                    "Constructor"
+                ],
                 "label": "new",
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink_primitives", "ConstructorResult"],
+                    "displayName": [
+                        "ink_primitives",
+                        "ConstructorResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x9bae9d5e"
@@ -44,7 +49,10 @@
                 "label": "new_panic",
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink_primitives", "ConstructorResult"],
+                    "displayName": [
+                        "ink_primitives",
+                        "ConstructorResult"
+                    ],
                     "type": 15
                 },
                 "selector": "0x794560e8"
@@ -53,46 +61,66 @@
         "docs": [],
         "environment": {
             "accountId": {
-                "displayName": ["AccountId"],
+                "displayName": [
+                    "AccountId"
+                ],
                 "type": 7
             },
             "balance": {
-                "displayName": ["Balance"],
+                "displayName": [
+                    "Balance"
+                ],
                 "type": 0
             },
             "blockNumber": {
-                "displayName": ["BlockNumber"],
+                "displayName": [
+                    "BlockNumber"
+                ],
                 "type": 1
             },
             "chainExtension": {
-                "displayName": ["ChainExtension"],
+                "displayName": [
+                    "ChainExtension"
+                ],
                 "type": 65
             },
             "hash": {
-                "displayName": ["Hash"],
+                "displayName": [
+                    "Hash"
+                ],
                 "type": 4
             },
             "maxEventTopics": 4,
             "timestamp": {
-                "displayName": ["Timestamp"],
+                "displayName": [
+                    "Timestamp"
+                ],
                 "type": 64
             }
         },
         "events": [],
         "lang_error": {
-            "displayName": ["ink", "LangError"],
+            "displayName": [
+                "ink",
+                "LangError"
+            ],
             "type": 14
         },
         "messages": [
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get the git commit id from when this contract was built"],
+                "docs": [
+                    " Get the git commit id from when this contract was built"
+                ],
                 "label": "get_git_commit_id",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 16
                 },
                 "selector": "0x3685e994"
@@ -100,12 +128,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the admin which can control this contract. set to author/instantiator by default"],
+                "docs": [
+                    " the admin which can control this contract. set to author/instantiator by default"
+                ],
                 "label": "get_admin",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 18
                 },
                 "selector": "0x57b8a8a7"
@@ -113,12 +146,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get all payee options"],
+                "docs": [
+                    " Get all payee options"
+                ],
                 "label": "get_payees",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 19
                 },
                 "selector": "0xf334a6d7"
@@ -126,12 +164,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get all dapp payee options"],
+                "docs": [
+                    " Get all dapp payee options"
+                ],
                 "label": "get_dapp_payees",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 22
                 },
                 "selector": "0xcce851af"
@@ -139,12 +182,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get all status options"],
+                "docs": [
+                    " Get all status options"
+                ],
                 "label": "get_statuses",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 25
                 },
                 "selector": "0xd39608f0"
@@ -152,12 +200,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get contract provider minimum stake default."],
+                "docs": [
+                    " Get contract provider minimum stake default."
+                ],
                 "label": "get_provider_stake_threshold",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 28
                 },
                 "selector": "0x3e7e8941"
@@ -165,12 +218,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get contract dapp minimum stake default."],
+                "docs": [
+                    " Get contract dapp minimum stake default."
+                ],
                 "label": "get_dapp_stake_threshold",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 28
                 },
                 "selector": "0xc9834fee"
@@ -178,12 +236,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the maximum fee a provider can charge for a commit"],
+                "docs": [
+                    " the maximum fee a provider can charge for a commit"
+                ],
                 "label": "get_max_provider_fee",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 29
                 },
                 "selector": "0xd799cf93"
@@ -191,12 +254,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the minimum number of providers needed for the contract to function"],
+                "docs": [
+                    " the minimum number of providers needed for the contract to function"
+                ],
                 "label": "get_min_num_active_providers",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 30
                 },
                 "selector": "0xa200bea1"
@@ -204,12 +272,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the time to complete a block, 6 seconds by default"],
+                "docs": [
+                    " the time to complete a block, 6 seconds by default"
+                ],
                 "label": "get_block_time",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 30
                 },
                 "selector": "0x8d3f151d"
@@ -217,12 +290,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the max age of a commit for a user before it is removed from the history, in seconds"],
+                "docs": [
+                    " the max age of a commit for a user before it is removed from the history, in seconds"
+                ],
                 "label": "get_max_user_history_age_seconds",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 29
                 },
                 "selector": "0xcab4fa0a"
@@ -230,12 +308,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the max number of commits stored for a single user"],
+                "docs": [
+                    " the max number of commits stored for a single user"
+                ],
                 "label": "get_max_user_history_len",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 30
                 },
                 "selector": "0xfb715e71"
@@ -243,12 +326,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" the max age of a commit for a user before it is removed from the history, in blocks"],
+                "docs": [
+                    " the max age of a commit for a user before it is removed from the history, in blocks"
+                ],
                 "label": "get_max_user_history_age_blocks",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 29
                 },
                 "selector": "0x6f3337c3"
@@ -258,32 +346,43 @@
                     {
                         "label": "url",
                         "type": {
-                            "displayName": ["Vec"],
+                            "displayName": [
+                                "Vec"
+                            ],
                             "type": 2
                         }
                     },
                     {
                         "label": "fee",
                         "type": {
-                            "displayName": ["u32"],
+                            "displayName": [
+                                "u32"
+                            ],
                             "type": 1
                         }
                     },
                     {
                         "label": "payee",
                         "type": {
-                            "displayName": ["Payee"],
+                            "displayName": [
+                                "Payee"
+                            ],
                             "type": 21
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Register a provider, their url and fee"],
+                "docs": [
+                    " Register a provider, their url and fee"
+                ],
                 "label": "provider_register",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0xc66f9a2a"
@@ -293,32 +392,43 @@
                     {
                         "label": "url",
                         "type": {
-                            "displayName": ["Vec"],
+                            "displayName": [
+                                "Vec"
+                            ],
                             "type": 2
                         }
                     },
                     {
                         "label": "fee",
                         "type": {
-                            "displayName": ["u32"],
+                            "displayName": [
+                                "u32"
+                            ],
                             "type": 1
                         }
                     },
                     {
                         "label": "payee",
                         "type": {
-                            "displayName": ["Payee"],
+                            "displayName": [
+                                "Payee"
+                            ],
                             "type": 21
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Update an existing provider, their url, fee and deposit funds"],
+                "docs": [
+                    " Update an existing provider, their url, fee and deposit funds"
+                ],
                 "label": "provider_update",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0xd2f70de8"
@@ -326,12 +436,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" De-activate a provider by setting their status to Deactivated"],
+                "docs": [
+                    " De-activate a provider by setting their status to Deactivated"
+                ],
                 "label": "provider_deactivate",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0xa65232da"
@@ -339,12 +454,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Unstake and deactivate the provider's service, returning stake"],
+                "docs": [
+                    " Unstake and deactivate the provider's service, returning stake"
+                ],
                 "label": "provider_deregister",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x5eff53cf"
@@ -354,18 +474,25 @@
                     {
                         "label": "account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Get an existing provider"],
+                "docs": [
+                    " Get an existing provider"
+                ],
                 "label": "get_provider",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 32
                 },
                 "selector": "0x457c7444"
@@ -373,12 +500,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Fund a provider"],
+                "docs": [
+                    " Fund a provider"
+                ],
                 "label": "provider_fund",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x54ee83bb"
@@ -388,25 +520,34 @@
                     {
                         "label": "dataset_id",
                         "type": {
-                            "displayName": ["Hash"],
+                            "displayName": [
+                                "Hash"
+                            ],
                             "type": 4
                         }
                     },
                     {
                         "label": "dataset_id_content",
                         "type": {
-                            "displayName": ["Hash"],
+                            "displayName": [
+                                "Hash"
+                            ],
                             "type": 4
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Add a new data set"],
+                "docs": [
+                    " Add a new data set"
+                ],
                 "label": "provider_set_dataset",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0xb0e7ab99"
@@ -416,18 +557,25 @@
                     {
                         "label": "contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Get an existing dapp"],
+                "docs": [
+                    " Get an existing dapp"
+                ],
                 "label": "get_dapp",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 35
                 },
                 "selector": "0xf96477c0"
@@ -437,25 +585,34 @@
                     {
                         "label": "contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     },
                     {
                         "label": "payee",
                         "type": {
-                            "displayName": ["DappPayee"],
+                            "displayName": [
+                                "DappPayee"
+                            ],
                             "type": 24
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Register a dapp"],
+                "docs": [
+                    " Register a dapp"
+                ],
                 "label": "dapp_register",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x42b45efa"
@@ -465,32 +622,43 @@
                     {
                         "label": "contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     },
                     {
                         "label": "payee",
                         "type": {
-                            "displayName": ["DappPayee"],
+                            "displayName": [
+                                "DappPayee"
+                            ],
                             "type": 24
                         }
                     },
                     {
                         "label": "owner",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Update a dapp with new funds, setting status as appropriate"],
+                "docs": [
+                    " Update a dapp with new funds, setting status as appropriate"
+                ],
                 "label": "dapp_update",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x5dbfa904"
@@ -500,18 +668,25 @@
                     {
                         "label": "contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps"],
+                "docs": [
+                    " Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps"
+                ],
                 "label": "dapp_fund",
                 "mutates": true,
                 "payable": true,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x55da62a9"
@@ -521,18 +696,25 @@
                     {
                         "label": "contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Cancel services as a dapp, returning remaining tokens"],
+                "docs": [
+                    " Cancel services as a dapp, returning remaining tokens"
+                ],
                 "label": "dapp_deregister",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0xdc7da4d5"
@@ -542,18 +724,25 @@
                     {
                         "label": "contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Deactivate a dapp, leaving stake intact"],
+                "docs": [
+                    " Deactivate a dapp, leaving stake intact"
+                ],
                 "label": "dapp_deactivate",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x94718d6f"
@@ -563,7 +752,9 @@
                     {
                         "label": "user_account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
@@ -574,7 +765,10 @@
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 38
                 },
                 "selector": "0x3be12ad6"
@@ -584,18 +778,25 @@
                     {
                         "label": "commit",
                         "type": {
-                            "displayName": ["Commit"],
+                            "displayName": [
+                                "Commit"
+                            ],
                             "type": 41
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Provider submits a captcha solution commitment"],
+                "docs": [
+                    " Provider submits a captcha solution commitment"
+                ],
                 "label": "provider_commit",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x57876316"
@@ -605,18 +806,25 @@
                     {
                         "label": "commits",
                         "type": {
-                            "displayName": ["Vec"],
+                            "displayName": [
+                                "Vec"
+                            ],
                             "type": 44
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Provider submits 0-many captcha solution commitments"],
+                "docs": [
+                    " Provider submits 0-many captcha solution commitments"
+                ],
                 "label": "provider_commit_many",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0xc8d4b3b2"
@@ -626,14 +834,18 @@
                     {
                         "label": "user_account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     },
                     {
                         "label": "threshold",
                         "type": {
-                            "displayName": ["u8"],
+                            "displayName": [
+                                "u8"
+                            ],
                             "type": 3
                         }
                     }
@@ -648,7 +860,10 @@
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 45
                 },
                 "selector": "0xbe7b6ef9"
@@ -658,18 +873,25 @@
                     {
                         "label": "user_account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Get the last correct captcha for a user"],
+                "docs": [
+                    " Get the last correct captcha for a user"
+                ],
                 "label": "dapp_operator_last_correct_captcha",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 48
                 },
                 "selector": "0xbe930f18"
@@ -679,18 +901,27 @@
                     {
                         "label": "user_account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Get a dapp user", "", " Returns an error if the user does not exist"],
+                "docs": [
+                    " Get a dapp user",
+                    "",
+                    " Returns an error if the user does not exist"
+                ],
                 "label": "get_user",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 51
                 },
                 "selector": "0xa4ca534e"
@@ -700,18 +931,27 @@
                     {
                         "label": "commit_id",
                         "type": {
-                            "displayName": ["Hash"],
+                            "displayName": [
+                                "Hash"
+                            ],
                             "type": 4
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Get a solution commitment", "", " Returns an error if the commitment does not exist"],
+                "docs": [
+                    " Get a solution commitment",
+                    "",
+                    " Returns an error if the commitment does not exist"
+                ],
                 "label": "get_commit",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 54
                 },
                 "selector": "0x5329f551"
@@ -721,18 +961,27 @@
                     {
                         "label": "provider_accounts",
                         "type": {
-                            "displayName": ["Vec"],
+                            "displayName": [
+                                "Vec"
+                            ],
                             "type": 8
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" List providers given an array of account id", "", " Returns empty if none were matched"],
+                "docs": [
+                    " List providers given an array of account id",
+                    "",
+                    " Returns empty if none were matched"
+                ],
                 "label": "list_providers_by_accounts",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 56
                 },
                 "selector": "0x52f0d2cb"
@@ -742,18 +991,27 @@
                     {
                         "label": "statuses",
                         "type": {
-                            "displayName": ["Vec"],
+                            "displayName": [
+                                "Vec"
+                            ],
                             "type": 26
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" List providers given an array of status", "", " Returns empty if none were matched"],
+                "docs": [
+                    " List providers given an array of status",
+                    "",
+                    " Returns empty if none were matched"
+                ],
                 "label": "list_providers_by_status",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 56
                 },
                 "selector": "0x54b28ab4"
@@ -763,25 +1021,36 @@
                     {
                         "label": "user_account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     },
                     {
                         "label": "dapp_contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Get a random active provider", "", " Returns error if no active provider is found"],
+                "docs": [
+                    " Get a random active provider",
+                    "",
+                    " Returns error if no active provider is found"
+                ],
                 "label": "get_random_active_provider",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 59
                 },
                 "selector": "0x4aee5bad"
@@ -789,12 +1058,19 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Get the AccountIds of all Providers ever registered", "", " Returns {Vec<AccountId>}"],
+                "docs": [
+                    " Get the AccountIds of all Providers ever registered",
+                    "",
+                    " Returns {Vec<AccountId>}"
+                ],
                 "label": "get_all_provider_accounts",
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 62
                 },
                 "selector": "0x5052021f"
@@ -804,21 +1080,27 @@
                     {
                         "label": "len",
                         "type": {
-                            "displayName": ["u128"],
+                            "displayName": [
+                                "u128"
+                            ],
                             "type": 0
                         }
                     },
                     {
                         "label": "user_account",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     },
                     {
                         "label": "dapp_contract",
                         "type": {
-                            "displayName": ["AccountId"],
+                            "displayName": [
+                                "AccountId"
+                            ],
                             "type": 7
                         }
                     }
@@ -831,7 +1113,10 @@
                 "mutates": false,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 28
                 },
                 "selector": "0x2306aecd"
@@ -839,12 +1124,17 @@
             {
                 "args": [],
                 "default": false,
-                "docs": [" Terminate this contract and return any/all funds in this contract to the destination"],
+                "docs": [
+                    " Terminate this contract and return any/all funds in this contract to the destination"
+                ],
                 "label": "terminate",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x476d839f"
@@ -854,18 +1144,25 @@
                     {
                         "label": "amount",
                         "type": {
-                            "displayName": ["Balance"],
+                            "displayName": [
+                                "Balance"
+                            ],
                             "type": 0
                         }
                     }
                 ],
                 "default": false,
-                "docs": [" Withdraw some funds from the contract to the specified destination"],
+                "docs": [
+                    " Withdraw some funds from the contract to the specified destination"
+                ],
                 "label": "withdraw",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x410fcc9d"
@@ -881,12 +1178,17 @@
                     }
                 ],
                 "default": false,
-                "docs": [" Set the code hash for this contract"],
+                "docs": [
+                    " Set the code hash for this contract"
+                ],
                 "label": "set_code_hash",
                 "mutates": true,
                 "payable": false,
                 "returnType": {
-                    "displayName": ["ink", "MessageResult"],
+                    "displayName": [
+                        "ink",
+                        "MessageResult"
+                    ],
                     "type": 10
                 },
                 "selector": "0x9e5c5758"
@@ -1322,7 +1624,11 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "types", "Hash"]
+                "path": [
+                    "ink_primitives",
+                    "types",
+                    "Hash"
+                ]
             }
         },
         {
@@ -1354,7 +1660,9 @@
                         "type": 7
                     }
                 ],
-                "path": ["BTreeSet"]
+                "path": [
+                    "BTreeSet"
+                ]
             }
         },
         {
@@ -1370,7 +1678,11 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "types", "AccountId"]
+                "path": [
+                    "ink_primitives",
+                    "types",
+                    "AccountId"
+                ]
             }
         },
         {
@@ -1430,7 +1742,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1470,7 +1784,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1618,7 +1934,11 @@
                         ]
                     }
                 },
-                "path": ["common", "common", "Error"]
+                "path": [
+                    "common",
+                    "common",
+                    "Error"
+                ]
             }
         },
         {
@@ -1634,7 +1954,10 @@
                         ]
                     }
                 },
-                "path": ["ink_primitives", "LangError"]
+                "path": [
+                    "ink_primitives",
+                    "LangError"
+                ]
             }
         },
         {
@@ -1674,7 +1997,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1714,7 +2039,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1765,7 +2092,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1805,7 +2134,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1835,7 +2166,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "Payee"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "Payee"
+                ]
             }
         },
         {
@@ -1875,7 +2210,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1909,7 +2246,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "DappPayee"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "DappPayee"
+                ]
             }
         },
         {
@@ -1949,7 +2290,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -1979,7 +2322,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "GovernanceStatus"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "GovernanceStatus"
+                ]
             }
         },
         {
@@ -2019,7 +2366,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2059,7 +2408,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2099,7 +2450,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2147,7 +2500,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2187,7 +2542,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2234,7 +2591,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "Provider"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "Provider"
+                ]
             }
         },
         {
@@ -2274,7 +2635,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2314,7 +2677,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2346,7 +2711,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "Dapp"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "Dapp"
+                ]
             }
         },
         {
@@ -2386,7 +2755,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2426,7 +2797,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2453,7 +2826,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "UserHistorySummary"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "UserHistorySummary"
+                ]
             }
         },
         {
@@ -2510,7 +2887,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "Commit"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "Commit"
+                ]
             }
         },
         {
@@ -2534,7 +2915,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "CaptchaStatus"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "CaptchaStatus"
+                ]
             }
         },
         {
@@ -2595,7 +2980,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2635,7 +3022,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2683,7 +3072,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2723,7 +3114,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2745,7 +3138,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "LastCorrectCaptcha"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "LastCorrectCaptcha"
+                ]
             }
         },
         {
@@ -2785,7 +3182,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2825,7 +3224,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2842,7 +3243,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "User"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "User"
+                ]
             }
         },
         {
@@ -2882,7 +3287,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2922,7 +3329,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -2962,7 +3371,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -3002,7 +3413,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -3052,7 +3465,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -3092,7 +3507,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -3119,7 +3536,11 @@
                         ]
                     }
                 },
-                "path": ["captcha", "captcha", "RandomProvider"]
+                "path": [
+                    "captcha",
+                    "captcha",
+                    "RandomProvider"
+                ]
             }
         },
         {
@@ -3159,7 +3580,9 @@
                         "type": 14
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -3199,7 +3622,9 @@
                         "type": 13
                     }
                 ],
-                "path": ["Result"]
+                "path": [
+                    "Result"
+                ]
             }
         },
         {
@@ -3216,7 +3641,11 @@
                 "def": {
                     "variant": {}
                 },
-                "path": ["ink_env", "types", "NoChainExtension"]
+                "path": [
+                    "ink_env",
+                    "types",
+                    "NoChainExtension"
+                ]
             }
         }
     ],
