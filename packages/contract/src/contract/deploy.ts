@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract/Abi'
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN_ZERO } from '@polkadot/util/bn'
+import { BN, BN_ZERO } from '@polkadot/util/bn'
 import { BlueprintOptions } from '@polkadot/api-contract/types'
 import { CodePromise } from '@polkadot/api-contract/promise'
 import { CodeSubmittableResult } from '@polkadot/api-contract/base'
@@ -24,7 +24,7 @@ import { LogLevel, Logger, ProsopoContractError, getLogger } from '@prosopo/comm
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { TransactionQueue } from '@prosopo/tx'
 import { UseWeight } from '@prosopo/types'
-import { dispatchErrorHandler } from './helpers.js'
+import { dispatchErrorHandler, getOptions } from './helpers.js'
 import { getWeight } from './useWeight.js'
 
 interface DryRunResult {
@@ -127,7 +127,10 @@ export class ContractDeployer {
                             unsub()
                             reject(
                                 new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
-                                    context: { error: result.status.type },
+                                    context: {
+                                        error: result.status.type,
+                                        deployer: this.pair.address,
+                                    },
                                     logLevel: this.logger.getLogLevel(),
                                 })
                             )
@@ -136,7 +139,9 @@ export class ContractDeployer {
                 })
             }
         } else {
-            throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error } })
+            throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
+                context: { error, deployer: this.pair.address },
+            })
         }
     }
 }
@@ -188,14 +193,15 @@ export async function dryRunDeploy(
             if (func === undefined) {
                 throw new ProsopoContractError('CONTRACT.INVALID_METHOD', { context: { func } })
             }
-            const options: BlueprintOptions = {
-                gasLimit: dryRunResult.gasRequired,
-                storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
-                salt: saltOrNull,
-            }
-            if (value !== undefined) {
-                options.value = value
-            }
+            const options: BlueprintOptions = getOptions(
+                api,
+                true,
+                new BN(value),
+                dryRunResult.gasRequired,
+                dryRunResult.storageDeposit,
+                true
+            )
+            options.salt = saltOrNull
             contract = func(options, ...params)
         }
     } catch (e) {

@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/client-example-server",
-    "version": "0.3.41",
+    "version": "1.0.1",
     "description": "Backend for client-example",
     "main": "dist/app.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "scripts": {
@@ -17,9 +17,9 @@
         "bundle:prod": "vite build --mode=production --config ./vite.config.ts",
         "bundle:dev": "vite build --mode=development --config ./vite.config.ts",
         "clean": "tsc --build --clean",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -38,11 +38,11 @@
         "@noble/hashes": "^1.3.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/api": "0.3.41",
-        "@prosopo/contract": "0.3.41",
-        "@prosopo/procaptcha": "0.3.41",
-        "@prosopo/server": "0.3.41",
-        "@prosopo/types": "0.3.41",
+        "@prosopo/api": "1.0.1",
+        "@prosopo/contract": "1.0.1",
+        "@prosopo/procaptcha": "1.0.1",
+        "@prosopo/server": "1.0.1",
+        "@prosopo/types": "1.0.1",
         "@typegoose/auto-increment": "3.3.0",
         "cors": "^2.8.5",
         "jsonwebtoken": "^9.0.0",
@@ -55,6 +55,6 @@
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vite": "^5.1.7",
-        "@prosopo/config": "0.3.41"
+        "@prosopo/config": "1.0.1"
     }
 }
