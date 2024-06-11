@@ -25,12 +25,13 @@ import {
     ImageVerificationResponse,
     NetworkConfig,
     PowCaptchaSolutionResponse,
+    ProcaptchaToken,
     ProviderRegistered,
     ServerPowCaptchaVerifyRequestBodyType,
     StoredEvents,
     SubmitPowCaptchaSolutionBody,
     VerificationResponse,
-    VerifySolutionBodyType,
+    VerifySolutionBodyTypeInput,
 } from '@prosopo/types'
 import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
@@ -51,9 +52,9 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody> {
         const { provider, blockNumber } = randomProvider
         const dappAccount = this.account
-        const url = `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
-            .toString()
-            .replace(/,/g, '')}`
+        const url = `${ApiPaths.GetImageCaptchaChallenge}/${
+            provider.datasetId
+        }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, '')}`
         return this.fetch(url)
     }
 
@@ -72,30 +73,37 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             salt,
             signature,
         })
-        return this.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
+        return this.post(ApiPaths.SubmitImageCaptchaSolution, captchaSolutionBody)
     }
 
     public verifyDappUser(
-        dapp: AccountId,
-        userAccount: AccountId,
-        blockNumber: number,
-        commitmentId?: string,
+        token: ProcaptchaToken,
+        dappUserSignature: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse> {
-        const payload: {
-            [ApiParams.dapp]: AccountId
-            [ApiParams.user]: AccountId
-            [ApiParams.blockNumber]: number
-            [ApiParams.commitmentId]?: string
-            [ApiParams.maxVerifiedTime]?: number
-        } = { dapp: dapp, user: userAccount, blockNumber }
-        if (commitmentId) {
-            payload['commitmentId'] = commitmentId
+        const payload: VerifySolutionBodyTypeInput = {
+            [ApiParams.token]: token,
+            [ApiParams.dappUserSignature]: dappUserSignature,
         }
         if (maxVerifiedTime) {
-            payload['maxVerifiedTime'] = maxVerifiedTime
+            payload[ApiParams.maxVerifiedTime] = maxVerifiedTime
         }
-        return this.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+
+        return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload)
+    }
+
+    public verifyUser(
+        token: ProcaptchaToken,
+        dappUserSignature: string,
+        maxVerifiedTime?: number
+    ): Promise<ImageVerificationResponse> {
+        const payload: VerifySolutionBodyTypeInput = {
+            [ApiParams.token]: token,
+            [ApiParams.dappUserSignature]: dappUserSignature,
+            ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
+        }
+
+        return this.post(ApiPaths.VerifyImageCaptchaSolutionUser, payload)
     }
 
     public getPowCaptchaChallenge(user: AccountId, dapp: AccountId): Promise<GetPowCaptchaResponse> {
@@ -142,15 +150,15 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     }
 
     public submitPowCaptchaVerify(
-        challenge: string,
-        dapp: string,
+        token: string,
+        signatureHex: string,
         recencyLimit: number
     ): Promise<VerificationResponse> {
         const body: ServerPowCaptchaVerifyRequestBodyType = {
-            [ApiParams.challenge]: challenge,
-            [ApiParams.dapp]: dapp,
+            [ApiParams.token]: token,
+            [ApiParams.dappSignature]: signatureHex,
             [ApiParams.verifiedTimeout]: recencyLimit,
         }
-        return this.post(ApiPaths.ServerPowCaptchaVerify, body)
+        return this.post(ApiPaths.VerifyPowCaptchaSolution, body)
     }
 }

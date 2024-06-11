@@ -20,6 +20,7 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2 } from '@prosopo/account'
@@ -214,13 +215,16 @@ export const Manager = (
                 isHuman: true,
                 loading: false,
             })
-            events.onHuman({
-                providerUrl,
-                [ApiParams.user]: getAccount().account.address,
-                [ApiParams.dapp]: getDappAccount(),
-                [ApiParams.challenge]: challenge.challenge,
-                [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
-            })
+            events.onHuman(
+                encodeProcaptchaOutput({
+                    [ApiParams.providerUrl]: providerUrl,
+                    [ApiParams.user]: getAccount().account.address,
+                    [ApiParams.dapp]: getDappAccount(),
+                    [ApiParams.challenge]: challenge.challenge,
+                    [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
+                    [ApiParams.nonce]: solution,
+                })
+            )
             setValidChallengeTimeout()
         }
     }
