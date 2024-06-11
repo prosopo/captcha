@@ -89,13 +89,17 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                             >
                                                 <div style={{ flex: 1 }}>
                                                     {state.loading ? (
-                                                        <LoadingSpinner themeColor={themeColor} />
+                                                        <LoadingSpinner
+                                                            themeColor={themeColor}
+                                                            aria-label="Loading spinner"
+                                                        />
                                                     ) : (
                                                         <Checkbox
                                                             checked={state.isHuman}
                                                             onChange={manager.start}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
+                                                            aria-label="human checkbox"
                                                         ></Checkbox>
                                                     )}
                                                 </div>
@@ -107,7 +111,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} aria-label="Prosopo logo"></Logo>
                                         </div>
                                     </a>
                                 </div>

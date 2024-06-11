@@ -75,7 +75,10 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                                 }}
                                             >
                                                 <div style={{ display: 'inline-flex' }}>
-                                                    <LoadingSpinner themeColor={themeColor} />
+                                                    <LoadingSpinner
+                                                        themeColor={themeColor}
+                                                        aria-label="Loading spinner"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -84,7 +87,7 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} aria-label="Prosopo logo"></Logo>
                                         </div>
                                     </a>
                                 </div>
