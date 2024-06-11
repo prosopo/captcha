@@ -48,6 +48,7 @@ const main = async () => {
             `Commits to the default branch (${defaultBranch}) are not allowed. Please create a branch and submit a pull request.`
         )
     }
+    console.log('all good')
 }
 
 main().catch((err) => {
