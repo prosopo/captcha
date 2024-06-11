@@ -24,7 +24,7 @@ export interface IProviderAccount extends IUserAccount {
     url: string
     fee: number
     datasetFile: string
-    stake: number | BN
+    stake: BN
     payee: Payee.dapp
     captchaDatasetId: string
     pair?: KeyringPair
@@ -32,6 +32,6 @@ export interface IProviderAccount extends IUserAccount {
 
 export interface IDappAccount {
     secret: string
-    fundAmount: number | BN
+    fundAmount: BN
     pair?: KeyringPair
 }

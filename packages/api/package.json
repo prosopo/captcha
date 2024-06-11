@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/api",
-    "version": "0.3.41",
+    "version": "1.0.1",
     "description": "Wrapper for the provider API",
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "exports": {
@@ -19,9 +19,9 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -37,11 +37,11 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@prosopo/types": "0.3.41"
+        "@prosopo/types": "1.0.1"
     },
     "devDependencies": {
-        "@prosopo/captcha-contract": "0.3.41",
-        "@prosopo/config": "0.3.41",
+        "@prosopo/captcha-contract": "1.0.1",
+        "@prosopo/config": "1.0.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
