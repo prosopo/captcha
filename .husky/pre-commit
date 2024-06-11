@@ -1,2 +1,1 @@
 npm run -w "@prosopo/hooks" hook:precommit
-echo hello
