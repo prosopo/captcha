@@ -1,5 +1,5 @@
 {
-    "name": "gh-actions",
+    "name": "@prosopo/gh-actions",
     "version": "1.0.1",
     "description": "",
     "private": true,
