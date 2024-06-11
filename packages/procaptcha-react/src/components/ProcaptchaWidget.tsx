@@ -108,6 +108,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                                     onChange={manager.start}
                                                     checked={state.isHuman}
                                                     labelText="I am human"
+                                                    aria-label="human checkbox"
                                                 />
                                             </div>
                                             <div
@@ -116,7 +117,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                                 }}
                                             >
                                                 <div style={{ display: 'inline-flex' }}>
-                                                    <LoadingSpinner themeColor={themeColor} />
+                                                    <LoadingSpinner
+                                                        themeColor={themeColor}
+                                                        aria-label="Loading spinner"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -125,7 +129,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor}></Logo>
+                                            <Logo themeColor={themeColor} aria-label="Prosopo logo"></Logo>
                                         </div>
                                     </a>
                                 </div>
