@@ -16,10 +16,16 @@ import { hideBin } from 'yargs/helpers'
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import chalk from 'chalk'
+import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
+
+const config = {} as Record<string, string>
+dotenv.config({
+    processEnv: config,
+})
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
@@ -58,7 +64,7 @@ const setEnvVariable = async (filePath: string, name: string, value: string) => 
     // let ENV_ABC: u32 = 3;
     //
 
-    name = 'env_' + name // add the env prefix to the name
+    name = 'env_' + name.toLowerCase() // add the env prefix to the name
     // names could be lower, upper or specific case
     for (const declaration of ['let', 'const']) {
         const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gims')
@@ -335,6 +341,7 @@ Cargo pass-through commands:
                 if (!argv.skipEnv) {
                     // set the env variables using find and replace
                     const env: Env = {
+                        ...config,
                         git_commit_id: await getGitCommitId(),
                     }
                     await setEnvVariables(packagePaths, env, argv)
