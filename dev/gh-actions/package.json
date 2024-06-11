@@ -1,6 +1,6 @@
 {
     "name": "gh-actions",
-    "version": "0.3.40",
+    "version": "1.0.1",
     "description": "",
     "private": true,
     "scripts": {
@@ -31,7 +31,7 @@
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     }
 }

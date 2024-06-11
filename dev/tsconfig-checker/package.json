@@ -1,6 +1,6 @@
 {
     "name": "tsconfig-checker",
-    "version": "0.3.40",
+    "version": "1.0.1",
     "description": "",
     "private": true,
     "scripts": {
@@ -26,10 +26,10 @@
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "dependencies": {
-        "@prosopo/util": "0.3.40"
+        "@prosopo/util": "1.0.1"
     }
 }

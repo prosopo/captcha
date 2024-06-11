@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/ts-brand",
-    "version": "0.3.40",
+    "version": "1.0.1",
     "description": "Brand your TypeScript types",
     "main": "./dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "exports": {

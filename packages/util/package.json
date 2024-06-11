@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/util",
-    "version": "0.3.40",
+    "version": "1.0.1",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "scripts": {

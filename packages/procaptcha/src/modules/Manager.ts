@@ -21,24 +21,23 @@ import {
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
     StoredEvents,
     TCaptchaSubmitResult,
+    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { Keyring } from '@polkadot/keyring'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import {
-    ProsopoApiError,
     ProsopoContractError,
     ProsopoDatasetError,
     ProsopoEnvError,
     ProsopoError,
     trimProviderUrl,
 } from '@prosopo/common'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -170,10 +169,13 @@ export function Manager(
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
-                events.onHuman({
-                    user: account.account.address,
-                    dapp: getDappAccount(),
-                })
+                events.onHuman(
+                    encodeProcaptchaOutput({
+                        [ApiParams.user]: account.account.address,
+                        [ApiParams.dapp]: getDappAccount(),
+                        [ApiParams.blockNumber]: getBlockNumber(),
+                    })
+                )
                 setValidChallengeTimeout()
                 return
             }
@@ -187,23 +189,37 @@ export function Manager(
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(
-                        getDappAccount(),
-                        account.account.address,
-                        procaptchaStorage.blockNumber,
-                        undefined,
+                    const extension = getExtension(account)
+                    if (!extension || !extension.signer || !extension.signer.signRaw) {
+                        throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
+                    }
+
+                    const signRaw = extension.signer.signRaw
+                    const { signature } = await signRaw({
+                        address: account.account.address,
+                        data: procaptchaStorage.blockNumber.toString(),
+                        type: 'bytes',
+                    })
+                    const token = encodeProcaptchaOutput({
+                        [ApiParams.user]: account.account.address,
+                        [ApiParams.dapp]: getDappAccount(),
+                        [ApiParams.blockNumber]: procaptchaStorage.blockNumber,
+                    })
+                    const verifyDappUserResponse = await providerApi.verifyUser(
+                        token,
+                        signature,
                         configOptional.captchas.image.cachedTimeout
                     )
                     if (verifyDappUserResponse.verified) {
                         updateState({ isHuman: true, loading: false })
-                        const output: ProcaptchaOutput = {
+                        const output = {
                             [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
                             [ApiParams.user]: account.account.address,
                             [ApiParams.dapp]: getDappAccount(),
                             [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
                             [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
                         }
-                        events.onHuman(output)
+                        events.onHuman(encodeProcaptchaOutput(output))
                         setValidChallengeTimeout()
                         return
                     }
@@ -231,7 +247,7 @@ export function Manager(
             const challenge = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
-                throw new ProsopoApiError('DEVELOPER.PROVIDER_NO_CAPTCHA')
+                throw new ProsopoDatasetError('DEVELOPER.PROVIDER_NO_CAPTCHA')
             }
 
             // setup timeout, taking the timeout from the individual captcha or the global default
@@ -328,13 +344,15 @@ export function Manager(
                 const providerUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
                 // cache this provider for future use
                 storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
-                events.onHuman({
-                    providerUrl,
-                    user: account.account.address,
-                    dapp: getDappAccount(),
-                    commitmentId: hashToHex(submission[1]),
-                    blockNumber,
-                })
+                events.onHuman(
+                    encodeProcaptchaOutput({
+                        [ApiParams.providerUrl]: providerUrl,
+                        [ApiParams.user]: account.account.address,
+                        [ApiParams.dapp]: getDappAccount(),
+                        [ApiParams.commitmentId]: hashToHex(submission[1]),
+                        [ApiParams.blockNumber]: blockNumber,
+                    })
+                )
                 setValidChallengeTimeout()
             }
         })
@@ -452,7 +470,9 @@ export function Manager(
 
     const getCaptchaApi = () => {
         if (!state.captchaApi) {
-            throw new ProsopoApiError('API.UNKNOWN', { context: { error: 'Captcha api not set', state } })
+            throw new ProsopoEnvError('API.UNKNOWN', {
+                context: { error: 'Captcha api not set', state },
+            })
         }
         return state.captchaApi
     }
