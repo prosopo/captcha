@@ -1,14 +1,14 @@
 version: '3.4'
 services:
-  substrate:
-    image: prosopo/substrate:polkadot-v0.9.43
-    build:
-      context: .
-      dockerfile: ./images/substrate.build.dockerfile
-    ports:
-      - "9615:9615"
-      - "9944:9944"
-      - "9933:9933"
-      - "30333:30333"
+    substrate:
+        image: prosopo/substrate:polkadot-v0.9.43
+        build:
+            context: .
+            dockerfile: ./images/substrate.build.dockerfile
+        ports:
+            - '9615:9615'
+            - '9944:9944'
+            - '9933:9933'
+            - '30333:30333'
 #    volumes:
 #      - ./chain-data:/chain-data
