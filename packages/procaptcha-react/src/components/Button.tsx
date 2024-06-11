@@ -83,6 +83,7 @@ const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }
                 e.preventDefault()
                 onClick()
             }}
+            aria-label={text}
         >
             {text}
         </button>
