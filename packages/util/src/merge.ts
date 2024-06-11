@@ -1,3 +1,5 @@
+import { isArray, isObject } from "./checks.js"
+
 export type MergeOptions = {
     atomicArrays?: boolean
 }
@@ -90,12 +92,4 @@ export function merge<T extends object | A[], U extends object | B[], A, B>(
     }
 
     return dest as T & U
-}
-
-export const isArray = (value: unknown): boolean => {
-    return Array.isArray(value)
-}
-
-export const isObject = (value: unknown): boolean => {
-    return value instanceof Object && !isArray(value)
 }
