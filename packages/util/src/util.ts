@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // sleep for some milliseconds
+import { u8aToHex } from '@polkadot/util'
+
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function getCurrentFileDirectory(url: string) {
@@ -33,3 +35,14 @@ export const flatten = (obj: object, prefix = ''): Record<string, unknown> => {
 // https://stackoverflow.com/questions/63116039/camelcase-to-kebab-case
 export const kebabCase = (str: string) =>
     str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase())
+
+export type Hash = string | number[]
+
+export const hashToHex = (hash: Hash) => {
+    if (isArray(hash)) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return u8aToHex(new Uint8Array(hash))
+    }
+    return hash.toString()
+}

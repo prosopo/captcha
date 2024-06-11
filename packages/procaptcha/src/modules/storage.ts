@@ -11,41 +11,46 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProcaptchaLocalStorage, ProsopoLocalStorageSchema } from '@prosopo/types'
+import { hexToString } from '@polkadot/util'
+import { stringToHex } from '@polkadot/util/string'
 
-const CURRENT_ACCOUNT_KEY = '@prosopo/current_account'
-const PROVIDER_URL_KEY = '@prosopo/provider'
+const PROCAPTCHA_STORAGE_KEY = '@prosopo/procaptcha'
+
+/**
+ * Gets procaptcha storage object from localStorage
+ */
+function getProcaptchaStorage(): ProcaptchaLocalStorage {
+    return ProsopoLocalStorageSchema.parse(
+        JSON.parse(hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || '0x7b7d'))
+    )
+}
+
+/**
+ * Sets procaptcha storage hex string in localStorage
+ * @param storage
+ */
+function setProcaptchaStorage(storage: ProcaptchaLocalStorage) {
+    localStorage.setItem(PROCAPTCHA_STORAGE_KEY, stringToHex(JSON.stringify(ProsopoLocalStorageSchema.parse(storage))))
+}
 
 /**
  * Sets default `account`
  */
 function setAccount(account: string) {
-    localStorage.setItem(CURRENT_ACCOUNT_KEY, account)
+    setProcaptchaStorage({ ...getProcaptchaStorage(), account })
 }
 
 /**
  * Gets default `account`
  */
 function getAccount(): string | null {
-    return localStorage.getItem(CURRENT_ACCOUNT_KEY)
-}
-
-/**
- * Sets `providerUrl` for `account`
- */
-function setProviderUrl(providerUrl: string) {
-    localStorage.setItem(PROVIDER_URL_KEY, providerUrl)
-}
-
-/**
- * Gets `providerUrl`
- */
-function getProviderUrl(): string | null {
-    return localStorage.getItem(PROVIDER_URL_KEY)
+    return getProcaptchaStorage().account || null
 }
 
 export default {
     setAccount,
     getAccount,
-    setProviderUrl,
-    getProviderUrl,
+    setProcaptchaStorage,
+    getProcaptchaStorage,
 }

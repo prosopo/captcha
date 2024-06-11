@@ -12,5 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from './api.js'
+export * from './client.js'
 export * from './collector.js'
 export * from './manager.js'
+export * from './props.js'
+export * from './storage.js'
+export * from './token.js'
+export * from './utils.js'

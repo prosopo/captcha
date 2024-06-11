@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/types-env",
-    "version": "0.3.2",
+    "version": "1.0.1",
     "description": "Types for prosopo environment",
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "exports": {
@@ -15,10 +15,11 @@
         }
     },
     "scripts": {
+        "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
         "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
@@ -36,11 +37,13 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
+        "@polkadot/api": "10.13.1",
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/types": "10.11.2",
-        "@prosopo/common": "0.3.2",
-        "@prosopo/types": "0.3.2",
-        "@prosopo/types-database": "0.3.2"
+        "@polkadot/rpc-provider": "10.13.1",
+        "@prosopo/contract": "1.0.1",
+        "@prosopo/common": "1.0.1",
+        "@prosopo/types": "1.0.1",
+        "@prosopo/types-database": "1.0.1"
     },
     "devDependencies": {
         "tslib": "2.6.2",

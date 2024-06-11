@@ -56,13 +56,8 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-            # Checkout the repo
+
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
@@ -84,7 +79,20 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - run: npm install -g npm@8.9
-            - run: npm install
-            - run: npm run build -w @prosopo/scripts
-            - run: npm run lint
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: npm ci
+
+            - run: npm run -w @prosopo/scripts build
+
+            - name: lint
+              run: |
+                  # get the files which have changed in the PR
+                  files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
+
+                  echo "files: $files"
+
+                  npm run lint:cmd -- $files

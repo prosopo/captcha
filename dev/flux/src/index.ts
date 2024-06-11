@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { commandAuth, commandDeploy, commandGetDapp, commandGetDapps, commandTerminal } from './commands/index.js'
+import {
+    commandAuth,
+    commandGetDapp,
+    commandGetDapps,
+    commandLogs,
+    commandRedeploy,
+    commandSign,
+    commandTerminal,
+} from './commands/index.js'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
@@ -22,9 +31,11 @@ export default async function processArgs(args: string[]) {
     return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
         .command(commandAuth({ logger }))
-        .command(commandDeploy({ logger }))
+        .command(commandRedeploy({ logger }))
         .command(commandGetDapp({ logger }))
         .command(commandGetDapps({ logger }))
+        .command(commandLogs({ logger }))
+        .command(commandSign({ logger }))
         .command(commandTerminal({ logger }))
         .parse()
 }

@@ -11,8 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { default as commandDeploy } from './deploy.js'
+export { default as commandRedeploy } from './redeploy.js'
 export { default as commandAuth } from './auth.js'
 export { default as commandGetDapps } from './getDapps.js'
 export { default as commandGetDapp } from './getDapp.js'
+export { default as commandLogs } from './logs.js'
+export { default as commandSign } from './sign.js'
 export { default as commandTerminal } from './terminal.js'

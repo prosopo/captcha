@@ -17,3 +17,6 @@ export const WIDGET_URL_TEXT = 'Visit prosopo.io to learn more about the service
 export const WIDGET_INNER_HEIGHT = 74
 export const WIDGET_OUTER_HEIGHT = 80
 export const WIDGET_DIMENSIONS = { maxWidth: '400px', minWidth: '200px', minHeight: `${WIDGET_OUTER_HEIGHT}px` }
+export const WIDGET_BORDER_RADIUS = '8px'
+export const WIDGET_PADDING = '2px'
+export const WIDGET_BORDER = '1px solid'

@@ -18,6 +18,7 @@ import {
     CaptchaSolution,
     CaptchaSolutionConfig,
     CaptchaWithProof,
+    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
@@ -43,7 +44,7 @@ import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, verifyRecency, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
@@ -55,6 +56,8 @@ import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
+
+const POW_SEPARATOR = '___'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -170,8 +173,8 @@ export class Tasks {
     /**
      * @description Generates a PoW Captcha for a given user and dapp
      *
-     * @param {string} userAccount - Dapp User address
-     * @param {string} dappAccount - Dapp User address
+     * @param {string} userAccount - user that is solving the captcha
+     * @param {string} dappAccount - dapp that is requesting the captcha
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         // TODO: Verify that the origin matches the url of the dapp
@@ -187,29 +190,30 @@ export class Tasks {
     }
 
     /**
-     * @description Generates a PoW Captcha for a given user and dapp
+     * @description Verifies a PoW Captcha for a given user and dapp
      *
-     * @param {string} blocknumber - Dapp User address
-     * @param {string} challenge - Dapp User address
-     * @param {string} difficulty - Dapp User address
-     * @param {string} nonce - Dapp User address
+     * @param {string} blockNumber - the block at which the Provider was selected
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {string} difficulty - how many leading zeroes the solution must have
+     * @param {string} signature - proof that the Provider provided the challenge
+     * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
+     * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
      */
     async verifyPowCaptchaSolution(
-        blocknumber: number,
+        blockNumber: number,
         challenge: string,
         difficulty: number,
         signature: string,
-        nonce: number
+        nonce: number,
+        timeout: number
     ): Promise<boolean> {
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
-
-        if (latestBlockNumber > blocknumber - 5) {
+        const recent = verifyRecency(this.contract.api, blockNumber, timeout)
+        if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blocknumber,
+                    blockNumber,
                 },
             })
         }
@@ -248,7 +252,7 @@ export class Tasks {
         return true
     }
 
-    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
+    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
         if (!challengeRecord) {
             throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
@@ -260,7 +264,7 @@ export class Tasks {
             return false
         }
 
-        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split('___')
+        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
 
         if (dappAccount !== challengeDappAccount) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -272,23 +276,20 @@ export class Tasks {
             })
         }
 
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
-
         if (!blocknumber) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: 'Block number not provided',
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },
             })
         }
-
-        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), timeout)
+        if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },
@@ -313,7 +314,7 @@ export class Tasks {
         dappAccount: string,
         requestHash: string,
         captchas: CaptchaSolution[],
-        signature: string // the signature to indicate ownership of account (web2 only)
+        signature: string // the signature to indicate ownership of account
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
@@ -321,7 +322,7 @@ export class Tasks {
             })
         }
 
-        // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
+        // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
@@ -332,7 +333,7 @@ export class Tasks {
 
         let response: DappUserSolutionResult = {
             captchas: [],
-            solutionApproved: false,
+            verified: false,
         }
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
@@ -349,8 +350,10 @@ export class Tasks {
         )
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
-        const blockNumber = (await getBlockNumber(this.contract.api)).toNumber()
+        const blockNumber = await getCurrentBlockNumber(this.contract.api)
         if (pendingRequest) {
+            // prevent this request hash from being used twice
+            await this.db.updateDappUserPendingStatus(requestHash)
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
                 userAccount: userAccount,
@@ -371,7 +374,7 @@ export class Tasks {
                         captchaId: id,
                         proof: tree.proof(id),
                     })),
-                    solutionApproved: true,
+                    verified: true,
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
             } else {
@@ -380,7 +383,7 @@ export class Tasks {
                         captchaId: id,
                         proof: [[]],
                     })),
-                    solutionApproved: false,
+                    verified: false,
                 }
             }
         }
@@ -530,11 +533,13 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
-        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
-
+        const timeLimit = captchas
+            // if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
+            .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
+            .reduce((a, b) => a + b, 0)
         const deadlineTs = timeLimit + currentTime
-        const currentBlockNumber = await getBlockNumber(this.contract.api)
-        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber.toNumber())
+        const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
+        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
         return { captchas, requestHash }
     }
 
@@ -693,21 +698,6 @@ export class Tasks {
     /** Get the dataset from the database */
     async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
         return await this.db.getDataset(datasetId)
-    }
-
-    /**
-     * Get the current block number
-     */
-    async getCurrentBlockNumber(): Promise<number> {
-        return (await getBlockNumber(this.contract.api)).toNumber()
-    }
-
-    /**
-     * Get the current block time in milliseconds
-     */
-    async getBlockTimeMs(): Promise<number> {
-        const blockTime = this.contract.api.consts.babe.expectedBlockTime
-        return blockTime.toNumber()
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {

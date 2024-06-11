@@ -13,11 +13,11 @@
 // limitations under the License.
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util'
-import { ISubmittableResult } from '@polkadot/types/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { at } from '@prosopo/util'
-import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
+import { getBalance, oneUnit } from '@prosopo/tx'
+import { send } from '@prosopo/tx'
 
 const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
@@ -43,9 +43,7 @@ export async function sendFunds(
     const mnemonic = getNextMnemonic()
     const pair = env.keyring.addFromMnemonic(mnemonic)
     const nonce = await envApi.rpc.system.accountNextIndex(pair.address)
-    const {
-        data: { free: previousFree },
-    } = await env.getContractInterface().api.query.system.account(pair.address)
+    const previousFree = await getBalance(envApi, pair.address)
     if (previousFree.lt(new BN(amount.toString()))) {
         throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', {
             context: {
@@ -55,54 +53,7 @@ export async function sendFunds(
             },
         })
     }
-
-    const api = env.getContractInterface().api
-    const unit = oneUnit(envApi)
-    const unitAmount = new BN(amount.toString()).div(unit).toString()
-    env.logger.debug(
-        'Sending funds from',
-        pair.address,
-        'to',
-        address,
-        'Amount:',
-        unitAmount,
-        'UNIT. Free balance:',
-        previousFree.div(unit).toString(),
-        'UNIT'
-    )
-    // eslint-disable-next-line no-async-promise-executor
-    const result = new Promise<ISubmittableResult>(async (resolve, reject) => {
-        const unsub = await api.tx.balances
-            .transferAllowDeath(address, amount)
-            .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
-                if (result.status.isInBlock || result.status.isFinalized) {
-                    result.events
-                        .filter(({ event: { section } }: any): boolean => section === 'system')
-                        .forEach((event): void => {
-                            const {
-                                event: { method },
-                            } = event
-
-                            if (method === 'ExtrinsicFailed') {
-                                unsub()
-                                reject(dispatchErrorHandler(api.registry, event))
-                            }
-                        })
-                    unsub()
-                    resolve(result)
-                } else if (result.isError) {
-                    unsub()
-                    reject(result)
-                }
-            })
-    })
-    await result
-        .then((result: ISubmittableResult) => {
-            env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
-        })
-        .catch((e) => {
-            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', { context: { error: e } })
-        })
+    await send(envApi, address, amount, pair, nonce)
 }
 
 /**

@@ -11,51 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CaptchaResponseBody } from '../provider/index.js'
+import { CaptchaSolution } from '../datasets/index.js'
+import { IProsopoCaptchaContract } from '../contract/index.js'
+import { ProviderApiInterface } from '../api/index.js'
+import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { Signer } from '@polkadot/api/types'
+import { TCaptchaSubmitResult } from './client.js'
 
-// declare module "*.json" {
-//   const value: any;
-//   export default value;
-// }
-
-import { Captcha, MerkleProof } from '../index.js'
-
-export interface ProsopoRandomProviderResponse {
-    providerId: string
-    blockNumber: string
-    provider: ProposoProvider
-}
-
-export type ProsopoDappOperatorIsHumanUserResponse = boolean
-
-export interface ProposoProvider {
-    balance: string
-    datasetId: string
-    datasetIdContent: string
-    fee: string
-    payee: string
-    serviceOrigin: string
-    status: string
-}
-
-// TODO de-duplicate. This is a duplicate of CaptchaWithProof from @prosopo/provider
-export interface CaptchaResponseCaptcha {
-    captcha: Omit<Captcha, 'solution'>
-    proof: MerkleProof
-}
-
-export interface GetCaptchaResponse {
-    captchas: CaptchaResponseCaptcha[]
-    requestHash: string
-}
-
-export interface GetVerificationResponse {
-    status: string
-    solutionApproved: boolean
-}
-
-export interface CaptchaSolutionResponse {
-    captchas: CaptchaResponseCaptcha[]
-    status: string
-    partialFee: string
-    solutionApproved: boolean
+export interface ProsopoCaptchaApiInterface {
+    userAccount: string
+    contract: IProsopoCaptchaContract
+    provider: RandomProvider
+    providerApi: ProviderApiInterface
+    dappAccount: string
+    web2: boolean
+    getCaptchaChallenge(): Promise<CaptchaResponseBody>
+    verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: CaptchaResponseBody): void
+    submitCaptchaSolution(
+        signer: Signer,
+        requestHash: string,
+        datasetId: string,
+        solutions: CaptchaSolution[],
+        salt: string
+    ): Promise<TCaptchaSubmitResult>
 }

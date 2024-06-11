@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaResponseCaptcha } from '@prosopo/types'
+import { CaptchaWithProof } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
 
 export interface CaptchaWidgetProps {
-    challenge: CaptchaResponseCaptcha
+    challenge: CaptchaWithProof
     solution: string[]
     onClick: (hash: string) => void
     themeColor: 'light' | 'dark'
@@ -138,6 +138,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                         aria-hidden="true"
                                         viewBox="0 0 24 24"
                                         data-testid="CheckIcon"
+                                        aria-label="Check icon"
                                     >
                                         <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
                                     </svg>

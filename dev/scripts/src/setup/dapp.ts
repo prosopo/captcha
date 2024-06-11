@@ -11,15 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
+import { BN_ZERO } from '@polkadot/util/bn'
 import { Dapp, DappPayee } from '@prosopo/captcha-contract'
 import { IDappAccount } from '@prosopo/types'
+import { LogLevel } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { oneUnit, wrapQuery } from '@prosopo/contract'
+import { TransactionQueue, oneUnit, submitTx } from '@prosopo/tx'
+import { getLogger } from '@prosopo/common'
 import { sendFunds } from './funds.js'
+import { wrapQuery } from '@prosopo/contract'
 
-export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount, address?: string): Promise<void> {
+const log = getLogger(LogLevel.enum.info, 'setupDapp')
+
+export async function setupDapp(
+    env: ProviderEnvironment,
+    dapp: IDappAccount,
+    address?: string,
+    queue?: TransactionQueue
+): Promise<void> {
     const logger = env.logger
 
     if (dapp.pair) {
@@ -34,15 +44,40 @@ export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount, ad
             )(addressToRegister)
             logger.info('   - dapp is already registered')
             logger.info('Dapp', dappResult)
+            if (dappResult.status === 'Inactive') {
+                await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(addressToRegister, {
+                    value: dapp.fundAmount,
+                })
+
+                logger.info('   - dappFund')
+
+                if (queue) {
+                    await submitTx(queue, tasks.contract, 'dappFund', [addressToRegister], dapp.fundAmount)
+                } else {
+                    await tasks.contract.tx.dappFund(addressToRegister, { value: dapp.fundAmount })
+                }
+            }
         } catch (e) {
-            logger.info('   - dappRegister')
+            logger.info('   - dappRegister', addressToRegister)
+
             await wrapQuery(tasks.contract.query.dappRegister, tasks.contract.query)(addressToRegister, DappPayee.dapp)
-            await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
-            logger.info('   - dappFund')
+            if (queue) {
+                await submitTx(queue, tasks.contract, 'dappRegister', [addressToRegister, DappPayee.dapp], BN_ZERO)
+            } else {
+                await tasks.contract.tx.dappRegister(addressToRegister, DappPayee.dapp)
+            }
+
             await wrapQuery(tasks.contract.query.dappFund, tasks.contract.query)(addressToRegister, {
                 value: dapp.fundAmount,
             })
-            await tasks.contract.tx.dappFund(addressToRegister, { value: dapp.fundAmount })
+
+            logger.info('   - dappFund')
+
+            if (queue) {
+                await submitTx(queue, tasks.contract, 'dappFund', [addressToRegister], dapp.fundAmount)
+            } else {
+                await tasks.contract.tx.dappFund(addressToRegister, { value: dapp.fundAmount })
+            }
         }
     }
 }
@@ -55,7 +90,7 @@ async function dappSendFunds(env: ProviderEnvironment, dapp: IDappAccount) {
         const {
             data: { free: previousFree },
         } = await env.getContractInterface().api.query.system.account(dapp.pair.address)
-        if (previousFree.lt(new BN(sendAmount.toString()))) {
+        if (previousFree.lt(sendAmount)) {
             // send enough funds to cover the tx fees
             await sendFunds(env, dapp.pair.address, 'Dapp', sendAmount)
         }

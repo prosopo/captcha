@@ -37,7 +37,8 @@ export default async function (
     command?: string,
     mode?: string,
     copyOptions?: ClosePluginOptions,
-    tsConfigPaths?: string[]
+    tsConfigPaths?: string[],
+    workspaceRoot?: string
 ): Promise<UserConfig> {
     logger.info(`Running at ${dir} in ${mode} mode`)
     const isProduction = mode === 'production'
@@ -60,6 +61,7 @@ export default async function (
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
         'process.env.PROSOPO_MONGO_EVENTS_URI': JSON.stringify(process.env.PROSOPO_MONGO_EVENTS_URI),
         'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
+        'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(process.env.PROSOPO_PACKAGE_VERSION),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }
@@ -80,7 +82,7 @@ export default async function (
         ...optionalPeerDependencies,
     ]
     logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-    const alias = getAliases(dir)
+    const alias = getAliases(workspaceRoot || dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
@@ -89,10 +91,10 @@ export default async function (
 
     // drop console logs if in production mode
     let drop: undefined | Drop[]
-    let pure: string[] | undefined
+    let pure: string[] = []
     if (isProduction) {
         drop = ['debugger']
-        pure = ['console.log', 'console.warn']
+        pure = ['console.log', 'console.warn', 'console.info', 'console.debug']
     }
 
     logger.info('Bundle name', bundleName)

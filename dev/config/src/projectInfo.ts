@@ -20,158 +20,98 @@ export const getContractNames = () => {
     })
 }
 
-export const getRootDir = () => {
-    return new URL('../../..', import.meta.url).pathname.slice(0, -1)
-}
+// Top Level
 
-export const getCacheDir = () => {
-    return `${getRootDir()}/.cache`
-}
+export const getRootDir = () => new URL('../../..', import.meta.url).pathname.slice(0, -1)
 
-export const getTestResultsDir = () => {
-    return `${getCacheDir()}/test-results`
-}
+export const getCacheDir = () => `${getRootDir()}/.cache`
 
-export const getDevDir = () => {
-    return `${getRootDir()}/dev`
-}
+export const getTestResultsDir = () => `${getCacheDir()}/test-results`
 
-export const getDemosDir = () => {
-    return `${getRootDir()}/demos`
-}
+export const getDevDir = () => `${getRootDir()}/dev`
 
-export const getContractDir = () => {
-    return `${getRootDir()}/packages/contract`
-}
+export const getDemosDir = () => `${getRootDir()}/demos`
 
-export const getProtocolDir = () => {
-    return `${getRootDir()}/protocol`
-}
+export const getProtocolDir = () => `${getRootDir()}/protocol`
 
-export const getPackagesDir = () => {
-    return `${getRootDir()}/packages`
-}
+export const getPackagesDir = () => `${getRootDir()}/packages`
 
-export const getNodeModulesDir = () => {
-    return `${getRootDir()}/node_modules`
-}
+export const getNodeModulesDir = () => `${getRootDir()}/node_modules`
 
-export const getConfigPkgDir = () => {
-    return `${getDevDir()}/config`
-}
+// Dev
 
-export const getScriptsPkgDir = () => {
-    return `${getDevDir()}/scripts`
-}
+export const getConfigPkgDir = () => `${getDevDir()}/config`
 
-export const getProtocolCliDir = () => {
-    return `${getProtocolDir()}/dist/cli`
-}
+export const getScriptsPkgDir = () => `${getDevDir()}/scripts`
 
-export const getProtocolDistDir = () => {
-    return `${getProtocolDir()}/target/ink`
-}
+// Protocol
 
-export const getClientExampleDir = () => {
-    return `${getDemosDir()}/client-example`
-}
+export const getProtocolCliDir = () => `${getProtocolDir()}/dist/cli`
 
-export const getClientExampleServerDir = () => {
-    return `${getDemosDir()}/client-example-server`
-}
+export const getProtocolDistDir = () => `${getProtocolDir()}/target/ink`
 
-export const getClientBundleExampleDir = () => {
-    return `${getDemosDir()}/client-bundle-example`
-}
+// Demos
 
-export const getDappExampleDir = () => {
-    return `${getDemosDir()}/dapp-example`
-}
+export const getClientExampleDir = () => `${getDemosDir()}/client-example`
 
-export const getCommonPkgDir = () => {
-    return `${getPackagesDir()}/common`
-}
+export const getClientExampleServerDir = () => `${getDemosDir()}/client-example-server`
 
-export const getAccountPkgDir = () => {
-    return `${getPackagesDir()}/account`
-}
+export const getClientBundleExampleDir = () => `${getDemosDir()}/client-bundle-example`
 
-export const getApiPkgDir = () => {
-    return `${getPackagesDir()}/api`
-}
+export const getDappExampleDir = () => `${getDemosDir()}/dapp-example`
 
-export const getCliPkgDir = () => {
-    return `${getPackagesDir()}/cli`
-}
+// Packages
 
-export const getUtilPkgDir = () => {
-    return `${getPackagesDir()}/util`
-}
+export const getAccountPkgDir = () => `${getPackagesDir()}/account`
 
-export const getDatabasePkgDir = () => {
-    return `${getPackagesDir()}/database`
-}
+export const getApiPkgDir = () => `${getPackagesDir()}/api`
 
-export const getDatasetsPkgDir = () => {
-    return `${getPackagesDir()}/datasets`
-}
+export const getCliPkgDir = () => `${getPackagesDir()}/cli`
 
-export const getDatasetsFsPkgDir = () => {
-    return `${getPackagesDir()}/datasets-fs`
-}
+export const getCommonPkgDir = () => `${getPackagesDir()}/common`
 
-export const getEnvPkgDir = () => {
-    return `${getPackagesDir()}/env`
-}
+export const getContractPkgDir = () => `${getPackagesDir()}/contract`
 
-export const getFileServerPkgDir = () => {
-    return `${getPackagesDir()}/file-server`
-}
+export const getDatabasePkgDir = () => `${getPackagesDir()}/database`
 
-export const getProcaptchaPkgDir = () => {
-    return `${getPackagesDir()}/procaptcha`
-}
+export const getDatasetsPkgDir = () => `${getPackagesDir()}/datasets`
 
-export const getProcaptchaReactPkgDir = () => {
-    return `${getPackagesDir()}/procaptcha-react`
-}
+export const getDatasetsFsPkgDir = () => `${getPackagesDir()}/datasets-fs`
 
-export const getProcaptchaBundlePkgDir = () => {
-    return `${getPackagesDir()}/procaptcha-bundle`
-}
+export const getEnvPkgDir = () => `${getPackagesDir()}/env`
 
-export const getProcaptchaPoWPkgDir = () => {
-    return `${getPackagesDir()}/procaptcha-pow`
-}
+export const getFileServerPkgDir = () => `${getPackagesDir()}/file-server`
 
-export const getProviderPkgDir = () => {
-    return `${getPackagesDir()}/provider`
-}
+export const getProcaptchaPkgDir = () => `${getPackagesDir()}/procaptcha`
 
-export const getServerPkgDir = () => {
-    return `${getPackagesDir()}/server`
-}
+export const getProcaptchaBundlePkgDir = () => `${getPackagesDir()}/procaptcha-bundle`
 
-export const getTypesDatabasePkgDir = () => {
-    return `${getPackagesDir()}/types-database`
-}
+export const getProcaptchaCommonPkgDir = () => `${getPackagesDir()}/procaptcha-common`
 
-export const getTypesEnvPkgDir = () => {
-    return `${getPackagesDir()}/types-env`
-}
+export const getProcaptchaFrictionlessPkgDir = () => `${getPackagesDir()}/procaptcha-frictionless`
 
-export const getTypesPkgDir = () => {
-    return `${getPackagesDir()}/types`
-}
+export const getProcaptchaPoWPkgDir = () => `${getPackagesDir()}/procaptcha-pow`
 
-export const getWebComponentsPkgDir = () => {
-    return `${getPackagesDir()}/web-components`
-}
+export const getProcaptchaReactPkgDir = () => `${getPackagesDir()}/procaptcha-react`
 
-export const getContractsDir = () => {
-    return `${getRootDir()}/contracts`
-}
+export const getProviderPkgDir = () => `${getPackagesDir()}/provider`
 
-export const getProtocolContractsDir = () => {
-    return `${getProtocolDir()}/contracts`
-}
+export const getServerPkgDir = () => `${getPackagesDir()}/server`
+
+export const getTxPkgDir = () => `${getPackagesDir()}/tx`
+
+export const getTypesPkgDir = () => `${getPackagesDir()}/types`
+
+export const getTypesDatabasePkgDir = () => `${getPackagesDir()}/types-database`
+
+export const getTypesEnvPkgDir = () => `${getPackagesDir()}/types-env`
+
+export const getUtilPkgDir = () => `${getPackagesDir()}/util`
+
+export const getWebComponentsPkgDir = () => `${getPackagesDir()}/web-components`
+
+// Contracts
+
+export const getContractsDir = () => `${getRootDir()}/contracts`
+
+export const getProtocolContractsDir = () => `${getProtocolDir()}/contracts`

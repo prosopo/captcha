@@ -19,8 +19,9 @@ import { Logger, ProsopoContractError } from '@prosopo/common'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
-import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
-import { oneUnit } from '../balances/index.js'
+import { filterAndDecodeContractEvents, formatEvent } from './helpers.js'
+import { getDispatchError } from '@prosopo/tx'
+import { oneUnit } from '@prosopo/tx'
 
 /**
  * Batch commits an array of transactions to the contract

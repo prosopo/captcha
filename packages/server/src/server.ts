@@ -12,23 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util'
 import {
+    CaptchaTimeoutOutput,
     ContractAbi,
     NetworkConfig,
     NetworkNamesSchema,
-    ProcaptchaOutput,
+    ProcaptchaOutputSchema,
+    ProcaptchaToken,
     ProsopoServerConfigOutput,
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, getExpectedBlockTime, getZeroAddress } from '@prosopo/contract'
+import { LogLevel, Logger, ProsopoContractError, ProsopoEnvError, getLogger, trimProviderUrl } from '@prosopo/common'
+import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { decodeProcaptchaOutput } from '@prosopo/types'
 import { get } from '@prosopo/util'
+import { isHex, u8aToHex } from '@polkadot/util'
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
@@ -75,7 +78,7 @@ export class ProsopoServer {
 
     async isReady() {
         try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             await this.getSigner()
             await this.getContractApi()
         } catch (error) {
@@ -86,7 +89,7 @@ export class ProsopoServer {
     async getSigner(): Promise<void> {
         if (this.pair) {
             if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false })
+                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             }
             await this.api.isReadyOrError
             try {
@@ -113,11 +116,6 @@ export class ProsopoServer {
         return this.contract
     }
 
-    async getViableHistoricBlockCount(maxVerifiedTime?: number): Promise<number> {
-        const expectedBlockTime = getExpectedBlockTime(this.getApi())
-        return new BN(maxVerifiedTime || 60000).div(expectedBlockTime).toNumber()
-    }
-
     /**
      * Check if the provider was actually chosen at blockNumber.
      * - If no blockNumber is provided, check the last `n` blocks where `n` is the number of blocks that fit in
@@ -127,82 +125,133 @@ export class ProsopoServer {
      * @param dapp
      * @param providerUrl
      * @param blockNumber
-     * @param maxVerifiedTime
      * @returns
      */
-    async checkRandomProvider(
-        user: string,
-        dapp: string,
-        providerUrl?: string,
-        blockNumber?: number,
-        maxVerifiedTime?: number
-    ) {
+    async checkRandomProvider(user: string, dapp: string, providerUrl: string, blockNumber: number) {
+        const block = await this.getApi().rpc.chain.getBlockHash(blockNumber)
         // Check if the provider was actually chosen at blockNumber
-        let blocksToCheck: number[] = []
-        if (blockNumber) {
-            blocksToCheck = [blockNumber]
-        } else {
-            const numberOfHistoricBlocksToCheck = await this.getViableHistoricBlockCount(maxVerifiedTime)
-            const currentBlockNumber = (await this.getApi().rpc.chain.getBlock()).block.header.number.toNumber()
-            blocksToCheck = Array.from(
-                { length: numberOfHistoricBlocksToCheck },
-                (_, index) => currentBlockNumber - index
-            )
+        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
+            block,
+            'getRandomActiveProvider',
+            [user, dapp]
+        )
+        if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
+            return getRandomProviderResponse.provider
         }
 
-        while (blocksToCheck.length > 0) {
-            const block = await this.getApi().rpc.chain.getBlockHash(blocksToCheck.pop() as number)
-            const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
-                block,
-                'getRandomActiveProvider',
-                [user, dapp]
-            )
-            if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
-                return getRandomProviderResponse.provider
-            }
-        }
         return undefined
     }
 
     /**
-     *
-     * @param payload Info output by procaptcha on completion of the captcha process
-     * @param maxVerifiedTime Maximum time in milliseconds since the blockNumber
-     * @returns
+     * Verify the user with the contract. We check the contract to see if the user has completed a captcha in the
+     * past. If they have, we check the time since the last correct captcha is within the maxVerifiedTime and we check
+     * whether the user is marked as human within the contract.
+     * @param user
+     * @param maxVerifiedTime
      */
-    public async isVerified(payload: ProcaptchaOutput, maxVerifiedTime?: number): Promise<boolean> {
-        const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
-        const contractApi = await this.getContractApi()
-
-        const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber, maxVerifiedTime)
-
-        if (!randomProvider) {
-            this.logger.info('Random provider selection failed')
-            // We have not been able to repeat the provider selection
-            return false
-        }
-
-        if (providerUrl) {
-            this.logger.info('Random provider is valid. Verifying with provider.')
-            // We can now trust the provider URL as it has been shown to have been randomly selected
-            const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(dapp, user, commitmentId, maxVerifiedTime)
-            return result.solutionApproved
-        } else {
+    public async verifyContract(user: string, maxVerifiedTime: number) {
+        try {
+            const contractApi = await this.getContractApi()
             this.logger.info('Provider URL not provided. Verifying with contract.')
-            // Check the time since the last correct captcha is less than the maxVerifiedTime
-            const blockTime = contractApi.api.consts.babe.expectedBlockTime.toNumber()
-            const blocksSinceLastCorrectCaptcha = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
+            const correctCaptchaBlockNumber = (await contractApi.query.dappOperatorLastCorrectCaptcha(user)).value
                 .unwrap()
                 .unwrap()
                 .before.valueOf()
-            if (maxVerifiedTime && blockTime * blocksSinceLastCorrectCaptcha > maxVerifiedTime) {
+            const recent = await verifyRecency(
+                (await this.getContractApi()).api,
+                correctCaptchaBlockNumber,
+                maxVerifiedTime
+            )
+            if (!recent) {
+                this.logger.info('User has not completed a captcha recently')
                 return false
             }
+            const isHuman = (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+                .unwrap()
+                .unwrap()
+            this.logger.info('isHuman', isHuman)
+            return isHuman
+        } catch (error) {
+            this.logger.error(error)
+            // if a user is not in the contract it errors, suppress this error and return false
+            return false
+        }
+    }
 
-            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
-                .unwrap()
-                .unwrap()
+    /**
+     * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
+     * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
+     * @param token
+     * @param blockNumber
+     * @param timeouts
+     * @param providerUrl
+     * @param challenge
+     */
+    public async verifyProvider(
+        token: string,
+        blockNumber: number,
+        timeouts: CaptchaTimeoutOutput,
+        providerUrl: string,
+        challenge?: string
+    ) {
+        this.logger.info('Verifying with provider.')
+        const blockNumberString = blockNumber.toString()
+        const dappUserSignature = this.pair?.sign(blockNumberString)
+        if (!dappUserSignature) {
+            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
+        }
+        const signatureHex = u8aToHex(dappUserSignature)
+
+        const providerApi = await this.getProviderApi(providerUrl)
+        if (challenge) {
+            const result = await providerApi.submitPowCaptchaVerify(token, signatureHex, timeouts.pow.cachedTimeout)
+            // We don't care about recency with PoW challenges as they are single use, so just return the verified result
+            return result.verified
+        }
+        const recent = await verifyRecency((await this.getContractApi()).api, blockNumber, timeouts.image.cachedTimeout)
+
+        if (!recent) {
+            // bail early if the block is too old. This saves us calling the Provider.
+            return false
+        }
+        const result = await providerApi.verifyDappUser(token, signatureHex, timeouts.image.cachedTimeout)
+
+        return result.verified
+    }
+
+    /**
+     *
+     * @returns
+     * @param token
+     */
+    public async isVerified(token: ProcaptchaToken): Promise<boolean> {
+        if (!isHex(token)) {
+            this.logger.error('Invalid token - not hex', token)
+            return false
+        }
+
+        const payload = decodeProcaptchaOutput(token)
+
+        const { user, providerUrl, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
+
+        if (providerUrl && blockNumber) {
+            // By requiring block number, we load balance requests to the providers by requiring that the random
+            // provider selection should be repeatable. If we have a block number, we check the provider was selected
+            // at that block.
+
+            // const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
+            // if (!randomProvider) {
+            //     this.logger.info('Random provider selection failed')
+            //     // We have not been able to repeat the provider selection
+            //     return false
+            // }
+
+            // If we have a providerURL and a blockNumber, we verify with the provider
+
+            return await this.verifyProvider(token, blockNumber, this.config.timeouts, providerUrl, challenge)
+        } else {
+            // If we don't have a providerURL, we verify with the contract
+            return await this.verifyContract(user, this.config.timeouts.contract.maxVerifiedTime)
         }
     }
 

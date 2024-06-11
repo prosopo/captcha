@@ -12,17 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CssBaseline } from '@mui/material'
-import App from './App.js'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import FrictionlessRoot from './routes/frictionless.js'
+import ImageCaptchaRoot from './routes/root.js'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import reportWebVitals from './reportWebVitals.js'
+
+const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <ImageCaptchaRoot />,
+    },
+    {
+        path: '/frictionless',
+        element: <FrictionlessRoot />,
+    },
+])
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 root.render(
     <React.Fragment>
         <CssBaseline />
-        <App />
+        <RouterProvider router={router} />
     </React.Fragment>
 )
 

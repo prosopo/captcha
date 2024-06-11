@@ -57,19 +57,22 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
+
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
             - run: mkdir -p ~/.cache/Cypress
 
-            - run: npm install
+            # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: npm ci
 
             - name: Rust formatting check
               run: |
@@ -104,9 +107,19 @@ jobs:
             - run: ls -la protocol/target/ink || true
             - run: ls -la node_modules || true
 
-            # remove all but the latest cache (this ensures there's at least one cache available for the next run, just in case this takes place while we're clearing up caches)
-            # this means there will be the previous cache (the latest) and the current cache (the one we're building now) after this workflow finishes
-            # github actions will prefer the latest cache, so the one output from this workflow will take precedence in future jobs
+            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
+            - name: Save cache
+              uses: actions/cache/save@v3
+              if: always()
+              with:
+                  path: |
+                      protocol/cargo-cache
+                      protocol/target
+                      node_modules
+                      ~/.cache/Cypress
+                  key: project-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+            # remove all but the latest cache, leaving only the cache we just saved
             - name: Cleanup caches
               if: always()
               run: |
@@ -121,15 +134,3 @@ jobs:
                   do
                       gh actions-cache delete $cacheKey -R $REPO --confirm
                   done
-
-            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
-            - name: Save cache
-              uses: actions/cache/save@v3
-              if: always()
-              with:
-                  path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      ~/.cache/Cypress
-                  key: project-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}

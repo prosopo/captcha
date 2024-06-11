@@ -47,7 +47,7 @@ const signMessage = async (currentAccount: InjectedAccountWithMeta) => {
     const signRaw = injector?.signer?.signRaw
 
     if (!signRaw) {
-        throw new ProsopoEnvError('PROGUI.NO_POLKADOT_EXTENSION')
+        throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
     }
 
     const blockNumberString = (await getCurrentBlockNumber()).toString()

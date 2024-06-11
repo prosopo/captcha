@@ -13,21 +13,10 @@
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract/Abi'
 import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import {
-    AccountId,
-    BlockNumber,
-    DispatchError,
-    Event,
-    EventRecord,
-    StorageDeposit,
-    WeightV2,
-} from '@polkadot/types/interfaces'
+import { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ApiBase } from '@polkadot/api/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
-import { Bytes } from '@polkadot/types-codec/extended'
-import { Compact } from '@polkadot/types-codec/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
 import { Registry } from '@polkadot/types-codec/types/registry'
@@ -84,20 +73,19 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
     return encodedArgs
 }
 
-/** Handle errors returned from contract queries by throwing them
+/** Get errors returned from contract queries
  */
-export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
+export function getContractError(response: ContractCallOutcome): string | undefined {
     if (response.output) {
         const out: any = response.output
         if (out.isOk) {
             const responseOk = out.asOk
             if (responseOk.isErr) {
-                throw new ProsopoContractError('CONTRACT.QUERY_ERROR', {
-                    context: { error: responseOk.toPrimitive().err.toString(), contractMethodName },
-                })
+                return responseOk.toPrimitive().err.toString()
             }
         }
     }
+    return 'Error: Failed to get contract error'
 }
 
 /** Hash a string, padding with zeroes until its 32 bytes long
@@ -118,24 +106,19 @@ export function stringToHexPadded(data: string): string {
 // TODO add test for this
 export function decodeEvents(contractAddress: AccountId, records: EventRecord[], abi: Abi): DecodedEvent[] | undefined {
     return records
-        .filter(
-            ({ event }) =>
-                function () {
-                    const data = event.toPrimitive().data
-                    if (data instanceof Array) {
-                        return false
-                    }
-                    if (!(data instanceof Object)) {
-                        return false
-                    }
-                    return (
-                        event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
-                    )
-                }
-        )
+        .filter(({ event }) => {
+            const data = event.toPrimitive().data
+            if (data instanceof Array) {
+                return false
+            }
+            if (!(data instanceof Object)) {
+                return false
+            }
+            return event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
+        })
         .map((record): DecodedEvent | null => {
             try {
-                return abi.decodeEvent(record.event.data.toU8a() as Bytes)
+                return abi.decodeEvent(record)
             } catch (error) {
                 console.error(error)
                 return null
@@ -161,7 +144,7 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
             // swallow
         }
     }
-    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message } })
+    return new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', { context: { error: message, event: event.toHuman() } })
 }
 
 // 4_999_999_999_999
@@ -170,12 +153,12 @@ const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 // The values returned by the dry run transactions are sometimes not large enough
 // to guarantee that the transaction will succeed. This is a safety margin to ensure
 // that the transaction will succeed.
-export const GAS_INCREASE_FACTOR = 1.1
+export const GAS_INCREASE_FACTOR = 2
 
 export function getOptions(
     api: ApiBase<'promise'>,
     isMutating?: boolean,
-    value?: number | BN,
+    value?: BN,
     gasLimit?: WeightV2,
     storageDeposit?: StorageDeposit,
     increaseGas?: boolean
@@ -192,38 +175,19 @@ export function getOptions(
               refTime: MAX_CALL_WEIGHT,
           }) as WeightV2)
         : undefined
-
     return {
         gasLimit: _gasLimit,
         storageDepositLimit: storageDeposit
-            ? storageDeposit.isCharge
+            ? storageDeposit.isCharge && storageDeposit.asCharge.gt(BN_ZERO)
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                ? storageDeposit.asRefund
+                ? storageDeposit.asRefund && storageDeposit.asRefund.gt(BN_ZERO)
+                    ? storageDeposit.asRefund.toBn().muln(gasIncreaseFactor)
+                    : null
                 : null
             : null,
-        value: value || BN_ZERO,
+        value: value ? value.toString() : BN_ZERO,
     } as ContractOptions
-}
-
-// Convert a dispatch error to a readable message
-export function getDispatchError(dispatchError: DispatchError): string {
-    let message: string = dispatchError.type
-
-    if (dispatchError.isModule) {
-        try {
-            const mod = dispatchError.asModule
-            const error = dispatchError.registry.findMetaError(mod)
-
-            message = `${error.section}.${error.name}`
-        } catch (error) {
-            // swallow
-        }
-    } else if (dispatchError.isToken) {
-        message = `${dispatchError.type}.${dispatchError.asToken.type}`
-    }
-
-    return message
 }
 
 export function filterAndDecodeContractEvents(result: SubmittableResult, abi: Abi, logger: Logger): DecodedEvent[] {
@@ -239,7 +203,7 @@ export function filterAndDecodeContractEvents(result: SubmittableResult, abi: Ab
                 },
             } = eventRecord
             try {
-                return abi.decodeEvent(data as Bytes)
+                return abi.decodeEvent(eventRecord)
             } catch (error) {
                 logger.error(`Unable to decode contract event: ${(error as Error).message}`)
                 logger.error(eventRecord.event.toHuman())
@@ -254,12 +218,4 @@ export function formatEvent(event: Event): string {
     return `${event.section}.${event.method}${
         'docs' in event ? (Array.isArray(event.docs) ? `(${event.docs.join('')})` : event.docs || '') : ''
     }`
-}
-
-export function getExpectedBlockTime(api: ApiPromise): BN {
-    return new BN(api.consts.babe?.expectedBlockTime || 6000)
-}
-
-export async function getBlockNumber(api: ApiPromise): Promise<Compact<BlockNumber>> {
-    return (await api.rpc.chain.getBlock()).block.header.number
 }

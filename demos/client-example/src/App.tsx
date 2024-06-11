@@ -17,28 +17,35 @@ import {
     EnvironmentTypes,
     EnvironmentTypesSchema,
     ProcaptchaConfigSchema,
-    ProcaptchaOutput,
+    ProcaptchaToken,
 } from '@prosopo/types'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { getServerUrl } from '@prosopo/server'
 import { useState } from 'react'
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
     'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
-function App() {
+interface AppProps {
+    captchaType?: string
+}
+
+function App(props: AppProps) {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
     const [account, setAccount] = useState<string>('')
-
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action
     const [isLogin, setIsLogin] = useState(true)
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
-    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
+    const [procaptchaToken, setProcaptchaToken] = useState<ProcaptchaToken | undefined>(undefined)
 
     const config = ProcaptchaConfigSchema.parse({
         userAccountAddress: account,
@@ -49,17 +56,19 @@ function App() {
         dappName: 'client-example',
         defaultEnvironment:
             (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
+        serverUrl: getServerUrl(),
         mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
+    console.log(config)
 
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
     const onLoggedIn = (token: string) => {
-        console.log('getting private resource with token ', token)
-        fetch(new URL('/private', config.serverUrl).href, {
+        const url = new URL('/private', config.serverUrl).href
+        console.log('getting private resource with token ', token, 'at', url)
+        fetch(url, {
             method: 'GET',
             headers: {
                 Origin: 'http://localhost:9230', // TODO: change this to env var
@@ -84,16 +93,18 @@ function App() {
     }
 
     const onActionHandler = () => {
-        if (!procaptchaOutput) {
+        if (!procaptchaToken) {
             alert('Must complete captcha')
         }
         const payload = {
             email,
             name,
             password,
-            [ApiParams.procaptchaResponse]: procaptchaOutput,
+            [ApiParams.procaptchaResponse]: procaptchaToken,
         }
-        fetch(new URL(urlPath, config.serverUrl).href, {
+        const url = new URL(urlPath, config.serverUrl).href
+        console.log('posting to', url, 'with payload', payload)
+        fetch(url, {
             method: 'POST',
             headers: {
                 ...corsHeaders,
@@ -128,9 +139,9 @@ function App() {
         setMessage('')
     }
 
-    const onHuman = async (procaptchaOutput: ProcaptchaOutput) => {
-        console.log('onHuman', procaptchaOutput)
-        setProcaptchaOutput(procaptchaOutput)
+    const onHuman = async (procaptchaToken: ProcaptchaToken) => {
+        console.log('onHuman', procaptchaToken)
+        setProcaptchaToken(procaptchaToken)
     }
 
     const getMessage = () => {
@@ -157,23 +168,32 @@ function App() {
             >
                 <Box>
                     <Typography component={'span'}>{message ? getMessage() : null}</Typography>
-                    {!config.web2 ? (
-                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
-                    ) : (
-                        <></>
-                    )}
+
                     <Box>
                         <h1>{label}</h1>
                         <form>
-                            <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
+                            <FormGroup sx={{ '& .MuiTextField-root,#select-account': { m: 1 } }}>
+                                {!config.web2 ? (
+                                    <FormControl>
+                                        <ExtensionAccountSelect
+                                            dappName={config.dappName}
+                                            value={account}
+                                            onChange={setAccount}
+                                            aria-label="Select account"
+                                        />
+                                    </FormControl>
+                                ) : (
+                                    <></>
+                                )}
                                 <FormControl>
                                     <TextField
                                         id="email"
                                         label="Email"
                                         type="text"
-                                        autoComplete="Email"
+                                        autoComplete="email"
                                         autoCapitalize="none"
                                         onChange={(e) => setEmail(e.target.value)}
+                                        aria-label="Email"
                                     />
                                 </FormControl>
 
@@ -183,8 +203,9 @@ function App() {
                                             id="name"
                                             label="Name"
                                             type="text"
-                                            autoComplete="Name"
+                                            autoComplete="name"
                                             onChange={(e) => setName(e.target.value)}
+                                            aria-label="Name"
                                         />
                                     </FormControl>
                                 )}
@@ -194,13 +215,26 @@ function App() {
                                         id="password"
                                         label="Password"
                                         type="password"
-                                        autoComplete="Password"
+                                        autoComplete="password"
                                         onChange={(e) => setPassword(e.target.value)}
+                                        aria-label="Password"
                                     />
                                 </FormControl>
 
                                 <FormControl sx={{ m: 1 }}>
-                                    <Procaptcha config={config} callbacks={{ onError, onHuman, onExpired }} />
+                                    {props.captchaType === 'frictionless' ? (
+                                        <ProcaptchaFrictionless
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                            aria-label="Frictionless captcha"
+                                        />
+                                    ) : (
+                                        <Procaptcha
+                                            config={config}
+                                            callbacks={{ onError, onHuman, onExpired }}
+                                            aria-label="Captcha"
+                                        />
+                                    )}
                                 </FormControl>
                                 <FormControl>
                                     <Box sx={{ p: 1 }}>
@@ -208,7 +242,8 @@ function App() {
                                             <Button
                                                 variant="contained"
                                                 onClick={onActionHandler}
-                                                disabled={!procaptchaOutput}
+                                                aria-label={isLogin ? 'Login' : 'Sign up'}
+                                                disabled={!procaptchaToken}
                                             >
                                                 {isLogin ? 'Login' : 'Sign up'}
                                             </Button>
@@ -217,7 +252,12 @@ function App() {
                                                     <Typography>- or -</Typography>
                                                 </Box>
                                             </Box>
-                                            <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                            <Button
+                                                onClick={onChangeHandler}
+                                                aria-label={isLogin ? 'Sign up' : 'Login'}
+                                            >
+                                                {isLogin ? 'Sign up' : 'Login'}
+                                            </Button>
                                         </Stack>
                                     </Box>
                                 </FormControl>

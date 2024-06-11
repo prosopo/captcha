@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPaths, VerifySolutionBody } from '@prosopo/types'
+import { ApiPaths, VerifySolutionBody, decodeProcaptchaOutput } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
-import { VerifySolutionBodyType } from '@prosopo/types'
+import { VerifySolutionBodyTypeOutput } from '@prosopo/types'
 import express, { Router } from 'express'
 
 /**
@@ -30,44 +30,46 @@ export function prosopoRouter(): Router {
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      */
-    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
-        let parsed: VerifySolutionBodyType
+    router.post(ApiPaths.VerifyImageCaptchaSolutionDapp, async (req, res, next) => {
+        let body: VerifySolutionBodyTypeOutput
         try {
-            parsed = VerifySolutionBody.parse(req.body)
+            body = VerifySolutionBody.parse(req.body)
         } catch (err) {
             return next(
                 new ProsopoApiError('CAPTCHA.PARSE_ERROR', {
-                    context: { error: err, errorCode: 400 },
+                    context: { error: err, code: 400 },
                     logLevel: 'info',
                 })
             )
         }
         try {
+            const { token } = body
+            const { user, dapp, commitmentId } = decodeProcaptchaOutput(token)
             const testCommitmentId = '0x123456789test'
             const testAccount = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
             const testDapp = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
             let statusMessage = 'API.USER_NOT_VERIFIED'
             let approved = false
             if (
-                (parsed.user && parsed.user === testAccount) ||
-                (parsed.commitmentId && parsed.commitmentId === testCommitmentId) ||
-                (parsed.dapp && parsed.dapp === testDapp)
+                (user && user === testAccount) ||
+                (commitmentId && commitmentId === testCommitmentId) ||
+                (dapp && dapp === testDapp)
             ) {
                 approved = true
                 statusMessage = 'API.USER_VERIFIED'
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: approved,
+                    verified: approved,
                     commitmentId: testCommitmentId,
                 })
             }
 
             return res.json({
                 status: req.t(statusMessage),
-                solutionApproved: false,
+                verified: false,
             })
         } catch (err) {
-            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, errorCode: 500 } }))
+            return next(new ProsopoApiError('API.UNKNOWN', { context: { error: err, code: 500 } }))
         }
     })
 

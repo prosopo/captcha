@@ -32,7 +32,7 @@ export const getNetwork = (config: ProcaptchaClientConfigOutput) => {
 const loadContract = async (
     account: string,
     contractAddress: string,
-    wsProviderUrl: string
+    wsProviderUrl: string | string[]
 ): Promise<ProsopoCaptchaContract> => {
     const api = await ApiPromise.create({ provider: new WsProvider(wsProviderUrl) })
     const type = 'sr25519'

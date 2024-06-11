@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CaptchaResponseBody } from '@prosopo/types'
 import { CaptchaWidget } from './CaptchaWidget.js'
-import { GetCaptchaResponse } from '@prosopo/api'
 import { Suspense, useMemo } from 'react'
 import { at } from '@prosopo/util'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
@@ -21,7 +21,7 @@ import Button from './Button.js'
 import addDataAttr from '../util/index.js'
 
 export interface CaptchaComponentProps {
-    challenge: GetCaptchaResponse
+    challenge: CaptchaResponseBody
     index: number
     solutions: string[][]
     onSubmit: () => void
@@ -138,13 +138,15 @@ const CaptchaComponent = ({
                             buttonType="cancel"
                             onClick={onCancel}
                             text={t('WIDGET.CANCEL')}
-                        ></Button>
+                            aria-label={t('WIDGET.CANCEL')}
+                        />
                         <Button
                             themeColor={themeColor}
                             buttonType="next"
                             text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
                             onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
-                        ></Button>
+                            aria-label={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                        />
                     </div>
                 </div>
             </div>
