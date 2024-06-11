@@ -128,9 +128,9 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 
     constructor(error: Error | TranslationKey, options?: BaseErrorOptions<ApiContextParams>) {
         const errorName = options?.name || 'ProsopoApiError'
-        const errorCode = options?.context?.code || 500
-        options = { ...options, name: errorName, context: { ...options?.context, errorCode } }
+        const code = options?.context?.code || 500
+        options = { ...options, name: errorName, context: { ...options?.context, code } }
         super(error, options)
-        this.code = errorCode
+        this.code = code
     }
 }

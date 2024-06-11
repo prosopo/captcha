@@ -1,4 +1,4 @@
-name: tests
+name: cypress
 
 on:
     pull_request:
@@ -94,7 +94,6 @@ jobs:
 
             # build all packages in workspace
             - run: npm run build:all
-            - run: npm run build:all:cjs
 
             - name: Setup env
               run: |
@@ -112,6 +111,27 @@ jobs:
                   docker container ls
                   sleep 10s
 
-            # deploy protocol and run the unit tests
-            - run: npm run deploy_protocol
-            - run: npm run test
+            # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
+            - run: NODE_ENV=test npm run deploy_protocol
+            - run: NODE_ENV=test npm run setup
+
+            # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
+            # Running bundle:dev instead of bundle:prod means the bundle will be built with selectors that can be used
+            # by the cypress tests to find the elements they need to interact with
+            - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:dev
+
+            # Needs concurrently to avoid vite hanging forever https://github.com/vitejs/vite/discussions/8745
+            - name: Install concurrently and cypress
+              run: npm i concurrently cypress
+
+            - name: Run the cypress tests on client-example
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
+
+            - name: Run the cypress tests on client-bundle-example
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
+
+            - name: Run the cypress tests on client-bundle-example explicit rendering
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others

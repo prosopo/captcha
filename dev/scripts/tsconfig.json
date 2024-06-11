@@ -50,6 +50,9 @@
             "path": "../../packages/procaptcha-bundle"
         },
         {
+            "path": "../../packages/procaptcha-common"
+        },
+        {
             "path": "../../packages/procaptcha-react"
         },
         {
