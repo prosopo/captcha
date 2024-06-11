@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/hooks",
-    "version": "0.3.41",
+    "version": "1.0.1",
     "private": true,
     "description": "Typescript git hooks for husky",
     "main": "dist/index.js",
