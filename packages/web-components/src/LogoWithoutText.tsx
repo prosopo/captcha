@@ -27,6 +27,7 @@ export const LogoWithoutText: React.FC<LogoWithoutTextProps> = ({ themeColor }: 
             viewBox="0 0 260 348"
             height="35px"
             style={{ fill }}
+            aria-label="Prosopo Logo Without Text"
         >
             <title>Prosopo Logo Without Text</title>
             <path d="M95.7053 40.2707C127.005 40.2707 157.022 52.6841 179.154 74.78C201.286 96.8759 213.719 126.844 213.719 158.093H254.056C254.056 70.7808 183.16 -4.57764e-05 95.7053 -4.57764e-05V40.2707Z" />

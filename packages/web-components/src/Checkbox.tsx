@@ -80,6 +80,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
                 type={'checkbox'}
                 aria-live={'assertive'}
                 aria-haspopup={'true'}
+                aria-label={labelText}
                 onChange={onChange}
                 checked={checked}
                 style={checkboxStyle}

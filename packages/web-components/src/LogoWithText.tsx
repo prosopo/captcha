@@ -28,6 +28,7 @@ export const LogoWithText: React.FC<LogoWithoutTextProps> = ({ themeColor }: Log
             height="35px"
             width="140px"
             style={{ fill }}
+            aria-label="Prosopo Logo With Text"
         >
             <title>Prosopo Logo With Text</title>
             <path

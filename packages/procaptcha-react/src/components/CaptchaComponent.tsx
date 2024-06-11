@@ -138,13 +138,15 @@ const CaptchaComponent = ({
                             buttonType="cancel"
                             onClick={onCancel}
                             text={t('WIDGET.CANCEL')}
-                        ></Button>
+                            aria-label={t('WIDGET.CANCEL')}
+                        />
                         <Button
                             themeColor={themeColor}
                             buttonType="next"
                             text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
                             onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
-                        ></Button>
+                            aria-label={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                        />
                     </div>
                 </div>
             </div>

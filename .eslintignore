@@ -2,6 +2,7 @@
 **/ProcaptchaWidget-*.js
 **/index-*.js
 **/typechain/*
+**/detector/src/index.js
 .yarn
 node_modules
 **/node_modules**/
