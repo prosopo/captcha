@@ -1,4 +1,4 @@
-import { isArray, isObject } from "./checks.js"
+import { isArray, isObject } from './checks.js'
 
 export type MergeOptions = {
     atomicArrays?: boolean

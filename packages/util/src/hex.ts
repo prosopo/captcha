@@ -1,5 +1,5 @@
+import { isArray } from './checks.js'
 import { u8aToHex } from '@polkadot/util'
-import { isArray } from "./checks.js"
 
 export type Hash = string | number[]
 
