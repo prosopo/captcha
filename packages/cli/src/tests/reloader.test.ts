@@ -56,7 +56,7 @@ describe('reloading api', () => {
                 onData(data, packageDir, appended).then((result) => {
                     appended = result.appended
                     const kill = result.kill
-                    // console.log('onData ran, appended', appended, 'kill', kill)
+                    console.log('onData ran, appended', appended, 'kill', kill)
                     if (kill) {
                         child.kill()
                         expect(appended).toBe(true)
