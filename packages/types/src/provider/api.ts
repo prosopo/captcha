@@ -11,21 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams } from '../api/params.js'
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
-import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
-import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
-import { array, input, number, object, output, string, infer as zInfer } from 'zod'
+import { array, number, object, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
-    GetImageCaptchaChallenge = '/v1/prosopo/provider/captcha/image',
+    GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
     GetPowCaptchaChallenge = '/v1/prosopo/provider/captcha/pow',
-    SubmitImageCaptchaSolution = '/v1/prosopo/provider/solution',
+    SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
     SubmitPowCaptchaSolution = '/v1/prosopo/provider/pow/solution',
-    VerifyPowCaptchaSolution = '/v1/prosopo/provider/pow/verify',
-    VerifyImageCaptchaSolutionDapp = `/v1/prosopo/provider/image/${ApiParams.dapp}/verify`,
-    VerifyImageCaptchaSolutionUser = `/v1/prosopo/provider/image/${ApiParams.user}/verify`,
+    ServerPowCaptchaVerify = '/v1/prosopo/provider/pow/server-verify',
+    VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
     SubmitUserEvents = '/v1/prosopo/provider/events',
@@ -36,6 +32,28 @@ export enum AdminApiPaths {
     UpdateDataset = '/v1/prosopo/provider/admin/dataset',
     ProviderDeregister = '/v1/prosopo/provider/admin/deregister',
     ProviderUpdate = '/v1/prosopo/provider/admin/update',
+}
+
+export enum ApiParams {
+    datasetId = 'datasetId',
+    user = 'user',
+    dapp = 'dapp',
+    provider = 'provider',
+    blockNumber = 'blockNumber',
+    signature = 'signature',
+    requestHash = 'requestHash',
+    captchas = 'captchas',
+    commitmentId = 'commitmentId',
+    proof = 'proof',
+    dappUserSignature = 'dappUserSignature',
+    providerUrl = 'providerUrl',
+    procaptchaResponse = 'procaptcha-response',
+    maxVerifiedTime = 'maxVerifiedTime',
+    verified = 'verified',
+    status = 'status',
+    challenge = 'challenge',
+    difficulty = 'difficulty',
+    nonce = 'nonce',
 }
 
 export interface DappUserSolutionResult {
@@ -78,13 +96,15 @@ export const CaptchaSolutionBody = object({
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = object({
-    [ApiParams.token]: ProcaptchaTokenSpec,
+    [ApiParams.dapp]: string(),
+    [ApiParams.user]: string(),
+    [ApiParams.blockNumber]: number(),
     [ApiParams.dappUserSignature]: string(),
-    [ApiParams.maxVerifiedTime]: number().optional().default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
+    [ApiParams.commitmentId]: string().optional(),
+    [ApiParams.maxVerifiedTime]: number().optional(),
 })
 
-export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>
-export type VerifySolutionBodyTypeOutput = output<typeof VerifySolutionBody>
+export type VerifySolutionBodyType = zInfer<typeof VerifySolutionBody>
 
 export interface PendingCaptchaRequest {
     accountId: string
@@ -125,24 +145,13 @@ export interface PowCaptchaSolutionResponse {
     [ApiParams.verified]: boolean
 }
 
-/**
- * Request body for the server to verify a PoW captcha solution
- * @param {string} token - The Procaptcha token
- * @param {string} dappUserSignature - The signature proving ownership of the site key
- * @param {number} verifiedTimeout - The maximum time in milliseconds since the Provider was selected at `blockNumber`
- */
 export const ServerPowCaptchaVerifyRequestBody = object({
-    [ApiParams.token]: ProcaptchaTokenSpec,
-    [ApiParams.dappSignature]: string(),
-    [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
-})
-
-export const GetPowCaptchaChallengeRequestBody = object({
-    [ApiParams.user]: string(),
+    [ApiParams.challenge]: string(),
+    [ApiParams.user]: string(), // add user
     [ApiParams.dapp]: string(),
+    [ApiParams.dappUserSignature]: string(),
+    [ApiParams.blockNumber]: number(),
 })
-
-export type GetPowCaptchaChallengeRequestBodyType = zInfer<typeof GetPowCaptchaChallengeRequestBody>
 
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
 
@@ -154,7 +163,6 @@ export const SubmitPowCaptchaSolutionBody = object({
     [ApiParams.user]: string(),
     [ApiParams.dapp]: string(),
     [ApiParams.nonce]: number(),
-    [ApiParams.verifiedTimeout]: number().optional().default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 })
 
 export type SubmitPowCaptchaSolutionBodyType = zInfer<typeof SubmitPowCaptchaSolutionBody>

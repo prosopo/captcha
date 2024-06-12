@@ -2,7 +2,6 @@
 **/ProcaptchaWidget-*.js
 **/index-*.js
 **/typechain/*
-**/detector/src/index.js
 .yarn
 node_modules
 **/node_modules**/
@@ -43,8 +42,6 @@ diagram.svg
 .env.*
 **/assets/*.js
 *.min.js
-**/Readme.md
-**/README.md
-code-of-conduct.md
-diagram.svg
-**/.eslintignore
+.rs
+.dockerfile
+**/docker/**
