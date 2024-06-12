@@ -80,7 +80,7 @@ const onData = async (data: any, rootDir: string, appended: boolean): Promise<{ 
     await new Promise((resolve) => setTimeout(resolve, 500))
 
     // find out which .env file is being used
-    if (data.includes('Running main process...')) {
+    if (data.includes('Running API restart process...')) {
         if (!appended) {
             const envPath = path.resolve(`${rootDir}/.env.test`)
 
