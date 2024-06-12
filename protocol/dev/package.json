@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/protocol-dev",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "scripts": {
@@ -13,9 +13,9 @@
         "build": "tsc",
         "cli": "f() { tsx src/cli.ts -- -- $@ ;}; f",
         "clean": "tsc --build --clean",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -27,7 +27,7 @@
         "chalk": "^5.3.0",
         "child_process": "^1.0.2",
         "consola": "^3.2.3",
-        "dotenv": "^16.1.4",
+        "dotenv": "^16.4.5",
         "fs": "^0.0.1-security",
         "glob": "^10.0.0",
         "path": "^0.12.7",

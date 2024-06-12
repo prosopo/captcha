@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
@@ -50,14 +50,14 @@
         "test:all": "npm run ws -- --if-present test",
         "eslint": "npm run ws -- eslint && npm run eslint:workspace",
         "eslint:workspace": "npm run eslint:cmd -- '.*.*' '*.*' .vscode .github docker",
-        "eslint:cmd": "npx eslint --ignore-path .eslintignore --no-error-on-unmatched-pattern",
+        "eslint:cmd": "npx eslint --ignore-path .eslintignore --no-error-on-unmatched-pattern --cache --cache-location node_modules/.cache/eslint/.eslintcache",
         "eslint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run eslint",
         "eslint:fix": "npm run ws -- eslint:fix && npm run eslint:fix:workspace",
         "eslint:fix:workspace": "npm run eslint:workspace -- --fix",
         "eslint:fix:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run eslint:fix",
         "prettier": "npm run ws -- prettier && npm run prettier:workspace",
         "prettier:workspace": "npm run prettier:cmd -- '.*.*' '*.*' .vscode .github docker",
-        "prettier:cmd": "npx prettier --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --ignore-unknown",
+        "prettier:cmd": "npx prettier --no-error-on-unmatched-pattern --check --ignore-path .eslintignore --ignore-unknown --cache --cache-location node_modules/.cache/prettier/.prettiercache",
         "prettier:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run prettier",
         "prettier:fix": "npm run ws -- prettier:fix && npm run prettier:fix:workspace",
         "prettier:fix:workspace": "npm run prettier:workspace -- --write",
@@ -75,7 +75,7 @@
     },
     "private": true,
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "workspaces": [
@@ -87,7 +87,7 @@
         "provider-gui"
     ],
     "dependencies": {
-        "@prosopo/flux": "0.3.42"
+        "@prosopo/flux": "1.0.1"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",

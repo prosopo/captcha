@@ -1,10 +1,10 @@
 {
     "name": "@prosopo/client-example",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "private": true,
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "dependencies": {
@@ -13,12 +13,12 @@
         "@mui/material": "^5.9.1",
         "@polkadot/extension-dapp": "0.46.9",
         "@polkadot/extension-inject": "0.46.9",
-        "@prosopo/common": "0.3.42",
-        "@prosopo/procaptcha": "0.3.42",
-        "@prosopo/procaptcha-frictionless": "0.3.42",
-        "@prosopo/procaptcha-react": "0.3.42",
-        "@prosopo/server": "0.3.42",
-        "@prosopo/types": "0.3.42",
+        "@prosopo/common": "1.0.1",
+        "@prosopo/procaptcha": "1.0.1",
+        "@prosopo/procaptcha-frictionless": "1.0.1",
+        "@prosopo/procaptcha-react": "1.0.1",
+        "@prosopo/server": "1.0.1",
+        "@prosopo/types": "1.0.1",
         "@types/react-dom": "^18.3.0",
         "electron": "25.8.4",
         "react": "^18.3.1",
@@ -39,9 +39,9 @@
         }
     },
     "devDependencies": {
-        "@prosopo/cli": "0.3.42",
-        "@prosopo/config": "0.3.42",
-        "@prosopo/vite-plugin-watch-workspace": "0.3.42",
+        "@prosopo/cli": "1.0.1",
+        "@prosopo/config": "1.0.1",
+        "@prosopo/vite-plugin-watch-workspace": "1.0.1",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
         "tslib": "2.6.2",
@@ -54,9 +54,9 @@
         "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
         "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"

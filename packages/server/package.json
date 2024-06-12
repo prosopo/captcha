@@ -1,11 +1,11 @@
 {
     "name": "@prosopo/server",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "description": "NodeJS package for server side communication with the prosopo captcha client",
     "main": "./dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "exports": {
@@ -19,9 +19,9 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -41,12 +41,12 @@
         "@polkadot/api": "10.13.1",
         "@polkadot/keyring": "12.6.2",
         "@polkadot/rpc-provider": "10.13.1",
-        "@prosopo/api": "0.3.42",
-        "@prosopo/common": "0.3.42",
-        "@prosopo/contract": "0.3.42",
-        "@prosopo/captcha-contract": "0.3.42",
-        "@prosopo/util": "0.3.42",
-        "@prosopo/types": "0.3.42"
+        "@prosopo/api": "1.0.1",
+        "@prosopo/common": "1.0.1",
+        "@prosopo/contract": "1.0.1",
+        "@prosopo/captcha-contract": "1.0.1",
+        "@prosopo/util": "1.0.1",
+        "@prosopo/types": "1.0.1"
     },
     "devDependencies": {
         "tslib": "2.6.2",

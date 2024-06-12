@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha-contract",
-    "version": "0.3.42",
+    "version": "1.0.1",
     "description": "The captcha contract",
     "main": "dist/index.js",
     "type": "module",
@@ -97,9 +97,9 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
