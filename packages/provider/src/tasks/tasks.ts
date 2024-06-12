@@ -366,6 +366,7 @@ export class Tasks {
                 completedAt: blockNumber,
                 processed: false,
                 batched: false,
+                stored: false,
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
@@ -715,6 +716,8 @@ export class Tasks {
         }
         //Get all unstored commitments
         const commitments = await this.db.getUnstoredDappUserCommitments()
+
+        this.logger.log(`Storing ${commitments.length} commitments externally`)
 
         await saveCaptchas(commitments, this.config.mongoCaptchaUri)
 

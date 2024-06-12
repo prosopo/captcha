@@ -31,7 +31,7 @@ export async function storeCaptchasExternally(pair: KeyringPair, config: Prosopo
     const cronSchedule = '0 * * * *'
 
     const job = new CronJob(cronSchedule, async () => {
-        env.logger.debug('storeCommitmentsExternal task....')
+        env.logger.log('storeCommitmentsExternal task....')
         await tasks.storeCommitmentsExternal().catch((err) => {
             env.logger.error(err)
         })

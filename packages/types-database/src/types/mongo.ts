@@ -50,6 +50,7 @@ export const UserCommitmentSchema = object({
     requestedAt: number(),
     processed: boolean(),
     batched: boolean(),
+    stored: boolean().optional(),
 }) satisfies ZodType<UserCommitmentRecord>
 
 export interface SolutionRecord extends CaptchaSolution {

@@ -568,7 +568,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /** @description Get Dapp User captcha commitments from the commitments table that have not been batched on-chain
      */
     async getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]> {
-        const docs = await this.tables?.commitment.find({ stored: false }).lean()
+        const docs = await this.tables?.commitment
+            .find({
+                $or: [{ stored: false }, { stored: { $exists: false } }],
+            })
+            .lean()
         return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
     }
 
