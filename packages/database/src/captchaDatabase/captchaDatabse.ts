@@ -22,4 +22,5 @@ export const saveCaptchas = async (events: UserCommitmentRecord[], atlasUri: str
     await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
     await StoredCaptcha.insertMany(events)
     logger.info('Mongo Saved Events')
+    await mongoose.connection.close()
 }
