@@ -11,6 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './databases/index.js'
-export * from './eventsDatabase/index.js'
-export * from './captchaDatabase/index.js'
+import { UserCommitmentRecord, UserCommitmentRecordSchema } from '@prosopo/types-database'
+import { getLoggerDefault } from '@prosopo/common'
+import mongoose from 'mongoose'
+const logger = getLoggerDefault()
+
+const StoredCaptcha = mongoose.model('StoredCaptcha', UserCommitmentRecordSchema)
+
+export const saveCaptchas = async (events: UserCommitmentRecord[], atlasUri: string) => {
+    await mongoose.connect(atlasUri).then(() => console.log('Connected to MongoDB Atlas'))
+    await StoredCaptcha.insertMany(events)
+    logger.info('Mongo Saved Events')
+    await mongoose.connection.close()
+}
