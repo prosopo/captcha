@@ -145,21 +145,6 @@ You can choose to implement any of the following types of captcha when rendering
 | `pow`          | The `pow` CAPTCHA type requires the user to solve a cryptographic puzzle. This puzzle simply requires a small amount of computational work to solve, and slows down bots significantly, making it difficult for them to scrape in high volumes.                                       |
 | `image`        | The `image` CAPTCHA type requires the user to solve a simple image CAPTCHA. This is CAPTCHA type most people are familiar with, created by Google reCAPTCHA.                                                                                                                          |
 
-<<<<<<< Updated upstream
-#### `procaptcha-response` JSON Data
-
-The output from the `onCaptchaVerified` function is the `procaptcha-response` JSON data. The `procaptcha-response` JSON
-data contains the following fields:
-
-| Key          | Type   | Description                                                                                                                   |
-| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| commitmentId | string | The commitment ID of the captcha challenge. This is only available in image or Frictionless mode.                             |
-| challenge    | string | The Proof-of-Work challenge that the user solved. This is only available in PoW or Frictionless mode.                         |
-| providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
-| dapp         | string | The SITE_KEY of your application / website                                                                                    |
-| user         | string | The user's account address                                                                                                    |
-| blockNumber  | number | The block number of the captcha challenge. This is used to verify that the contacted provider was randomly selected on-chain. |
-
 ### Add the Procaptcha Widget to your site with React
 
 You must import Procaptcha, define a config with ProcaptchaConfigSchema, optionally define callbacks, and render via the Procaptcha component. A minimal example would be as follows:
@@ -184,10 +169,7 @@ export default MyApp
 
 Further example usage can be seen in [demos/client-example](https://github.com/prosopo/captcha/blob/main/demos/client-example/src/App.tsx#L220C1-L223C43)
 
-### Verify the User `procaptcha-response` data Server Side
-=======
 ### Verify the User `procaptcha-response` token Server Side
->>>>>>> Stashed changes
 
 By adding the client side code, you were able to render a Procaptcha widget that identified if users were real people or
 automated bots. When the captcha succeeded, the Procaptcha script inserted unique data into your form data, which is
