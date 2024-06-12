@@ -714,15 +714,14 @@ export class Tasks {
             this.logger.info('Mongo env not set')
             return
         }
-        //Get all unstored commitments
+        // Get all unstored commitments
         const commitments = await this.db.getUnstoredDappUserCommitments()
 
-        this.logger.log(`Storing ${commitments.length} commitments externally`)
+        this.logger.info(`Storing ${commitments.length} commitments externally`)
 
         await saveCaptchas(commitments, this.config.mongoCaptchaUri)
 
         const commitIds = commitments.map((commitment) => commitment.id)
-
         await this.db.markDappUserCommitmentsStored(commitIds)
     }
 }

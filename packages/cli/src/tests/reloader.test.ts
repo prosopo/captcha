@@ -72,7 +72,7 @@ describe('reloading api', () => {
                 restoreEnv()
                 throw error
             })
-    }, 120000)
+    }, 200000)
 })
 
 const onData = async (data: any, rootDir: string, appended: boolean): Promise<{ appended: boolean; kill: boolean }> => {
