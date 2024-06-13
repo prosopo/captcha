@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/datasets",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "private": false,
@@ -48,13 +48,13 @@
     },
     "dependencies": {
         "@polkadot/util": "12.6.2",
-        "@prosopo/common": "1.0.1",
-        "@prosopo/types": "1.0.1",
-        "@prosopo/util": "1.0.1",
+        "@prosopo/common": "1.0.2",
+        "@prosopo/types": "1.0.2",
+        "@prosopo/util": "1.0.2",
         "vitest": "^1.3.1"
     },
     "devDependencies": {
-        "@prosopo/config": "1.0.1",
+        "@prosopo/config": "1.0.2",
         "dotenv": "^16.0.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
