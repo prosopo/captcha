@@ -30,7 +30,7 @@ import {
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaProps } from '@prosopo/types'
 import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
-import { useEffect, useRef, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 
 const Procaptcha = (props: ProcaptchaProps) => {
     const config = props.config
@@ -40,7 +40,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const [state, _updateState] = useProcaptcha(useState, useRef)
     // get the state update mechanism
     const updateState = buildUpdateState(state, _updateState)
-    const manager = Manager(config, state, updateState, callbacks)
+    const manager = useRef(Manager(config, state, updateState, callbacks))
     const captchaRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -51,8 +51,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
         if (!form) return
 
         const handleSubmit = () => {
-            console.log('Form submitted:', form)
-            manager.resetState()
+            manager.current.resetState()
         }
 
         form.addEventListener('submit', handleSubmit)
@@ -116,7 +115,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                     ) : (
                                                         <Checkbox
                                                             checked={state.isHuman}
-                                                            onChange={manager.start}
+                                                            onChange={manager.current.start}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
                                                             aria-label="human checkbox"

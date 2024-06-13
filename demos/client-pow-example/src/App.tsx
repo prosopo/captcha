@@ -41,15 +41,7 @@ function App() {
                 event.preventDefault()
                 console.log('Form submitted:', form)
 
-                // Simulate a form submission to example.com
-                try {
-                    const formData = new FormData(form)
-                    const data = Object.fromEntries(formData.entries())
-
-                    console.log('Dummy form submission with data:', data)
-                } catch (error) {
-                    console.error('Error during dummy form submission:', error)
-                }
+                console.log('Dummy form submission with data:', event)
             }
 
             form.addEventListener('submit', handleSubmit)
@@ -58,6 +50,7 @@ function App() {
                 form.removeEventListener('submit', handleSubmit)
             }
         }
+        return
     }, [])
 
     return (
