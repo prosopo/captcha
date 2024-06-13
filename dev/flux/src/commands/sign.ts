@@ -16,7 +16,8 @@ import { ArgumentsCamelCase, Argv } from 'yargs'
 import { Keypair } from '@polkadot/util-crypto/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { base58Decode, base64Encode } from '@polkadot/util-crypto'
-import { sign, wifToPrivateKey } from '../lib/sep256k1Sign.js'
+import { getPrivateKey, getPublicKey } from './process.env.js'
+import { sign } from '../lib/sep256k1Sign.js'
 import { u8aToHex } from '@polkadot/util'
 const msgSpec = z.string()
 
@@ -33,8 +34,8 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 desc: 'Message to sign',
             } as const),
         handler: async (argv: ArgumentsCamelCase) => {
-            const publicKeyEncoded = process.env.PROSOPO_ZELCORE_PUBLIC_KEY || ''
-            const secretKey = wifToPrivateKey(process.env.PROSOPO_ZELCORE_PRIVATE_KEY || '')
+            const publicKeyEncoded = getPublicKey()
+            const secretKey = getPrivateKey()
             const publicKey: Uint8Array = base58Decode(publicKeyEncoded)
             const keypair: Keypair = { secretKey, publicKey }
             const message = msgSpec.parse(argv.msg)
