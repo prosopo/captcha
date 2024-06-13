@@ -231,5 +231,6 @@ export const Manager = (
 
     return {
         start,
+        resetState,
     }
 }

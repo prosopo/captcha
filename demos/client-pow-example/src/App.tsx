@@ -14,7 +14,7 @@
 
 import { EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 function App() {
     const [account, setAccount] = useState<string>('')
@@ -30,9 +30,50 @@ function App() {
         serverUrl: process.env.PROSOPO_SERVER_URL || '',
         atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
     })
+
+    const formRef = useRef<HTMLFormElement>(null)
+
+    useEffect(() => {
+        const form = formRef.current
+
+        if (form) {
+            const handleSubmit = async (event: Event) => {
+                event.preventDefault()
+                console.log('Form submitted:', form)
+
+                // Simulate a form submission to example.com
+                try {
+                    const formData = new FormData(form)
+                    const data = Object.fromEntries(formData.entries())
+
+                    console.log('Dummy form submission with data:', data)
+                } catch (error) {
+                    console.error('Error during dummy form submission:', error)
+                }
+            }
+
+            form.addEventListener('submit', handleSubmit)
+
+            return () => {
+                form.removeEventListener('submit', handleSubmit)
+            }
+        }
+    }, [])
+
     return (
         <div style={{ height: '100%', display: 'block', justifyContent: 'center', alignItems: 'center' }}>
-            <ProcaptchaPow config={config} />
+            <form ref={formRef}>
+                <div>
+                    <label htmlFor="name">Name:</label>
+                    <input type="text" id="name" name="name" required />
+                </div>
+                <div>
+                    <label htmlFor="email">Email:</label>
+                    <input type="email" id="email" name="email" required />
+                </div>
+                <ProcaptchaPow config={config} />
+                <button type="submit">Submit</button>
+            </form>
         </div>
     )
 }
