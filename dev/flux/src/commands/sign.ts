@@ -24,33 +24,33 @@ export default (cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.auth')
 
     return {
-        command: 'sign',
+        command: 'sign <msg>',
         describe: 'Sign a message with a private key',
         builder: (yargs: Argv) =>
-            yargs.option('msg', {
+            yargs.positional('msg', {
                 type: 'string',
                 demandOption: true,
                 desc: 'Message to sign',
             } as const),
         handler: async (argv: ArgumentsCamelCase) => {
+            const publicKeyEncoded = process.env.PROSOPO_ZELCORE_PUBLIC_KEY || ''
             const secretKey = wifToPrivateKey(process.env.PROSOPO_ZELCORE_PRIVATE_KEY || '')
-            const publicKey: Uint8Array = base58Decode(process.env.PROSOPO_ZELCORE_PUBLIC_KEY || '')
+            const publicKey: Uint8Array = base58Decode(publicKeyEncoded)
             const keypair: Keypair = { secretKey, publicKey }
             const message = msgSpec.parse(argv.msg)
             if (message.length === 0) {
-                console.error('No message provided')
+                logger.error('No message provided')
                 process.exit()
             }
             sign(message, keypair)
                 .then((sig) => {
                     const hexSig = u8aToHex(sig)
-                    logger.info(`Hex Signature   : ${hexSig}`)
-                    logger.info(`Public Key: ${publicKey}`)
+                    logger.info(`Public Key: ${publicKeyEncoded}`)
                     logger.info(`Base64 Signature: ${base64Encode(hexSig)}`)
                     process.exit()
                 })
                 .catch((error) => {
-                    console.error(error)
+                    logger.error(error)
                     process.exit()
                 })
         },
