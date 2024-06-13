@@ -130,7 +130,7 @@ export const Manager = (
         return dappAccount
     }
 
-    // get the state update mechanis
+    // get the state update mechanism
     const updateState = buildUpdateState(state, onStateUpdate)
 
     const resetState = () => {

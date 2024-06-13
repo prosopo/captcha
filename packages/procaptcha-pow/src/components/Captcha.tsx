@@ -30,7 +30,7 @@ import {
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaProps } from '@prosopo/types'
 import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const Procaptcha = (props: ProcaptchaProps) => {
     const config = props.config
