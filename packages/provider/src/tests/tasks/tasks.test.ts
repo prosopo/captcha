@@ -181,6 +181,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
                     userSignature: Array.from(userSignature),
                     processed: false,
                     batched: false,
+                    stored: false,
                 }
                 await providerTasks.db.storeDappUserSolution([captchaSolution], commit)
                 if (status === CaptchaStatus.approved) {
