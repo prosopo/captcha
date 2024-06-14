@@ -8,8 +8,7 @@ authors = [
 edition = "2021"
 
 [dependencies.ink]
-git = "https://github.com/prosopo/ink_sr25519"
-branch = "4.3.0-custom"
+version = "5.0.0"
 default-features = false
 
 [dependencies.scale]
