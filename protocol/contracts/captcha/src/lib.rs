@@ -1291,20 +1291,11 @@ pub mod captcha {
 
         /// Set the code hash for this contract
         #[ink(message)]
-        pub fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        pub fn set_code_hash(&mut self, code_hash: Hash) -> Result<(), Error> {
             self.check_caller_admin()?;
-            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
-            if let Err(e) = set_code_hash_result {
-                match e {
-                    ink::env::Error::CodeNotFound => {
-                        return err!(self, Error::CodeNotFound);
-                    }
-                    _ => {
-                        return err!(self, Error::SetCodeHashFailed);
-                    }
-                }
-            }
-            Ok(())
+            self.env()
+                .set_code_hash(&code_hash)
+                .or_else(|_| err!(self, Error::SetCodeHashFailed))
         }
 
         /// Is the caller the admin for this contract?
