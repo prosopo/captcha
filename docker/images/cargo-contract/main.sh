@@ -1,8 +1,5 @@
 #! /bin/bash
 
-# Load the cargo env
-source /root/.cargo/env
-
 # Stop on error / print each command / stop on unset variable / stop on pipe fail
 set -euxo pipefail
 
