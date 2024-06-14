@@ -24,8 +24,10 @@ pub mod proxy {
     use common::err;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
+    use ink::env::CallFlags;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::traits::StorageLayout;
+    use scale::Encode;
 
     #[ink(storage)]
     #[derive(Default)]
@@ -128,15 +130,13 @@ pub mod proxy {
         ///   have any effect whatsoever on the contract we forward to.
         #[ink(message, payable, selector = _)]
         pub fn forward(&self) -> u32 {
+            let mut flags = CallFlags::empty();
+            flags.insert(CallFlags::FORWARD_INPUT);
+            flags.insert(CallFlags::TAIL_CALL);
             ink::env::call::build_call::<ink::env::DefaultEnvironment>()
                 .call(self.get_destination())
                 .transferred_value(self.env().transferred_value())
-                .gas_limit(0)
-                .call_flags(
-                    ink::env::CallFlags::default()
-                        .set_forward_input(true)
-                        .set_tail_call(true),
-                )
+                .call_flags(flags)
                 .try_invoke()
                 .unwrap_or_else(|env_err| {
                     panic!(
