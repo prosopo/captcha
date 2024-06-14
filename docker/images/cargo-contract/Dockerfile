@@ -42,7 +42,7 @@ ARG CARGO_CONTRACT_VERSION=4.1.1
 RUN cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract
 
 # Cleanup deps for installing cargo-contract (almost everything except gcc, that's needed for contract compilation)
-RUN apt-get remove -y curl pkg-config openssl libssl-dev g++ && \
+RUN apt-get remove --auto-remove -y curl pkg-config openssl libssl-dev g++ && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
