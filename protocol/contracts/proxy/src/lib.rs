@@ -27,7 +27,6 @@ pub mod proxy {
     use ink::env::CallFlags;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::traits::StorageLayout;
-    use scale::Encode;
 
     #[ink(storage)]
     #[derive(Default)]
