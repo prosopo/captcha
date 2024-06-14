@@ -39,7 +39,7 @@ pub mod proxy {
         GetDestination,
         ProxyWithdraw(Amount),
         ProxyTerminate,
-        ProxySetCodeHash([u8; 32]),
+        ProxySetCodeHash(Hash),
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -108,15 +108,13 @@ pub mod proxy {
         /// `true` is returned on successful upgrade, `false` otherwise
         /// Errors are returned if the caller is not an admin, if the code hash is the callers
         /// account_id, if the code is not found, and for any other unknown ink errors
-        fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        fn set_code_hash(&mut self, code_hash: Hash) -> Result<(), Error> {
             let caller = self.env().caller();
             check_is_admin(caller)?;
 
-            match ink::env::set_code_hash(&code_hash) {
-                Ok(()) => Ok(()),
-                Err(ink::env::Error::CodeNotFound) => err!(self, Error::CodeNotFound),
-                Err(_) => err!(self, Error::SetCodeHashFailed),
-            }
+            self.env()
+                .set_code_hash(&code_hash)
+                .or_else(|_| err!(self, Error::SetCodeHashFailed))
         }
 
         /// Fallback message for a contract call that doesn't match any
