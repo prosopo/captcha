@@ -46,9 +46,18 @@ RUN apt-get remove --auto-remove -y curl pkg-config openssl libssl-dev g++ && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Create cache dirs for cargo
+ARG CARGO_CACHE=/cargo-cache
+RUN mkdir ${CARGO_CACHE}
+RUN rm -rf ${CARGO_HOME}/registry
+RUN rm -rf ${CARGO_HOME}/git
+RUN ln -s ${CARGO_CACHE}/registry ${CARGO_HOME}/registry
+RUN ln -s ${CARGO_CACHE}/git ${CARGO_HOME}/git
+
 # set permissions for the cargo-contract binary. This allows the user which invokes the container to read/write/exe to these dirs
 RUN chmod -R a+wrx ${CARGO_HOME}
 RUN chmod -R a+wrx ${RUSTUP_HOME}
+RUN chmod -R a+wrx ${CARGO_CACHE}
 
 # Add the main script
 COPY main.sh /main.sh
