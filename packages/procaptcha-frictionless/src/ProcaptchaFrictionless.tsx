@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 import { BotDetectionFunction, ProcaptchaFrictionlessProps } from '@prosopo/types'
 import { isBot } from '@prosopo/detector'
 
-const custonDetectBot: BotDetectionFunction = async () => {
+const customDetectBot: BotDetectionFunction = async () => {
     return await isBot().then((result) => {
         const bot = result.isBot
         return { bot }
@@ -28,7 +28,7 @@ const custonDetectBot: BotDetectionFunction = async () => {
 export const ProcaptchaFrictionless = ({
     config,
     callbacks,
-    detectBot = custonDetectBot,
+    detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
 
