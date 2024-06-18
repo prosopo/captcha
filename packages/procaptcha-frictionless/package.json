@@ -34,8 +34,7 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@fingerprintjs/botd": "^1.9.0",
-        "@prosopo/detector": "^1.0.2",
+        "@prosopo/detector": "1.0.2",
         "@prosopo/procaptcha-pow": "1.0.2",
         "@prosopo/procaptcha-react": "1.0.2",
         "@prosopo/types": "1.0.2",
