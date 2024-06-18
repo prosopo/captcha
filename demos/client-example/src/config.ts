@@ -11,31 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// ../.env | .env.local | .env.development >>
-// PROSOPO_API_BASE_URL=http://localhost
-// PROSOPO_SITE_KEY=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
+import { ProsopoClientConfigOutput, ProsopoClientConfigSchema } from '@prosopo/types'
+import { getServerUrl } from '@prosopo/server'
 
-import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
-import { ProsopoClientConfigInput } from '@prosopo/types'
-
-const getWeb2 = (): boolean | undefined => {
-    return process.env.PROSOPO_WEB2 === 'true' ? true : process.env.PROSOPO_WEB2 === 'false' ? false : undefined
-}
-
-const config: ProsopoClientConfigInput = {
+const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
     account: {
-        address: process.env.PROSOPO_SITE_KEY || '',
+        address: process.env.PROSOPO_SITE_KEY,
     },
-    userAccountAddress: '',
-    web2: getWeb2(),
-    defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
-        ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
-        : EnvironmentTypesSchema.enum.development,
-    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-        ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-        : NetworkNamesSchema.enum.development,
+    web2: process.env.PROSOPO_WEB2 !== 'false',
+    defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
+    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
     dappName: 'client-example',
-    serverUrl: process.env.PROSOPO_SERVER_URL || '',
-}
+    serverUrl: getServerUrl(),
+})
 
 export default config

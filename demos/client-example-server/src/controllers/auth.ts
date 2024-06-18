@@ -46,16 +46,26 @@ const verify = async (
 ) => {
     if (verifyType === 'api') {
         // verify using the API endpoint
-        console.log('verifying using the API endpoint')
+        console.log('Verifying using the API endpoint', verifyEndpoint)
 
         const response = await fetch(verifyEndpoint, {
             method: 'POST',
             body: JSON.stringify({ [ApiParams.token]: token, [ApiParams.secret]: secret }),
         })
-        return (await response.json()).verified
+        console.log('Status:', response.status, 'Status Text:', response.statusText)
+
+        const verified = (await response.json()).verified
+
+        console.log(`Verified: ${verified}`)
+
+        return verified
     } else {
         // verify using the TypeScript library
-        console.log('verifying using the TypeScript library')
+        console.log('Verifying using the TypeScript library')
+
+        const verified = await prosopoServer.isVerified(token)
+
+        console.log(`Verified: ${verified}`)
 
         return await prosopoServer.isVerified(token)
     }
