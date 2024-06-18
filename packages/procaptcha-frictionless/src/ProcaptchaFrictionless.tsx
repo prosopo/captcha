@@ -14,18 +14,35 @@
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { ProcaptchaProps } from '@prosopo/types'
-import { load } from '@fingerprintjs/botd'
 import { useEffect, useState } from 'react'
+import { load } from '@fingerprintjs/botd'
+import { BotDetectionFunction, ProcaptchaFrictionlessProps } from '@prosopo/types'
+import { isBot } from '@prosopo/detector'
 
-export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
-    // Use state to manage which component to render
+// Default bot detection function
+const defaultDetectBot: BotDetectionFunction = async () => {
+    const botd = await load()
+    const result = botd.detect()
+    return result
+}
+
+const custonDetectBot: BotDetectionFunction = async () => {
+    return await isBot().then((result) => {
+        console.log(result)
+        return { bot: result.isBot }
+    })
+}
+
+export const ProcaptchaFrictionless = ({
+    config,
+    callbacks,
+    detectBot = custonDetectBot,
+}: ProcaptchaFrictionlessProps) => {
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
 
     useEffect(() => {
-        const detectBot = async () => {
-            const botd = await load()
-            const result = botd.detect()
+        const detectAndSetComponent = async () => {
+            const result = await detectBot()
             if (result.bot) {
                 setComponentToRender(<Procaptcha config={config} callbacks={callbacks} />)
             } else {
@@ -33,8 +50,8 @@ export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) =
             }
         }
 
-        detectBot()
-    }, [config, callbacks])
+        detectAndSetComponent()
+    }, [config, callbacks, detectBot])
 
     return componentToRender
 }
