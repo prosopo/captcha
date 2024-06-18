@@ -11,4 +11,6 @@ cd /src
 
 # Run the command passed as arguments to the script
 # `& wait` runs the command in the background and waits for it to finish, allowing ctrl-c to work as child processes are killed
-eval "$@" & wait
+eval "$@" & 
+pid=$!
+wait $pid
