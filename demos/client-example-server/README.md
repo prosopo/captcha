@@ -5,7 +5,7 @@ is based
 on [an article written by Agustin Fernandez](https://www.asapdevelopers.com/build-a-react-native-login-app-with-node-js-backend/)
 and is adapted to use a Mongo In-Memory Database. This backend server integrates with the client-example React app.
 
-## How to run locally
+## Quickstart
 
 ### Test Your Site Key and Secret Key
 

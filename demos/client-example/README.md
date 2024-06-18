@@ -2,7 +2,7 @@
 
 This project is a _minimal_ example demonstrating how to include Prosopo Procaptcha in a client React app.
 
-## How to Test Your Site Key
+## Quickstart
 
 #### 1. Build & Deploy
 
