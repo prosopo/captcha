@@ -346,11 +346,7 @@ jobs:
 
             - name: Build the contract sources
               if: steps.check_version_any.outputs.bump == 'true'
-              run: |
-                  cd protocol
-                  npm run build
-                  npm run cli -- clean --docker
-                  npm run cli -- build --docker --release
+              run: npm -w @prosopo/protocol run build:contracts
 
             - name: Typedoc
               run: |

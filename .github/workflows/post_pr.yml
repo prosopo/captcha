@@ -73,28 +73,14 @@ jobs:
             - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: npm ci
+            
+            - run: npm -w @prosopo/protocol run rustfmt
 
-            - name: Rust formatting check
-              run: |
-                  cd protocol
-                  npm run build
-                  npm run cli -- fmt --all --verbose --docker
+            - run: npm -w @prosopo/protocol run clippy
 
-            - name: Clippy
-              run: |
-                  cd protocol
-                  npm run build
-                  npm run cli -- clippy --docker -- -- -D warnings
+            - run: npm -w @prosopo/protocol run build
 
-            - name: Build contracts
-              run: |
-                  cd protocol
-                  npm run cli -- build --docker --skip-env
-
-            - name: Test contracts
-              run: |
-                  cd protocol
-                  RUST_BACKTRACE=1 npm run cli -- test --docker
+            - run: npm -w @prosopo/protocol run test
 
             # install cypress so we don't have to do that every time
             - name: Cypress install

@@ -88,8 +88,4 @@ jobs:
 
             - run: npm ci
 
-            - name: Rust formatting check
-              run: |
-                  cd protocol
-                  npm run build
-                  npm run cli -- fmt --all --verbose --check --docker
+            - run: npm -w @prosopo/protocol run rustfmt

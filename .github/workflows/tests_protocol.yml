@@ -89,11 +89,7 @@ jobs:
 
             - run: npm ci
 
-            - name: Build contracts
-              id: build
-              run: |
-                  cd protocol
-                  npm run cli -- build --docker --skip-env
+            - run: npm -w @prosopo/protocol run build
 
             - name: Check typechain is up-to-date
               run: |
@@ -119,7 +115,4 @@ jobs:
                         fi
                     done
 
-            - name: Test contracts
-              run: |
-                  cd protocol
-                  RUST_BACKTRACE=1 npm run cli -- test --docker
+            - run: npm -w @prosopo/protocol run test
