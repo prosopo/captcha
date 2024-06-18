@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { at } from '@prosopo/util'
 import { getServerConfig } from '@prosopo/server'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
@@ -80,11 +81,11 @@ async function main() {
 
     const config = getServerConfig()
 
-    console.log('config', config)
+    console.log('Config', config)
 
     app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType))
 
-    app.listen(process.env.PROSOPO_SERVER_PORT)
+    app.listen(config.serverUrl ? parseInt(at(config.serverUrl.split(':'), 2)) : 9228)
 }
 
 main()
