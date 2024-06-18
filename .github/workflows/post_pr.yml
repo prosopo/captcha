@@ -73,7 +73,7 @@ jobs:
             - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: npm ci
-            
+
             - run: npm -w @prosopo/protocol run rustfmt
 
             - run: npm -w @prosopo/protocol run clippy
