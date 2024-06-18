@@ -418,7 +418,7 @@ pub mod proxy {
 
             let new_code_hash = get_code_hash(1);
             assert_eq!(
-                contract.handler(ProxyMessages::ProxySetCodeHash(new_code_hash)),
+                contract.handler(ProxyMessages::ProxySetCodeHash(new_code_hash.into())),
                 Err(Error::NotAuthorised)
             );
             // assert_eq!(

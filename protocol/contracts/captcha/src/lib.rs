@@ -1641,7 +1641,7 @@ pub mod captcha {
 
             let new_code_hash = get_code_hash(1);
             assert_eq!(
-                contract.set_code_hash(new_code_hash),
+                contract.set_code_hash(new_code_hash.into()),
                 Err(Error::NotAuthorised)
             );
         }
