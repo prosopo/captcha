@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './api/index.js'
-export * from './config/index.js'
-export * from './contract/index.js'
-export * from './datasets/index.js'
-export * from './provider/index.js'
-export * from './procaptcha/index.js'
-export * from './procaptcha-bundle/index.js'
-export * from './procaptcha-frictionless/index.js'
-export { default as networks } from './networks/index.js'
-export type { Hash, AccountId } from '@prosopo/captcha-contract/types-arguments'
+import { ProcaptchaProps } from '../procaptcha/props.js'
+
+export type BotDetectionFunction = () => Promise<{ bot: boolean }>
+
+/**
+ * The props for the Procaptcha Frictionless component.
+ */
+export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
+    detectBot?: BotDetectionFunction
+}
