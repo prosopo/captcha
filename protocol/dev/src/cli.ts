@@ -219,7 +219,7 @@ export async function processArgs(args: string[]) {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
-        const dockerImage = argv.docker === '' ? 'prosopo/contracts-ci-linux:3.0.1' : argv.docker ?? ''
+        const dockerImage = argv.docker === '' ? 'prosopo/cargo-contract:4.1.1' : argv.docker ?? ''
         console.log(`dockerImage=${dockerImage}`)
         console.log(`cmd=${cmd}`)
 
