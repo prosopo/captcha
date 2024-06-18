@@ -42,11 +42,10 @@ features = [ "test-dependency" ]
 [lib]
 path = "src/lib.rs"
 
-[profile.release]
-overflow-checks = false
-
 [features]
 default = [ "std" ]
 std = [ "ink/std", "scale/std", "scale-info/std" ]
 ink-as-dependency = [ ]
 
+[profile.release]
+overflow-checks = false

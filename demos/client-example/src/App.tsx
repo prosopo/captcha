@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import {
-    ApiParams,
-    EnvironmentTypes,
-    EnvironmentTypesSchema,
-    ProcaptchaConfigSchema,
-    ProcaptchaToken,
-} from '@prosopo/types'
+import { ApiParams, ProcaptchaToken } from '@prosopo/types'
 import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
-import { getServerUrl } from '@prosopo/server'
 import { useState } from 'react'
+import config from './config.js'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
@@ -47,19 +41,6 @@ function App(props: AppProps) {
     // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
     const [procaptchaToken, setProcaptchaToken] = useState<ProcaptchaToken | undefined>(undefined)
 
-    const config = ProcaptchaConfigSchema.parse({
-        userAccountAddress: account,
-        account: {
-            address: process.env.PROSOPO_SITE_KEY || '',
-        },
-        web2: process.env.PROSOPO_WEB2 === 'true',
-        dappName: 'client-example',
-        defaultEnvironment:
-            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: getServerUrl(),
-        mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
-        devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
-    })
     console.log(config)
 
     const label = isLogin ? 'Login' : 'Sign up'
