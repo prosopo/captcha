@@ -65,6 +65,13 @@ export const Manager = (
         updateState({ timeout: undefined })
     }
 
+    const clearSuccessfulChallengeTimeout = () => {
+        // clear the timeout
+        window.clearTimeout(state.successfullChallengeTimeout)
+        // then clear the timeout from the state
+        updateState({ successfullChallengeTimeout: undefined })
+    }
+
     const getConfig = () => {
         const config: ProcaptchaClientConfigInput = {
             userAccountAddress: '',
@@ -129,6 +136,7 @@ export const Manager = (
     const resetState = () => {
         // clear timeout just in case a timer is still active (shouldn't be)
         clearTimeout()
+        clearSuccessfulChallengeTimeout()
         updateState(defaultState())
     }
 
@@ -231,5 +239,6 @@ export const Manager = (
 
     return {
         start,
+        resetState,
     }
 }
