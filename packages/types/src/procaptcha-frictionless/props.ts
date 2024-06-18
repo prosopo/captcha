@@ -11,18 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ReportHandler } from 'web-vitals'
+import { ProcaptchaProps } from '../procaptcha/props.js'
 
-const reportWebVitals = (onPerfEntry?: ReportHandler) => {
-    if (onPerfEntry && onPerfEntry instanceof Function) {
-        import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-            getCLS(onPerfEntry)
-            getFID(onPerfEntry)
-            getFCP(onPerfEntry)
-            getLCP(onPerfEntry)
-            getTTFB(onPerfEntry)
-        })
-    }
+export type BotDetectionFunction = () => Promise<{ bot: boolean }>
+
+/**
+ * The props for the Procaptcha Frictionless component.
+ */
+export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
+    detectBot?: BotDetectionFunction
 }
-
-export default reportWebVitals
