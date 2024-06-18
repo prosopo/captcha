@@ -15,21 +15,13 @@ import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { useEffect, useState } from 'react'
-import { load } from '@fingerprintjs/botd'
 import { BotDetectionFunction, ProcaptchaFrictionlessProps } from '@prosopo/types'
 import { isBot } from '@prosopo/detector'
 
-// Default bot detection function
-const defaultDetectBot: BotDetectionFunction = async () => {
-    const botd = await load()
-    const result = botd.detect()
-    return result
-}
-
 const custonDetectBot: BotDetectionFunction = async () => {
     return await isBot().then((result) => {
-        console.log(result)
-        return { bot: result.isBot }
+        const bot = result.isBot
+        return { bot }
     })
 }
 
