@@ -7,9 +7,33 @@ and is adapted to use a Mongo In-Memory Database. This backend server integrates
 
 ## How to run locally
 
+### Test Your Site Key and Secret Key
+
+#### 1. Build & Deploy
+
+From the root of this repository, run the following commands:
+
+```bash
+cp demos/client-example-server/env.production demos/client-example-server/.env.production && \
+npm i && \
+npm run start:server
+```
+
+Make sure you replace the following placeholders in the `.env.production` file with your own site key and secret key.
+You can obtain these by logging into the [Prosopo portal](https://portal.prosopo.io).
+
+```typescript
+PROSOPO_SITE_KEY=<YOUR SITE KEY HERE>
+PROSOPO_SITE_PRIVATE_KEY=<YOUR SECRET KEY HERE>
+```
+
+## 🚧 Developing the Client Example Server
+
+You can run in development mode to make changes to the client-example-server by following these instructions:
+
 ### 1. Build & Deploy
 
-From the roof of this repository, run the following commands:
+From the root of this repository, run the following commands:
 
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
