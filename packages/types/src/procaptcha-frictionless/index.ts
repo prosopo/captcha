@@ -11,18 +11,4 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoClientConfigOutput, ProsopoClientConfigSchema } from '@prosopo/types'
-import { getServerUrl } from '@prosopo/server'
-
-const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
-    account: {
-        address: process.env.PROSOPO_SITE_KEY,
-    },
-    web2: process.env.PROSOPO_WEB2 !== 'false',
-    defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
-    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
-    dappName: 'client-example',
-    serverUrl: getServerUrl(),
-})
-
-export default config
+export * from './props.js'

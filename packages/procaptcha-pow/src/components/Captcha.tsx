@@ -30,7 +30,7 @@ import {
 import { Manager } from '../Services/Manager.js'
 import { ProcaptchaProps } from '@prosopo/types'
 import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const Procaptcha = (props: ProcaptchaProps) => {
     const config = props.config
@@ -40,10 +40,29 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const [state, _updateState] = useProcaptcha(useState, useRef)
     // get the state update mechanism
     const updateState = buildUpdateState(state, _updateState)
-    const manager = Manager(config, state, updateState, callbacks)
+    const manager = useRef(Manager(config, state, updateState, callbacks))
+    const captchaRef = useRef<HTMLInputElement>(null)
+
+    useEffect(() => {
+        const element = captchaRef.current
+        if (!element) return
+
+        const form = element.closest('form')
+        if (!form) return
+
+        const handleSubmit = () => {
+            manager.current.resetState()
+        }
+
+        form.addEventListener('submit', handleSubmit)
+
+        return () => {
+            form.removeEventListener('submit', handleSubmit)
+        }
+    }, [])
 
     return (
-        <div>
+        <div ref={captchaRef}>
             <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
                 <ContainerDiv>
                     <WidthBasedStylesDiv>
@@ -96,7 +115,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                     ) : (
                                                         <Checkbox
                                                             checked={state.isHuman}
-                                                            onChange={manager.start}
+                                                            onChange={manager.current.start}
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
                                                             aria-label="human checkbox"
