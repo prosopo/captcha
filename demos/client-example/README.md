@@ -23,7 +23,7 @@ PROSOPO_SITE_KEY=<YOUR SITE KEY HERE>
 
 #### 2. Visit the App
 
-The app is now running in development mode. Open [http://localhost:9230](http://localhost:9230) to view it in the
+The app is now running in development mode. Open [http://localhost:9230/frictionless](http://localhost:9230) to view it in the
 browser. You also need
 to [start the backend server](https://github.com/prosopo/captcha/blob/main/demos/client-example-server/README.md) to
 test the verification process.
@@ -48,5 +48,5 @@ npm run start:demo
 
 #### 2. Visit the App
 
-The app is now running in development mode. Open [http://localhost:9230](http://localhost:9230) to view it in the
+The app is now running in development mode. Open [http://localhost:9230/frictionless](http://localhost:9230) to view it in the
 browser.

@@ -27,6 +27,9 @@ PROSOPO_SITE_KEY=<YOUR SITE KEY HERE>
 PROSOPO_SITE_PRIVATE_KEY=<YOUR SECRET KEY HERE>
 ```
 
+Run this example API in conjunction with
+the [client-example](https://github.com/prosopo/captcha/tree/main/demos/client-example) React app.
+
 ## 🚧 Developing the Client Example Server
 
 You can run in development mode to make changes to the client-example-server by following these instructions:
