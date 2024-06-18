@@ -92,7 +92,7 @@ jobs:
             - name: Build contracts
               id: build
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run cli -- build --docker --skip-env
 
             - name: Check typechain is up-to-date
@@ -121,5 +121,5 @@ jobs:
 
             - name: Test contracts
               run: |
-                  cd protocol/dev
+                  cd protocol
                   RUST_BACKTRACE=1 npm run cli -- test --docker

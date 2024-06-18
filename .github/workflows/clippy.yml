@@ -90,6 +90,6 @@ jobs:
 
             - name: Clippy
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run build
                   npm run cli -- clippy --docker -- -- -D warnings

@@ -347,7 +347,7 @@ jobs:
             - name: Build the contract sources
               if: steps.check_version_any.outputs.bump == 'true'
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run build
                   npm run cli -- clean --docker
                   npm run cli -- build --docker --release

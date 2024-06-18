@@ -90,6 +90,6 @@ jobs:
 
             - name: Rust formatting check
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run build
                   npm run cli -- fmt --all --verbose --check --docker

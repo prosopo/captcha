@@ -76,24 +76,24 @@ jobs:
 
             - name: Rust formatting check
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run build
                   npm run cli -- fmt --all --verbose --docker
 
             - name: Clippy
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run build
                   npm run cli -- clippy --docker -- -- -D warnings
 
             - name: Build contracts
               run: |
-                  cd protocol/dev
+                  cd protocol
                   npm run cli -- build --docker --skip-env
 
             - name: Test contracts
               run: |
-                  cd protocol/dev
+                  cd protocol
                   RUST_BACKTRACE=1 npm run cli -- test --docker
 
             # install cypress so we don't have to do that every time
