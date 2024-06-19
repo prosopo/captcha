@@ -175,3 +175,20 @@ CLI:info {
 CLI:info Public Key: 15...b
 CLI:info Base64 Signature: H...=
 ```
+
+### Format an env file
+
+Use this command to format an env file in the array format needed for updating in FluxOS. The output will be printed to the terminal.
+
+```bash
+# format the env file
+> npx flux formatenv .env
+CLI:info ["FOO=bar","BAR=BLAH"]
+```
+
+You can write the output to a file by using the `--write` flag.
+
+```bash
+# format the env file and write the output to a file
+> npx flux formatenv .env --write <file_name>
+```
