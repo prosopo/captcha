@@ -56,7 +56,9 @@ async function main() {
 
     log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`)
     if (processedArgs.api) {
-        await new ReloadingAPI(envPath, config, pair, processedArgs).start()
+        await new ReloadingAPI(envPath, config, pair, processedArgs).start().then(() => {
+            log.info('Running API restart process...')
+        })
     } else {
         process.exit(0)
     }

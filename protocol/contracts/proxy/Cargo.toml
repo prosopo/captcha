@@ -1,6 +1,6 @@
 [package]
 name = "proxy"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
   "Chris Taylor <chris@prosopo.io>",
   "George Oastler <george@prosopo.io>"
@@ -40,11 +40,10 @@ features = [ "test-dependency" ]
 [lib]
 path = "src/lib.rs"
 
-[profile.release]
-overflow-checks = false
-
 [features]
 default = [ "std" ]
 std = [ "ink/std", "scale/std", "scale-info/std" ]
 ink-as-dependency = [ ]
 
+[profile.release]
+overflow-checks = false
