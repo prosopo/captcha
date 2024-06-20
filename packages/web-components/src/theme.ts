@@ -25,6 +25,8 @@ const grey = {
     900: '#212121',
 }
 
+const DEFAULT_SPACING = 10 // size in pixels
+
 export const lightTheme = {
     palette: {
         mode: 'light',
@@ -37,6 +39,10 @@ export const lightTheme = {
             contrastText: '#000',
         },
         grey,
+    },
+    spacing: {
+        unit: DEFAULT_SPACING,
+        half: Math.floor(DEFAULT_SPACING / 2),
     },
 }
 
@@ -53,4 +59,9 @@ export const darkTheme = {
         },
         grey,
     },
+    spacing: {
+        unit: DEFAULT_SPACING,
+        half: Math.floor(DEFAULT_SPACING / 2),
+    },
+}
 }

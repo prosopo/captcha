@@ -58,6 +58,11 @@ const CaptchaComponent = ({
                     maxHeight: '100%',
                     display: 'flex',
                     flexDirection: 'column',
+                    border: '1px solid #dddddd',
+                    boxShadow: 'rgba(255, 255, 255, 0.2) 0px 0px 4px',
+                    borderRadius: '4px',
+                    padding: `${theme.spacing.unit}px`,
+                    backgroundColor: theme.palette.background.default,
                 }}
             >
                 <div
@@ -73,35 +78,45 @@ const CaptchaComponent = ({
                             display: 'flex',
                             alignItems: 'center',
                             width: '100%',
-                            backgroundColor: theme.palette.primary.main,
-                            padding: '16px',
                         }}
                     >
-                        <div>
-                            <p
+                        <div
+                            style={{
+                                backgroundColor: theme.palette.primary.main,
+                                width: '100%',
+                            }}
+                        >
+                            <div
                                 style={{
-                                    color: '#ffffff',
-                                    fontWeight: 700,
-                                    lineHeight: 1.5,
+                                    paddingLeft: `${theme.spacing.half}px`,
+                                    paddingRight: `${theme.spacing.half}px`,
                                 }}
                             >
-                                {t('WIDGET.SELECT_ALL')}
-                                {':'}
-                                &nbsp;
-                                <span style={{ textTransform: 'capitalize' }}>
-                                    {`${at(challenge.captchas, index).captcha.target}`}
-                                </span>
-                            </p>
-                            <p
-                                style={{
-                                    color: '#ffffff',
-                                    fontWeight: 500,
-                                    lineHeight: 0.8,
-                                    fontSize: '0.8rem',
-                                }}
-                            >
-                                {t('WIDGET.IF_NONE_CLICK_NEXT')}
-                            </p>
+                                <p
+                                    style={{
+                                        color: '#ffffff',
+                                        fontWeight: 700,
+                                        lineHeight: 1.5,
+                                    }}
+                                >
+                                    {t('WIDGET.SELECT_ALL')}
+                                    {':'}
+                                    &nbsp;
+                                    <span style={{ textTransform: 'capitalize' }}>
+                                        {`${at(challenge.captchas, index).captcha.target}`}
+                                    </span>
+                                </p>
+                                <p
+                                    style={{
+                                        color: '#ffffff',
+                                        fontWeight: 500,
+                                        lineHeight: 0.8,
+                                        fontSize: '0.8rem',
+                                    }}
+                                >
+                                    {t('WIDGET.IF_NONE_CLICK_NEXT')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
@@ -125,14 +140,14 @@ const CaptchaComponent = ({
                     />
                     <div
                         style={{
-                            padding: '8px 16px',
+                            padding: `0 ${theme.spacing}px`,
                             display: 'flex',
                             width: '100%',
                         }}
                     ></div>
                     <div
                         style={{
-                            padding: '0 16px 16px',
+                            padding: `0 ${theme.spacing}px`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
