@@ -64,4 +64,3 @@ export const darkTheme = {
         half: Math.floor(DEFAULT_SPACING / 2),
     },
 }
-}
