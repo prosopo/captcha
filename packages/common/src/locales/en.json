@@ -3,7 +3,8 @@
         "NO_POLKADOT_EXTENSION": "Polkadot extension not found"
     },
     "WIDGET": {
-        "SELECT_ALL": "Select all images containing a",
+        "SELECT_ALL": "Select all containing the following",
+        "IF_NONE_CLICK_NEXT": "If there are none, click Next",
         "NEXT": "Next",
         "SUBMIT": "Submit",
         "CANCEL": "Cancel",

@@ -77,26 +77,31 @@ const CaptchaComponent = ({
                             padding: '24px 16px',
                         }}
                     >
-                        <p
-                            style={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                lineHeight: 1.5,
-                            }}
-                        >
-                            {t('WIDGET.SELECT_ALL')}
-                            {': '}
-                        </p>
-                        <p
-                            style={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                textTransform: 'capitalize',
-                                lineHeight: 1.5,
-                            }}
-                        >
-                            {`${at(challenge.captchas, index).captcha.target}`}
-                        </p>
+                        <div>
+                            <p
+                                style={{
+                                    color: '#ffffff',
+                                    fontWeight: 700,
+                                    textTransform: 'capitalize',
+                                    lineHeight: 1.5,
+                                }}
+                            >
+                                {t('WIDGET.SELECT_ALL')}
+                                {':'}
+                                &nbsp;
+                                {`${at(challenge.captchas, index).captcha.target}`}
+                            </p>
+                            <p
+                                style={{
+                                    color: '#ffffff',
+                                    fontWeight: 500,
+                                    lineHeight: 0.8,
+                                    fontSize: '0.8rem',
+                                }}
+                            >
+                                {t('WIDGET.IF_NONE_CLICK_NEXT')}
+                            </p>
+                        </div>
                     </div>
                     <div {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
                         {captcha && (
