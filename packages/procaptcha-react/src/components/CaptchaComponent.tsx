@@ -82,14 +82,15 @@ const CaptchaComponent = ({
                                 style={{
                                     color: '#ffffff',
                                     fontWeight: 700,
-                                    textTransform: 'capitalize',
                                     lineHeight: 1.5,
                                 }}
                             >
                                 {t('WIDGET.SELECT_ALL')}
                                 {':'}
                                 &nbsp;
-                                {`${at(challenge.captchas, index).captcha.target}`}
+                                <span style={{ textTransform: 'capitalize' }}>
+                                    {`${at(challenge.captchas, index).captcha.target}`}
+                                </span>
                             </p>
                             <p
                                 style={{
