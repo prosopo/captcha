@@ -74,7 +74,7 @@ const CaptchaComponent = ({
                             alignItems: 'center',
                             width: '100%',
                             backgroundColor: theme.palette.primary.main,
-                            padding: '24px 16px',
+                            padding: '16px',
                         }}
                     >
                         <div>
