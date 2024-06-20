@@ -61,7 +61,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
     return (
         cy
-            .xpath("//p[contains(text(),'images containing')]", { timeout: 4000 })
+            .xpath("//p[contains(text(),'all containing')]", { timeout: 4000 })
             .should('be.visible')
             .parent()
             .parent()
