@@ -35,7 +35,7 @@ export const formatEnvToArray = (envPath: string) => {
         .map((line) => {
             const [key, ...value] = line.split('=')
             if (!value[0]) return `"${key}="`
-            return `"${key}=${value[0].replace(/"/g, '\\"')}"`
+            return `"${key}=${value.join('=').replace(/"/g, '\\"')}"`
         })
         .join(',')}]`
 }

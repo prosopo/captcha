@@ -36,7 +36,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
                 logger.info(formattedEnv)
 
                 if (parsedArgs.write) {
-                    const writePath = path.resolve(__dirname, parsedArgs.write)
+                    const writePath = path.resolve(parsedArgs.write)
                     fs.writeFileSync(writePath, formattedEnv)
                     logger.info(`Formatted env written to ${writePath}`)
                 }
