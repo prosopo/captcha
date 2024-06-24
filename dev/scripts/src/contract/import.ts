@@ -48,7 +48,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             context: { error: `Path to ABIs does not exist: ${pathToAbis}` },
         })
     await exec(`mkdir -p ${pathToOutput}`)
-    const cmd = `npx typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
+    const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
     const name = path.basename(pathToAbis)
     // copy the metadata
