@@ -11,40 +11,39 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { handleEventReturn } from '@prosopo/typechain-types'
-import type { ContractPromise } from '@polkadot/api-contract'
+import {handleEventReturn} from "@prosopo/typechain-types";
+import type {ContractPromise} from "@polkadot/api-contract";
 
 export function getTypeDescription(id: number | string, types: any): any {
-    return types[id]
+	return types[id];
 }
 
 export function getEventTypeDescription(name: string, types: any): any {
-    return types[name]
+	return types[name];
 }
 
 export function decodeEvents(events: any[], contract: ContractPromise, types: any): any[] {
-    return events
-        .filter((record: any) => {
-            const { event } = record
+	return events.filter((record: any) => {
+		const { event } = record;
 
-            const [address, data] = record.event.data
+		const [address, data] = record.event.data;
 
-            return event.method == 'ContractEmitted' && address.toString() === contract.address.toString()
-        })
-        .map((record: any) => {
-            const { args, event } = contract.abi.decodeEvent(record)
+		return event.method == 'ContractEmitted' && address.toString() === contract.address.toString();
+	}).map((record: any) => {
 
-            const _event: Record<string, any> = {}
+		const {args, event} = contract.abi.decodeEvent(record);
 
-            for (let i = 0; i < args.length; i++) {
-                _event[event.args[i]!.name] = args[i]!.toJSON()
-            }
+		const _event: Record < string, any > = {};
 
-            handleEventReturn(_event, getEventTypeDescription(event.identifier.toString(), types))
+		for (let i = 0; i < args.length; i++) {
+			_event[event.args[i]!.name] = args[i]!.toJSON();
+		}
 
-            return {
-                name: event.identifier.toString(),
-                args: _event,
-            }
-        })
+		handleEventReturn(_event, getEventTypeDescription(event.identifier.toString(), types));
+
+		return {
+			name: event.identifier.toString(),
+			args: _event,
+		};
+	});
 }
