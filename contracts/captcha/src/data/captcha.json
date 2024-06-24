@@ -23,6 +23,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
+    "6": { "name": "Mapping", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
     "7": {
         "name": "AccountId",
         "body": "string | number[]",
@@ -31,6 +32,66 @@
         "isConvertable": false
     },
     "8": {
+        "name": "Provider",
+        "body": {
+            "status": {
+                "name": "GovernanceStatus",
+                "body": { "Active": null, "Inactive": null },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            },
+            "balance": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
+            "fee": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
+            "payee": {
+                "name": "Payee",
+                "body": { "Provider": null, "Dapp": null },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            },
+            "url": {
+                "name": "Array",
+                "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            },
+            "datasetId": {
+                "name": "Hash",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "datasetIdContent": {
+                "name": "Hash",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            }
+        },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "9": {
+        "name": "GovernanceStatus",
+        "body": { "Active": null, "Inactive": null },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "10": {
+        "name": "Payee",
+        "body": { "Provider": null, "Dapp": null },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "15": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
+    "17": {
         "name": "Array",
         "body": {
             "0": {
@@ -45,7 +106,122 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "9": {
+    "18": { "name": "Mapping", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "22": { "name": "Mapping", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "25": { "name": "Mapping", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "26": {
+        "name": "Dapp",
+        "body": {
+            "status": {
+                "name": "GovernanceStatus",
+                "body": { "Active": null, "Inactive": null },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            },
+            "balance": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
+            "owner": {
+                "name": "AccountId",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "payee": {
+                "name": "DappPayee",
+                "body": { "Provider": null, "Dapp": null, "Any": null },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            }
+        },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "27": {
+        "name": "DappPayee",
+        "body": { "Provider": null, "Dapp": null, "Any": null },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "30": { "name": "Lazy", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "33": { "name": "Mapping", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "34": {
+        "name": "Commit",
+        "body": {
+            "id": {
+                "name": "Hash",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "userAccount": {
+                "name": "AccountId",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "datasetId": {
+                "name": "Hash",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "status": {
+                "name": "CaptchaStatus",
+                "body": { "Pending": null, "Approved": null, "Disapproved": null },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            },
+            "dappContract": {
+                "name": "AccountId",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "providerAccount": {
+                "name": "AccountId",
+                "body": "string | number[]",
+                "isResult": false,
+                "isPrimitive": true,
+                "isConvertable": false
+            },
+            "requestedAt": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
+            "completedAt": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
+            "userSignature": {
+                "name": "Array",
+                "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            }
+        },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "35": {
+        "name": "CaptchaStatus",
+        "body": { "Pending": null, "Approved": null, "Disapproved": null },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "36": {
+        "name": "Array",
+        "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "39": {
         "name": "Array",
         "body": {
             "0": {
@@ -60,7 +236,32 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "10": {
+    "40": { "name": "Mapping", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "41": {
+        "name": "User",
+        "body": {
+            "history": {
+                "name": "Array",
+                "body": {
+                    "0": {
+                        "name": "Hash",
+                        "body": "string | number[]",
+                        "isResult": false,
+                        "isPrimitive": true,
+                        "isConvertable": false
+                    }
+                },
+                "isResult": false,
+                "isPrimitive": false,
+                "isConvertable": false
+            }
+        },
+        "isResult": false,
+        "isPrimitive": false,
+        "isConvertable": false
+    },
+    "44": { "name": "Lazy", "body": {}, "isResult": false, "isPrimitive": false, "isConvertable": false },
+    "48": {
         "name": "Result<Result<null, Error, LangError",
         "body": {
             "ok": {
@@ -124,7 +325,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "11": {
+    "49": {
         "name": "Result<null, Error",
         "body": {
             "ok": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -173,8 +374,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "12": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
-    "13": {
+    "50": {
         "name": "Error",
         "body": {
             "NotAuthorised": null,
@@ -214,14 +414,14 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "14": {
+    "51": {
         "name": "LangError",
         "body": { "CouldNotReadInput": null },
         "isResult": false,
         "isPrimitive": false,
         "isConvertable": false
     },
-    "15": {
+    "52": {
         "name": "Result<null, LangError",
         "body": {
             "ok": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -237,7 +437,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "16": {
+    "53": {
         "name": "Result<Array, LangError",
         "body": {
             "ok": {
@@ -259,14 +459,14 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "17": {
+    "54": {
         "name": "Array",
         "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
         "isResult": false,
         "isPrimitive": false,
         "isConvertable": false
     },
-    "18": {
+    "55": {
         "name": "Result<AccountId, LangError",
         "body": {
             "ok": {
@@ -288,7 +488,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "19": {
+    "56": {
         "name": "Result<Array, LangError",
         "body": {
             "ok": {
@@ -318,7 +518,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "20": {
+    "57": {
         "name": "Array",
         "body": {
             "0": {
@@ -333,14 +533,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "21": {
-        "name": "Payee",
-        "body": { "Provider": null, "Dapp": null },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "22": {
+    "58": {
         "name": "Result<Array, LangError",
         "body": {
             "ok": {
@@ -370,7 +563,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "23": {
+    "59": {
         "name": "Array",
         "body": {
             "0": {
@@ -385,14 +578,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "24": {
-        "name": "DappPayee",
-        "body": { "Provider": null, "Dapp": null, "Any": null },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "25": {
+    "60": {
         "name": "Result<Array, LangError",
         "body": {
             "ok": {
@@ -422,7 +608,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "26": {
+    "61": {
         "name": "Array",
         "body": {
             "0": {
@@ -437,14 +623,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "27": {
-        "name": "GovernanceStatus",
-        "body": { "Active": null, "Inactive": null },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "28": {
+    "62": {
         "name": "Result<ReturnNumber, LangError",
         "body": {
             "ok": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
@@ -460,7 +639,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "29": {
+    "63": {
         "name": "Result<number, LangError",
         "body": {
             "ok": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -476,7 +655,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "30": {
+    "64": {
         "name": "Result<number, LangError",
         "body": {
             "ok": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -492,8 +671,8 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "31": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
-    "32": {
+    "65": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
+    "66": {
         "name": "Result<Result<Provider, Error, LangError",
         "body": {
             "ok": {
@@ -613,7 +792,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "33": {
+    "67": {
         "name": "Result<Provider, Error",
         "body": {
             "ok": {
@@ -713,52 +892,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "34": {
-        "name": "Provider",
-        "body": {
-            "status": {
-                "name": "GovernanceStatus",
-                "body": { "Active": null, "Inactive": null },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "balance": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
-            "fee": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
-            "payee": {
-                "name": "Payee",
-                "body": { "Provider": null, "Dapp": null },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "url": {
-                "name": "Array",
-                "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "datasetId": {
-                "name": "Hash",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "datasetIdContent": {
-                "name": "Hash",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            }
-        },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "35": {
+    "68": {
         "name": "Result<Result<Dapp, Error, LangError",
         "body": {
             "ok": {
@@ -856,7 +990,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "36": {
+    "69": {
         "name": "Result<Dapp, Error",
         "body": {
             "ok": {
@@ -939,37 +1073,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "37": {
-        "name": "Dapp",
-        "body": {
-            "status": {
-                "name": "GovernanceStatus",
-                "body": { "Active": null, "Inactive": null },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "balance": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
-            "owner": {
-                "name": "AccountId",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "payee": {
-                "name": "DappPayee",
-                "body": { "Provider": null, "Dapp": null, "Any": null },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            }
-        },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "38": {
+    "70": {
         "name": "Result<Result<UserHistorySummary, Error, LangError",
         "body": {
             "ok": {
@@ -1058,7 +1162,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "39": {
+    "71": {
         "name": "Result<UserHistorySummary, Error",
         "body": {
             "ok": {
@@ -1117,7 +1221,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "40": {
+    "72": {
         "name": "UserHistorySummary",
         "body": {
             "correct": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -1128,80 +1232,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "41": {
-        "name": "Commit",
-        "body": {
-            "id": {
-                "name": "Hash",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "userAccount": {
-                "name": "AccountId",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "datasetId": {
-                "name": "Hash",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "status": {
-                "name": "CaptchaStatus",
-                "body": { "Pending": null, "Approved": null, "Disapproved": null },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            },
-            "dappContract": {
-                "name": "AccountId",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "providerAccount": {
-                "name": "AccountId",
-                "body": "string | number[]",
-                "isResult": false,
-                "isPrimitive": true,
-                "isConvertable": false
-            },
-            "requestedAt": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
-            "completedAt": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
-            "userSignature": {
-                "name": "Array",
-                "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            }
-        },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "42": {
-        "name": "CaptchaStatus",
-        "body": { "Pending": null, "Approved": null, "Disapproved": null },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "43": {
-        "name": "Array",
-        "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "44": {
+    "73": {
         "name": "Array",
         "body": {
             "0": {
@@ -1270,7 +1301,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "45": {
+    "74": {
         "name": "Result<Result<boolean, Error, LangError",
         "body": {
             "ok": {
@@ -1334,7 +1365,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "46": {
+    "75": {
         "name": "Result<boolean, Error",
         "body": {
             "ok": { "name": "boolean", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -1383,8 +1414,8 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "47": { "name": "boolean", "isResult": false, "isPrimitive": true, "isConvertable": false },
-    "48": {
+    "76": { "name": "boolean", "isResult": false, "isPrimitive": true, "isConvertable": false },
+    "77": {
         "name": "Result<Result<LastCorrectCaptcha, Error, LangError",
         "body": {
             "ok": {
@@ -1468,7 +1499,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "49": {
+    "78": {
         "name": "Result<LastCorrectCaptcha, Error",
         "body": {
             "ok": {
@@ -1532,7 +1563,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "50": {
+    "79": {
         "name": "LastCorrectCaptcha",
         "body": {
             "before": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -1548,7 +1579,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "51": {
+    "80": {
         "name": "Result<Result<User, Error, LangError",
         "body": {
             "ok": {
@@ -1634,7 +1665,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "52": {
+    "81": {
         "name": "Result<User, Error",
         "body": {
             "ok": {
@@ -1705,30 +1736,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "53": {
-        "name": "User",
-        "body": {
-            "history": {
-                "name": "Array",
-                "body": {
-                    "0": {
-                        "name": "Hash",
-                        "body": "string | number[]",
-                        "isResult": false,
-                        "isPrimitive": true,
-                        "isConvertable": false
-                    }
-                },
-                "isResult": false,
-                "isPrimitive": false,
-                "isConvertable": false
-            }
-        },
-        "isResult": false,
-        "isPrimitive": false,
-        "isConvertable": false
-    },
-    "54": {
+    "82": {
         "name": "Result<Result<Commit, Error, LangError",
         "body": {
             "ok": {
@@ -1867,7 +1875,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "55": {
+    "83": {
         "name": "Result<Commit, Error",
         "body": {
             "ok": {
@@ -1976,7 +1984,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "56": {
+    "84": {
         "name": "Result<Result<Array, Error, LangError",
         "body": {
             "ok": {
@@ -2109,7 +2117,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "57": {
+    "85": {
         "name": "Result<Array, Error",
         "body": {
             "ok": {
@@ -2222,7 +2230,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "58": {
+    "86": {
         "name": "Array",
         "body": {
             "0": {
@@ -2282,7 +2290,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "59": {
+    "87": {
         "name": "Result<Result<RandomProvider, Error, LangError",
         "body": {
             "ok": {
@@ -2428,7 +2436,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "60": {
+    "88": {
         "name": "Result<RandomProvider, Error",
         "body": {
             "ok": {
@@ -2549,7 +2557,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "61": {
+    "89": {
         "name": "RandomProvider",
         "body": {
             "providerAccount": {
@@ -2617,7 +2625,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "62": {
+    "90": {
         "name": "Result<Result<Array, Error, LangError",
         "body": {
             "ok": {
@@ -2695,7 +2703,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "63": {
+    "91": {
         "name": "Result<Array, Error",
         "body": {
             "ok": {
