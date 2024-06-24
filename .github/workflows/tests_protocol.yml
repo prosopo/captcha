@@ -89,7 +89,7 @@ jobs:
 
             - run: npm ci
 
-            - run: npm -w @prosopo/protocol run build
+            - run: npm -w @prosopo/protocol run build:all
 
             - name: Check typechain is up-to-date
               run: |

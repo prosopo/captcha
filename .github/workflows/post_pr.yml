@@ -78,9 +78,9 @@ jobs:
 
             - run: npm -w @prosopo/protocol run clippy
 
-            - run: npm -w @prosopo/protocol run build
+            - run: npm -w @prosopo/protocol run build:all
 
-            - run: npm -w @prosopo/protocol run test
+            - run: npm -w @prosopo/protocol run test:all
 
             # install cypress so we don't have to do that every time
             - name: Cypress install
