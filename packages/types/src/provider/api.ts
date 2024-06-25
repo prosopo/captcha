@@ -16,7 +16,20 @@ import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
-import { ZodTypeAny, array, input, number, object, output, string, infer as zInfer } from 'zod'
+import {
+    ZodDefault,
+    ZodNumber,
+    ZodObject,
+    ZodOptional,
+    ZodTypeAny,
+    array,
+    input,
+    number,
+    object,
+    output,
+    string,
+    infer as zInfer,
+} from 'zod'
 
 export enum ApiPaths {
     GetImageCaptchaChallenge = '/v1/prosopo/provider/captcha/image',
@@ -55,14 +68,38 @@ export const ProviderDefaultRateLimits = {
     [AdminApiPaths.ProviderUpdate]: { windowMs: 60000, limit: 5 },
 }
 
+type RateLimit = {
+    windowMs: number
+    limit: number
+}
+
 const RateLimitSchema = object({
     windowMs: number().optional().default(60000),
     limit: number().optional().default(60),
 })
 
+type RateLimitSchemaType = ZodDefault<
+    ZodObject<
+        {
+            windowMs: ZodDefault<ZodOptional<ZodNumber>>
+            limit: ZodDefault<ZodOptional<ZodNumber>>
+        },
+        'strip',
+        ZodTypeAny,
+        {
+            windowMs: number
+            limit: number
+        },
+        {
+            windowMs?: number | undefined
+            limit?: number | undefined
+        }
+    >
+>
+
 // Utility function to create Zod schemas with defaults
-const createRateLimitSchemaWithDefaults = (paths: Record<string, { windowMs: number; limit: number }>) => {
-    return Object.entries(paths).reduce(
+const createRateLimitSchemaWithDefaults = (paths: Record<string, RateLimit>) =>
+    Object.entries(paths).reduce(
         (schemas, [path, defaults]) => {
             schemas[path] = RateLimitSchema.default(() => ({
                 windowMs: defaults.windowMs,
@@ -70,9 +107,8 @@ const createRateLimitSchemaWithDefaults = (paths: Record<string, { windowMs: num
             }))
             return schemas
         },
-        {} as Record<string, ZodTypeAny>
+        {} as Record<string, RateLimitSchemaType>
     )
-}
 
 const apiRateLimitSchemas = createRateLimitSchemaWithDefaults(ProviderDefaultRateLimits)
 
