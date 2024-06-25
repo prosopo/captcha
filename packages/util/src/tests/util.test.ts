@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { flatten } from '../util.js'
+import { flattenObject } from '../util.js'
 
 describe('util', () => {
     test('flatten obj', () => {
@@ -24,7 +24,7 @@ describe('util', () => {
             },
             d: 2,
         }
-        expect(flatten(obj)).to.deep.equal({
+        expect(flattenObject(obj)).to.deep.equal({
             'a.b.c': 1,
             d: 2,
         })
