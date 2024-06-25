@@ -9,6 +9,8 @@
         "npm": ">=9"
     },
     "scripts": {
+        "build": "echo 'run npm run build:all' to build contracts/crates",
+        "test": "echo 'run npm run test:all' to test contracts/crates",
         "docker": "f() { if [ \"$CI\" = \"true\" ]; then FLAGS=''; else FLAGS='-it'; fi ; mkdir -p cargo-cache && docker run --rm $FLAGS -u $(id -u):$(id -g) --cpu-quota=-1 -v $PWD:/src -v $PWD/cargo-cache:/usr/local/cargo/registry prosopo/cargo-contract:4.1.1 \"export RUST_BACKTRACE=1; $@\" ;}; f",
         "build:contract": "f() { npm run docker -- \"cd contracts/$1 && cargo contract build --release\" ;}; f",
         "build:contract:dev": "f() { npm run docker -- \"cd contracts/$1 && cargo contract build\" ;}; f",
