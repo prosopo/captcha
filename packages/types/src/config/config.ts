@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ApiPathRateLimits, ProviderDefaultRateLimits } from '../provider/index.js'
 import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
 import { input } from 'zod'
 import { literal } from 'zod'
@@ -23,7 +24,6 @@ import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
 import z, { boolean } from 'zod'
-import { ApiPathRateLimits, ProviderDefaultRateLimits } from '../provider/index.js'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 

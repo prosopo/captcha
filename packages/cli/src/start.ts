@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CombinedApiPaths } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
@@ -21,7 +22,6 @@ import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter, storeCaptchasEx
 import cors from 'cors'
 import express from 'express'
 import getConfig from './prosopo.config.js'
-import { CombinedApiPaths } from '@prosopo/types'
 import rateLimit from 'express-rate-limit'
 
 function startApi(env: ProviderEnvironment, admin = false): Server {

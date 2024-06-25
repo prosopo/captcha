@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import {
-    AdminApiPaths,
-    ApiPaths,
     BatchCommitConfigSchema,
     DatabaseTypes,
     EnvironmentTypesSchema,
