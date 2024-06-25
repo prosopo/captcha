@@ -13,6 +13,16 @@
 // limitations under the License.
 
 import { ApiPathRateLimits, ProviderDefaultRateLimits } from '../provider/index.js'
+import {
+    DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
+    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
+    DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
+    DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
+    DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
+    DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
+    DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+    DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from './timeouts.js'
 import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
 import { input } from 'zod'
 import { literal } from 'zod'
@@ -24,16 +34,6 @@ import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
 import z, { boolean } from 'zod'
-import {
-    DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
-    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
-    DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
-    DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
-    DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
-    DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
-    DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
-    DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-} from './timeouts.js'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 
