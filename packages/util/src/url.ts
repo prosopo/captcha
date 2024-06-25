@@ -18,12 +18,13 @@ export const getURLProtocol = (url: URL) => {
     return 'https'
 }
 
+export const URLDomainRegex = /^(?:https?:\/\/)?(?:[^@/\n]+@)?(?:www\.)?([^:/\n]+)/
+
 /**
  * Extracts domain from a URL
  * @param domains
  */
 export const getDomain = (domains: string) => {
-    const domainRegex = /^(?:https?:\/\/)?(?:[^@/\n]+@)?(?:www\.)?([^:/\n]+)/
-    const match = domains.match(domainRegex)
+    const match = domains.match(URLDomainRegex)
     return match ? match[1] : ''
 }
