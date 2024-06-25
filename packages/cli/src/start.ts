@@ -43,8 +43,7 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     const rateLimits = env.config.rateLimits
     for (const [path, limit] of Object.entries(rateLimits)) {
         const enumPath = path as CombinedApiPaths
-        const limiter = rateLimit(limit)
-        apiApp.use(enumPath, limiter)
+        apiApp.use(enumPath, rateLimit(limit))
     }
 
     return apiApp.listen(apiPort, () => {

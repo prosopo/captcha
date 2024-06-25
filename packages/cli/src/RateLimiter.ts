@@ -1,25 +1,4 @@
-import { RateLimiterMemory } from 'rate-limiter-flexible'
-import { Request, Response, NextFunction, Express } from 'express'
 import { AdminApiPaths, ApiPaths } from '@prosopo/types'
-
-export const rateLimiter = (key: string, windowMs: number, max: number) => {
-    const limiter = new RateLimiterMemory({
-        keyPrefix: key,
-        points: max, // Number of points
-        duration: windowMs / 1000, // Per duration in seconds
-    })
-
-    return (req: Request, res: Response, next: NextFunction) => {
-        limiter
-            .consume(req.ip || '')
-            .then(() => {
-                next()
-            })
-            .catch(() => {
-                res.status(429).send('Too Many Requests')
-            })
-    }
-}
 
 export const getRateLimitConfig = () => {
     return {
