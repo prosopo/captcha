@@ -21,6 +21,8 @@ import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter, storeCaptchasEx
 import cors from 'cors'
 import express from 'express'
 import getConfig from './prosopo.config.js'
+import { CombinedApiPaths } from '@prosopo/types'
+import rateLimit from 'express-rate-limit'
 
 function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info(`Starting Prosopo API`)
@@ -38,9 +40,12 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     }
 
     // Rate limiting
-    env.config.rateLimits.forEach((rateLimit) => {
-        apiApp.use(rateLimit)
-    })
+    const rateLimits = env.config.rateLimits
+    for (const [path, limit] of Object.entries(rateLimits)) {
+        const enumPath = path as CombinedApiPaths
+        const limiter = rateLimit(limit)
+        apiApp.use(enumPath, limiter)
+    }
 
     return apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)

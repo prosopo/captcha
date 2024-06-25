@@ -51,6 +51,8 @@ export enum AdminApiPaths {
     ProviderUpdate = '/v1/prosopo/provider/admin/update',
 }
 
+export type CombinedApiPaths = ApiPaths | AdminApiPaths
+
 export const ProviderDefaultRateLimits = {
     [ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
     [ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
@@ -73,46 +75,29 @@ type RateLimit = {
     limit: number
 }
 
-const RateLimitSchema = object({
-    windowMs: number().optional().default(60000),
-    limit: number().optional().default(60),
-})
-
-type RateLimitSchemaType = ZodDefault<
-    ZodObject<
-        {
-            windowMs: ZodDefault<ZodOptional<ZodNumber>>
-            limit: ZodDefault<ZodOptional<ZodNumber>>
-        },
-        'strip',
-        ZodTypeAny,
-        {
-            windowMs: number
-            limit: number
-        },
-        {
-            windowMs?: number | undefined
-            limit?: number | undefined
-        }
-    >
->
+type RateLimitSchemaType = ZodObject<{
+    windowMs: ZodDefault<ZodOptional<ZodNumber>>
+    limit: ZodDefault<ZodOptional<ZodNumber>>
+}>
 
 // Utility function to create Zod schemas with defaults
-const createRateLimitSchemaWithDefaults = (paths: Record<string, RateLimit>) =>
-    Object.entries(paths).reduce(
-        (schemas, [path, defaults]) => {
-            schemas[path] = RateLimitSchema.default(() => ({
-                windowMs: defaults.windowMs,
-                limit: defaults.limit,
-            }))
-            return schemas
-        },
-        {} as Record<string, RateLimitSchemaType>
+const createRateLimitSchemaWithDefaults = (paths: Record<CombinedApiPaths, RateLimit>) =>
+    object(
+        Object.entries(paths).reduce(
+            (schemas, [path, defaults]) => {
+                const enumPath = path as CombinedApiPaths
+                schemas[enumPath] = object({
+                    windowMs: number().optional().default(defaults.windowMs),
+                    limit: number().optional().default(defaults.limit),
+                })
+
+                return schemas
+            },
+            {} as Record<CombinedApiPaths, RateLimitSchemaType>
+        )
     )
 
-const apiRateLimitSchemas = createRateLimitSchemaWithDefaults(ProviderDefaultRateLimits)
-
-export const ApiPathRateLimits = object(apiRateLimitSchemas)
+export const ApiPathRateLimits = createRateLimitSchemaWithDefaults(ProviderDefaultRateLimits)
 
 export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]
