@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ApiParams } from '../api/params.js'
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
-import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/timeouts.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import {
