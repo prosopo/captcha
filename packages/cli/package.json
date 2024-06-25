@@ -32,7 +32,6 @@
     },
     "dependencies": {
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/types": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
         "@prosopo/captcha-contract": "1.0.2",
@@ -46,7 +45,6 @@
         "cron-parser": "^4.9.0",
         "dotenv": "^16.0.1",
         "express-rate-limit": "^7.3.1",
-        "rate-limiter-flexible": "^5.0.3",
         "yargs": "^17.7.2",
         "zod": "^3.22.4"
     },
