@@ -16,7 +16,7 @@ import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/index.js'
 import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
-import { array, input, number, object, output, string, infer as zInfer } from 'zod'
+import { ZodTypeAny, array, input, number, object, output, string, infer as zInfer } from 'zod'
 
 export enum ApiPaths {
     GetImageCaptchaChallenge = '/v1/prosopo/provider/captcha/image',
@@ -37,6 +37,46 @@ export enum AdminApiPaths {
     ProviderDeregister = '/v1/prosopo/provider/admin/deregister',
     ProviderUpdate = '/v1/prosopo/provider/admin/update',
 }
+
+export const ProviderDefaultRateLimits = {
+    [ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
+    [ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.VerifyImageCaptchaSolutionUser]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
+    [ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
+    [AdminApiPaths.BatchCommit]: { windowMs: 60000, limit: 5 },
+    [AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
+    [AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
+    [AdminApiPaths.ProviderUpdate]: { windowMs: 60000, limit: 5 },
+}
+
+const RateLimitSchema = object({
+    windowMs: number().optional().default(60000),
+    limit: number().optional().default(60),
+})
+
+// Utility function to create Zod schemas with defaults
+const createRateLimitSchemaWithDefaults = (paths: Record<string, { windowMs: number; limit: number }>) => {
+    return Object.entries(paths).reduce(
+        (schemas, [path, defaults]) => {
+            schemas[path] = RateLimitSchema.default(() => ({
+                windowMs: defaults.windowMs,
+                limit: defaults.limit,
+            }))
+            return schemas
+        },
+        {} as Record<string, ZodTypeAny>
+    )
+}
+
+const apiRateLimitSchemas = createRateLimitSchemaWithDefaults(ProviderDefaultRateLimits)
+
+export const ApiPathRateLimits = object(apiRateLimitSchemas)
 
 export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]

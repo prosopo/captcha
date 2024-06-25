@@ -37,6 +37,11 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
         apiApp.use(prosopoAdminRouter(env))
     }
 
+    // Rate limiting
+    env.config.rateLimits.forEach((rateLimit) => {
+        apiApp.use(rateLimit)
+    })
+
     return apiApp.listen(apiPort, () => {
         env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
     })
@@ -59,6 +64,8 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
         env = new ProviderEnvironment(config, pair)
     }
     await env.isReady()
+
+    console.log(env.config.rateLimits)
 
     // Start the scheduled job
     if (env.pair) {

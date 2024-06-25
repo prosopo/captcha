@@ -23,6 +23,7 @@ import { union } from 'zod'
 import { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
 import z, { boolean } from 'zod'
+import { ApiPathRateLimits, ProviderDefaultRateLimits } from '../provider/index.js'
 
 const LogLevel = zEnum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'log'])
 
@@ -252,6 +253,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         server: ProsopoImageServerConfigSchema,
         mongoEventsUri: string().optional(),
         mongoCaptchaUri: string().optional(),
+        rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
     })
 )
 

@@ -45,18 +45,19 @@
         "cors": "^2.8.5",
         "cron-parser": "^4.9.0",
         "dotenv": "^16.0.1",
+        "rate-limiter-flexible": "^5.0.3",
         "yargs": "^17.7.2",
         "zod": "^3.22.4"
     },
     "devDependencies": {
-        "es-main": "^1.2.0",
-        "express": "^4.18.2",
-        "vite": "^5.1.7",
-        "vitest": "^1.3.1",
         "@prosopo/config": "1.0.2",
         "@types/cors": "^2.8.14",
+        "es-main": "^1.2.0",
+        "express": "^4.18.2",
         "tslib": "2.6.2",
-        "typescript": "5.1.6"
+        "typescript": "5.1.6",
+        "vite": "^5.1.7",
+        "vitest": "^1.3.1"
     },
     "author": "Prosopo",
     "license": "Apache-2.0",

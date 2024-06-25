@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import {
+    AdminApiPaths,
+    ApiPaths,
     BatchCommitConfigSchema,
     DatabaseTypes,
     EnvironmentTypesSchema,
@@ -26,6 +28,8 @@ import {
 } from '@prosopo/types'
 import { getAddress, getPassword, getSecret } from './process.env.js'
 import { getLogLevel } from '@prosopo/common'
+import { g } from 'vitest/dist/suite-IbNSsUWN.js'
+import { getRateLimitConfig } from './RateLimiter.js'
 
 function getMongoURI(): string {
     const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || 'mongodb'
@@ -83,5 +87,6 @@ export default function getConfig(
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true',
         mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || '',
+        rateLimits: getRateLimitConfig(),
     } as ProsopoConfigInput)
 }
