@@ -28,7 +28,6 @@ import {
 } from '@prosopo/types'
 import { getAddress, getPassword, getSecret } from './process.env.js'
 import { getLogLevel } from '@prosopo/common'
-import { g } from 'vitest/dist/suite-IbNSsUWN.js'
 import { getRateLimitConfig } from './RateLimiter.js'
 
 function getMongoURI(): string {
