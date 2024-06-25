@@ -1222,7 +1222,7 @@ pub mod captcha {
             Ok(provider_accounts)
         }
 
-        /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
+        /// Get a random number from 0 to len - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
         pub fn get_random_number(
             &self,
