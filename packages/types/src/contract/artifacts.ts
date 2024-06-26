@@ -109,10 +109,10 @@ export const AbiTypeSpec = z.object({
     id: z.number(),
     type: z.object({
         def: z.object({
-            composite: z.union([z
+            composite: z
                 .object({
-                    fields: z.array(AbiFieldSpec),
-                }), z.object({})])
+                    fields: z.array(AbiFieldSpec).optional(), // some composite objects have no fields
+                })
                 .optional(),
             variant: z
                 .object({
