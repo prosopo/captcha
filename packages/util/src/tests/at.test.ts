@@ -42,6 +42,12 @@ describe('at', () => {
 
     })
 
+    test('infinite index', () => {
+        expect(() => at([1, 2, 3], Infinity)).to.throw()
+        expect(() => at([1, 2, 3], -Infinity)).to.throw()
+        expect(() => at([1, 2, 3], NaN)).to.throw()
+    })
+
     test('compatible with string', () => {
         expect(at('abc', 0)).to.equal('a')
         expect(at('abc', 1)).to.equal('b')
