@@ -30,6 +30,10 @@ export function at<T extends readonly unknown[]>(items: T | string, index: numbe
         throw new Error('Array is empty')
     }
 
+    if (!isFinite(index)) {
+        throw new Error(`Index ${index} is not a finite number`)
+    }
+
     if (!options?.noWrap) {
         if (index > 0) {
             index = index % items.length
