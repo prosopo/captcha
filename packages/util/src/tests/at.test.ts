@@ -34,9 +34,12 @@ describe('at', () => {
         const a5: string = at('abc', 0)
         const a10: string = at('abc', 0, { optional: false })
         const a11: string | undefined = at('abc', 0, { optional: true })
-        const a12: undefined = at([undefined, undefined, undefined], 0)
+        const a12: never = at([undefined, undefined, undefined], 0)
         const a13: undefined = at([undefined, undefined, undefined], 0, { optional: true })
         const a14: undefined = at([undefined, undefined, undefined], 0, { optional: false })
+
+        const a15: string = at(['a', 'b', 'c'] as readonly string[], 0)
+
     })
 
     test('compatible with string', () => {
