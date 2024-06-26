@@ -15,10 +15,6 @@ import type BN from 'bn.js';
 
 export type Hash = string | number[]
 
-export type Mapping = {
-	
-}
-
 export type AccountId = string | number[]
 
 export type Provider = {
@@ -41,18 +37,6 @@ export enum Payee {
 	dapp = 'Dapp'
 }
 
-export type Mapping = {
-	
-}
-
-export type Mapping = {
-	
-}
-
-export type Mapping = {
-	
-}
-
 export type Dapp = {
 	status: GovernanceStatus,
 	balance: (string | number | BN),
@@ -64,14 +48,6 @@ export enum DappPayee {
 	provider = 'Provider',
 	dapp = 'Dapp',
 	any = 'Any'
-}
-
-export type Lazy = {
-	
-}
-
-export type Mapping = {
-	
 }
 
 export type Commit = {
@@ -92,16 +68,8 @@ export enum CaptchaStatus {
 	disapproved = 'Disapproved'
 }
 
-export type Mapping = {
-	
-}
-
 export type User = {
 	history: Array<Hash>
-}
-
-export type Lazy = {
-	
 }
 
 export enum Error {
