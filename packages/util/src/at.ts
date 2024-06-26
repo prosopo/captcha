@@ -24,7 +24,11 @@ export function at<T extends readonly unknown[]>(
     index: number,
     options: AtOptions & { optional: true }
 ): T[number] | undefined
-export function at<T extends readonly unknown[]>(items: T, index: number, options?: AtOptions): Exclude<T[number], undefined>
+export function at<T extends readonly unknown[]>(
+    items: T,
+    index: number,
+    options?: AtOptions
+): Exclude<T[number], undefined>
 export function at<T extends readonly unknown[]>(items: T | string, index: number, options?: AtOptions): T[number] {
     if (items.length === 0) {
         throw new Error('Array is empty')

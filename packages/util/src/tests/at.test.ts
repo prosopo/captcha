@@ -39,7 +39,6 @@ describe('at', () => {
         const a14: undefined = at([undefined, undefined, undefined], 0, { optional: false })
 
         const a15: string = at(['a', 'b', 'c'] as readonly string[], 0)
-
     })
 
     test('infinite index', () => {
