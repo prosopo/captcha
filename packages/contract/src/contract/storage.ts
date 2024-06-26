@@ -54,11 +54,7 @@ export const getPrimitiveTypes = function (abiJson: AbiMetadata): PrimitiveTypes
     })
 
     types.forEach((type) => {
-        const item = type.type.def.composite?.fields[0]
-        if (item === undefined) {
-            throw new Error('Invalid type definition')
-        }
-        primitiveTypes[type.id] = type.type.def.primitive || item.typeName || ''
+        primitiveTypes[type.id] = type.type.def.primitive || ''
     })
     return primitiveTypes
 }
