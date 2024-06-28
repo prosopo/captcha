@@ -24,6 +24,7 @@ import {
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ProcaptchaInvisible } from '@prosopo/procaptcha-invisible'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
 import { at } from '@prosopo/util'
 import { createRoot } from 'react-dom/client'
@@ -243,11 +244,14 @@ const renderLogic = (
         setValidChallengeLength(renderOptions, element, config)
 
         switch (renderOptions?.captchaType) {
-            case 'pow':
+            case FeaturesEnum.Pow:
                 createRoot(element).render(<ProcaptchaPow config={config} callbacks={callbacks} />)
                 break
-            case 'frictionless':
+            case FeaturesEnum.Frictionless:
                 createRoot(element).render(<ProcaptchaFrictionless config={config} callbacks={callbacks} />)
+                break
+            case FeaturesEnum.Invisible:
+                createRoot(element).render(<ProcaptchaInvisible config={config} callbacks={callbacks} />)
                 break
             default:
                 createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
