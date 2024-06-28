@@ -15,6 +15,7 @@ export enum FeaturesEnum {
     Image = 'image',
     Pow = 'pow',
     Frictionless = 'frictionless',
+    Invisible = 'invisible',
 }
 
 export type Features = `${FeaturesEnum}`
