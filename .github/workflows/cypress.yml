@@ -120,10 +120,6 @@ jobs:
             # by the cypress tests to find the elements they need to interact with
             - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:dev
 
-            # Needs concurrently to avoid vite hanging forever https://github.com/vitejs/vite/discussions/8745
-            - name: Install concurrently and cypress
-              run: npm i concurrently cypress
-
             - name: Run the cypress tests on client-example
               run: |
                   npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
