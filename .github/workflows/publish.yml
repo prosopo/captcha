@@ -5,9 +5,6 @@ on:
         # only on the main branch
         branches:
             - main
-        paths:
-            # only when the package.json file changes
-            - 'package.json'
 
 jobs:
     publish:
