@@ -96,6 +96,11 @@ jobs:
             - run: npm run build:all
             - run: npm run build:all:cjs
 
+            # bundle procaptcha-bundle using webpack
+            - name: Webpack Bundle procaptcha-bundle
+              run: |
+                  npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
+
             - name: Setup env
               run: |
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
