@@ -1,11 +1,11 @@
-name: clippy
+name: protocol_clippy
 
 on:
     pull_request:
         branches: [main, dev, release/*]
         paths:
             - 'protocol/**'
-            - '.github/workflows/clippy.yml'
+            - '.github/workflows/protocol_clippy.yml'
     workflow_dispatch:
 
 concurrency:

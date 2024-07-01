@@ -1,11 +1,11 @@
-name: rustfmt
+name: protocol_tests
 
 on:
     pull_request:
         branches: [main, dev, release/*]
         paths:
             - 'protocol/**'
-            - '.github/workflows/rustfmt.yml'
+            - '.github/workflows/protocol_tests.yml'
     workflow_dispatch:
 
 concurrency:
@@ -14,8 +14,8 @@ concurrency:
 
 env:
     CARGO_TERM_COLOR: always
-    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
+    NODE_ENV: test
 
 jobs:
     check:
@@ -88,8 +88,13 @@ jobs:
 
             - run: npm ci
 
-            - name: Rust formatting check
+            - name: Build contracts
+              id: build
               run: |
                   cd protocol/dev
-                  npm run build
-                  npm run cli -- fmt --all --verbose --check --docker
+                  npm run cli -- build --docker --skip-env
+
+            - name: Test contracts
+              run: |
+                  cd protocol/dev
+                  RUST_BACKTRACE=1 npm run cli -- test --docker
