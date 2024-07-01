@@ -20,6 +20,7 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2 } from '@prosopo/account'
@@ -62,6 +63,13 @@ export const Manager = (
         window.clearTimeout(state.timeout)
         // then clear the timeout from the state
         updateState({ timeout: undefined })
+    }
+
+    const clearSuccessfulChallengeTimeout = () => {
+        // clear the timeout
+        window.clearTimeout(state.successfullChallengeTimeout)
+        // then clear the timeout from the state
+        updateState({ successfullChallengeTimeout: undefined })
     }
 
     const getConfig = () => {
@@ -128,6 +136,7 @@ export const Manager = (
     const resetState = () => {
         // clear timeout just in case a timer is still active (shouldn't be)
         clearTimeout()
+        clearSuccessfulChallengeTimeout()
         updateState(defaultState())
     }
 
@@ -214,18 +223,22 @@ export const Manager = (
                 isHuman: true,
                 loading: false,
             })
-            events.onHuman({
-                providerUrl,
-                [ApiParams.user]: getAccount().account.address,
-                [ApiParams.dapp]: getDappAccount(),
-                [ApiParams.challenge]: challenge.challenge,
-                [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
-            })
+            events.onHuman(
+                encodeProcaptchaOutput({
+                    [ApiParams.providerUrl]: providerUrl,
+                    [ApiParams.user]: getAccount().account.address,
+                    [ApiParams.dapp]: getDappAccount(),
+                    [ApiParams.challenge]: challenge.challenge,
+                    [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
+                    [ApiParams.nonce]: solution,
+                })
+            )
             setValidChallengeTimeout()
         }
     }
 
     return {
         start,
+        resetState,
     }
 }

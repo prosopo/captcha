@@ -83,7 +83,7 @@ const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
     }
 }
 
-const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
+export const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
     const u8Sig = hexToU8a(signature)
 
     if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {

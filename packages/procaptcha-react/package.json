@@ -1,13 +1,13 @@
 {
     "name": "@prosopo/procaptcha-react",
-    "version": "0.3.42",
+    "version": "1.0.2",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
     "type": "module",
     "sideEffects": false,
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "exports": {
@@ -23,9 +23,9 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose tsconfig.json",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -35,12 +35,12 @@
     ],
     "dependencies": {
         "@emotion/react": "^11.11.4",
-        "@prosopo/common": "0.3.42",
-        "@prosopo/procaptcha": "0.3.42",
-        "@prosopo/procaptcha-common": "0.3.42",
-        "@prosopo/types": "0.3.42",
-        "@prosopo/util": "0.3.42",
-        "@prosopo/web-components": "0.3.42",
+        "@prosopo/common": "1.0.2",
+        "@prosopo/procaptcha": "1.0.2",
+        "@prosopo/procaptcha-common": "1.0.2",
+        "@prosopo/types": "1.0.2",
+        "@prosopo/util": "1.0.2",
+        "@prosopo/web-components": "1.0.2",
         "react": "^18.3.1"
     },
     "overrides": {

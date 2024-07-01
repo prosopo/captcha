@@ -453,7 +453,7 @@ pub mod captcha {
             };
 
             // update the balance
-            new_provider.balance += self.env().transferred_value();
+            new_provider.balance = Math::add(new_provider.balance, self.env().transferred_value())?;
 
             // if the provider is
             // not deactivating
@@ -702,7 +702,7 @@ pub mod captcha {
             };
 
             // update the dapp funds
-            new_dapp.balance += self.env().transferred_value();
+            new_dapp.balance = Math::add(new_dapp.balance, self.env().transferred_value())?;
 
             // update the dapp status
             new_dapp.status =
@@ -880,9 +880,9 @@ pub mod captcha {
             for hash in history.iter() {
                 let result = self.commits.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
-                    summary.correct += 1;
+                    summary.correct = Math::add(summary.correct, 1)?;
                 } else if result.status == CaptchaStatus::Disapproved {
-                    summary.incorrect += 1;
+                    summary.incorrect = Math::add(summary.incorrect, 1)?;
                 } else {
                     return Err(Error::InvalidCaptchaStatus);
                 }
@@ -971,12 +971,12 @@ pub mod captcha {
             if provider.fee != 0 {
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
-                    dapp.balance -= fee;
-                    provider.balance += fee;
+                    dapp.balance = Math::sub(dapp.balance, fee)?;
+                    provider.balance = Math::add(provider.balance, fee)?;
                 }
                 if provider.payee == Payee::Dapp {
-                    provider.balance -= fee;
-                    dapp.balance += fee;
+                    provider.balance = Math::sub(provider.balance, fee)?;
+                    dapp.balance = Math::add(dapp.balance, fee)?;
                 }
                 self.providers.insert(provider_account, &provider);
                 self.dapps.insert(dapp_contract, &dapp);
@@ -1145,7 +1145,7 @@ pub mod captcha {
                     .unwrap_or_default();
 
                 // The max length of the active providers is the sum of the two
-                max += active_providers_secondary.len();
+                max = Math::add(max, active_providers_secondary.len())?;
 
                 // If the max is 0, then there are no active providers
                 if max == 0 {
@@ -1163,7 +1163,7 @@ pub mod captcha {
                 if index < active_providers_initial.len() as u128 {
                     active_providers = active_providers_initial;
                 } else {
-                    index -= active_providers_initial.len() as u128;
+                    index = Math::add(index, active_providers_initial.len() as u128)?;
                     active_providers = active_providers_secondary;
                 }
             } else {

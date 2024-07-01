@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { NetworkConfigSchema, NetworkNamesSchema, networks as getNetworks } from '@prosopo/types'
+import {
+    NetworkConfigSchema,
+    NetworkNamesSchema,
+    decodeProcaptchaOutput,
+    networks as getNetworks,
+} from '@prosopo/types'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { run as fundDapps } from '../contract/fundDapps.js'
@@ -22,6 +27,7 @@ import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
+import { isHex } from '@polkadot/util'
 import { setup } from '../setup/index.js'
 import { run as transferContract } from '../contract/transferContract.js'
 import { updateEnvFiles } from '../util/index.js'
@@ -98,7 +104,7 @@ export async function processArgs(args: string[]) {
             (yargs) =>
                 yargs.option('update_env', {
                     type: 'boolean',
-                    demand: false,
+                    demandOption: false,
                     desc: 'Update env files with the new contract address',
                     default: false,
                 }),
@@ -119,7 +125,7 @@ export async function processArgs(args: string[]) {
             'create_env_files',
             'Copies the env.xyz files to .env.xyz',
             (yargs) => yargs,
-            async (argv) => {
+            async () => {
                 const env = getEnv()
                 const scripts = getScriptsPkgDir()
                 await exec(`cp -v ${scripts}/env.${env} ${scripts}/.env.${env}`)
@@ -134,7 +140,7 @@ export async function processArgs(args: string[]) {
             builder: (yargs) =>
                 yargs.option('force', {
                     type: 'boolean',
-                    demand: false,
+                    demandOption: false,
                     desc: 'Force provider re-registration and dataset setup',
                 }),
 
@@ -150,12 +156,12 @@ export async function processArgs(args: string[]) {
                 yargs
                     .option('in', {
                         type: 'string',
-                        demand: true,
+                        demandOption: true,
                         desc: "The path to the contract's abi",
                     })
                     .option('out', {
                         type: 'string',
-                        demand: true,
+                        demandOption: true,
                         desc: 'The path to the output directory',
                     }),
             handler: async (argv) => {
@@ -166,7 +172,7 @@ export async function processArgs(args: string[]) {
             command: 'import_all_contracts',
             describe: 'Update all contracts into the contract package.',
             builder: (yargs) => yargs,
-            handler: async (argv) => {
+            handler: async () => {
                 const contracts = getContractNames()
                 for (const contract of contracts) {
                     const inDir = `${getProtocolDistDir()}/${contract}`
@@ -180,7 +186,7 @@ export async function processArgs(args: string[]) {
             command: 'fund_dapps',
             describe: 'Fund the dapps if they are unfunded',
             builder: (yargs) => yargs,
-            handler: async (argv) => {
+            handler: async () => {
                 const atlasUri = process.env._DEV_ONLY_ATLAS_URI
                 fundDapps(atlasUri)
                     .then((result) => {
@@ -251,9 +257,26 @@ export async function processArgs(args: string[]) {
         .command({
             command: 'version',
             describe: 'Set the version of packages',
-            builder: (yargs) => yargs.option('v', { type: 'string', demand: true }),
+            builder: (yargs) => yargs.option('v', { type: 'string', demandOption: true }),
             handler: async (argv) => {
                 await setVersion(String(argv.v))
+            },
+        })
+        .command({
+            command: 'token <tokenHex>',
+            describe: 'Decode a Procaptcha token to the JSON output format',
+            builder: (yargs) =>
+                yargs.positional('tokenHex', {
+                    describe: 'a Procaptcha token to decode',
+                    type: 'string',
+                    demandOption: true,
+                }),
+            handler: async (argv) => {
+                if (!isHex(argv.tokenHex)) {
+                    log.error('Token must be a hex string')
+                    process.exit(1)
+                }
+                log.info(decodeProcaptchaOutput(argv.tokenHex))
             },
         }).argv
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaWithProof } from '@prosopo/types'
+import { Properties } from 'csstype'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
@@ -36,6 +37,20 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
 
     const isTouchDevice = 'ontouchstart' in window
 
+    // Assumes a 3x3 grid, could be made more generic
+    const fullSpacing = `${theme.spacing.unit}px`
+    const halfSpacing = `${theme.spacing.half}px`
+    const paddingForImageColumns: { [key: number]: any } = {
+        0: { paddingLeft: 0, paddingRight: halfSpacing, paddingTop: halfSpacing, paddingBottom: halfSpacing },
+        1: { paddingLeft: halfSpacing, paddingRight: halfSpacing, paddingTop: halfSpacing, paddingBottom: halfSpacing },
+        2: { paddingLeft: halfSpacing, paddingRight: 0, paddingTop: halfSpacing, paddingBottom: halfSpacing },
+    }
+
+    const paddingForImageRows: { [key: number]: any } = {
+        0: { paddingTop: fullSpacing },
+        2: { paddingBottom: fullSpacing },
+    }
+
     return (
         <div
             style={{
@@ -52,26 +67,32 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
         >
             {items.map((item, index) => {
                 const hash = getHash(item)
+                const imageStyle: Properties<string | number, string> = {
+                    ...paddingForImageColumns[index % 3],
+                    ...paddingForImageRows[Math.floor(index / 3)],
+                    // enable the items in the grid to grow in width to use up excess space
+                    flexGrow: 1,
+                    // make the width of each item 1/3rd of the width overall, i.e. 3 columns
+                    flexBasis: '33.3333%',
+                    // include the padding / margin / border in the width
+                    boxSizing: 'border-box',
+                }
+                console.log('imageStyle index ', index, imageStyle)
                 return (
-                    <div
-                        style={{
-                            paddingTop: '4px',
-                            paddingLeft: '4px',
-                            // enable the items in the grid to grow in width to use up excess space
-                            flexGrow: 1,
-                            // make the width of each item 1/3rd of the width overall, i.e. 3 columns
-                            flexBasis: '33.3333%',
-                            // include the padding / margin / border in the width
-                            boxSizing: 'border-box',
-                        }}
-                        key={index}
-                    >
+                    <div style={imageStyle} key={index}>
                         <div
-                            style={{ cursor: 'pointer', height: '100%', width: '100%' }}
+                            style={{
+                                cursor: 'pointer',
+                                height: '100%',
+                                width: '100%',
+                                border: 1,
+                                borderStyle: 'solid',
+                                borderColor: theme.palette.grey[300],
+                            }}
                             onClick={isTouchDevice ? undefined : () => onClick(hash)}
                             onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
                         >
-                            <div style={{ border: 1, borderColor: theme.palette.grey[300] }}>
+                            <div>
                                 <img
                                     style={{
                                         width: '100%', // image should be full width / height of the item
@@ -138,6 +159,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                         aria-hidden="true"
                                         viewBox="0 0 24 24"
                                         data-testid="CheckIcon"
+                                        aria-label="Check icon"
                                     >
                                         <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
                                     </svg>

@@ -13,7 +13,6 @@ env.production
 env.development
 env.test
 .env.*
-webpack.*
 *.ipynb
 captchas_*.json
 data.json

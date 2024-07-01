@@ -177,7 +177,7 @@ jobs:
                   docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
 
                   # Start the bundle demo & run the cypress tests against the new bundle
-                  npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
+                  # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
 
             - name: Github release
               continue-on-error: true

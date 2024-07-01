@@ -58,6 +58,11 @@ const CaptchaComponent = ({
                     maxHeight: '100%',
                     display: 'flex',
                     flexDirection: 'column',
+                    border: '1px solid #dddddd',
+                    boxShadow: 'rgba(255, 255, 255, 0.2) 0px 0px 4px',
+                    borderRadius: '4px',
+                    padding: `${theme.spacing.unit}px`,
+                    backgroundColor: theme.palette.background.default,
                 }}
             >
                 <div
@@ -73,30 +78,46 @@ const CaptchaComponent = ({
                             display: 'flex',
                             alignItems: 'center',
                             width: '100%',
-                            backgroundColor: theme.palette.primary.main,
-                            padding: '24px 16px',
                         }}
                     >
-                        <p
+                        <div
                             style={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                lineHeight: 1.5,
+                                backgroundColor: theme.palette.primary.main,
+                                width: '100%',
                             }}
                         >
-                            {t('WIDGET.SELECT_ALL')}
-                            {': '}
-                        </p>
-                        <p
-                            style={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                textTransform: 'capitalize',
-                                lineHeight: 1.5,
-                            }}
-                        >
-                            {`${at(challenge.captchas, index).captcha.target}`}
-                        </p>
+                            <div
+                                style={{
+                                    paddingLeft: `${theme.spacing.half}px`,
+                                    paddingRight: `${theme.spacing.half}px`,
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        color: '#ffffff',
+                                        fontWeight: 700,
+                                        lineHeight: 1.5,
+                                    }}
+                                >
+                                    {t('WIDGET.SELECT_ALL')}
+                                    {':'}
+                                    &nbsp;
+                                    <span style={{ textTransform: 'capitalize' }}>
+                                        {`${at(challenge.captchas, index).captcha.target}`}
+                                    </span>
+                                </p>
+                                <p
+                                    style={{
+                                        color: '#ffffff',
+                                        fontWeight: 500,
+                                        lineHeight: 0.8,
+                                        fontSize: '0.8rem',
+                                    }}
+                                >
+                                    {t('WIDGET.IF_NONE_CLICK_NEXT')}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     <div {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
                         {captcha && (
@@ -119,14 +140,14 @@ const CaptchaComponent = ({
                     />
                     <div
                         style={{
-                            padding: '8px 16px',
+                            padding: `0 ${theme.spacing}px`,
                             display: 'flex',
                             width: '100%',
                         }}
                     ></div>
                     <div
                         style={{
-                            padding: '0 16px 16px',
+                            padding: `0 ${theme.spacing}px`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -138,13 +159,15 @@ const CaptchaComponent = ({
                             buttonType="cancel"
                             onClick={onCancel}
                             text={t('WIDGET.CANCEL')}
-                        ></Button>
+                            aria-label={t('WIDGET.CANCEL')}
+                        />
                         <Button
                             themeColor={themeColor}
                             buttonType="next"
                             text={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
                             onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
-                        ></Button>
+                            aria-label={index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                        />
                     </div>
                 </div>
             </div>
