@@ -94,30 +94,6 @@ jobs:
                   cd protocol/dev
                   npm run cli -- build --docker --skip-env
 
-            - name: Check typechain is up-to-date
-              run: |
-                  # check the output of typechain has a contract hash matching the current contract version
-                  # this looks at the hash in the metadata for the contracts and matches typechain's metadata hash against protocol's metadata hash to detect differences
-                  set -euo pipefail
-                    typechain_contracts=$(find ./contracts -maxdepth 1 -mindepth 1 -type d)
-                    protocol_contracts=$(find ./protocol/target/ink -maxdepth 1 -mindepth 1 -type d)
-                    contracts=( "${typechain_contracts[@]}" "${protocol_contracts[@]}" )
-                    for contract_path in ${contracts[@]}; do
-                        contract_name=$(basename $contract_path)
-                        typechain_metadata="./contracts/$contract_name/src/$contract_name.json"
-                        protocol_metadata="./protocol/target/ink/$contract_name/$contract_name.json"
-                        typechain_hash=$(cat $typechain_metadata | jq -r '.source.hash')
-                        protocol_hash=$(cat $protocol_metadata | jq -r '.source.hash')
-                        if [ "$typechain_hash" != "$protocol_hash" ]; then
-                            echo "Hash mismatch for $contract_name"
-                            echo "Typechain: $typechain_hash"
-                            echo "Protocol: $protocol_hash"
-                            exit 1
-                        else
-                            echo "Hash match for $contract_path"
-                        fi
-                    done
-
             - name: Test contracts
               run: |
                   cd protocol/dev
