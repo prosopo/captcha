@@ -101,6 +101,18 @@ jobs:
               run: |
                   npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
 
+            - name: Build JS bundle
+              run: |
+                  # Copy the rococo env file to production env file
+                  echo "Copying the rococo env to production env file in procaptcha-bundle"
+                  cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+
+                  # Navigate to the JS bundle directory and build
+                  echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                  cd packages/procaptcha-bundle
+
+                  NODE_ENV=production npm run bundle:prod
+
             - name: Setup env
               run: |
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
