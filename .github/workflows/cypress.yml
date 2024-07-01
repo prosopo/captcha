@@ -9,7 +9,7 @@ on:
             - 'demos/**'
             - 'dev/**'
             - 'contracts/**'
-            - '.github/workflows/tests.yml'
+            - '.github/workflows/cypress.yml'
     workflow_dispatch:
 
 concurrency:
