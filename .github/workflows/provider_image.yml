@@ -81,7 +81,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:

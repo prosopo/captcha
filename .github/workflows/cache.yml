@@ -4,7 +4,7 @@ name: post_pr
 # we do this because any branch can use caches built on dev, whereas caches built on other branches are only available to that branch and its children
 on:
     push:
-        branches: [main]
+        branches: [main, dev]
     workflow_dispatch:
 
 concurrency:
@@ -117,20 +117,19 @@ jobs:
                       protocol/target
                       node_modules
                       ~/.cache/Cypress
-                  key: project-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             # remove all but the latest cache, leaving only the cache we just saved
             - name: Cleanup caches
               if: always()
               run: |
                   set +e; gh extension install actions/gh-actions-cache; set -e
-                  REPO=${{ github.repository }}
                   echo "Fetching list of cache key"
-                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key project-cache-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
+                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R ${{ github.repository }} --key project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
                   echo caches to be removed:
                   echo ${cacheKeys}
                   set +e
                   for cacheKey in $cacheKeys
                   do
-                      gh actions-cache delete $cacheKey -R $REPO --confirm
+                      gh actions-cache delete $cacheKey -R ${{ github.repository }} --confirm
                   done
