@@ -4,7 +4,7 @@ on:
     pull_request:
         branches: [main, dev, release/*]
         paths:
-            - '**.rs'
+            - 'protocol/**'
             - '.github/workflows/clippy.yml'
     workflow_dispatch:
 
