@@ -136,7 +136,7 @@ export function getStorageKeyAndType(
         }
 
         const rootKeyReversed = reverseHexString(rootKey.slice(2))
-        const item = get<PortableType>(abi.registry.lookup.types, storage.layout.leaf.ty)
+        const item = at(abi.registry.lookup.types, parseInt(storage.layout.leaf.ty))
         return {
             storageType: item,
             storageKey: rootKeyReversed,
