@@ -105,7 +105,7 @@ jobs:
                   # find all package.json files, recursively
                   pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
                   # replace the version in all package.json files
-                  xargs -I % sh -c "cat % | jq '.version = \"${{ github.event.inputs.version }}\"' > %" <<< "$pkgJsons"
+                  xargs -I % sh -c "cat % | jq '.version = \"${{ github.event.inputs.version }}\"' > %.new && mv %.new %" <<< "$pkgJsons"
 
                   # find all Cargo.toml files
                   cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
