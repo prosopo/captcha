@@ -1,0 +1,115 @@
+# Check the version has been bumped before releasing
+
+name: release_version
+
+on:
+    pull_request:
+        branches: [release/*]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            - uses: actions/checkout@v3
+
+            # fail-fast step to check if the version has been bumped
+            # when running manually, there won't be a version line change, so we need to skip this step in that case
+            - name: Detect version bump
+              id: next_version
+              run: |
+
+                  # use git to look for differences in the root package.json between the before and after state
+                  # before and after git sha's are passed in as env vars by github
+                  diff=$(git show --pretty=format: --no-notes ${{ github.event.before }}..${{ github.event.after }} -- package.json | cat)
+                  echo "diff:"
+                  echo "$diff"
+                  echo ""
+
+                  # grep for the version line
+                  # next version will be the line added
+                  next=$(echo "$diff" | grep -e "\+\s*\"version\"")
+                  # previous version will be the line removed
+                  prev=$(echo "$diff" | grep -e "-\s*\"version\"")
+                  echo "version_changes:"
+                  echo "$version_changes"
+                  echo ""
+
+                  # if the version line has changed then we know there's been a version change. Not necessarily bumped up, though!
+                  # the next version will be whatever is currently in the package.json file
+                  # subsequent steps can choose whether the version has been bumped or not. All we know at this stage is the version has been changed, i.e. new_version != old_version, but we don't know whether new_version > old_version or new_version < old_version
+                  if [[ -n "$version_changes" ]]; then
+                    echo "version has changed"
+                  else
+                    echo "version has not changed"
+                    exit 1
+                  fi
+
+                  NEXT_VERSION=$(cat package.json | jq -r '.version' || echo "0.0.0")
+                  # split into major, minor, patch
+                  NEXT_MAJOR=$(echo $NEXT_VERSION | cut -d. -f1)
+                  NEXT_MINOR=$(echo $NEXT_VERSION | cut -d. -f2)
+                  NEXT_PATCH=$(echo $NEXT_VERSION | cut -d. -f3)
+                  echo "next_version=$NEXT_VERSION"
+                  echo "next_major=$MAJOR"
+                  echo "next_minor=$MINOR"
+                  echo "next_patch=$PATCH"
+
+                  # export the next version numbers
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+
+            - name: Check version has been bumped
+              run: |
+                  set -eu
+                  # get the previous version
+                  # break into major, minor, patch
+
+                  # get the current version
+                  # break into major, minor, patch
+
+                  # check if the current version is greater than the previous version
+
