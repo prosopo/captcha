@@ -4,7 +4,6 @@ name: auto_merge
 
 on:
     pull_request:
-        branches: [main, dev, release/*]
         types:
             - opened
             - reopened
