@@ -99,11 +99,19 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                   # make a new branch for the version changes
-                  git switch -c bump-version-${{ github.event.inputs.version }}
+                  git switch -c release/${{ github.event.inputs.version }}
 
-                  # make the version changes
-                  npm run version ${{ github.event.inputs.version }}
+                  set -eu
+                  # find all package.json files, recursively
+                  pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
+                  # replace the version in all package.json files
+                  xargs -I % sh -c "cat % | jq '.version = \"${{ github.event.inputs.version }}\"' > %" <<< "$pkgJsons"
 
+                  # find all Cargo.toml files
+                  cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
+                  # replace the first version line in all Cargo.toml files
+                  xargs -I % sh -c "sed -i '0,/version =/s/version =.*/version = \"${{ github.event.inputs.version }}\"/' %" <<< "$cargoTomls"
+                  
                   # rebuild typechain
                   npm run build:typechain
 
