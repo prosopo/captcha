@@ -1,3 +1,5 @@
+# Build a cache of build artifacts after PRs to speed up subsequent builds
+
 name: post_pr
 
 # on push to main, or manually triggered

@@ -1,3 +1,5 @@
+# Publish packages after a release
+
 name: publish
 
 on:

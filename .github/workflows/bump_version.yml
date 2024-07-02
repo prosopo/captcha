@@ -1,3 +1,5 @@
+# Workflow which bumps the version of all packages in the repo
+
 name: bump_version
 
 on:

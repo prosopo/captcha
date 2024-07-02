@@ -1,3 +1,5 @@
+# This workflow will run rustfmt on the protocol workspace
+
 name: protocol_rustfmt
 
 on:

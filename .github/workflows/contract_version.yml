@@ -1,3 +1,5 @@
+# Check the contract JS is in sync with the Rust version
+
 name: contract_version
 
 on:

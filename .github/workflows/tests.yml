@@ -1,3 +1,5 @@
+# Run tests for js packages
+
 name: tests
 
 on:

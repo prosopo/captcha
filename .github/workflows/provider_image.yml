@@ -1,3 +1,5 @@
+# Build and publish the provider image
+
 name: provider_image
 
 on:

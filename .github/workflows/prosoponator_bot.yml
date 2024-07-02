@@ -1,3 +1,5 @@
+# Run prosoponator bot on any comments
+
 name: prosoponator_bot
 
 on: issue_comment

@@ -1,3 +1,5 @@
+# This workflow will run clippy on the protocol workspace
+
 name: protocol_clippy
 
 on:

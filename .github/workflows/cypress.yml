@@ -1,3 +1,5 @@
+# Run cypress tests
+
 name: cypress
 
 on:

@@ -1,3 +1,7 @@
+# Workflow to check all versions of packages are the same, ensuring we move in lockstep.
+# We made the decision to move in lockstep for greater dev speed at the detriment of more frequent version bumps than necessary to some packages.
+# Lockstep versioning is simpler and doesn't require backwards compatibility headaches.
+
 name: lockstep_version
 
 on:

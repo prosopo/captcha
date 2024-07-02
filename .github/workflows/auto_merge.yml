@@ -1,3 +1,5 @@
+# Merge a PR automatically when opened or reopened
+
 name: auto_merge
 
 on:

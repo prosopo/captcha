@@ -1,3 +1,5 @@
+# Run the protocol workspace tests
+
 name: protocol_tests
 
 on:

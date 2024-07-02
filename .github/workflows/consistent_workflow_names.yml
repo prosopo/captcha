@@ -1,3 +1,5 @@
+# Check workflow names are consistent with their filenames for easier debugging
+
 name: consistent_workflow_names
 
 on:

@@ -1,3 +1,5 @@
+# This workflow will list the contents of the cache directories, useful for debugging cache issues.
+
 name: ls_cache
 
 on:
