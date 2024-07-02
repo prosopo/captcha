@@ -1,6 +1,6 @@
 # Check the version has been bumped before releasing
 
-name: release_version
+name: check_version_bump
 
 on:
     pull_request:
