@@ -54,9 +54,13 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+                  
+            - name: Install
+              if: github.event.pull_request.draft == false
+              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - name: Enable auto-merge on PR
+              if: github.event.pull_request.draft == false
               env:
                   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
