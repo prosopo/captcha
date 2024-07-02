@@ -123,23 +123,13 @@ jobs:
 
             - name: Build docker js_server
               run: |
+                # technically, if the release is for a version which is less than a published version, the following code will have bundles from versions ahead of this one. However, this isn't really a problem, as we just want the latest bundle to be available alongside old ones, not so bothered about newer ones.
+
                   # Set the JS location in the container
                   JS_FOLDER="/usr/share/nginx/html/js"
 
                   # Get the most recent version of the js_server image
-                  docker pull prosopo/js_server:${{ steps.next_version.outputs.version }}
-
-                  # get the previous version number from latest release on docker
-                  VERSION=$(cd dev/gh-actions && npx tsx src/previousDockerTag.ts prosopo js_server ${{ steps.next_version.outputs.version }})
-
-                  if [[ -z "$VERSION" ]]; then
-                    echo "Failed to get previous version"
-                    exit 1
-                  fi
-
-                  MAJOR=$(echo $VERSION | cut -d. -f1)
-                  MINOR=$(echo $VERSION | cut -d. -f2)
-                  PATCH=$(echo $VERSION | cut -d. -f3)
+                  docker pull prosopo/js_server:latest
 
                   # Create a temporary container from the latest image
                   echo "Building Docker image..."
