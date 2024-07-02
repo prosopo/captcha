@@ -93,33 +93,6 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return `${result}`
                 })
-                // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/\n(.*)\n(\s*)\/\/\s*@ts-ignore/g, (match, p1, p2) => {
-                    // don't replace if already ignored by eslint
-                    if (p1.includes('eslint-disable-next-line')) return match
-                    const result = `\n${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
-                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
-                    return result
-                })
-
-                // replace EventRecord with EventRecord[]
-                // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/: EventRecord\)/g, (match) => {
-                    const result = `: EventRecord[])`
-                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
-                    return result
-                })
-
-                // replace EventRecord incorrect imports
-                // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(
-                    /import\s+type\s+\{\s*EventRecord\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/g,
-                    (match) => {
-                        const result = `import type { EventRecord } from '@polkadot/types/interfaces'`
-                        if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
-                        return result
-                    }
-                )
 
                 fs.writeFileSync(filePath, replaced)
             }
