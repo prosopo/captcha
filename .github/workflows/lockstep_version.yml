@@ -1,0 +1,83 @@
+name: lockstep_version
+
+on:
+    pull_request:
+        branches: [main]
+        paths:
+            - '**/package.json'
+            - '**/Cargo.toml'
+            - '.github/workflows/lockstep_version.yml'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+env:
+    CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
+    GH_TOKEN: ${{ github.token }}
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            - uses: actions/checkout@v3
+
+            - name: Check package versions are all moving in lockstep
+              run: |
+                  set -eu
+                  # find all package.json files, recursively
+                  pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
+                  # extract version from package.json files
+                  jsVers=$(xargs -I % sh -c "jq -r '.version' %" <<< "$pkgJsons")
+
+                  # find all Cargo.toml files
+                    cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
+                  # extract the version out of all Cargo.toml files (we're assuming the version is the first version line encountered)
+                    rustVers=$(xargs -I % sh -c "grep -m 1 'version' % | awk -F'\"' '{print \$2}'" <<< "$cargoTomls")
+                    
+                  # compare all versions detected, if they are not all the same, fail the workflow
+                  vers=$(echo "$jsVers $rustVers" | tr ' ' '\n')
+                    if [[ $(echo "$vers" | uniq | wc -l) -ne 1 ]]; then
+                        echo "versions are not all the same: $vers"
+                        exit 1
+                    fi
