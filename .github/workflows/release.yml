@@ -184,6 +184,12 @@ jobs:
                   # Start the bundle demo & run the cypress tests against the new bundle
                   # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
 
+            - name: Tag
+              run: |
+                echo "Tagging the release..."
+                git tag -a "v${{ steps.next_version.outputs.version }}" -m "v${{ steps.next_version.outputs.version }}"
+                git push origin "v${{ steps.next_version.outputs.version }}"
+
             - name: Github release
               continue-on-error: true
               id: github_release
