@@ -187,7 +187,7 @@ jobs:
 
             - name: Github release
               continue-on-error: true
-              id: publish_github
+              id: github_release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -197,10 +197,10 @@ jobs:
             - name: Github release notification
               if: always()
               run: |
-                  if [[ "${{ steps.publish_github.outcome }}" == 'success' ]]; then
+                  if [[ "${{ steps.github_release.outcome }}" == 'success' ]]; then
                     echo "Github release successful."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Github release <https://github.com/prosopo/captcha/releases/tag/v${{ steps.next_version.outputs.version }}|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  elif [[ "${{ steps.publish_github.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.github_release.outcome }}" == 'failure' ]]; then
                     echo "Github release failed."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Github release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
@@ -209,7 +209,7 @@ jobs:
 
             - name: Npm release
               continue-on-error: true
-              id: publish_release
+              id: npm_release
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                     echo "Running on GitHub Actions"
@@ -226,10 +226,10 @@ jobs:
             - name: Npm release notification
               if: always()
               run: |
-                  if [[ "${{ steps.publish_release.outcome }}" == 'success' ]]; then
+                  if [[ "${{ steps.npm_release.outcome }}" == 'success' ]]; then
                     echo "Npm release successful."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Npm release <https://www.npmjs.com/package/@prosopo/procaptcha/v/${{ steps.next_version.outputs.version }}|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  elif [[ "${{ steps.publish_release.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.npm_release.outcome }}" == 'failure' ]]; then
                     echo "Npm release failed."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Npm release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else 
@@ -238,7 +238,7 @@ jobs:
 
             - name: Docker js_server release
               continue-on-error: true
-              id: publish_docker_js_server
+              id: docker_js_server_release
               run: |
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
@@ -251,10 +251,10 @@ jobs:
             - name: Docker js_server release notification
               if: always()
               run: |
-                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                  if [[ "${{ steps.docker_js_server_release.outcome }}" == 'success' ]]; then
                     echo "Docker js_server release successful."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker js_server release <https://hub.docker.com/r/prosopo/js_server/tags|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  elif [[ "${{ steps.publish_docker_js_server.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.docker_js_server_release.outcome }}" == 'failure' ]]; then
                     echo "Docker js_server release failed."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker js_server release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
@@ -262,14 +262,14 @@ jobs:
                   fi
 
             - name: Redeploy flux docker js_server
-              id: redeploy_flux_docker_js_server
+              id: flux_docker_js_server_redeploy
               continue-on-error: true
               if: always()
               env:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
-                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
+                  if [[ "${{ steps.docker_js_server_release.outcome }}" == 'success' ]]; then
                     echo "Installing @prosopo/flux..."
                     npm i -g @prosopo/flux
                     echo "Soft redeploying flux docker js_server."
@@ -284,11 +284,11 @@ jobs:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
                   PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
               run: |
-                  if [[ "${{ steps.publish_docker_js_server.outcome }}" == 'success' ]]; then
-                    if [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'success' ]]; then
+                  if [[ "${{ steps.docker_js_server_release.outcome }}" == 'success' ]]; then
+                    if [[ "${{ steps.flux_docker_js_server_redeploy.outcome }}" == 'success' ]]; then
                         echo "Redeployed flux docker js_server."
                         curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> has been requested.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                    elif [[ "${{ steps.redeploy_flux_docker_js_server.outcome }}" == 'failure' ]]; then
+                    elif [[ "${{ steps.flux_docker_js_server_redeploy.outcome }}" == 'failure' ]]; then
                         echo "Redeploying flux docker js_server failed."
                         curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Flux docker js_server redeploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                     else
@@ -324,7 +324,7 @@ jobs:
                   cd ../..
 
             - name: Build and push the Provider Container
-              id: publish_docker_provider
+              id: docker_provider_release
               continue-on-error: true
               uses: docker/build-push-action@v5
               with:
@@ -337,10 +337,10 @@ jobs:
             - name: Docker provider release notification
               if: always()
               run: |
-                  if [[ "${{ steps.publish_docker_provider.outcome }}" == 'success' ]]; then
+                  if [[ "${{ steps.docker_provider_release.outcome }}" == 'success' ]]; then
                     echo "Docker provider release successful."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Docker provider release <https://hub.docker.com/r/prosopo/provider/tags|v${{ steps.next_version.outputs.version }}> has been published.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
-                  elif [[ "${{ steps.publish_docker_provider.outcome }}" == 'failure' ]]; then
+                  elif [[ "${{ steps.docker_provider_release.outcome }}" == 'failure' ]]; then
                     echo "Docker provider release failed."
                     curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Docker provider release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
                   else
