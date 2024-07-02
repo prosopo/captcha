@@ -113,10 +113,6 @@ jobs:
                   npm run cli -- clean --docker
                   npm run cli -- build --docker --release
 
-            - name: Typedoc
-              run: |
-                  npm run docs
-
             - name: Build JS bundle
               run: |
                   # Copy the rococo env file to production env file
