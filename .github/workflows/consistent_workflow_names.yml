@@ -6,6 +6,7 @@ on:
     pull_request:
         # only when workflow file is changed
         paths: ['.github/workflows/**']
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
