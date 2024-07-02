@@ -4,8 +4,7 @@ name: release
 
 on:
     push:
-        # only on the main branch
-        branches: [ release/* ]
+        branches: [ main ]
 
 jobs:
     publish:
