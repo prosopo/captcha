@@ -40,7 +40,6 @@
         "@prosopo/contract": "1.0.2",
         "@prosopo/database": "1.0.2",
         "@prosopo/datasets": "1.0.2",
-        "@prosopo/typechain-polkadot": "file:../../../typechain-polkadot/packages/typechain-polkadot",
         "@prosopo/datasets-fs": "1.0.2",
         "@prosopo/env": "1.0.2",
         "@prosopo/file-server": "1.0.2",
