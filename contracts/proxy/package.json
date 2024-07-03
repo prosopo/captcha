@@ -3,6 +3,10 @@
     "version": "1.0.2",
     "description": "The proxy contract",
     "main": "dist/index.js",
+    "engines": {
+        "node": ">=20",
+        "npm": ">=9"
+    },
     "type": "module",
     "scripts": {
         "test": "echo \"No test specified\"",
