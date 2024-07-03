@@ -1,3 +1,7 @@
 {
-    "type": "module"
+    "type": "module",
+    "engines": {
+        "node": ">=20",
+        "npm": ">=9"
+    }
 }
