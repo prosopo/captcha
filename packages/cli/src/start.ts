@@ -69,8 +69,6 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
     }
     await env.isReady()
 
-    console.log(env.config.rateLimits)
-
     // Start the scheduled job
     if (env.pair) {
         storeCaptchasExternally(env.pair, env.config).catch((err) => {
