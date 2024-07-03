@@ -68,6 +68,8 @@ jobs:
               id: next_version
               run: |
 
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   VERSION=$(cat package.json | jq -r '.version')
 
                   # if version not detected, error
@@ -116,6 +118,8 @@ jobs:
 
             - name: Build JS bundle
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
                   cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
@@ -128,6 +132,8 @@ jobs:
 
             - name: Build docker js_server
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                 # technically, if the release is for a version which is less than a published version, the following code will have bundles from versions ahead of this one. However, this isn't really a problem, as we just want the latest bundle to be available alongside old ones, not so bothered about newer ones.
 
                   # Set the JS location in the container
@@ -178,6 +184,8 @@ jobs:
 
             - name: Build the production CLI package
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   echo "Building the production CLI package..."
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in cli package"

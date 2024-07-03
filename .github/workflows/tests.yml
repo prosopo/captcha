@@ -98,6 +98,8 @@ jobs:
 
             - name: Build JS bundle
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   # Copy the rococo env file to production env file
                   echo "Copying the rococo env to production env file in procaptcha-bundle"
                   cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
@@ -110,6 +112,8 @@ jobs:
 
             - name: Setup env
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
                   cp demos/client-example/env.development demos/client-example/.env.test
                   cp dev/scripts/env.test .env.test

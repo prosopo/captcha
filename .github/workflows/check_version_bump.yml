@@ -59,6 +59,8 @@ jobs:
             # when running manually, there won't be a version line change, so we need to skip this step in that case
             - name: Detect version bump
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
 
                 # get the next version as the version currently set in the root package.json
                 NEXT=$(jq -r '.version' package.json)

@@ -109,6 +109,8 @@ jobs:
             - name: Cleanup caches
               if: always()
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   set +e; gh extension install actions/gh-actions-cache; set -e
                   echo "Fetching list of cache key"
                   cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R ${{ github.repository }} --key project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)

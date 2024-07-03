@@ -63,10 +63,11 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   # make a new branch for the version changes
                   git switch -c release/${{ github.event.inputs.version }}
 
-                  set -eu
                   # find all package.json files, recursively
                   pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
                   # replace the version in all package.json files

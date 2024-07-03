@@ -58,6 +58,8 @@ jobs:
 
             - name: Check workflow names
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   cd .github/workflows
                   # Iterate through files in the current directory
                   for file in *.yml *.yaml; do

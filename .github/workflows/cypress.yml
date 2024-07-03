@@ -92,6 +92,8 @@ jobs:
 
             - name: Setup env
               run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   cp demos/client-example-server/env.development demos/client-example-server/.env.test
                   cp demos/client-example/env.development demos/client-example/.env.test
                   cp dev/scripts/env.test .env.test

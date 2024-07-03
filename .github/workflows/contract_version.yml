@@ -66,7 +66,8 @@ jobs:
 
             - name: Check contract version matches provider version
               run: |
-                  set -eu
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   # get the version of the contract in js pkg
                   for contract in contracts/*; do
                     echo "checking version in $contract"

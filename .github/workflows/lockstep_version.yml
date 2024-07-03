@@ -68,7 +68,8 @@ jobs:
 
             - name: Check package versions are all moving in lockstep
               run: |
-                  set -eu
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
                   # find all package.json files, recursively
                   pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
                   # extract version from package.json files
