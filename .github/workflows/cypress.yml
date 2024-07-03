@@ -5,13 +5,6 @@ name: cypress
 on:
     pull_request:
         branches: [main, dev, release/*]
-        paths:
-            - 'docker/**'
-            - 'packages/**'
-            - 'demos/**'
-            - 'dev/**'
-            - 'contracts/**'
-            - '.github/workflows/cypress.yml'
     workflow_dispatch:
 
 concurrency:

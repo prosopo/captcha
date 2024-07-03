@@ -5,12 +5,6 @@ name: provider_image
 on:
     pull_request:
         branches: [main, dev, release/*]
-        paths:
-            - 'docker/**'
-            - 'dev/**'
-            - 'packages/**'
-            - 'contracts/**'
-            - '.github/workflows/provider_image.yml'
     workflow_dispatch:
 
 concurrency:
