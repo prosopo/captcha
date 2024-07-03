@@ -66,7 +66,7 @@
         "lint:cmd": "f() { npm run -w @prosopo/scripts license; npm run eslint:cmd -- $@; npm run prettier:cmd -- $@; }; f",
         "lint:workspace": "npm run eslint:workspace && npm run prettier:workspace",
         "lint:contracts": "npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint",
-        "lint:fix": "FILES=$(git diff --name-status main | sed '/^[M]/!D' | awk -F ' ' '{print $2}'); echo $FILES; f() { npm run -w @prosopo/scripts license:fix; npm run eslint:fix -- $FILES; npm run prettier:fix -- $FILES; }; f",
+        "lint:fix": "FILES=$(git diff --name-status main | sed '/^[M|A]/!D' | awk -F ' ' '{print $2}'); echo $FILES; f() { npm run -w @prosopo/scripts license:fix; npm run eslint:fix -- $FILES; npm run prettier:fix -- $FILES; }; f",
         "lint:fix:contracts": "npm run -w @prosopo/scripts license:fix && npm -w @prosopo/captcha-contract -w @prosopo/common-contract -w @prosopo/proxy-contract run lint:fix",
         "lint:fix:workspace": "npm run eslint:fix:workspace && npm run prettier:fix:workspace",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
