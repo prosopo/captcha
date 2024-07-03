@@ -48,6 +48,14 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
+            # Add support for more platforms with QEMU (optional)
+            # https://github.com/docker/setup-qemu-action
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+              
             - name: Dockerhub login
               run: |
                   echo "Logging into Docker Hub."
@@ -214,13 +222,6 @@ jobs:
                     echo "Skipping flux redeploy."
                   fi
 
-            # Add support for more platforms with QEMU (optional)
-            # https://github.com/docker/setup-qemu-action
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v3
-
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
 
             - name: Build the production CLI package
               run: |
