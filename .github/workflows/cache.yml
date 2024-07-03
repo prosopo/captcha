@@ -1,9 +1,7 @@
 # Build a cache of build artifacts after PRs to speed up subsequent builds
 
-name: post_pr
+name: cache
 
-# on push to main, or manually triggered
-# we do this because any branch can use caches built on dev, whereas caches built on other branches are only available to that branch and its children
 on:
     push:
         branches: [main, dev]
