@@ -48,57 +48,12 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             context: { error: `Path to ABIs does not exist: ${pathToAbis}` },
         })
     await exec(`mkdir -p ${pathToOutput}`)
-    const cmd = `npx typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
+    const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     await exec(cmd)
     const name = path.basename(pathToAbis)
     // copy the metadata
     // TODO this is a temp fix. This functionality should be in typechain!
     await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`)
-    // walk each file in the output directory
-    const walk = (dir: string) => {
-        const files = fs.readdirSync(dir)
-        for (const file of files) {
-            const filePath = path.join(dir, file)
-            const stat = fs.statSync(filePath)
-            if (stat.isDirectory()) {
-                walk(filePath)
-            } else if (filePath.endsWith('.ts')) {
-                // replace the relative imports with .js extension applied
-                // eslint-disable-next-line no-useless-escape
-                const regex = /(import(?:(?!from).)+from\s+)(['"]\.[./\w-]+['"])(\s+assert\s+\{[^}]*\})?/gs
-                const fileContents = fs.readFileSync(filePath, 'utf8')
-                let replaced = fileContents.replace(regex, (match, p1, p2, p3) => {
-                    const start = p1.toString()
-                    const srcQuoted = p2.toString()
-                    const src = getPath(srcQuoted)
-                    const extension = getExtension(src)
-                    if (verbose) console.log(`src: ${src}`)
-                    if (verbose) console.log(`extension: ${extension}`)
-                    if (verbose) console.log('p3: ', p3)
-                    let result = ''
-                    if (extension === 'js') {
-                        // already has .js extension
-                        return match
-                    } else if (extension === 'json') {
-                        if ((p3 ?? '').includes('assert')) {
-                            // already has assert
-                            return match
-                        }
-                        // needs json assertion
-                        result = `${start}'${src}' assert { type: 'json' }`
-                    } else {
-                        // needs .js extension
-                        result = `${start}'${src}.js'`
-                    }
-                    if (verbose) console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
-                    return `${result}`
-                })
-
-                fs.writeFileSync(filePath, replaced)
-            }
-        }
-    }
-    walk(pathToOutput)
 
     const _ = lodash()
 
