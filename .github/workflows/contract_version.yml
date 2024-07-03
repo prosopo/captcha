@@ -76,7 +76,7 @@ jobs:
                     echo "js version: $jsVer"
                     # get the version of the contract in rust pkg
                     # assuming the contract version is the first version line in Cargo.toml
-                    rustVer=$(cat protocol/contracts/$contract/Cargo.toml | grep -m 1 "version = " | cut -d '"' -f 2)
+                    rustVer=$(cat protocol/$contract/Cargo.toml | grep -m 1 "version = " | cut -d '"' -f 2)
                     if [[ "$jsVer" != "$rustVer" ]]; then
                         echo "version mismatch: $jsVer != $rustVer"
                         exit 1
