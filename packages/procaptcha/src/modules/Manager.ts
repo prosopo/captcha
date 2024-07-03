@@ -308,7 +308,7 @@ export function Manager(
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
 
-            const first = at<CaptchaWithProof>(challenge.captchas, 0)
+            const first = at(challenge.captchas, 0)
             if (!first.captcha.datasetId) {
                 throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_ID', {
                     context: { error: 'No datasetId set for challenge' },
@@ -384,7 +384,7 @@ export function Manager(
         }
         const index = state.index
         const solutions = state.solutions
-        const solution = at<string[]>(solutions, index)
+        const solution = at(solutions, index)
         if (solution.includes(hash)) {
             // remove the hash from the solution
             solution.splice(solution.indexOf(hash), 1)
