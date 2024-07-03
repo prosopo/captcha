@@ -69,6 +69,7 @@ jobs:
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
+                  # must restore all cache dirs, and they must exist ahead of this!
                   path: |
                       protocol/cargo-cache
                       protocol/target
