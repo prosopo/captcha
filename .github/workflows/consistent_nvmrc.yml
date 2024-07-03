@@ -1,0 +1,90 @@
+# Check the npm versions are consistent across packages
+
+name: consistent_nvmrc
+
+on:
+    pull_request:
+        branches: [main, dev, release/*]
+        paths:
+            - '**/package.json'
+            - '**/.nvmrc'
+            - '.github/workflows/consistent_engine_node_and_nvmrc.yml'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+env:
+    CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
+    GH_TOKEN: ${{ github.token }}
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            - uses: actions/checkout@v3
+
+            - name: Check contract version matches provider version
+              run: |
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                
+                # find all .nvmrc files except in node_modules and get the content
+                nvmrcs=$(find . -name '.nvmrc' -not -path '*/node_modules/*' -exec cat {} +)
+
+                # check all .nvmrc files are the same content
+                if [ $(echo "$nvmrcs" | uniq | wc -l) -gt 1 ]; then
+                  echo "ERROR: .nvmrc files are not consistent"
+                  echo "$nvmrcs"
+                  exit 1
+                fi
+
+                # check nvmrc version matches engine
+                engine=$(jq -r '.engines.node' package.json)
+
+                if [ "$engine" != "$(cat .nvmrc)" ]; then
+                  echo "ERROR: .nvmrc version does not match engine"
+                  echo "engine: $engine"
+                  echo ".nvmrc: $(cat .nvmrc)"
+                  exit 1
+                fi
+                
