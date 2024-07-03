@@ -79,8 +79,8 @@ jobs:
                   exit 1
                 fi
 
-                # check nvmrc version matches engine
-                engine=$(jq -r '.engines.node' package.json)
+                # check nvmrc version matches engine, replacing <=> in the engine string with blank
+                engine=$(jq -r '.engines.node' package.json | tr -d '<>=')
 
                 if [ "$engine" != "$(cat .nvmrc)" ]; then
                   echo "ERROR: .nvmrc version does not match engine"
