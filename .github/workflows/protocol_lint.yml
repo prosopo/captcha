@@ -1,6 +1,6 @@
-# This workflow will run clippy on the protocol workspace
+# This workflow will run linting on the protocol workspace
 
-name: protocol_clippy
+name: protocol_lint
 
 on:
     pull_request:
@@ -92,4 +92,6 @@ jobs:
 
             - run: npm ci
 
+            - run: npm -w @prosopo/protocol run rustfmt
+            
             - run: npm -w @prosopo/protocol run clippy
