@@ -1222,7 +1222,7 @@ pub mod captcha {
             Ok(provider_accounts)
         }
 
-        /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
+        /// Get a random number from 0 to len - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
         pub fn get_random_number(
             &self,
@@ -1291,20 +1291,11 @@ pub mod captcha {
 
         /// Set the code hash for this contract
         #[ink(message)]
-        pub fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        pub fn set_code_hash(&mut self, code_hash: Hash) -> Result<(), Error> {
             self.check_caller_admin()?;
-            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
-            if let Err(e) = set_code_hash_result {
-                match e {
-                    ink::env::Error::CodeNotFound => {
-                        return err!(self, Error::CodeNotFound);
-                    }
-                    _ => {
-                        return err!(self, Error::SetCodeHashFailed);
-                    }
-                }
-            }
-            Ok(())
+            self.env()
+                .set_code_hash(&code_hash)
+                .or_else(|_| err!(self, Error::SetCodeHashFailed))
         }
 
         /// Is the caller the admin for this contract?
@@ -1650,7 +1641,7 @@ pub mod captcha {
 
             let new_code_hash = get_code_hash(1);
             assert_eq!(
-                contract.set_code_hash(new_code_hash),
+                contract.set_code_hash(new_code_hash.into()),
                 Err(Error::NotAuthorised)
             );
         }
