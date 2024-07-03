@@ -90,13 +90,6 @@ jobs:
 
             - run: npm ci
 
-            - name: Build contracts
-              id: build
-              run: |
-                  cd protocol/dev
-                  npm run cli -- build --docker --skip-env
+            - run: npm -w @prosopo/protocol run build:all
 
-            - name: Test contracts
-              run: |
-                  cd protocol/dev
-                  RUST_BACKTRACE=1 npm run cli -- test --docker
+            - run: npm -w @prosopo/protocol run test:all

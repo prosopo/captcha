@@ -26,8 +26,6 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@prosopo/typechain-polkadot": "1.1.15",
-        "@prosopo/typechain-types": "1.1.15",
         "@polkadot/api": "10.13.1",
         "@polkadot/api-contract": "10.13.1",
         "@polkadot/types": "10.13.1",

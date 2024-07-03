@@ -49,3 +49,4 @@ code-of-conduct.md
 diagram.svg
 **/.eslintignore
 *.css
+**/*.sh

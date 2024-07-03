@@ -90,8 +90,4 @@ jobs:
 
             - run: npm ci
 
-            - name: Clippy
-              run: |
-                  cd protocol/dev
-                  npm run build
-                  npm run cli -- clippy --docker -- -- -D warnings
+            - run: npm -w @prosopo/protocol run clippy

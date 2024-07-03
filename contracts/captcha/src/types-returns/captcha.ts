@@ -17,6 +17,61 @@ export type Hash = string | number[]
 
 export type AccountId = string | number[]
 
+export type Provider = {
+    status: GovernanceStatus
+    balance: ReturnNumber
+    fee: number
+    payee: Payee
+    url: Array<number>
+    datasetId: Hash
+    datasetIdContent: Hash
+}
+
+export enum GovernanceStatus {
+    active = 'Active',
+    inactive = 'Inactive',
+}
+
+export enum Payee {
+    provider = 'Provider',
+    dapp = 'Dapp',
+}
+
+export type Dapp = {
+    status: GovernanceStatus
+    balance: ReturnNumber
+    owner: AccountId
+    payee: DappPayee
+}
+
+export enum DappPayee {
+    provider = 'Provider',
+    dapp = 'Dapp',
+    any = 'Any',
+}
+
+export type Commit = {
+    id: Hash
+    userAccount: AccountId
+    datasetId: Hash
+    status: CaptchaStatus
+    dappContract: AccountId
+    providerAccount: AccountId
+    requestedAt: number
+    completedAt: number
+    userSignature: Array<number>
+}
+
+export enum CaptchaStatus {
+    pending = 'Pending',
+    approved = 'Approved',
+    disapproved = 'Disapproved',
+}
+
+export type User = {
+    history: Array<Hash>
+}
+
 export enum Error {
     notAuthorised = 'NotAuthorised',
     transferFailed = 'TransferFailed',
@@ -56,70 +111,15 @@ export enum LangError {
     couldNotReadInput = 'CouldNotReadInput',
 }
 
-export enum Payee {
-    provider = 'Provider',
-    dapp = 'Dapp',
-}
-
-export enum DappPayee {
-    provider = 'Provider',
-    dapp = 'Dapp',
-    any = 'Any',
-}
-
-export enum GovernanceStatus {
-    active = 'Active',
-    inactive = 'Inactive',
-}
-
-export type Provider = {
-    status: GovernanceStatus
-    balance: ReturnNumber
-    fee: number
-    payee: Payee
-    url: Array<number>
-    datasetId: Hash
-    datasetIdContent: Hash
-}
-
-export type Dapp = {
-    status: GovernanceStatus
-    balance: ReturnNumber
-    owner: AccountId
-    payee: DappPayee
-}
-
 export type UserHistorySummary = {
     correct: number
     incorrect: number
     score: number
 }
 
-export type Commit = {
-    id: Hash
-    userAccount: AccountId
-    datasetId: Hash
-    status: CaptchaStatus
-    dappContract: AccountId
-    providerAccount: AccountId
-    requestedAt: number
-    completedAt: number
-    userSignature: Array<number>
-}
-
-export enum CaptchaStatus {
-    pending = 'Pending',
-    approved = 'Approved',
-    disapproved = 'Disapproved',
-}
-
 export type LastCorrectCaptcha = {
     before: number
     dappContract: AccountId
-}
-
-export type User = {
-    history: Array<Hash>
 }
 
 export type RandomProvider = {

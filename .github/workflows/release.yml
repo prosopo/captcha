@@ -103,11 +103,7 @@ jobs:
                   npm run build:all:cjs
 
             - name: Build the contract sources
-              run: |
-                  cd protocol/dev
-                  npm run build
-                  npm run cli -- clean --docker
-                  npm run cli -- build --docker --release
+              run: npm -w @prosopo/protocol run build:contracts
 
             - name: Build JS bundle
               run: |
