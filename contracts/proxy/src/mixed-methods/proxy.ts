@@ -15,8 +15,8 @@
 
 import { handleReturnType, queryOkJSON } from '@prosopo/typechain-types'
 import { txSignAndSend } from '@prosopo/typechain-types'
-import type * as ArgumentTypes from '../types-arguments/proxy.js'
-import type * as ReturnTypes from '../types-returns/proxy.js'
+import type * as ArgumentTypes from '../types-arguments/proxy'
+import type * as ReturnTypes from '../types-returns/proxy'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, GasLimitAndRequiredValue, Result } from '@prosopo/typechain-types'
@@ -24,12 +24,12 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { QueryReturnType } from '@prosopo/typechain-types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { getTypeDescription } from './../shared/utils.js'
+import { getTypeDescription } from './../shared/utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { decodeEvents } from '../shared/utils.js'
-import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json' assert { type: 'json' }
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json' assert { type: 'json' }
+import { decodeEvents } from '../shared/utils'
+import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json'
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json'
 import type { EventRecord } from '@polkadot/types/interfaces'
 
 export default class Methods {

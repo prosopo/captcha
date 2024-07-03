@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CodePromise } from '@polkadot/api-contract'
-import { ContractFile } from '../contract-info/captcha.js'
+import { ContractFile } from '../contract-info/captcha'
 import { SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@prosopo/typechain-types'
 import type { ApiPromise } from '@polkadot/api'
 import type { ConstructorOptions } from '@prosopo/typechain-types'

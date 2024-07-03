@@ -14,16 +14,16 @@
 /* This file is auto-generated */
 
 import { handleReturnType, queryOkJSON } from '@prosopo/typechain-types'
-import type * as ArgumentTypes from '../types-arguments/common.js'
-import type * as ReturnTypes from '../types-returns/common.js'
+import type * as ArgumentTypes from '../types-arguments/common'
+import type * as ReturnTypes from '../types-returns/common'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, Result } from '@prosopo/typechain-types'
 import type { QueryReturnType } from '@prosopo/typechain-types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { getTypeDescription } from './../shared/utils.js'
-import DATA_TYPE_DESCRIPTIONS from '../data/common.json' assert { type: 'json' }
+import { getTypeDescription } from './../shared/utils'
+import DATA_TYPE_DESCRIPTIONS from '../data/common.json'
 
 export default class Methods {
     readonly __nativeContract: ContractPromise

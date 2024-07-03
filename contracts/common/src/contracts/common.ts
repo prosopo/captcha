@@ -14,13 +14,13 @@
 /* This file is auto-generated */
 
 import { Abi } from '@polkadot/api-contract'
-import { ContractAbi } from '../contract-info/common.js'
+import { ContractAbi } from '../contract-info/common'
 import { ContractPromise } from '@polkadot/api-contract'
-import BuildExtrinsicMethods from '../build-extrinsic/common.js'
-import EventsClass from '../events/common.js'
-import MixedMethods from '../mixed-methods/common.js'
-import QueryMethods from '../query/common.js'
-import TxSignAndSendMethods from '../tx-sign-and-send/common.js'
+import BuildExtrinsicMethods from '../build-extrinsic/common'
+import EventsClass from '../events/common'
+import MixedMethods from '../mixed-methods/common'
+import QueryMethods from '../query/common'
+import TxSignAndSendMethods from '../tx-sign-and-send/common'
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
 

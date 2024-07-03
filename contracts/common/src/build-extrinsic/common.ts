@@ -14,7 +14,7 @@
 /* This file is auto-generated */
 
 import { buildSubmittableExtrinsic } from '@prosopo/typechain-types'
-import type * as ArgumentTypes from '../types-arguments/common.js'
+import type * as ArgumentTypes from '../types-arguments/common'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit } from '@prosopo/typechain-types'

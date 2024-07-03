@@ -14,15 +14,15 @@
 /* This file is auto-generated */
 
 import { txSignAndSend } from '@prosopo/typechain-types'
-import type * as ArgumentTypes from '../types-arguments/common.js'
+import type * as ArgumentTypes from '../types-arguments/common'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit } from '@prosopo/typechain-types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { decodeEvents } from '../shared/utils.js'
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json' assert { type: 'json' }
+import { decodeEvents } from '../shared/utils'
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json'
 import type { EventRecord } from '@polkadot/types/interfaces'
 
 export default class Methods {
