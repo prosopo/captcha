@@ -188,5 +188,5 @@ jobs:
                   sleep 10s
                   docker logs $CONTAINER >& provider-mock.log
                   echo $(cat provider.log)
-                  RESPONSE=$(curl --location 'http://localhost:9229/v1/prosopo/provider/verify' --header 'Content-Type: application/json' --data '{"user": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY","dapp": "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM","blockNumber": 1}'| jq --raw-output '.status')
+                  RESPONSE=$(curl --location 'http://localhost:9229/v1/prosopo/provider/verify' --header 'Content-Type: application/json' --data '{"token": "0x0000c03543346872666a7739446a585a547a56334d777a727241723950314d4a685372765747577169316553757955706e684dc03547727776614546357a58623236467a397263517044575335374374455248704e6568584350634e6f48474b75745159010000000000"}'| jq --raw-output '.status')
                   if [ "$RESPONSE" = "User verified" ]; then exit 0; else exit 1; fi
