@@ -24,11 +24,11 @@ export default (cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.getDapp')
 
     return {
-        command: 'getDapp',
+        command: 'getDapp <app>',
         describe: 'Get dapp details',
         builder: (yargs: Argv) =>
             yargs
-                .option('app', {
+                .positional('app', {
                     type: 'string' as const,
                     demandOption: false,
                     desc: 'Name of the dapp to get the details of',
