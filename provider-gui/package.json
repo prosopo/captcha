@@ -1,9 +1,9 @@
 {
     "name": "@prosopo/provider-gui",
-    "version": "0.3.39",
+    "version": "1.0.2",
     "private": false,
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "scripts": {
@@ -12,9 +12,9 @@
         "build": "next build",
         "clean": "rm -rf .next",
         "start": "next start",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../.eslintignore",
+        "eslint": "npx eslint . --cache --cache-location ../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../.eslintignore",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -29,17 +29,17 @@
         "@polkadot/extension-dapp": "0.46.9",
         "@polkadot/extension-inject": "0.46.9",
         "@polkadot/api": "10.13.1",
-        "@prosopo/common": "0.3.39",
-        "@prosopo/contract": "0.3.39",
-        "@prosopo/util": "0.3.39",
-        "@prosopo/captcha-contract": "0.3.39",
-        "@prosopo/types": "0.3.39",
-        "@prosopo/api": "0.3.39",
-        "@prosopo/cli": "0.3.39",
-        "@prosopo/env": "0.3.39",
-        "@prosopo/provider": "0.3.39",
-        "next": "14.0.1",
-        "react": "18.2.0"
+        "@prosopo/common": "1.0.2",
+        "@prosopo/contract": "1.0.2",
+        "@prosopo/util": "1.0.2",
+        "@prosopo/captcha-contract": "1.0.2",
+        "@prosopo/types": "1.0.2",
+        "@prosopo/api": "1.0.2",
+        "@prosopo/cli": "1.0.2",
+        "@prosopo/env": "1.0.2",
+        "@prosopo/provider": "1.0.2",
+        "next": "14.2.3",
+        "react-dom": "^18.3.1"
     },
     "overrides": {
         "@polkadot/extension-inject": {
@@ -57,8 +57,8 @@
         "@types/react": "18.2.33",
         "bufferutil": "^4.0.1",
         "eslint": "8.44.0",
-        "eslint-config-next": "13.4.9",
-        "react-dom": "18.2.0",
+        "eslint-config-next": "^14.2.3",
+        "react-dom": "^18.3.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "utf-8-validate": "5.0.2"

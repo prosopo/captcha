@@ -24,8 +24,9 @@ import {
     ProsopoConfigSchema,
     ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
+import { getAddress, getPassword, getSecret } from './process.env.js'
 import { getLogLevel } from '@prosopo/common'
-import { getSecret } from './process.env.js'
+import { getRateLimitConfig } from './RateLimiter.js'
 
 function getMongoURI(): string {
     const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || 'mongodb'
@@ -42,7 +43,8 @@ export default function getConfig(
     networksConfig?: ProsopoNetworksSchemaInput,
     captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
     batchCommitConfig?: typeof BatchCommitConfigSchema,
-    captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput
+    captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
+    who = 'PROVIDER'
 ): ProsopoConfigOutput {
     return ProsopoConfigSchema.parse({
         logLevel: getLogLevel(),
@@ -53,9 +55,9 @@ export default function getConfig(
             ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
             : NetworkNamesSchema.enum.development,
         account: {
-            address: process.env.PROSOPO_PROVIDER_ADDRESS || undefined,
-            password: process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD || undefined,
-            secret: getSecret(),
+            address: getAddress(who),
+            password: getPassword(who),
+            secret: getSecret(who),
         },
         database: {
             development: {
@@ -81,5 +83,7 @@ export default function getConfig(
         captchas: captchaServeConfig,
         devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === 'true',
         mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
+        mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || '',
+        rateLimits: getRateLimitConfig(),
     } as ProsopoConfigInput)
 }

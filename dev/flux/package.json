@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/flux",
-    "version": "0.3.39",
+    "version": "1.0.2",
     "description": "Tools for managing Flux deployment",
     "main": "dist/index.js",
     "bin": {
@@ -8,7 +8,7 @@
     },
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "scripts": {
@@ -17,9 +17,9 @@
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "cli": "node dist/index.js",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -30,16 +30,16 @@
         "@noble/curves": "^1.3.0",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/cli": "0.3.39",
-        "@prosopo/common": "0.3.39",
-        "@prosopo/util": "0.3.39",
+        "@prosopo/cli": "1.0.2",
+        "@prosopo/common": "1.0.2",
+        "@prosopo/util": "1.0.2",
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
         "qs": "^6.11.2",
         "socket.io-client": "^4.7.4",
         "varuint-bitcoin": "^1.1.2",
-        "yargs": "^17.5.1",
+        "yargs": "^17.7.2",
         "yargs-parser": "^21.0.1",
         "zod": "^3.22.4"
     },
@@ -48,7 +48,6 @@
     },
     "devDependencies": {
         "@esm-bundle/chai": "^4.3.4-fix.0",
-        "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",
         "vitest": "^0.34.2"

@@ -11,21 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BotDetectionFunction, ProcaptchaFrictionlessProps } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { ProcaptchaProps } from '@prosopo/types'
-import { load } from '@fingerprintjs/botd'
+import { isBot } from '@prosopo/detector'
 import { useEffect, useState } from 'react'
 
-export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) => {
-    // Use state to manage which component to render
+const customDetectBot: BotDetectionFunction = async () => {
+    return await isBot().then((result) => {
+        const bot = result.isBot
+        return { bot }
+    })
+}
+
+export const ProcaptchaFrictionless = ({
+    config,
+    callbacks,
+    detectBot = customDetectBot,
+}: ProcaptchaFrictionlessProps) => {
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
 
     useEffect(() => {
-        const detectBot = async () => {
-            const botd = await load()
-            const result = botd.detect()
+        const detectAndSetComponent = async () => {
+            const result = await detectBot()
             if (result.bot) {
                 setComponentToRender(<Procaptcha config={config} callbacks={callbacks} />)
             } else {
@@ -33,8 +42,8 @@ export const ProcaptchaFrictionless = ({ config, callbacks }: ProcaptchaProps) =
             }
         }
 
-        detectBot()
-    }, [config, callbacks])
+        detectAndSetComponent()
+    }, [config, callbacks, detectBot])
 
     return componentToRender
 }

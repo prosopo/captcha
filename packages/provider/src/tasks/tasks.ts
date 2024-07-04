@@ -18,6 +18,7 @@ import {
     CaptchaSolution,
     CaptchaSolutionConfig,
     CaptchaWithProof,
+    DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
@@ -43,13 +44,13 @@ import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getCurrentBlockNumber, verifyRecency, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
-import { saveCaptchaEvent } from '@prosopo/database'
+import { saveCaptchaEvent, saveCaptchas } from '@prosopo/database'
 import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
@@ -196,24 +197,23 @@ export class Tasks {
      * @param {string} difficulty - how many leading zeroes the solution must have
      * @param {string} signature - proof that the Provider provided the challenge
      * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
+     * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
      */
     async verifyPowCaptchaSolution(
         blockNumber: number,
         challenge: string,
         difficulty: number,
         signature: string,
-        nonce: number
+        nonce: number,
+        timeout: number
     ): Promise<boolean> {
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
-
-        if (blockNumber < latestBlockNumber - 5) {
+        const recent = verifyRecency(this.contract.api, blockNumber, timeout)
+        if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blockNumber,
-                    latestBlockNumber,
                 },
             })
         }
@@ -252,7 +252,7 @@ export class Tasks {
         return true
     }
 
-    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string): Promise<boolean> {
+    async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
         if (!challengeRecord) {
             throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
@@ -276,23 +276,20 @@ export class Tasks {
             })
         }
 
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
-
         if (!blocknumber) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: 'Block number not provided',
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },
             })
         }
-
-        if (latestBlockNumber > parseInt(blocknumber) + 5) {
+        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), timeout)
+        if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
-                    ERROR: 'Blockhash must be from within last 5 blocks',
+                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
                     blocknumber,
                 },
@@ -369,6 +366,7 @@ export class Tasks {
                 completedAt: blockNumber,
                 processed: false,
                 batched: false,
+                stored: false,
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
@@ -536,7 +534,10 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
-        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
+        const timeLimit = captchas
+            // if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
+            .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
+            .reduce((a, b) => a + b, 0)
         const deadlineTs = timeLimit + currentTime
         const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
@@ -706,5 +707,21 @@ export class Tasks {
             return
         }
         await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
+    }
+
+    async storeCommitmentsExternal(): Promise<void> {
+        if (!this.config.mongoCaptchaUri) {
+            this.logger.info('Mongo env not set')
+            return
+        }
+        // Get all unstored commitments
+        const commitments = await this.db.getUnstoredDappUserCommitments()
+
+        this.logger.info(`Storing ${commitments.length} commitments externally`)
+
+        await saveCaptchas(commitments, this.config.mongoCaptchaUri)
+
+        const commitIds = commitments.map((commitment) => commitment.id)
+        await this.db.markDappUserCommitmentsStored(commitIds)
     }
 }

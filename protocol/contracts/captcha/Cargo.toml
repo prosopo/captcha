@@ -1,6 +1,6 @@
 [package]
 name = "captcha"
-version = "0.3.39"
+version = "1.0.2"
 authors = [
   "Chris Taylor <chris@prosopo.io>",
   "George Oastler <george@prosopo.io>",
@@ -10,8 +10,7 @@ authors = [
 edition = "2021"
 
 [dependencies.ink]
-git = "https://github.com/prosopo/ink_sr25519"
-branch = "4.3.0-custom"
+version = "5.0.0"
 default-features = false
 
 [dependencies.scale]
@@ -42,11 +41,7 @@ features = [ "test-dependency" ]
 [lib]
 path = "src/lib.rs"
 
-[profile.release]
-overflow-checks = false
-
 [features]
 default = [ "std" ]
 std = [ "ink/std", "scale/std", "scale-info/std" ]
 ink-as-dependency = [ ]
-

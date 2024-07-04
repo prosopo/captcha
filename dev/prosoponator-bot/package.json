@@ -1,6 +1,6 @@
 {
-    "name": "prosoponator-bot",
-    "version": "0.3.39",
+    "name": "@prosopo/prosoponator-bot",
+    "version": "1.0.2",
     "description": "",
     "private": true,
     "scripts": {
@@ -8,9 +8,9 @@
         "build": "tsc --build --verbose",
         "start": "npx tsx src/index.ts",
         "test": "echo 'No test specified'",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -33,7 +33,7 @@
     "main": "dist/index.js",
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     }
 }

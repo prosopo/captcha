@@ -59,20 +59,19 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return (
-        cy
-            .xpath("//p[contains(text(),'images containing')]", { timeout: 4000 })
-            .should('be.visible')
-            .parent()
-            .parent()
-            .children()
-            .next()
-            //.next()
-            .children()
-            .first()
-            .children()
-            .as('captchaImages')
-    )
+    return cy
+        .xpath("//p[contains(text(),'all containing')]", { timeout: 4000 })
+        .should('be.visible')
+        .parent()
+        .parent()
+        .parent()
+        .parent()
+        .children()
+        .next()
+        .children()
+        .first()
+        .children()
+        .as('captchaImages')
 }
 
 function getSelectors(captcha: Captcha) {

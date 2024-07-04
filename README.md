@@ -39,7 +39,7 @@ solved, a hidden JSON payload will automatically be added to your form that you 
 verification. You can retrieve it server side with POST parameter `procaptcha-response`.
 
 Here's a full example where Procaptcha is being used to protect a signup form from automated abuse. When the form is
-submitted, the `procaptcha-response` JSON data will be included with the email and password POST data after the captcha
+submitted, the `procaptcha-response` token will be included with the email and password POST data after the captcha
 is solved.
 
 ##### Example of implicit rendering
@@ -145,21 +145,31 @@ You can choose to implement any of the following types of captcha when rendering
 | `pow`          | The `pow` CAPTCHA type requires the user to solve a cryptographic puzzle. This puzzle simply requires a small amount of computational work to solve, and slows down bots significantly, making it difficult for them to scrape in high volumes.                                       |
 | `image`        | The `image` CAPTCHA type requires the user to solve a simple image CAPTCHA. This is CAPTCHA type most people are familiar with, created by Google reCAPTCHA.                                                                                                                          |
 
-#### `procaptcha-response` JSON Data
+### Add the Procaptcha Widget to your site with React
 
-The output from the `onCaptchaVerified` function is the `procaptcha-response` JSON data. The `procaptcha-response` JSON
-data contains the following fields:
+You must import Procaptcha, define a config with ProcaptchaConfigSchema, optionally define callbacks, and render via the Procaptcha component. A minimal example would be as follows:
 
-| Key          | Type   | Description                                                                                                                   |
-| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| commitmentId | string | The commitment ID of the captcha challenge. This is only available in image or Frictionless mode.                             |
-| challenge    | string | The Proof-of-Work challenge that the user solved. This is only available in PoW or Frictionless mode.                         |
-| providerUrl  | string | The URL of the provider that the user used to solve the captcha challenge.                                                    |
-| dapp         | string | The SITE_KEY of your application / website                                                                                    |
-| user         | string | The user's account address                                                                                                    |
-| blockNumber  | number | The block number of the captcha challenge. This is used to verify that the contacted provider was randomly selected on-chain. |
+```javascript
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { ProcaptchaConfigSchema } from '@prosopo/types'
 
-### Verify the User `procaptcha-response` data Server Side
+const MyApp = () => {
+    const config = ProcaptchaConfigSchema.parse({
+        account: {
+            address: 'YOUR_SITEKEY',
+        },
+        // Other config options, see demos/client-example for more details
+    })
+
+    return <Procaptcha config={config} />
+}
+
+export default MyApp
+```
+
+Further example usage can be seen in [demos/client-example](https://github.com/prosopo/captcha/blob/main/demos/client-example/src/App.tsx#L220C1-L223C43)
+
+### Verify the User `procaptcha-response` token Server Side
 
 By adding the client side code, you were able to render a Procaptcha widget that identified if users were real people or
 automated bots. When the captcha succeeded, the Procaptcha script inserted unique data into your form data, which is
@@ -171,24 +181,20 @@ To verify that the token is indeed real and valid, you must now verify it at the
 
 https://api.prosopo.io/siteverify
 
-The endpoint expects a POST request with the `procaptcha-response` sent from your frontend HTML to your backend for
-verification.
+The endpoint expects a POST request with the `procaptcha-response` token. You must also pass your secret key, which you can obtain by [logging in to our customer portal](https://portal.prosopo.io).
 
-A simple test will look like this, where the contents in data is the `procaptcha-response` JSON data, after being
+A simple test will look like this, where the contents in data is the `procaptcha-response` token, after being
 parsed:
 
 ```javascript
 // pseudocode
-// get the contents of the procaptcha-response JSON data
+// get the contents of the procaptcha-response token
 data = req.body['procaptcha-response']
 
 // send a POST application/json request to the API endpoint
 response = POST('https://api.prosopo.io/siteverify', {
-    providerUrl: data.providerUrl,
-    user: data.user,
-    dapp: YOUR_SITE_KEY, // Make sure to replace YOUR_SITE_KEY with your actual site key
-    challenge: data.commitmentId,
-    blockNumber: data.blockNumber,
+    token: data.token,
+    secret: 'your_secret_key',
 })
 ```
 
@@ -197,13 +203,7 @@ Or, as a CURL command:
 ```bash
 curl --location 'https://api.prosopo.io/siteverify' \
 --header 'Content-Type: application/json' \
---data '{
-    "providerUrl": "...",
-    "user": "...",
-    "dapp": "...",
-    "challenge": "...",
-    "blockNumber": ...
-}'
+--data '{"secret":"0x1234123412341234123412341234","token":"PROCAPTCHA-RESPONSE"}''
 ```
 
 Note that the endpoint expects the application/json Content-Type. You can see exactly what is sent
@@ -233,10 +233,13 @@ import {ApiParams} from '@prosopo/types'
 // parse the body received from the frontend
 const payload = JSON.parse(event.body)
 
-// parse the procaptcha response, which is a JSON string
-const procaptchaResponse = JSON.parse(payload[ApiParams.procaptchaResponse])
+// parse the procaptcha response token
+const procaptchaResponse = payload[ApiParams.procaptchaResponse]
 
-// send the
+// initialise the `ProsopoServer` class
+const prosopoServer = new ProsopoServer(config, pair)
+
+// check if the captcha response is verified
 if (await prosopoServer.isVerified(procaptchaResponse)) {
     // perform CAPTCHA protected action
 }
@@ -245,28 +248,65 @@ if (await prosopoServer.isVerified(procaptchaResponse)) {
 There is an example TypeScript server side implementation
 in [demos/client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server).
 
-## Rendering different CAPTCHA types with Procaptcha
+#### Specifying timeouts
 
-### Frictionless CAPTCHA
+Custom timeouts can be specified for the length of time in which a user has to solve the CAPTCHA challenge. The defaults are as follows:
+
+```typescript
+const defaultCaptchaTimeouts = {
+    image: {
+        // The timeframe in which a user must complete an image captcha (1 minute)
+        challengeTimeout: 60000,
+        // The timeframe in which an image captcha solution remains valid on the page before timing out (2 minutes)
+        solutionTimeout: 60000 * 2,
+        // The timeframe in which an image captcha solution must be verified server side (3 minutes)
+        verifiedTimeout: 60000 * 3,
+        // The time in milliseconds that a cached, verified, image captcha solution is valid for (15 minutes)
+        cachedTimeout: 60000 * 15,
+    },
+    pow: {
+        // The timeframe in which a pow captcha solution remains valid on the page before timing out (1 minute)
+        challengeTimeout: 60000,
+        // The timeframe in which a pow captcha must be completed and verified (2 minutes)
+        solutionTimeout: 60000 * 2,
+        // The time in milliseconds that a Provider cached, verified, pow captcha solution is valid for (3 minutes)
+        cachedTimeout: 60000 * 3,
+    },
+}
+```
+
+To specify timeouts using API verification, pass the above object in a field called `timeouts`, implementing one or more of the timeouts.
+
+```typescript
+// send a POST application/json request to the API endpoint
+response = POST('https://api.prosopo.io/siteverify', {
+    ...
+    timeouts: defaultCaptchaTimeouts, // add timeouts object here
+})
+```
+
+To specify timeouts using the verification package, pass the above object in the `timeouts` field of the `ProsopoServer` config, implementing one or more of the timeouts.
+
+```typescript
+config = { timeouts: defaultCaptchaTimeouts, ...config }
+const prosopoServer = new ProsopoServer(config, pair)
+```
+
+## Rendering different CAPTCHA types with Procaptcha
 
 Procaptcha's default `frictionless` feature dynamically detects if the user is a bot or a human. If the user is likely
 to be a bot, the user will be presented with a Proof-of-Work CAPTCHA challenge. If the user is likely to be a human, the
 user will not be presented with an image CAPTCHA challenge.
 
-Serve a Frictionless CAPTCHA by setting the `captchaType` to `frictionless`, or by omitting it, as it is the default
-setting.
+Serve **different** types of CAPTCHA by setting the `captchaType` to `frictionless`, `pow`, `image`.
 
-#### Example of Frictionless CAPTCHA implicit rendering
+#### Example of setting CAPTCHA type implicitly
 
 ```html
-<div class="procaptcha" data-sitekey="your_site_key"></div>
-
-<!-- or -->
-
 <div class="procaptcha" data-sitekey="your_site_key" data-captcha-type="frictionless"></div>
 ```
 
-#### Example of Frictionless CAPTCHA rendering
+#### Example of setting CAPTCHA type explicitly
 
 ```javascript
 document.getElementById('procaptcha-script').addEventListener('load', function () {
@@ -279,66 +319,7 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
         siteKey: 'YOUR_SITE_KEY',
         theme: 'dark',
         callback: onCaptchaVerified,
-        captchaType: 'frictionless', // can also be omitted
-    })
-})
-```
-
-### Proof of Work CAPTCHA
-
-Procaptcha's Proof-of-Work feature deters bot attacks by requiring users to solve a cryptographic puzzle. The
-puzzle is easy for humans to solve but computationally expensive for bots. Serve a Proof-of-Work CAPTCHA by setting
-the `captchaType` to `pow`.
-
-#### Example of Proof-of-Work CAPTCHA implicit rendering
-
-```html
-<div class="procaptcha" data-sitekey="your_site_key" data-captcha-type="pow"></div>
-```
-
-#### Example of Proof-of-Work CAPTCHA rendering
-
-```javascript
-document.getElementById('procaptcha-script').addEventListener('load', function () {
-    function onCaptchaVerified(output) {
-        console.log('Captcha verified, output: ' + JSON.stringify(output))
-    }
-    // Get the Element using elementId
-    const captchaContainer = document.getElementById('procaptcha-container')
-    window.procaptcha.render(captchaContainer, {
-        siteKey: 'YOUR_SITE_KEY',
-        theme: 'dark',
-        callback: onCaptchaVerified,
-        captchaType: 'pow',
-    })
-})
-```
-
-### Image CAPTCHA
-
-Procaptcha's' `image` setting displays an image CAPTCHA to users. Serve an image CAPTCHA by setting the `captchaType`
-to `image`.
-
-#### Example of Image CAPTCHA implicit rendering
-
-```html
-<div class="procaptcha" data-sitekey="your_site_key" data-captcha-type="image"></div>
-```
-
-#### Example of Image CAPTCHA explicit rendering
-
-```javascript
-document.getElementById('procaptcha-script').addEventListener('load', function () {
-    function onCaptchaVerified(output) {
-        console.log('Captcha verified, output: ' + JSON.stringify(output))
-    }
-    // Get the Element using elementId
-    const captchaContainer = document.getElementById('procaptcha-container')
-    window.procaptcha.render(captchaContainer, {
-        siteKey: 'YOUR_SITE_KEY',
-        theme: 'dark',
-        callback: onCaptchaVerified,
-        captchaType: 'image',
+        captchaType: 'image', // `pow` or `frictionless`
     })
 })
 ```

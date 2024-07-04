@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/tx",
-    "version": "0.3.39",
+    "version": "1.0.2",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "scripts": {
@@ -8,16 +8,16 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
+        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "type": "module",
     "engines": {
-        "node": ">=18",
+        "node": ">=20",
         "npm": ">=9"
     },
     "main": "./dist/index.js",
@@ -43,24 +43,11 @@
     },
     "dependencies": {
         "@polkadot/api": "10.13.1",
-        "@polkadot/api-contract": "10.13.1",
         "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.13.1",
-        "@polkadot/typegen": "10.13.1",
         "@polkadot/types": "10.13.1",
-        "@polkadot/types-create": "10.13.1",
-        "@polkadot/util": "12.6.2",
-        "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/common": "0.3.39",
-        "@prosopo/types": "0.3.39",
-        "@prosopo/util": "0.3.39",
-        "@prosopo/captcha-contract": "0.3.39",
-        "@prosopo/typechain-types": "1.1.15",
-        "rxjs": "^7.8.1"
+        "@prosopo/common": "1.0.2"
     },
     "devDependencies": {
-        "@polkadot/api-augment": "10.13.1",
-        "ts-node": "^10.9.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },

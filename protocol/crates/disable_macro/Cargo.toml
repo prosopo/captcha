@@ -3,7 +3,7 @@ proc-macro = true
 
 [package]
 name = "disable_macro"
-version = "0.3.39"
+version = "1.0.2"
 authors = [ "George Oastler <goastler4@gmail.com>" ]
 edition = "2021"
 description = "macro that disables all functions"

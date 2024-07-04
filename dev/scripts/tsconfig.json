@@ -50,13 +50,16 @@
             "path": "../../packages/procaptcha-bundle"
         },
         {
+            "path": "../../packages/procaptcha-common"
+        },
+        {
             "path": "../../packages/procaptcha-react"
         },
         {
             "path": "../../packages/procaptcha-pow"
         },
         {
-            "path": "../../protocol/dev"
+            "path": "../../protocol"
         },
         {
             "path": "../../packages/provider"
@@ -72,6 +75,9 @@
         },
         {
             "path": "../../packages/types-env"
+        },
+        {
+            "path": "../../packages/tx"
         },
         {
             "path": "../../packages/web-components"

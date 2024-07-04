@@ -1,44 +1,58 @@
 version: '3.8'
 services:
-  provider:
-    image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
-    build:
-      context: ..
-      dockerfile: ./docker/images/provider.dockerfile
-    env_file:
-      - ../.env.production
-    ports:
-      - "9229:9229"
-    tty: true
-    depends_on:
-      - database
-    networks:
-      - internal
-      - external
-
-  database:
-    image: mongodb-raspberrypi4-unofficial-r6.0.10
-    volumes:
-      - /data/db:/data/db
-    ports:
-      - "27017:27017"
-    env_file:
-      - ../.env.production
-    networks:
-      - internal
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./provider.Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - external
+    provider:
+        image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+        build:
+            context: ..
+            dockerfile: ./docker/images/provider.dockerfile
+        env_file:
+            - ../.env.production
+        ports:
+            - '9229:9229'
+        tty: true
+        depends_on:
+            - database
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+    database:
+        image: mongodb-raspberrypi4-unofficial-r6.0.10
+        volumes:
+            - /data/db:/data/db
+        ports:
+            - '27017:27017'
+        env_file:
+            - ../.env.production
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+    caddy:
+        image: caddy:2
+        restart: unless-stopped
+        ports:
+            - '80:80'
+            - '443:443'
+            - '443:443/udp'
+        volumes:
+            - ./provider.Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
 networks:
     internal:
         name: internal

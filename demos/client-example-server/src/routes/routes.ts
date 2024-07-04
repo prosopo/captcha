@@ -12,16 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Connection } from 'mongoose'
-import { ProsopoServer } from '@prosopo/server'
+import { ProsopoServerConfigOutput } from '@prosopo/types'
 import { isAuth, login, signup } from '../controllers/auth.js'
 import express from 'express'
 
 const router = express.Router()
 
-function getRoutes(mongoose: Connection, prosopoServer: ProsopoServer): express.Router {
-    router.post('/login', login.bind(null, mongoose, prosopoServer))
+function getRoutes(
+    mongoose: Connection,
+    config: ProsopoServerConfigOutput,
+    verifyEndpoint: string,
+    verifyType: string
+): express.Router {
+    router.post('/login', login.bind(null, mongoose, config, verifyEndpoint, verifyType))
 
-    router.post('/signup', signup.bind(null, mongoose, prosopoServer))
+    router.post('/signup', signup.bind(null, mongoose, config, verifyEndpoint, verifyType))
 
     router.get('/private', isAuth)
 

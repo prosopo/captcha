@@ -332,14 +332,14 @@ pub mod captcha {
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_threshold(&self) -> Balance {
-            let env_provider_stake_threshold: Balance = 1000000000;
+            let env_provider_stake_threshold: Balance = 1000000000000000000000;
             env_provider_stake_threshold
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
         pub fn get_dapp_stake_threshold(&self) -> Balance {
-            let env_dapp_stake_threshold: Balance = 1000000000;
+            let env_dapp_stake_threshold: Balance = 100000000000000000000;
             env_dapp_stake_threshold
         }
 
@@ -453,7 +453,7 @@ pub mod captcha {
             };
 
             // update the balance
-            new_provider.balance += self.env().transferred_value();
+            new_provider.balance = Math::add(new_provider.balance, self.env().transferred_value())?;
 
             // if the provider is
             // not deactivating
@@ -702,7 +702,7 @@ pub mod captcha {
             };
 
             // update the dapp funds
-            new_dapp.balance += self.env().transferred_value();
+            new_dapp.balance = Math::add(new_dapp.balance, self.env().transferred_value())?;
 
             // update the dapp status
             new_dapp.status =
@@ -880,9 +880,9 @@ pub mod captcha {
             for hash in history.iter() {
                 let result = self.commits.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
-                    summary.correct += 1;
+                    summary.correct = Math::add(summary.correct, 1)?;
                 } else if result.status == CaptchaStatus::Disapproved {
-                    summary.incorrect += 1;
+                    summary.incorrect = Math::add(summary.incorrect, 1)?;
                 } else {
                     return Err(Error::InvalidCaptchaStatus);
                 }
@@ -971,12 +971,12 @@ pub mod captcha {
             if provider.fee != 0 {
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
-                    dapp.balance -= fee;
-                    provider.balance += fee;
+                    dapp.balance = Math::sub(dapp.balance, fee)?;
+                    provider.balance = Math::add(provider.balance, fee)?;
                 }
                 if provider.payee == Payee::Dapp {
-                    provider.balance -= fee;
-                    dapp.balance += fee;
+                    provider.balance = Math::sub(provider.balance, fee)?;
+                    dapp.balance = Math::add(dapp.balance, fee)?;
                 }
                 self.providers.insert(provider_account, &provider);
                 self.dapps.insert(dapp_contract, &dapp);
@@ -1145,7 +1145,7 @@ pub mod captcha {
                     .unwrap_or_default();
 
                 // The max length of the active providers is the sum of the two
-                max += active_providers_secondary.len();
+                max = Math::add(max, active_providers_secondary.len())?;
 
                 // If the max is 0, then there are no active providers
                 if max == 0 {
@@ -1163,7 +1163,7 @@ pub mod captcha {
                 if index < active_providers_initial.len() as u128 {
                     active_providers = active_providers_initial;
                 } else {
-                    index -= active_providers_initial.len() as u128;
+                    index = Math::add(index, active_providers_initial.len() as u128)?;
                     active_providers = active_providers_secondary;
                 }
             } else {
@@ -1222,7 +1222,7 @@ pub mod captcha {
             Ok(provider_accounts)
         }
 
-        /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
+        /// Get a random number from 0 to len - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
         pub fn get_random_number(
             &self,
@@ -1291,20 +1291,11 @@ pub mod captcha {
 
         /// Set the code hash for this contract
         #[ink(message)]
-        pub fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        pub fn set_code_hash(&mut self, code_hash: Hash) -> Result<(), Error> {
             self.check_caller_admin()?;
-            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
-            if let Err(e) = set_code_hash_result {
-                match e {
-                    ink::env::Error::CodeNotFound => {
-                        return err!(self, Error::CodeNotFound);
-                    }
-                    _ => {
-                        return err!(self, Error::SetCodeHashFailed);
-                    }
-                }
-            }
-            Ok(())
+            self.env()
+                .set_code_hash(&code_hash)
+                .or_else(|_| err!(self, Error::SetCodeHashFailed))
         }
 
         /// Is the caller the admin for this contract?
@@ -1343,7 +1334,9 @@ pub mod captcha {
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        const STAKE_THRESHOLD: u128 = 1000000000;
+        const PROVIDER_STAKE_THRESHOLD: u128 = 1000000000000000000000;
+        const DAPP_STAKE_THRESHOLD: u128 = 100000000000000000000;
+        const DEFAULT_FEE: u128 = 1000000;
 
         const set_caller: fn(AccountId) =
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
@@ -1500,8 +1493,11 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // ctor params should be set
-            assert_eq!(contract.get_provider_stake_threshold(), STAKE_THRESHOLD);
-            assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
+            assert_eq!(
+                contract.get_provider_stake_threshold(),
+                PROVIDER_STAKE_THRESHOLD
+            );
+            assert_eq!(contract.get_dapp_stake_threshold(), DAPP_STAKE_THRESHOLD);
             assert_eq!(contract.get_admin(), get_admin_account(0));
             assert_eq!(contract.get_max_user_history_len(), 10);
             assert_eq!(
@@ -1645,7 +1641,7 @@ pub mod captcha {
 
             let new_code_hash = get_code_hash(1);
             assert_eq!(
-                contract.set_code_hash(new_code_hash),
+                contract.set_code_hash(new_code_hash.into()),
                 Err(Error::NotAuthorised)
             );
         }
@@ -1751,7 +1747,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             let provider_stake_threshold: u128 = contract.get_provider_stake_threshold();
-            assert!(STAKE_THRESHOLD.eq(&provider_stake_threshold));
+            assert!(PROVIDER_STAKE_THRESHOLD.eq(&provider_stake_threshold));
         }
 
         /// Assert contract dapp minimum stake default set from constructor.
@@ -1762,7 +1758,7 @@ pub mod captcha {
 
             let mut contract = get_contract(0);
             let dapp_stake_threshold: u128 = contract.get_dapp_stake_threshold();
-            assert!(STAKE_THRESHOLD.eq(&dapp_stake_threshold));
+            assert!(DAPP_STAKE_THRESHOLD.eq(&dapp_stake_threshold));
         }
 
         /// Test provider register
@@ -2113,7 +2109,7 @@ pub mod captcha {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the call
-            let balance = STAKE_THRESHOLD;
+            let balance = DAPP_STAKE_THRESHOLD;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // Mark the the dapp account as being a contract on-chain
@@ -2154,7 +2150,7 @@ pub mod captcha {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the call
-            let balance_1 = STAKE_THRESHOLD;
+            let balance_1 = DAPP_STAKE_THRESHOLD;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
             // Mark the the dapp account as being a contract on-chain
@@ -2177,7 +2173,7 @@ pub mod captcha {
             assert_eq!(dapp.balance, balance_1);
 
             // Transfer tokens with the call
-            let balance_2 = STAKE_THRESHOLD;
+            let balance_2 = DAPP_STAKE_THRESHOLD;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
 
             // run the register function again for the same (caller, contract) pair, adding more
@@ -2288,14 +2284,15 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // Register the provider
-            let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
+            let (provider_account, url, fee) =
+                generate_provider_data(0x2, "4242", DEFAULT_FEE.try_into().unwrap());
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
                 .provider_register(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2315,8 +2312,8 @@ pub mod captcha {
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-            // Give the dap a balance
-            let balance = 2000000000000;
+            // Give the dapp a balance
+            let dapp_balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2393,7 +2390,7 @@ pub mod captcha {
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2413,7 +2410,7 @@ pub mod captcha {
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
-            let balance = 2000000000000;
+            let balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2452,14 +2449,15 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // Register the provider
-            let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
+            let (provider_account, url, fee) =
+                generate_provider_data(0x2, "4242", DEFAULT_FEE.try_into().unwrap());
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
                 .provider_register(url.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2481,7 +2479,7 @@ pub mod captcha {
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
-            let balance = 2000000000000;
+            let dapp_balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2555,7 +2553,7 @@ pub mod captcha {
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2573,7 +2571,7 @@ pub mod captcha {
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
-            let balance = 2000000000000;
+            let balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2646,7 +2644,7 @@ pub mod captcha {
                 .provider_register(url.clone(), fee, Payee::Dapp)
                 .unwrap();
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let balance = 20000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(url, fee, Payee::Dapp).unwrap();
             let root1 = str_to_hash("merkle tree1".to_string());
@@ -2662,7 +2660,7 @@ pub mod captcha {
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
-            let balance = 2000000000000;
+            let balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2688,7 +2686,7 @@ pub mod captcha {
                 .provider_register(url.clone(), fee, Payee::Provider)
                 .unwrap();
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let balance = 20000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .provider_update(url.clone(), fee, Payee::Provider)
@@ -2706,7 +2704,7 @@ pub mod captcha {
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dapp a balance
-            let balance = 2000000000000;
+            let balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Any)
@@ -2756,7 +2754,7 @@ pub mod captcha {
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2774,7 +2772,7 @@ pub mod captcha {
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
-            let balance = 2000000000000;
+            let balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2842,7 +2840,7 @@ pub mod captcha {
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2860,7 +2858,7 @@ pub mod captcha {
             // Call from the dapp_contract
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract);
             // Give the dap a balance
-            let balance = 2000000000000;
+            let balance = DAPP_STAKE_THRESHOLD * 2;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
@@ -2874,7 +2872,7 @@ pub mod captcha {
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
+            let balance = PROVIDER_STAKE_THRESHOLD * 2;
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);

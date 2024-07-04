@@ -16,7 +16,7 @@ import { ApiPromise } from '@polkadot/api/promise/Api'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { NetworkConfig, NetworkPairTypeSchema } from '@prosopo/types'
+import { NetworkConfig, NetworkPairTypeSchema, PolkadotSecretJSON } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { hexToU8a } from '@polkadot/util/hex'
@@ -25,7 +25,7 @@ import { mnemonicValidate } from '@polkadot/util-crypto/mnemonic'
 
 export async function getPairAsync(
     networkConfig?: NetworkConfig,
-    secret?: string,
+    secret?: string | KeyringPair$Json | PolkadotSecretJSON,
     account?: string | Uint8Array,
     pairType?: KeypairType,
     ss58Format?: number
@@ -36,7 +36,7 @@ export async function getPairAsync(
 
 export function getPair(
     networkConfig?: NetworkConfig,
-    secret?: string,
+    secret?: string | KeyringPair$Json | PolkadotSecretJSON,
     account?: string | Uint8Array,
     pairType?: KeypairType,
     ss58Format?: number
@@ -50,9 +50,9 @@ export function getPair(
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (!secret && account) {
         return keyring.addFromAddress(account)
-    } else if (secret) {
+    } else if (secret && typeof secret === 'string') {
         if (mnemonicValidate(secret)) {
-            return keyring.addFromUri(secret)
+            return keyring.addFromMnemonic(secret)
         }
         if (isHex(secret)) {
             return keyring.addFromSeed(hexToU8a(secret))
@@ -68,8 +68,10 @@ export function getPair(
             const keyring = new Keyring({ type: content[1], ss58Format })
             return keyring.addFromJson(json as KeyringPair$Json)
         } catch (e) {
-            throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
+            throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED', { context: { error: e } })
         }
+    } else if (typeof secret === 'object') {
+        return keyring.addFromJson(secret as KeyringPair$Json)
     } else {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }

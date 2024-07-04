@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from './databases/index.js'
 export * from './eventsDatabase/index.js'
+export * from './captchaDatabase/index.js'

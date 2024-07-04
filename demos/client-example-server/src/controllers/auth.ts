@@ -11,14 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams } from '@prosopo/types'
+import { ApiParams, ProcaptchaToken, ProsopoServerConfigOutput } from '@prosopo/types'
 import { Connection } from 'mongoose'
 import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user.js'
 import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
+import { getPairAsync } from '@prosopo/contract'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
@@ -35,9 +37,45 @@ function hashPassword(password: string): string {
     return u8aToHex(blake2b(password))
 }
 
+const verify = async (
+    prosopoServer: ProsopoServer,
+    verifyType: string,
+    verifyEndpoint: string,
+    token: ProcaptchaToken,
+    secret: string
+) => {
+    if (verifyType === 'api') {
+        // verify using the API endpoint
+        console.log('Verifying using the API endpoint', verifyEndpoint)
+
+        const response = await fetch(verifyEndpoint, {
+            method: 'POST',
+            body: JSON.stringify({ [ApiParams.token]: token, [ApiParams.secret]: secret }),
+        })
+        console.log('Status:', response.status, 'Status Text:', response.statusText)
+
+        const verified = (await response.json()).verified
+
+        console.log(`Verified: ${verified}`)
+
+        return verified
+    } else {
+        // verify using the TypeScript library
+        console.log('Verifying using the TypeScript library')
+
+        const verified = await prosopoServer.isVerified(token)
+
+        console.log(`Verified: ${verified}`)
+
+        return await prosopoServer.isVerified(token)
+    }
+}
+
 const signup = async (
     mongoose: Connection,
-    prosopoServer: ProsopoServer,
+    config: ProsopoServerConfigOutput,
+    verifyEndpoint: string,
+    verifyType: string,
     req: Request,
     res: Response,
     next: NextFunction
@@ -49,12 +87,28 @@ const signup = async (
             email: req.body.email,
         })
         const payload = SubscribeBodySpec.parse(req.body)
+        const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
+        const prosopoServer = new ProsopoServer(config, pair)
         await prosopoServer.isReady()
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
         }
-        console.log('payload', payload)
-        if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+        console.log('Request payload', payload)
+
+        // get the procaptcha-response token
+        const token = payload[ApiParams.procaptchaResponse]
+
+        console.log('Sending Procaptcha token', token)
+
+        if (!config.account.secret) {
+            throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
+                context: { missingParams: ['PROSOPO_SITE_PRIVATE_KEY'] },
+            })
+        }
+
+        const verified = await verify(prosopoServer, verifyType, verifyEndpoint, token, config.account.secret)
+
+        if (verified) {
             // salt
             const salt = randomAsHex(32)
             // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
@@ -83,8 +137,17 @@ const signup = async (
     }
 }
 
-const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response) => {
+const login = async (
+    mongoose: Connection,
+    config: ProsopoServerConfigOutput,
+    verifyEndpoint: string,
+    verifyType: string,
+    req: Request,
+    res: Response
+) => {
     const User = mongoose.model<UserInterface>('User')
+    const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
+    const prosopoServer = new ProsopoServer(config, pair)
     await prosopoServer.isReady()
     // checks if email exists
     await User.findOne({
@@ -94,8 +157,19 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
             if (!dbUser) {
                 res.status(404).json({ message: 'user not found' })
             } else {
-                const payload = SubscribeBodySpec.parse(req.body)
-                if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+                const payload = SubscribeBodySpec.parse(req.body[ApiParams.procaptchaResponse])
+
+                const token = payload[ApiParams.procaptchaResponse]
+
+                if (!config.account.secret) {
+                    throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
+                        context: { missingParams: ['PROSOPO_SITE_PRIVATE_KEY'] },
+                    })
+                }
+
+                const verified = await verify(prosopoServer, verifyType, verifyEndpoint, token, config.account.secret)
+
+                if (verified) {
                     // password hash
                     // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
                     const passwordHash = hashPassword(`${req.body.password}${dbUser.salt}`)

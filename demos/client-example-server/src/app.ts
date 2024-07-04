@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { ProsopoServer, getServerConfig } from '@prosopo/server'
-import { getPairAsync } from '@prosopo/contract'
+import { at } from '@prosopo/util'
+import { getServerConfig } from '@prosopo/server'
 import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -31,9 +31,22 @@ export function getEnvFile(filename = '.env', filepath = './') {
     return path.join(filepath, `${filename}.${env}`)
 }
 
+enum ProsopoVerificationType {
+    api = 'api',
+    local = 'local',
+}
+
 async function main() {
     const logger = getLoggerDefault()
     loadEnv()
+
+    const verifyEndpoint = process.env.PROSOPO_VERIFY_ENDPOINT || 'https://api.prosopo.io/siteverify'
+
+    const verifyType: ProsopoVerificationType = Object.keys(ProsopoVerificationType).includes(
+        process.env.PROSOPO_VERIFICATION_TYPE as string
+    )
+        ? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
+        : ProsopoVerificationType.api
 
     const app = express()
 
@@ -68,13 +81,11 @@ async function main() {
 
     const config = getServerConfig()
 
-    console.log('config', config)
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], process.env.PROSOPO_SITE_PRIVATE_KEY)
-    const prosopoServer = new ProsopoServer(config, pair)
+    console.log('Config', config)
 
-    app.use(routesFactory(mongoose, prosopoServer))
+    app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType))
 
-    app.listen(process.env.PROSOPO_SERVER_PORT)
+    app.listen(config.serverUrl ? parseInt(at(config.serverUrl.split(':'), 2)) : 9228)
 }
 
 main()
