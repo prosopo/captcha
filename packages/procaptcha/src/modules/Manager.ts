@@ -210,7 +210,11 @@ export function Manager(
                         signature,
                         configOptional.captchas.image.cachedTimeout
                     )
-                    if (verifyDappUserResponse.verified && verifyDappUserResponse.commitmentId) {
+                    if (
+                        verifyDappUserResponse.verified &&
+                        verifyDappUserResponse.commitmentId &&
+                        verifyDappUserResponse.blockNumber
+                    ) {
                         updateState({ isHuman: true, loading: false })
                         const output = {
                             [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
