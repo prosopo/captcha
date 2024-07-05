@@ -48,7 +48,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const tasks = new Tasks(env)
                 const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappRegister> = [
                     z.string().parse(argv.contract),
-                    get(DappPayee, z.string().parse(argv.payee)),
+                    get(DappPayee, z.string().parse(argv.payee).toLowerCase()),
                     {
                         value: 0,
                     },
