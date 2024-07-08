@@ -1,0 +1,37 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["es6", "dom"],
+        "jsxImportSource": "@emotion/react"
+    },
+    "include": ["src", "src/**/*.json"],
+
+    "references": [
+        {
+            "path": "../account"
+        },
+        {
+            "path": "../api"
+        },
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../procaptcha"
+        },
+        {
+            "path": "../procaptcha-pow"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../util"
+        },
+        {
+            "path": "../web-components"
+        }
+    ]
+}
