@@ -50,7 +50,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(3, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(4, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -69,7 +69,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(7, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(8, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -92,7 +92,7 @@ export default class Methods {
             [account],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(7, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(8, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -111,7 +111,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(8, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(9, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }

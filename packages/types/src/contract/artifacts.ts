@@ -111,7 +111,7 @@ export const AbiTypeSpec = z.object({
         def: z.object({
             composite: z
                 .object({
-                    fields: z.array(AbiFieldSpec),
+                    fields: z.array(AbiFieldSpec).optional(), // some composite objects have no fields
                 })
                 .optional(),
             variant: z

@@ -31,7 +31,7 @@ const reDeploy = async (
     appName: string,
     hard = false
 ) => {
-    const apiUrl = new URL(`${url}apps/redeploy/${appName}/${hard}/true`).toString()
+    const apiUrl = new URL(`${url}apps/redeploy/${appName}/${hard}/true`).href
     const Zelidauth = getZelIdAuthHeader(zelid, signature, loginPhrase)
     const response = await fetch(apiUrl, {
         method: 'GET',
@@ -49,7 +49,7 @@ export const main = async (publicKey: string, privateKey: Uint8Array, appName: s
         // Login to the node
         await verifyLogin(publicKey, nodeSignature, nodeLoginPhrase, nodeAPIURL)
 
-        // Soft redeploy the app
+        // Redeploy the app
         const redeployResponse = await reDeploy(publicKey, nodeSignature, nodeLoginPhrase, nodeAPIURL, appName, hard)
 
         log.info(redeployResponse)

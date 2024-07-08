@@ -17,6 +17,7 @@ import {
     NetworkNamesSchema,
     decodeProcaptchaOutput,
     networks as getNetworks,
+    encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
@@ -263,20 +264,22 @@ export async function processArgs(args: string[]) {
             },
         })
         .command({
-            command: 'token <tokenHex>',
-            describe: 'Decode a Procaptcha token to the JSON output format',
+            command: 'token <token>',
+            describe: 'Encode or Decode a Procaptcha token to the JSON output format',
             builder: (yargs) =>
-                yargs.positional('tokenHex', {
+                yargs.positional('token', {
                     describe: 'a Procaptcha token to decode',
                     type: 'string',
                     demandOption: true,
                 }),
             handler: async (argv) => {
-                if (!isHex(argv.tokenHex)) {
-                    log.error('Token must be a hex string')
-                    process.exit(1)
+                if (!isHex(argv.token)) {
+                    log.debug('Encoding token to hex')
+                    log.info(encodeProcaptchaOutput(JSON.parse(argv.token)))
+                } else {
+                    log.debug('Decoding token from hex')
+                    log.info(decodeProcaptchaOutput(argv.token))
                 }
-                log.info(decodeProcaptchaOutput(argv.tokenHex))
             },
         }).argv
 }

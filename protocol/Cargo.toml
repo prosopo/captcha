@@ -3,7 +3,7 @@ members = [ "crates/*", "contracts/*" ]
 resolver = "2"
 
   [workspace.package]
-  version = "0.1.17"
+  version = "0.0.0"
   authors = [
   "Chris Taylor chris@prosopo.io",
   "George Oastler george@prosopo.io",

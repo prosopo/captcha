@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BotDetectionFunction, ProcaptchaFrictionlessProps } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { ProcaptchaPow } from '@prosopo/procaptcha-pow'
-import { useEffect, useState } from 'react'
-import { BotDetectionFunction, ProcaptchaFrictionlessProps } from '@prosopo/types'
 import { isBot } from '@prosopo/detector'
+import { useEffect, useState } from 'react'
 
 const customDetectBot: BotDetectionFunction = async () => {
     return await isBot().then((result) => {

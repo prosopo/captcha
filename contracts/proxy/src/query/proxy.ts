@@ -50,7 +50,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(6, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(7, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -75,7 +75,7 @@ export default class Methods {
             [msg],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(12, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(14, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }

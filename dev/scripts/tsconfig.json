@@ -59,7 +59,7 @@
             "path": "../../packages/procaptcha-pow"
         },
         {
-            "path": "../../protocol/dev"
+            "path": "../../protocol"
         },
         {
             "path": "../../packages/provider"

@@ -59,7 +59,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(6, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(7, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }

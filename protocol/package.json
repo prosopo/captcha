@@ -1,0 +1,41 @@
+{
+    "name": "@prosopo/protocol",
+    "version": "1.0.2",
+    "description": "Dev tools for working with prosopo contracts",
+    "main": "dist/index.js",
+    "type": "module",
+    "engines": {
+        "node": ">=20",
+        "npm": ">=9"
+    },
+    "scripts": {
+        "build": "echo 'run npm run build:all' to build contracts/crates",
+        "test": "echo 'run npm run test:all' to test contracts/crates",
+        "docker": "f() { if [ \"$CI\" = \"true\" ]; then FLAGS=''; else FLAGS='-it'; fi ; mkdir -p cargo-cache && docker run --rm $FLAGS -u $(id -u):$(id -g) --cpu-quota=-1 -v $PWD:/src -v $PWD/cargo-cache:/usr/local/cargo/registry prosopo/cargo-contract:4.1.1 \"export RUST_BACKTRACE=1; $@\" ;}; f",
+        "build:contract": "f() { npm run docker -- \"cd contracts/$1 && cargo contract build --release\" ;}; f",
+        "build:contract:dev": "f() { npm run docker -- \"cd contracts/$1 && cargo contract build\" ;}; f",
+        "build:crate": "f() { npm run docker -- \"cd crates/$1 && cargo build\" ;}; f",
+        "build:contract:all": "eval $(npm --silent run ls:contracts | xargs -I {} printf 'npm run build:contract -- {}\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "build:crate:all": "eval $(npm --silent run ls:crates | xargs -I {} printf 'npm run build:crate -- {}\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "build:all": "npm run build:crate:all && npm run build:contract:all",
+        "test:contract": "f() { npm run docker -- \"cd contracts/$1 && cargo test\" ;}; f",
+        "test:contract:all": "eval $(npm --silent run ls:contracts | xargs -I {} printf 'npm run test:contract -- {}\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "test:crate": "f() { npm run docker -- \"cd crates/$1 && cargo test\" ;}; f",
+        "test:crate:all": "eval $(npm --silent run ls:crates | xargs -I {} printf 'npm run test:crate -- {}\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "test:all": "npm run test:crate:all && npm run test:contract:all",
+        "check:crates": "eval $(npm --silent run ls:crates | xargs -I {} printf 'npm run docker -- \"cd crates/{} && cargo check\"\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "check:contracts": "eval $(npm --silent run ls:contracts | xargs -I {} printf 'npm run docker -- \"cd contracts/{} && cargo check\"\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "check": "npm run check:crates && npm run check:contracts",
+        "clean": "npm run clean:target && npm run clean:cache",
+        "clean:target": "npm run docker -- cargo clean",
+        "clean:cache": "rm -rf cargo-cache/*",
+        "rustfmt": "eval $(npm --silent run ls:all | xargs -I {} printf 'npm run docker -- \"cd {} && cargo fmt --all -- --check --verbose\"\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "clippy": "eval $(npm --silent run ls:all | xargs -I {} printf 'npm run docker -- \"cd {} && cargo clippy -- -D warnings -A clippy::too_many_arguments\"\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
+        "ls:crates": "f() { cd crates && find . -maxdepth 1 | tr -d '.' | tr -d '/' | tail -n +2 ;}; f",
+        "ls:contracts": "f() { cd contracts && find . -maxdepth 1 | tr -d '.' | tr -d '/' | tail -n +2 ;}; f",
+        "ls:all": "f() { find crates contracts -maxdepth 1 -mindepth 1 -type d ;}; f"
+    },
+    "author": "Prosopo Limited",
+    "license": "Apache-2.0",
+    "private": true
+}

@@ -36,6 +36,7 @@
         "consola": "^3.2.3",
         "dotenv": "^16.0.3",
         "glob": "^10.0.0",
+        "openpgp": "^5.11.1",
         "qs": "^6.11.2",
         "socket.io-client": "^4.7.4",
         "varuint-bitcoin": "^1.1.2",

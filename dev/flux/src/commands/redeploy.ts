@@ -27,14 +27,25 @@ export default (cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.deploy')
 
     return {
-        command: 'redeploy',
+        command: 'redeploy <app>',
         describe: 'Deploy a Flux application',
         builder: (yargs: Argv) =>
-            yargs.option('hard', {
-                type: 'boolean' as const,
-                demand: false,
-                desc: 'Whether to hard redeploy the app',
-            } as const),
+            yargs
+                .positional('app', {
+                    type: 'string' as const,
+                    demandOption: false,
+                    desc: 'Name of the app to redeploy.',
+                } as const)
+                .option('ip', {
+                    type: 'string' as const,
+                    demandOption: false,
+                    desc: 'IP of the Flux node to authenticate with. Authentication is done with api.runonflux.io by default.',
+                } as const)
+                .option('hard', {
+                    type: 'boolean' as const,
+                    demand: false,
+                    desc: 'Whether to hard redeploy the app',
+                } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
                 const privateKey = getPrivateKey()

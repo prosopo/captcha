@@ -1,5 +1,5 @@
 {
-    "0": {
+    "1": {
         "name": "Result<Result<null, Error, LangError",
         "body": {
             "ok": {
@@ -63,7 +63,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "1": {
+    "2": {
         "name": "Result<null, Error",
         "body": {
             "ok": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -112,8 +112,8 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "2": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
-    "3": {
+    "3": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
+    "4": {
         "name": "Error",
         "body": {
             "NotAuthorised": null,
@@ -153,14 +153,14 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "4": {
+    "5": {
         "name": "LangError",
         "body": { "CouldNotReadInput": null },
         "isResult": false,
         "isPrimitive": false,
         "isConvertable": false
     },
-    "5": {
+    "6": {
         "name": "Result<null, LangError",
         "body": {
             "ok": { "name": "null", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -176,7 +176,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "6": {
+    "7": {
         "name": "Result<number, LangError",
         "body": {
             "ok": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
@@ -192,8 +192,8 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "7": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
-    "8": {
+    "8": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
+    "9": {
         "name": "ProxyMessages",
         "body": {
             "getGitCommitId": null,
@@ -202,10 +202,10 @@
             "proxyWithdraw": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
             "proxyTerminate": null,
             "proxySetCodeHash": {
-                "name": "Array",
-                "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
+                "name": "Hash",
+                "body": "string | number[]",
                 "isResult": false,
-                "isPrimitive": false,
+                "isPrimitive": true,
                 "isConvertable": false
             }
         },
@@ -213,16 +213,23 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "9": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
-    "10": {
+    "10": { "name": "ReturnNumber", "isResult": false, "isPrimitive": false, "isConvertable": true },
+    "11": {
+        "name": "Hash",
+        "body": "string | number[]",
+        "isResult": false,
+        "isPrimitive": true,
+        "isConvertable": false
+    },
+    "12": {
         "name": "Array",
         "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
         "isResult": false,
         "isPrimitive": false,
         "isConvertable": false
     },
-    "11": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
-    "12": {
+    "13": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false },
+    "14": {
         "name": "Result<Result<ProxyReturnTypes, Error, LangError",
         "body": {
             "ok": {
@@ -329,7 +336,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "13": {
+    "15": {
         "name": "Result<ProxyReturnTypes, Error",
         "body": {
             "ok": {
@@ -411,7 +418,7 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "14": {
+    "16": {
         "name": "ProxyReturnTypes",
         "body": {
             "u8X32": {
@@ -441,14 +448,14 @@
         "isPrimitive": false,
         "isConvertable": false
     },
-    "15": {
+    "17": {
         "name": "Array",
         "body": { "0": { "name": "number", "isResult": false, "isPrimitive": true, "isConvertable": false } },
         "isResult": false,
         "isPrimitive": false,
         "isConvertable": false
     },
-    "16": {
+    "18": {
         "name": "AccountId",
         "body": "string | number[]",
         "isResult": false,

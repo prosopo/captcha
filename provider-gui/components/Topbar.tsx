@@ -29,7 +29,7 @@ const TopBar = () => {
             <Toolbar>
                 <Box display="flex" flexGrow={1}>
                     <Link href="/">
-                        <Image src="/prosopo-logo-white.png" height={50} width={200} alt="Prosopo Logo" />
+                        <Image src="/prosopo-logo-white.svg" height={50} width={200} alt="Prosopo Logo" />
                     </Link>
                 </Box>
                 <Box m={2}>

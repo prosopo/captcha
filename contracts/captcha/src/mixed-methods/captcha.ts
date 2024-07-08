@@ -61,7 +61,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(16, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(53, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -80,7 +80,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(18, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(55, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -99,7 +99,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(19, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -120,7 +120,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(22, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(58, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -141,7 +141,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(25, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(60, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -162,7 +162,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(28, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -181,7 +181,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(28, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -200,7 +200,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(29, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(63, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -219,7 +219,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(30, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(64, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -238,7 +238,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(30, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(64, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -257,7 +257,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(29, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(63, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -276,7 +276,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(30, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(64, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -295,7 +295,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(29, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(63, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -410,7 +410,7 @@ export default class Methods {
             [account],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(32, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(66, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -477,7 +477,7 @@ export default class Methods {
             [contract],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(35, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(68, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -614,7 +614,7 @@ export default class Methods {
             [userAccount],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(38, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(70, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -679,7 +679,7 @@ export default class Methods {
             [userAccount, threshold],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(45, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(74, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -704,7 +704,7 @@ export default class Methods {
             [userAccount],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(48, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(77, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -727,7 +727,7 @@ export default class Methods {
             [userAccount],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(80, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -750,7 +750,7 @@ export default class Methods {
             [commitId],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(82, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -773,7 +773,7 @@ export default class Methods {
             [providerAccounts],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(84, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -796,7 +796,7 @@ export default class Methods {
             [statuses],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(84, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -821,7 +821,7 @@ export default class Methods {
             [userAccount, dappContract],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(87, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -844,7 +844,7 @@ export default class Methods {
             [],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(90, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -871,7 +871,7 @@ export default class Methods {
             [len, userAccount, dappContract],
             __options,
             (result) => {
-                return handleReturnType(result, getTypeDescription(28, DATA_TYPE_DESCRIPTIONS))
+                return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS))
             }
         )
     }
@@ -918,10 +918,10 @@ export default class Methods {
     /**
      * setCodeHash
      *
-     * @param { Array<(number | string | BN)> } codeHash,
+     * @param { ArgumentTypes.Hash } codeHash,
      * @returns { void }
      */
-    setCodeHash(codeHash: Array<number | string | BN>, __options: GasLimit) {
+    setCodeHash(codeHash: ArgumentTypes.Hash, __options: GasLimit) {
         return txSignAndSend(
             this.__apiPromise,
             this.__nativeContract,

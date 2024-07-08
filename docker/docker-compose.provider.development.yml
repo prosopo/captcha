@@ -16,6 +16,11 @@ services:
         networks:
             - internal
             - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
     substrate:
         image: prosopo/substrate-contracts-node:v0.35
         ports:
@@ -26,6 +31,11 @@ services:
         networks:
             - internal
             - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
     database:
         image: mongo:5.0.4
         # volumes:
@@ -38,6 +48,11 @@ services:
             - MONGO_INITDB_DATABASE=prosopo
         networks:
             - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
 networks:
     internal:
         name: internal

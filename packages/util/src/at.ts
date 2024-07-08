@@ -16,18 +16,26 @@ export type AtOptions = {
     noWrap?: boolean // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
 }
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null (can be overridden with the options)
+
 export function at(str: string, index: number, options: AtOptions & { optional: true }): string | undefined
 export function at(str: string, index: number, options?: AtOptions): string
-export function at<T>(items: T[] | string, index: number, options: AtOptions & { optional: false }): T
-export function at<T>(
-    items: (T | undefined)[] | string,
+export function at<T extends readonly unknown[]>(
+    items: T,
     index: number,
     options: AtOptions & { optional: true }
-): T | undefined
-export function at<T>(items: T[], index: number, options?: AtOptions): T
-export function at<T>(items: T[] | string, index: number, options?: AtOptions): T {
+): T[number] | undefined
+export function at<T extends readonly unknown[]>(
+    items: T,
+    index: number,
+    options?: AtOptions
+): Exclude<T[number], undefined>
+export function at<T extends readonly unknown[]>(items: T | string, index: number, options?: AtOptions): T[number] {
     if (items.length === 0) {
         throw new Error('Array is empty')
+    }
+
+    if (!isFinite(index)) {
+        throw new Error(`Index ${index} is not a finite number`)
     }
 
     if (!options?.noWrap) {
