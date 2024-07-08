@@ -16,6 +16,7 @@ import { ApiParams, ProcaptchaToken } from '@prosopo/types'
 import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
+import { ProcaptchaInvisible } from '@prosopo/procaptcha-invisible'
 import { useState } from 'react'
 import config from './config.js'
 
@@ -210,11 +211,22 @@ function App(props: AppProps) {
                                             aria-label="Frictionless captcha"
                                         />
                                     ) : (
-                                        <Procaptcha
-                                            config={config}
-                                            callbacks={{ onError, onHuman, onExpired }}
-                                            aria-label="Captcha"
-                                        />
+                                        <>
+                                            {' '}
+                                            {props.captchaType === 'invisible' ? (
+                                                <ProcaptchaInvisible
+                                                    config={config}
+                                                    callbacks={{ onError, onHuman, onExpired }}
+                                                    aria-label="Invisible captcha"
+                                                />
+                                            ) : (
+                                                <Procaptcha
+                                                    config={config}
+                                                    callbacks={{ onError, onHuman, onExpired }}
+                                                    aria-label="Captcha"
+                                                />
+                                            )}{' '}
+                                        </>
                                     )}
                                 </FormControl>
                                 <FormControl>

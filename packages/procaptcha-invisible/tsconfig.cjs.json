@@ -21,6 +21,12 @@
             "path": "../procaptcha/tsconfig.cjs.json"
         },
         {
+            "path": "../procaptcha-frictionless/tsconfig.cjs.json"
+        },
+        {
+            "path": "../procaptcha-invisible/tsconfig.cjs.json"
+        },
+        {
             "path": "../procaptcha-pow/tsconfig.cjs.json"
         },
         {

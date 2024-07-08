@@ -16,6 +16,7 @@
         "@prosopo/common": "1.0.2",
         "@prosopo/procaptcha": "1.0.2",
         "@prosopo/procaptcha-frictionless": "1.0.2",
+        "@prosopo/procaptcha-invisible": "1.0.2",
         "@prosopo/procaptcha-react": "1.0.2",
         "@prosopo/server": "1.0.2",
         "@prosopo/types": "1.0.2",
