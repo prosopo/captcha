@@ -14,6 +14,9 @@
             "path": "../procaptcha"
         },
         {
+            "path": "../procaptcha-invisible"
+        },
+        {
             "path": "../procaptcha-react"
         },
         {
