@@ -14,6 +14,7 @@
 import { CssBaseline } from '@mui/material'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import FrictionlessRoot from './routes/frictionless.js'
+import InvisibleRoot from './routes/invisible.js'
 import ImageCaptchaRoot from './routes/root.js'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
     {
         path: '/frictionless',
         element: <FrictionlessRoot />,
+    },
+    {
+        path: '/invisible',
+        element: <InvisibleRoot />,
     },
 ])
 

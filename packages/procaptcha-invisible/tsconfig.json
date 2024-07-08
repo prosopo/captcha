@@ -22,6 +22,12 @@
             "path": "../procaptcha"
         },
         {
+            "path": "../procaptcha-frictionless"
+        },
+        {
+            "path": "../procaptcha-invisible"
+        },
+        {
             "path": "../procaptcha-pow"
         },
         {

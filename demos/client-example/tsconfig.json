@@ -14,6 +14,9 @@
             "path": "../../packages/procaptcha-frictionless"
         },
         {
+            "path": "../../packages/procaptcha-invisible"
+        },
+        {
             "path": "../../packages/cli"
         },
         {

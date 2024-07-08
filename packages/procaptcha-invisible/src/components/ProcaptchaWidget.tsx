@@ -44,9 +44,6 @@ const Procaptcha = (props: ProcaptchaProps) => {
         manager.current.start()
     }, [])
 
-    return (
-        <div ref={captchaRef} style={{display: "none"}}>
-        </div>
-    )
+    return <div ref={captchaRef}>Protected by Procaptcha</div>
 }
 export default Procaptcha
