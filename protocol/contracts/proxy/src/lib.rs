@@ -24,6 +24,7 @@ pub mod proxy {
     use common::err;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
+    use ink::env::CallFlags;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::traits::StorageLayout;
 
@@ -39,7 +40,7 @@ pub mod proxy {
         GetDestination,
         ProxyWithdraw(Amount),
         ProxyTerminate,
-        ProxySetCodeHash([u8; 32]),
+        ProxySetCodeHash(Hash),
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -108,15 +109,13 @@ pub mod proxy {
         /// `true` is returned on successful upgrade, `false` otherwise
         /// Errors are returned if the caller is not an admin, if the code hash is the callers
         /// account_id, if the code is not found, and for any other unknown ink errors
-        fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        fn set_code_hash(&mut self, code_hash: Hash) -> Result<(), Error> {
             let caller = self.env().caller();
             check_is_admin(caller)?;
 
-            match ink::env::set_code_hash(&code_hash) {
-                Ok(()) => Ok(()),
-                Err(ink::env::Error::CodeNotFound) => err!(self, Error::CodeNotFound),
-                Err(_) => err!(self, Error::SetCodeHashFailed),
-            }
+            self.env()
+                .set_code_hash(&code_hash)
+                .or_else(|_| err!(self, Error::SetCodeHashFailed))
         }
 
         /// Fallback message for a contract call that doesn't match any
@@ -130,15 +129,13 @@ pub mod proxy {
         ///   have any effect whatsoever on the contract we forward to.
         #[ink(message, payable, selector = _)]
         pub fn forward(&self) -> u32 {
+            let mut flags = CallFlags::empty();
+            flags.insert(CallFlags::FORWARD_INPUT);
+            flags.insert(CallFlags::TAIL_CALL);
             ink::env::call::build_call::<ink::env::DefaultEnvironment>()
                 .call(self.get_destination())
                 .transferred_value(self.env().transferred_value())
-                .gas_limit(0)
-                .call_flags(
-                    ink::env::CallFlags::default()
-                        .set_forward_input(true)
-                        .set_tail_call(true),
-                )
+                .call_flags(flags)
                 .try_invoke()
                 .unwrap_or_else(|env_err| {
                     panic!(
@@ -421,7 +418,7 @@ pub mod proxy {
 
             let new_code_hash = get_code_hash(1);
             assert_eq!(
-                contract.handler(ProxyMessages::ProxySetCodeHash(new_code_hash)),
+                contract.handler(ProxyMessages::ProxySetCodeHash(new_code_hash.into())),
                 Err(Error::NotAuthorised)
             );
             // assert_eq!(

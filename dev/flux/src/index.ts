@@ -15,6 +15,7 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import {
     commandAuth,
+    commandFormatEnv,
     commandGetDapp,
     commandGetDapps,
     commandLogs,
@@ -32,6 +33,7 @@ export default async function processArgs(args: string[]) {
         .usage('Usage: $0 [global options] <command> [options]')
         .command(commandAuth({ logger }))
         .command(commandRedeploy({ logger }))
+        .command(commandFormatEnv({ logger }))
         .command(commandGetDapp({ logger }))
         .command(commandGetDapps({ logger }))
         .command(commandLogs({ logger }))

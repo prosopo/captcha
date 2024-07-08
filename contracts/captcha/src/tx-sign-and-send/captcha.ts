@@ -830,9 +830,9 @@ export default class Methods {
     /**
      * setCodeHash
      *
-     * @param { Array<(number | string | BN)> } codeHash,
+     * @param { ArgumentTypes.Hash } codeHash,
      */
-    setCodeHash(codeHash: Array<number | string | BN>, __options?: GasLimit) {
+    setCodeHash(codeHash: ArgumentTypes.Hash, __options?: GasLimit) {
         return txSignAndSend(
             this.__apiPromise,
             this.__nativeContract,
