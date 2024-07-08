@@ -38,10 +38,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
         form.addEventListener('submit', handleSubmit)
 
+        manager.current.start()
+
         return () => {
             form.removeEventListener('submit', handleSubmit)
         }
-        manager.current.start()
     }, [])
 
     return <div ref={captchaRef}>Protected by Procaptcha</div>
