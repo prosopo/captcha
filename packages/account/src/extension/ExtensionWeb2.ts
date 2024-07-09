@@ -38,6 +38,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 export class ExtensionWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
         const network = this.getNetwork(config)
+        console.log(network)
         const wsProvider = new WsProvider(network.endpoint)
 
         const account = await this.createAccount(wsProvider)

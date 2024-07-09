@@ -163,6 +163,8 @@ export function Manager(
                 return
             }
 
+            console.log('alkjsdhbflajkshdbfljashdbflajshdbf')
+
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
             updateState({ loading: true })
