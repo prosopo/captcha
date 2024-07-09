@@ -75,6 +75,8 @@
         "fix:rs:clippy": "npm run --silent docker:rust -- cargo clippy -- -D warnings -A clippy::too_many_arguments --file /src/**/*.rs",
         "fix:rs:rustfmt": "npm run --silent docker:rust -- rustfmt --recursive /src",
         "fix:rs": "run-s fix:rs:rustfmt fix:rs:clippy",
+        "lint:toml": "npm run --silent docker:rust -- rustfmt --check /src/**/*.toml",
+        "fix:toml": "npm run --silent docker:rust -- rustfmt /src/**/*.toml",
         "changed:lint": "npm run --silent lint:js --changed",
         "changed:fix": "npm run --silent fix:js --changed",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
