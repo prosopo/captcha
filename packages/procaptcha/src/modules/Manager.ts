@@ -27,10 +27,13 @@ import {
     TCaptchaSubmitResult,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import {ApiPromise} from '@polkadot/api/promise/Api'
+import {BN_ZERO} from '@polkadot/util'
+import {ExtensionWeb2, ExtensionWeb3} from '@prosopo/account'
+import {GovernanceStatus, Payee, RandomProvider} from '@prosopo/captcha-contract/types-returns'
+import {Keyring} from '@polkadot/keyring'
+import {PROVIDERS} from "../providers.js";
+import {ProsopoCaptchaContract} from '@prosopo/contract'
 import {
     ProsopoContractError,
     ProsopoDatasetError,
@@ -38,14 +41,14 @@ import {
     ProsopoError,
     trimProviderUrl,
 } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
-import { at, hashToHex } from '@prosopo/util'
-import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
-import { randomAsHex } from '@polkadot/util-crypto/random'
-import { sleep } from '../utils/utils.js'
+import {ProviderApi} from '@prosopo/api'
+import {ReturnNumber} from "@prosopo/typechain-types/dist/src/types.js";
+import {WsProvider} from '@polkadot/rpc-provider/ws'
+import {ContractAbi as abiJson} from '@prosopo/captcha-contract/contract-info'
+import {at, hashToHex} from '@prosopo/util'
+import {buildUpdateState, getDefaultEvents} from '@prosopo/procaptcha-common'
+import {randomAsHex} from '@polkadot/util-crypto/random'
+import {sleep} from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -72,6 +75,29 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
         })
     }
     return network
+}
+
+const getRandomActiveProvider = (): RandomProvider =>  {
+    const randomIntBetween = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
+
+    // TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
+    //  to ensure that the random selection was completed within a certain timeframe
+
+    const randomProvderObj = at(PROVIDERS, randomIntBetween(0,PROVIDERS.length-1))
+    return {
+        providerAccount: randomProvderObj.address,
+        provider: {
+            status: GovernanceStatus.active,
+            balance: new ReturnNumber(BN_ZERO),
+            fee: 0,
+            payee: Payee.dapp,
+            url: randomProvderObj.url,
+            datasetId: randomProvderObj.datasetId,
+            datasetIdContent: randomProvderObj.datasetIdContent,
+        },
+        blockNumber: 0,
+    }
+
 }
 
 /**
@@ -156,16 +182,16 @@ export function Manager(
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            let contractIsHuman = false
-            try {
-                contractIsHuman = (
-                    await contract.query.dappOperatorIsHumanUser(account.account.address, config.solutionThreshold)
-                ).value
-                    .unwrap()
-                    .unwrap()
-            } catch (error) {
-                console.warn(error)
-            }
+            const contractIsHuman = false
+            // try {
+            //     contractIsHuman = (
+            //         await contract.query.dappOperatorIsHumanUser(account.account.address, config.solutionThreshold)
+            //     ).value
+            //         .unwrap()
+            //         .unwrap()
+            // } catch (error) {
+            //     console.warn(error)
+            // }
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
@@ -235,13 +261,9 @@ export function Manager(
             }
 
             // get a random provider
-            const getRandomProviderResponse: RandomProvider = await wrapQuery(
-                contract.query.getRandomActiveProvider,
-                contract.query
-            )(account.account.address, getDappAccount())
-            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
-
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+            const getRandomProviderResponse = getRandomActiveProvider()
+            const blockNumber = getRandomProviderResponse.blockNumber
+            const providerUrl = getRandomProviderResponse.provider.url.toString()
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
 
@@ -570,10 +592,7 @@ export function Manager(
             providerApi = await loadProviderApi(providerUrlFromStorage)
         } else {
             const contract = await loadContract()
-            const getRandomProviderResponse: RandomProvider = await wrapQuery(
-                contract.query.getRandomActiveProvider,
-                contract.query
-            )(getAccount().account.address, getDappAccount())
+            const getRandomProviderResponse: RandomProvider = getRandomActiveProvider()
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             providerApi = await loadProviderApi(providerUrl)
         }
