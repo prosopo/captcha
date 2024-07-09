@@ -63,7 +63,7 @@
         "fix:py": "ruff format .",
         "lint:js": "biome lint .",
         "fix:js": "npm run --silent lint:js --fix",
-        "lint:html": "htmlhint '**/*.html' --config htmlhint.json",
+        "lint:html": "htmlhint '**/*.{html,svg}' --config htmlhint.json",
         "lint:md": "markdownlint '**/*.md' --ignore-path .gitignore",
         "fix:md": "npm run --silent lint:md --fix",
         "lint": "run-s lint:*",
