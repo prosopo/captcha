@@ -195,7 +195,7 @@ export function Manager(
 
             console.log('line 269', providerApi)
 
-            state.captchaApi = new ProsopoCaptchaApi(
+            const captchaApi = new ProsopoCaptchaApi(
                 account.account.address,
                 contract,
                 getRandomProviderResponse,
@@ -205,7 +205,9 @@ export function Manager(
             )
             console.log('state\n\n\n\n1', state)
 
-            const challenge = await state.captchaApi.getCaptchaChallenge()
+            updateState({ captchaApi })
+
+            const challenge = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
                 throw new ProsopoDatasetError('DEVELOPER.PROVIDER_NO_CAPTCHA')
@@ -272,6 +274,7 @@ export function Manager(
             )
 
             const account = getAccount()
+            console.log('account in submit', account)
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
 
@@ -291,6 +294,8 @@ export function Manager(
                     context: { error: 'No Captcha API found in state' },
                 })
             }
+
+            console.log('SIGNER', signer)
 
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
@@ -424,20 +429,6 @@ export function Manager(
         updateState(defaultState())
     }
 
-    const getCaptchaApi = (
-        userAccount: string,
-        contract: string,
-        provider: RandomProvider,
-        providerApi: ProviderApi,
-        web2: boolean,
-        dappAccount: string
-    ) => {
-        if (!state.captchaApi) {
-            state.captchaApi = new ProsopoCaptchaApi(userAccount, contract, provider, providerApi, web2, dappAccount)
-        }
-        return state.captchaApi
-    }
-
     /**
      * Load the account using address specified in config, or generate new address if not found in local storage for web2 mode.
      */
@@ -488,31 +479,9 @@ export function Manager(
         if (!account.extension) {
             throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION', { context: { error: 'Extension not loaded' } })
         }
-        return account.extension
-    }
 
-    /**
-     * Load the contract instance using addresses from config.
-     */
-    const loadContract = async (): Promise<ProsopoCaptchaContract> => {
-        const config = getConfig()
-        const network = getNetwork(config)
-        const api = await ApiPromise.create({
-            provider: new WsProvider(network.endpoint),
-            initWasm: false,
-            noInitWarn: true,
-        })
-        // TODO create a shared keyring that's stored somewhere
-        const type = 'ed25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
-        return new ProsopoCaptchaContract(
-            api,
-            JSON.parse(abiJson),
-            network.contract.address,
-            'prosopo',
-            0,
-            keyring.addFromAddress(getAccount().account.address)
-        )
+        console.log('accaount in getExtension', account)
+        return account.extension
     }
 
     const exportData = async (events: StoredEvents) => {
