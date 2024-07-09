@@ -78,6 +78,8 @@
         "lint:yaml": "yamllint",
         "lint:py": "ruff check --config ruff.toml .",
         "lint:fix:py": "ruff format --config ruff.toml .",
+        "lint:js": "biome lint ",
+        "lint:fix:js": "biome lint --fix",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
         "docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
@@ -99,6 +101,7 @@
         "@prosopo/flux": "1.0.2"
     },
     "devDependencies": {
+        "@biomejs/biome": "1.8.3",
         "@eslint/eslintrc": "^2.0.3",
         "@html-eslint/eslint-plugin": "^0.22.0",
         "@html-eslint/parser": "^0.22.0",
