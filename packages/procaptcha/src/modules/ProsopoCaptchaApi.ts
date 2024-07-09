@@ -66,6 +66,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
     public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
+            console.log('captchaChallenge', captchaChallenge)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             // convert https/http to match page
             captchaChallenge.captchas.forEach((captcha) => {

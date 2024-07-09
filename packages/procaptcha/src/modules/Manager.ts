@@ -174,100 +174,29 @@ export function Manager(
             // allow UI to catch up with the loading state
             await sleep(100)
 
-            // check accounts / setup accounts
             const account = await loadAccount()
 
-            // account has been found, check if account is already marked as human
-            // first, ask the smart contract
             const contract = await loadContract()
-            // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = false
-            // try {
-            //     contractIsHuman = (
-            //         await contract.query.dappOperatorIsHumanUser(account.account.address, config.solutionThreshold)
-            //     ).value
-            //         .unwrap()
-            //         .unwrap()
-            // } catch (error) {
-            //     console.warn(error)
-            // }
-
-            if (contractIsHuman) {
-                updateState({ isHuman: true, loading: false })
-                events.onHuman(
-                    encodeProcaptchaOutput({
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.blockNumber]: getBlockNumber(),
-                    })
-                )
-                setValidChallengeTimeout()
-                return
-            }
-
-            // Check if there is a provider in local storage or get a random one from the contract
-            const procaptchaStorage = storage.getProcaptchaStorage()
-            let providerApi: ProviderApi
-            if (procaptchaStorage.providerUrl && procaptchaStorage.blockNumber) {
-                providerApi = await loadProviderApi(procaptchaStorage.providerUrl)
-
-                // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
-                // so contact the provider to check if this is the case
-                try {
-                    const extension = getExtension(account)
-                    if (!extension || !extension.signer || !extension.signer.signRaw) {
-                        throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
-                    }
-
-                    const signRaw = extension.signer.signRaw
-                    const { signature } = await signRaw({
-                        address: account.account.address,
-                        data: procaptchaStorage.blockNumber.toString(),
-                        type: 'bytes',
-                    })
-                    const token = encodeProcaptchaOutput({
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.blockNumber]: procaptchaStorage.blockNumber,
-                    })
-                    const verifyDappUserResponse = await providerApi.verifyUser(
-                        token,
-                        signature,
-                        configOptional.captchas.image.cachedTimeout
-                    )
-                    if (
-                        verifyDappUserResponse.verified &&
-                        verifyDappUserResponse.commitmentId &&
-                        verifyDappUserResponse.blockNumber
-                    ) {
-                        updateState({ isHuman: true, loading: false })
-                        const output = {
-                            [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
-                            [ApiParams.user]: account.account.address,
-                            [ApiParams.dapp]: getDappAccount(),
-                            [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
-                            [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
-                        }
-                        events.onHuman(encodeProcaptchaOutput(output))
-                        setValidChallengeTimeout()
-                        return
-                    }
-                } catch (err) {
-                    // if the provider is down, we should continue with the process of selecting a random provider
-                    console.error('Error contacting provider from storage', procaptchaStorage.providerUrl)
-                    // continue as if the provider was not in storage
-                }
-            }
 
             // get a random provider
             const getRandomProviderResponse = getRandomActiveProvider()
             const blockNumber = getRandomProviderResponse.blockNumber
             const providerUrl = getRandomProviderResponse.provider.url
             // get the provider api inst
-            providerApi = await loadProviderApi(providerUrl)
+            console.log('line 267', providerUrl)
+            const providerApi = await loadProviderApi(providerUrl)
+
+            console.log('line 269', providerApi)
 
             // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+            const captchaApi = getCaptchaApi(
+                account.account.address,
+                contract,
+                getRandomProviderResponse,
+                providerApi,
+                config.web2,
+                config.account.address || ''
+            )
 
             const challenge = await captchaApi.getCaptchaChallenge()
 
@@ -329,6 +258,8 @@ export function Manager(
                 }
             )
 
+            const contract = await loadContract()
+
             const account = getAccount()
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
@@ -340,7 +271,13 @@ export function Manager(
                 })
             }
 
-            const captchaApi = getCaptchaApi()
+            const captchaApi = state.captchaApi
+
+            if (!captchaApi) {
+                throw new ProsopoError('CAPTCHA.INVALID_TOKEN', {
+                    context: { error: 'No Captcha API found in state' },
+                })
+            }
 
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
@@ -438,27 +375,6 @@ export function Manager(
         updateState({ index: state.index + 1 })
     }
 
-    const loadCaptchaApi = async (
-        contract: ProsopoCaptchaContract,
-        provider: RandomProvider,
-        providerApi: ProviderApi
-    ) => {
-        const config = getConfig()
-        // setup the captcha api to carry out a challenge
-        const captchaApi = new ProsopoCaptchaApi(
-            getAccount().account.address,
-            contract,
-            provider,
-            providerApi,
-            config.web2,
-            getDappAccount()
-        )
-
-        updateState({ captchaApi })
-
-        return getCaptchaApi()
-    }
-
     const loadProviderApi = async (providerUrl: string) => {
         const config = getConfig()
         const network = getNetwork(config)
@@ -493,11 +409,16 @@ export function Manager(
         updateState(defaultState())
     }
 
-    const getCaptchaApi = () => {
+    const getCaptchaApi = (
+        userAccount: string,
+        contract: ProsopoCaptchaContract,
+        provider: RandomProvider,
+        providerApi: ProviderApi,
+        web2: boolean,
+        dappAccount: string
+    ) => {
         if (!state.captchaApi) {
-            throw new ProsopoEnvError('API.UNKNOWN', {
-                context: { error: 'Captcha api not set', state },
-            })
+            state.captchaApi = new ProsopoCaptchaApi(userAccount, contract, provider, providerApi, web2, dappAccount)
         }
         return state.captchaApi
     }
@@ -590,7 +511,6 @@ export function Manager(
         if (providerUrlFromStorage) {
             providerApi = await loadProviderApi(providerUrlFromStorage)
         } else {
-            const contract = await loadContract()
             const getRandomProviderResponse: RandomProvider = getRandomActiveProvider()
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             providerApi = await loadProviderApi(providerUrl)
