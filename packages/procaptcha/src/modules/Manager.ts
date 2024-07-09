@@ -32,7 +32,7 @@ import { BN_ZERO } from '@polkadot/util'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { GovernanceStatus, Payee, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Keyring } from '@polkadot/keyring'
-import { PROVIDERS } from '../providers.js'
+import { PROVIDERS } from './providers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import {
     ProsopoContractError,
