@@ -40,7 +40,6 @@
         "@noble/hashes": "^1.3.3",
         "@prosopo/config": "1.0.2",
         "@prosopo/util": "1.0.2",
-        "@polkadot/util": "12.6.2",
         "lodash": "^4.17.21",
         "seedrandom": "^3.0.5"
     },
