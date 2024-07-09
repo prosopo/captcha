@@ -262,7 +262,7 @@ export function Manager(
             // get a random provider
             const getRandomProviderResponse = getRandomActiveProvider()
             const blockNumber = getRandomProviderResponse.blockNumber
-            const providerUrl = getRandomProviderResponse.provider.url.toString()
+            const providerUrl = getRandomProviderResponse.provider.url
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
 
