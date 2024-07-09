@@ -176,6 +176,8 @@ export function Manager(
 
             const account = await loadAccount()
 
+            console.log(account)
+
             const contract = await loadContract()
 
             // get a random provider
