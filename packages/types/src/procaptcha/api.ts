@@ -21,7 +21,7 @@ import { TCaptchaSubmitResult } from './client.js'
 
 export interface ProsopoCaptchaApiInterface {
     userAccount: string
-    contract: IProsopoCaptchaContract
+    contract: IProsopoCaptchaContract | string
     provider: RandomProvider
     providerApi: ProviderApiInterface
     dappAccount: string
