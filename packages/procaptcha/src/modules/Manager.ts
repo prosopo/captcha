@@ -27,13 +27,13 @@ import {
     TCaptchaSubmitResult,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import {ApiPromise} from '@polkadot/api/promise/Api'
-import {BN_ZERO} from '@polkadot/util'
-import {ExtensionWeb2, ExtensionWeb3} from '@prosopo/account'
-import {GovernanceStatus, Payee, RandomProvider} from '@prosopo/captcha-contract/types-returns'
-import {Keyring} from '@polkadot/keyring'
-import {PROVIDERS} from "../providers.js";
-import {ProsopoCaptchaContract} from '@prosopo/contract'
+import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN_ZERO } from '@polkadot/util'
+import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
+import { GovernanceStatus, Payee, RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { Keyring } from '@polkadot/keyring'
+import { PROVIDERS } from '../providers.js'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
 import {
     ProsopoContractError,
     ProsopoDatasetError,
@@ -41,14 +41,14 @@ import {
     ProsopoError,
     trimProviderUrl,
 } from '@prosopo/common'
-import {ProviderApi} from '@prosopo/api'
-import {ReturnNumber} from "@prosopo/typechain-types/dist/src/types.js";
-import {WsProvider} from '@polkadot/rpc-provider/ws'
-import {ContractAbi as abiJson} from '@prosopo/captcha-contract/contract-info'
-import {at, hashToHex} from '@prosopo/util'
-import {buildUpdateState, getDefaultEvents} from '@prosopo/procaptcha-common'
-import {randomAsHex} from '@polkadot/util-crypto/random'
-import {sleep} from '../utils/utils.js'
+import { ProviderApi } from '@prosopo/api'
+import { ReturnNumber } from '@prosopo/typechain-types/dist/src/types.js'
+import { WsProvider } from '@polkadot/rpc-provider/ws'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { at, hashToHex } from '@prosopo/util'
+import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
+import { randomAsHex } from '@polkadot/util-crypto/random'
+import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
@@ -77,13 +77,13 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
     return network
 }
 
-const getRandomActiveProvider = (): RandomProvider =>  {
+const getRandomActiveProvider = (): RandomProvider => {
     const randomIntBetween = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
 
     // TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
     //  to ensure that the random selection was completed within a certain timeframe
 
-    const randomProvderObj = at(PROVIDERS, randomIntBetween(0,PROVIDERS.length-1))
+    const randomProvderObj = at(PROVIDERS, randomIntBetween(0, PROVIDERS.length - 1))
     return {
         providerAccount: randomProvderObj.address,
         provider: {
@@ -97,7 +97,6 @@ const getRandomActiveProvider = (): RandomProvider =>  {
         },
         blockNumber: 0,
     }
-
 }
 
 /**
