@@ -75,7 +75,7 @@
         "lint:fix:caddyfile": "find . -name '*.Caddyfile' ! -path '*/node_modules/*' | xargs -I {} echo 'caddy fmt --overwrite {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
         "lint:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
         "lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -I {} echo 'shellcheck {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
-        "lint:yaml": "find . \\( -name '*.yml' -o -name '*.yaml' \\) ! -path '*/node_modules/*' | xargs -I {} echo 'yamllint {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
+        "lint:yaml": "yamllint",
         "lint:py": "ruff check --config ruff.toml .",
         "lint:fix:py": "ruff format --config ruff.toml .",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
