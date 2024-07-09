@@ -74,6 +74,7 @@
         "lint:caddyfiles": "find . -name '*.Caddyfile' ! -path '*/node_modules/*' | xargs -I {} echo 'caddy fmt {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
         "lint:fix:caddyfiles": "find . -name '*.Caddyfile' ! -path '*/node_modules/*' | xargs -I {} echo 'caddy fmt --overwrite {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
         "lint:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
+        "lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -I {} echo 'shellcheck {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
         "removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
         "postinstall": "npm run removePolkadotJSWarnings",
         "docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
