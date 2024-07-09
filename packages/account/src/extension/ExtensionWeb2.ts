@@ -102,10 +102,7 @@ export class ExtensionWeb2 extends Extension {
         const type: KeypairType = 'ed25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         const keypair = keyring.addFromMnemonic(mnemonic)
-        const address =
-            keypair.address.length === 42
-                ? keypair.address
-                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
+        const address = keypair.address.length === 42 ? keypair.address : encodeAddress(decodeAddress(keypair.address))
         return {
             address,
             type,
