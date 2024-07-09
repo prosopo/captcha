@@ -26,7 +26,6 @@ import {
     ProsopoCaptchaApiInterface,
 } from '@prosopo/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
@@ -37,7 +36,7 @@ import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
     userAccount: string
-    contract: ProsopoCaptchaContract
+    contract: string
     provider: RandomProvider
     providerApi: ProviderApi
     dappAccount: string
@@ -45,7 +44,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 
     constructor(
         userAccount: string,
-        contract: ProsopoCaptchaContract,
+        contract: string,
         provider: RandomProvider,
         providerApi: ProviderApi,
         web2: boolean,
@@ -66,7 +65,6 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
     public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
-            console.log('captchaChallenge', captchaChallenge)
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             // convert https/http to match page
             captchaChallenge.captchas.forEach((captcha) => {
@@ -146,7 +144,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
             result = await this.providerApi.submitCaptchaSolution(
                 solutions,
                 requestHash,
-                this.contract.pair.address,
+                this.contract,
                 salt,
                 signature
             )

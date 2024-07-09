@@ -28,6 +28,7 @@ export const buildUpdateState =
         // mutate the current state. Note that this is in order of properties in the nextState object.
         // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
         Object.assign(state, nextState)
+        console.log(state.captchaApi, nextState.captchaApi)
         // then call the update function for the frontend to do the same
         onStateUpdate(nextState)
     }
@@ -94,7 +95,7 @@ export const useProcaptcha = (
             // force a copy of the array to ensure a re-render
             // nutshell: react doesn't look inside an array for changes, hence changes to the array need to result in a fresh array
             if (nextState.solutions !== undefined) setSolutions(nextState.solutions.slice())
-            if (nextState.captchaApi !== undefined) setCaptchaApi(nextState.captchaApi)
+            if (nextState.captchaApi != undefined) setCaptchaApi(nextState.captchaApi)
             if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
             if (nextState.challenge !== undefined) setChallenge(nextState.challenge)
             if (nextState.loading !== undefined) setLoading(nextState.loading)

@@ -53,6 +53,7 @@ import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
 const defaultState = (): Partial<ProcaptchaState> => {
+    console.log('RESETTING OR SOMETHING')
     return {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
@@ -180,10 +181,12 @@ export function Manager(
 
             console.log(account)
 
-            const contract = await loadContract()
+            const contract = getNetwork(config).contract.address
 
             // get a random provider
             const getRandomProviderResponse = getRandomActiveProvider()
+
+            console.log(getRandomProviderResponse)
             const blockNumber = getRandomProviderResponse.blockNumber
             const providerUrl = getRandomProviderResponse.provider.url
             // get the provider api inst
@@ -192,8 +195,7 @@ export function Manager(
 
             console.log('line 269', providerApi)
 
-            // get the captcha challenge and begin the challenge
-            const captchaApi = getCaptchaApi(
+            state.captchaApi = new ProsopoCaptchaApi(
                 account.account.address,
                 contract,
                 getRandomProviderResponse,
@@ -201,8 +203,9 @@ export function Manager(
                 config.web2,
                 config.account.address || ''
             )
+            console.log('state\n\n\n\n1', state)
 
-            const challenge = await captchaApi.getCaptchaChallenge()
+            const challenge = await state.captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
                 throw new ProsopoDatasetError('DEVELOPER.PROVIDER_NO_CAPTCHA')
@@ -220,6 +223,8 @@ export function Manager(
                 updateState({ isHuman: false, showModal: false, loading: false })
             }, timeMillis)
 
+            console.log('state\n\n\n\n2', state)
+
             // update state with new challenge
             updateState({
                 index: 0,
@@ -229,11 +234,15 @@ export function Manager(
                 timeout,
                 blockNumber,
             })
+
+            console.log('state\n\n\n\n3', state)
         })
+        console.log('state\n\n\n\nat  end of start', state)
     }
 
     const submit = async () => {
         await fallable(async () => {
+            console.log('state\n\n\n\n', state)
             // disable the time limit, user has submitted their solution in time
             clearTimeout()
 
@@ -262,8 +271,6 @@ export function Manager(
                 }
             )
 
-            const contract = await loadContract()
-
             const account = getAccount()
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
@@ -276,6 +283,8 @@ export function Manager(
             }
 
             const captchaApi = state.captchaApi
+
+            console.log(state)
 
             if (!captchaApi) {
                 throw new ProsopoError('CAPTCHA.INVALID_TOKEN', {
@@ -348,6 +357,7 @@ export function Manager(
                 context: { error: 'Cannot select, index is out of range for this Captcha' },
             })
         }
+        console.log('state in select', state)
         const index = state.index
         const solutions = state.solutions
         const solution = at(solutions, index)
@@ -365,6 +375,7 @@ export function Manager(
      * Proceed to the next round of the challenge.
      */
     const nextRound = () => {
+        console.log('state\n\n\n\n4', state)
         if (!state.challenge) {
             throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
                 context: { error: 'Cannot select, no Captcha found in state' },
@@ -415,7 +426,7 @@ export function Manager(
 
     const getCaptchaApi = (
         userAccount: string,
-        contract: ProsopoCaptchaContract,
+        contract: string,
         provider: RandomProvider,
         providerApi: ProviderApi,
         web2: boolean,
@@ -468,10 +479,7 @@ export function Manager(
     }
 
     const getBlockNumber = () => {
-        if (!state.blockNumber) {
-            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
-        }
-        const blockNumber: number = state.blockNumber
+        const blockNumber: number = state.blockNumber || 0
         return blockNumber
     }
 
@@ -495,7 +503,7 @@ export function Manager(
             noInitWarn: true,
         })
         // TODO create a shared keyring that's stored somewhere
-        const type = 'sr25519'
+        const type = 'ed25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         return new ProsopoCaptchaContract(
             api,

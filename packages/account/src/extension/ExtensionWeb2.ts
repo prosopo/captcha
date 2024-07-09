@@ -37,11 +37,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  */
 export class ExtensionWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
-        const network = this.getNetwork(config)
-        console.log(network)
-        const wsProvider = new WsProvider(network.endpoint)
-
-        const account = await this.createAccount(wsProvider)
+        const account = await this.createAccount()
         const extension: InjectedExtension = await this.createExtension(account)
 
         return {
@@ -83,7 +79,7 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createAccount(wsProvider: WsProvider): Promise<AccountWithKeyPair> {
+    private async createAccount(): Promise<AccountWithKeyPair> {
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
@@ -99,11 +95,10 @@ export class ExtensionWeb2 extends Extension {
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
-        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false, noInitWarn: true })
-        const type: KeypairType = 'ed25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+        const type: KeypairType = 'sr25519'
+        const keyring = new Keyring({ type, ss58Format: 5 })
         const keypair = keyring.addFromMnemonic(mnemonic)
-        const address = keypair.address.length === 42 ? keypair.address : encodeAddress(decodeAddress(keypair.address))
+        const address = keypair.address
         return {
             address,
             type,
