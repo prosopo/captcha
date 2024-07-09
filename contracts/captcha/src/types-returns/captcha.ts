@@ -122,8 +122,10 @@ export type LastCorrectCaptcha = {
     dappContract: AccountId
 }
 
+type FrontendProvider = Omit<Provider, 'url'> & { url: string }
+
 export type RandomProvider = {
     providerAccount: AccountId
-    provider: Provider
+    provider: FrontendProvider
     blockNumber: number
 }
