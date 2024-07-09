@@ -144,7 +144,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
             result = await this.providerApi.submitCaptchaSolution(
                 solutions,
                 requestHash,
-                this.contract,
+                this.userAccount,
                 salt,
                 signature
             )
