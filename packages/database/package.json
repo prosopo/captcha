@@ -37,13 +37,10 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@polkadot/util": "12.6.2",
-        "@prosopo/captcha-contract": "1.0.2",
         "@prosopo/common": "1.0.2",
         "@prosopo/config": "1.0.2",
         "@prosopo/types": "1.0.2",
         "@prosopo/types-database": "1.0.2",
-        "mongodb": "5.8.0",
         "mongodb-memory-server": "^8.7.2",
         "mongoose": "^7.3.3"
     },
