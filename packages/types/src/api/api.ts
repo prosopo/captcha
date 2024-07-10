@@ -32,6 +32,8 @@ export interface ProviderApiInterface {
         requestHash: string,
         userAccount: AccountId,
         salt: string,
+        timestamp: string,
+        signedTimestamp: string,
         signature?: string
     ): Promise<CaptchaSolutionResponse>
     verifyDappUser(

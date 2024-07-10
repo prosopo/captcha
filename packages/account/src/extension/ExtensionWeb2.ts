@@ -96,12 +96,11 @@ export class ExtensionWeb2 extends Extension {
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
         const type: KeypairType = 'sr25519'
-        const keyring = new Keyring({ type, ss58Format: 5 })
+        const keyring = new Keyring({ type, ss58Format: 42 })
         const keypair = keyring.addFromMnemonic(mnemonic)
         const address = keypair.address
         return {
             address,
-            type,
             name: address,
             keypair,
         }

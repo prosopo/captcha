@@ -343,6 +343,9 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const userSignature = signer.sign(stringToHex(requestHash))
         signatureVerify(stringToHex(requestHash), userSignature, accountAddress(dappUserAccount))
 
+        const timestamp = Date.now().toString()
+        const signedTimestamp = u8aToHex(signer.sign(stringToHex(timestamp)))
+
         return {
             dappUserAccount,
             captchaSolutions,
@@ -352,6 +355,8 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             userSalt,
             userSignature,
             blockNumber,
+            timestamp,
+            signedTimestamp,
         }
     }
 
@@ -706,8 +711,16 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
 
     test('Captcha proofs are returned if commitment found and solution is correct', async ({ env }): Promise<void> => {
         // Construct a pending request hash between dappUserAccount, providerAccount and dappContractAccount
-        const { captchaSolutions, requestHash, dappUserAccount, providerAccount, dappContractAccount, userSignature } =
-            await createMockCaptchaSolutionsAndRequestHash(env)
+        const {
+            captchaSolutions,
+            requestHash,
+            dappUserAccount,
+            providerAccount,
+            dappContractAccount,
+            userSignature,
+            timestamp,
+            signedTimestamp,
+        } = await createMockCaptchaSolutionsAndRequestHash(env)
 
         const dappUserTasks = await getSignedTasks(env, dappUserAccount)
 
@@ -747,7 +760,9 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             accountContract(dappContractAccount),
             requestHash,
             JSON.parse(JSON.stringify(captchaSolutionsSalted)),
-            u8aToHex(userSignature)
+            u8aToHex(userSignature),
+            timestamp,
+            signedTimestamp
         )
         expect(result.captchas.length).to.be.eq(2)
         const expectedProof = tree.proof(at(captchaSolutionsSalted, 0).captchaId)

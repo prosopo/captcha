@@ -215,7 +215,7 @@ export class ProsopoServer {
             return false
         }
         const result = await providerApi.verifyDappUser(token, signatureHex, timeouts.image.cachedTimeout)
-
+        console.log(result)
         return result.verified
     }
 
@@ -232,12 +232,18 @@ export class ProsopoServer {
 
         const payload = decodeProcaptchaOutput(token)
 
+        console.log('payload\n\n----\n\n', payload)
+
         const { user, providerUrl, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
 
-        if (providerUrl && blockNumber) {
+        console.log(user, providerUrl, blockNumber, challenge)
+
+        if (providerUrl) {
             // By requiring block number, we load balance requests to the providers by requiring that the random
             // provider selection should be repeatable. If we have a block number, we check the provider was selected
             // at that block.
+
+            // Temp removing block number check
 
             // const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
             // if (!randomProvider) {

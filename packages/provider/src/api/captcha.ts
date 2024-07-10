@@ -64,9 +64,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                     })
                 }
                 validateAddress(user, false, api.registry.chainSS58)
-                const blockNumberParsed = parseBlockNumber(blockNumber)
-
-                // await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {
@@ -78,6 +75,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                         },
                     })),
                     requestHash: taskData.requestHash,
+                    timestamp: taskData.timestamp,
+                    signedTimestamp: taskData.signedTime,
                 }
                 return res.json(captchaResponse)
             } catch (err) {
@@ -96,6 +95,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @return {DappUserSolutionResult} - The Captcha solution result and proof
      */
     router.post(ApiPaths.SubmitImageCaptchaSolution, async (req, res, next) => {
+        console.log('SubmitImageCaptchaSolution')
         let parsed: CaptchaSolutionBodyType
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
@@ -105,13 +105,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
         try {
             // TODO allow the dapp to override the length of time that the request hash is valid for
+            console.log('parsed', parsed)
+            console.log('dappUserSolution start')
             const result: DappUserSolutionResult = await tasks.dappUserSolution(
                 parsed[ApiParams.user],
                 parsed[ApiParams.dapp],
                 parsed[ApiParams.requestHash],
                 parsed[ApiParams.captchas],
-                parsed[ApiParams.signature]
+                parsed[ApiParams.signature],
+                parsed[ApiParams.signedTimestamp]
             )
+
+            console.log('dappUserSolution done')
             const returnValue: CaptchaSolutionResponse = {
                 status: req.i18n.t(result.verified ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
                 ...result,

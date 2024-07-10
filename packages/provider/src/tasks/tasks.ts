@@ -314,13 +314,18 @@ export class Tasks {
         dappAccount: string,
         requestHash: string,
         captchas: CaptchaSolution[],
-        signature: string // the signature to indicate ownership of account
+        signature: string, // the signature to indicate ownership of account
+        timestamp: string,
+        signedTimestamp: string
     ): Promise<DappUserSolutionResult> {
+        console.log('starting dapp active check')
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
                 context: { failedFuncName: this.getPaymentInfo.name, dappAccount },
             })
         }
+
+        console.log('dapp is active check passed')
 
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
@@ -330,6 +335,21 @@ export class Tasks {
                 context: { failedFuncName: this.dappUserSolution.name, userAccount },
             })
         }
+
+        // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
+        const timestampSigVerify = signatureVerify(stringToHex(timestamp), signedTimestamp, this.contract.pair.address)
+        if (!timestampSigVerify.isValid) {
+            // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
+            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', {
+                context: {
+                    failedFuncName: this.dappUserSolution.name,
+                    userAccount,
+                    error: 'timestamp signature is invalid',
+                },
+            })
+        }
+
+        console.log('------\n\npast the verification stage\n')
 
         let response: DappUserSolutionResult = {
             captchas: [],
@@ -506,7 +526,7 @@ export class Tasks {
     async getRandomCaptchasAndRequestHash(
         datasetId: string,
         userAccount: string
-    ): Promise<{ captchas: CaptchaWithProof[]; requestHash: string }> {
+    ): Promise<{ captchas: CaptchaWithProof[]; requestHash: string; timestamp: string; signedTime: string }> {
         const dataset = await this.db.getDatasetDetails(datasetId)
         if (!dataset) {
             throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED')
@@ -534,6 +554,8 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
+        const signedTime = u8aToHex(this.contract.pair.sign(stringToHex(currentTime.toString())))
+
         const timeLimit = captchas
             // if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
             .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
@@ -541,7 +563,7 @@ export class Tasks {
         const deadlineTs = timeLimit + currentTime
         const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
-        return { captchas, requestHash }
+        return { captchas, requestHash, timestamp: currentTime.toString(), signedTime }
     }
 
     /**

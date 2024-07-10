@@ -125,6 +125,8 @@ export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>
 export type CaptchaResponseBody = {
     [ApiParams.captchas]: CaptchaWithProof[]
     [ApiParams.requestHash]: string
+    [ApiParams.timestamp]: string
+    [ApiParams.signedTimestamp]: string
 }
 
 export const CaptchaSolutionBody = object({
@@ -133,6 +135,8 @@ export const CaptchaSolutionBody = object({
     [ApiParams.captchas]: array(CaptchaSolutionSchema),
     [ApiParams.requestHash]: string(),
     [ApiParams.signature]: string(), // the signature to prove account ownership
+    [ApiParams.timestamp]: string(),
+    [ApiParams.signedTimestamp]: string(),
 })
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
