@@ -53,7 +53,6 @@ import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 
 const defaultState = (): Partial<ProcaptchaState> => {
-    console.log('RESETTING OR SOMETHING')
     return {
         // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
@@ -164,8 +163,6 @@ export function Manager(
                 return
             }
 
-            console.log('alkjsdhbflajkshdbfljashdbflajshdbf')
-
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
             updateState({ loading: true })
@@ -178,22 +175,15 @@ export function Manager(
             await sleep(100)
 
             const account = await loadAccount()
-
-            console.log(account)
-
             const contract = getNetwork(config).contract.address
 
             // get a random provider
             const getRandomProviderResponse = getRandomActiveProvider()
 
-            console.log(getRandomProviderResponse)
             const blockNumber = getRandomProviderResponse.blockNumber
             const providerUrl = getRandomProviderResponse.provider.url
             // get the provider api inst
-            console.log('line 267', providerUrl)
             const providerApi = await loadProviderApi(providerUrl)
-
-            console.log('line 269', providerApi)
 
             const captchaApi = new ProsopoCaptchaApi(
                 account.account.address,
@@ -203,8 +193,6 @@ export function Manager(
                 config.web2,
                 config.account.address || ''
             )
-            console.log('state\n\n\n\n1', state)
-
             updateState({ captchaApi })
 
             const challenge = await captchaApi.getCaptchaChallenge()
@@ -225,8 +213,6 @@ export function Manager(
                 updateState({ isHuman: false, showModal: false, loading: false })
             }, timeMillis)
 
-            console.log('state\n\n\n\n2', state)
-
             // update state with new challenge
             updateState({
                 index: 0,
@@ -236,15 +222,11 @@ export function Manager(
                 timeout,
                 blockNumber,
             })
-
-            console.log('state\n\n\n\n3', state)
         })
-        console.log('state\n\n\n\nat  end of start', state)
     }
 
     const submit = async () => {
         await fallable(async () => {
-            console.log('state\n\n\n\n', state)
             // disable the time limit, user has submitted their solution in time
             clearTimeout()
 
@@ -274,7 +256,6 @@ export function Manager(
             )
 
             const account = getAccount()
-            console.log('account in submit', account)
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
 
@@ -287,15 +268,11 @@ export function Manager(
 
             const captchaApi = state.captchaApi
 
-            console.log(state)
-
             if (!captchaApi) {
                 throw new ProsopoError('CAPTCHA.INVALID_TOKEN', {
                     context: { error: 'No Captcha API found in state' },
                 })
             }
-
-            console.log('SIGNER', signer)
 
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
@@ -362,7 +339,6 @@ export function Manager(
                 context: { error: 'Cannot select, index is out of range for this Captcha' },
             })
         }
-        console.log('state in select', state)
         const index = state.index
         const solutions = state.solutions
         const solution = at(solutions, index)
@@ -380,7 +356,6 @@ export function Manager(
      * Proceed to the next round of the challenge.
      */
     const nextRound = () => {
-        console.log('state\n\n\n\n4', state)
         if (!state.challenge) {
             throw new ProsopoError('CAPTCHA.NO_CAPTCHA', {
                 context: { error: 'Cannot select, no Captcha found in state' },
@@ -480,7 +455,6 @@ export function Manager(
             throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION', { context: { error: 'Extension not loaded' } })
         }
 
-        console.log('accaount in getExtension', account)
         return account.extension
     }
 
