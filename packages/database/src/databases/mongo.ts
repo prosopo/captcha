@@ -418,6 +418,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void> {
         const commitmentRecord = UserCommitmentSchema.parse(commit)
+        console.log('commitmentRecord inserted', commitmentRecord)
         if (captchas.length) {
             await this.tables?.commitment.updateOne(
                 {
@@ -802,6 +803,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         const commitmentCursor = this.tables?.commitment?.findOne({ id: commitmentId }).lean()
 
         const doc = await commitmentCursor
+
+        console.log('doc\n\n\n', doc)
 
         return doc ? UserCommitmentSchema.parse(doc) : undefined
     }

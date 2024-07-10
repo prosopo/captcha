@@ -223,6 +223,8 @@ export const Manager = (
                 isHuman: true,
                 loading: false,
             })
+
+            const tempSignatureForTypes = 'blah'
             events.onHuman(
                 encodeProcaptchaOutput({
                     [ApiParams.providerUrl]: providerUrl,
@@ -231,6 +233,8 @@ export const Manager = (
                     [ApiParams.challenge]: challenge.challenge,
                     [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
                     [ApiParams.nonce]: solution,
+                    [ApiParams.timestamp]: tempSignatureForTypes,
+                    [ApiParams.signedTimestamp]: tempSignatureForTypes,
                 })
             )
             setValidChallengeTimeout()

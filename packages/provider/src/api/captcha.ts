@@ -113,6 +113,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 parsed[ApiParams.requestHash],
                 parsed[ApiParams.captchas],
                 parsed[ApiParams.signature],
+                parsed[ApiParams.timestamp],
                 parsed[ApiParams.signedTimestamp]
             )
 

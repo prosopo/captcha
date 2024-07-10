@@ -40,6 +40,7 @@ import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
+import { timeStamp } from 'console'
 
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -300,6 +301,8 @@ export function Manager(
                         [ApiParams.dapp]: getDappAccount(),
                         [ApiParams.commitmentId]: hashToHex(submission[1]),
                         [ApiParams.blockNumber]: blockNumber,
+                        [ApiParams.timestamp]: challenge.timestamp,
+                        [ApiParams.signedTimestamp]: challenge.signedTimestamp,
                     })
                 )
                 setValidChallengeTimeout()

@@ -36,6 +36,7 @@ export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' 
     processed: boolean
     batched: boolean
     stored?: boolean
+    requestedAtTimestamp: number
 }
 
 export const UserCommitmentSchema = object({
@@ -51,6 +52,7 @@ export const UserCommitmentSchema = object({
     processed: boolean(),
     batched: boolean(),
     stored: boolean().optional(),
+    requestedAtTimestamp: number(),
 }) satisfies ZodType<UserCommitmentRecord>
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -115,6 +117,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     processed: { type: Boolean, required: true },
     batched: { type: Boolean, required: true },
     stored: { type: Boolean, required: false },
+    requestedAtTimestamp: { type: Number, required: true },
 })
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 })

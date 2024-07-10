@@ -169,6 +169,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
                 const status = count % 2 === 0 ? CaptchaStatus.approved : CaptchaStatus.disapproved
                 const signer = env.keyring.addFromMnemonic(accountMnemonic(dappUser))
                 const userSignature = signer.sign(stringToHex(requestHash))
+                const requestedAtTimestamp = Date.now()
                 const commit: UserCommitmentRecord = {
                     id: commitmentId,
                     userAccount: accountAddress(dappUser),
@@ -182,6 +183,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
                     processed: false,
                     batched: false,
                     stored: false,
+                    requestedAtTimestamp,
                 }
                 await providerTasks.db.storeDappUserSolution([captchaSolution], commit)
                 if (status === CaptchaStatus.approved) {

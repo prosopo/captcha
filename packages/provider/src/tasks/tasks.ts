@@ -354,6 +354,8 @@ export class Tasks {
         let response: DappUserSolutionResult = {
             captchas: [],
             verified: false,
+            timestamp: timestamp,
+            signedTimestamp,
         }
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
@@ -368,6 +370,9 @@ export class Tasks {
             userAccount,
             captchaIds
         )
+
+        console.log('TIMESTAMP AS AN INT', parseInt(timestamp))
+        console.log('TIMESTAMP AS A STR', timestamp)
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
         const blockNumber = await getCurrentBlockNumber(this.contract.api)
@@ -387,6 +392,7 @@ export class Tasks {
                 processed: false,
                 batched: false,
                 stored: false,
+                requestedAtTimestamp: parseInt(timestamp),
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
@@ -395,6 +401,8 @@ export class Tasks {
                         captchaId: id,
                         proof: tree.proof(id),
                     })),
+                    timestamp: timestamp,
+                    signedTimestamp: signedTimestamp,
                     verified: true,
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
@@ -404,6 +412,8 @@ export class Tasks {
                         captchaId: id,
                         proof: [[]],
                     })),
+                    timestamp,
+                    signedTimestamp,
                     verified: false,
                 }
             }
@@ -679,6 +689,7 @@ export class Tasks {
      * Get dapp user solution from database
      */
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord> {
+        console.log('getting commit by id')
         const dappUserSolution = await this.db.getDappUserCommitmentById(commitmentId)
         if (!dappUserSolution) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -693,6 +704,7 @@ export class Tasks {
 
     /* Check if dapp user has verified solution in cache */
     async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord | undefined> {
+        console.log('getting commit by user')
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {

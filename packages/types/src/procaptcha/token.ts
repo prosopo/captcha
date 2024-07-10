@@ -24,6 +24,8 @@ export const ProcaptchaOutputSchema = object({
     [ApiParams.blockNumber]: number(),
     [ApiParams.challenge]: string().optional(),
     [ApiParams.nonce]: number().optional(),
+    [ApiParams.timestamp]: string(),
+    [ApiParams.signedTimestamp]: string(),
 })
 
 /**
@@ -44,6 +46,8 @@ export const ProcaptchaTokenCodec = Struct({
     [ApiParams.blockNumber]: u32,
     [ApiParams.challenge]: Option(str),
     [ApiParams.nonce]: Option(u32),
+    [ApiParams.timestamp]: str,
+    [ApiParams.signedTimestamp]: str,
 })
 
 export const ProcaptchaTokenSpec = string().startsWith('0x')

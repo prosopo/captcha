@@ -102,6 +102,8 @@ export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]
     partialFee?: string
     [ApiParams.verified]: boolean
+    [ApiParams.timestamp]: string
+    [ApiParams.signedTimestamp]: string
 }
 
 export interface CaptchaSolutionResponse extends DappUserSolutionResult {
