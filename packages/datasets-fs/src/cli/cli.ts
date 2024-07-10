@@ -57,7 +57,7 @@ export class Cli extends Loggable {
                 '$0',
                 'default command',
                 (y: Argv) => y,
-                (argv: any) => {
+                () => {
                     throw new ProsopoCliError('CLI.PARAMETER_ERROR', { context: { error: `no command specified` } })
                 }
             )
