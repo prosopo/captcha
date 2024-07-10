@@ -27,24 +27,13 @@ import {
     TCaptchaSubmitResult,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN_ZERO } from '@polkadot/util'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
 import { GovernanceStatus, Payee, RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { Keyring } from '@polkadot/keyring'
-import { PROVIDERS } from './providers.js'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
-import {
-    ProsopoContractError,
-    ProsopoDatasetError,
-    ProsopoEnvError,
-    ProsopoError,
-    trimProviderUrl,
-} from '@prosopo/common'
+import { loadBalancer } from './providers.js'
+import { ProsopoDatasetError, ProsopoEnvError, ProsopoError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { ReturnNumber } from '@prosopo/typechain-types/dist/src/types.js'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at, hashToHex } from '@prosopo/util'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
@@ -82,6 +71,8 @@ const getRandomActiveProvider = (): RandomProvider => {
 
     // TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
     //  to ensure that the random selection was completed within a certain timeframe
+
+    const PROVIDERS = loadBalancer('development')
 
     const randomProvderObj = at(PROVIDERS, randomIntBetween(0, PROVIDERS.length - 1))
     return {
@@ -278,9 +269,10 @@ export function Manager(
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
                 signer,
                 challenge.requestHash,
-                first.captcha.datasetId,
                 captchaSolution,
-                salt
+                salt,
+                challenge.timestamp,
+                challenge.signedTimestamp
             )
 
             // mark as is human if solution has been approved
@@ -298,7 +290,7 @@ export function Manager(
                 loading: false,
             })
             if (state.isHuman) {
-                const providerUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
+                const providerUrl = captchaApi.provider.provider.url
                 // cache this provider for future use
                 storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
                 events.onHuman(

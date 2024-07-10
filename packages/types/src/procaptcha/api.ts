@@ -31,8 +31,9 @@ export interface ProsopoCaptchaApiInterface {
     submitCaptchaSolution(
         signer: Signer,
         requestHash: string,
-        datasetId: string,
         solutions: CaptchaSolution[],
-        salt: string
+        salt: string,
+        timestamp: string,
+        signedTimestamp: string
     ): Promise<TCaptchaSubmitResult>
 }
