@@ -88,7 +88,9 @@
         "provider-gui"
     ],
     "dependencies": {
-        "@prosopo/flux": "1.0.2"
+        "@prosopo/flux": "1.0.2",
+        "concurrently": "^8.2.2",
+        "cypress": "^13.13.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",

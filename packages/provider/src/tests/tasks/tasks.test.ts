@@ -661,16 +661,6 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
 
-    test('Dapp is active', async ({ env }): Promise<void> => {
-        const dappAccount = await getUser(env, AccountKey.dappsWithStake)
-
-        const tasks = await getSignedTasks(env, dappAccount)
-
-        const result: any = await tasks.dappIsActive(accountContract(dappAccount))
-
-        expect(result).to.equal(true)
-    })
-
     test('Dapp details', async ({ env }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dapps)
 

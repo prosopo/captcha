@@ -318,12 +318,7 @@ export class Tasks {
         timestamp: string,
         signedTimestamp: string
     ): Promise<DappUserSolutionResult> {
-        if (!(await this.dappIsActive(dappAccount))) {
-            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
-                context: { failedFuncName: this.getPaymentInfo.name, dappAccount },
-            })
-        }
-
+        console.log('sig verify check')
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
@@ -333,8 +328,11 @@ export class Tasks {
             })
         }
 
+        console.log('time sig verification check')
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const timestampSigVerify = signatureVerify(stringToHex(timestamp), signedTimestamp, this.contract.pair.address)
+
+        console.log('throw if invalid')
         if (!timestampSigVerify.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
             throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', {
@@ -352,12 +350,14 @@ export class Tasks {
             timestamp: timestamp,
             signedTimestamp,
         }
+
+        console.log('validateReceivedCaptchasAgainstStoredCaptchas')
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
+
+        console.log('buildTreeAndGetCommitmentId')
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
-        const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
-            .unwrap()
-            .unwrap()
+
         const pendingRecord = await this.db.getDappUserPending(requestHash)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
             requestHash,
@@ -365,6 +365,14 @@ export class Tasks {
             userAccount,
             captchaIds
         )
+
+        const datasetId = at(storedCaptchas, 0).datasetId
+
+        if (!datasetId) {
+            throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH', {
+                context: { failedFuncName: this.dappUserSolution.name },
+            })
+        }
 
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
@@ -377,7 +385,7 @@ export class Tasks {
                 userAccount: userAccount,
                 dappContract: dappAccount,
                 providerAccount: this.contract.pair.address,
-                datasetId: provider.datasetId.toString(),
+                datasetId,
                 status: CaptchaStatus.pending,
                 userSignature: Array.from(userSignature),
                 requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
@@ -412,15 +420,6 @@ export class Tasks {
             }
         }
         return response
-    }
-
-    /**
-     * Validate that the dapp is active in the contract
-     */
-    async dappIsActive(dappAccount: string): Promise<boolean> {
-        const dapp: Dapp = await wrapQuery(this.contract.query.getDapp, this.contract.query)(dappAccount)
-        //dapp.status.isActive doesn't work: https://substrate.stackexchange.com/questions/6333/how-do-we-work-with-polkadot-js-enums-in-typescript
-        return dapp.status.toString() === 'Active'
     }
 
     /**
