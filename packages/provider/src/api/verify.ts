@@ -48,7 +48,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
     async function verifyImageSolution(res: Response, req: Request, next: NextFunction, isDapp: boolean) {
         const parsed = VerifySolutionBody.parse(req.body)
         try {
-            console.log('\n\nstarting verify image solution\n\n------')
             const { dappUserSignature, token } = parsed
             const { user, dapp, blockNumber, commitmentId } = decodeProcaptchaOutput(token)
 
@@ -58,13 +57,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             // Will throw an error if the signature is invalid
             verifySignature(dappUserSignature, blockNumber.toString(), keyPair)
 
-            console.log('\n\n-----finished verification\n\n')
-
             const solution = await (commitmentId
                 ? tasks.getDappUserCommitmentById(commitmentId)
                 : tasks.getDappUserCommitmentByAccount(user))
-
-            console.log('solution\n\n\n--------------', solution)
 
             // No solution exists
             if (!solution) {
@@ -91,8 +86,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             if (maxVerifiedTime) {
                 const currentTime = Date.now()
                 const timeSinceCompletion = currentTime - solution.requestedAtTimestamp
-
-                console.log(timeSinceCompletion)
 
                 // A solution exists but has timed out
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
