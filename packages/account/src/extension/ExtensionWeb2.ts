@@ -37,7 +37,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  */
 export class ExtensionWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
-        const account = await this.createAccount()
+        const account = await this.createAccount(config)
         const extension: InjectedExtension = await this.createExtension(account)
 
         return {
@@ -79,7 +79,7 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createAccount(): Promise<AccountWithKeyPair> {
+    private async createAccount(config: ProcaptchaClientConfigOutput): Promise<AccountWithKeyPair> {
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
@@ -96,7 +96,7 @@ export class ExtensionWeb2 extends Extension {
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
         const type: KeypairType = 'sr25519'
-        const keyring = new Keyring({ type, ss58Format: 42 })
+        const keyring = new Keyring({ type, ss58Format: config.networks[config.defaultNetwork].ss58Format })
         const keypair = keyring.addFromMnemonic(mnemonic)
         const address = keypair.address
         return {
