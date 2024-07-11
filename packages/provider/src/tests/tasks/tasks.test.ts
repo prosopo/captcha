@@ -346,7 +346,8 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         signatureVerify(stringToHex(requestHash), userSignature, accountAddress(dappUserAccount))
 
         const timestamp = Date.now().toString()
-        const signedTimestamp = u8aToHex(signer.sign(stringToHex(timestamp)))
+        const providerSigner = env.keyring.addFromMnemonic(accountMnemonic(providerAccount))
+        const signedTimestamp = u8aToHex(providerSigner.sign(stringToHex(timestamp)))
 
         return {
             dappUserAccount,

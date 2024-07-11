@@ -318,14 +318,11 @@ export class Tasks {
         timestamp: string,
         signedTimestamp: string
     ): Promise<DappUserSolutionResult> {
-        console.log('starting dapp active check')
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', {
                 context: { failedFuncName: this.getPaymentInfo.name, dappAccount },
             })
         }
-
-        console.log('dapp is active check passed')
 
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
@@ -349,8 +346,6 @@ export class Tasks {
             })
         }
 
-        console.log('------\n\npast the verification stage\n')
-
         let response: DappUserSolutionResult = {
             captchas: [],
             verified: false,
@@ -371,8 +366,6 @@ export class Tasks {
             captchaIds
         )
 
-        console.log('TIMESTAMP AS AN INT', parseInt(timestamp))
-        console.log('TIMESTAMP AS A STR', timestamp)
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
         const blockNumber = await getCurrentBlockNumber(this.contract.api)
@@ -418,7 +411,6 @@ export class Tasks {
                 }
             }
         }
-
         return response
     }
 
