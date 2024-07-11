@@ -46,10 +46,12 @@
         "@polkadot/util": "12.6.2",
         "@prosopo/common": "1.0.2",
         "@prosopo/captcha-contract": "1.0.2",
+        "scale-ts": "^1.6.0",
         "zod": "^3.22.3"
     },
     "devDependencies": {
         "@types/node": "^18.0.6",
+        "@prosopo/config": "1.0.2",
         "tslib": "2.6.2",
         "typescript": "5.1.6"
     },
