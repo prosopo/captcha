@@ -146,7 +146,6 @@ export default async function (
                     tryCatchDeoptimization: false,
                     moduleSideEffects: 'no-external', //true,
                     preset: 'smallest',
-                    manualPureFunctions: ['createWasmFn', 'unzlibSync', 'withWasm', 'isReady', 'initBridge', 'twox'],
                     unknownGlobalSideEffects: false,
                 },
                 experimentalLogSideEffects: false,
