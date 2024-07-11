@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
 import { Extension } from './Extension.js'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
@@ -21,8 +20,6 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { default as Signer } from '@polkadot/extension-base/page/Signer'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
@@ -92,11 +89,24 @@ export class ExtensionWeb2 extends Extension {
 
         const browserEntropy = await this.getFingerprint()
         const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
+
+        const temp = [canvasEntropy, browserEntropy].join('')
+
+        console.log(temp)
+
+        console.log(hexHash([canvasEntropy, browserEntropy].join('')))
+
+        console.log(hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2))
+
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
         const type: KeypairType = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: config.networks[config.defaultNetwork].ss58Format })
+
+        console.log(config.networks[config.defaultNetwork])
+
+        console.log(config.defaultNetwork)
         const keypair = keyring.addFromMnemonic(mnemonic)
         const address = keypair.address
         return {

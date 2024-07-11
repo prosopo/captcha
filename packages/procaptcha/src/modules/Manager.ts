@@ -40,7 +40,8 @@ import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
-import { timeStamp } from 'console'
+import { waitReady } from '@polkadot/wasm-crypto'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
 
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -154,6 +155,8 @@ export function Manager(
             if (state.isHuman) {
                 return
             }
+            await waitReady()
+            await cryptoWaitReady()
 
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
