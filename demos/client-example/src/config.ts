@@ -25,4 +25,5 @@ const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
     serverUrl: getServerUrl(),
 })
 
+console.log('\n\nCONFIG\\n\n---------------------------', config, process.env.PROSOPO_DEFAULT_NETWORK)
 export default config
