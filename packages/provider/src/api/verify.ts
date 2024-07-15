@@ -150,8 +150,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a dapp's solution as being approved or not
      *
-     *
-     * TODO FILL IN CORRECTLY
+     * @param {string} token - Token containing dapp, blockNumber and challenge
+     * @param {string} dappSignature - Signed token
+     * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
      */
     router.post(ApiPaths.VerifyPowCaptchaSolution, async (req, res, next) => {
         try {
