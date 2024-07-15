@@ -253,6 +253,9 @@ export class Tasks {
 
     async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
+
+        console.log('\n\n-----\n\n found challenge record \n\n', challengeRecord)
+
         if (!challengeRecord) {
             throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
                 context: { failedFuncName: this.serverVerifyPowCaptchaSolution.name, challenge },
@@ -260,10 +263,13 @@ export class Tasks {
         }
 
         if (challengeRecord.checked) {
+            console.log('\n\n-----\n\n challenge already checked \n\n')
             return false
         }
 
         const [blocknumber, _, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
+
+        console.log('\n\n-----\n\n blocknumber, challengeDappAccount \n\n', blocknumber, challengeDappAccount)
 
         if (dappAccount !== challengeDappAccount) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -285,6 +291,9 @@ export class Tasks {
             })
         }
         const recent = verifyRecency(challenge, timeout)
+
+        console.log('\n\n-----\n\n recent \n\n', recent)
+
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
