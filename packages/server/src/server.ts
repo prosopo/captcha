@@ -176,6 +176,7 @@ export class ProsopoServer {
 
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
+            console.log('reached challenge entrypoint')
             const result = await providerApi.submitPowCaptchaVerify(token, signatureHex, timeouts.pow.cachedTimeout)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified

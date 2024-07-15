@@ -67,7 +67,7 @@ const verify = async (
 
         console.log(`Verified: ${verified}`)
 
-        return await prosopoServer.isVerified(token)
+        return verified
     }
 }
 
@@ -108,6 +108,8 @@ const signup = async (
 
         const verified = await verify(prosopoServer, verifyType, verifyEndpoint, token, config.account.secret)
 
+        console.log(verified)
+
         if (verified) {
             // salt
             const salt = randomAsHex(32)
@@ -129,7 +131,7 @@ const signup = async (
                     })
             }
         } else {
-            res.status(401).json({ message: 'user has not completed a captcha' })
+            res.status(401).json({ message: 'user has not completed a captcha', context: verified })
         }
     } catch (err) {
         console.error('error', err)

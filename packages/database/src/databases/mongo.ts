@@ -527,6 +527,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         try {
             const updateResult = await this.tables.powCaptcha.updateOne({ challenge }, { $set: { checked } })
 
+            console.error(updateResult)
             if (updateResult.matchedCount === 0) {
                 this.logger.info('No PowCaptcha record found to update', { challenge, checked })
                 throw new ProsopoDBError('DATABASE.CAPTCHA_GET_FAILED', {
