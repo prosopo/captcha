@@ -98,7 +98,7 @@
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix",
+        "eslint:fix": "npm run eslint -- --fix --quiet",
         "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
@@ -124,9 +124,7 @@
         "@polkadot/types-codec": "10.13.1",
         "@polkadot/types-create": "10.13.1",
         "@polkadot/util": "12.6.2",
-        "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/typechain-polkadot": "1.1.15",
-        "@prosopo/typechain-types": "1.1.15"
+        "@polkadot/util-crypto": "12.6.2"
     },
     "devDependencies": {
         "tslib": "2.6.2",

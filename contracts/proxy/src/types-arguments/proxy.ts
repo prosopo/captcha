@@ -58,7 +58,7 @@ export interface ProxyMessages {
     getDestination?: null
     proxyWithdraw?: string | number | BN
     proxyTerminate?: null
-    proxySetCodeHash?: Array<number | string | BN>
+    proxySetCodeHash?: Hash
 }
 
 export class ProxyMessagesBuilder {
@@ -87,12 +87,14 @@ export class ProxyMessagesBuilder {
             proxyTerminate: null,
         }
     }
-    static ProxySetCodeHash(value: Array<number | string | BN>): ProxyMessages {
+    static ProxySetCodeHash(value: Hash): ProxyMessages {
         return {
             proxySetCodeHash: value,
         }
     }
 }
+
+export type Hash = string | number[]
 
 export interface ProxyReturnTypes {
     u8X32?: Array<number | string | BN>

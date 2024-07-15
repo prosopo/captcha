@@ -15,7 +15,11 @@ services:
         networks:
             - internal
             - external
-
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
     database:
         image: mongodb-raspberrypi4-unofficial-r6.0.10
         volumes:
@@ -26,6 +30,11 @@ services:
             - ../.env.production
         networks:
             - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
     caddy:
         image: caddy:2
         restart: unless-stopped
@@ -39,6 +48,11 @@ services:
             - caddy_config:/config
         networks:
             - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
 networks:
     internal:
         name: internal

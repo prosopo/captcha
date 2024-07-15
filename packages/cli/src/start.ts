@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CombinedApiPaths } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
@@ -21,6 +22,7 @@ import { prosopoAdminRouter, prosopoRouter, prosopoVerifyRouter, storeCaptchasEx
 import cors from 'cors'
 import express from 'express'
 import getConfig from './prosopo.config.js'
+import rateLimit from 'express-rate-limit'
 
 function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info(`Starting Prosopo API`)
@@ -35,6 +37,13 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
 
     if (admin) {
         apiApp.use(prosopoAdminRouter(env))
+    }
+
+    // Rate limiting
+    const rateLimits = env.config.rateLimits
+    for (const [path, limit] of Object.entries(rateLimits)) {
+        const enumPath = path as CombinedApiPaths
+        apiApp.use(enumPath, rateLimit(limit))
     }
 
     return apiApp.listen(apiPort, () => {
