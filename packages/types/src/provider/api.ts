@@ -213,7 +213,6 @@ export type GetPowCaptchaChallengeRequestBodyType = zInfer<typeof GetPowCaptchaC
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
 
 export const SubmitPowCaptchaSolutionBody = object({
-    [ApiParams.blockNumber]: number(),
     [ApiParams.challenge]: string(),
     [ApiParams.difficulty]: number(),
     [ApiParams.signature]: string(),

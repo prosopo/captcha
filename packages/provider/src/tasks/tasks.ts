@@ -179,11 +179,11 @@ export class Tasks {
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         // TODO: Verify that the origin matches the url of the dapp
         const difficulty = 4
-        const latestHeader = await this.contract.api.rpc.chain.getHeader()
-        const latestBlockNumber = latestHeader.number.toNumber()
+
+        const timestamp = Date.now().toString()
 
         // Use blockhash, userAccount and dappAccount for string for challenge
-        const challenge = `${latestBlockNumber}___${userAccount}___${dappAccount}`
+        const challenge = `${timestamp}___${userAccount}___${dappAccount}`
         const signature = u8aToHex(this.contract.pair.sign(stringToHex(challenge)))
 
         return { challenge, difficulty, signature }
@@ -200,20 +200,19 @@ export class Tasks {
      * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
      */
     async verifyPowCaptchaSolution(
-        blockNumber: number,
         challenge: string,
         difficulty: number,
         signature: string,
         nonce: number,
         timeout: number
     ): Promise<boolean> {
-        const recent = verifyRecency(this.contract.api, blockNumber, timeout)
+        const recent = verifyRecency(challenge, timeout)
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {
                     ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
                     failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blockNumber,
+                    challenge,
                 },
             })
         }
@@ -264,7 +263,7 @@ export class Tasks {
             return false
         }
 
-        const [blocknumber, userAccount, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
+        const [blocknumber, _, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
 
         if (dappAccount !== challengeDappAccount) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -285,7 +284,7 @@ export class Tasks {
                 },
             })
         }
-        const recent = verifyRecency(this.contract.api, parseInt(blocknumber), timeout)
+        const recent = verifyRecency(challenge, timeout)
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
                 context: {

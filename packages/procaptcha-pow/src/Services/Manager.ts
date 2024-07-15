@@ -22,18 +22,16 @@ import {
     ProcaptchaStateUpdateFn,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import { BN_ZERO } from '@polkadot/util'
 import { ExtensionWeb2 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
+import { GovernanceStatus, Payee, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
-import { solvePoW } from '@prosopo/util'
+import { at, solvePoW } from '@prosopo/util'
+import { ReturnNumber } from '@prosopo/typechain-types/dist/src/types.js'
+import { loadBalancer } from './Providers.js'
 
 export const Manager = (
     configInput: ProcaptchaClientConfigInput,
@@ -89,28 +87,6 @@ export const Manager = (
             })
         }
         return network
-    }
-    /**
-     * Load the contract instance using addresses from config.
-     */
-    const loadContract = async (): Promise<ProsopoCaptchaContract> => {
-        const network = getNetwork(getConfig())
-        const api = await ApiPromise.create({
-            provider: new WsProvider(network.endpoint),
-            initWasm: false,
-            noInitWarn: true,
-        })
-        const type = 'sr25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
-
-        return new ProsopoCaptchaContract(
-            api,
-            JSON.parse(abiJson),
-            network.contract.address,
-            'prosopo',
-            0,
-            keyring.addFromAddress(getConfig().account.address || '')
-        )
     }
 
     const getAccount = () => {
@@ -193,17 +169,12 @@ export const Manager = (
             })
         }
 
-        const contract = await loadContract()
+        // get a random provider
+        const getRandomProviderResponse = getRandomActiveProvider()
 
         const events = getDefaultEvents(onStateUpdate, state, callbacks)
 
-        // get a random provider
-        const getRandomProviderResponse: RandomProvider = await wrapQuery(
-            contract.query.getRandomActiveProvider,
-            contract.query
-        )(userAccount, getDappAccount())
-
-        const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+        const providerUrl = getRandomProviderResponse.provider.url
 
         const providerApi = new ProviderApi(getNetwork(getConfig()), providerUrl, getDappAccount())
 
@@ -238,6 +209,30 @@ export const Manager = (
                 })
             )
             setValidChallengeTimeout()
+        }
+    }
+
+    const getRandomActiveProvider = (): RandomProvider => {
+        const randomIntBetween = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
+
+        // TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
+        //  to ensure that the random selection was completed within a certain timeframe
+
+        const PROVIDERS = loadBalancer('development')
+
+        const randomProvderObj = at(PROVIDERS, randomIntBetween(0, PROVIDERS.length - 1))
+        return {
+            providerAccount: randomProvderObj.address,
+            provider: {
+                status: GovernanceStatus.active,
+                balance: new ReturnNumber(BN_ZERO),
+                fee: 0,
+                payee: Payee.dapp,
+                url: randomProvderObj.url,
+                datasetId: randomProvderObj.datasetId,
+                datasetIdContent: randomProvderObj.datasetIdContent,
+            },
+            blockNumber: 0,
         }
     }
 
