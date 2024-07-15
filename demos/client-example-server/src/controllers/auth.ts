@@ -131,7 +131,7 @@ const signup = async (
                     })
             }
         } else {
-            res.status(401).json({ message: 'user has not completed a captcha', context: verified })
+            res.status(401).json({ message: 'user has not completed a captcha', verified })
         }
     } catch (err) {
         console.error('error', err)
