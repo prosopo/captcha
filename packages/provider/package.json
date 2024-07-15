@@ -25,7 +25,7 @@
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
         "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix",
+        "eslint:fix": "npm run eslint -- --fix --quiet",
         "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
