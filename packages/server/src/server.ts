@@ -176,13 +176,11 @@ export class ProsopoServer {
 
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
-            console.log('reached challenge entrypoint')
             const result = await providerApi.submitPowCaptchaVerify(token, signatureHex, timeouts.pow.cachedTimeout)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
         const result = await providerApi.verifyDappUser(token, signatureHex, timeouts.image.cachedTimeout)
-        console.log(result)
         return result.verified
     }
 
@@ -199,28 +197,9 @@ export class ProsopoServer {
 
         const payload = decodeProcaptchaOutput(token)
 
-        console.log('payload\n\n----\n\n', payload)
-
-        const { user, providerUrl, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
-
-        console.log(user, providerUrl, blockNumber, challenge)
+        const { providerUrl, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
 
         if (providerUrl) {
-            // By requiring block number, we load balance requests to the providers by requiring that the random
-            // provider selection should be repeatable. If we have a block number, we check the provider was selected
-            // at that block.
-
-            // Temp removing block number check
-
-            // const randomProvider = await this.checkRandomProvider(user, dapp, providerUrl, blockNumber)
-            // if (!randomProvider) {
-            //     this.logger.info('Random provider selection failed')
-            //     // We have not been able to repeat the provider selection
-            //     return false
-            // }
-
-            // If we have a providerURL and a blockNumber, we verify with the provider
-
             return await this.verifyProvider(token, blockNumber, this.config.timeouts, providerUrl, challenge)
         } else {
             // If we don't have a providerURL, something has gone deeply wrong

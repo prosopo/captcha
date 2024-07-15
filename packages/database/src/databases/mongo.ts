@@ -418,7 +418,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void> {
         const commitmentRecord = UserCommitmentSchema.parse(commit)
-        console.log('commitmentRecord inserted', commitmentRecord)
         if (captchas.length) {
             await this.tables?.commitment.updateOne(
                 {
@@ -526,8 +525,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
         try {
             const updateResult = await this.tables.powCaptcha.updateOne({ challenge }, { $set: { checked } })
-
-            console.error(updateResult)
             if (updateResult.matchedCount === 0) {
                 this.logger.info('No PowCaptcha record found to update', { challenge, checked })
                 throw new ProsopoDBError('DATABASE.CAPTCHA_GET_FAILED', {
@@ -804,8 +801,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         const commitmentCursor = this.tables?.commitment?.findOne({ id: commitmentId }).lean()
 
         const doc = await commitmentCursor
-
-        console.log('doc\n\n\n', doc)
 
         return doc ? UserCommitmentSchema.parse(doc) : undefined
     }

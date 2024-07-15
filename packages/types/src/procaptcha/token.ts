@@ -24,8 +24,8 @@ export const ProcaptchaOutputSchema = object({
     [ApiParams.blockNumber]: number(),
     [ApiParams.challenge]: string().optional(),
     [ApiParams.nonce]: number().optional(),
-    [ApiParams.timestamp]: string(),
-    [ApiParams.signedTimestamp]: string(),
+    [ApiParams.timestamp]: string().optional(),
+    [ApiParams.signedTimestamp]: string().optional(),
 })
 
 /**

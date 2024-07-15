@@ -155,12 +155,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
      */
     router.post(ApiPaths.VerifyPowCaptchaSolution, async (req, res, next) => {
         try {
-            console.log('REQ REACHED PROVIDER', req.body)
             const { token, dappSignature, verifiedTimeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
-
             const { dapp, blockNumber, challenge } = decodeProcaptchaOutput(token)
-
-            console.log(decodeProcaptchaOutput(token))
 
             if (!challenge) {
                 const unverifiedResponse: VerificationResponse = {
@@ -176,11 +172,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             // Will throw an error if the signature is invalid
             verifySignature(dappSignature, blockNumber.toString(), dappPair)
 
-            console.log('\n\n-----\n\n reached verify sig \n\n')
-
             const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, verifiedTimeout)
-
-            console.log('\n\n-----\n\n reached approve \n\n')
 
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),

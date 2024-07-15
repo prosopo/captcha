@@ -94,7 +94,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      * @return {DappUserSolutionResult} - The Captcha solution result and proof
      */
     router.post(ApiPaths.SubmitImageCaptchaSolution, async (req, res, next) => {
-        console.log('SubmitImageCaptchaSolution')
         let parsed: CaptchaSolutionBodyType
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
@@ -104,8 +103,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
         try {
             // TODO allow the dapp to override the length of time that the request hash is valid for
-            console.log('parsed', parsed)
-            console.log('dappUserSolution start')
             const result: DappUserSolutionResult = await tasks.dappUserSolution(
                 parsed[ApiParams.user],
                 parsed[ApiParams.dapp],
@@ -116,7 +113,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 parsed[ApiParams.signedTimestamp]
             )
 
-            console.log('dappUserSolution done')
             const returnValue: CaptchaSolutionResponse = {
                 status: req.i18n.t(result.verified ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
                 ...result,

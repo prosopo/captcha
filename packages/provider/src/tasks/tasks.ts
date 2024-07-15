@@ -254,8 +254,6 @@ export class Tasks {
     async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
 
-        console.log('\n\n-----\n\n found challenge record \n\n', challengeRecord)
-
         if (!challengeRecord) {
             throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
                 context: { failedFuncName: this.serverVerifyPowCaptchaSolution.name, challenge },
@@ -263,13 +261,10 @@ export class Tasks {
         }
 
         if (challengeRecord.checked) {
-            console.log('\n\n-----\n\n challenge already checked \n\n')
             return false
         }
 
         const [blocknumber, _, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
-
-        console.log('\n\n-----\n\n blocknumber, challengeDappAccount \n\n', blocknumber, challengeDappAccount)
 
         if (dappAccount !== challengeDappAccount) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -291,8 +286,6 @@ export class Tasks {
             })
         }
         const recent = verifyRecency(challenge, timeout)
-
-        console.log('\n\n-----\n\n recent \n\n', recent)
 
         if (!recent) {
             throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
@@ -326,7 +319,6 @@ export class Tasks {
         timestamp: string,
         signedTimestamp: string
     ): Promise<DappUserSolutionResult> {
-        console.log('sig verify check')
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
@@ -336,11 +328,9 @@ export class Tasks {
             })
         }
 
-        console.log('time sig verification check')
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const timestampSigVerify = signatureVerify(stringToHex(timestamp), signedTimestamp, this.contract.pair.address)
 
-        console.log('throw if invalid')
         if (!timestampSigVerify.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
             throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', {
@@ -359,11 +349,9 @@ export class Tasks {
             signedTimestamp,
         }
 
-        console.log('validateReceivedCaptchasAgainstStoredCaptchas')
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
 
-        console.log('buildTreeAndGetCommitmentId')
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
 
         const pendingRecord = await this.db.getDappUserPending(requestHash)
@@ -688,7 +676,6 @@ export class Tasks {
      * Get dapp user solution from database
      */
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord> {
-        console.log('getting commit by id')
         const dappUserSolution = await this.db.getDappUserCommitmentById(commitmentId)
         if (!dappUserSolution) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -703,7 +690,6 @@ export class Tasks {
 
     /* Check if dapp user has verified solution in cache */
     async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord | undefined> {
-        console.log('getting commit by user')
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {
