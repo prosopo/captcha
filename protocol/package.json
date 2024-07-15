@@ -23,6 +23,7 @@
         "test:crate": "f() { npm run docker -- \"cd crates/$1 && cargo test\" ;}; f",
         "test:crate:all": "eval $(npm --silent run ls:crates | xargs -I {} printf 'npm run test:crate -- {}\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
         "test:all": "npm run test:crate:all && npm run test:contract:all",
+        "lint": "echo \"Not linting @prosopo/protocol\" && exit 0",
         "check:crates": "eval $(npm --silent run ls:crates | xargs -I {} printf 'npm run docker -- \"cd crates/{} && cargo check\"\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
         "check:contracts": "eval $(npm --silent run ls:contracts | xargs -I {} printf 'npm run docker -- \"cd contracts/{} && cargo check\"\n' | sed ':a;N;$!ba;s/\\n/ \\&\\& /g')",
         "check": "npm run check:crates && npm run check:contracts",
