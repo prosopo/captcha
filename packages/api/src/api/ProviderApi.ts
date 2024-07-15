@@ -126,9 +126,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         nonce: number,
         timeout?: number
     ): Promise<PowCaptchaSolutionResponse> {
-        const { blockNumber } = randomProvider
         const body = SubmitPowCaptchaSolutionBody.parse({
-            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.challenge]: challenge.challenge,
             [ApiParams.difficulty]: challenge.difficulty,
             [ApiParams.signature]: challenge.signature,

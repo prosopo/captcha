@@ -157,18 +157,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a user's PoW solution as being approved or not
      *
-     * @param {string} blocknumber - the block number at which the captcha was requested
      * @param {string} challenge - the challenge string
      * @param {number} difficulty - the difficulty of the challenge
      * @param {string} signature - the signature of the challenge
      * @param {string} nonce - the nonce of the challenge
+     * @param {number} verifiedTimeout - the valid length of captcha solution in ms
      */
     router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { blockNumber, challenge, difficulty, signature, nonce, verifiedTimeout } =
-                SubmitPowCaptchaSolutionBody.parse(req.body)
+            const { challenge, difficulty, signature, nonce, verifiedTimeout } = SubmitPowCaptchaSolutionBody.parse(
+                req.body
+            )
             const verified = await tasks.verifyPowCaptchaSolution(
-                blockNumber,
                 challenge,
                 difficulty,
                 signature,

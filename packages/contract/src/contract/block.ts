@@ -36,13 +36,15 @@ export const getCurrentBlockNumber = async (api: ApiPromise): Promise<number> =>
  * @param maxVerifiedTime
  * @param blockNumber
  */
-export const verifyRecency = async (api: ApiPromise, blockNumber: number, maxVerifiedTime: number) => {
+export const verifyRecency = async (challenge: string, maxVerifiedTime: number) => {
     // Get the current block number
-    const currentBlock = await getCurrentBlockNumber(api)
-    // Calculate how many blocks have passed since the blockNumber
-    const blocksPassed = currentBlock - blockNumber
-    // Get the expected block time
-    const blockTime = getBlockTimeMs(api)
-    // Check if the time since the last correct captcha is within the limit
-    return blockTime * blocksPassed <= maxVerifiedTime
+    const timestamp = challenge.split('___')[0]
+
+    if (!timestamp) {
+        throw new Error('Invalid challenge')
+    }
+
+    const currentTimestamp = Date.now()
+    const challengeTimestamp = parseInt(timestamp, 10)
+    return currentTimestamp - challengeTimestamp <= maxVerifiedTime
 }
