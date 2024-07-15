@@ -17,7 +17,6 @@ import { UserConfig } from 'vite'
 import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
-import { getAliases } from '../polkadot/index.js'
 import { getLogger } from '@prosopo/common'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { default as viteReact } from '@vitejs/plugin-react'
@@ -82,12 +81,10 @@ export default async function (
         ...optionalPeerDependencies,
     ]
     logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-    const alias = getAliases(workspaceRoot || dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
     proto['toJSON'] = RegExp.prototype.toString
-    logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
     let drop: undefined | Drop[]
@@ -118,9 +115,6 @@ export default async function (
             legalComments: 'none',
         },
         define,
-        resolve: {
-            alias,
-        },
 
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
