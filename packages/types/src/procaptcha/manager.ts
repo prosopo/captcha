@@ -78,3 +78,17 @@ export interface ProcaptchaState {
  * variables.
  */
 export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void
+
+export type Hash = string | number[]
+
+export type Provider = {
+    url: string
+    datasetId: Hash
+    datasetIdContent: Hash
+}
+
+export type RandomProvider = {
+    providerAccount: Hash
+    provider: Provider
+    blockNumber: number
+}

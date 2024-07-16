@@ -20,17 +20,16 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    Provider,
+    RandomProvider,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { BN_ZERO } from '@polkadot/util'
 import { ExtensionWeb2 } from '@prosopo/account'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { GovernanceStatus, Payee, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
 import { at, solvePoW } from '@prosopo/util'
-import { ReturnNumber } from '@prosopo/typechain-types/dist/src/types.js'
 import { loadBalancer } from './Providers.js'
 
 export const Manager = (
@@ -221,10 +220,6 @@ export const Manager = (
         return {
             providerAccount: randomProvderObj.address,
             provider: {
-                status: GovernanceStatus.active,
-                balance: new ReturnNumber(BN_ZERO),
-                fee: 0,
-                payee: Payee.dapp,
                 url: randomProvderObj.url,
                 datasetId: randomProvderObj.datasetId,
                 datasetIdContent: randomProvderObj.datasetIdContent,

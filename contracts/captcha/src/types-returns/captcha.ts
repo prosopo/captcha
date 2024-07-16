@@ -19,7 +19,6 @@ export type AccountId = string | number[]
 
 export type Provider = {
     status: GovernanceStatus
-    balance: ReturnNumber
     fee: number
     payee: Payee
     url: Array<number>

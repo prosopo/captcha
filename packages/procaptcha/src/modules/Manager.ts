@@ -23,24 +23,21 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    RandomProvider,
     StoredEvents,
     TCaptchaSubmitResult,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { BN_ZERO } from '@polkadot/util'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { GovernanceStatus, Payee, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { loadBalancer } from './providers.js'
 import { ProsopoDatasetError, ProsopoEnvError, ProsopoError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { ReturnNumber } from '@prosopo/typechain-types/dist/src/types.js'
 import { at, hashToHex } from '@prosopo/util'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
-import { waitReady } from '@polkadot/wasm-crypto'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 
 const defaultState = (): Partial<ProcaptchaState> => {
@@ -80,10 +77,6 @@ const getRandomActiveProvider = (): RandomProvider => {
     return {
         providerAccount: randomProvderObj.address,
         provider: {
-            status: GovernanceStatus.active,
-            balance: new ReturnNumber(BN_ZERO),
-            fee: 0,
-            payee: Payee.dapp,
             url: randomProvderObj.url,
             datasetId: randomProvderObj.datasetId,
             datasetIdContent: randomProvderObj.datasetIdContent,
@@ -155,7 +148,6 @@ export function Manager(
             if (state.isHuman) {
                 return
             }
-            await waitReady()
             await cryptoWaitReady()
 
             resetState()

@@ -21,8 +21,8 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { default as Signer } from '@polkadot/extension-base/page/Signer'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
+import { getFingerprint } from '@prosopo/detector'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 import { version } from '@prosopo/util'
@@ -87,7 +87,7 @@ export class ExtensionWeb2 extends Extension {
             seed: 42,
         }
 
-        const browserEntropy = await this.getFingerprint()
+        const browserEntropy = await getFingerprint()
         const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
@@ -101,17 +101,6 @@ export class ExtensionWeb2 extends Extension {
             name: address,
             keypair,
         }
-    }
-
-    private async getFingerprint(): Promise<string> {
-        // Initialize an agent at application startup.
-        const fpPromise = load()
-        // Get the visitor identifier when you need it.
-        const fp = await fpPromise
-        const result = await fp.get()
-        // strip out the components that change in incognito mode
-        const { screenFrame, ...componentsReduced } = result.components
-        return hashComponents(componentsReduced)
     }
 
     getNetwork = (config: ProcaptchaClientConfigOutput) => {
