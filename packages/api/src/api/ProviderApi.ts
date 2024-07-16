@@ -31,9 +31,10 @@ import {
     StoredEvents,
     SubmitPowCaptchaSolutionBody,
     VerificationResponse,
+    RandomProvider,
     VerifySolutionBodyTypeInput,
+    Provider,
 } from '@prosopo/types'
-import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase implements ProviderApi {

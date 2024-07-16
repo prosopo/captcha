@@ -22,8 +22,7 @@ import {
     ProviderRegistered,
 } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
-import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { StoredEvents } from '../procaptcha/index.js'
+import { Provider, RandomProvider, StoredEvents } from '../procaptcha/index.js'
 
 export interface ProviderApiInterface {
     getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody>

@@ -24,11 +24,11 @@ import {
     CaptchaSolutionResponse,
     CaptchaWithProof,
     ProsopoCaptchaApiInterface,
+    RandomProvider,
 } from '@prosopo/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '@prosopo/types'
 import { at } from '@prosopo/util'
