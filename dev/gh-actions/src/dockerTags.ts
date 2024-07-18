@@ -11,51 +11,53 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import axios from 'axios';
+import axios from 'axios'
 
 export async function fetchTags(namespace: string, repository: string): Promise<string[]> {
-    const tags: string[] = [];
-    let page = 1;
-    let nextPageUrl: string | null = `https://hub.docker.com/v2/repositories/${namespace}/${repository}/tags/?page=${page}`;
+    const tags: string[] = []
+    let page = 1
+    let nextPageUrl:
+        | string
+        | null = `https://hub.docker.com/v2/repositories/${namespace}/${repository}/tags/?page=${page}`
 
     while (nextPageUrl) {
         try {
-            const response: any = await axios.get(nextPageUrl);
-            const data = response.data;
+            const response: any = await axios.get(nextPageUrl)
+            const data = response.data
             tags.push(...data.results.map((tag: any) => tag.name))
-            nextPageUrl = data.next;
-            page++;
+            nextPageUrl = data.next
+            page++
         } catch (error) {
-            console.error(`Error fetching tags: ${error}`);
-            break;
+            console.error(`Error fetching tags: ${error}`)
+            break
         }
     }
 
     tags.sort(semVerLt)
 
-    return tags.reverse();
+    return tags.reverse()
 }
 
 export const semVerLt = (a: string, b: string): number => {
-    const aParts = a.split('.').map((part) => parseInt(part, 10));
-    const bParts = b.split('.').map((part) => parseInt(part, 10));
+    const aParts = a.split('.').map((part) => parseInt(part, 10))
+    const bParts = b.split('.').map((part) => parseInt(part, 10))
 
     if (aParts.length !== bParts.length || aParts.length !== 3) {
         // not semver, so compare lexicographically
-        return a.localeCompare(b);
+        return a.localeCompare(b)
     }
 
     for (let i = 0; i < aParts.length; i++) {
         if (aParts[i]! < bParts[i]!) {
-            return -1;
+            return -1
         } else if (aParts[i]! > bParts[i]!) {
-            return 1;
+            return 1
         }
     }
 
-    return 0;
+    return 0
 }
 
 export const isSemVer = (tag: string): boolean => {
-    return /^\d+\.\d+\.\d+$/.test(tag);
+    return /^\d+\.\d+\.\d+$/.test(tag)
 }

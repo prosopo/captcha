@@ -94,11 +94,11 @@ jobs:
 
             - name: lint
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  # get the files which have changed in the PR
-                  files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  echo "files: $files"
+                    # get the files which have changed in the PR
+                    files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
 
-                  npm run lint:cmd -- $files
+                    echo "files: $files"
+
+                    npm run lint:cmd -- $files

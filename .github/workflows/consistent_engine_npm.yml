@@ -66,17 +66,17 @@ jobs:
 
             - name: Check contract version matches provider version
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  # find all package.json files, recursively
-                  pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
-                  
-                  # extract the npm version from the package.json files
-                    versions=$(jq -r '.engines.npm' $pkgJsons)
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    # ensure all npm versions are the same
-                    if [ $(echo "$versions" | uniq | wc -l) -ne 1 ]; then
-                      echo "Npm versions are not consistent across packages"
-                      echo "$versions"
-                      exit 1
-                    fi
+                    # find all package.json files, recursively
+                    pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
+                    
+                    # extract the npm version from the package.json files
+                      versions=$(jq -r '.engines.npm' $pkgJsons)
+
+                      # ensure all npm versions are the same
+                      if [ $(echo "$versions" | uniq | wc -l) -ne 1 ]; then
+                        echo "Npm versions are not consistent across packages"
+                        echo "$versions"
+                        exit 1
+                      fi

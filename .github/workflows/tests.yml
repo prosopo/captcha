@@ -100,29 +100,29 @@ jobs:
 
             - name: Build JS bundle
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  # Copy the rococo env file to production env file
-                  echo "Copying the rococo env to production env file in procaptcha-bundle"
-                  cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # Navigate to the JS bundle directory and build
-                  echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
-                  cd packages/procaptcha-bundle
+                    # Copy the rococo env file to production env file
+                    echo "Copying the rococo env to production env file in procaptcha-bundle"
+                    cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
-                  NODE_ENV=production npm run bundle:prod
+                    # Navigate to the JS bundle directory and build
+                    echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                    cd packages/procaptcha-bundle
+
+                    NODE_ENV=production npm run bundle:prod
 
             - name: Setup env
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  cp demos/client-example-server/env.development demos/client-example-server/.env.test
-                  cp demos/client-example/env.development demos/client-example/.env.test
-                  cp dev/scripts/env.test .env.test
-                  cp dev/scripts/env.test dev/scripts/.env.test
-                  cp dev/scripts/env.test packages/cli/.env.test
-                  cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                  echo NODE_ENV: $NODE_ENV
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    cp demos/client-example-server/env.development demos/client-example-server/.env.test
+                    cp demos/client-example/env.development demos/client-example/.env.test
+                    cp dev/scripts/env.test .env.test
+                    cp dev/scripts/env.test dev/scripts/.env.test
+                    cp dev/scripts/env.test packages/cli/.env.test
+                    cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+                    echo NODE_ENV: $NODE_ENV
 
             - name: Start the docker images
               run: |

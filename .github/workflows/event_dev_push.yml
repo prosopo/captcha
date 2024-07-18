@@ -62,8 +62,8 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                curl -X POST \
-                -H "Authorization: token $GITHUB_TOKEN" \
-                -H "Accept: application/vnd.github.everest-preview+json" \
-                -d '{"event_type": "captcha_dev_push"}' \
-                https://api.github.com/repos/prosopo/captcha-private/dispatches
+                  curl -X POST \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Accept: application/vnd.github.everest-preview+json" \
+                  -d '{"event_type": "captcha_dev_push"}' \
+                  https://api.github.com/repos/prosopo/captcha-private/dispatches

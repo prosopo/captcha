@@ -4,7 +4,7 @@ name: deploy
 
 on:
     push:
-        branches: [ main ]
+        branches: [main]
     workflow_dispatch:
 
 jobs:
@@ -68,35 +68,35 @@ jobs:
               id: next_version
               run: |
 
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  VERSION=$(cat package.json | jq -r '.version')
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # if version not detected, error
-                    if [[ -z "$VERSION" ]]; then
-                        echo "Failed to get version"
-                        exit 1
-                    fi
-                    # or if version null
-                    if [[ "$VERSION" == "null" ]]; then
-                        echo "Failed to get version"
-                        exit 1
-                    fi
+                    VERSION=$(cat package.json | jq -r '.version')
 
-                  # split into major, minor, patch
-                  MAJOR=$(echo $VERSION | cut -d. -f1)
-                  MINOR=$(echo $VERSION | cut -d. -f2)
-                  PATCH=$(echo $VERSION | cut -d. -f3)
-                  echo "version=$VERSION"
-                  echo "major=$MAJOR"
-                  echo "minor=$MINOR"
-                  echo "patch=$PATCH"
+                    # if version not detected, error
+                      if [[ -z "$VERSION" ]]; then
+                          echo "Failed to get version"
+                          exit 1
+                      fi
+                      # or if version null
+                      if [[ "$VERSION" == "null" ]]; then
+                          echo "Failed to get version"
+                          exit 1
+                      fi
 
-                  # export the next version numbers
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
-                  echo "major=$MAJOR" >> $GITHUB_OUTPUT
-                  echo "minor=$MINOR" >> $GITHUB_OUTPUT
-                  echo "patch=$PATCH" >> $GITHUB_OUTPUT
+                    # split into major, minor, patch
+                    MAJOR=$(echo $VERSION | cut -d. -f1)
+                    MINOR=$(echo $VERSION | cut -d. -f2)
+                    PATCH=$(echo $VERSION | cut -d. -f3)
+                    echo "version=$VERSION"
+                    echo "major=$MAJOR"
+                    echo "minor=$MINOR"
+                    echo "patch=$PATCH"
+
+                    # export the next version numbers
+                    echo "version=$VERSION" >> $GITHUB_OUTPUT
+                    echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                    echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                    echo "patch=$PATCH" >> $GITHUB_OUTPUT
 
             - uses: actions/setup-node@v3
               with:
@@ -118,89 +118,89 @@ jobs:
 
             - name: Build JS bundle
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  # Copy the rococo env file to production env file
-                  echo "Copying the rococo env to production env file in procaptcha-bundle"
-                  cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # Navigate to the JS bundle directory and build
-                  echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
-                  cd packages/procaptcha-bundle
+                    # Copy the rococo env file to production env file
+                    echo "Copying the rococo env to production env file in procaptcha-bundle"
+                    cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
-                  NODE_ENV=production npm run bundle:prod
+                    # Navigate to the JS bundle directory and build
+                    echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                    cd packages/procaptcha-bundle
+
+                    NODE_ENV=production npm run bundle:prod
 
             - name: Build docker js_server
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                # technically, if the release is for a version which is less than a published version, the following code will have bundles from versions ahead of this one. However, this isn't really a problem, as we just want the latest bundle to be available alongside old ones, not so bothered about newer ones.
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # Set the JS location in the container
-                  JS_FOLDER="/usr/share/nginx/html/js"
+                  # technically, if the release is for a version which is less than a published version, the following code will have bundles from versions ahead of this one. However, this isn't really a problem, as we just want the latest bundle to be available alongside old ones, not so bothered about newer ones.
 
-                  # Get the most recent version of the js_server image
-                  docker pull prosopo/js_server:latest
+                    # Set the JS location in the container
+                    JS_FOLDER="/usr/share/nginx/html/js"
 
-                  # Create a temporary container from the latest image
-                  echo "Building Docker image..."
-                  OLD_CONTAINER_ID=$(docker create prosopo/js_server:$VERSION)
+                    # Get the most recent version of the js_server image
+                    docker pull prosopo/js_server:latest
 
-                  # Remove the old js temp folder
-                  rm -rf ./js_bundles_host_temp
+                    # Create a temporary container from the latest image
+                    echo "Building Docker image..."
+                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:$VERSION)
 
-                  # Copy out the old files
-                  docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
+                    # Remove the old js temp folder
+                    rm -rf ./js_bundles_host_temp
 
-                  # Build the new image
-                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
+                    # Copy out the old files
+                    docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
 
-                  # Run the new image
-                  NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
+                    # Build the new image
+                    docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
 
-                  # Copy the legacy files across
-                  docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
+                    # Run the new image
+                    NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
 
-                  # Copy the new bundle files to the container into a folder with the version name
-                  docker cp packages/procaptcha-bundle/dist/bundle/. $NEW_CONTAINER_ID:$JS_FOLDER
+                    # Copy the legacy files across
+                    docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
 
-                  # Start the new container
-                  docker start $NEW_CONTAINER_ID
+                    # Copy the new bundle files to the container into a folder with the version name
+                    docker cp packages/procaptcha-bundle/dist/bundle/. $NEW_CONTAINER_ID:$JS_FOLDER
 
-                  # Move procaptcha.bundle.js
-                  docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
+                    # Start the new container
+                    docker start $NEW_CONTAINER_ID
 
-                  # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
-                  docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
+                    # Move procaptcha.bundle.js
+                    docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
 
-                  # Commit the changes to the container
-                  docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
+                    # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
+                    docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
 
-                  # Check this new docker image works locally
-                  docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+                    # Commit the changes to the container
+                    docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
 
-                  # Start the bundle demo & run the cypress tests against the new bundle
-                  # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
+                    # Check this new docker image works locally
+                    docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                    # Start the bundle demo & run the cypress tests against the new bundle
+                    # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
 
             - name: Build the production CLI package
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  echo "Building the production CLI package..."
-                  # Copy the rococo env file to production env file
-                  echo "Copying the rococo env to production env file in cli package"
-                  cp ./dev/scripts/env.production ./packages/cli/.env.production
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # Navigate to the provider CLI directory and build
-                  echo "Navigating to 'packages/cli' and bundling..."
-                  cd packages/cli
-                  NODE_ENV=production npm run build
-                  NODE_ENV=production npm run bundle:prod
+                    echo "Building the production CLI package..."
+                    # Copy the rococo env file to production env file
+                    echo "Copying the rococo env to production env file in cli package"
+                    cp ./dev/scripts/env.production ./packages/cli/.env.production
 
-                  # Navigate back to the project root
-                  echo "Navigating back to project root..."
-                  cd ../..
-            
+                    # Navigate to the provider CLI directory and build
+                    echo "Navigating to 'packages/cli' and bundling..."
+                    cd packages/cli
+                    NODE_ENV=production npm run build
+                    NODE_ENV=production npm run bundle:prod
+
+                    # Navigate back to the project root
+                    echo "Navigating back to project root..."
+                    cd ../..
+
             # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Github release
               id: github_release
@@ -261,11 +261,11 @@ jobs:
             - name: Deploy fail notification
               if: failure()
               run: |
-                echo "Deploy failed"
-                curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  echo "Deploy failed"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
 
             - name: Deploy success notification
               if: success()
               run: |
-                echo "Deploy succeeded"
-                curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  echo "Deploy succeeded"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}

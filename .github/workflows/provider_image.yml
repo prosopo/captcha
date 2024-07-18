@@ -97,11 +97,11 @@ jobs:
             # build the cli production bundle
             - name: Build cli production bundle
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  cp ./dev/scripts/env.production ./packages/cli/.env.production
-                  cp ./dev/scripts/env.production ./.env.production
-                  NODE_ENV=production npm run -w @prosopo/cli bundle:prod
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    cp ./dev/scripts/env.production ./packages/cli/.env.production
+                    cp ./dev/scripts/env.production ./.env.production
+                    NODE_ENV=production npm run -w @prosopo/cli bundle:prod
 
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
@@ -152,13 +152,13 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
-                  sleep 20s
-                  docker logs $CONTAINER >& provider.log
-                  echo $(cat provider.log)
-                  grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
+                    sleep 20s
+                    docker logs $CONTAINER >& provider.log
+                    echo $(cat provider.log)
+                    grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
 
             - name: Build the provider-mock package
               id: build_provider_mock_package

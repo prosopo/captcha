@@ -11,24 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import axios from 'axios';
-import { fetchTags, isSemVer, semVerLt } from './dockerTags.js';
+import axios from 'axios'
+import { fetchTags, isSemVer, semVerLt } from './dockerTags.js'
 
 const main = async () => {
     // get args
-    const args = process.argv.slice(2);
+    const args = process.argv.slice(2)
     // tags will be sorted in descending order
     const tags = await fetchTags(String(args[0]), String(args[1]))
     // find the tag that is previous to the given tag
-    const target = String(args[2]);
+    const target = String(args[2])
     for (const tag of tags) {
         if (isSemVer(tag) === false) {
-            continue;
+            continue
         }
         if (semVerLt(tag, target) === -1) {
             // found the previous tag
-            console.log(tag);
-            return;
+            console.log(tag)
+            return
         }
     }
 }

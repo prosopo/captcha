@@ -69,21 +69,21 @@ jobs:
 
             - name: Check package versions are all moving in lockstep
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                  # find all package.json files, recursively
-                  pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
-                  # extract version from package.json files
-                  jsVers=$(xargs -I % sh -c "jq -r '.version' %" <<< "$pkgJsons")
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # find all Cargo.toml files
-                    cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
-                  # extract the version out of all Cargo.toml files (we're assuming the version is the first version line encountered)
-                    rustVers=$(xargs -I % sh -c "grep -m 1 'version' % | awk -F'\"' '{print \$2}'" <<< "$cargoTomls")
-                    
-                  # compare all versions detected, if they are not all the same, fail the workflow
-                  vers=$(echo "$jsVers $rustVers" | tr ' ' '\n')
-                    if [[ $(echo "$vers" | uniq | wc -l) -ne 1 ]]; then
-                        echo "versions are not all the same: $vers"
-                        exit 1
-                    fi
+                    # find all package.json files, recursively
+                    pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
+                    # extract version from package.json files
+                    jsVers=$(xargs -I % sh -c "jq -r '.version' %" <<< "$pkgJsons")
+
+                    # find all Cargo.toml files
+                      cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
+                    # extract the version out of all Cargo.toml files (we're assuming the version is the first version line encountered)
+                      rustVers=$(xargs -I % sh -c "grep -m 1 'version' % | awk -F'\"' '{print \$2}'" <<< "$cargoTomls")
+                      
+                    # compare all versions detected, if they are not all the same, fail the workflow
+                    vers=$(echo "$jsVers $rustVers" | tr ' ' '\n')
+                      if [[ $(echo "$vers" | uniq | wc -l) -ne 1 ]]; then
+                          echo "versions are not all the same: $vers"
+                          exit 1
+                      fi
