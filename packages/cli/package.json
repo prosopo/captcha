@@ -24,7 +24,7 @@
         "cli": "node ./dist/cli.js",
         "start": "node ./dist/cli.js --api",
         "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix",
+        "eslint:fix": "npm run eslint -- --fix --quiet",
         "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
         "prettier:fix": "npm run prettier -- --write",
         "lint": "npm run eslint && npm run prettier",
@@ -51,6 +51,7 @@
     "devDependencies": {
         "@prosopo/config": "1.0.2",
         "@types/cors": "^2.8.14",
+        "@types/yargs": "^17.0.32",
         "es-main": "^1.2.0",
         "express": "^4.18.2",
         "tslib": "2.6.2",
