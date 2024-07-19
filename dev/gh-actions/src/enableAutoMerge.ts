@@ -20,12 +20,15 @@ const main = async () => {
     if (process.env.PR_NUMBER === undefined) {
         throw new Error('PR_NUMBER env variable not set')
     }
+    if (process.env.REPO === undefined) {
+        throw new Error('REPO env variable not set')
+    }
 
     // TODO get the type from graphql definition
     const pr: any = await graphql(
         `  
     query {
-      repository(owner: "prosopo", name: "captcha") {
+      repository(owner: "prosopo", name: ${process.env.REPO}) {
         pullRequest(number: ${process.env.PR_NUMBER}) {
           id
         }
