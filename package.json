@@ -1,7 +1,6 @@
 {
     "name": "@prosopo/captcha",
     "version": "1.0.2",
-    "stableVersion": "0.0.0",
     "author": "Prosopo",
     "type": "module",
     "repository": {
@@ -101,6 +100,8 @@
         "@typescript-eslint/parser": "^6.0.0",
         "@vitest/coverage-v8": "^1.3.1",
         "babel-plugin-import": "^1.13.6",
+        "concurrently": "^8.2.2",
+        "cypress": "^13.12.0",
         "depcheck": "^1.4.7",
         "eslint": "^8.55.0",
         "eslint-config-prettier": "^8.5.0",

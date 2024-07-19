@@ -1,11 +1,16 @@
-name: webpack_bundling
+# Workflow to check all versions of packages are the same, ensuring we move in lockstep.
+# We made the decision to move in lockstep for greater dev speed at the detriment of more frequent version bumps than necessary to some packages.
+# Lockstep versioning is simpler and doesn't require backwards compatibility headaches.
+
+name: lockstep_version
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
         paths:
-            - 'src/**'
-            - 'package.json'
+            - '**/package.json'
+            - '**/Cargo.toml'
+            - '.github/workflows/lockstep_version.yml'
     workflow_dispatch:
 
 concurrency:
@@ -14,12 +19,13 @@ concurrency:
 
 env:
     CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
-    NODE_ENV: test
 
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -58,42 +64,26 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-            # Checkout the repo
+
             - uses: actions/checkout@v3
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
-            - run: mkdir -p ~/.cache/Cypress
-
-            - name: Restore cache
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      ~/.cache/Cypress
-                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
-                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
-                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
-                  key: some-unused-cache-key
-                  restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
-
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - name: Install npm
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
-
-            - run: npm install
-
-            # build all packages in workspace
-            - run: npm run build scripts
-            - run: npm run build:all:cjs
-
-            # bundle procaptcha-bundle using webpack
-            - name: Webpack Bundle procaptcha-bundle
+            - name: Check package versions are all moving in lockstep
               run: |
-                  npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    # find all package.json files, recursively
+                    pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
+                    # extract version from package.json files
+                    jsVers=$(xargs -I % sh -c "jq -r '.version' %" <<< "$pkgJsons")
+
+                    # find all Cargo.toml files
+                      cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
+                    # extract the version out of all Cargo.toml files (we're assuming the version is the first version line encountered)
+                      rustVers=$(xargs -I % sh -c "grep -m 1 'version' % | awk -F'\"' '{print \$2}'" <<< "$cargoTomls")
+                      
+                    # compare all versions detected, if they are not all the same, fail the workflow
+                    vers=$(echo "$jsVers $rustVers" | tr ' ' '\n')
+                      if [[ $(echo "$vers" | uniq | wc -l) -ne 1 ]]; then
+                          echo "versions are not all the same: $vers"
+                          exit 1
+                      fi

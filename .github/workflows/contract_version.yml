@@ -1,8 +1,10 @@
+# Check the contract JS is in sync with the Rust version
+
 name: contract_version
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
         paths:
             - '**/package.json'
             - '**/Cargo.toml'
@@ -21,6 +23,7 @@ env:
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -64,13 +67,18 @@ jobs:
 
             - name: Check contract version matches provider version
               run: |
-                  set -eu
-                    provider=$(cat packages/provider/package.json | jq -r '.version')
-                    find protocol/target/ink/*/ -name "Cargo.toml" | while read line; do
-                        contract=$(cat $line | grep -m 1 "version = " | cut -d '"' -f 2)
-                        echo "checking version in $line"
-                        if [[ "$contract" != "$provider" ]]; then
-                            echo "version mismatch: $contract != $provider"
-                            exit 1
-                        fi
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    # get the version of the contract in js pkg
+                    for contract in contracts/*; do
+                      echo "checking version in $contract"
+                      jsVer=$(cat $contract/package.json | jq -r .version)
+                      echo "js version: $jsVer"
+                      # get the version of the contract in rust pkg
+                      # assuming the contract version is the first version line in Cargo.toml
+                      rustVer=$(cat protocol/$contract/Cargo.toml | grep -m 1 "version = " | cut -d '"' -f 2)
+                      if [[ "$jsVer" != "$rustVer" ]]; then
+                          echo "version mismatch: $jsVer != $rustVer"
+                          exit 1
+                      fi
                     done
