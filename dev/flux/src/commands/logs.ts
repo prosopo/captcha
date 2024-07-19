@@ -50,7 +50,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
         describe: 'Output the last `n` lines of logs from a Flux Node',
         builder: (yargs: Argv) =>
             yargs
-                .option('app', {
+                .positional('<app>', {
                     type: 'string' as const,
                     demandOption: false,
                     desc: 'Name of the app to authenticate with. Authentication is done with api.runonflux.io by default.',
