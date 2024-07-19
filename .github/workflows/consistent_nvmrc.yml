@@ -67,25 +67,24 @@ jobs:
 
             - name: Check contract version matches provider version
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                
-                # find all .nvmrc files except in node_modules and get the content
-                nvmrcs=$(find . -name '.nvmrc' -not -path '*/node_modules/*' -exec cat {} +)
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                # check all .nvmrc files are the same content
-                if [ $(echo "$nvmrcs" | uniq | wc -l) -gt 1 ]; then
-                  echo "ERROR: .nvmrc files are not consistent"
-                  echo "$nvmrcs"
-                  exit 1
-                fi
+                  # find all .nvmrc files except in node_modules and get the content
+                  nvmrcs=$(find . -name '.nvmrc' -not -path '*/node_modules/*' -exec cat {} +)
 
-                # check nvmrc version matches engine, replacing <=> in the engine string with blank
-                engine=$(jq -r '.engines.node' package.json | tr -d '<>=')
+                  # check all .nvmrc files are the same content
+                  if [ $(echo "$nvmrcs" | uniq | wc -l) -gt 1 ]; then
+                    echo "ERROR: .nvmrc files are not consistent"
+                    echo "$nvmrcs"
+                    exit 1
+                  fi
 
-                if [ "$engine" != "$(cat .nvmrc)" ]; then
-                  echo "ERROR: .nvmrc version does not match engine"
-                  echo "engine: $engine"
-                  echo ".nvmrc: $(cat .nvmrc)"
-                  exit 1
-                fi
-                
+                  # check nvmrc version matches engine, replacing <=> in the engine string with blank
+                  engine=$(jq -r '.engines.node' package.json | tr -d '<>=')
+
+                  if [ "$engine" != "$(cat .nvmrc)" ]; then
+                    echo "ERROR: .nvmrc version does not match engine"
+                    echo "engine: $engine"
+                    echo ".nvmrc: $(cat .nvmrc)"
+                    exit 1
+                  fi

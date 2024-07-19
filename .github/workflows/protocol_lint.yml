@@ -93,5 +93,5 @@ jobs:
             - run: npm ci
 
             - run: npm -w @prosopo/protocol run rustfmt
-            
+
             - run: npm -w @prosopo/protocol run clippy
