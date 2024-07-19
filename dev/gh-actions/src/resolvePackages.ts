@@ -29,6 +29,9 @@ const exe = async (cmd: string): Promise<string> => {
     })
 }
 
+/**
+ * Given a set of files that have changed, work out which packages in the workspace have changed. Include dependencies.
+ */
 const main = async () => {
     // stdin is a list of changed files
     const changedFiles: string[]= []
