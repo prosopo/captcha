@@ -61,5 +61,5 @@ jobs:
               run: |
                   echo "Enabling auto-merge on PR"
                     cd dev/gh-actions
-                    npm ci
+                    npm i
                     PR_NUMBER=${{ github.event.number }} npx tsx src/enableAutoMerge.ts
