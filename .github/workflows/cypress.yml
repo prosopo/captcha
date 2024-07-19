@@ -1,15 +1,10 @@
+# Run cypress tests
+
 name: cypress
 
 on:
     pull_request:
-        branches: [main]
-        paths:
-            - 'docker/**'
-            - 'packages/**'
-            - 'demos/**'
-            - 'dev/**'
-            - 'contracts/**'
-            - '.github/workflows/tests.yml'
+        branches: [main, dev, release/*]
     workflow_dispatch:
 
 concurrency:
@@ -24,6 +19,7 @@ env:
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -73,6 +69,7 @@ jobs:
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
+                  # must restore all cache dirs, and they must exist ahead of this!
                   path: |
                       protocol/cargo-cache
                       protocol/target
@@ -83,7 +80,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -97,13 +94,15 @@ jobs:
 
             - name: Setup env
               run: |
-                  cp demos/client-example-server/env.development demos/client-example-server/.env.test
-                  cp demos/client-example/env.development demos/client-example/.env.test
-                  cp dev/scripts/env.test .env.test
-                  cp dev/scripts/env.test dev/scripts/.env.test
-                  cp dev/scripts/env.test packages/cli/.env.test
-                  cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                  echo NODE_ENV: $NODE_ENV
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    cp demos/client-example-server/env.development demos/client-example-server/.env.test
+                    cp demos/client-example/env.development demos/client-example/.env.test
+                    cp dev/scripts/env.test .env.test
+                    cp dev/scripts/env.test dev/scripts/.env.test
+                    cp dev/scripts/env.test packages/cli/.env.test
+                    cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+                    echo NODE_ENV: $NODE_ENV
 
             - name: Start the docker images
               run: |
@@ -119,10 +118,6 @@ jobs:
             # Running bundle:dev instead of bundle:prod means the bundle will be built with selectors that can be used
             # by the cypress tests to find the elements they need to interact with
             - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:dev
-
-            # Needs concurrently to avoid vite hanging forever https://github.com/vitejs/vite/discussions/8745
-            - name: Install concurrently and cypress
-              run: npm i concurrently cypress
 
             - name: Run the cypress tests on client-example
               run: |
