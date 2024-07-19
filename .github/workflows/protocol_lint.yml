@@ -1,11 +1,13 @@
-name: clippy
+# This workflow will run linting on the protocol workspace
+
+name: protocol_lint
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
         paths:
-            - '**.rs'
-            - '.github/workflows/clippy.yml'
+            - 'protocol/**'
+            - '.github/workflows/protocol_clippy.yml'
     workflow_dispatch:
 
 concurrency:
@@ -20,6 +22,7 @@ env:
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -69,6 +72,7 @@ jobs:
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
+                  # must restore all cache dirs, and they must exist ahead of this!
                   path: |
                       protocol/cargo-cache
                       protocol/target
@@ -79,7 +83,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -87,5 +91,7 @@ jobs:
             - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
 
             - run: npm ci
+
+            - run: npm -w @prosopo/protocol run rustfmt
 
             - run: npm -w @prosopo/protocol run clippy

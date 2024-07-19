@@ -1,3 +1,5 @@
+# Check for dependent issues and pull requests in GitHub repositories.
+
 name: dependent_issues
 
 on:
