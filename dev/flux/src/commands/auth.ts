@@ -26,11 +26,11 @@ export default (cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.auth')
 
     return {
-        command: 'auth',
+        command: 'auth <app>',
         describe: 'Authenticate with a Flux Node',
         builder: (yargs: Argv) =>
             yargs
-                .option('app', {
+                .positional('app', {
                     type: 'string' as const,
                     demandOption: false,
                     desc: 'Name of the app to authenticate with. Authentication is done with api.runonflux.io by default.',
