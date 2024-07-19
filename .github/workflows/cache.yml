@@ -1,11 +1,10 @@
-name: rustfmt
+# Build a cache of build artifacts after PRs to speed up subsequent builds
+
+name: cache
 
 on:
-    pull_request:
-        branches: [main]
-        paths:
-            - '**.rs'
-            - '.github/workflows/rustfmt.yml'
+    push:
+        branches: [main, dev]
     workflow_dispatch:
 
 concurrency:
@@ -14,11 +13,10 @@ concurrency:
 
 env:
     CARGO_TERM_COLOR: always
-    ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
 
 jobs:
-    check:
+    build:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
@@ -61,25 +59,13 @@ jobs:
 
             - uses: actions/checkout@v3
 
+            # make cache dirs
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
             - run: mkdir -p ~/.cache/Cypress
 
-            - name: Restore cache
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      ~/.cache/Cypress
-                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
-                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
-                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
-                  key: some-unused-cache-key
-                  restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+            # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
 
             - uses: actions/setup-node@v3
               with:
@@ -89,3 +75,49 @@ jobs:
             - run: npm ci
 
             - run: npm -w @prosopo/protocol run rustfmt
+
+            - run: npm -w @prosopo/protocol run clippy
+
+            - run: npm -w @prosopo/protocol run build:all
+
+            - run: npm -w @prosopo/protocol run test:all
+
+            # install cypress so we don't have to do that every time
+            - name: Cypress install
+              run: |
+                  npm i --save-dev cypress
+                  npx cypress install
+
+            - run: ls -la ~/.cache/Cypress || true
+            - run: ls -la protocol/cargo-cache || true
+            - run: ls -la protocol/target/ink || true
+            - run: ls -la node_modules || true
+
+            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
+            - name: Save cache
+              uses: actions/cache/save@v3
+              if: always()
+              with:
+                  path: |
+                      protocol/cargo-cache
+                      protocol/target
+                      node_modules
+                      ~/.cache/Cypress
+                  key: project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+            # remove all but the latest cache, leaving only the cache we just saved
+            - name: Cleanup caches
+              if: always()
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    set +e; gh extension install actions/gh-actions-cache; set -e
+                    echo "Fetching list of cache key"
+                    cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R ${{ github.repository }} --key project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
+                    echo caches to be removed:
+                    echo ${cacheKeys}
+                    set +e
+                    for cacheKey in $cacheKeys
+                    do
+                        gh actions-cache delete $cacheKey -R ${{ github.repository }} --confirm
+                    done

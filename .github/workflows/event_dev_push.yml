@@ -1,21 +1,24 @@
-# Check workflow names are consistent with their filenames for easier debugging
+# Send an event to other repos on push to main
 
-name: consistent_workflow_names
+name: event_dev_push
 
 on:
-    pull_request:
-        # only when workflow file is changed
-        paths: ['.github/workflows/**']
+    push:
+        branches: [dev]
     workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
 
+env:
+    CARGO_TERM_COLOR: always
+    ENVIRONMENT: development
+    GH_TOKEN: ${{ github.token }}
+
 jobs:
-    check:
+    event:
         runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -55,29 +58,12 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
-
-            - name: Check workflow names
+            - name: Send event
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-
-                    cd .github/workflows
-                    # Iterate through files in the current directory
-                    for file in *.yml *.yaml; do
-                        # Check if the item is a file (not a directory)
-                        if [[ -f "$file" ]]; then
-                          # find the first line beginning with "name:"
-                              first_line=$(grep -m 1 "^name:" "$file")
-                            
-                            # Extract name from the first line
-                            name=$(echo "$first_line" | awk -F ': ' '{print $2}')
-                            
-                            # Check if the extracted value matches the filename
-                            if [[ "$name" == "${file%.*}" ]]; then
-                                echo "File: $file - Name: $name (Match)"
-                            else
-                                echo "File: $file - Name: $name (No Match)"
-                                exit 1
-                            fi
-                        fi
-                    done
+                  curl -X POST \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Accept: application/vnd.github.everest-preview+json" \
+                  -d '{"event_type": "captcha_dev_push"}' \
+                  https://api.github.com/repos/prosopo/captcha-private/dispatches

@@ -1,8 +1,10 @@
+# Lint the codebase
+
 name: lint
 
 on:
     pull_request:
-        branches: [main]
+        branches: [main, dev, release/*]
     workflow_dispatch:
 
 concurrency:
@@ -18,6 +20,7 @@ jobs:
     check:
         name: check
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -67,6 +70,7 @@ jobs:
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
+                  # must restore all cache dirs, and they must exist ahead of this!
                   path: |
                       protocol/cargo-cache
                       protocol/target
@@ -77,7 +81,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -90,9 +94,11 @@ jobs:
 
             - name: lint
               run: |
-                  # get the files which have changed in the PR
-                  files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  echo "files: $files"
+                    # get the files which have changed in the PR
+                    files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
 
-                  npm run lint:cmd -- $files
+                    echo "files: $files"
+
+                    npm run lint:cmd -- $files
