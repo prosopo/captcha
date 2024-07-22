@@ -81,7 +81,8 @@ export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void
 
 export type Hash = string | number[]
 
-export type Provider = {
+//temp
+type Provider = {
     url: string
     datasetId: Hash
     datasetIdContent: Hash

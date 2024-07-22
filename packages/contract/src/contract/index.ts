@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from './block.js'
-export * from './interface.js'
 export * from './helpers.js'
 export * from './useWeight.js'
 export * from './deploy.js'

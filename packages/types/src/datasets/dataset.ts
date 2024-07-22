@@ -19,8 +19,10 @@ import {
     CaptchasWithNumericSolutionSchema,
     SelectAllCaptchaSchema,
 } from './captcha.js'
-import { Hash } from '@prosopo/captcha-contract/types-arguments'
 import { array, nativeEnum, number, object, string } from 'zod'
+
+//temp
+type Hash = string
 
 export type DatasetBase = {
     datasetId?: Hash

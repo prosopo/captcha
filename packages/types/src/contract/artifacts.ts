@@ -15,58 +15,6 @@ import { Abi } from '@polkadot/api-contract/Abi'
 import { Text } from '@polkadot/types-codec/native'
 import z from 'zod'
 
-// {
-//     "id": 0,
-//   "type": {
-//     "def": {
-//         "composite": {
-//             "fields": [
-//                 {
-//                     "name": "offset_key",
-//                     "type": 10,
-//                     "typeName": "Key"
-//                 }
-//             ]
-//         }
-//     },
-//     "params": [
-//         {
-//             "name": "K",
-//             "type": 1
-//         },
-//         {
-//             "name": "V",
-//             "type": 4
-//         }
-//     ],
-//       "path": [
-//         "ink_storage",
-//         "lazy",
-//         "mapping",
-//         "Mapping"
-//     ]
-// }
-// },
-// {
-//     "id": 1,
-//   "type": {
-//     "def": {
-//         "composite": {
-//             "fields": [
-//                 {
-//                     "type": 2,
-//                     "typeName": "[u8; 32]"
-//                 }
-//             ]
-//         }
-//     },
-//     "path": [
-//         "ink_env",
-//         "types",
-//         "AccountId"
-//     ]
-// }
-// },
 export const AbiParamSpec = z.object({
     name: z.string(),
     type: z.union([z.number(), z.string()]),
@@ -82,21 +30,6 @@ export const AbiVariantSpec = z.object({
     index: z.number(),
     name: z.string(),
 })
-
-//An enum in the storage section of the abi
-// {
-//                                 "0": {
-//                                   "fields": [],
-//                                   "name": "Pending"
-//                                 },
-//                                 "1": {
-//                                   "fields": [],
-//                                   "name": "Approved"
-//                                 },
-//                                 "2": {
-//                                   "fields": [],
-//                                   "name": "Disapproved"
-//                                 }
 
 const AbiStorageEnumFieldSpec = z.object({
     name: z.string(),

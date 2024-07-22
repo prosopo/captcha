@@ -13,7 +13,6 @@
 // limitations under the License.
 import { CaptchaResponseBody } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
-import { IProsopoCaptchaContract } from '../contract/index.js'
 import { ProviderApiInterface } from '../api/index.js'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from './client.js'
@@ -21,7 +20,6 @@ import { RandomProvider } from './manager.js'
 
 export interface ProsopoCaptchaApiInterface {
     userAccount: string
-    contract: IProsopoCaptchaContract | string
     provider: RandomProvider
     providerApi: ProviderApiInterface
     dappAccount: string

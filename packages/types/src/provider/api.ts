@@ -14,7 +14,6 @@
 import { ApiParams } from '../api/params.js'
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/timeouts.js'
-import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import {
     ZodDefault,
@@ -78,6 +77,14 @@ type RateLimitSchemaType = ZodObject<{
     windowMs: ZodDefault<ZodOptional<ZodNumber>>
     limit: ZodDefault<ZodOptional<ZodNumber>>
 }>
+
+export type Hash = string | number[]
+
+export type Provider = {
+    url: string
+    datasetId: Hash
+    datasetIdContent: Hash
+}
 
 // Utility function to create Zod schemas with defaults
 const createRateLimitSchemaWithDefaults = (paths: Record<CombinedApiPaths, RateLimit>) =>
