@@ -70,7 +70,6 @@
         "npm": ">=9"
     },
     "workspaces": [
-        "contracts/*",
         "dev/*",
         "packages/*",
         "demos/*"

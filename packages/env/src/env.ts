@@ -18,24 +18,19 @@ import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
-import { isAddress } from '@polkadot/util-crypto/address'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
     db: Database | undefined
-    contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     defaultNetwork: NetworkNames
     contractName: string
-    abi: ContractAbi
     logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
@@ -65,7 +60,6 @@ export class Environment implements ProsopoEnvironment {
                 type: 'sr25519', // TODO get this from the chain
             })
             if (this.pair) this.keyring.addPair(this.pair)
-            this.abi = JSON.parse(abiJson)
             this.importDatabase().catch((err) => {
                 this.logger.error(err)
             })
@@ -93,13 +87,6 @@ export class Environment implements ProsopoEnvironment {
         }
 
         return this.pair
-    }
-
-    getContractInterface(): ProsopoCaptchaContract {
-        if (this.contractInterface === undefined) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
-        }
-        return this.contractInterface
     }
 
     getApi(): ApiPromise {
@@ -130,31 +117,6 @@ export class Environment implements ProsopoEnvironment {
         return this.pair
     }
 
-    async changeSigner(pair: KeyringPair): Promise<void> {
-        await this.getApi().isReadyOrError
-        this.pair = pair
-        await this.getSigner()
-        this.contractInterface = await this.getContractApi()
-    }
-
-    async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = this.pair ? await this.getApi().rpc.system.accountNextIndex(this.pair.address) : 0
-        if (!isAddress(this.contractAddress)) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
-        }
-        this.contractInterface = new ProsopoCaptchaContract(
-            this.getApi(),
-            this.abi,
-            this.contractAddress,
-            this.contractName,
-            parseInt(nonce.toString()),
-            this.pair,
-            this.config.logLevel as unknown as LogLevel,
-            this.config.account.address // allows calling the contract from a public address only
-        )
-        return this.contractInterface
-    }
-
     async isReady() {
         try {
             if (this.pair && this.config.account.password && this.pair.isLocked) {
@@ -165,13 +127,6 @@ export class Environment implements ProsopoEnvironment {
             }
             await this.getSigner()
             // make sure contract address is valid before trying to load contract interface
-            if (isAddress(this.contractAddress)) {
-                this.contractInterface = await this.getContractApi()
-            } else {
-                // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
-                // just console logging for the time being!
-                console.warn('invalid contract address: ' + this.contractAddress)
-            }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)

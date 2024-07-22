@@ -13,24 +13,20 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import { ContractAbi } from '@prosopo/types'
 import { Database } from '@prosopo/types-database' // config
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 
 export interface ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
     db: Database | undefined
-    contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     defaultNetwork: NetworkNames
     contractName: string
-    abi: ContractAbi
     logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
@@ -39,7 +35,5 @@ export interface ProsopoEnvironment {
     api: ApiPromise | undefined
     isReady(): Promise<void>
     importDatabase(): Promise<void>
-    changeSigner(pair: KeyringPair): Promise<void>
     getApi(): ApiPromise
-    getContractInterface(): ProsopoCaptchaContract
 }

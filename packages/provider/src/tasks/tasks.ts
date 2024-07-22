@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
+import { Header } from '@polkadot/types/interfaces'
 import {
     Captcha,
     CaptchaConfig,
@@ -28,7 +28,6 @@ import {
     PendingCaptchaRequest,
     PoWCaptcha,
     ProsopoConfigOutput,
-    RandomProvider,
     StoredEvents,
 } from '@prosopo/types'
 import {
@@ -43,7 +42,7 @@ import {
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getCurrentBlockNumber, verifyRecency, wrapQuery } from '@prosopo/contract'
+import { verifyRecency } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
@@ -54,6 +53,7 @@ import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 const POW_SEPARATOR = '___'
 
@@ -61,8 +61,6 @@ const POW_SEPARATOR = '___'
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
-    contract: ProsopoCaptchaContract
-
     db: Database
 
     captchaConfig: CaptchaConfig
@@ -73,18 +71,20 @@ export class Tasks {
 
     config: ProsopoConfigOutput
 
+    pair: KeyringPair
+
     constructor(env: ProviderEnvironment) {
-        if (!env.contractInterface) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
-                context: { failedFuncName: this.constructor.name, contractAddress: env.contractAddress },
-            })
-        }
         this.config = env.config
-        this.contract = env.contractInterface
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
         this.logger = getLogger(env.config.logLevel, 'Tasks')
+        if (!env.pair) {
+            throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', {
+                context: { failedFuncName: 'Tasks.constructor' },
+            })
+        }
+        this.pair = env.pair
     }
 
     async providerSetDatasetFromFile(file: JSON): Promise<void> {
@@ -171,7 +171,7 @@ export class Tasks {
 
         // Use blockhash, userAccount and dappAccount for string for challenge
         const challenge = `${timestamp}___${userAccount}___${dappAccount}`
-        const signature = u8aToHex(this.contract.pair.sign(stringToHex(challenge)))
+        const signature = u8aToHex(this.pair.sign(stringToHex(challenge)))
 
         return { challenge, difficulty, signature }
     }
@@ -203,7 +203,7 @@ export class Tasks {
             })
         }
 
-        const signatureVerification = signatureVerify(stringToHex(challenge), signature, this.contract.pair.address)
+        const signatureVerification = signatureVerify(stringToHex(challenge), signature, this.pair.address)
 
         if (!signatureVerification.isValid) {
             throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
@@ -315,7 +315,7 @@ export class Tasks {
         }
 
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
-        const timestampSigVerify = signatureVerify(stringToHex(timestamp), signedTimestamp, this.contract.pair.address)
+        const timestampSigVerify = signatureVerify(stringToHex(timestamp), signedTimestamp, this.pair.address)
 
         if (!timestampSigVerify.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
@@ -365,7 +365,7 @@ export class Tasks {
                 id: commitmentId,
                 userAccount: userAccount,
                 dappContract: dappAccount,
-                providerAccount: this.contract.pair.address,
+                providerAccount: this.pair.address,
                 datasetId,
                 status: CaptchaStatus.pending,
                 userSignature: Array.from(userSignature),
@@ -528,14 +528,14 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
-        const signedTime = u8aToHex(this.contract.pair.sign(stringToHex(currentTime.toString())))
+        const signedTime = u8aToHex(this.pair.sign(stringToHex(currentTime.toString())))
 
         const timeLimit = captchas
             // if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
             .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
             .reduce((a, b) => a + b, 0)
         const deadlineTs = timeLimit + currentTime
-        const currentBlockNumber = await getCurrentBlockNumber(this.contract.api)
+        const currentBlockNumber = 0 //TEMP
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
         return { captchas, requestHash, timestamp: currentTime.toString(), signedTime }
     }
@@ -561,60 +561,6 @@ export class Tasks {
         const parent = await contract.api.rpc.chain.getBlock(header.parentHash)
 
         return this.isRecentBlock(contract, parent.block.header, blockNo, depth - 1)
-    }
-
-    /**
-     * Validate that provided `datasetId` was a result of calling `get_random_provider` method
-     * @param {string} userAccount - Same user that called `get_random_provider`
-     * @param {string} dappContractAccount - account of dapp that is requesting captcha
-     * @param {string} datasetId - `captcha_dataset_id` from the result of `get_random_provider`
-     * @param {string} blockNumber - Block on which `get_random_provider` was called
-     */
-    async validateProviderWasRandomlyChosen(
-        userAccount: string,
-        dappContractAccount: string,
-        datasetId: string | Hash,
-        blockNumber: number
-    ) {
-        const contract = await this.contract.contract
-        if (!contract) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', {
-                context: { failedFuncName: this.validateProviderWasRandomlyChosen.name },
-            })
-        }
-
-        const header = await contract.api.rpc.chain.getHeader()
-
-        const isBlockNoValid = await this.isRecentBlock(contract, header, blockNumber)
-
-        if (!isBlockNoValid) {
-            throw new ProsopoEnvError('CAPTCHA.INVALID_BLOCK_NO', {
-                context: {
-                    failedFuncName: this.validateProviderWasRandomlyChosen.name,
-                    userAccount,
-                    dappContractAccount,
-                    datasetId,
-                    header,
-                    blockNumber,
-                },
-            })
-        }
-
-        const block = (await contract.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
-        const randomProviderAndBlockNo = await this.contract.queryAtBlock<RandomProvider>(
-            block,
-            'getRandomActiveProvider',
-            [userAccount, dappContractAccount]
-        )
-
-        if (datasetId.toString().localeCompare(randomProviderAndBlockNo.provider.datasetId.toString())) {
-            throw new ProsopoEnvError('DATASET.INVALID_DATASET_ID', {
-                context: {
-                    failedFuncName: this.validateProviderWasRandomlyChosen.name,
-                    randomProviderAndBlockNo,
-                },
-            })
-        }
     }
 
     /*

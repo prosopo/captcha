@@ -11,14 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { default as commandDappAccounts } from './dappAccounts.js'
-export { default as commandDappDetails } from './dappDetails.js'
-export { default as commandDappRegister } from './dappRegister.js'
-export { default as commandProviderAccounts } from './providerAccounts.js'
-export { default as commandProviderDataset } from './providerDataset.js'
-export { default as commandProviderDetails } from './providerDetails.js'
 export { default as commandProviderDeregister } from './providerDeregister.js'
-export { default as commandProviderRegister } from './providerRegister.js'
 export { default as commandProviderSetDataset } from './providerSetDataset.js'
-export { default as commandProviderUpdate } from './providerUpdate.js'
 export { default as commandVersion } from './version.js'

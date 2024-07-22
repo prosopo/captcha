@@ -26,9 +26,6 @@
             "path": "../../packages/contract"
         },
         {
-            "path": "../../contracts/captcha"
-        },
-        {
             "path": "../../packages/database"
         },
         {

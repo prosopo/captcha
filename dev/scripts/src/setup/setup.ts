@@ -15,14 +15,11 @@ import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount, Payee } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { ReturnNumber } from '@prosopo/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'
-import { generateMnemonic, getPairAsync, wrapQuery } from '@prosopo/contract'
+import { generateMnemonic, getPairAsync } from '@prosopo/contract'
 import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
 import { isAddress } from '@polkadot/util-crypto'
-import { registerProvider } from './provider.js'
-import { setupDapp } from './dapp.js'
 import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
@@ -98,10 +95,6 @@ export async function updateEnvFile(vars: Record<string, string>) {
     await fse.writeFile(envFile, readEnvFile)
 }
 
-async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount, address?: string) {
-    await setupDapp(env, dapp, address)
-}
-
 export async function setup(force: boolean) {
     const defaultProvider = getDefaultProvider()
     const defaultDapp = getDefaultDapp()
@@ -130,12 +123,6 @@ export async function setup(force: boolean) {
         const env = new ProviderEnvironment(defaultConfig(), pair)
         await env.isReady()
 
-        const result: ReturnNumber = await wrapQuery(
-            env.getContractInterface().query.getDappStakeThreshold,
-            env.getContractInterface().query
-        )()
-        const stakeAmount = result.rawNumber
-        defaultDapp.fundAmount = stakeAmount.muln(2)
         defaultProvider.secret = mnemonic
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
@@ -158,7 +145,6 @@ export async function setup(force: boolean) {
         }
 
         env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
-        await registerDapp(env, defaultDapp, dappAddressToRegister)
 
         if (!hasProviderAccount) {
             await updateEnvFile({

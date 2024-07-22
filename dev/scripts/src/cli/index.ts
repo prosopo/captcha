@@ -12,18 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import {
-    NetworkConfigSchema,
-    NetworkNamesSchema,
-    decodeProcaptchaOutput,
-    networks as getNetworks,
-    encodeProcaptchaOutput,
-} from '@prosopo/types'
-import { deployDapp } from '../contract/deploy/index.js'
+import { decodeProcaptchaOutput, encodeProcaptchaOutput } from '@prosopo/types'
 import { exec } from '../util/index.js'
-import { run as fundDapps } from '../contract/fundDapps.js'
-import { get } from '@prosopo/util'
-import { getContractNames, getContractsDir, getProtocolDistDir, getScriptsPkgDir } from '@prosopo/config'
+import { getProtocolDistDir, getScriptsPkgDir } from '@prosopo/config'
 import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
@@ -54,29 +45,6 @@ export async function processArgs(args: string[]) {
 
     await yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
-        .command(
-            'deploy_dapp',
-            'Deploy the prosopo dapp example contract',
-            (yargs) =>
-                yargs.option('update_env', {
-                    type: 'boolean',
-                    demandOption: false,
-                    desc: 'Update env files with the new contract address',
-                    default: false,
-                }),
-            async (argv) => {
-                const dappContractAddress = await deployDapp()
-                log.info('contract address', dappContractAddress)
-                if (argv.update_env) {
-                    await updateEnvFiles(
-                        ['PROSOPO_SITE_KEY', 'NEXT_PUBLIC_PROSOPO_SITE_KEY'],
-                        dappContractAddress.toString(),
-                        log
-                    )
-                }
-            },
-            []
-        )
         .command(
             'create_env_files',
             'Copies the env.xyz files to .env.xyz',
@@ -122,37 +90,6 @@ export async function processArgs(args: string[]) {
                     }),
             handler: async (argv) => {
                 await importContract(argv.in, argv.out)
-            },
-        })
-        .command({
-            command: 'import_all_contracts',
-            describe: 'Update all contracts into the contract package.',
-            builder: (yargs) => yargs,
-            handler: async () => {
-                const contracts = getContractNames()
-                for (const contract of contracts) {
-                    const inDir = `${getProtocolDistDir()}/${contract}`
-                    await exec(
-                        `node dist/cli/index.js import_contract --in=${inDir} --out=${getContractsDir()}/${contract}/src`
-                    )
-                }
-            },
-        })
-        .command({
-            command: 'fund_dapps',
-            describe: 'Fund the dapps if they are unfunded',
-            builder: (yargs) => yargs,
-            handler: async () => {
-                const atlasUri = process.env._DEV_ONLY_ATLAS_URI
-                fundDapps(atlasUri)
-                    .then((result) => {
-                        log.info(result)
-                        process.exit(0)
-                    })
-                    .catch((e) => {
-                        console.error(e)
-                        process.exit(1)
-                    })
             },
         })
         .command({
