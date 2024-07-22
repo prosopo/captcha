@@ -16,7 +16,6 @@ import {
     ApiParams,
     CaptchaResponseBody,
     CaptchaSolution,
-    CaptchaWithProof,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
@@ -190,9 +189,7 @@ export function Manager(
 
             // setup timeout, taking the timeout from the individual captcha or the global default
             const timeMillis: number = challenge.captchas
-                .map(
-                    (captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || config.captchas.image.challengeTimeout
-                )
+                .map((captcha) => captcha.timeLimitMs || config.captchas.image.challengeTimeout)
                 .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
                 events.onChallengeExpired()
@@ -230,24 +227,22 @@ export function Manager(
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
-                (captcha: CaptchaWithProof, index: number) => {
-                    const solution = at(state.solutions, index)
-                    return {
-                        captchaId: captcha.captcha.captchaId,
-                        captchaContentId: captcha.captcha.captchaContentId,
-                        salt,
-                        solution,
-                    }
+            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
+                const solution = at(state.solutions, index)
+                return {
+                    captchaId: captcha.captchaId,
+                    captchaContentId: captcha.captchaContentId,
+                    salt,
+                    solution,
                 }
-            )
+            })
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
 
             const first = at(challenge.captchas, 0)
-            if (!first.captcha.datasetId) {
+            if (!first.datasetId) {
                 throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_ID', {
                     context: { error: 'No datasetId set for challenge' },
                 })

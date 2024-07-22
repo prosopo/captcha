@@ -125,11 +125,6 @@ export interface CaptchaSolution {
     solution: HashedSolution[]
 }
 
-export interface CaptchaWithProof {
-    captcha: Captcha
-    proof: MerkleProof
-}
-
 export type PoWChallengeId = string
 
 export interface PoWCaptcha {

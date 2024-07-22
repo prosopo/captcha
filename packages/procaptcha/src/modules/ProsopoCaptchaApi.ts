@@ -11,18 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    CaptchaMerkleTree,
-    computeCaptchaHash,
-    computeCaptchaSolutionHash,
-    computeItemHash,
-    verifyProof,
-} from '@prosopo/datasets'
+import { CaptchaMerkleTree, computeCaptchaSolutionHash } from '@prosopo/datasets'
 import {
     CaptchaResponseBody,
     CaptchaSolution,
     CaptchaSolutionResponse,
-    CaptchaWithProof,
     ProsopoCaptchaApiInterface,
     RandomProvider,
 } from '@prosopo/types'
@@ -31,7 +24,6 @@ import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '@prosopo/types'
-import { at } from '@prosopo/util'
 import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
@@ -65,10 +57,9 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
     public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
-            this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             // convert https/http to match page
             captchaChallenge.captchas.forEach((captcha) => {
-                captcha.captcha.items.forEach((item) => {
+                captcha.items.forEach((item) => {
                     if (item.data) {
                         // drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
                         // https://stackoverflow.com/a/18320348/7215926
@@ -81,29 +72,6 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
         } catch (error) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', { context: { error } })
         }
-    }
-
-    public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: CaptchaResponseBody): void {
-        // TODO make sure root is equal to root on the provider
-        const first = at(captchaChallenge.captchas, 0)
-        const proofLength = first.proof.length
-
-        const last = at(first.proof, proofLength - 1)
-        if (provider.provider.datasetIdContent.toString() !== at(last, 0)) {
-            throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
-        }
-
-        for (const captchaWithProof of captchaChallenge.captchas) {
-            //TODO calculate the captchaId from the captcha content
-            if (!verifyCaptchaData(captchaWithProof)) {
-                throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
-            }
-
-            if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
-                throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
-            }
-        }
-        return
     }
 
     public async submitCaptchaSolution(
@@ -157,32 +125,6 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 
         return [result, commitmentId, tx]
     }
-}
-
-/**
- * Verify the captcha data by hashing the images and checking the hashes correspond to the hashes passed in the captcha
- * Verify the captcha content id is present in the first layer of the proof
- * @param {CaptchaWithProof} captchaWithProof
- * @returns {boolean}
- */
-async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<boolean> {
-    const captcha = captchaWithProof.captcha
-    const proof = captchaWithProof.proof
-    // Check that all the item hashes are equal to the provided item hashes in the captcha
-    if (
-        !(await Promise.all(captcha.items.map(async (item) => (await computeItemHash(item)).hash === item.hash))).every(
-            (hash) => hash === true
-        )
-    ) {
-        return false
-    }
-    // Check that the computed captcha content id is equal to the provided captcha content id
-    const captchaHash = computeCaptchaHash(captcha, false, false, false)
-    if (captchaHash !== captcha.captchaContentId) {
-        return false
-    }
-    // Check that the captcha content id is present in the first layer of the proof
-    return at(proof, 0).indexOf(captchaHash) !== -1
 }
 
 export default ProsopoCaptchaApi

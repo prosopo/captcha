@@ -14,12 +14,12 @@
 import {
     ApiParams,
     ApiPaths,
+    Captcha,
     CaptchaRequestBody,
     CaptchaResponseBody,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
     CaptchaSolutionResponse,
-    CaptchaWithProof,
     DappUserSolutionResult,
     GetPowCaptchaChallengeRequestBody,
     PowCaptchaSolutionResponse,
@@ -55,7 +55,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
         async (req, res, next) => {
             try {
-                const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
+                const { datasetId, user } = CaptchaRequestBody.parse(req.params)
                 const api = env.api
                 if (api === undefined) {
                     throw new ProsopoApiError('DEVELOPER.METHOD_NOT_IMPLEMENTED', {
@@ -66,12 +66,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {
-                    captchas: taskData.captchas.map((cwp: CaptchaWithProof) => ({
-                        ...cwp,
-                        captcha: {
-                            ...cwp.captcha,
-                            items: cwp.captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
-                        },
+                    captchas: taskData.captchas.map((captcha: Captcha) => ({
+                        ...captcha,
+                        items: captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
                     })),
                     requestHash: taskData.requestHash,
                     timestamp: taskData.timestamp,
@@ -190,19 +187,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const { events, accountId } = req.body
             await tasks.saveCaptchaEvent(events, accountId)
             return res.json({ status: 'success' })
-        } catch (err) {
-            tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
-        }
-    })
-
-    /**
-     * Verifies that the provider is running and registered in the contract
-     */
-    router.get(ApiPaths.GetProviderStatus, async (req, res, next) => {
-        try {
-            const status = await tasks.providerStatus()
-            return res.json({ status })
         } catch (err) {
             tasks.logger.error(err)
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))

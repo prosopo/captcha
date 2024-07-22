@@ -27,7 +27,6 @@ export interface ProsopoCaptchaApiInterface {
     dappAccount: string
     web2: boolean
     getCaptchaChallenge(): Promise<CaptchaResponseBody>
-    verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: CaptchaResponseBody): void
     submitCaptchaSolution(
         signer: Signer,
         requestHash: string,

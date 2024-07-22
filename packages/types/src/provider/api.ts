@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '../api/params.js'
-import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { Captcha, CaptchaSolutionSchema } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/timeouts.js'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import {
@@ -158,7 +158,7 @@ export const CaptchaRequestBody = object({
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>
 
 export type CaptchaResponseBody = {
-    [ApiParams.captchas]: CaptchaWithProof[]
+    [ApiParams.captchas]: Captcha[]
     [ApiParams.requestHash]: string
     [ApiParams.timestamp]: string
     [ApiParams.signedTimestamp]: string

@@ -11,19 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Header } from '@polkadot/types/interfaces'
 import {
     Captcha,
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
     CaptchaStatus,
-    CaptchaWithProof,
     DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     DappUserSolutionResult,
-    DatasetBase,
     DatasetRaw,
-    DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
     PoWCaptcha,
@@ -32,28 +28,26 @@ import {
 } from '@prosopo/types'
 import {
     CaptchaMerkleTree,
-    buildDataset,
     compareCaptchaSolutions,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { verifyRecency } from '@prosopo/contract'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { saveCaptchaEvent, saveCaptchas } from '@prosopo/database'
-import { sha256 } from '@noble/hashes/sha256'
 import { shuffleArray } from '../util.js'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
 import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { providerValidateDataset } from './dataset/setDataset.js'
+import { checkRecentPowSolution, validatePowCaptchaSolution } from './pow/verify.js'
 
 const POW_SEPARATOR = '___'
 
@@ -62,15 +56,10 @@ const POW_SEPARATOR = '___'
  */
 export class Tasks {
     db: Database
-
     captchaConfig: CaptchaConfig
-
     captchaSolutionConfig: CaptchaSolutionConfig
-
     logger: Logger
-
     config: ProsopoConfigOutput
-
     pair: KeyringPair
 
     constructor(env: ProviderEnvironment) {
@@ -87,43 +76,22 @@ export class Tasks {
         this.pair = env.pair
     }
 
+    /**
+     * @description Set the provider dataset from a file
+     *
+     * @param file JSON of the captcha dataset
+     */
     async providerSetDatasetFromFile(file: JSON): Promise<void> {
         const datasetRaw = parseCaptchaDataset(file)
-        this.logger.debug('Parsed raw data set')
         return await this.providerSetDataset(datasetRaw)
     }
 
     async providerSetDataset(datasetRaw: DatasetRaw): Promise<void> {
-        // check that the number of captchas contained within dataset.captchas is greater than or equal to the total
-        // number of captchas that must be served
-        if (datasetRaw.captchas.length < this.config.captchas.solved.count + this.config.captchas.unsolved.count) {
-            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', {
-                context: { failedFuncName: this.providerSetDataset.name },
-            })
-        }
-
-        // check that the number of solutions contained within dataset.captchas is greater than or equal to the number
-        // of solved captchas that must be served
-        const solutions = datasetRaw.captchas
-            .map((captcha): number => (captcha.solution ? 1 : 0))
-            .reduce((partialSum, b) => partialSum + b, 0)
-        if (solutions < this.config.captchas.solved.count) {
-            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', {
-                context: { failedFuncName: this.providerSetDataset.name },
-            })
-        }
-        if (solutions < this.config.captchas.unsolved.count) {
-            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', {
-                context: { failedFuncName: this.providerSetDataset.name },
-            })
-        }
-
-        const dataset = await buildDataset(datasetRaw)
-        if (!dataset.datasetId || !dataset.datasetContentId) {
-            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', {
-                context: { failedFuncName: this.providerSetDataset.name },
-            })
-        }
+        const dataset = await providerValidateDataset(
+            datasetRaw,
+            this.captchaConfig.solved.count,
+            this.captchaConfig.unsolved.count
+        )
 
         await this.db?.storeDataset(dataset)
     }
@@ -134,27 +102,16 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof(datasetId: Hash, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof(datasetId: Hash, solved: boolean, size: number): Promise<Captcha[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
-        if (captchaDocs) {
-            const captchas: CaptchaWithProof[] = []
-            for (const captcha of captchaDocs) {
-                const datasetDetails: DatasetBase = await this.db.getDatasetDetails(datasetId)
-                const tree = new CaptchaMerkleTree()
-                if (datasetDetails.contentTree) {
-                    tree.layers = datasetDetails.contentTree
-                    const proof = tree.proof(captcha.captchaContentId)
-                    // cannot pass solution to dapp user as they are required to solve the captcha!
-                    delete captcha.solution
-                    captcha.items = shuffleArray(captcha.items)
-                    captchas.push({ captcha, proof })
-                }
-            }
-            return captchas
+
+        if (!captchaDocs) {
+            throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
+                context: { failedFuncName: this.getCaptchaWithProof.name, datasetId, solved, size },
+            })
         }
-        throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED', {
-            context: { failedFuncName: this.getCaptchaWithProof.name, datasetId, solved, size },
-        })
+
+        return captchaDocs
     }
 
     /**
@@ -164,9 +121,7 @@ export class Tasks {
      * @param {string} dappAccount - dapp that is requesting the captcha
      */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
-        // TODO: Verify that the origin matches the url of the dapp
         const difficulty = 4
-
         const timestamp = Date.now().toString()
 
         // Use blockhash, userAccount and dappAccount for string for challenge
@@ -192,51 +147,19 @@ export class Tasks {
         nonce: number,
         timeout: number
     ): Promise<boolean> {
-        const recent = verifyRecency(challenge, timeout)
-        if (!recent) {
-            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
-                context: {
-                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    challenge,
-                },
-            })
-        }
-
-        const signatureVerification = signatureVerify(stringToHex(challenge), signature, this.pair.address)
-
-        if (!signatureVerification.isValid) {
-            throw new ProsopoContractError('GENERAL.INVALID_SIGNATURE', {
-                context: {
-                    ERROR: 'Provider signature is invalid for this message',
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    signature,
-                },
-            })
-        }
-
-        const solutionValid = Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
-            .map((byte) => byte.toString(16).padStart(2, '0'))
-            .join('')
-            .startsWith('0'.repeat(difficulty))
-
-        if (!solutionValid) {
-            throw new ProsopoContractError('API.CAPTCHA_FAILED', {
-                context: {
-                    ERROR: 'Captcha solution is invalid',
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    nonce,
-                    challenge,
-                    difficulty,
-                },
-            })
-        }
-
+        await validatePowCaptchaSolution(challenge, difficulty, signature, nonce, this.pair.address, timeout)
         await this.db.storePowCaptchaRecord(challenge, false)
-
         return true
     }
 
+    /**
+     * @description Verifies a PoW Captcha for a given user and dapp. This is called by the server to verify the user's solution
+     * and update the record in the database to show that the user has solved the captcha
+     *
+     * @param {string} dappAccount - the dapp that is requesting the captcha
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+     */
     async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
 
@@ -246,11 +169,9 @@ export class Tasks {
             })
         }
 
-        if (challengeRecord.checked) {
-            return false
-        }
+        if (challengeRecord.checked) return false
 
-        const [blocknumber, _, challengeDappAccount] = challengeRecord.challenge.split(POW_SEPARATOR)
+        const challengeDappAccount = challengeRecord.challenge.split(POW_SEPARATOR)[2]
 
         if (dappAccount !== challengeDappAccount) {
             throw new ProsopoEnvError('CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND', {
@@ -262,26 +183,7 @@ export class Tasks {
             })
         }
 
-        if (!blocknumber) {
-            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
-                context: {
-                    ERROR: 'Block number not provided',
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blocknumber,
-                },
-            })
-        }
-        const recent = verifyRecency(challenge, timeout)
-
-        if (!recent) {
-            throw new ProsopoContractError('CONTRACT.INVALID_BLOCKHASH', {
-                context: {
-                    ERROR: `Block in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
-                    failedFuncName: this.verifyPowCaptchaSolution.name,
-                    blocknumber,
-                },
-            })
-        }
+        checkRecentPowSolution(challenge, timeout)
 
         await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true)
         return true
@@ -404,13 +306,6 @@ export class Tasks {
     }
 
     /**
-     * Gets provider status in contract
-     */
-    providerStatus(): string {
-        return 'Contract is being dropped. No Provider contract status'
-    }
-
-    /**
      * Validate length of received captchas array matches length of captchas found in database
      * Validate that the datasetId is the same for all captchas and is equal to the datasetId on the stored captchas
      */
@@ -500,7 +395,7 @@ export class Tasks {
     async getRandomCaptchasAndRequestHash(
         datasetId: string,
         userAccount: string
-    ): Promise<{ captchas: CaptchaWithProof[]; requestHash: string; timestamp: string; signedTime: string }> {
+    ): Promise<{ captchas: Captcha[]; requestHash: string; timestamp: string; signedTime: string }> {
         const dataset = await this.db.getDatasetDetails(datasetId)
         if (!dataset) {
             throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED')
@@ -514,15 +409,15 @@ export class Tasks {
         }
 
         const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount)
-        let unsolved: CaptchaWithProof[] = []
+        let unsolved: Captcha[] = []
         if (unsolvedCount) {
             unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCount)
         }
-        const captchas: CaptchaWithProof[] = shuffleArray([...solved, ...unsolved])
+        const captchas: Captcha[] = shuffleArray([...solved, ...unsolved])
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(
-            captchas.map((c) => c.captcha.captchaId),
+            captchas.map((c) => c.captchaId),
             userAccount,
             salt
         )
@@ -532,35 +427,12 @@ export class Tasks {
 
         const timeLimit = captchas
             // if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
-            .map((captcha) => captcha.captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
+            .map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
             .reduce((a, b) => a + b, 0)
         const deadlineTs = timeLimit + currentTime
         const currentBlockNumber = 0 //TEMP
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber)
         return { captchas, requestHash, timestamp: currentTime.toString(), signedTime }
-    }
-
-    /**
-     * Block by block search for blockNo
-     */
-    async isRecentBlock(
-        contract: ContractPromise,
-        header: Header,
-        blockNo: number,
-        depth = this.captchaSolutionConfig.captchaBlockRecency
-    ): Promise<boolean> {
-        if (depth == 0) {
-            return false
-        }
-
-        const headerBlockNo = header.number.toPrimitive()
-        if (headerBlockNo === blockNo) {
-            return true
-        }
-
-        const parent = await contract.api.rpc.chain.getBlock(header.parentHash)
-
-        return this.isRecentBlock(contract, parent.block.header, blockNo, depth - 1)
     }
 
     /*
@@ -590,11 +462,6 @@ export class Tasks {
             }
         }
         return undefined
-    }
-
-    /** Get the dataset from the database */
-    async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
-        return await this.db.getDataset(datasetId)
     }
 
     async saveCaptchaEvent(events: StoredEvents, accountId: string) {
