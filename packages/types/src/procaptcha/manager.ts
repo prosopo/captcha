@@ -79,7 +79,7 @@ export interface ProcaptchaState {
  */
 export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void
 
-export type Hash = string | number[]
+type Hash = string | number[]
 
 //temp
 type Provider = {

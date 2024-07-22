@@ -18,10 +18,11 @@ import {
     GetPowCaptchaResponse,
     ImageVerificationResponse,
     PowCaptchaSolutionResponse,
+    Provider,
     ProviderRegistered,
 } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
-import { Provider, RandomProvider, StoredEvents } from '../procaptcha/index.js'
+import { RandomProvider, StoredEvents } from '../procaptcha/index.js'
 
 //temp
 type AccountId = string
