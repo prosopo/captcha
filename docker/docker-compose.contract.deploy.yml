@@ -17,9 +17,6 @@ services:
                 CONSTRUCTOR: default
         volumes:
             - ./contracts:/contracts
-            #   - type: bind
-            #     source: ./protocol/contracts
-            #     target: /contracts/prosopo
         links:
             - substrate
     substrate:
