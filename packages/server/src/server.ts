@@ -23,32 +23,20 @@ import {
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import {
-    LogLevel,
-    Logger,
-    ProsopoApiError,
-    ProsopoContractError,
-    ProsopoEnvError,
-    getLogger,
-    trimProviderUrl,
-} from '@prosopo/common'
-import { ProsopoCaptchaContract, getZeroAddress, verifyRecency } from '@prosopo/contract'
+import { LogLevel, Logger, ProsopoApiError, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { decodeProcaptchaOutput } from '@prosopo/types'
 import { get } from '@prosopo/util'
 import { isHex, u8aToHex } from '@polkadot/util'
 
 export class ProsopoServer {
     config: ProsopoServerConfigOutput
-    contract: ProsopoCaptchaContract | undefined
     prosopoContractAddress: string
     dappContractAddress: string | undefined
     defaultEnvironment: string
     contractName: string
-    abi: ContractAbi
     logger: Logger
     wsProvider: WsProvider
     keyring: Keyring
@@ -70,7 +58,6 @@ export class ProsopoServer {
         this.keyring = new Keyring({
             type: 'sr25519', // TODO get this from the chain
         })
-        this.abi = JSON.parse(abiJson)
     }
 
     public async getProviderApi(providerUrl: string) {
@@ -88,7 +75,6 @@ export class ProsopoServer {
         try {
             this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             await this.getSigner()
-            await this.getContractApi()
         } catch (error) {
             throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error } })
         }
@@ -115,39 +101,6 @@ export class ProsopoServer {
             throw new ProsopoEnvError(new Error('api undefined'))
         }
         return this.api
-    }
-
-    getContract(): ProsopoCaptchaContract {
-        if (this.contract === undefined) {
-            throw new ProsopoEnvError(new Error('contract undefined'))
-        }
-        return this.contract
-    }
-
-    /**
-     * Check if the provider was actually chosen at blockNumber.
-     * - If no blockNumber is provided, check the last `n` blocks where `n` is the number of blocks that fit in
-     *   `maxVerifiedTime`.
-     * - If no `maxVerifiedTime` is provided, use the default of 1 minute.
-     * @param user
-     * @param dapp
-     * @param providerUrl
-     * @param blockNumber
-     * @returns
-     */
-    async checkRandomProvider(user: string, dapp: string, providerUrl: string, blockNumber: number) {
-        const block = await this.getApi().rpc.chain.getBlockHash(blockNumber)
-        // Check if the provider was actually chosen at blockNumber
-        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
-            block,
-            'getRandomActiveProvider',
-            [user, dapp]
-        )
-        if (trimProviderUrl(getRandomProviderResponse.provider.url.toString()) === providerUrl) {
-            return getRandomProviderResponse.provider
-        }
-
-        return undefined
     }
 
     /**
@@ -205,17 +158,5 @@ export class ProsopoServer {
             // If we don't have a providerURL, something has gone deeply wrong
             throw new ProsopoApiError('API.BAD_REQUEST', { context: { message: 'No provider URL' } })
         }
-    }
-
-    public async getContractApi(): Promise<ProsopoCaptchaContract> {
-        this.contract = new ProsopoCaptchaContract(
-            this.getApi(),
-            this.abi,
-            this.prosopoContractAddress,
-            this.contractName,
-            0,
-            this.pair
-        )
-        return this.contract
     }
 }

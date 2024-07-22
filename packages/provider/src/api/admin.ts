@@ -13,7 +13,7 @@
 // limitations under the License.
 import * as z from 'zod'
 import { AdminApiPaths } from '@prosopo/types'
-import { BatchCommitmentsTask, Tasks } from '../index.js'
+import { Tasks } from '../index.js'
 import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
@@ -33,30 +33,6 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
     // Use the authMiddleware for all routes in this router
     router.use(authMiddleware(tasks, env))
-
-    router.post(AdminApiPaths.BatchCommit, async (req, res, next) => {
-        if (env.db) {
-            try {
-                const batchCommitter = new BatchCommitmentsTask(
-                    apiBatchCommitConfig,
-                    env.getContractInterface(),
-                    env.db,
-                    0n,
-                    env.logger
-                )
-                const result = await batchCommitter.run()
-
-                console.info(`Batch commit complete: ${result}`)
-                res.status(200).send(result)
-            } catch (err) {
-                console.error(err)
-                res.status(500).send(err)
-            }
-        } else {
-            console.error('No database configured')
-            res.status(500).send('No database configured')
-        }
-    })
 
     router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
         try {
