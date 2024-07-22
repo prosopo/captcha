@@ -22,7 +22,6 @@ import {
     Item,
     PowCaptcha,
 } from '@prosopo/types'
-import { CaptchaStatus, Commit } from '@prosopo/captcha-contract/types-returns'
 import { Connection, Model, Schema } from 'mongoose'
 import { DeleteResult } from 'mongodb'
 import { Hash } from '@prosopo/types'
@@ -37,6 +36,12 @@ export interface UserCommitmentRecord extends Omit<Commit, 'userSignaturePart1' 
     batched: boolean
     stored?: boolean
     requestedAtTimestamp: number
+}
+
+enum CaptchaStatus {
+    pending = 'Pending',
+    approved = 'Approved',
+    rejected = 'Rejected',
 }
 
 export const UserCommitmentSchema = object({
