@@ -344,10 +344,6 @@ jobs:
                   npm run build:all
                   npm run build:all:cjs
 
-            - name: Build the contract sources
-              if: steps.check_version_any.outputs.bump == 'true'
-              run: npm -w @prosopo/protocol run build:contracts
-
             - name: Typedoc
               run: |
                   npm run docs

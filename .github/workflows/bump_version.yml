@@ -90,7 +90,6 @@ jobs:
             - run: npm ci
 
             - run: npm run build -w @prosopo/scripts
-            - run: npm run build -w @prosopo/protocol-dev
 
             - name: Bump version
               env:
@@ -101,9 +100,6 @@ jobs:
 
                   # make the version changes
                   npm run version ${{ github.event.inputs.version }}
-
-                  # rebuild typechain
-                  npm run build:typechain
 
                   # lint
                   npm run lint:fix

@@ -13,8 +13,6 @@
         "cmd:about": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
         "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
-        "build:contracts": "npm run -w @prosopo/protocol build:all",
-        "build:typechain": "npm run build:contracts && cd dev/scripts && npm run build && npm run cli -- import_all_contracts && cd ../.. && npm run lint:fix:contracts",
         "build:all": "npm run ws -- --if-present build",
         "build:all:cjs": "npm run ws -- --if-present build:cjs",
         "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle:dev",

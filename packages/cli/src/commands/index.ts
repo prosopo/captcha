@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { default as commandBatchCommit } from './batchCommit.js'
 export { default as commandDappAccounts } from './dappAccounts.js'
 export { default as commandDappDetails } from './dappDetails.js'
 export { default as commandDappUpdate } from './dappUpdate.js'

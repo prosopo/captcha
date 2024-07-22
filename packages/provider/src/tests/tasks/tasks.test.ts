@@ -29,8 +29,6 @@ import { MockEnvironment, ProviderEnvironment } from '@prosopo/env'
 import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
 import { ProsopoContractError, ProsopoEnvError, hexHash, i18n } from '@prosopo/common'
 import { ReturnNumber } from '@prosopo/typechain-types'
-import { ScheduledTaskNames } from '@prosopo/types'
-import { UserCommitmentRecord } from '@prosopo/types-database'
 import { ViteTestContext } from '@prosopo/env'
 import { assert, beforeEach, describe, expect, test } from 'vitest'
 import { at, get } from '@prosopo/util'
@@ -42,7 +40,6 @@ import { getUser } from '../getUser.js'
 import { parseBlockNumber } from '../../index.js'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { signatureVerify } from '@polkadot/util-crypto/signature'
-import { sleep } from '@prosopo/util'
 import { stringToHex, stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 
@@ -106,8 +103,6 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             env.db?.close()
         }
     })
-
-    const commitmentCount = 50
 
     /** Gets some static solved captchas and constructions captcha solutions from them
      *  Computes the request hash for these captchas and the dappUser and then stores the request hash in the mock db

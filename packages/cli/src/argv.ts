@@ -15,7 +15,6 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import {
-    commandBatchCommit,
     commandDappAccounts,
     commandDappDetails,
     commandDappRegister,
@@ -51,7 +50,6 @@ export function processArgs(args: string[], pair: KeyringPair, config: ProsopoCo
         .command(commandProviderDetails(pair, config, { logger }))
         .command(commandProviderDataset(pair, config, { logger }))
         .command(commandDappDetails(pair, config, { logger }))
-        .command(commandBatchCommit(pair, config, { logger }))
         .command(commandVersion(pair, config, { logger }))
         .parse()
 }

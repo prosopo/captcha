@@ -40,7 +40,7 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { CaptchaStatus, Dapp, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
+import { CaptchaStatus, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
@@ -89,13 +89,13 @@ export class Tasks {
         this.logger = getLogger(env.config.logLevel, 'Tasks')
     }
 
-    async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
+    async providerSetDatasetFromFile(file: JSON): Promise<void> {
         const datasetRaw = parseCaptchaDataset(file)
         this.logger.debug('Parsed raw data set')
         return await this.providerSetDataset(datasetRaw)
     }
 
-    async providerSetDataset(datasetRaw: DatasetRaw): Promise<SubmittableResult | undefined> {
+    async providerSetDataset(datasetRaw: DatasetRaw): Promise<void> {
         // check that the number of captchas contained within dataset.captchas is greater than or equal to the total
         // number of captchas that must be served
         if (datasetRaw.captchas.length < this.config.captchas.solved.count + this.config.captchas.unsolved.count) {
@@ -128,18 +128,7 @@ export class Tasks {
         }
 
         await this.db?.storeDataset(dataset)
-        // catch any errors before running the tx
-        await wrapQuery(this.contract.query.providerSetDataset, this.contract.query)(
-            dataset.datasetId,
-            dataset.datasetContentId
-        )
-        const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {
-            value: 0,
-        })
-        return txResult.result
     }
-
-    // Other tasks
 
     /**
      * @description Get random captchas that are solved or not solved, along with the merkle proof for each
@@ -192,7 +181,6 @@ export class Tasks {
     /**
      * @description Verifies a PoW Captcha for a given user and dapp
      *
-     * @param {string} blockNumber - the block at which the Provider was selected
      * @param {string} challenge - the starting string for the PoW challenge
      * @param {string} difficulty - how many leading zeroes the solution must have
      * @param {string} signature - proof that the Provider provided the challenge
@@ -372,7 +360,6 @@ export class Tasks {
 
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
-        const blockNumber = await getCurrentBlockNumber(this.contract.api)
         if (pendingRequest) {
             // prevent this request hash from being used twice
             await this.db.updateDappUserPendingStatus(requestHash)
@@ -385,7 +372,7 @@ export class Tasks {
                 status: CaptchaStatus.pending,
                 userSignature: Array.from(userSignature),
                 requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
-                completedAt: blockNumber,
+                completedAt: 0, //temp
                 processed: false,
                 batched: false,
                 stored: false,
@@ -421,16 +408,8 @@ export class Tasks {
     /**
      * Gets provider status in contract
      */
-    async providerStatus(): Promise<ProviderRegistered> {
-        try {
-            const provider: Provider = await wrapQuery(
-                this.contract.query.getProvider,
-                this.contract.query
-            )(this.contract.pair.address)
-            return { status: provider.status ? 'Registered' : 'Unregistered' }
-        } catch (e) {
-            return { status: 'Unregistered' }
-        }
+    providerStatus(): string {
+        return 'Contract is being dropped. No Provider contract status'
     }
 
     /**
