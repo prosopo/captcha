@@ -13,7 +13,6 @@
 // limitations under the License.
 export { default as commandDappAccounts } from './dappAccounts.js'
 export { default as commandDappDetails } from './dappDetails.js'
-export { default as commandDappUpdate } from './dappUpdate.js'
 export { default as commandDappRegister } from './dappRegister.js'
 export { default as commandProviderAccounts } from './providerAccounts.js'
 export { default as commandProviderDataset } from './providerDataset.js'

@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { AdminApiPaths } from '@prosopo/types'
+import { AdminApiPaths, Payee } from '@prosopo/types'
 import { Tasks } from '../index.js'
-import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoEnvError, UrlConverter } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Router } from 'express'

@@ -19,7 +19,7 @@ import {
     networks as getNetworks,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
+import { deployDapp } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { run as fundDapps } from '../contract/fundDapps.js'
 import { get } from '@prosopo/util'
@@ -30,7 +30,6 @@ import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { isHex } from '@polkadot/util'
 import { setup } from '../setup/index.js'
-import { run as transferContract } from '../contract/transferContract.js'
 import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
 import setVersion from '../scripts/setVersion.js'
@@ -55,50 +54,6 @@ export async function processArgs(args: string[]) {
 
     await yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
-        .command(
-            'deploy_protocol',
-            'Deploy the prosopo protocol contract',
-            (yargs) =>
-                yargs
-                    .option('update_env', {
-                        type: 'boolean',
-                        demandOption: false,
-                        desc: 'Update env files with the new contract address',
-                        default: false,
-                    })
-                    .option('deployer', {
-                        type: 'string',
-                        demandOption: false,
-                        desc: `The account prefix that will deploy the contract. Specifying PROVIDER will cause the 
-                        script to look for PROVIDER_JSON in the env file. Specifying DEPLOYER will cause the script to 
-                        look for DEPLOYER_JSON in the env file. Defaults to undefined.`,
-                        default: undefined,
-                    })
-                    .option('cwd', {
-                        type: 'string',
-                        demandOption: false,
-                        desc: `The working directory from which env files will be updated`,
-                        default: undefined,
-                    }),
-            async (argv) => {
-                const protocolContractAddress = await deployProtocol(
-                    process.env.PROSOPO_CAPTCHA_WASM_PATH,
-                    process.env.PROSOPO_CAPTCHA_ABI_PATH,
-                    argv.deployer
-                )
-
-                log.info('contract address', protocolContractAddress)
-                if (argv.update_env) {
-                    await updateEnvFiles(
-                        ['PROSOPO_CONTRACT_ADDRESS', 'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS'],
-                        protocolContractAddress.toString(),
-                        log,
-                        argv.cwd
-                    )
-                }
-            },
-            []
-        )
         .command(
             'deploy_dapp',
             'Deploy the prosopo dapp example contract',
@@ -198,61 +153,6 @@ export async function processArgs(args: string[]) {
                         console.error(e)
                         process.exit(1)
                     })
-            },
-        })
-        .command({
-            command: 'transfer_contract',
-            describe: 'Transfer dapps and providers from one contract to another',
-            builder: (yargs) =>
-                yargs
-                    .option('transfer-from', {
-                        type: 'string',
-                        demandOption: true,
-                        desc: 'The name of the network and the contract address to transfer from `{ network, address }`',
-                    })
-                    .option('transfer-to', {
-                        type: 'string',
-                        demandOption: false,
-                        desc: 'The name of the network and the contract address to transfer to `{ network, address }`',
-                    })
-                    .option('transfer-providers', {
-                        type: 'boolean',
-                        demandOption: true,
-                        desc: 'Whether to transfer providers or not',
-                        default: false,
-                    })
-                    .option('transfer-dapps', {
-                        type: 'boolean',
-                        demandOption: true,
-                        desc: 'Whether to transfer dapps or not',
-                        default: false,
-                    }),
-            handler: async (argv) => {
-                log.debug(argv)
-                const atlasUri = process.env._DEV_ONLY_ATLAS_URI
-                const transferFrom = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
-                const networks = getNetworks()
-                const transferFromNetworkName = NetworkNamesSchema.parse(transferFrom.network)
-                const transferFromNetwork = NetworkConfigSchema.parse(get(networks, transferFrom.network))
-                transferFromNetwork.contract.address = transferFrom.address
-                let transferToNetwork = undefined
-                let transferToNetworkName = undefined
-                // Defaults to transferring to the network defined by env
-                if (argv.transferTo !== undefined) {
-                    const transferTo = TransferNetworkSchema.parse(JSON.parse(argv.transferFrom))
-                    transferToNetwork = NetworkConfigSchema.parse(get(networks, transferTo.network))
-                    transferToNetwork.contract.address = transferFrom.address
-                    transferToNetworkName = NetworkNamesSchema.parse(transferToNetworkName)
-                }
-                const transferConfig = { dapps: argv.transferDapps, providers: argv.transferProviders }
-                await transferContract(
-                    transferFromNetworkName,
-                    transferFromNetwork,
-                    transferConfig,
-                    transferToNetworkName,
-                    transferToNetwork,
-                    atlasUri
-                )
             },
         })
         .command({

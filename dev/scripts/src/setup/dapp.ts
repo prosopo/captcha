@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN_ZERO } from '@polkadot/util/bn'
-import { Dapp, DappPayee } from '@prosopo/captcha-contract'
-import { IDappAccount } from '@prosopo/types'
+import { Dapp, DappPayee, IDappAccount } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
@@ -21,8 +20,6 @@ import { TransactionQueue, oneUnit, submitTx } from '@prosopo/tx'
 import { getLogger } from '@prosopo/common'
 import { sendFunds } from './funds.js'
 import { wrapQuery } from '@prosopo/contract'
-
-const log = getLogger(LogLevel.enum.info, 'setupDapp')
 
 export async function setupDapp(
     env: ProviderEnvironment,

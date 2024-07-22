@@ -18,7 +18,6 @@ import {
     commandDappAccounts,
     commandDappDetails,
     commandDappRegister,
-    commandDappUpdate,
     commandProviderAccounts,
     commandProviderDataset,
     commandProviderDeregister,
@@ -44,7 +43,6 @@ export function processArgs(args: string[], pair: KeyringPair, config: ProsopoCo
         .command(commandProviderDeregister(pair, config, { logger }))
         .command(commandProviderSetDataset(pair, config, { logger }))
         .command(commandDappRegister(pair, config, { logger }))
-        .command(commandDappUpdate(pair, config, { logger }))
         .command(commandProviderAccounts(pair, config, { logger }))
         .command(commandDappAccounts(pair, config, { logger }))
         .command(commandProviderDetails(pair, config, { logger }))

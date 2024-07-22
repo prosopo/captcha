@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { AccountId } from '@prosopo/captcha-contract'
 import {
     CaptchaResponseBody,
     CaptchaSolutionResponse,
@@ -25,41 +24,41 @@ import { CaptchaSolution } from '../datasets/index.js'
 import { Provider, RandomProvider, StoredEvents } from '../procaptcha/index.js'
 
 export interface ProviderApiInterface {
-    getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody>
+    getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<CaptchaResponseBody>
     submitCaptchaSolution(
         captchas: CaptchaSolution[],
         requestHash: string,
-        userAccount: AccountId,
+        userAccount: string,
         salt: string,
         timestamp: string,
         signedTimestamp: string,
         signature?: string
     ): Promise<CaptchaSolutionResponse>
     verifyDappUser(
-        dapp: AccountId,
-        userAccount: AccountId,
+        dapp: string,
+        userAccount: string,
         blockNumber: number,
         dappUserSignature: string,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse>
     verifyUser(
-        dapp: AccountId,
-        userAccount: AccountId,
+        dapp: string,
+        userAccount: string,
         blockNumber: number,
         dappUserSignature: string,
         commitmentId?: string,
         maxVerifiedTime?: number
     ): Promise<ImageVerificationResponse>
-    getPowCaptchaChallenge(userAccount: AccountId, dappAccount: AccountId): Promise<GetPowCaptchaResponse>
+    getPowCaptchaChallenge(userAccount: string, dappAccount: string): Promise<GetPowCaptchaResponse>
     submitPowCaptchaSolution(
         challenge: GetPowCaptchaResponse,
-        userAccount: AccountId,
-        dappAccount: AccountId,
+        userAccount: string,
+        dappAccount: string,
         randomProvider: RandomProvider,
         nonce: number
     ): Promise<PowCaptchaSolutionResponse>
-    submitUserEvents(events: StoredEvents, accountId: AccountId): Promise<unknown>
+    submitUserEvents(events: StoredEvents, string: string): Promise<unknown>
     getProviderStatus(): Promise<ProviderRegistered>
     getProviderDetails(): Promise<Provider>
 }

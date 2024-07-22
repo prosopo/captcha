@@ -19,6 +19,7 @@ export enum Payee {
     provider = 'Provider',
     dapp = 'Dapp',
 }
+
 export interface IUserAccount {
     secret?: string
     address: string

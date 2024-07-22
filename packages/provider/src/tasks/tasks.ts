@@ -17,6 +17,7 @@ import {
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
+    CaptchaStatus,
     CaptchaWithProof,
     DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
     DappUserSolutionResult,
@@ -27,8 +28,7 @@ import {
     PendingCaptchaRequest,
     PoWCaptcha,
     ProsopoConfigOutput,
-    ProviderDetails,
-    ProviderRegistered,
+    RandomProvider,
     StoredEvents,
 } from '@prosopo/types'
 import {
@@ -40,13 +40,11 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { CaptchaStatus, Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
 import { ContractPromise } from '@polkadot/api-contract/promise'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getCurrentBlockNumber, verifyRecency, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
-import { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util/hex'
 import { randomAsHex } from '@polkadot/util-crypto/random'
@@ -619,38 +617,6 @@ export class Tasks {
         }
     }
 
-    /**
-     * Get payment info for a transaction
-     * @param {string} userAccount
-     * @param {string} blockHash
-     * @param {string} txHash
-     * @returns {Promise<RuntimeDispatchInfo|null>}
-     */
-    private async getPaymentInfo(
-        userAccount: string,
-        blockHash: string,
-        txHash: string
-    ): Promise<RuntimeDispatchInfoV1 | null> {
-        // Validate block and transaction, checking that the signer matches the userAccount
-        const signedBlock: SignedBlock = (await this.contract.api.rpc.chain.getBlock(blockHash)) as SignedBlock
-        if (!signedBlock) {
-            return null
-        }
-        const extrinsic = signedBlock.block.extrinsics.find((extrinsic) => extrinsic.hash.toString() === txHash)
-        if (!extrinsic || extrinsic.signer.toString() !== userAccount) {
-            return null
-        }
-        // Retrieve tx fee for extrinsic
-        const paymentInfo = (await this.contract.api.rpc.payment.queryInfo(
-            extrinsic.toHex(),
-            blockHash
-        )) as RuntimeDispatchInfoV1
-        if (!paymentInfo) {
-            return null
-        }
-        return paymentInfo
-    }
-
     /*
      * Get dapp user solution from database
      */
@@ -678,20 +644,6 @@ export class Tasks {
             }
         }
         return undefined
-    }
-
-    /* Returns public details of provider */
-    async getProviderDetails(): Promise<ProviderDetails> {
-        const provider: Provider = await wrapQuery(
-            this.contract.query.getProvider,
-            this.contract.query
-        )(this.contract.pair.address)
-
-        const dbConnectionOk = await this.getCaptchaWithProof(provider.datasetId, true, 1)
-            .then(() => true)
-            .catch(() => false)
-
-        return { provider, dbConnectionOk }
     }
 
     /** Get the dataset from the database */

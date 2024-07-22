@@ -14,7 +14,6 @@
 import { ApiParams } from '../api/params.js'
 import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/timeouts.js'
-import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import {
     ZodDefault,
@@ -72,6 +71,40 @@ export const ProviderDefaultRateLimits = {
 type RateLimit = {
     windowMs: number
     limit: number
+}
+
+type Hash = string | number[]
+
+//temp
+enum Payee {
+    provider = 'Provider',
+    dapp = 'Dapp',
+}
+
+//temp
+type Provider = {
+    status: GovernanceStatus
+    fee: number
+    payee: Payee
+    url: Array<number>
+    datasetId: Hash
+    datasetIdContent: Hash
+}
+
+//temp
+enum GovernanceStatus {
+    active = 'Active',
+    inactive = 'Inactive',
+}
+
+//temp
+type FrontendProvider = Omit<Provider, 'url'> & { url: string }
+
+//temp
+type RandomProvider = {
+    providerAccount: string
+    provider: FrontendProvider
+    blockNumber: number
 }
 
 type RateLimitSchemaType = ZodObject<{

@@ -14,12 +14,12 @@
 import {
     ApiParams,
     ApiPaths,
+    CaptchaStatus,
     ImageVerificationResponse,
     ServerPowCaptchaVerifyRequestBody,
     VerificationResponse,
     VerifySolutionBody,
 } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'

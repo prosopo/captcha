@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util'
-import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import { IDappAccount, IProviderAccount, Payee } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { Payee } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@prosopo/typechain-types'
 import { defaultConfig, getSecret } from '@prosopo/cli'
@@ -142,8 +141,6 @@ export async function setup(force: boolean) {
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
         defaultProvider.pair = await getPairAsync(network, providerSecret)
-
-        await registerProvider(env, defaultProvider, force)
 
         // If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
         // If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
