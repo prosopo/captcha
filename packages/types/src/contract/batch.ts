@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
-import { Hash } from '@prosopo/captcha-contract/types-arguments'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 
+//temp
+type Hash = string
 export interface ExtrinsicBatch {
     extrinsics: SubmittableExtrinsic<'promise'>[]
     ids: Hash[]

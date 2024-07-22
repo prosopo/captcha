@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { AccountId } from '@prosopo/captcha-contract'
 import {
     CaptchaResponseBody,
     CaptchaSolutionResponse,
@@ -23,6 +22,9 @@ import {
 } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
 import { Provider, RandomProvider, StoredEvents } from '../procaptcha/index.js'
+
+//temp
+type AccountId = string
 
 export interface ProviderApiInterface {
     getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody>
