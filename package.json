@@ -10,7 +10,7 @@
     "scripts": {
         "hostid": "npm run cmd -- \"dig +short %s.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'\"",
         "cmd:about": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
-        "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
+        "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd || exit $?; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:contracts": "npm run -w @prosopo/protocol build:all",
         "build:typechain": "npm run build:contracts && cd dev/scripts && npm run build && npm run cli -- import_all_contracts && cd ../.. && npm run lint:fix:contracts",
