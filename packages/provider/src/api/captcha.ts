@@ -64,7 +64,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 }
                 validateAddress(user, false, api.registry.chainSS58)
 
-                const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
+                const taskData = await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {
                     captchas: taskData.captchas.map((captcha: Captcha) => ({
                         ...captcha,
@@ -100,7 +100,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
         try {
             // TODO allow the dapp to override the length of time that the request hash is valid for
-            const result: DappUserSolutionResult = await tasks.dappUserSolution(
+            const result: DappUserSolutionResult = await tasks.imgCaptchaManager.dappUserSolution(
                 parsed[ApiParams.user],
                 parsed[ApiParams.dapp],
                 parsed[ApiParams.requestHash],
@@ -139,7 +139,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 })
             }
 
-            const challenge = await tasks.getPowCaptchaChallenge(user, dapp, origin)
+            const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(user, dapp, origin)
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)
@@ -161,7 +161,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const { challenge, difficulty, signature, nonce, verifiedTimeout } = SubmitPowCaptchaSolutionBody.parse(
                 req.body
             )
-            const verified = await tasks.verifyPowCaptchaSolution(
+            const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
                 challenge,
                 difficulty,
                 signature,
@@ -185,7 +185,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     router.post(ApiPaths.SubmitUserEvents, async (req, res, next) => {
         try {
             const { events, accountId } = req.body
-            await tasks.saveCaptchaEvent(events, accountId)
+            await tasks.datasetManager.saveCaptchaEvent(events, accountId)
             return res.json({ status: 'success' })
         } catch (err) {
             tasks.logger.error(err)

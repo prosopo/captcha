@@ -4,9 +4,10 @@ import { Database } from '@prosopo/types-database'
 import { ProsopoEnvError } from '@prosopo/common'
 import { stringToHex } from '@polkadot/util'
 import { checkRecentPowSolution as checkRecentPow, checkPowSignature, checkPowSolution } from './powTasksUtils.js'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 export class PowCaptchaManager {
-    pair: any
+    pair: KeyringPair
     db: Database
     POW_SEPARATOR: string
 
@@ -16,6 +17,12 @@ export class PowCaptchaManager {
         this.POW_SEPARATOR = '___'
     }
 
+    /**
+     * @description Generates a PoW Captcha for a given user and dapp
+     *
+     * @param {string} userAccount - user that is solving the captcha
+     * @param {string} dappAccount - dapp that is requesting the captcha
+     */
     async getPowCaptchaChallenge(userAccount: string, dappAccount: string, origin: string): Promise<PoWCaptcha> {
         const difficulty = 4
         const timestamp = Date.now().toString()
@@ -27,6 +34,15 @@ export class PowCaptchaManager {
         return { challenge, difficulty, signature }
     }
 
+    /**
+     * @description Verifies a PoW Captcha for a given user and dapp
+     *
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {string} difficulty - how many leading zeroes the solution must have
+     * @param {string} signature - proof that the Provider provided the challenge
+     * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
+     * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+     */
     async verifyPowCaptchaSolution(
         challenge: string,
         difficulty: number,
@@ -35,13 +51,21 @@ export class PowCaptchaManager {
         timeout: number
     ): Promise<boolean> {
         checkRecentPow(challenge, timeout)
-        checkPowSignature(challenge, signature, this.pair.providerAddress)
+        checkPowSignature(challenge, signature, this.pair.address)
         checkPowSolution(nonce, challenge, difficulty)
 
         await this.db.storePowCaptchaRecord(challenge, false)
         return true
     }
 
+    /**
+     * @description Verifies a PoW Captcha for a given user and dapp. This is called by the server to verify the user's solution
+     * and update the record in the database to show that the user has solved the captcha
+     *
+     * @param {string} dappAccount - the dapp that is requesting the captcha
+     * @param {string} challenge - the starting string for the PoW challenge
+     * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+     */
     async serverVerifyPowCaptchaSolution(dappAccount: string, challenge: string, timeout: number): Promise<boolean> {
         const challengeRecord = await this.db.getPowCaptchaRecordByChallenge(challenge)
 

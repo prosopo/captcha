@@ -25,5 +25,5 @@ export async function setupProvider(env: ProviderEnvironment, provider: IProvide
     const logger = env.logger
     const tasks = new Tasks(env)
     logger.info('   - providerSetDataset')
-    await tasks.providerSetDataset(datasetWithSolutionHashes)
+    await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes)
 }

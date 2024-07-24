@@ -58,8 +58,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             verifySignature(dappUserSignature, blockNumber.toString(), keyPair)
 
             const solution = await (commitmentId
-                ? tasks.getDappUserCommitmentById(commitmentId)
-                : tasks.getDappUserCommitmentByAccount(user))
+                ? tasks.imgCaptchaManager.getDappUserCommitmentById(commitmentId)
+                : tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user))
 
             // No solution exists
             if (!solution) {
@@ -173,7 +173,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             // Will throw an error if the signature is invalid
             verifySignature(dappSignature, blockNumber.toString(), dappPair)
 
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, verifiedTimeout)
+            const approved = await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
+                dapp,
+                challenge,
+                verifiedTimeout
+            )
 
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),

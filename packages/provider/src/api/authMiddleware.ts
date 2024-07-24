@@ -16,7 +16,6 @@ import { NextFunction, Request, Response } from 'express'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
-import { getCurrentBlockNumber } from '@prosopo/contract'
 import { hexToU8a, isHex } from '@polkadot/util'
 
 export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {

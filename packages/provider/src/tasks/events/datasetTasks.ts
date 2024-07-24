@@ -1,0 +1,76 @@
+import { CaptchaConfig, DatasetRaw, ProsopoConfigOutput, StoredEvents } from '@prosopo/types'
+import { Logger } from '@prosopo/common'
+import { saveCaptchaEvent, saveCaptchas } from '@prosopo/database'
+import { Database } from '@prosopo/types-database'
+import { parseCaptchaDataset } from '@prosopo/datasets'
+import { providerValidateDataset } from './datasetTasksUtils.js'
+
+export class DatasetManager {
+    config: ProsopoConfigOutput
+    logger: Logger
+    captchaConfig: CaptchaConfig
+    db: Database
+
+    constructor(config: ProsopoConfigOutput, logger: Logger, captchaConfig: CaptchaConfig, db: Database) {
+        this.config = config
+        this.logger = logger
+        this.captchaConfig = captchaConfig
+        this.db = db
+    }
+
+    /**
+     * @description Set the provider dataset from a file
+     *
+     * @param file JSON of the captcha dataset
+     */
+    async providerSetDatasetFromFile(file: JSON): Promise<void> {
+        const datasetRaw = parseCaptchaDataset(file)
+        return await this.providerSetDataset(datasetRaw)
+    }
+
+    async providerSetDataset(datasetRaw: DatasetRaw): Promise<void> {
+        const dataset = await providerValidateDataset(
+            datasetRaw,
+            this.captchaConfig.solved.count,
+            this.captchaConfig.unsolved.count
+        )
+
+        await this.db?.storeDataset(dataset)
+    }
+
+    /**
+     * @description Save captcha user events to external db
+     *
+     * **Note:** This is only used in development mode
+     *
+     * @param events
+     * @param accountId
+     * @returns
+     */
+    async saveCaptchaEvent(events: StoredEvents, accountId: string) {
+        if (!this.config.devOnlyWatchEvents || !this.config.mongoEventsUri) {
+            this.logger.info('Dev watch events not set to true, not saving events')
+            return
+        }
+        await saveCaptchaEvent(events, accountId, this.config.mongoEventsUri)
+    }
+
+    /**
+     * @description Store commitments externally in the database, clear them from local cache
+     *
+     * @param db
+     * @returns
+     */
+    async storeCommitmentsExternal(): Promise<void> {
+        if (!this.config.mongoCaptchaUri) {
+            this.logger.info('Mongo env not set')
+            return
+        }
+
+        const commitments = await this.db.getUnstoredDappUserCommitments()
+        this.logger.info(`Storing ${commitments.length} commitments externally`)
+
+        await saveCaptchas(commitments, this.config.mongoCaptchaUri)
+        await this.db.markDappUserCommitmentsStored(commitments.map((commitment) => commitment.id))
+    }
+}
