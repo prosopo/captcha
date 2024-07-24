@@ -47,9 +47,7 @@ import { stringToHex } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { providerValidateDataset } from './dataset/setDataset.js'
-import { checkRecentPowSolution, validatePowCaptchaSolution } from './pow/verify.js'
-
-const POW_SEPARATOR = '___'
+import { checkRecentPowSolution, validatePowCaptchaSolution } from './powCaptcha/verify.js'
 
 /**
  * @description Tasks that are shared by the API and CLI
