@@ -2,10 +2,10 @@
     "version": "1.0.0",
     "configurations": [
         {
-            "name": "TS-Node",
+            "name": "tsx",
             "type": "node",
             "request": "launch",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/tsx",
             "runtimeArgs": ["--transpile-only", "--esm"],
             "program": "${workspaceRoot}/dev/scripts/src/cli/index.ts",
             "args": ["version"],

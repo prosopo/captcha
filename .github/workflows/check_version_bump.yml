@@ -1,11 +1,10 @@
-# Check workflow names are consistent with their filenames for easier debugging
+# Check the version has been bumped before releasing
 
-name: consistent_workflow_names
+name: check_version_bump
 
 on:
     pull_request:
-        # only when workflow file is changed
-        paths: ['.github/workflows/**']
+        branches: [main]
     workflow_dispatch:
 
 concurrency:
@@ -57,27 +56,44 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - name: Check workflow names
+            # fail-fast step to check if the version has been bumped
+            # when running manually, there won't be a version line change, so we need to skip this step in that case
+            - name: Detect version bump
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    cd .github/workflows
-                    # Iterate through files in the current directory
-                    for file in *.yml *.yaml; do
-                        # Check if the item is a file (not a directory)
-                        if [[ -f "$file" ]]; then
-                          # find the first line beginning with "name:"
-                              first_line=$(grep -m 1 "^name:" "$file")
-                            
-                            # Extract name from the first line
-                            name=$(echo "$first_line" | awk -F ': ' '{print $2}')
-                            
-                            # Check if the extracted value matches the filename
-                            if [[ "$name" == "${file%.*}" ]]; then
-                                echo "File: $file - Name: $name (Match)"
-                            else
-                                echo "File: $file - Name: $name (No Match)"
-                                exit 1
-                            fi
-                        fi
-                    done
+
+                  # get the next version as the version currently set in the root package.json
+                  NEXT=$(jq -r '.version' package.json)
+                  echo "Next version: $NEXT"
+
+                  # checkout the repo back to before this pr
+                  git checkout ${{ github.event.before }}
+
+                  # get the previous version as the version currently set in the root package.json in the before state
+                  PREV=$(jq -r '.version' package.json)
+                  echo "Previous version: $PREV"
+
+                  # switch back to the current state
+                  git switch -
+
+                  # break next and previous versions into major, minor, patch
+                  NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
+                  NEXT_MINOR=$(echo $NEXT | cut -d. -f2)
+                  NEXT_PATCH=$(echo $NEXT | cut -d. -f3)
+                  PREV_MAJOR=$(echo $PREV | cut -d. -f1)
+                  PREV_MINOR=$(echo $PREV | cut -d. -f2)
+                  PREV_PATCH=$(echo $PREV | cut -d. -f3)
+
+                  # compare the versions, checking for an *increasing* version
+
+                  if [[ $NEXT_MAJOR -gt $PREV_MAJOR ]]; then
+                      echo "Major version bump"
+                  elif [[ $NEXT_MAJOR -eq $PREV_MAJOR && $NEXT_MINOR -gt $PREV_MINOR ]]; then
+                      echo "Minor version bump"
+                  elif [[ $NEXT_MAJOR -eq $PREV_MAJOR && $NEXT_MINOR -eq $PREV_MINOR && $NEXT_PATCH -gt $PREV_PATCH ]]; then
+                      echo "Patch version bump"
+                  else
+                      echo "Version not bumped / not an increasing version"
+                      exit 1
+                  fi

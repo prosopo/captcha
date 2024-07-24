@@ -1,0 +1,271 @@
+# Publish / release / deploy packages after a release
+
+name: deploy
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            # Add support for more platforms with QEMU (optional)
+            # https://github.com/docker/setup-qemu-action
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Dockerhub login
+              run: |
+                  echo "Logging into Docker Hub."
+                  echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
+
+            - uses: actions/checkout@v3
+
+            - name: Next version
+              id: next_version
+              run: |
+
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    VERSION=$(cat package.json | jq -r '.version')
+
+                    # if version not detected, error
+                      if [[ -z "$VERSION" ]]; then
+                          echo "Failed to get version"
+                          exit 1
+                      fi
+                      # or if version null
+                      if [[ "$VERSION" == "null" ]]; then
+                          echo "Failed to get version"
+                          exit 1
+                      fi
+
+                    # split into major, minor, patch
+                    MAJOR=$(echo $VERSION | cut -d. -f1)
+                    MINOR=$(echo $VERSION | cut -d. -f2)
+                    PATCH=$(echo $VERSION | cut -d. -f3)
+                    echo "version=$VERSION"
+                    echo "major=$MAJOR"
+                    echo "minor=$MINOR"
+                    echo "patch=$PATCH"
+
+                    # export the next version numbers
+                    echo "version=$VERSION" >> $GITHUB_OUTPUT
+                    echo "major=$MAJOR" >> $GITHUB_OUTPUT
+                    echo "minor=$MINOR" >> $GITHUB_OUTPUT
+                    echo "patch=$PATCH" >> $GITHUB_OUTPUT
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+
+            - run: npm ci
+
+            # build from scratch to ensure nothing bought over from cache
+
+            - name: Build packages
+              run: |
+                  echo "Building packages..."
+                  npm run build:all
+                  npm run build:all:cjs
+
+            - name: Build the contract sources
+              run: npm -w @prosopo/protocol run build:contracts
+
+            - name: Build JS bundle
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    # Copy the rococo env file to production env file
+                    echo "Copying the rococo env to production env file in procaptcha-bundle"
+                    cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+
+                    # Navigate to the JS bundle directory and build
+                    echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                    cd packages/procaptcha-bundle
+
+                    NODE_ENV=production npm run bundle:prod
+
+            - name: Build docker js_server
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                  # technically, if the release is for a version which is less than a published version, the following code will have bundles from versions ahead of this one. However, this isn't really a problem, as we just want the latest bundle to be available alongside old ones, not so bothered about newer ones.
+
+                    # Set the JS location in the container
+                    JS_FOLDER="/usr/share/nginx/html/js"
+
+                    # Get the most recent version of the js_server image
+                    docker pull prosopo/js_server:latest
+
+                    # Create a temporary container from the latest image
+                    echo "Building Docker image..."
+                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:$VERSION)
+
+                    # Remove the old js temp folder
+                    rm -rf ./js_bundles_host_temp
+
+                    # Copy out the old files
+                    docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
+
+                    # Build the new image
+                    docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
+
+                    # Run the new image
+                    NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
+
+                    # Copy the legacy files across
+                    docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
+
+                    # Copy the new bundle files to the container into a folder with the version name
+                    docker cp packages/procaptcha-bundle/dist/bundle/. $NEW_CONTAINER_ID:$JS_FOLDER
+
+                    # Start the new container
+                    docker start $NEW_CONTAINER_ID
+
+                    # Move procaptcha.bundle.js
+                    docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
+
+                    # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
+                    docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
+
+                    # Commit the changes to the container
+                    docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                    # Check this new docker image works locally
+                    docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                    # Start the bundle demo & run the cypress tests against the new bundle
+                    # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
+
+            - name: Build the production CLI package
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    echo "Building the production CLI package..."
+                    # Copy the rococo env file to production env file
+                    echo "Copying the rococo env to production env file in cli package"
+                    cp ./dev/scripts/env.production ./packages/cli/.env.production
+
+                    # Navigate to the provider CLI directory and build
+                    echo "Navigating to 'packages/cli' and bundling..."
+                    cd packages/cli
+                    NODE_ENV=production npm run build
+                    NODE_ENV=production npm run bundle:prod
+
+                    # Navigate back to the project root
+                    echo "Navigating back to project root..."
+                    cd ../..
+
+            # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
+            - name: Github release
+              id: github_release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  # do a gh release with the contract sources + bundle
+                  gh release create --generate-notes "v${{ steps.next_version.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+
+            - name: Npm release
+              run: |
+                  if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
+                    echo "Running on GitHub Actions"
+                    # Write the npm token to ~/.npmrc
+                    echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+                    echo "Publishing to npm dry-run..."
+                    npm run publish:dry-run
+                    echo "Publishing to npm..."
+                    npm run publish
+                  else
+                    echo "Running locally via act, skipping npm publish."
+                  fi
+
+            - name: Docker js_server release
+              id: docker_js_server_release
+              run: |
+                  # Push the new image to Docker Hub
+                  echo "Pushing Docker image..."
+                  docker push prosopo/js_server:${{ steps.next_version.outputs.version }}
+
+                  # Push latest
+                  docker tag prosopo/js_server:${{ steps.next_version.outputs.version }} prosopo/js_server:latest
+                  docker push prosopo/js_server:latest
+
+            - name: Redeploy flux docker js_server
+              env:
+                  PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
+                  PROSOPO_ZELCORE_PUBLIC_KEY: ${{ secrets.PROSOPO_ZELCORE_PUBLIC_KEY }}
+              run: |
+                  if [[ "${{ steps.docker_js_server_release.outcome }}" == 'success' ]]; then
+                    echo "Installing @prosopo/flux..."
+                    npm i -g @prosopo/flux
+                    echo "Soft redeploying flux docker js_server."
+                    npx flux redeploy --app ProcaptchaJavascriptServer
+                  else
+                    echo "Skipping flux redeploy."
+                  fi
+
+            - name: Build and push the Provider Container
+              uses: docker/build-push-action@v5
+              with:
+                  context: ${{github.workspace}}
+                  file: ${{github.workspace}}/docker/images/provider.dockerfile
+                  platforms: linux/amd64,linux/arm64
+                  push: true
+                  tags: prosopo/provider:${{ steps.next_version.outputs.version }},prosopo/provider:latest
+
+            - name: Deploy fail notification
+              if: failure()
+              run: |
+                  echo "Deploy failed"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+
+            - name: Deploy success notification
+              if: success()
+              run: |
+                  echo "Deploy succeeded"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
