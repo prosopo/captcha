@@ -16,7 +16,6 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'
-import { stringToU8a } from '@polkadot/util'
 
 export async function setupProvider(env: ProviderEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
