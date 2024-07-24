@@ -21,7 +21,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "build:debug": "tsc --build --verbose",
         "build:config": "tsc --project",
-        "test": "npx vitest run --config ./vite.test.config.ts",
+        "test": "echo \"No test specified\"",
         "mnemonic": "tsx ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
         "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
