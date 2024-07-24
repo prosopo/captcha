@@ -1,3 +1,5 @@
+# Workflow which bumps the version of all packages in the repo
+
 name: bump_version
 
 on:
@@ -95,25 +97,27 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
-                  # make a new branch for the version changes
-                  git switch -c bump-version-${{ github.event.inputs.version }}
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                  # make the version changes
-                  npm run version ${{ github.event.inputs.version }}
+                    # make a new branch for the version changes
+                    git switch -c release/${{ github.event.inputs.version }}
 
                   # lint
                   npm run lint:fix
 
-                  # set the author in git
-                  git config user.name "prosoponator[bot]"
-                  git config user.email "dev@prosopo.io"
+                    # lint
+                    npm run lint:fix
 
-                  # commit the version changes
-                  git add .
-                  git commit -m "Bump version to ${{ github.event.inputs.version }}"
+                    # set the author in git
+                    git config user.name "prosoponator[bot]"
+                    git config user.email "dev@prosopo.io"
 
-                  # push version changes
-                  git push --set-upstream origin bump-version-${{ github.event.inputs.version }}
+                    # commit the version changes
+                    git add .
+                    git commit -m "Bump version to ${{ github.event.inputs.version }}"
 
-                  # create a PR for the release
-                  gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill
+                    # push version changes
+                    git push --set-upstream origin bump-version-${{ github.event.inputs.version }}
+
+                    # create a PR for the release
+                    gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill

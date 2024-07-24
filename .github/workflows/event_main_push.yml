@@ -1,11 +1,10 @@
-name: consistent_versions
+# Send an event to other repos on push to main
+
+name: event_main_push
 
 on:
-    pull_request:
+    push:
         branches: [main]
-        paths:
-            - '**/package.json'
-            - 'package.json'
     workflow_dispatch:
 
 concurrency:
@@ -18,7 +17,7 @@ env:
     GH_TOKEN: ${{ github.token }}
 
 jobs:
-    check:
+    event:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
@@ -59,24 +58,12 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
-
-            - name: Check versions are consistent amongst packages
+            - name: Send event
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  # for each package, get the version then filter to unique versions
-                  versions=$(npx --workspaces npm pkg get version | grep "@" | awk '{print $2}' | uniq)
-                  # if more than one version is detected, fail
-                  if [ $(echo "$versions" | wc -l) -gt 1 ]; then
-                      echo "Versions are not consistent amongst packages:"
-                      echo "$versions"
-                      exit 1
-                  fi
-                  # if version doesn't match the root workspace version, fail
-                  root_version=$(npm pkg get version)
-                  if [ "$versions" != "$root_version" ]; then
-                      echo "Version is not consistent with root workspace version:"
-                      echo "$versions"
-                      echo "$root_version"
-                      exit 1
-                  fi
-                  # else versions are consistent, pass
+                  curl -X POST \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Accept: application/vnd.github.everest-preview+json" \
+                  -d '{"event_type": "captcha_main_push"}' \
+                  https://api.github.com/repos/prosopo/captcha-private/dispatches

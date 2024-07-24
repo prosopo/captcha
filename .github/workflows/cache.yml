@@ -1,11 +1,10 @@
-name: post_pr
+# Build a cache of build artifacts after PRs to speed up subsequent builds
 
-# on push to main, or manually triggered
-# we do this because any branch can use caches built on main, whereas caches built on other branches are only available to that branch and its children
+name: cache
+
 on:
     push:
-        branches:
-            - 'main'
+        branches: [main, dev]
     workflow_dispatch:
 
 concurrency:
@@ -60,6 +59,7 @@ jobs:
 
             - uses: actions/checkout@v3
 
+            # make cache dirs
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
@@ -95,20 +95,21 @@ jobs:
                       protocol/target
                       node_modules
                       ~/.cache/Cypress
-                  key: project-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             # remove all but the latest cache, leaving only the cache we just saved
             - name: Cleanup caches
               if: always()
               run: |
-                  set +e; gh extension install actions/gh-actions-cache; set -e
-                  REPO=${{ github.repository }}
-                  echo "Fetching list of cache key"
-                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key project-cache-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
-                  echo caches to be removed:
-                  echo ${cacheKeys}
-                  set +e
-                  for cacheKey in $cacheKeys
-                  do
-                      gh actions-cache delete $cacheKey -R $REPO --confirm
-                  done
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    set +e; gh extension install actions/gh-actions-cache; set -e
+                    echo "Fetching list of cache key"
+                    cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R ${{ github.repository }} --key project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
+                    echo caches to be removed:
+                    echo ${cacheKeys}
+                    set +e
+                    for cacheKey in $cacheKeys
+                    do
+                        gh actions-cache delete $cacheKey -R ${{ github.repository }} --confirm
+                    done
