@@ -61,7 +61,9 @@ export class ImgCaptchaManager {
     ): Promise<{ captchas: Captcha[]; requestHash: string; timestamp: string; signedTime: string }> {
         const dataset = await this.db.getDatasetDetails(datasetId)
         if (!dataset) {
-            throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED')
+            throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED', {
+                context: { failedFuncName: this.getRandomCaptchasAndRequestHash.name, dataset, datasetId },
+            })
         }
 
         const unsolvedCount: number = Math.abs(Math.trunc(this.captchaConfig.unsolved.count))

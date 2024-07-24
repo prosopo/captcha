@@ -409,8 +409,16 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             return doc
         }
 
+        const allDatasetsInDb = await this.tables?.dataset.find()
+
+        if (!allDatasetsInDb) {
+            throw new Error('no datasets in db')
+        }
+
+        const allDatasetIds = allDatasetsInDb.map((dataset) => dataset.datasetId)
+
         throw new ProsopoDBError('DATABASE.DATASET_GET_FAILED', {
-            context: { failedFuncName: this.getDatasetDetails.name, datasetId },
+            context: { failedFuncName: this.getDatasetDetails.name, datasetId, allDatasetIds },
         })
     }
 
