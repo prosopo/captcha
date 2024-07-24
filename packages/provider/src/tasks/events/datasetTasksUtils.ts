@@ -20,6 +20,7 @@ export const providerValidateDataset = async (
     minSolvedCaptchas: number,
     minUnsolvedCaptchas: number
 ) => {
+    console.log('-------\n\nproviderValidateDataset\n\n---------')
     // Check that the number of captchas in the dataset is greater or equal to min number of solved captchas
     if (datasetRaw.captchas.length < minSolvedCaptchas + minUnsolvedCaptchas) {
         throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', {

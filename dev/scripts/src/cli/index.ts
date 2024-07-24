@@ -30,11 +30,6 @@ const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
 
-const TransferNetworkSchema = z.object({
-    network: z.string(),
-    address: z.string(),
-})
-
 export async function processArgs(args: string[]) {
     const parsed = await yargs(hideBin(args)).option('logLevel', {
         describe: 'set log level',

@@ -23,6 +23,7 @@ import { isAddress } from '@polkadot/util-crypto'
 import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
 import path from 'path'
+import { setupProvider } from './provider.js'
 
 const logger = getLogger(LogLevel.enum.info, 'setup')
 const __dirname = path.resolve()
@@ -98,6 +99,7 @@ export async function updateEnvFile(vars: Record<string, string>) {
 export async function setup(force: boolean) {
     const defaultProvider = getDefaultProvider()
     const defaultDapp = getDefaultDapp()
+
     if (defaultProvider.secret) {
         const hasProviderAccount = defaultProvider.address && defaultProvider.secret
         logger.debug('ENVIRONMENT', process.env.NODE_ENV)
@@ -143,6 +145,8 @@ export async function setup(force: boolean) {
                 dappAddressToRegister = defaultDapp.pair.address
             }
         }
+
+        await setupProvider(env, defaultProvider)
 
         env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
 
