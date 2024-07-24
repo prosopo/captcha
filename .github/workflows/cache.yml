@@ -75,10 +75,7 @@ jobs:
             - run: npm ci
 
             # install cypress so we don't have to do that every time
-            - name: Cypress install
-              run: |
-                  npm i --save-dev cypress
-                  npx cypress install
+            - run: npx cypress install
 
             - run: ls -la ~/.cache/Cypress || true
             - run: ls -la protocol/cargo-cache || true
