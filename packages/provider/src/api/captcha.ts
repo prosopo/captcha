@@ -56,13 +56,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         async (req, res, next) => {
             try {
                 const { datasetId, user } = CaptchaRequestBody.parse(req.params)
-                const api = env.api
-                if (api === undefined) {
-                    throw new ProsopoApiError('DEVELOPER.METHOD_NOT_IMPLEMENTED', {
-                        context: { error: 'api not setup', env },
-                    })
-                }
-                validateAddress(user, false, api.registry.chainSS58)
+                validateAddress(user, false, 42)
 
                 const taskData = await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {

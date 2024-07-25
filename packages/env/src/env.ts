@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
+import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
@@ -21,7 +20,6 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {
@@ -33,10 +31,8 @@ export class Environment implements ProsopoEnvironment {
     contractName: string
     logger: Logger
     assetsResolver: AssetsResolver | undefined
-    wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair | undefined
-    api: ApiPromise | undefined
 
     constructor(config: ProsopoBasicConfigOutput, pair?: KeyringPair) {
         this.config = config
@@ -51,8 +47,6 @@ export class Environment implements ProsopoEnvironment {
             this.config.networks[this.defaultNetwork]
         ) {
             const network = this.config.networks[this.defaultNetwork]
-            this.logger.info(`Endpoint: ${network?.endpoint}`)
-            this.wsProvider = new WsProvider(network?.endpoint)
             this.contractAddress = network?.contract.address
             this.contractName = network?.contract.name
 
@@ -77,7 +71,6 @@ export class Environment implements ProsopoEnvironment {
             })
         }
 
-        await this.getApi().isReadyOrError
         try {
             this.pair = this.keyring.addPair(this.pair)
         } catch (error) {
@@ -87,13 +80,6 @@ export class Environment implements ProsopoEnvironment {
         }
 
         return this.pair
-    }
-
-    getApi(): ApiPromise {
-        if (this.api === undefined) {
-            throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
-        }
-        return this.api
     }
 
     getDb(): Database {
@@ -121,9 +107,6 @@ export class Environment implements ProsopoEnvironment {
         try {
             if (this.pair && this.config.account.password && this.pair.isLocked) {
                 this.pair.unlock(this.config.account.password)
-            }
-            if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
             }
             await this.getSigner()
             // make sure contract address is valid before trying to load contract interface

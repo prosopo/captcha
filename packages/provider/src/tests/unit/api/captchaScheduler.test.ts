@@ -4,8 +4,8 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfigOutput } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { storeCaptchasExternally } from '../../api/captchaScheduler.js'
-import { Tasks } from '../../tasks/tasks.js'
+import { storeCaptchasExternally } from '../../../api/captchaScheduler.js'
+import { Tasks } from '../../../tasks/tasks.js'
 
 vi.mock('@prosopo/env', () => ({
     ProviderEnvironment: vi.fn().mockImplementation(() => ({

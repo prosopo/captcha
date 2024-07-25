@@ -13,4 +13,3 @@
 // limitations under the License.
 export * from './setup.js'
 export * from './provider.js'
-export * from './funds.js'

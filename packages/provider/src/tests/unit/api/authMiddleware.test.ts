@@ -4,8 +4,8 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { hexToU8a, isHex } from '@polkadot/util'
-import { Tasks } from '../../tasks/tasks.js'
-import { authMiddleware } from '../../api/authMiddleware.js'
+import { authMiddleware } from '../../../api/authMiddleware.js'
+import { Tasks } from '../../../tasks/tasks.js'
 
 vi.mock('@polkadot/util', () => ({
     hexToU8a: vi.fn(),

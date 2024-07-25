@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { Request, Response, NextFunction } from 'express'
 import { ProsopoApiError, ProsopoBaseError, ProsopoEnvError } from '@prosopo/common'
 import { ZodError } from 'zod'
-import { handleErrors } from '../../api/errorHandler.js'
+import { handleErrors } from '../../../api/errorHandler.js'
 
 describe('handleErrors', () => {
     it('should handle ProsopoApiError', () => {

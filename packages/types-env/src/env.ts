@@ -13,12 +13,11 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api/promise/Api'
 import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import { Database } from '@prosopo/types-database' // config
+import { Database } from '@prosopo/types-database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
 
 export interface ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
@@ -29,11 +28,8 @@ export interface ProsopoEnvironment {
     contractName: string
     logger: Logger
     assetsResolver: AssetsResolver | undefined
-    wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair | undefined
-    api: ApiPromise | undefined
     isReady(): Promise<void>
     importDatabase(): Promise<void>
-    getApi(): ApiPromise
 }
