@@ -16,7 +16,7 @@ import { PoWCaptcha } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { ProsopoEnvError } from '@prosopo/common'
 import { stringToHex } from '@polkadot/util'
-import { checkRecentPowSolution as checkRecentPow, checkPowSignature, checkPowSolution } from './powTasksUtils.js'
+import { checkRecentPowSolution, checkPowSignature, checkPowSolution } from './powTasksUtils.js'
 import { KeyringPair } from '@polkadot/keyring/types'
 
 export class PowCaptchaManager {
@@ -63,7 +63,7 @@ export class PowCaptchaManager {
         nonce: number,
         timeout: number
     ): Promise<boolean> {
-        checkRecentPow(challenge, timeout)
+        checkRecentPowSolution(challenge, timeout)
         checkPowSignature(challenge, signature, this.pair.address)
         checkPowSolution(nonce, challenge, difficulty)
 
@@ -102,7 +102,7 @@ export class PowCaptchaManager {
             })
         }
 
-        checkRecentPow(challenge, timeout)
+        checkRecentPowSolution(challenge, timeout)
 
         await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true)
         return true

@@ -18,7 +18,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { PowCaptchaManager } from './powCaptcha/powTasks.js'
 import { ImgCaptchaManager } from './imgCaptcha/imgCaptchaTasks.js'
-import { DatasetManager } from './events/datasetTasks.js'
+import { DatasetManager } from './dataset/datasetTasks.js'
 
 /**
  * @description Tasks that are shared by the API and CLI

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
-import { buildDataset, CaptchaMerkleTree, computeCaptchaSolutionHash } from '@prosopo/datasets'
-import { CaptchaSolution, DatasetRaw } from '@prosopo/types'
+import { CaptchaMerkleTree, computeCaptchaSolutionHash } from '@prosopo/datasets'
+import { CaptchaSolution } from '@prosopo/types'
 
 /**
  * Build merkle tree and get commitment from contract, returning the tree, commitment, and commitmentId
