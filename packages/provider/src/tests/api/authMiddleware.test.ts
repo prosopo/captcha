@@ -7,13 +7,11 @@ import { hexToU8a, isHex } from '@polkadot/util'
 import { Tasks } from '../../tasks/tasks.js'
 import { authMiddleware } from '../../api/authMiddleware.js'
 
-// Mock dependencies
 vi.mock('@polkadot/util', () => ({
     hexToU8a: vi.fn(),
     isHex: vi.fn(),
 }))
 
-// Mock tasks and environment
 const mockTasks = {} as Tasks
 const mockPair = {
     publicKey: 'mockPublicKey',
