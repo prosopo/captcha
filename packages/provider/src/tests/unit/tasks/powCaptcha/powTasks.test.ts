@@ -104,7 +104,7 @@ describe('PowCaptchaManager', () => {
             const timeout = 1000
 
             ;(checkRecentPowSolution as any).mockImplementation(() => {
-                throw new ProsopoEnvError('CAPTCHA.INVALID_RECENT_POW', {
+                throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', {
                     context: {
                         failedFuncName: 'verifyPowCaptchaSolution',
                     },
@@ -114,7 +114,7 @@ describe('PowCaptchaManager', () => {
             await expect(
                 powCaptchaManager.verifyPowCaptchaSolution(challenge, difficulty, signature, nonce, timeout)
             ).rejects.toThrow(
-                new ProsopoEnvError('CAPTCHA.INVALID_RECENT_POW', {
+                new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', {
                     context: {
                         failedFuncName: 'verifyPowCaptchaSolution',
                     },
