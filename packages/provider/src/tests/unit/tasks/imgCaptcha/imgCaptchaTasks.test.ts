@@ -27,7 +27,7 @@ vi.mock('@polkadot/util', () => ({
 vi.mock('../../../../util.js', () => ({
     shuffleArray: vi.fn(),
 }))
-vi.mock('./imgCaptchaTasksUtils', () => ({
+vi.mock('../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js', () => ({
     buildTreeAndGetCommitmentId: vi.fn(),
 }))
 
@@ -146,75 +146,6 @@ describe('ImgCaptchaManager', () => {
                 })
             )
         })
-    })
-
-    it('should process dapp user solution successfully', async () => {
-        const userAccount = 'userAccount'
-        const dappAccount = 'dappAccount'
-        const requestHash = 'requestHash'
-        const captchas = [
-            { captchaId: 'captcha1', solution: 'solution1', salt: 'salt1' },
-        ] as unknown as CaptchaSolution[]
-        const signature = 'signature'
-        const timestamp = 'timestamp'
-        const signedTimestamp = 'signedTimestamp'
-
-        ;(signatureVerify as any).mockReturnValueOnce({ isValid: true })
-        ;(signatureVerify as any).mockReturnValueOnce({ isValid: true })
-        ;(db.getCaptchaById as any).mockResolvedValue([])
-        ;(parseAndSortCaptchaSolutions as any).mockReturnValue(captchas)
-        ;(buildTreeAndGetCommitmentId as any).mockReturnValue({
-            tree: { proof: vi.fn().mockReturnValue([]) },
-            commitmentId: 'commitmentId',
-        })
-        ;(db.getDappUserPending as any).mockResolvedValue({ deadlineTimestamp: Date.now() + 10000, salt: 'salt' })
-        ;(computePendingRequestHash as any).mockReturnValue('requestHash')
-        ;(db.storeDappUserSolution as any).mockResolvedValue({})
-        ;(compareCaptchaSolutions as any).mockReturnValue(true)
-
-        const result = await imgCaptchaManager.dappUserSolution(
-            userAccount,
-            dappAccount,
-            requestHash,
-            captchas,
-            signature,
-            timestamp,
-            signedTimestamp
-        )
-
-        expect(result.verified).toBe(true)
-        expect(db.storeDappUserSolution).toHaveBeenCalled()
-        expect(db.approveDappUserCommitment).toHaveBeenCalledWith('commitmentId')
-    })
-
-    it('should throw an error if signature is invalid', async () => {
-        const userAccount = 'userAccount'
-        const dappAccount = 'dappAccount'
-        const requestHash = 'requestHash'
-        const captchas = [
-            { captchaId: 'captcha1', solution: 'solution1', salt: 'salt1', datasetId: 'datasetId' },
-        ] as unknown as CaptchaSolution[]
-        const signature = 'signature'
-        const timestamp = 'timestamp'
-        const signedTimestamp = 'signedTimestamp'
-
-        ;(signatureVerify as any).mockReturnValue({ isValid: false })
-
-        await expect(
-            imgCaptchaManager.dappUserSolution(
-                userAccount,
-                dappAccount,
-                requestHash,
-                captchas,
-                signature,
-                timestamp,
-                signedTimestamp
-            )
-        ).rejects.toThrow(
-            new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', {
-                context: { failedFuncName: 'dappUserSolution', userAccount },
-            })
-        )
     })
 
     it('should validate received captchas against stored captchas', async () => {

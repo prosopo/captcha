@@ -18,7 +18,7 @@ vi.mock('@prosopo/env', () => ({
     })),
 }))
 
-vi.mock('../../tasks/tasks.js', () => ({
+vi.mock('../../../tasks/tasks.js', () => ({
     Tasks: vi.fn().mockImplementation(() => ({
         datasetManager: {
             storeCommitmentsExternal: vi.fn().mockResolvedValue(undefined),
