@@ -7,7 +7,6 @@ import { ProviderEnvironment } from '@prosopo/env'
 import { storeCaptchasExternally } from '../../api/captchaScheduler.js'
 import { Tasks } from '../../tasks/tasks.js'
 
-// Mock dependencies
 vi.mock('@prosopo/env', () => ({
     ProviderEnvironment: vi.fn().mockImplementation(() => ({
         isReady: vi.fn().mockResolvedValue(true),
