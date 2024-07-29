@@ -17,10 +17,12 @@ import {
     Captcha,
     CaptchaSolution,
     CaptchaStates,
+    CaptchaStatus,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
+    Hash,
     PendingCaptchaRequest,
     PowCaptcha,
     ScheduledTaskNames,
@@ -46,7 +48,6 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { CaptchaStatus, Hash } from '@prosopo/captcha-contract/types-returns'
 import { DeleteResult, ServerApiVersion } from 'mongodb'
 import { isHex } from '@polkadot/util/is'
 import mongoose, { Connection } from 'mongoose'
@@ -408,8 +409,16 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             return doc
         }
 
+        const allDatasetsInDb = await this.tables?.dataset.find()
+
+        if (!allDatasetsInDb) {
+            throw new Error('no datasets in db')
+        }
+
+        const allDatasetIds = allDatasetsInDb.map((dataset) => dataset.datasetId)
+
         throw new ProsopoDBError('DATABASE.DATASET_GET_FAILED', {
-            context: { failedFuncName: this.getDatasetDetails.name, datasetId },
+            context: { failedFuncName: this.getDatasetDetails.name, datasetId, allDatasetIds },
         })
     }
 
@@ -525,7 +534,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
         try {
             const updateResult = await this.tables.powCaptcha.updateOne({ challenge }, { $set: { checked } })
-
             if (updateResult.matchedCount === 0) {
                 this.logger.info('No PowCaptcha record found to update', { challenge, checked })
                 throw new ProsopoDBError('DATABASE.CAPTCHA_GET_FAILED', {

@@ -32,7 +32,7 @@ export async function storeCaptchasExternally(pair: KeyringPair, config: Prosopo
 
     const job = new CronJob(cronSchedule, async () => {
         env.logger.log('storeCommitmentsExternal task....')
-        await tasks.storeCommitmentsExternal().catch((err) => {
+        await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
             env.logger.error(err)
         })
     })
