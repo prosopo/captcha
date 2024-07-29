@@ -192,8 +192,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
         try {
-            //temp
-            return res.json({ version, ...{ message: 'HOW ARE WE GONNA GET PROVIDER DETAILS' } })
+            return res.json({ version, ...{ message: 'Provider online' } })
         } catch (err) {
             tasks.logger.error(err)
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
