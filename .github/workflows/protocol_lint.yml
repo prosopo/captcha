@@ -4,7 +4,7 @@ name: protocol_lint
 
 on:
     pull_request:
-        branches: [main, dev, release/*]
+        branches: [main, dev, staging, release/*]
         paths:
             - 'protocol/**'
             - '.github/workflows/protocol_clippy.yml'
