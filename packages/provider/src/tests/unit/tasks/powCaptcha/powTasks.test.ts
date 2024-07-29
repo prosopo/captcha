@@ -5,9 +5,9 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { Database } from '@prosopo/types-database'
 import { PowCaptchaManager } from '../../../../tasks/powCaptcha/powTasks.js'
 import {
+    checkRecentPowSolution,
     checkPowSignature,
     checkPowSolution,
-    checkRecentPowSolution,
 } from '../../../../tasks/powCaptcha/powTasksUtils.js'
 
 vi.mock('@polkadot/util-crypto', () => ({

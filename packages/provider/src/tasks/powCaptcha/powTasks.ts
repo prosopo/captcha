@@ -16,8 +16,8 @@ import { PoWCaptcha } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { ProsopoEnvError } from '@prosopo/common'
 import { stringToHex } from '@polkadot/util'
-import { checkRecentPowSolution, checkPowSignature, checkPowSolution } from './powTasksUtils.js'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { checkRecentPowSolution, checkPowSignature, checkPowSolution } from './powTasksUtils.js'
 
 export class PowCaptchaManager {
     pair: KeyringPair
