@@ -4,7 +4,7 @@ name: cache
 
 on:
     push:
-        branches: [main, dev]
+        branches: [main, dev, staging]
     workflow_dispatch:
 
 concurrency:
