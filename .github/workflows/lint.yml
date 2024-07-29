@@ -92,13 +92,4 @@ jobs:
 
             - run: npm run -w @prosopo/scripts build
 
-            - name: lint
-              run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-
-                    # get the files which have changed in the PR
-                    files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
-
-                    echo "files: $files"
-
-                    npm run lint:cmd -- $files
+            - run: npm run lint
