@@ -121,7 +121,7 @@ describe('Image Captcha Integration Tests', () => {
                 dapp: dappAccount,
                 requestHash: data.requestHash,
                 signature: u8aToHex(pair.sign(stringToU8a(data.requestHash))),
-                signedTimestamp: data.signedTimestamp,
+                timestampSignature: data.timestampSignature,
                 timestamp: data.timestamp,
                 user: userAccount,
             }

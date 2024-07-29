@@ -80,7 +80,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
         solutions: CaptchaSolution[],
         salt: string,
         timestamp: string,
-        signedTimestamp: string
+        timestampSignature: string
     ): Promise<TCaptchaSubmitResult> {
         const tree = new CaptchaMerkleTree()
 
@@ -116,7 +116,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
                 this.userAccount,
                 salt,
                 timestamp,
-                signedTimestamp,
+                timestampSignature,
                 signature
             )
         } catch (error) {

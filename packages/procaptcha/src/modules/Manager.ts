@@ -263,7 +263,7 @@ export function Manager(
                 captchaSolution,
                 salt,
                 challenge.timestamp,
-                challenge.signedTimestamp
+                challenge.timestampSignature
             )
 
             // mark as is human if solution has been approved
@@ -292,7 +292,7 @@ export function Manager(
                         [ApiParams.commitmentId]: hashToHex(submission[1]),
                         [ApiParams.blockNumber]: blockNumber,
                         [ApiParams.timestamp]: challenge.timestamp,
-                        [ApiParams.signedTimestamp]: challenge.signedTimestamp,
+                        [ApiParams.timestampSignature]: challenge.timestampSignature,
                     })
                 )
                 setValidChallengeTimeout()

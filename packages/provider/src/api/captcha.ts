@@ -66,7 +66,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                     })),
                     requestHash: taskData.requestHash,
                     timestamp: taskData.timestamp,
-                    signedTimestamp: taskData.signedTime,
+                    timestampSignature: taskData.signedTime,
                 }
                 return res.json(captchaResponse)
             } catch (err) {
@@ -101,7 +101,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 parsed[ApiParams.captchas],
                 parsed[ApiParams.signature],
                 parsed[ApiParams.timestamp],
-                parsed[ApiParams.signedTimestamp]
+                parsed[ApiParams.timestampSignature]
             )
 
             const returnValue: CaptchaSolutionResponse = {

@@ -36,6 +36,6 @@ export enum ApiParams {
     timeouts = 'timeouts',
     token = 'token',
     secret = 'secret',
-    signedTimestamp = 'signedTimestamp',
+    timestampSignature = 'timestampSignature',
     timestamp = 'timestamp',
 }

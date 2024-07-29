@@ -64,7 +64,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
         userAccount: string,
         salt: string,
         timestamp: string,
-        signedTimestamp: string,
+        timestampSignature: string,
         signature?: string
     ): Promise<CaptchaSolutionResponse> {
         const captchaSolutionBody: CaptchaSolutionBodyType = CaptchaSolutionBody.parse({
@@ -75,7 +75,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
             salt,
             signature,
             [ApiParams.timestamp]: timestamp,
-            [ApiParams.signedTimestamp]: signedTimestamp,
+            [ApiParams.timestampSignature]: timestampSignature,
         })
         return this.post(ApiPaths.SubmitImageCaptchaSolution, captchaSolutionBody)
     }

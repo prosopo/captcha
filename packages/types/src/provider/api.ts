@@ -136,7 +136,7 @@ export interface DappUserSolutionResult {
     partialFee?: string
     [ApiParams.verified]: boolean
     [ApiParams.timestamp]: string
-    [ApiParams.signedTimestamp]: string
+    [ApiParams.timestampSignature]: string
 }
 
 export interface CaptchaSolutionResponse extends DappUserSolutionResult {
@@ -161,7 +161,7 @@ export type CaptchaResponseBody = {
     [ApiParams.captchas]: Captcha[]
     [ApiParams.requestHash]: string
     [ApiParams.timestamp]: string
-    [ApiParams.signedTimestamp]: string
+    [ApiParams.timestampSignature]: string
 }
 
 export const CaptchaSolutionBody = object({
@@ -171,7 +171,7 @@ export const CaptchaSolutionBody = object({
     [ApiParams.requestHash]: string(),
     [ApiParams.signature]: string(), // the signature to prove account ownership
     [ApiParams.timestamp]: string(),
-    [ApiParams.signedTimestamp]: string(),
+    [ApiParams.timestampSignature]: string(),
 })
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>

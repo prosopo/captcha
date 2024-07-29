@@ -116,7 +116,7 @@ export class ImgCaptchaManager {
         captchas: CaptchaSolution[],
         signature: string, // the signature to indicate ownership of account
         timestamp: string,
-        signedTimestamp: string
+        timestampSignature: string
     ): Promise<DappUserSolutionResult> {
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
@@ -128,7 +128,7 @@ export class ImgCaptchaManager {
         }
 
         // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
-        const timestampSigVerify = signatureVerify(stringToHex(timestamp), signedTimestamp, this.pair.address)
+        const timestampSigVerify = signatureVerify(stringToHex(timestamp), timestampSignature, this.pair.address)
 
         if (!timestampSigVerify.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
@@ -145,7 +145,7 @@ export class ImgCaptchaManager {
             captchas: [],
             verified: false,
             timestamp: timestamp,
-            signedTimestamp,
+            timestampSignature,
         }
 
         const { storedCaptchas, receivedCaptchas, captchaIds } =
@@ -197,7 +197,7 @@ export class ImgCaptchaManager {
                         proof: tree.proof(id),
                     })),
                     timestamp: timestamp,
-                    signedTimestamp: signedTimestamp,
+                    timestampSignature: timestampSignature,
                     verified: true,
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
@@ -208,7 +208,7 @@ export class ImgCaptchaManager {
                         proof: [[]],
                     })),
                     timestamp,
-                    signedTimestamp,
+                    timestampSignature,
                     verified: false,
                 }
             }
