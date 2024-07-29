@@ -4,7 +4,7 @@ name: tests
 
 on:
     pull_request:
-        branches: [main, dev, release/*]
+        branches: [main, dev, staging, release/*]
     workflow_dispatch:
 
 concurrency:
