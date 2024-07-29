@@ -30,7 +30,7 @@ import { ProviderApi } from '@prosopo/api'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { sleep } from '@prosopo/procaptcha'
 import { at, solvePoW } from '@prosopo/util'
-import { loadBalancer } from './Providers.js'
+import { loadBalancer } from '@prosopo/load-balancer'
 
 export const Manager = (
     configInput: ProcaptchaClientConfigInput,
@@ -214,7 +214,8 @@ export const Manager = (
         // TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
         //  to ensure that the random selection was completed within a certain timeframe
 
-        const PROVIDERS = loadBalancer('development')
+        const environment = getConfig().defaultEnvironment
+        const PROVIDERS = loadBalancer(environment)
 
         const randomProvderObj = at(PROVIDERS, randomIntBetween(0, PROVIDERS.length - 1))
         return {

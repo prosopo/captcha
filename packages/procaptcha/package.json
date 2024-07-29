@@ -44,6 +44,7 @@
         "@prosopo/captcha-contract": "1.0.2",
         "@prosopo/common": "1.0.2",
         "@prosopo/datasets": "1.0.2",
+        "@prosopo/load-balancer": "1.0.2",
         "@prosopo/procaptcha-common": "1.0.2",
         "@prosopo/types": "1.0.2",
         "@prosopo/util": "1.0.2",

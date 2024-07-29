@@ -28,7 +28,6 @@ import {
     encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { loadBalancer } from './providers.js'
 import { ProsopoDatasetError, ProsopoEnvError, ProsopoError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { at, hashToHex } from '@prosopo/util'
@@ -38,6 +37,7 @@ import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { loadBalancer } from '@prosopo/load-balancer'
 
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
