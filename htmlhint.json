@@ -1,0 +1,11 @@
+{
+    "exclude": [
+        "**/node_modules/**"
+    ],
+    "plugins": [
+        "htmlhint-plugin-svg"
+    ],
+    "rules": {
+        "htmlhint-plugin-svg": true
+    }
+}
