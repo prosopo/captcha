@@ -35,12 +35,9 @@ export default defineConfig(async function ({ command, mode }) {
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(mode),
-        'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
         'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
-        'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
         // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
-        'process.env.PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.PROSOPO_CONTRACT_ADDRESS),
         'process.env.PROSOPO_WEB2': JSON.stringify(process.env.PROSOPO_WEB2),
         'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
         'process.env.PROSOPO_SERVER_PORT': JSON.stringify(process.env.PROSOPO_SERVER_PORT),
