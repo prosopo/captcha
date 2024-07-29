@@ -11,9 +11,6 @@
         },
         {
             "path": "../types/tsconfig.cjs.json"
-        },
-        {
-            "path": "../../contracts/captcha/tsconfig.cjs.json"
         }
     ]
 }

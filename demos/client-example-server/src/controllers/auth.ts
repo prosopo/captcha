@@ -52,22 +52,13 @@ const verify = async (
             method: 'POST',
             body: JSON.stringify({ [ApiParams.token]: token, [ApiParams.secret]: secret }),
         })
-        console.log('Status:', response.status, 'Status Text:', response.statusText)
 
         const verified = (await response.json()).verified
-
-        console.log(`Verified: ${verified}`)
-
         return verified
     } else {
         // verify using the TypeScript library
-        console.log('Verifying using the TypeScript library')
-
         const verified = await prosopoServer.isVerified(token)
-
-        console.log(`Verified: ${verified}`)
-
-        return await prosopoServer.isVerified(token)
+        return verified
     }
 }
 
@@ -89,16 +80,11 @@ const signup = async (
         const payload = SubscribeBodySpec.parse(req.body)
         const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
         const prosopoServer = new ProsopoServer(config, pair)
-        await prosopoServer.isReady()
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
         }
-        console.log('Request payload', payload)
-
         // get the procaptcha-response token
         const token = payload[ApiParams.procaptchaResponse]
-
-        console.log('Sending Procaptcha token', token)
 
         if (!config.account.secret) {
             throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
@@ -129,7 +115,7 @@ const signup = async (
                     })
             }
         } else {
-            res.status(401).json({ message: 'user has not completed a captcha' })
+            res.status(401).json({ message: 'user has not completed a captcha', verified })
         }
     } catch (err) {
         console.error('error', err)
@@ -148,7 +134,6 @@ const login = async (
     const User = mongoose.model<UserInterface>('User')
     const pair = await getPairAsync(config.networks[config.defaultNetwork], config.account.secret)
     const prosopoServer = new ProsopoServer(config, pair)
-    await prosopoServer.isReady()
     // checks if email exists
     await User.findOne({
         email: req.body.email,

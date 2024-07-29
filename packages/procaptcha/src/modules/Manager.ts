@@ -16,38 +16,28 @@ import {
     ApiParams,
     CaptchaResponseBody,
     CaptchaSolution,
-    CaptchaWithProof,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigInput,
     ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
+    RandomProvider,
     StoredEvents,
     TCaptchaSubmitResult,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'
-import { Keyring } from '@polkadot/keyring'
-import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
-import {
-    ProsopoContractError,
-    ProsopoDatasetError,
-    ProsopoEnvError,
-    ProsopoError,
-    trimProviderUrl,
-} from '@prosopo/common'
+import { ProsopoDatasetError, ProsopoEnvError, ProsopoError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { at, hashToHex } from '@prosopo/util'
 import { buildUpdateState, getDefaultEvents } from '@prosopo/procaptcha-common'
 import { randomAsHex } from '@polkadot/util-crypto/random'
 import { sleep } from '../utils/utils.js'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
 import storage from './storage.js'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
+import { loadBalancer } from '@prosopo/load-balancer'
 
 const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -72,6 +62,26 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
         })
     }
     return network
+}
+
+const getRandomActiveProvider = (): RandomProvider => {
+    const randomIntBetween = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
+
+    // TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
+    //  to ensure that the random selection was completed within a certain timeframe
+
+    const PROVIDERS = loadBalancer('development')
+
+    const randomProvderObj = at(PROVIDERS, randomIntBetween(0, PROVIDERS.length - 1))
+    return {
+        providerAccount: randomProvderObj.address,
+        provider: {
+            url: randomProvderObj.url,
+            datasetId: randomProvderObj.datasetId,
+            datasetIdContent: randomProvderObj.datasetIdContent,
+        },
+        blockNumber: 0,
+    }
 }
 
 /**
@@ -137,6 +147,7 @@ export function Manager(
             if (state.isHuman) {
                 return
             }
+            await cryptoWaitReady()
 
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
@@ -149,104 +160,26 @@ export function Manager(
             // allow UI to catch up with the loading state
             await sleep(100)
 
-            // check accounts / setup accounts
             const account = await loadAccount()
-
-            // account has been found, check if account is already marked as human
-            // first, ask the smart contract
-            const contract = await loadContract()
-            // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            let contractIsHuman = false
-            try {
-                contractIsHuman = (
-                    await contract.query.dappOperatorIsHumanUser(account.account.address, config.solutionThreshold)
-                ).value
-                    .unwrap()
-                    .unwrap()
-            } catch (error) {
-                console.warn(error)
-            }
-
-            if (contractIsHuman) {
-                updateState({ isHuman: true, loading: false })
-                events.onHuman(
-                    encodeProcaptchaOutput({
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.blockNumber]: getBlockNumber(),
-                    })
-                )
-                setValidChallengeTimeout()
-                return
-            }
-
-            // Check if there is a provider in local storage or get a random one from the contract
-            const procaptchaStorage = storage.getProcaptchaStorage()
-            let providerApi: ProviderApi
-            if (procaptchaStorage.providerUrl && procaptchaStorage.blockNumber) {
-                providerApi = await loadProviderApi(procaptchaStorage.providerUrl)
-
-                // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
-                // so contact the provider to check if this is the case
-                try {
-                    const extension = getExtension(account)
-                    if (!extension || !extension.signer || !extension.signer.signRaw) {
-                        throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION')
-                    }
-
-                    const signRaw = extension.signer.signRaw
-                    const { signature } = await signRaw({
-                        address: account.account.address,
-                        data: procaptchaStorage.blockNumber.toString(),
-                        type: 'bytes',
-                    })
-                    const token = encodeProcaptchaOutput({
-                        [ApiParams.user]: account.account.address,
-                        [ApiParams.dapp]: getDappAccount(),
-                        [ApiParams.blockNumber]: procaptchaStorage.blockNumber,
-                    })
-                    const verifyDappUserResponse = await providerApi.verifyUser(
-                        token,
-                        signature,
-                        configOptional.captchas.image.cachedTimeout
-                    )
-                    if (
-                        verifyDappUserResponse.verified &&
-                        verifyDappUserResponse.commitmentId &&
-                        verifyDappUserResponse.blockNumber
-                    ) {
-                        updateState({ isHuman: true, loading: false })
-                        const output = {
-                            [ApiParams.providerUrl]: procaptchaStorage.providerUrl,
-                            [ApiParams.user]: account.account.address,
-                            [ApiParams.dapp]: getDappAccount(),
-                            [ApiParams.commitmentId]: hashToHex(verifyDappUserResponse.commitmentId),
-                            [ApiParams.blockNumber]: verifyDappUserResponse.blockNumber,
-                        }
-                        events.onHuman(encodeProcaptchaOutput(output))
-                        setValidChallengeTimeout()
-                        return
-                    }
-                } catch (err) {
-                    // if the provider is down, we should continue with the process of selecting a random provider
-                    console.error('Error contacting provider from storage', procaptchaStorage.providerUrl)
-                    // continue as if the provider was not in storage
-                }
-            }
+            const contract = getNetwork(config).contract.address
 
             // get a random provider
-            const getRandomProviderResponse: RandomProvider = await wrapQuery(
-                contract.query.getRandomActiveProvider,
-                contract.query
-            )(account.account.address, getDappAccount())
-            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
+            const getRandomProviderResponse = getRandomActiveProvider()
 
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+            const blockNumber = getRandomProviderResponse.blockNumber
+            const providerUrl = getRandomProviderResponse.provider.url
             // get the provider api inst
-            providerApi = await loadProviderApi(providerUrl)
+            const providerApi = await loadProviderApi(providerUrl)
 
-            // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+            const captchaApi = new ProsopoCaptchaApi(
+                account.account.address,
+                contract,
+                getRandomProviderResponse,
+                providerApi,
+                config.web2,
+                config.account.address || ''
+            )
+            updateState({ captchaApi })
 
             const challenge = await captchaApi.getCaptchaChallenge()
 
@@ -256,9 +189,7 @@ export function Manager(
 
             // setup timeout, taking the timeout from the individual captcha or the global default
             const timeMillis: number = challenge.captchas
-                .map(
-                    (captcha: CaptchaWithProof) => captcha.captcha.timeLimitMs || config.captchas.image.challengeTimeout
-                )
+                .map((captcha) => captcha.timeLimitMs || config.captchas.image.challengeTimeout)
                 .reduce((a: number, b: number) => a + b)
             const timeout = setTimeout(() => {
                 events.onChallengeExpired()
@@ -296,38 +227,43 @@ export function Manager(
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
-                (captcha: CaptchaWithProof, index: number) => {
-                    const solution = at(state.solutions, index)
-                    return {
-                        captchaId: captcha.captcha.captchaId,
-                        captchaContentId: captcha.captcha.captchaContentId,
-                        salt,
-                        solution,
-                    }
+            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
+                const solution = at(state.solutions, index)
+                return {
+                    captchaId: captcha.captchaId,
+                    captchaContentId: captcha.captchaContentId,
+                    salt,
+                    solution,
                 }
-            )
+            })
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
             const signer = getExtension(account).signer
 
             const first = at(challenge.captchas, 0)
-            if (!first.captcha.datasetId) {
+            if (!first.datasetId) {
                 throw new ProsopoDatasetError('CAPTCHA.INVALID_CAPTCHA_ID', {
                     context: { error: 'No datasetId set for challenge' },
                 })
             }
 
-            const captchaApi = getCaptchaApi()
+            const captchaApi = state.captchaApi
+
+            if (!captchaApi) {
+                throw new ProsopoError('CAPTCHA.INVALID_TOKEN', {
+                    context: { error: 'No Captcha API found in state' },
+                })
+            }
 
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
                 signer,
                 challenge.requestHash,
-                first.captcha.datasetId,
                 captchaSolution,
-                salt
+                salt,
+                challenge.timestamp,
+                challenge.timestampSignature
             )
 
             // mark as is human if solution has been approved
@@ -345,7 +281,7 @@ export function Manager(
                 loading: false,
             })
             if (state.isHuman) {
-                const providerUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
+                const providerUrl = captchaApi.provider.provider.url
                 // cache this provider for future use
                 storage.setProcaptchaStorage({ ...storage.getProcaptchaStorage(), providerUrl, blockNumber })
                 events.onHuman(
@@ -355,6 +291,8 @@ export function Manager(
                         [ApiParams.dapp]: getDappAccount(),
                         [ApiParams.commitmentId]: hashToHex(submission[1]),
                         [ApiParams.blockNumber]: blockNumber,
+                        [ApiParams.timestamp]: challenge.timestamp,
+                        [ApiParams.timestampSignature]: challenge.timestampSignature,
                     })
                 )
                 setValidChallengeTimeout()
@@ -417,27 +355,6 @@ export function Manager(
         updateState({ index: state.index + 1 })
     }
 
-    const loadCaptchaApi = async (
-        contract: ProsopoCaptchaContract,
-        provider: RandomProvider,
-        providerApi: ProviderApi
-    ) => {
-        const config = getConfig()
-        // setup the captcha api to carry out a challenge
-        const captchaApi = new ProsopoCaptchaApi(
-            getAccount().account.address,
-            contract,
-            provider,
-            providerApi,
-            config.web2,
-            getDappAccount()
-        )
-
-        updateState({ captchaApi })
-
-        return getCaptchaApi()
-    }
-
     const loadProviderApi = async (providerUrl: string) => {
         const config = getConfig()
         const network = getNetwork(config)
@@ -470,15 +387,6 @@ export function Manager(
         // clear timeout just in case a timer is still active (shouldn't be)
         clearTimeout()
         updateState(defaultState())
-    }
-
-    const getCaptchaApi = () => {
-        if (!state.captchaApi) {
-            throw new ProsopoEnvError('API.UNKNOWN', {
-                context: { error: 'Captcha api not set', state },
-            })
-        }
-        return state.captchaApi
     }
 
     /**
@@ -522,10 +430,7 @@ export function Manager(
     }
 
     const getBlockNumber = () => {
-        if (!state.blockNumber) {
-            throw new ProsopoContractError('CAPTCHA.INVALID_BLOCK_NO', { context: { error: 'Block number not found' } })
-        }
-        const blockNumber: number = state.blockNumber
+        const blockNumber: number = state.blockNumber || 0
         return blockNumber
     }
 
@@ -534,31 +439,8 @@ export function Manager(
         if (!account.extension) {
             throw new ProsopoEnvError('ACCOUNT.NO_POLKADOT_EXTENSION', { context: { error: 'Extension not loaded' } })
         }
-        return account.extension
-    }
 
-    /**
-     * Load the contract instance using addresses from config.
-     */
-    const loadContract = async (): Promise<ProsopoCaptchaContract> => {
-        const config = getConfig()
-        const network = getNetwork(config)
-        const api = await ApiPromise.create({
-            provider: new WsProvider(network.endpoint),
-            initWasm: false,
-            noInitWarn: true,
-        })
-        // TODO create a shared keyring that's stored somewhere
-        const type = 'sr25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
-        return new ProsopoCaptchaContract(
-            api,
-            JSON.parse(abiJson),
-            network.contract.address,
-            'prosopo',
-            0,
-            keyring.addFromAddress(getAccount().account.address)
-        )
+        return account.extension
     }
 
     const exportData = async (events: StoredEvents) => {
@@ -569,11 +451,7 @@ export function Manager(
         if (providerUrlFromStorage) {
             providerApi = await loadProviderApi(providerUrlFromStorage)
         } else {
-            const contract = await loadContract()
-            const getRandomProviderResponse: RandomProvider = await wrapQuery(
-                contract.query.getRandomActiveProvider,
-                contract.query
-            )(getAccount().account.address, getDappAccount())
+            const getRandomProviderResponse: RandomProvider = getRandomActiveProvider()
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             providerApi = await loadProviderApi(providerUrl)
         }

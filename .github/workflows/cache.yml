@@ -74,14 +74,6 @@ jobs:
 
             - run: npm ci
 
-            - run: npm -w @prosopo/protocol run rustfmt
-
-            - run: npm -w @prosopo/protocol run clippy
-
-            - run: npm -w @prosopo/protocol run build:all
-
-            - run: npm -w @prosopo/protocol run test:all
-
             # install cypress so we don't have to do that every time
             - run: npx cypress install
 

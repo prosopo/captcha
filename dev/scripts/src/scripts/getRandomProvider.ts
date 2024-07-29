@@ -28,10 +28,10 @@ async function main() {
     const tasks = new Tasks(env)
     const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ['', '']
     const dappContractAccount = process.env.PROSOPO_SITE_KEY || ''
-    const provider = (await tasks.contract.query.getRandomActiveProvider(address, dappContractAccount)).value
-        .unwrap()
-        .unwrap()
-    console.log(provider)
+    // const provider = (await tasks.contract.query.getRandomActiveProvider(address, dappContractAccount)).value
+    //     .unwrap()
+    //     .unwrap()
+    console.log('Tasks no longer makes contract queries. Please update to add in RPC calls.')
     process.exit()
 }
 

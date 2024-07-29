@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
-import { ApiPromise } from '@polkadot/api/promise/Api'
 import { Extension } from './Extension.js'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
@@ -21,11 +20,9 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { default as Signer } from '@polkadot/extension-base/page/Signer'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import { hashComponents, load } from '@fingerprintjs/fingerprintjs'
 import { picassoCanvas } from '@prosopo/util'
+import { getFingerprint } from '@prosopo/detector'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 import { version } from '@prosopo/util'
@@ -37,10 +34,7 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  */
 export class ExtensionWeb2 extends Extension {
     public async getAccount(config: ProcaptchaClientConfigOutput): Promise<Account> {
-        const network = this.getNetwork(config)
-        const wsProvider = new WsProvider(network.endpoint)
-
-        const account = await this.createAccount(wsProvider)
+        const account = await this.createAccount(config)
         const extension: InjectedExtension = await this.createExtension(account)
 
         return {
@@ -82,7 +76,7 @@ export class ExtensionWeb2 extends Extension {
         }
     }
 
-    private async createAccount(wsProvider: WsProvider): Promise<AccountWithKeyPair> {
+    private async createAccount(config: ProcaptchaClientConfigOutput): Promise<AccountWithKeyPair> {
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
@@ -93,36 +87,20 @@ export class ExtensionWeb2 extends Extension {
             seed: 42,
         }
 
-        const browserEntropy = await this.getFingerprint()
+        const browserEntropy = await getFingerprint()
         const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
-        const api = await ApiPromise.create({ provider: wsProvider, initWasm: false, noInitWarn: true })
-        const type: KeypairType = 'ed25519'
-        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+        const type: KeypairType = 'sr25519'
+        const keyring = new Keyring({ type, ss58Format: config.networks[config.defaultNetwork].ss58Format })
         const keypair = keyring.addFromMnemonic(mnemonic)
-        const address =
-            keypair.address.length === 42
-                ? keypair.address
-                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
+        const address = keypair.address
         return {
             address,
-            type,
             name: address,
             keypair,
         }
-    }
-
-    private async getFingerprint(): Promise<string> {
-        // Initialize an agent at application startup.
-        const fpPromise = load()
-        // Get the visitor identifier when you need it.
-        const fp = await fpPromise
-        const result = await fp.get()
-        // strip out the components that change in incognito mode
-        const { screenFrame, ...componentsReduced } = result.components
-        return hashComponents(componentsReduced)
     }
 
     getNetwork = (config: ProcaptchaClientConfigOutput) => {

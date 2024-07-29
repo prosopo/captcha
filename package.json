@@ -12,11 +12,8 @@
         "cmd:about": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
         "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd || exit $?; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
-        "build:contracts": "npm run -w @prosopo/protocol build:all",
-        "build:typechain": "npm run build:contracts && cd dev/scripts && npm run build && npm run cli -- import_all_contracts && cd ../.. && npm run lint-fix:contracts",
         "build:all": "npm run ws -- --if-present build",
         "build:all:cjs": "npm run ws -- --if-present build:cjs",
-        "build:provider-gui": "npm run -w @prosopo/provider-gui build",
         "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle:dev",
         "rebuild": "f() { npm run cmd -- \"npm run clean %s\" $@ ; npm run cmd -- \"npm run build %s\" $@ ;}; f",
         "rebuild:npm": "npm run clean:npm && npm i",
@@ -37,7 +34,6 @@
         "setup": "npm -w @prosopo/scripts run setup",
         "setup:all": "npm run deploy_protocol && npm run setup",
         "start:provider": "npm -w @prosopo/cli run start",
-        "start:provider-gui": "npm -w @prosopo/provider-gui run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:demo:pow": "npm -w @prosopo/client-pow-example run start",
@@ -88,12 +84,9 @@
         "npm": ">=9"
     },
     "workspaces": [
-        "protocol",
-        "contracts/*",
         "dev/*",
         "packages/*",
-        "demos/*",
-        "provider-gui"
+        "demos/*"
     ],
     "dependencies": {
         "@prosopo/flux": "1.0.2"
