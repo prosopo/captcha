@@ -24,8 +24,8 @@ export const ProcaptchaOutputSchema = object({
     [ApiParams.blockNumber]: number(),
     [ApiParams.challenge]: string().optional(),
     [ApiParams.nonce]: number().optional(),
-    [ApiParams.timestamp]: string().optional(),
-    [ApiParams.timestampSignature]: string().optional(),
+    [ApiParams.timestamp]: string(),
+    [ApiParams.timestampSignature]: string(),
 })
 
 /**
@@ -46,8 +46,8 @@ export const ProcaptchaTokenCodec = Struct({
     [ApiParams.blockNumber]: u32,
     [ApiParams.challenge]: Option(str),
     [ApiParams.nonce]: Option(u32),
-    [ApiParams.timestamp]: Option(str),
-    [ApiParams.timestampSignature]: Option(str),
+    [ApiParams.timestamp]: str,
+    [ApiParams.timestampSignature]: str,
 })
 
 export const ProcaptchaTokenSpec = string().startsWith('0x')
@@ -60,8 +60,6 @@ export const encodeProcaptchaOutput = (procaptchaOutput: ProcaptchaOutput): Proc
             [ApiParams.providerUrl]: undefined,
             [ApiParams.challenge]: undefined,
             [ApiParams.nonce]: undefined,
-            [ApiParams.timestamp]: undefined,
-            [ApiParams.timestampSignature]: undefined,
             // override any optional fields by spreading the procaptchaOutput
             ...procaptchaOutput,
         })

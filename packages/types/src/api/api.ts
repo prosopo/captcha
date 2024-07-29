@@ -18,10 +18,12 @@ import {
     GetPowCaptchaResponse,
     ImageVerificationResponse,
     PowCaptchaSolutionResponse,
+    Provider,
     ProviderRegistered,
+    RandomProvider,
 } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
-import { Provider, RandomProvider, StoredEvents } from '../procaptcha/index.js'
+import { StoredEvents } from '../procaptcha/index.js'
 
 export interface ProviderApiInterface {
     getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<CaptchaResponseBody>

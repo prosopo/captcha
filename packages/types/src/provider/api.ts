@@ -73,35 +73,17 @@ type RateLimit = {
     limit: number
 }
 
-type Hash = string | number[]
+export type Hash = string | number[]
 
-//temp
-enum Payee {
-    provider = 'Provider',
-    dapp = 'Dapp',
-}
-
-//temp
-type Provider = {
-    status: GovernanceStatus
-    fee: number
-    payee: Payee
+export type Provider = {
     url: Array<number>
     datasetId: Hash
     datasetIdContent: Hash
 }
 
-//temp
-enum GovernanceStatus {
-    active = 'Active',
-    inactive = 'Inactive',
-}
+export type FrontendProvider = Omit<Provider, 'url'> & { url: string }
 
-//temp
-type FrontendProvider = Omit<Provider, 'url'> & { url: string }
-
-//temp
-type RandomProvider = {
+export type RandomProvider = {
     providerAccount: string
     provider: FrontendProvider
     blockNumber: number
@@ -218,6 +200,8 @@ export interface GetPowCaptchaResponse {
     [ApiParams.challenge]: string
     [ApiParams.difficulty]: number
     [ApiParams.signature]: string
+    [ApiParams.timestamp]: string
+    [ApiParams.timestampSignature]: string
 }
 
 export interface PowCaptchaSolutionResponse {

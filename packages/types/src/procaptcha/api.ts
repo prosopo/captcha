@@ -11,13 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaResponseBody } from '../provider/index.js'
+import { CaptchaResponseBody, RandomProvider } from '../provider/index.js'
 import { CaptchaSolution } from '../datasets/index.js'
 import { IProsopoCaptchaContract } from '../contract/index.js'
 import { ProviderApiInterface } from '../api/index.js'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from './client.js'
-import { RandomProvider } from './manager.js'
 
 export interface ProsopoCaptchaApiInterface {
     userAccount: string
@@ -33,6 +32,6 @@ export interface ProsopoCaptchaApiInterface {
         solutions: CaptchaSolution[],
         salt: string,
         timestamp: string,
-        timestampSignature: string
+        signedTimestamp: string
     ): Promise<TCaptchaSubmitResult>
 }

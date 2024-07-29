@@ -1,17 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import fetch from 'node-fetch'
-import {
-    ApiParams,
-    ApiPaths,
-    Captcha,
-    CaptchaResponseBody,
-    CaptchaSolutionResponse,
-    PoWCaptcha,
-    PowCaptchaSolutionResponse,
-} from '@prosopo/types'
-import { datasetWithSolutionHashes, dummyUserAccount } from './mocks/solvedTestCaptchas'
+import { ApiPaths, Captcha, CaptchaResponseBody, CaptchaSolutionResponse } from '@prosopo/types'
 import { getPairAsync } from '@prosopo/contract'
-import { hexToString, stringToHex, stringToU8a, u8aToHex, u8aToString } from '@polkadot/util'
+import { stringToU8a, u8aToHex } from '@polkadot/util'
+import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import { dummyUserAccount } from './mocks/solvedTestCaptchas.js'
 
 const solutions = datasetWithSolutionHashes
 

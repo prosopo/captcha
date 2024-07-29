@@ -20,7 +20,6 @@ import {
     ProcaptchaConfigSchema,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
-    Provider,
     RandomProvider,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
@@ -202,6 +201,8 @@ export const Manager = (
                     [ApiParams.challenge]: challenge.challenge,
                     [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
                     [ApiParams.nonce]: solution,
+                    [ApiParams.timestamp]: challenge.timestamp,
+                    [ApiParams.timestampSignature]: challenge.timestampSignature,
                 })
             )
             setValidChallengeTimeout()

@@ -14,18 +14,16 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { decodeProcaptchaOutput, encodeProcaptchaOutput } from '@prosopo/types'
 import { exec } from '../util/index.js'
-import { getProtocolDistDir, getScriptsPkgDir } from '@prosopo/config'
+import { getScriptsPkgDir } from '@prosopo/config'
 import { getEnv, loadEnv } from '@prosopo/cli'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { isHex } from '@polkadot/util'
 import { setup } from '../setup/index.js'
-import { updateEnvFiles } from '../util/index.js'
 import path from 'path'
 import setVersion from '../scripts/setVersion.js'
 import yargs from 'yargs'
-import z from 'zod'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)

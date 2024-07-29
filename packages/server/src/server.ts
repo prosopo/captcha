@@ -60,47 +60,8 @@ export class ProsopoServer {
         })
     }
 
-    public async getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.network, providerUrl, this.getDappContractAddress())
-    }
-
-    public getDappContractAddress(): string {
-        if (!this.dappContractAddress) {
-            return getZeroAddress(this.getApi()).toString()
-        }
-        return this.dappContractAddress
-    }
-
-    async isReady() {
-        try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
-            await this.getSigner()
-        } catch (error) {
-            throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error } })
-        }
-    }
-
-    async getSigner(): Promise<void> {
-        if (this.pair) {
-            if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
-            }
-            await this.api.isReadyOrError
-            try {
-                this.pair = this.keyring.addPair(this.pair)
-            } catch (error) {
-                throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', {
-                    context: { failedFuncName: this.getSigner.name, error },
-                })
-            }
-        }
-    }
-
-    getApi(): ApiPromise {
-        if (this.api === undefined) {
-            throw new ProsopoEnvError(new Error('api undefined'))
-        }
-        return this.api
+    getProviderApi(providerUrl: string): ProviderApi {
+        return new ProviderApi(this.network, providerUrl, this.dappContractAddress || '')
     }
 
     /**
@@ -117,6 +78,7 @@ export class ProsopoServer {
         blockNumber: number,
         timeouts: CaptchaTimeoutOutput,
         providerUrl: string,
+        timestamp: string,
         challenge?: string
     ) {
         this.logger.info('Verifying with provider.')
@@ -132,6 +94,12 @@ export class ProsopoServer {
             const result = await providerApi.submitPowCaptchaVerify(token, signatureHex, timeouts.pow.cachedTimeout)
             // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
+        }
+        const imageTimeout = this.config.timeouts.image.cachedTimeout
+        const recent = timestamp ? Date.now() - parseInt(timestamp) < imageTimeout : false
+        if (!recent) {
+            this.logger.error('Image captcha is not recent')
+            return false
         }
         const result = await providerApi.verifyDappUser(token, signatureHex, timeouts.image.cachedTimeout)
         return result.verified
@@ -150,10 +118,17 @@ export class ProsopoServer {
 
         const payload = decodeProcaptchaOutput(token)
 
-        const { providerUrl, blockNumber, challenge } = ProcaptchaOutputSchema.parse(payload)
+        const { providerUrl, blockNumber, challenge, timestamp } = ProcaptchaOutputSchema.parse(payload)
 
         if (providerUrl) {
-            return await this.verifyProvider(token, blockNumber, this.config.timeouts, providerUrl, challenge)
+            return await this.verifyProvider(
+                token,
+                blockNumber,
+                this.config.timeouts,
+                providerUrl,
+                timestamp,
+                challenge
+            )
         } else {
             // If we don't have a providerURL, something has gone deeply wrong
             throw new ProsopoApiError('API.BAD_REQUEST', { context: { message: 'No provider URL' } })
