@@ -52,21 +52,12 @@ const verify = async (
             method: 'POST',
             body: JSON.stringify({ [ApiParams.token]: token, [ApiParams.secret]: secret }),
         })
-        console.log('Status:', response.status, 'Status Text:', response.statusText)
 
         const verified = (await response.json()).verified
-
-        console.log(`Verified: ${verified}`)
-
         return verified
     } else {
         // verify using the TypeScript library
-        console.log('Verifying using the TypeScript library')
-
         const verified = await prosopoServer.isVerified(token)
-
-        console.log(`Verified: ${verified}`)
-
         return verified
     }
 }
@@ -93,12 +84,8 @@ const signup = async (
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
         }
-        console.log('Request payload', payload)
-
         // get the procaptcha-response token
         const token = payload[ApiParams.procaptchaResponse]
-
-        console.log('Sending Procaptcha token', token)
 
         if (!config.account.secret) {
             throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED', {
@@ -107,8 +94,6 @@ const signup = async (
         }
 
         const verified = await verify(prosopoServer, verifyType, verifyEndpoint, token, config.account.secret)
-
-        console.log(verified)
 
         if (verified) {
             // salt
