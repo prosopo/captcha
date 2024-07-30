@@ -232,11 +232,11 @@ jobs:
             - name: Deploy fail notification
               if: failure()
               run: |
-                  echo "Deploy failed"
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  echo "Staging Deploy failed"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Staging Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
 
             - name: Deploy success notification
               if: success()
               run: |
-                  echo "Deploy succeeded"
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  echo "Staging Deploy succeeded"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Staging Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
