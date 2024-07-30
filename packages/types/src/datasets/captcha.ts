@@ -131,6 +131,7 @@ export interface PoWCaptcha {
     challenge: PoWChallengeId
     difficulty: number
     signature: string
+    timestamp: string
 }
 
 export type CaptchaConfig = {

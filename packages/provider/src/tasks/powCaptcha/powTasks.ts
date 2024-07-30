@@ -44,7 +44,7 @@ export class PowCaptchaManager {
         const challenge = `${timestamp}___${userAccount}___${dappAccount}`
         const signature = u8aToHex(this.pair.sign(stringToHex(challenge)))
 
-        return { challenge, difficulty, signature }
+        return { challenge, difficulty, signature, timestamp }
     }
 
     /**
