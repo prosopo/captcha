@@ -141,7 +141,7 @@ jobs:
 
                     # Create a temporary container from the latest image
                     echo "Building Docker image..."
-                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:$VERSION)
+                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:latest)
 
                     # Remove the old js temp folder
                     rm -rf ./js_bundles_host_temp
