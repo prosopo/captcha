@@ -41,8 +41,8 @@
         "@prosopo/config": "1.0.2",
         "@prosopo/types": "1.0.2",
         "@prosopo/types-database": "1.0.2",
-        "mongodb-memory-server": "^8.7.2",
-        "mongoose": "^7.3.3"
+        "mongodb-memory-server": "^9.4.0",
+        "mongoose": "^8.5.1"
     },
     "devDependencies": {
         "tslib": "2.6.2",
