@@ -40,7 +40,7 @@
         "@prosopo/common": "1.0.2",
         "@prosopo/types": "1.0.2",
         "@prosopo/captcha-contract": "1.0.2",
-        "mongodb": "5.8.0",
+        "mongodb": "5.6.0",
         "mongoose": "^7.3.3",
         "zod": "^3.22.3"
     },
