@@ -91,8 +91,13 @@ export class ProsopoServer {
 
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
+            const powTimeout = this.config.timeouts.pow.cachedTimeout
+            const recent = timestamp ? Date.now() - parseInt(timestamp) < powTimeout : false
+            if (!recent) {
+                this.logger.error('PoW captcha is not recent')
+                return false
+            }
             const result = await providerApi.submitPowCaptchaVerify(token, signatureHex, timeouts.pow.cachedTimeout)
-            // We don't care about recency with PoW challenges as they are single use, so just return the verified result
             return result.verified
         }
         const imageTimeout = this.config.timeouts.image.cachedTimeout
