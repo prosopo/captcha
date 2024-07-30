@@ -26,6 +26,7 @@
         "start": "vite serve --mode development --host",
         "bundle:dev": "vite build --config vite.config.ts --mode development --debug",
         "bundle:dev:webpack": "webpack build --config webpack.config.cjs --mode development",
+        "bundle:staging": "vite build --config vite.config.ts --mode development",
         "bundle:prod": "vite build --config vite.config.ts --mode production",
         "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
         "eslint:fix": "npm run eslint -- --fix --quiet",
