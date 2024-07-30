@@ -23,6 +23,9 @@
             "path": "../datasets"
         },
         {
+            "path": "../load-balancer"
+        },
+        {
             "path": "../procaptcha-common"
         },
         {
