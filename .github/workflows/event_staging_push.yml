@@ -1,10 +1,10 @@
 # Send an event to other repos on push to main
 
-name: event_dev_push
+name: event_main_push
 
 on:
     push:
-        branches: [dev]
+        branches: [staging]
     workflow_dispatch:
 
 concurrency:
@@ -65,5 +65,5 @@ jobs:
                   curl -X POST \
                   -H "Authorization: token $GITHUB_TOKEN" \
                   -H "Accept: application/vnd.github.everest-preview+json" \
-                  -d '{"event_type": "captcha_dev_push"}' \
+                  -d '{"event_type": "captcha_staging_push"}' \
                   https://api.github.com/repos/prosopo/captcha-private/dispatches
