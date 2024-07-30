@@ -125,7 +125,7 @@ jobs:
                     echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                     cd packages/procaptcha-bundle
 
-                    NODE_ENV=production npm run bundle:staging
+                    NODE_ENV=staging npm run bundle:staging
 
             - name: Build docker js_server
               run: |
