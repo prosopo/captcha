@@ -7,9 +7,6 @@
     "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
-            "path": "../../contracts/captcha/tsconfig.cjs.json"
-        },
-        {
             "path": "../common/tsconfig.cjs.json"
         },
         {

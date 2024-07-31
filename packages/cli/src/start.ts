@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CombinedApiPaths } from '@prosopo/types'
+import type { CombinedApiPaths } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Server } from 'node:net'
+import type { Server } from 'node:net'
 import { getDB, getSecret } from './process.env.js'
 import { getPairAsync } from '@prosopo/contract'
 import { i18nMiddleware } from '@prosopo/common'
@@ -25,7 +25,7 @@ import getConfig from './prosopo.config.js'
 import rateLimit from 'express-rate-limit'
 
 function startApi(env: ProviderEnvironment, admin = false): Server {
-    env.logger.info(`Starting Prosopo API`)
+    env.logger.info('Starting Prosopo API')
     const apiApp = express()
     const apiPort = env.config.server.port
 
@@ -55,9 +55,6 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
     if (!env) {
         loadEnv()
 
-        // Fail to start api if db is not defined
-        getDB()
-
         const secret = getSecret()
         const config = getConfig(undefined, undefined, undefined, {
             solved: { count: 2 },
@@ -67,6 +64,9 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }
+    // Fail to start api if db env var is not defined
+    getDB()
+
     await env.isReady()
 
     // Start the scheduled job

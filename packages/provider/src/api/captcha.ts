@@ -14,12 +14,12 @@
 import {
     ApiParams,
     ApiPaths,
+    Captcha,
     CaptchaRequestBody,
     CaptchaResponseBody,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
     CaptchaSolutionResponse,
-    CaptchaWithProof,
     DappUserSolutionResult,
     GetPowCaptchaChallengeRequestBody,
     PowCaptchaSolutionResponse,
@@ -29,7 +29,6 @@ import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { handleErrors } from './errorHandler.js'
-import { parseBlockNumber } from '../util.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
 import { version } from '@prosopo/util'
@@ -56,28 +55,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
         async (req, res, next) => {
             try {
-                const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
-                const api = env.api
-                if (api === undefined) {
-                    throw new ProsopoApiError('DEVELOPER.METHOD_NOT_IMPLEMENTED', {
-                        context: { error: 'api not setup', env },
-                    })
-                }
-                validateAddress(user, false, api.registry.chainSS58)
-                const blockNumberParsed = parseBlockNumber(blockNumber)
+                const { datasetId, user } = CaptchaRequestBody.parse(req.params)
+                validateAddress(user, false, 42)
 
-                // await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
-
-                const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
+                const taskData = await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(datasetId, user)
                 const captchaResponse: CaptchaResponseBody = {
-                    captchas: taskData.captchas.map((cwp: CaptchaWithProof) => ({
-                        ...cwp,
-                        captcha: {
-                            ...cwp.captcha,
-                            items: cwp.captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
-                        },
+                    captchas: taskData.captchas.map((captcha: Captcha) => ({
+                        ...captcha,
+                        items: captcha.items.map((item) => parseCaptchaAssets(item, env.assetsResolver)),
                     })),
                     requestHash: taskData.requestHash,
+                    timestamp: taskData.timestamp,
+                    timestampSignature: taskData.signedTime,
                 }
                 return res.json(captchaResponse)
             } catch (err) {
@@ -105,13 +94,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
         try {
             // TODO allow the dapp to override the length of time that the request hash is valid for
-            const result: DappUserSolutionResult = await tasks.dappUserSolution(
+            const result: DappUserSolutionResult = await tasks.imgCaptchaManager.dappUserSolution(
                 parsed[ApiParams.user],
                 parsed[ApiParams.dapp],
                 parsed[ApiParams.requestHash],
                 parsed[ApiParams.captchas],
-                parsed[ApiParams.signature]
+                parsed[ApiParams.signature],
+                parsed[ApiParams.timestamp],
+                parsed[ApiParams.timestampSignature]
             )
+
             const returnValue: CaptchaSolutionResponse = {
                 status: req.i18n.t(result.verified ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
                 ...result,
@@ -141,7 +133,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 })
             }
 
-            const challenge = await tasks.getPowCaptchaChallenge(user, dapp, origin)
+            const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(user, dapp, origin)
             return res.json(challenge)
         } catch (err) {
             tasks.logger.error(err)
@@ -152,18 +144,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a user's PoW solution as being approved or not
      *
-     * @param {string} blocknumber - the block number at which the captcha was requested
      * @param {string} challenge - the challenge string
      * @param {number} difficulty - the difficulty of the challenge
      * @param {string} signature - the signature of the challenge
      * @param {string} nonce - the nonce of the challenge
+     * @param {number} verifiedTimeout - the valid length of captcha solution in ms
      */
     router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
         try {
-            const { blockNumber, challenge, difficulty, signature, nonce, verifiedTimeout } =
-                SubmitPowCaptchaSolutionBody.parse(req.body)
-            const verified = await tasks.verifyPowCaptchaSolution(
-                blockNumber,
+            const { challenge, difficulty, signature, nonce, verifiedTimeout } = SubmitPowCaptchaSolutionBody.parse(
+                req.body
+            )
+            const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
                 challenge,
                 difficulty,
                 signature,
@@ -187,21 +179,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     router.post(ApiPaths.SubmitUserEvents, async (req, res, next) => {
         try {
             const { events, accountId } = req.body
-            await tasks.saveCaptchaEvent(events, accountId)
+            await tasks.datasetManager.saveCaptchaEvent(events, accountId)
             return res.json({ status: 'success' })
-        } catch (err) {
-            tasks.logger.error(err)
-            return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
-        }
-    })
-
-    /**
-     * Verifies that the provider is running and registered in the contract
-     */
-    router.get(ApiPaths.GetProviderStatus, async (req, res, next) => {
-        try {
-            const status = await tasks.providerStatus()
-            return res.json({ status })
         } catch (err) {
             tasks.logger.error(err)
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))
@@ -213,8 +192,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
      */
     router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
         try {
-            const details = await tasks.getProviderDetails()
-            return res.json({ version, ...details })
+            return res.json({ version, ...{ message: 'Provider online' } })
         } catch (err) {
             tasks.logger.error(err)
             return next(new ProsopoApiError('API.BAD_REQUEST', { context: { code: 400, error: err } }))

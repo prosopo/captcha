@@ -1,5 +1,4 @@
 # https://docs.docker.com/cloud/ecs-integration/
-version: '3.8'
 services:
     substrate:
         image: prosopo/substrate:demo-v1.0.4

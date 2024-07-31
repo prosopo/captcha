@@ -8,9 +8,6 @@
     "include": ["src", "src/**/*.json"],
     "references": [
         {
-            "path": "../../contracts/captcha"
-        },
-        {
             "path": "../account"
         },
         {
@@ -24,6 +21,9 @@
         },
         {
             "path": "../datasets"
+        },
+        {
+            "path": "../load-balancer"
         },
         {
             "path": "../procaptcha-common"

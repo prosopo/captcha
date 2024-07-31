@@ -12,36 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { AssetsResolver, ContractAbi, EnvironmentTypes, NetworkNames } from '@prosopo/types'
+import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfigOutput } from '@prosopo/types'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { WsProvider } from '@polkadot/rpc-provider/ws'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract/contract-info'
 import { get } from '@prosopo/util'
-import { isAddress } from '@polkadot/util-crypto/address'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
     db: Database | undefined
-    contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     defaultNetwork: NetworkNames
     contractName: string
-    abi: ContractAbi
     logger: Logger
     assetsResolver: AssetsResolver | undefined
-    wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair | undefined
-    api: ApiPromise | undefined
 
     constructor(config: ProsopoBasicConfigOutput, pair?: KeyringPair) {
         this.config = config
@@ -56,8 +47,6 @@ export class Environment implements ProsopoEnvironment {
             this.config.networks[this.defaultNetwork]
         ) {
             const network = this.config.networks[this.defaultNetwork]
-            this.logger.info(`Endpoint: ${network?.endpoint}`)
-            this.wsProvider = new WsProvider(network?.endpoint)
             this.contractAddress = network?.contract.address
             this.contractName = network?.contract.name
 
@@ -65,7 +54,6 @@ export class Environment implements ProsopoEnvironment {
                 type: 'sr25519', // TODO get this from the chain
             })
             if (this.pair) this.keyring.addPair(this.pair)
-            this.abi = JSON.parse(abiJson)
             this.importDatabase().catch((err) => {
                 this.logger.error(err)
             })
@@ -83,7 +71,6 @@ export class Environment implements ProsopoEnvironment {
             })
         }
 
-        await this.getApi().isReadyOrError
         try {
             this.pair = this.keyring.addPair(this.pair)
         } catch (error) {
@@ -93,20 +80,6 @@ export class Environment implements ProsopoEnvironment {
         }
 
         return this.pair
-    }
-
-    getContractInterface(): ProsopoCaptchaContract {
-        if (this.contractInterface === undefined) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
-        }
-        return this.contractInterface
-    }
-
-    getApi(): ApiPromise {
-        if (this.api === undefined) {
-            throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
-        }
-        return this.api
     }
 
     getDb(): Database {
@@ -130,57 +103,22 @@ export class Environment implements ProsopoEnvironment {
         return this.pair
     }
 
-    async changeSigner(pair: KeyringPair): Promise<void> {
-        await this.getApi().isReadyOrError
-        this.pair = pair
-        await this.getSigner()
-        this.contractInterface = await this.getContractApi()
-    }
-
-    async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = this.pair ? await this.getApi().rpc.system.accountNextIndex(this.pair.address) : 0
-        if (!isAddress(this.contractAddress)) {
-            throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED')
-        }
-        this.contractInterface = new ProsopoCaptchaContract(
-            this.getApi(),
-            this.abi,
-            this.contractAddress,
-            this.contractName,
-            parseInt(nonce.toString()),
-            this.pair,
-            this.config.logLevel as unknown as LogLevel,
-            this.config.account.address // allows calling the contract from a public address only
-        )
-        return this.contractInterface
-    }
-
     async isReady() {
         try {
             if (this.pair && this.config.account.password && this.pair.isLocked) {
                 this.pair.unlock(this.config.account.password)
             }
-            if (!this.api) {
-                this.api = await ApiPromise.create({ provider: this.wsProvider, initWasm: false, noInitWarn: true })
-            }
             await this.getSigner()
             // make sure contract address is valid before trying to load contract interface
-            if (isAddress(this.contractAddress)) {
-                this.contractInterface = await this.getContractApi()
-            } else {
-                // TODO this needs sorting out, we shouldn't silently not setup the contract interface when the address is invalid, as it leads to errors elsewhere related to contract interface === undefined. We should throw an error here and handle it in the calling code. But, I think there's time's when we want the address to be optional because we're populating it or something (dunno, need to check the test setup procedure) so needs a restructure to enable that
-                // just console logging for the time being!
-                console.warn('invalid contract address: ' + this.contractAddress)
-            }
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
                 })
             }
             if (this.db && this.db.connection?.readyState !== 1) {
-                this.logger.warn(`Database connection is not ready, reconnecting...`)
+                this.logger.warn('Database connection is not ready, reconnecting...')
                 await this.db.connect()
-                this.logger.info(`Connected to db`)
+                this.logger.info('Connected to db')
             }
         } catch (err) {
             throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error: err }, logger: this.logger })

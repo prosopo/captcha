@@ -53,7 +53,7 @@ export default (): ProsopoNetworksSchemaInput => {
                 name: 'captcha',
             },
             pairType: pairTypeSr25519,
-            ss58Format: 5,
+            ss58Format: 42,
         },
         [NetworkNamesSchema.Values.astar]: {
             endpoint: process.env.PROSOPO_SUBSTRATE_ENDPOINT
@@ -69,7 +69,7 @@ export default (): ProsopoNetworksSchemaInput => {
                 name: 'captcha',
             },
             pairType: pairTypeSr25519,
-            ss58Format: 5,
+            ss58Format: 42,
         },
     }
 }

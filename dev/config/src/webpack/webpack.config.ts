@@ -15,7 +15,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
-import path from 'path'
+import path from 'node:path'
 
 const moduleDirs = [path.resolve('./node_modules')]
 
@@ -58,8 +58,8 @@ export default (mode: string) => {
                         options: {
                             plugins: [
                                 '@babel/plugin-transform-runtime',
-                                '@babel/proposal-class-properties',
-                                '@babel/proposal-object-rest-spread',
+                                '@babel/transform-class-properties',
+                                '@babel/transform-object-rest-spread',
                                 '@babel/plugin-transform-react-jsx',
                                 ['@babel/plugin-syntax-import-attributes', { deprecatedAssertSyntax: true }],
                             ],

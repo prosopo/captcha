@@ -40,7 +40,7 @@ export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logg
                 const file = z.string().parse(argv.file)
                 const jsonFile = loadJSONFile(file) as JSON
                 logger.info(`Loaded JSON from ${file}`)
-                const result = await tasks.providerSetDatasetFromFile(jsonFile)
+                const result = await tasks.datasetManager.providerSetDatasetFromFile(jsonFile)
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {
                 logger.error(err)

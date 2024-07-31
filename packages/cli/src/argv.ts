@@ -14,21 +14,7 @@
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
 import { ProsopoConfigOutput } from '@prosopo/types'
-import {
-    commandBatchCommit,
-    commandDappAccounts,
-    commandDappDetails,
-    commandDappRegister,
-    commandDappUpdate,
-    commandProviderAccounts,
-    commandProviderDataset,
-    commandProviderDeregister,
-    commandProviderDetails,
-    commandProviderRegister,
-    commandProviderSetDataset,
-    commandProviderUpdate,
-    commandVersion,
-} from './commands/index.js'
+import { commandProviderSetDataset, commandVersion } from './commands/index.js'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
@@ -40,18 +26,7 @@ export function processArgs(args: string[], pair: KeyringPair, config: ProsopoCo
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', { demand: false, default: false, type: 'boolean' } as const)
         .option('adminApi', { demand: false, default: false, type: 'boolean' } as const)
-        .command(commandProviderRegister(pair, config, { logger }))
-        .command(commandProviderUpdate(pair, config, { logger }))
-        .command(commandProviderDeregister(pair, config, { logger }))
         .command(commandProviderSetDataset(pair, config, { logger }))
-        .command(commandDappRegister(pair, config, { logger }))
-        .command(commandDappUpdate(pair, config, { logger }))
-        .command(commandProviderAccounts(pair, config, { logger }))
-        .command(commandDappAccounts(pair, config, { logger }))
-        .command(commandProviderDetails(pair, config, { logger }))
-        .command(commandProviderDataset(pair, config, { logger }))
-        .command(commandDappDetails(pair, config, { logger }))
-        .command(commandBatchCommit(pair, config, { logger }))
         .command(commandVersion(pair, config, { logger }))
         .parse()
 }

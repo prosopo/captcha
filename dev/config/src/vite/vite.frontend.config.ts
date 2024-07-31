@@ -17,7 +17,6 @@ import { UserConfig } from 'vite'
 import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
-import { getAliases } from '../polkadot/index.js'
 import { getLogger } from '@prosopo/common'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { default as viteReact } from '@vitejs/plugin-react'
@@ -42,10 +41,10 @@ export default async function (
 ): Promise<UserConfig> {
     logger.info(`Running at ${dir} in ${mode} mode`)
     const isProduction = mode === 'production'
-    // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
-    // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
+    // NODE_ENV must be wrapped in quotes.
+    // If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
     // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
-    process.env.NODE_ENV = `${mode}`
+    process.env.NODE_ENV = `${process.env.NODE_ENV || mode}`
     logger.info(`NODE_ENV: ${process.env.NODE_ENV}`)
 
     // Set the env vars that we want to be available in the browser
@@ -55,7 +54,9 @@ export default async function (
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
-        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(
+            process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode
+        ),
         'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
         'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
@@ -82,12 +83,10 @@ export default async function (
         ...optionalPeerDependencies,
     ]
     logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-    const alias = getAliases(workspaceRoot || dir)
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
     proto['toJSON'] = RegExp.prototype.toString
-    logger.debug(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     // drop console logs if in production mode
     let drop: undefined | Drop[]
@@ -118,9 +117,6 @@ export default async function (
             legalComments: 'none',
         },
         define,
-        resolve: {
-            alias,
-        },
 
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
@@ -146,7 +142,6 @@ export default async function (
                     tryCatchDeoptimization: false,
                     moduleSideEffects: 'no-external', //true,
                     preset: 'smallest',
-                    manualPureFunctions: ['createWasmFn', 'unzlibSync', 'withWasm', 'isReady', 'initBridge', 'twox'],
                     unknownGlobalSideEffects: false,
                 },
                 experimentalLogSideEffects: false,
