@@ -14,8 +14,8 @@
         "start": "node ./dist/app.js",
         "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
         "build": "tsc --build --verbose",
-        "bundle:prod": "vite build --mode=production --config ./vite.config.ts",
-        "bundle:dev": "vite build --mode=development --config ./vite.config.ts",
+        "bundle:production": "vite build --mode=production --config ./vite.config.ts",
+        "bundle:development": "vite build --mode=development --config ./vite.config.ts",
         "clean": "tsc --build --clean"
     },
     "repository": {

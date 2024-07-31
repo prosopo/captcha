@@ -4,11 +4,11 @@
 
 ### Install Node.js
 
-https://nodejs.org/en/download/package-manager
+<https://nodejs.org/en/download/package-manager>
 
 ### Install Cypress
 
-https://docs.cypress.io/guides/getting-started/installing-cypress
+<https://docs.cypress.io/guides/getting-started/installing-cypress>
 
 ### Set up the containers
 
@@ -79,6 +79,6 @@ This tests the JavaScript bundle in a static HTML page. Make sure to build the b
 bundle will be copied to the client-bundle-example folder by the vite build command.
 
 ```bash
-npm -w @prosopo/procaptcha-bundle run bundle:dev
+npm -w @prosopo/procaptcha-bundle run bundle:development
 npm -w @prosopo/cypress-shared run cypress:open:client-example-bundle
 ```

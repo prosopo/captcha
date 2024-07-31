@@ -94,9 +94,9 @@ jobs:
 
                 # if branch is main, then prod, else staging
                 if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-                    echo "prod"
-                    echo "env=prod" >> $GITHUB_OUTPUT
-                    echo "prod=true" >> $GITHUB_OUTPUT
+                    echo "production"
+                    echo "env=production" >> $GITHUB_OUTPUT
+                    echo "production=true" >> $GITHUB_OUTPUT
                     echo "docker_latest_tag=latest" >> $GITHUB_OUTPUT
                     echo "docker_version_tag=$VERSION" >> $GITHUB_OUTPUT
                 else
@@ -211,7 +211,7 @@ jobs:
             # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Github release
               id: github_release
-              if: ${{ steps.env.outputs.prod }}
+              if: ${{ steps.env.outputs.production }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -219,7 +219,7 @@ jobs:
                   gh release create --generate-notes "v${{ steps.env.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm release
-              if: ${{ steps.env.outputs.prod }}
+              if: ${{ steps.env.outputs.production }}
               run: |
                   if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                     echo "Running on GitHub Actions"

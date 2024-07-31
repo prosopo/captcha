@@ -24,10 +24,10 @@
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "vite serve --mode development --host",
-        "bundle:dev": "vite build --config vite.config.ts --mode development --debug",
-        "bundle:dev:webpack": "webpack build --config webpack.config.cjs --mode development",
+        "bundle:development": "vite build --config vite.config.ts --mode development --debug",
+        "bundle:development:webpack": "webpack build --config webpack.config.cjs --mode development",
         "bundle:staging": "vite build --config vite.config.ts --mode development",
-        "bundle:prod": "vite build --config vite.config.ts --mode production"
+        "bundle:production": "vite build --config vite.config.ts --mode production"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
