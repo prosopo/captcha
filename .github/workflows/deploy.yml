@@ -217,6 +217,7 @@ jobs:
             # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Github release
               id: github_release
+              if: ${{ steps.env.outputs.prod }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
