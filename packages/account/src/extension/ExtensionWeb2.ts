@@ -26,6 +26,7 @@ import { getFingerprint } from '@prosopo/detector'
 import { stringToU8a } from '@polkadot/util/string'
 import { u8aToHex } from '@polkadot/util/u8a'
 import { version } from '@prosopo/util'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
@@ -77,6 +78,7 @@ export class ExtensionWeb2 extends Extension {
     }
 
     private async createAccount(config: ProcaptchaClientConfigOutput): Promise<AccountWithKeyPair> {
+        await cryptoWaitReady()
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
