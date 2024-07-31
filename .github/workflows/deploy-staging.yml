@@ -127,6 +127,21 @@ jobs:
 
                     NODE_ENV=staging npm run bundle:staging
 
+            - name: Checkout js-bundle branch
+              run: |
+                  git fetch origin js-bundle:js-bundle
+                  git checkout js-bundle
+
+            - name: Copy built bundle to js-bundle branch
+              run: |
+                  cp packages/procaptcha-bundle/dist/bundle/* .
+                  git add -A
+                  git commit -m 'Deploy JS bundle from mstagingain'
+
+            - name: Push the bundle to js-bundle branch
+              run: |
+                  git push origin js-bundle --force
+
             - name: Build docker js_server
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -197,7 +212,6 @@ jobs:
                     # Navigate back to the project root
                     echo "Navigating back to project root..."
                     cd ../..
-
 
             - name: Docker js_server release
               id: docker_js_server_release
