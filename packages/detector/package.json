@@ -8,8 +8,6 @@
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 0",
-        "lint:fix": "echo \"Not linting @prosopo/obf-bot\" && exit 0",
-        "lint": "echo \"Not linting @prosopo/obf-bot\" && exit 0",
         "build": "tsc"
     },
     "devDependencies": {
