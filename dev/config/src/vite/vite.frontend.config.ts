@@ -41,10 +41,10 @@ export default async function (
 ): Promise<UserConfig> {
     logger.info(`Running at ${dir} in ${mode} mode`)
     const isProduction = mode === 'production'
-    // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
-    // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
+    // NODE_ENV must be wrapped in quotes.
+    // If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
     // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
-    process.env.NODE_ENV = `${mode}`
+    process.env.NODE_ENV = `${process.env.NODE_ENV || mode}`
     logger.info(`NODE_ENV: ${process.env.NODE_ENV}`)
 
     // Set the env vars that we want to be available in the browser
