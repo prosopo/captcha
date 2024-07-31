@@ -135,6 +135,11 @@ jobs:
             - name: Copy built bundle to js-bundle branch
               run: |
                   cp packages/procaptcha-bundle/dist/bundle/* .
+
+                  # set the author in git
+                  git config user.name "prosoponator[bot]"
+                  git config user.email "dev@prosopo.io"
+
                   git add -A
                   git commit -m 'Deploy JS bundle from mstagingain'
 
