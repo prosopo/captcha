@@ -153,11 +153,11 @@ jobs:
                     JS_FOLDER="/usr/share/nginx/html/js"
 
                     # Get the most recent version of the js_server image
-                    docker pull prosopo/js_server:latest
+                    docker pull prosopo/js_server:${{ steps.env.outputs.docker_tag }}
 
                     # Create a temporary container from the latest image
                     echo "Building Docker image..."
-                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:latest)
+                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.env.outputs.docker_tag }})
 
                     # Remove the old js temp folder
                     rm -rf ./js_bundles_host_temp
