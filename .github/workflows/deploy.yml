@@ -64,8 +64,8 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - name: Next version
-              id: next_version
+            - name: Detect version
+              id: version
               run: |
 
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -153,10 +153,10 @@ jobs:
                     docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
 
                     # Build the new image
-                    docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.next_version.outputs.version }} --no-cache
+                    docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.version.outputs.version }} --no-cache
 
                     # Run the new image
-                    NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.next_version.outputs.version }})
+                    NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.version.outputs.version }})
 
                     # Copy the legacy files across
                     docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
@@ -168,16 +168,16 @@ jobs:
                     docker start $NEW_CONTAINER_ID
 
                     # Move procaptcha.bundle.js
-                    docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js
+                    docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.version.outputs.version }}.js
 
                     # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
-                    docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.next_version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
+                    docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.version.outputs.version }}.js $JS_FOLDER/procaptcha.bundle.js
 
                     # Commit the changes to the container
-                    docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.next_version.outputs.version }}
+                    docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.version.outputs.version }}
 
                     # Check this new docker image works locally
-                    docker run -d -p 3080:80 prosopo/js_server:${{ steps.next_version.outputs.version }}
+                    docker run -d -p 3080:80 prosopo/js_server:${{ steps.version.outputs.version }}
 
                     # Start the bundle demo & run the cypress tests against the new bundle
                     # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
@@ -208,7 +208,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # do a gh release with the contract sources + bundle
-                  gh release create --generate-notes "v${{ steps.next_version.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release create --generate-notes "v${{ steps.version.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm release
               run: |
@@ -229,10 +229,10 @@ jobs:
               run: |
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
-                  docker push prosopo/js_server:${{ steps.next_version.outputs.version }}
+                  docker push prosopo/js_server:${{ steps.version.outputs.version }}
 
                   # Push latest
-                  docker tag prosopo/js_server:${{ steps.next_version.outputs.version }} prosopo/js_server:latest
+                  docker tag prosopo/js_server:${{ steps.version.outputs.version }} prosopo/js_server:latest
                   docker push prosopo/js_server:latest
 
             - name: Redeploy flux docker js_server
@@ -256,16 +256,16 @@ jobs:
                   file: ${{github.workspace}}/docker/images/provider.dockerfile
                   platforms: linux/amd64,linux/arm64
                   push: true
-                  tags: prosopo/provider:${{ steps.next_version.outputs.version }},prosopo/provider:latest
+                  tags: prosopo/provider:${{ steps.version.outputs.version }},prosopo/provider:latest
 
             - name: Deploy fail notification
               if: failure()
               run: |
                   echo "Deploy failed"
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
 
             - name: Deploy success notification
               if: success()
               run: |
                   echo "Deploy succeeded"
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.next_version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
