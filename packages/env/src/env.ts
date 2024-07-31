@@ -116,9 +116,9 @@ export class Environment implements ProsopoEnvironment {
                 })
             }
             if (this.db && this.db.connection?.readyState !== 1) {
-                this.logger.warn(`Database connection is not ready, reconnecting...`)
+                this.logger.warn('Database connection is not ready, reconnecting...')
                 await this.db.connect()
-                this.logger.info(`Connected to db`)
+                this.logger.info('Connected to db')
             }
         } catch (err) {
             throw new ProsopoEnvError('GENERAL.ENVIRONMENT_NOT_READY', { context: { error: err }, logger: this.logger })

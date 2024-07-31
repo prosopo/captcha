@@ -11,13 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
-import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger } from '@prosopo/common'
-import { ProsopoBasicConfigOutput } from '@prosopo/types'
+import type { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
+import type { Database } from '@prosopo/types-database'
+import type { Keyring } from '@polkadot/keyring'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { Logger } from '@prosopo/common'
+import type { ProsopoBasicConfigOutput } from '@prosopo/types'
 
 export interface ProsopoEnvironment {
     config: ProsopoBasicConfigOutput
@@ -30,6 +29,7 @@ export interface ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     keyring: Keyring
     pair: KeyringPair | undefined
+    getDb(): Database
     isReady(): Promise<void>
     importDatabase(): Promise<void>
 }
