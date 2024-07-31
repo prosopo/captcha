@@ -135,13 +135,13 @@ jobs:
 
                     # Copy the rococo env file to production env file
                     echo "Copying the rococo env to production env file in procaptcha-bundle"
-                    cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+                    cp ./dev/scripts/env.${{ steps.env.outputs.env }} ./packages/procaptcha-bundle/.env.${{ steps.env.outputs.env }}
 
                     # Navigate to the JS bundle directory and build
                     echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                     cd packages/procaptcha-bundle
 
-                    NODE_ENV=production npm run bundle:prod
+                    NODE_ENV=production npm run bundle:${{ steps.env.outputs.env }}
 
             - name: Build docker js_server
               run: |
