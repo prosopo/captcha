@@ -64,7 +64,7 @@ jobs:
                     echo "staging=true" >> $GITHUB_OUTPUT
                     echo "docker_tag=staging" >> $GITHUB_OUTPUT
                 fi
-                
+
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
             - name: Set up QEMU
@@ -128,9 +128,6 @@ jobs:
                   echo "Building packages..."
                   npm run build:all
                   npm run build:all:cjs
-
-            - name: Build the contract sources
-              run: npm -w @prosopo/protocol run build:contracts
 
             - name: Build JS bundle
               run: |
