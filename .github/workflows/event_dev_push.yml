@@ -4,7 +4,7 @@ name: event_dev_push
 
 on:
     push:
-        branches: [dev]
+        branches: [dev, staging]
     workflow_dispatch:
 
 concurrency:
