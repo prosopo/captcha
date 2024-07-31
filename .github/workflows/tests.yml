@@ -110,7 +110,7 @@ jobs:
                     echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                     cd packages/procaptcha-bundle
 
-                    NODE_ENV=production npm run bundle:production
+                    npm run bundle:production
 
             - name: Setup env
               run: |

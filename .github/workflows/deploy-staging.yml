@@ -125,7 +125,7 @@ jobs:
                     echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                     cd packages/procaptcha-bundle
 
-                    NODE_ENV=staging npm run bundle:staging
+                    npm run bundle:staging
 
             - name: Build docker js_server
               run: |
@@ -192,7 +192,7 @@ jobs:
                     echo "Navigating to 'packages/cli' and bundling..."
                     cd packages/cli
                     NODE_ENV=staging npm run build
-                    NODE_ENV=staging npm run bundle:staging
+                    npm run bundle:staging
 
                     # Navigate back to the project root
                     echo "Navigating back to project root..."

@@ -101,7 +101,7 @@ jobs:
 
                     cp ./dev/scripts/env.production ./packages/cli/.env.production
                     cp ./dev/scripts/env.production ./.env.production
-                    NODE_ENV=production npm run -w @prosopo/cli bundle:production
+                    npm run -w @prosopo/cli bundle:production
 
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
