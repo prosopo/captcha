@@ -14,7 +14,7 @@
 import { ProsopoEnvError } from '@prosopo/common'
 import { EnvironmentTypes } from '@prosopo/types'
 
-type HardcodedProvider = {
+export type HardcodedProvider = {
     address: string
     url: string
     datasetId: string
