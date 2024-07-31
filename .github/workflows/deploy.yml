@@ -141,7 +141,7 @@ jobs:
                     echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                     cd packages/procaptcha-bundle
 
-                    NODE_ENV=production npm run bundle:${{ steps.env.outputs.env }}
+                    npm run bundle:${{ steps.env.outputs.env }}
 
             - name: Build docker js_server
               run: |
@@ -202,13 +202,13 @@ jobs:
                     echo "Building the production CLI package..."
                     # Copy the rococo env file to production env file
                     echo "Copying the rococo env to production env file in cli package"
-                    cp ./dev/scripts/env.production ./packages/cli/.env.production
+                    cp ./dev/scripts/env.${{ steps.env.outputs.env }} ./packages/cli/.env.${{ steps.env.outputs.env }}
 
                     # Navigate to the provider CLI directory and build
                     echo "Navigating to 'packages/cli' and bundling..."
                     cd packages/cli
-                    NODE_ENV=production npm run build
-                    NODE_ENV=production npm run bundle:prod
+                    npm run build:${{ steps.env.outputs.env }}
+                    npm run bundle:${{ steps.env.outputs.env }}
 
                     # Navigate back to the project root
                     echo "Navigating back to project root..."
