@@ -49,6 +49,22 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
+            - name: Detect env
+              id: env
+              run: |
+                # if branch is main, then prod, else staging
+                if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+                    echo "prod"
+                    echo "env=prod" >> $GITHUB_OUTPUT
+                    echo "prod=true" >> $GITHUB_OUTPUT
+                    echo "docker_tag=latest" >> $GITHUB_OUTPUT
+                else
+                    echo "staging"
+                    echo "env=staging" >> $GITHUB_OUTPUT
+                    echo "staging=true" >> $GITHUB_OUTPUT
+                    echo "docker_tag=staging" >> $GITHUB_OUTPUT
+                fi
+                
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
             - name: Set up QEMU
