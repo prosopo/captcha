@@ -43,6 +43,7 @@ export default class ReloadingAPI {
     public async start() {
         log.info('Starting API')
         this._envWatcher = await this._watchEnv()
+        loadEnv()
         const env = new ProviderEnvironment(this._config, this._pair)
         await env.isReady()
         this.api = await start(env, !!this._processedArgs.adminApi)
@@ -59,12 +60,11 @@ export default class ReloadingAPI {
 
     private async _watchEnv() {
         return fs.watchFile(this._envPath, async () => {
-            log.info('env file change detected')
+            log.info(`env file change detected. Restarting: ${this._restarting}`)
             if (!this._restarting) {
                 this._restarting = true
                 await this.stop()
                 loadEnv()
-
                 await this.start()
                 this._restarting = false
             }

@@ -21,9 +21,6 @@ import { Tasks } from '../tasks/tasks.js'
 export async function storeCaptchasExternally(pair: KeyringPair, config: ProsopoConfigOutput) {
     const env = new ProviderEnvironment(config, pair)
     await env.isReady()
-    if (env.db === undefined) {
-        throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')
-    }
 
     const tasks = new Tasks(env)
 

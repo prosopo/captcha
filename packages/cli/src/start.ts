@@ -28,7 +28,8 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
     env.logger.info('Starting Prosopo API')
     const apiApp = express()
     const apiPort = env.config.server.port
-
+    // https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+    apiApp.set('trust proxy', env.config.proxyCount /* number of proxies between user and server */)
     apiApp.use(cors())
     apiApp.use(express.json({ limit: '50mb' }))
     apiApp.use(i18nMiddleware({}))
@@ -55,6 +56,9 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
     if (!env) {
         loadEnv()
 
+        // Fail to start api if db is not defined
+        getDB()
+
         const secret = getSecret()
         const config = getConfig(undefined, undefined, undefined, {
             solved: { count: 2 },
@@ -64,8 +68,6 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
         const pair = await getPairAsync(config.networks[config.defaultNetwork], secret, '')
         env = new ProviderEnvironment(config, pair)
     }
-    // Fail to start api if db env var is not defined
-    getDB()
 
     await env.isReady()
 
