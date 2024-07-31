@@ -247,10 +247,10 @@ jobs:
               run: |
                   # Push the new image to Docker Hub
                   echo "Pushing Docker image..."
-                  docker push prosopo/js_server:${{ steps.version.outputs.version }}
+                  docker push prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}
 
                   # Push latest
-                  docker tag prosopo/js_server:${{ steps.version.outputs.version }} prosopo/js_server:latest
+                  docker tag prosopo/js_server:${{ steps.env.outputs.docker_version_tag }} prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}
                   docker push prosopo/js_server:latest
 
             - name: Redeploy flux docker js_server
@@ -274,7 +274,7 @@ jobs:
                   file: ${{github.workspace}}/docker/images/provider.dockerfile
                   platforms: linux/amd64,linux/arm64
                   push: true
-                  tags: prosopo/provider:${{ steps.version.outputs.version }},prosopo/provider:latest
+                  tags: prosopo/provider:${{ steps.env.outputs.docker_version_tag }},prosopo/provider:${{ steps.env.outputs.docker_latest_tag }}
 
             - name: Deploy fail notification
               if: failure()
