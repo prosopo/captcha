@@ -22,13 +22,7 @@
         "bundle:prod": "vite build --config vite.config.ts --mode production",
         "test": "npx vitest run --config ./vite.test.config.ts",
         "cli": "node ./dist/cli.js",
-        "start": "node ./dist/cli.js --api",
-        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix --quiet",
-        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
-        "prettier:fix": "npm run prettier -- --write",
-        "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "start": "node ./dist/cli.js --api"
     },
     "dependencies": {
         "@polkadot/keyring": "12.6.2",
