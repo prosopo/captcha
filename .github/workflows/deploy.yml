@@ -64,50 +64,41 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - name: Detect version
-              id: version
-              run: |
-
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-
-                    VERSION=$(cat package.json | jq -r '.version')
-
-                    # if version not detected, error
-                      if [[ -z "$VERSION" ]]; then
-                          echo "Failed to get version"
-                          exit 1
-                      fi
-                      # or if version null
-                      if [[ "$VERSION" == "null" ]]; then
-                          echo "Failed to get version"
-                          exit 1
-                      fi
-
-                    # split into major, minor, patch
-                    MAJOR=$(echo $VERSION | cut -d. -f1)
-                    MINOR=$(echo $VERSION | cut -d. -f2)
-                    PATCH=$(echo $VERSION | cut -d. -f3)
-                    echo "version=$VERSION"
-                    echo "major=$MAJOR"
-                    echo "minor=$MINOR"
-                    echo "patch=$PATCH"
-
-                    # export the next version numbers
-                    echo "version=$VERSION" >> $GITHUB_OUTPUT
-                    echo "major=$MAJOR" >> $GITHUB_OUTPUT
-                    echo "minor=$MINOR" >> $GITHUB_OUTPUT
-                    echo "patch=$PATCH" >> $GITHUB_OUTPUT
-
             - name: Detect env
               id: env
               run: |
+                
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                VERSION=$(cat package.json | jq -r '.version')
+
+                # if version not detected, error
+                    if [[ -z "$VERSION" ]]; then
+                        echo "Failed to get version"
+                        exit 1
+                    fi
+                    # or if version null
+                    if [[ "$VERSION" == "null" ]]; then
+                        echo "Failed to get version"
+                        exit 1
+                    fi
+
+                # split into major, minor, patch
+                MAJOR=$(echo $VERSION | cut -d. -f1)
+                MINOR=$(echo $VERSION | cut -d. -f2)
+                PATCH=$(echo $VERSION | cut -d. -f3)
+                echo "version=$VERSION"
+
+                # export the next version numbers
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+
                 # if branch is main, then prod, else staging
                 if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
                     echo "prod"
                     echo "env=prod" >> $GITHUB_OUTPUT
                     echo "prod=true" >> $GITHUB_OUTPUT
                     echo "docker_latest_tag=latest" >> $GITHUB_OUTPUT
-                    echo "docker_version_tag=${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+                    echo "docker_version_tag=$VERSION" >> $GITHUB_OUTPUT
                 else
                     echo "staging"
                     echo "env=staging" >> $GITHUB_OUTPUT
@@ -225,7 +216,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # do a gh release with the contract sources + bundle
-                  gh release create --generate-notes "v${{ steps.version.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release create --generate-notes "v${{ steps.env.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm release
               if: ${{ steps.env.outputs.prod }}
@@ -280,10 +271,10 @@ jobs:
               if: failure()
               run: |
                   echo "Deploy failed"
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.version.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.env.outputs.env }} v${{ steps.env.outputs.version }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
 
             - name: Deploy success notification
               if: success()
               run: |
                   echo "Deploy succeeded"
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|v${{ steps.version.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Deploy <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.env.outputs.env }} v${{ steps.env.outputs.version }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
