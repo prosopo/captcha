@@ -54,7 +54,9 @@ export default async function (
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         'process.env.PROSOPO_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.PROSOPO_SUBSTRATE_ENDPOINT),
-        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(process.env.PROSOPO_DEFAULT_ENVIRONMENT),
+        'process.env.PROSOPO_DEFAULT_ENVIRONMENT': JSON.stringify(
+            process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode
+        ),
         'process.env.PROSOPO_DEFAULT_NETWORK': JSON.stringify(process.env.PROSOPO_DEFAULT_NETWORK),
         'process.env.PROSOPO_SERVER_URL': JSON.stringify(process.env.PROSOPO_SERVER_URL),
         'process.env._DEV_ONLY_WATCH_EVENTS': JSON.stringify(process.env._DEV_ONLY_WATCH_EVENTS),
