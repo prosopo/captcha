@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '../api/params.js'
-import { Captcha, CaptchaSolutionSchema } from '../datasets/index.js'
+import { type Captcha, CaptchaSolutionSchema } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/timeouts.js'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import {
-    ZodDefault,
-    ZodNumber,
-    ZodObject,
-    ZodOptional,
+    type ZodDefault,
+    type ZodNumber,
+    type ZodObject,
+    type ZodOptional,
     array,
-    input,
+    type input,
     number,
     object,
-    output,
+    type output,
     string,
-    infer as zInfer,
+    type infer as zInfer,
 } from 'zod'
 
 export enum ApiPaths {

@@ -245,6 +245,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
         mongoEventsUri: string().optional(),
         mongoCaptchaUri: string().optional(),
         rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
+        proxyCount: number().optional().default(0),
     })
 )
 

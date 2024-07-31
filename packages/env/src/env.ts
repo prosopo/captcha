@@ -54,9 +54,14 @@ export class Environment implements ProsopoEnvironment {
                 type: 'sr25519', // TODO get this from the chain
             })
             if (this.pair) this.keyring.addPair(this.pair)
-            this.importDatabase().catch((err) => {
-                this.logger.error(err)
-            })
+            if (this.config.database) {
+                this.importDatabase().catch((err) => {
+                    throw new ProsopoEnvError('DATABASE.DATABASE_IMPORT_FAILED', {
+                        context: { error: err },
+                        logger: this.logger,
+                    })
+                })
+            }
         } else {
             throw new ProsopoEnvError('CONFIG.UNKNOWN_ENVIRONMENT', {
                 context: { constructor: this.constructor.name, environment: this.config.defaultEnvironment },
@@ -111,9 +116,7 @@ export class Environment implements ProsopoEnvironment {
             await this.getSigner()
             // make sure contract address is valid before trying to load contract interface
             if (!this.db) {
-                await this.importDatabase().catch((err) => {
-                    this.logger.error(err)
-                })
+                await this.importDatabase()
             }
             if (this.db && this.db.connection?.readyState !== 1) {
                 this.logger.warn('Database connection is not ready, reconnecting...')
