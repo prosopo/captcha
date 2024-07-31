@@ -35,7 +35,7 @@ export class Tasks {
 
     constructor(env: ProviderEnvironment) {
         this.config = env.config
-        this.db = env.db as Database
+        this.db = env.getDb()
         this.captchaConfig = env.config.captchas
         this.logger = getLogger(env.config.logLevel, 'Tasks')
         if (!env.pair) {

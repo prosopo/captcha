@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { u8aToHex } from '@polkadot/util'
-import { PoWCaptcha } from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
+import type { PoWCaptcha } from '@prosopo/types'
+import type { Database } from '@prosopo/types-database'
 import { ProsopoEnvError } from '@prosopo/common'
 import { stringToHex } from '@polkadot/util'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { checkRecentPowSolution, checkPowSignature, checkPowSolution } from './powTasksUtils.js'
 
 export class PowCaptchaManager {
