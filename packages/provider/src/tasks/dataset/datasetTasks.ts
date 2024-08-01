@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaConfig, DatasetRaw, ProsopoConfigOutput, StoredEvents } from '@prosopo/types'
-import { Logger } from '@prosopo/common'
+import type { CaptchaConfig, DatasetRaw, ProsopoConfigOutput, StoredEvents } from '@prosopo/types'
+import type { Logger } from '@prosopo/common'
 import { saveCaptchaEvent, saveCaptchas } from '@prosopo/database'
-import { Database } from '@prosopo/types-database'
+import type { Database } from '@prosopo/types-database'
 import { parseCaptchaDataset } from '@prosopo/datasets'
 import { providerValidateDataset } from './datasetTasksUtils.js'
 
