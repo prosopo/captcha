@@ -21,10 +21,8 @@ const StoredCaptcha = mongoose.model('StoredCaptcha', UserCommitmentRecordSchema
 export const saveCaptchas = async (events: UserCommitmentRecord[], atlasUri: string) => {
     const connection = mongoose.createConnection(atlasUri, {
         authSource: 'admin',
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
     })
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve, reject) => {
         connection
             .once('open', () => {
                 logger.info('Connected to MongoDB Atlas')

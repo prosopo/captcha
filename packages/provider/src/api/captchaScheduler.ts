@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CronJob } from 'cron'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '../tasks/tasks.js'
 
