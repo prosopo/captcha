@@ -99,13 +99,16 @@ jobs:
                     echo "production=true" >> $GITHUB_OUTPUT
                     echo "docker_latest_tag=latest" >> $GITHUB_OUTPUT
                     echo "docker_version_tag=$VERSION" >> $GITHUB_OUTPUT
-                else
+                elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
                     echo "staging"
                     echo "env=staging" >> $GITHUB_OUTPUT
                     echo "staging=true" >> $GITHUB_OUTPUT
                     echo "docker_tag=staging" >> $GITHUB_OUTPUT
                     echo "docker_latest_tag=staging" >> $GITHUB_OUTPUT
-                    echo "docker_version_tag=staging" >> $GITHUB_OUTPUT
+                    echo "docker_version_tag=staging" >> $GITHUB_OUTPUT  
+                else
+                    echo "cannot deploy from branch ${{ github.ref }}"
+                    exit 1
                 fi
 
             - uses: actions/setup-node@v3
