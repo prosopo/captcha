@@ -200,7 +200,7 @@ jobs:
                     # Navigate to the provider CLI directory and build
                     echo "Navigating to 'packages/cli' and bundling..."
                     cd packages/cli
-                    npm run build:${{ steps.env.outputs.env }}
+                    NODE_ENV=${{ steps.env.outputs.env }} npm run build
                     NODE_ENV=${{ steps.env.outputs.env }} npm run bundle
 
                     # Navigate back to the project root
