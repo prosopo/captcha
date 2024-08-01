@@ -139,6 +139,13 @@ jobs:
 
                     NODE_ENV=${{ steps.env.outputs.env }} npm -w @prosopo/procaptcha-bundle run bundle
 
+            - name: Deploy staging js bundle
+              if: ${{ steps.env.outputs.staging }}
+              run: |
+
+                  # upload the bundle to the staging release, overwriting any existing bundle used for staging before.
+                  gh release upload ${{ steps.env.outputs.env }} packages/procaptcha-bundle/dist/bundle/* --clobber
+
             - name: Build docker js_server
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
