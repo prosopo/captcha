@@ -21,7 +21,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "build:debug": "tsc --build --verbose",
         "build:config": "tsc --project",
-        "test": "npx vitest run --config ./vite.test.config.ts",
+        "test": "NODE_ENV=${NODE_ENV:-test} npx vitest run --config ./vite.test.config.ts",
         "mnemonic": "tsx ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test"
     },

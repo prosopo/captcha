@@ -10,7 +10,7 @@
     },
     "scripts": {
         "test": "echo \"No test specified\"",
-        "dev": "vite serve --mode=development --config ./vite.config.ts --host",
+        "dev": "NODE_ENV=${NODE_ENV:-development} vite serve --mode=development --config ./vite.config.ts --host",
         "start": "node ./dist/app.js",
         "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
         "build": "tsc --build --verbose",
