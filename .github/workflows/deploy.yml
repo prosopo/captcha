@@ -132,10 +132,9 @@ jobs:
                     cp ./dev/scripts/env.${{ steps.env.outputs.env }} ./packages/procaptcha-bundle/.env.${{ steps.env.outputs.env }}
 
                     # Navigate to the JS bundle directory and build
-                    echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
-                    cd packages/procaptcha-bundle
+                    echo "Building JS bundle..."
 
-                    npm run bundle:${{ steps.env.outputs.env }}
+                    NODE_ENV=${{ steps.env.outputs.env }} npm -w @prosopo/procaptcha-bundle run bundle
 
             - name: Build docker js_server
               run: |
@@ -202,7 +201,7 @@ jobs:
                     echo "Navigating to 'packages/cli' and bundling..."
                     cd packages/cli
                     npm run build:${{ steps.env.outputs.env }}
-                    npm run bundle:${{ steps.env.outputs.env }}
+                    NODE_ENV=${{ steps.env.outputs.env }} npm run bundle
 
                     # Navigate back to the project root
                     echo "Navigating back to project root..."

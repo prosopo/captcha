@@ -115,9 +115,9 @@ jobs:
             - run: NODE_ENV=test npm run setup
 
             # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
-            # Running bundle:development instead of bundle:production means the bundle will be built with selectors that can be used
+            # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
             # by the cypress tests to find the elements they need to interact with
-            - run: NODE_ENV=test npm -w @prosopo/procaptcha-bundle run bundle:development
+            - run: NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
 
             - name: Run the cypress tests on client-example
               run: |

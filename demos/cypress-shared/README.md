@@ -79,6 +79,6 @@ This tests the JavaScript bundle in a static HTML page. Make sure to build the b
 bundle will be copied to the client-bundle-example folder by the vite build command.
 
 ```bash
-npm -w @prosopo/procaptcha-bundle run bundle:development
+NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
 npm -w @prosopo/cypress-shared run cypress:open:client-example-bundle
 ```

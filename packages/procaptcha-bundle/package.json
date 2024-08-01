@@ -24,10 +24,8 @@
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
-        "bundle:development": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
-        "bundle:development:webpack": "NODE_ENV=${NODE_ENV:-development}; build --config webpack.config.cjs --mode $NODE_ENV",
-        "bundle:staging": "NODE_ENV=${NODE_ENV:-staging}; vite build --config vite.config.ts --mode $NODE_ENV",
-        "bundle:production": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
+        "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
+        "bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; build --config webpack.config.cjs --mode $NODE_ENV"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
