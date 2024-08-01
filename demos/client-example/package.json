@@ -48,10 +48,10 @@
     },
     "scripts": {
         "test": "echo \"No test specified\"",
-        "start": "NODE_ENV=${NODE_ENV:-development} vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
+        "start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
         "build": "tsc --build --verbose",
-        "bundle:production": "NODE_ENV=${NODE_ENV:-production} vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
-        "bundle:development": "NODE_ENV=${NODE_ENV:-development} vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
+        "bundle:production": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
+        "bundle:development": "NODE_ENV=${NODE_ENV:-development}; vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean"
     },
     "browserslist": {

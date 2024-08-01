@@ -12,7 +12,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "test": "NODE_ENV=${NODE_ENV:-test} npx vitest run --config ./vite.test.config.ts",
+        "test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
         "cli": "node ./dist/cli.js"
     },
     "main": "./dist/index.js",
