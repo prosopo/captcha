@@ -14,7 +14,7 @@
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:all": "npm run ws -- --if-present build",
         "build:all:cjs": "npm run ws -- --if-present build:cjs",
-        "build:bundle": "NODE_ENV=development npm run -w @prosopo/procaptcha-bundle bundle",
+        "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle",
         "rebuild": "f() { npm run cmd -- \"npm run clean %s\" $@ ; npm run cmd -- \"npm run build %s\" $@ ;}; f",
         "rebuild:npm": "npm run clean:npm && npm i",
         "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
