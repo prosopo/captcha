@@ -144,7 +144,7 @@ jobs:
               run: |
 
                   # upload the bundle to the staging release, overwriting any existing bundle used for staging before.
-                  gh release upload ${{ steps.env.outputs.env }} packages/procaptcha-bundle/dist/bundle/* --clobber
+                  gh release upload ${{ steps.env.outputs.env }}-release packages/procaptcha-bundle/dist/bundle/* --clobber
 
             - name: Build docker js_server
               run: |
