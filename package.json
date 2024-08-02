@@ -51,7 +51,7 @@
         "lint-fix:caddyfile": "caddy fmt --overwrite **/*.Caddyfile",
         "lint:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
         "lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -I {} echo 'shellcheck {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
-        "lint:yaml": "yamllint",
+        "lint:yaml": "yamllint .",
         "lint:py": "ruff check .",
         "lint-fix:py": "ruff format .",
         "lint:js": "biome lint .",
