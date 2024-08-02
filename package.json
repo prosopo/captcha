@@ -47,7 +47,7 @@
         "lint:license": "npm run -w @prosopo/scripts license",
         "lint-fix:license": "npm run -w @prosopo/scripts license:fix",
         "lint:dockerfile": "find . \\( -name 'Dockerfile' -o -name '*.dockerfile' \\) ! -path '*/node_modules/*' | xargs -I {} echo 'echo {} && cat {} | docker run --rm -i hadolint/hadolint' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
-        "lint:caddyfile": "caddy fmt **/*.Caddyfile",
+        "lint:caddyfile": "caddy fmt --diff **/*.Caddyfile",
         "lint-fix:caddyfile": "caddy fmt --overwrite **/*.Caddyfile",
         "lint:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
         "lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -I {} echo 'shellcheck {}' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
