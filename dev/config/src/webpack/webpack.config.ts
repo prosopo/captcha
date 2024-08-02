@@ -122,7 +122,7 @@ export default (mode: string) => {
                           },
                       }),
                   ]
-                : [new TerserPlugin({})],
+                : [],
             usedExports: true,
         },
     }
