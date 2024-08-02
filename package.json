@@ -14,6 +14,7 @@
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:all": "npm run ws -- build",
         "build:all:cjs": "npm run ws -- build:cjs",
+        "bundle:all": "npm run ws -- --if-present bundle",
         "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle",
         "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
         "clean-npm:node-modules": "rimraf '**/node_modules'",
