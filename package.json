@@ -63,7 +63,7 @@
         "lint-fix": "run-s lint-fix:*",
         "docker:rust": "f() { if [ \"$CI\" = \"true\" ]; then FLAGS=''; else FLAGS='-it'; fi ; mkdir -p cargo-cache && docker run --rm $FLAGS -u $(id -u):$(id -g) --cpu-quota=-1 -v $PWD:/src -v $PWD/cargo-cache:/usr/local/cargo/registry prosopo/cargo-contract:4.1.1 \"export RUST_BACKTRACE=1; $@\" ;}; f",
         "lint:rs:clippy": "npm run --silent docker:rust -- cargo clippy -- -D warnings -A clippy::too_many_arguments --file /src/**/*.rs",
-        "lint:rs:rustfmt": "npm run --silent docker:rust -- 'find . -name \"*.rs\" | xargs -I {} echo \"echo {}; rustfmt --check {}\" | awk \"{printf \\\"%s%s\\\", sep, \\$0; sep=\\\" && \\\"} END{print \\\"\\\"}\" | bash'",
+        "lint:rs:rustfmt": "npm run --silent docker:rust -- 'find . -name \"Cargo.toml\" | xargs -I {} echo \"echo {}; cargo fmt --check --manifest-path {}\" | awk \"{printf \\\"%s%s\\\", sep, \\$0; sep=\\\" && \\\"} END{print \\\"\\\"}\" | bash'",
         "lint:rs": "run-s lint:rs:rustfmt lint:rs:clippy",
         "lint-fix:rs:clippy": "npm run --silent docker:rust -- cargo clippy -- -D warnings -A clippy::too_many_arguments --file /src/**/*.rs",
         "lint-fix:rs:rustfmt": "npm run --silent docker:rust -- 'find . -name \"*.rs\" | xargs -I {} echo \"echo {}; rustfmt {}\" | awk \"{printf \\\"%s%s\\\", sep, \\$0; sep=\\\" && \\\"} END{print \\\"\\\"}\" | bash'",
