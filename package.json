@@ -46,8 +46,6 @@
         "test:all": "npm run ws -- --if-present test",
         "lint:license": "npm run -w @prosopo/scripts license",
         "lint-fix:license": "npm run -w @prosopo/scripts license:fix",
-        "lint:contracts": "biome lint contracts/*",
-        "lint-fix:contracts": "npm run --silent lint:contracts --fix",
         "lint:dockerfile": "find . \\( -name 'Dockerfile' -o -name '*.dockerfile' -o -name 'docker-compose.*.yml' \\) ! -path '*/node_modules/*' | xargs -I {} echo 'cat {} | docker run --rm -i hadolint/hadolint' | awk '{printf \"%s%s\", sep, $0; sep=\" && \"} END{print \"\"}' | bash",
         "lint:caddyfile": "caddy fmt **/*.Caddyfile",
         "lint-fix:caddyfile": "caddy fmt --overwrite **/*.Caddyfile",
