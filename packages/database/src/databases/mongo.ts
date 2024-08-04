@@ -17,10 +17,12 @@ import {
     Captcha,
     CaptchaSolution,
     CaptchaStates,
+    CaptchaStatus,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
+    Hash,
     PendingCaptchaRequest,
     PowCaptcha,
     ScheduledTaskNames,
@@ -46,7 +48,6 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { CaptchaStatus, Hash } from '@prosopo/captcha-contract/types-returns'
 import { DeleteResult, ServerApiVersion } from 'mongodb'
 import { isHex } from '@polkadot/util/is'
 import mongoose, { Connection } from 'mongoose'
@@ -133,6 +134,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             connection.on('connected', () => {
                 this.logger.info(`Database connected to ${this.url}`)
+                resolve(connection)
             })
 
             connection.on('disconnected', () => {
@@ -141,6 +143,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             connection.on('reconnected', () => {
                 this.logger.info(`Database reconnected to ${this.url}`)
+                resolve(connection)
             })
 
             connection.on('reconnectFailed', () => {
@@ -153,6 +156,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             connection.on('fullsetup', () => {
                 this.logger.info(`Database connection to ${this.url} is fully setup`)
+                resolve(connection)
             })
         })
 
@@ -180,7 +184,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
         try {
-            this.logger.debug(`Storing dataset in database`)
+            this.logger.debug('Storing dataset in database')
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
@@ -205,7 +209,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solved: !!solution?.length,
             }))
 
-            this.logger.debug(`Inserting captcha records`)
+            this.logger.debug('Inserting captcha records')
             // create a bulk upsert operation and execute
             if (captchaDocs.length) {
                 await this.tables?.captcha.bulkWrite(
@@ -231,7 +235,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     datasetContentId: parsedDataset.datasetContentId,
                 }))
 
-            this.logger.debug(`Inserting solution records`)
+            this.logger.debug('Inserting solution records')
             // create a bulk upsert operation and execute
             if (captchaSolutionDocs.length) {
                 await this.tables?.solution.bulkWrite(
@@ -244,7 +248,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
-            this.logger.debug(`Dataset stored in database`)
+            this.logger.debug('Dataset stored in database')
         } catch (err) {
             throw new ProsopoDBError('DATABASE.DATASET_LOAD_FAILED', {
                 context: { failedFuncName: this.storeDataset.name, error: err },
@@ -337,7 +341,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         ])
         const docs = await cursor
 
-        if (docs && docs.length) {
+        if (docs?.length) {
             // drop the _id field
             return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
         }
@@ -355,7 +359,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         const cursor = this.tables?.captcha.find({ captchaId: { $in: captchaId } }).lean()
         const docs = await cursor
 
-        if (docs && docs.length) {
+        if (docs?.length) {
             // drop the _id field
             return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
         }
@@ -408,8 +412,16 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             return doc
         }
 
+        const allDatasetsInDb = await this.tables?.dataset.find()
+
+        if (!allDatasetsInDb) {
+            throw new Error('no datasets in db')
+        }
+
+        const allDatasetIds = allDatasetsInDb.map((dataset) => dataset.datasetId)
+
         throw new ProsopoDBError('DATABASE.DATASET_GET_FAILED', {
-            context: { failedFuncName: this.getDatasetDetails.name, datasetId },
+            context: { failedFuncName: this.getDatasetDetails.name, datasetId, allDatasetIds },
         })
     }
 
@@ -454,12 +466,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @returns {Promise<void>} A promise that resolves when the record is added.
      */
     async storePowCaptchaRecord(challenge: string, checked: boolean): Promise<void> {
-        if (!this.tables) {
-            throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED', {
-                context: { failedFuncName: this.storePowCaptchaRecord.name },
-                logger: this.logger,
-            })
-        }
+        const tables = this.getTables()
 
         const powCaptchaRecord = {
             challenge,
@@ -467,7 +474,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         }
 
         try {
-            await this.tables.powCaptcha.create(powCaptchaRecord)
+            await tables.powCaptcha.create(powCaptchaRecord)
             this.logger.info('PowCaptcha record added successfully', { challenge, checked })
         } catch (error) {
             this.logger.error('Failed to add PowCaptcha record', { error, challenge, checked })
@@ -496,10 +503,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             if (record) {
                 this.logger.info('PowCaptcha record retrieved successfully', { challenge })
                 return record
-            } else {
-                this.logger.info('No PowCaptcha record found', { challenge })
-                return null
             }
+            this.logger.info('No PowCaptcha record found', { challenge })
+            return null
         } catch (error) {
             this.logger.error('Failed to retrieve PowCaptcha record', { error, challenge })
             throw new ProsopoDBError('DATABASE.CAPTCHA_GET_FAILED', {
@@ -516,25 +522,18 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @returns {Promise<void>} A promise that resolves when the record is updated.
      */
     async updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void> {
-        if (!this.tables) {
-            throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED', {
-                context: { failedFuncName: this.updatePowCaptchaRecord.name },
-                logger: this.logger,
-            })
-        }
+        const tables = this.getTables()
 
         try {
-            const updateResult = await this.tables.powCaptcha.updateOne({ challenge }, { $set: { checked } })
-
+            const updateResult = await tables.powCaptcha.updateOne({ challenge }, { $set: { checked } })
             if (updateResult.matchedCount === 0) {
                 this.logger.info('No PowCaptcha record found to update', { challenge, checked })
                 throw new ProsopoDBError('DATABASE.CAPTCHA_GET_FAILED', {
                     context: { challenge, checked },
                     logger: this.logger,
                 })
-            } else {
-                this.logger.info('PowCaptcha record updated successfully', { challenge, checked })
             }
+            this.logger.info('PowCaptcha record updated successfully', { challenge, checked })
         } catch (error) {
             this.logger.error('Failed to update PowCaptcha record', { error, challenge, checked })
             throw new ProsopoDBError('DATABASE.CAPTCHA_UPDATE_FAILED', {
@@ -732,7 +731,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         ])
 
         const docs = await cursor
-        if (docs && docs.length) {
+        if (docs?.length) {
             // return the _id field
             return docs[0]._id
         }
@@ -761,7 +760,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         ])
         const docs = await cursor
 
-        if (docs && docs.length) {
+        if (docs?.length) {
             return docs as CaptchaSolution[]
         }
 
@@ -922,7 +921,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             status?: ScheduledTaskStatus
         } = { processName: task }
         if (status) {
-            lookup['status'] = status
+            lookup.status = status
         }
         const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
             ?.findOne(lookup)

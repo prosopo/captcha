@@ -1,15 +1,10 @@
+# Run tests for js packages
+
 name: tests
 
 on:
     pull_request:
-        branches: [main]
-        paths:
-            - 'docker/**'
-            - 'packages/**'
-            - 'demos/**'
-            - 'dev/**'
-            - 'contracts/**'
-            - '.github/workflows/tests.yml'
+        branches: [main, dev, staging, release/*]
     workflow_dispatch:
 
 concurrency:
@@ -24,6 +19,7 @@ env:
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -73,6 +69,7 @@ jobs:
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
+                  # must restore all cache dirs, and they must exist ahead of this!
                   path: |
                       protocol/cargo-cache
                       protocol/target
@@ -83,7 +80,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -96,15 +93,36 @@ jobs:
             - run: npm run build:all
             - run: npm run build:all:cjs
 
+            # bundle procaptcha-bundle using webpack
+            - name: Webpack Bundle procaptcha-bundle
+              run: |
+                  npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
+
+            - name: Build JS bundle
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    # Copy the rococo env file to production env file
+                    echo "Copying the rococo env to production env file in procaptcha-bundle"
+                    cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+
+                    # Navigate to the JS bundle directory and build
+                    echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                    cd packages/procaptcha-bundle
+
+                    NODE_ENV=production npm run bundle:prod
+
             - name: Setup env
               run: |
-                  cp demos/client-example-server/env.development demos/client-example-server/.env.test
-                  cp demos/client-example/env.development demos/client-example/.env.test
-                  cp dev/scripts/env.test .env.test
-                  cp dev/scripts/env.test dev/scripts/.env.test
-                  cp dev/scripts/env.test packages/cli/.env.test
-                  cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                  echo NODE_ENV: $NODE_ENV
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    cp demos/client-example-server/env.development demos/client-example-server/.env.test
+                    cp demos/client-example/env.development demos/client-example/.env.test
+                    cp dev/scripts/env.test .env.test
+                    cp dev/scripts/env.test dev/scripts/.env.test
+                    cp dev/scripts/env.test packages/cli/.env.test
+                    cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+                    echo NODE_ENV: $NODE_ENV
 
             - name: Start the docker images
               run: |

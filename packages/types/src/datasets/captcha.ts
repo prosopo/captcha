@@ -71,6 +71,48 @@ export interface Captcha extends CaptchaWithoutId {
     datasetContentId?: string
 }
 
+//temp
+export enum CaptchaStatus {
+    pending = 'Pending',
+    approved = 'Approved',
+    disapproved = 'Disapproved',
+}
+
+//temp
+type Hash = string | number[]
+
+//temp
+export type Commit = {
+    id: Hash
+    userAccount: string
+    datasetId: Hash
+    status: CaptchaStatus
+    dappContract: string
+    providerAccount: string
+    requestedAt: number
+    completedAt: number
+    userSignature: Array<number>
+}
+
+//temp
+export enum GovernanceStatus {
+    active = 'Active',
+    inactive = 'Inactive',
+}
+
+export type Dapp = {
+    status: GovernanceStatus
+    balance: string | number
+    owner: AccountId
+    payee: DappPayee
+}
+
+export enum DappPayee {
+    provider = 'Provider',
+    dapp = 'Dapp',
+    any = 'Any',
+}
+
 export interface PowCaptcha {
     challenge: string
     checked: boolean
@@ -83,17 +125,13 @@ export interface CaptchaSolution {
     solution: HashedSolution[]
 }
 
-export interface CaptchaWithProof {
-    captcha: Captcha
-    proof: MerkleProof
-}
-
 export type PoWChallengeId = string
 
 export interface PoWCaptcha {
     challenge: PoWChallengeId
     difficulty: number
     signature: string
+    timestamp: string
 }
 
 export type CaptchaConfig = {

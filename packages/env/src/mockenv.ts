@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
-import { Dapp, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProviderEnvironment } from './provider.js'
 import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
+import { Dapp, Provider } from '@prosopo/types'
 
 export type TestAccount = {
     mnemonic: string

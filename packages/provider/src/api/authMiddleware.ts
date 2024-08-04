@@ -16,7 +16,6 @@ import { NextFunction, Request, Response } from 'express'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../index.js'
-import { getCurrentBlockNumber } from '@prosopo/contract'
 import { hexToU8a, isHex } from '@polkadot/util'
 
 export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
@@ -29,7 +28,6 @@ export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
             }
 
             verifyEnvironmentKeyPair(env)
-            await verifyBlockNumber(blocknumber, tasks)
             verifySignature(signature, blocknumber, env.pair)
 
             next()
@@ -62,24 +60,6 @@ const extractHeaders = (req: Request) => {
 const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
     if (!env.pair) {
         throw new ProsopoEnvError('CONTRACT.CANNOT_FIND_KEYPAIR')
-    }
-}
-
-const verifyBlockNumber = async (blockNumber: string, tasks: Tasks) => {
-    const parsedBlockNumber = parseInt(blockNumber)
-    const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
-
-    if (
-        isNaN(parsedBlockNumber) ||
-        parsedBlockNumber < currentBlockNumber - 500 ||
-        parsedBlockNumber > currentBlockNumber
-    ) {
-        throw new ProsopoApiError('API.BAD_REQUEST', {
-            context: {
-                error: `Invalid block number ${parsedBlockNumber}, current block number is ${currentBlockNumber}`,
-                code: 400,
-            },
-        })
     }
 }
 
