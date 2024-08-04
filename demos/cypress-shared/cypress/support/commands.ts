@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import { Captcha, CaptchaWithProof } from '@prosopo/types'
+import { Captcha } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import Chainable = Cypress.Chainable
 import { SolutionRecord } from '@prosopo/types-database'
@@ -42,7 +42,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
             expect(response).to.not.be.undefined
             expect(response?.statusCode).to.equal(200)
             expect(response?.body).to.have.property('captchas')
-            const captchas = response?.body.captchas.map(({ captcha }: { captcha: CaptchaWithProof }) => captcha)
+            const captchas = response?.body.captchas
             console.log('-----------------------------captchas', captchas, 'length', captchas.length)
             expect(captchas).to.have.lengthOf(2)
             expect(captchas[0]).to.have.property('items')

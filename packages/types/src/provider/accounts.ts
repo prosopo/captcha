@@ -13,7 +13,12 @@
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Payee } from '@prosopo/captcha-contract/types-arguments'
+
+//temp
+export enum Payee {
+    provider = 'Provider',
+    dapp = 'Dapp',
+}
 
 export interface IUserAccount {
     secret?: string

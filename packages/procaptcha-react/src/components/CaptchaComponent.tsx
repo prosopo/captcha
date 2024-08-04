@@ -103,7 +103,7 @@ const CaptchaComponent = ({
                                     {':'}
                                     &nbsp;
                                     <span style={{ textTransform: 'capitalize' }}>
-                                        {`${at(challenge.captchas, index).captcha.target}`}
+                                        {`${at(challenge.captchas, index).target}`}
                                     </span>
                                 </p>
                                 <p

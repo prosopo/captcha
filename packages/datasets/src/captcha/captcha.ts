@@ -236,7 +236,7 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @param  {string} salt
  * @return {string}
  */
-export function computePendingRequestHash(captchaIds: string[], userAccount: string, salt: string): string {
+export function computePendingRequestHash(captchaIds: string[], userAccount: string | number[], salt: string): string {
     return hexHashArray([...captchaIds.sort(), userAccount, salt])
 }
 

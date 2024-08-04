@@ -13,30 +13,33 @@
 // limitations under the License.
 
 import {
-    BatchCommitConfigSchema,
+    type BatchCommitConfigSchema,
     DatabaseTypes,
     EnvironmentTypesSchema,
     NetworkNamesSchema,
-    ProsopoCaptchaCountConfigSchemaInput,
-    ProsopoCaptchaSolutionConfigSchema,
-    ProsopoConfigInput,
-    ProsopoConfigOutput,
+    type ProsopoCaptchaCountConfigSchemaInput,
+    type ProsopoCaptchaSolutionConfigSchema,
+    type ProsopoConfigInput,
+    type ProsopoConfigOutput,
     ProsopoConfigSchema,
-    ProsopoNetworksSchemaInput,
+    type ProsopoNetworksSchemaInput,
 } from '@prosopo/types'
 import { getAddress, getPassword, getSecret } from './process.env.js'
-import { getLogLevel } from '@prosopo/common'
+import { getLogger, getLogLevel, LogLevel } from '@prosopo/common'
 import { getRateLimitConfig } from './RateLimiter.js'
+
+const logger = getLogger(LogLevel.enum.info, 'Config')
 
 function getMongoURI(): string {
     const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || 'mongodb'
     const mongoSrv = protocol === 'mongodb+srv'
-    const password = process.env.PROSOPO_DATABASE_PASSWORD || ''
-    const username = process.env.PROSOPO_DATABASE_USERNAME || ''
+    const password = process.env.PROSOPO_DATABASE_PASSWORD || 'root'
+    const username = process.env.PROSOPO_DATABASE_USERNAME || 'root'
     const host = process.env.PROSOPO_DATABASE_HOST || 'localhost'
-    const port = mongoSrv ? '' : `:${process.env.PROSOPO_DATABASE_PORT ? process.env.PROSOPO_DATABASE_PORT : 27017}`
+    const port = mongoSrv ? '' : `:${process.env.PROSOPO_DATABASE_PORT || 27017}`
     const retries = mongoSrv ? '?retryWrites=true&w=majority' : ''
-    return `${protocol}://${username}:${password}@${host}${port}/${retries}`
+    const mongoURI = `${protocol}://${username}:${password}@${host}${port}/${retries}`
+    return mongoURI
 }
 
 export default function getConfig(
@@ -63,13 +66,19 @@ export default function getConfig(
             development: {
                 type: DatabaseTypes.enum.mongo,
                 endpoint: getMongoURI(),
-                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                dbname: process.env.PROSOPO_DATABASE_NAME || 'prosopo',
+                authSource: 'admin',
+            },
+            staging: {
+                type: DatabaseTypes.enum.mongo,
+                endpoint: getMongoURI(),
+                dbname: process.env.PROSOPO_DATABASE_NAME || 'prosopo',
                 authSource: 'admin',
             },
             production: {
                 type: DatabaseTypes.enum.mongo,
                 endpoint: getMongoURI(),
-                dbname: process.env.PROSOPO_DATABASE_NAME || '',
+                dbname: process.env.PROSOPO_DATABASE_NAME || 'prosopo',
                 authSource: 'admin',
             },
         },
@@ -85,5 +94,6 @@ export default function getConfig(
         mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || '',
         mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || '',
         rateLimits: getRateLimitConfig(),
+        proxyCount: process.env.PROSOPO_PROXY_COUNT ? Number.parseInt(process.env.PROSOPO_PROXY_COUNT) : 0,
     } as ProsopoConfigInput)
 }

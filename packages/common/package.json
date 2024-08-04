@@ -19,17 +19,12 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "test": "npx vitest run --config ./vite.test.config.ts",
-        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
-        "prettier:fix": "npm run prettier -- --write",
-        "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "test": "npx vitest run --config ./vite.test.config.ts"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {
+        "@prosopo/util": "1.0.2",
         "@polkadot/util-crypto": "12.6.2",
         "consola": "^3.2.3",
         "i18next": "^21.9.2",

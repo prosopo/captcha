@@ -36,13 +36,7 @@
         "build": "tsc --build --verbose",
         "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
         "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
-        "clean": "tsc --build --clean",
-        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
-        "prettier:fix": "npm run prettier -- --write",
-        "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
+        "clean": "tsc --build --clean"
     },
     "browserslist": {
         "production": [

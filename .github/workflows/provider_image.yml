@@ -1,14 +1,10 @@
+# Build and publish the provider image
+
 name: provider_image
 
 on:
     pull_request:
-        branches: [main]
-        paths:
-            - 'docker/**'
-            - 'dev/**'
-            - 'packages/**'
-            - 'contracts/**'
-            - '.github/workflows/provider_image.yml'
+        branches: [main, dev, staging, release/*]
     workflow_dispatch:
 
 concurrency:
@@ -22,6 +18,7 @@ env:
 jobs:
     check:
         runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
               env:
@@ -71,6 +68,7 @@ jobs:
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
+                  # must restore all cache dirs, and they must exist ahead of this!
                   path: |
                       protocol/cargo-cache
                       protocol/target
@@ -81,7 +79,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -99,9 +97,11 @@ jobs:
             # build the cli production bundle
             - name: Build cli production bundle
               run: |
-                  cp ./dev/scripts/env.production ./packages/cli/.env.production
-                  cp ./dev/scripts/env.production ./.env.production
-                  NODE_ENV=production npm run -w @prosopo/cli bundle:prod
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    cp ./dev/scripts/env.production ./packages/cli/.env.production
+                    cp ./dev/scripts/env.production ./.env.production
+                    NODE_ENV=production npm run -w @prosopo/cli bundle:prod
 
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
@@ -152,11 +152,13 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
               run: |
-                  CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
-                  sleep 20s
-                  docker logs $CONTAINER >& provider.log
-                  echo $(cat provider.log)
-                  grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
+                    sleep 20s
+                    docker logs $CONTAINER >& provider.log
+                    echo $(cat provider.log)
+                    grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
 
             - name: Build the provider-mock package
               id: build_provider_mock_package

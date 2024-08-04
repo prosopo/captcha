@@ -2,10 +2,12 @@
     "name": "@prosopo/detector",
     "version": "1.0.2",
     "main": "src/index.js",
+    "engines": {
+        "node": ">=20",
+        "npm": ">=9"
+    },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 0",
-        "lint:fix": "echo \"Not linting @prosopo/obf-bot\" && exit 0",
-        "lint": "echo \"Not linting @prosopo/obf-bot\" && exit 0",
         "build": "tsc"
     },
     "devDependencies": {

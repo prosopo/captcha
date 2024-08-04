@@ -1,4 +1,3 @@
-version: '3.8'
 services:
     provider:
         image: prosopo/provider:${PROVIDER_IMAGE_VERSION}

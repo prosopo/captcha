@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '../api/params.js'
-import { CaptchaSolutionSchema, CaptchaWithProof } from '../datasets/index.js'
+import { type Captcha, CaptchaSolutionSchema } from '../datasets/index.js'
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from '../config/timeouts.js'
-import { Hash, Provider } from '@prosopo/captcha-contract/types-returns'
 import { ProcaptchaTokenSpec } from '../procaptcha/index.js'
 import {
-    ZodDefault,
-    ZodNumber,
-    ZodObject,
-    ZodOptional,
+    type ZodDefault,
+    type ZodNumber,
+    type ZodObject,
+    type ZodOptional,
     array,
-    input,
+    type input,
     number,
     object,
-    output,
+    type output,
     string,
-    infer as zInfer,
+    type infer as zInfer,
 } from 'zod'
 
 export enum ApiPaths {
@@ -74,6 +73,22 @@ type RateLimit = {
     limit: number
 }
 
+export type Hash = string | number[]
+
+export type Provider = {
+    url: Array<number>
+    datasetId: Hash
+    datasetIdContent: Hash
+}
+
+export type FrontendProvider = Omit<Provider, 'url'> & { url: string }
+
+export type RandomProvider = {
+    providerAccount: string
+    provider: FrontendProvider
+    blockNumber: number
+}
+
 type RateLimitSchemaType = ZodObject<{
     windowMs: ZodDefault<ZodOptional<ZodNumber>>
     limit: ZodDefault<ZodOptional<ZodNumber>>
@@ -102,6 +117,8 @@ export interface DappUserSolutionResult {
     [ApiParams.captchas]: CaptchaIdAndProof[]
     partialFee?: string
     [ApiParams.verified]: boolean
+    [ApiParams.timestamp]: string
+    [ApiParams.timestampSignature]: string
 }
 
 export interface CaptchaSolutionResponse extends DappUserSolutionResult {
@@ -123,8 +140,10 @@ export const CaptchaRequestBody = object({
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>
 
 export type CaptchaResponseBody = {
-    [ApiParams.captchas]: CaptchaWithProof[]
+    [ApiParams.captchas]: Captcha[]
     [ApiParams.requestHash]: string
+    [ApiParams.timestamp]: string
+    [ApiParams.timestampSignature]: string
 }
 
 export const CaptchaSolutionBody = object({
@@ -133,6 +152,8 @@ export const CaptchaSolutionBody = object({
     [ApiParams.captchas]: array(CaptchaSolutionSchema),
     [ApiParams.requestHash]: string(),
     [ApiParams.signature]: string(), // the signature to prove account ownership
+    [ApiParams.timestamp]: string(),
+    [ApiParams.timestampSignature]: string(),
 })
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>
@@ -179,6 +200,8 @@ export interface GetPowCaptchaResponse {
     [ApiParams.challenge]: string
     [ApiParams.difficulty]: number
     [ApiParams.signature]: string
+    [ApiParams.timestamp]: string
+    [ApiParams.timestampSignature]: string
 }
 
 export interface PowCaptchaSolutionResponse {
@@ -207,7 +230,6 @@ export type GetPowCaptchaChallengeRequestBodyType = zInfer<typeof GetPowCaptchaC
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<typeof ServerPowCaptchaVerifyRequestBody>
 
 export const SubmitPowCaptchaSolutionBody = object({
-    [ApiParams.blockNumber]: number(),
     [ApiParams.challenge]: string(),
     [ApiParams.difficulty]: number(),
     [ApiParams.signature]: string(),

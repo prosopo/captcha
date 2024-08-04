@@ -1,4 +1,3 @@
-version: '3.4'
 services:
     substrate:
         image: prosopo/substrate-contracts-node:v0.35

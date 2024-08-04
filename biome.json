@@ -1,0 +1,19 @@
+{
+    "vcs": {
+        "useIgnoreFile": true
+    },
+    "files": {
+        "include": [
+            "**/*.js",
+            "**/*.jsx",
+            "**/*.cjs",
+            "**/*.mjs",
+            "**/*.ts",
+            "**/*.tsx",
+            "**/*.cts",
+            "**/*.mts",
+            "**/*.json",
+            "**/*.jsonc"
+        ]
+    }
+}

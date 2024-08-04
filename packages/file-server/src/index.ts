@@ -11,17 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
 import { isMain } from '@prosopo/util'
 import dotenv from 'dotenv'
 import express, { Request, Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
 import stream from 'stream'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
 
 const parseArray = (value: string) => {
     try {

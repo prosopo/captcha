@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util/bn'
-import { Hash } from '@prosopo/captcha-contract/types-arguments'
+import { Hash } from '@prosopo/types'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 
 export interface ExtrinsicBatch {

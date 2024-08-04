@@ -68,4 +68,5 @@ export function isBot(): Promise<{
     isBot: boolean
     botType: any
 }>
+export function getFingerprint(): Promise<string>
 //# sourceMappingURL=index.d.ts.map
