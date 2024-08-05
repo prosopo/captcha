@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams } from '../api/index.js'
-import { CaptchaResponseBody } from '../provider/index.js'
-import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { ProcaptchaToken, ProcaptchaTokenSpec } from './token.js'
-import { ProsopoCaptchaApiInterface } from './api.js'
-import { TCaptchaSubmitResult } from './client.js'
+import type { CaptchaResponseBody } from '../provider/index.js'
+import type { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { type ProcaptchaToken, ProcaptchaTokenSpec } from './token.js'
+import type { ProsopoCaptchaApiInterface } from './api.js'
+import type { TCaptchaSubmitResult } from './client.js'
 import { object } from 'zod'
 /**
  * House the account and associated extension.

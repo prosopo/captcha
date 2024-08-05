@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Cli } from './index.js'
-import { CliCommandAny } from './cli/cliCommand.js'
+import type { CliCommandAny } from './cli/cliCommand.js'
 import { Flatten } from './commands/flatten.js'
 import { GenerateV1 } from './commands/generateV1.js'
 import { GenerateV2 } from './commands/generateV2.js'

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { Data, DataSchema, Item } from '@prosopo/types'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { type Data, DataSchema, type Item } from '@prosopo/types'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util/lodash'

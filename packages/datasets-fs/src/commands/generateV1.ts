@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { CaptchaTypes, CaptchaWithoutId, Captchas, CaptchasContainerSchema, Item, RawSolution } from '@prosopo/types'
+import { CaptchaTypes, type CaptchaWithoutId, type Captchas, CaptchasContainerSchema, type Item, type RawSolution } from '@prosopo/types'
 import { Generate, ArgsSchema as GenerateArgsSchema } from './generate.js'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
 import { at, get } from '@prosopo/util'
@@ -91,7 +91,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             const nIncorrect = size - nCorrect
 
             const targetItems: Item[] = get(this.labelToImages, target)
-            const notTargetItems: Item[] = notTargets.map((notTarget) => get(this.labelToImages, notTarget)).flat()
+            const notTargetItems: Item[] = notTargets.flatMap((notTarget) => get(this.labelToImages, notTarget))
 
             if (targetItems.length < nCorrect) {
                 throw new ProsopoEnvError(new Error(`not enough images for target (${target})`), {

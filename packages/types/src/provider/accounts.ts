@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util/bn'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { BN } from '@polkadot/util/bn'
+import type { KeyringPair } from '@polkadot/keyring/types'
 
 //temp
 export enum Payee {

@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
-import { Drop } from 'esbuild'
-import { UserConfig } from 'vite'
+import type { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
+import type { Drop } from 'esbuild'
+import type { UserConfig } from 'vite'
 import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'

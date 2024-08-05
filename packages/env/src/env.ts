@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
+import type { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
+import type { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProsopoBasicConfigOutput } from '@prosopo/types'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import type { ProsopoBasicConfigOutput } from '@prosopo/types'
+import type { ProsopoEnvironment } from '@prosopo/types-env'
 import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {

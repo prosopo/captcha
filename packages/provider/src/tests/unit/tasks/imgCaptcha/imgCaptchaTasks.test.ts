@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Captcha, CaptchaSolution, CaptchaStatus, PendingCaptchaRequest } from '@prosopo/types'
-import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError } from '@prosopo/common'
+import { type Captcha, type CaptchaSolution, CaptchaStatus, type PendingCaptchaRequest } from '@prosopo/types'
+import type { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { type Logger, ProsopoEnvError } from '@prosopo/common'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { computePendingRequestHash, compareCaptchaSolutions, parseAndSortCaptchaSolutions } from '@prosopo/datasets'
 import { u8aToHex, stringToHex, hexToU8a } from '@polkadot/util'
 import { ImgCaptchaManager } from '../../../../tasks/imgCaptcha/imgCaptchaTasks.js'

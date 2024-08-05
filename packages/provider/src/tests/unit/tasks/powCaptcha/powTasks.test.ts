@@ -13,9 +13,9 @@
 // limitations under the License.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { u8aToHex, stringToHex } from '@polkadot/util'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { Database } from '@prosopo/types-database'
+import type { Database } from '@prosopo/types-database'
 import { PowCaptchaManager } from '../../../../tasks/powCaptcha/powTasks.js'
 import {
     checkRecentPowSolution,

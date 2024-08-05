@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Brand, brand, brandClass, brandKey, getBrand, unbrand } from '../index.js'
+import { type Brand, brand, brandClass, brandKey, getBrand, unbrand } from '../index.js'
 import { describe, expect, expectTypeOf, test } from 'vitest'
 
 export type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2

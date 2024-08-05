@@ -32,9 +32,9 @@ const parseVersion = (version: string) => {
             throw new Error()
         }
         let [major, minor, patch] = parts
-        major = parseInt(major ?? '').toString()
-        minor = parseInt(minor ?? '').toString()
-        patch = parseInt(patch ?? '').toString()
+        major = Number.parseInt(major ?? '').toString()
+        minor = Number.parseInt(minor ?? '').toString()
+        patch = Number.parseInt(patch ?? '').toString()
         if (major === 'NaN' || minor === 'NaN' || patch === 'NaN') {
             throw new Error()
         }

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ProsopoConfigOutput, CaptchaConfig, DatasetRaw, StoredEvents } from '@prosopo/types'
-import { Logger } from '@prosopo/common'
-import { Database } from '@prosopo/types-database'
+import type { ProsopoConfigOutput, CaptchaConfig, DatasetRaw, StoredEvents } from '@prosopo/types'
+import type { Logger } from '@prosopo/common'
+import type { Database } from '@prosopo/types-database'
 import { saveCaptchaEvent, saveCaptchas } from '@prosopo/database'
 import { parseCaptchaDataset } from '@prosopo/datasets'
 import { DatasetManager } from '../../../../tasks/dataset/datasetTasks.js'

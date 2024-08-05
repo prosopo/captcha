@@ -14,25 +14,25 @@
 import {
     ApiParams,
     ApiPaths,
-    Captcha,
+    type Captcha,
     CaptchaRequestBody,
-    CaptchaResponseBody,
+    type CaptchaResponseBody,
     CaptchaSolutionBody,
-    CaptchaSolutionBodyType,
-    CaptchaSolutionResponse,
-    DappUserSolutionResult,
+    type CaptchaSolutionBodyType,
+    type CaptchaSolutionResponse,
+    type DappUserSolutionResult,
     GetPowCaptchaChallengeRequestBody,
-    PowCaptchaSolutionResponse,
+    type PowCaptchaSolutionResponse,
     SubmitPowCaptchaSolutionBody,
 } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { handleErrors } from './errorHandler.js'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto/address'
 import { version } from '@prosopo/util'
-import express, { Router } from 'express'
+import express, { type Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

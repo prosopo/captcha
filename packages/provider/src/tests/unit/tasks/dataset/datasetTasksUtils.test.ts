@@ -14,7 +14,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ProsopoEnvError } from '@prosopo/common'
 import { buildDataset } from '@prosopo/datasets'
-import { DatasetRaw } from '@prosopo/types'
+import type { DatasetRaw } from '@prosopo/types'
 import { providerValidateDataset } from '../../../../tasks/dataset/datasetTasksUtils.js'
 
 // Mock buildDataset function

@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Connection } from 'mongoose'
-import { ProsopoServerConfigOutput } from '@prosopo/types'
+import type { Connection } from 'mongoose'
+import type { ProsopoServerConfigOutput } from '@prosopo/types'
 import { isAuth, login, signup } from '../controllers/auth.js'
 import express from 'express'
 

@@ -14,7 +14,7 @@
 import { ApiParams } from '../api/params.js'
 import { Option, Struct, str, u32 } from 'scale-ts'
 import { hexToU8a, u8aToHex } from '@polkadot/util'
-import { number, object, string, infer as zInfer } from 'zod'
+import { number, object, string, type infer as zInfer } from 'zod'
 
 export const ProcaptchaOutputSchema = object({
     [ApiParams.commitmentId]: string().optional(),

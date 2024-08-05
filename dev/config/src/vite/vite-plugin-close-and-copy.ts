@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Plugin } from 'vite'
+import type { Plugin } from 'vite'
 import { getLogger } from '@prosopo/common'
 import fs from 'node:fs'
 import path from 'path'

@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { AbiMetadata, AbiStorageField } from '@prosopo/types'
-import { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { AbiMetadata, AbiStorageField } from '@prosopo/types'
+import type { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { ProsopoContractError, reverseHexString } from '@prosopo/common'
 import { at, get } from '@prosopo/util'
 import { firstValueFrom } from 'rxjs'
@@ -41,7 +41,7 @@ export type PrimitiveStorageFields = {
  * @return an object containing the primitive types, keyed on their IDs in the contract JSON
  * @param abiJson
  */
-export const getPrimitiveTypes = function (abiJson: AbiMetadata): PrimitiveTypes {
+export const getPrimitiveTypes = (abiJson: AbiMetadata): PrimitiveTypes => {
     const primitiveTypes: { [key: number]: string } = {}
     const types = abiJson.types.filter((type) => {
         if (type.type.def.primitive) {
@@ -136,7 +136,7 @@ export function getStorageKeyAndType(
         }
 
         const rootKeyReversed = reverseHexString(rootKey.slice(2))
-        const item = at(abi.registry.lookup.types, parseInt(storage.layout.leaf.ty))
+        const item = at(abi.registry.lookup.types, Number.parseInt(storage.layout.leaf.ty))
         return {
             storageType: item,
             storageKey: rootKeyReversed,

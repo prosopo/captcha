@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { consoleTableWithWrapping } from '@prosopo/util'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 import { main } from '../lib/logs.js'
@@ -30,7 +30,7 @@ const fluxAuthArgs = z.object({
 const writeLogs = (file: string, result: { url: string; logs: string }[]) => {
     const filePath = path.resolve(file)
     // delete the file if it exists
-    fs.unlink(file, function (err) {
+    fs.unlink(file, (err) => {
         if (err) return console.log(err)
         console.log('file deleted successfully')
     })

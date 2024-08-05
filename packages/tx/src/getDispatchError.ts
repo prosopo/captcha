@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DispatchError } from '@polkadot/types/interfaces'
+import type { DispatchError } from '@polkadot/types/interfaces'
 
 /** Convert a dispatch error to a readable message
  * @param dispatchError

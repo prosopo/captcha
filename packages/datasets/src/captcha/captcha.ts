@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    AssetsResolver,
-    Captcha,
-    CaptchaSolution,
+    type AssetsResolver,
+    type Captcha,
+    type CaptchaSolution,
     CaptchaSolutionArraySchema,
-    CaptchaWithoutId,
-    DatasetRaw,
+    type CaptchaWithoutId,
+    type DatasetRaw,
     DatasetWithNumericSolutionSchema,
-    HashedItem,
-    HashedSolution,
-    Item,
-    RawSolution,
+    type HashedItem,
+    type HashedSolution,
+    type Item,
+    type RawSolution,
 } from '@prosopo/types'
 import { ProsopoDatasetError, ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { at } from '@prosopo/util'

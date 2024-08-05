@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { IProsopoCaptchaContract } from '@prosopo/types'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { BN } from '@polkadot/util'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { IProsopoCaptchaContract } from '@prosopo/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, ProsopoContractError, getLogger } from '@prosopo/common'
-import { TransactionQueue } from './txQueue.js'
+import type { TransactionQueue } from './txQueue.js'
 
 const log = getLogger(LogLevel.enum.info, 'submitTx')
 

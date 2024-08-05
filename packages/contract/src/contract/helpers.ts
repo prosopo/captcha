@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Abi } from '@polkadot/api-contract/Abi'
-import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { ApiBase } from '@polkadot/api/types'
+import type { Abi } from '@polkadot/api-contract/Abi'
+import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
+import type { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
+import type { AnyJson } from '@polkadot/types/types/codec'
+import type { ApiBase } from '@polkadot/api/types'
 import { BN, BN_ONE, BN_ZERO, bnFromHex } from '@polkadot/util/bn'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
-import { Registry } from '@polkadot/types-codec/types/registry'
-import { SubmittableResult } from '@polkadot/api/submittable'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { type Logger, ProsopoContractError, capitaliseFirstLetter } from '@prosopo/common'
+import type { Registry } from '@polkadot/types-codec/types/registry'
+import type { SubmittableResult } from '@polkadot/api/submittable'
 import { isHex, isU8a } from '@polkadot/util/is'
 import { stringToHex } from '@polkadot/util/string'
 

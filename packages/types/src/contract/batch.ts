@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util/bn'
-import { Hash } from '@prosopo/types'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { BN } from '@polkadot/util/bn'
+import type { Hash } from '@prosopo/types'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 
 export interface ExtrinsicBatch {
     extrinsics: SubmittableExtrinsic<'promise'>[]

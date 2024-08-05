@@ -13,7 +13,8 @@
 // limitations under the License.
 import { css } from '@emotion/react'
 import { darkTheme, lightTheme } from './theme.js'
-import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
+import type React from 'react'
+import { type ButtonHTMLAttributes, type CSSProperties, useMemo, useState } from 'react'
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     themeColor: 'light' | 'dark'

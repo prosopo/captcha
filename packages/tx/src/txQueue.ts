@@ -37,12 +37,12 @@
  * be a ContractSubmittableResult. If the queue is currently submitting a transaction, the callback will not be called
  * until the transaction has been submitted. The transaction will be submitted later by the queue.
  */
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ISubmittableResult } from '@polkadot/types/types'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoContractError, ProsopoTxQueueError, getLogLevel, getLogger } from '@prosopo/common'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { SubmittableResult } from '@polkadot/api/submittable'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { ISubmittableResult } from '@polkadot/types/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type LogLevel, type Logger, ProsopoContractError, ProsopoTxQueueError, getLogLevel, getLogger } from '@prosopo/common'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { SubmittableResult } from '@polkadot/api/submittable'
 import { getDispatchError } from './getDispatchError.js'
 
 type TxCallbackFn = (result: ISubmittableResult) => void

@@ -13,7 +13,7 @@
 // limitations under the License.
 // generate some dummy data for testing the generate fns
 
-import { CaptchaItemTypes, Item, LabelledItem } from '@prosopo/types'
+import { CaptchaItemTypes, type Item, type LabelledItem } from '@prosopo/types'
 import fs from 'fs'
 
 const nLabels = 4

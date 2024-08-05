@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId } from '@polkadot/types/interfaces'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { KeypairType } from '@polkadot/util-crypto/types'
+import type { AccountId } from '@polkadot/types/interfaces'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { NetworkConfig, NetworkPairTypeSchema, PolkadotSecretJSON } from '@prosopo/types'
+import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
+import { type NetworkConfig, NetworkPairTypeSchema, type PolkadotSecretJSON } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { hexToU8a } from '@polkadot/util/hex'

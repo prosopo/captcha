@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProsopoCliError } from '@prosopo/common'
 import { Readable } from 'stream'
-import fs, { WriteStream, createWriteStream } from 'fs'
+import fs, { type WriteStream, createWriteStream } from 'fs'
 
 export function loadJSONFile(filePath: string) {
     try {

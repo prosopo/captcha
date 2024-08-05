@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, ProcaptchaToken, ProsopoServerConfigOutput } from '@prosopo/types'
-import { Connection } from 'mongoose'
-import { NextFunction, Request, Response } from 'express'
+import { ApiParams, type ProcaptchaToken, type ProsopoServerConfigOutput } from '@prosopo/types'
+import type { Connection } from 'mongoose'
+import type { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoServer } from '@prosopo/server'
-import { UserInterface } from '../models/user.js'
+import type { UserInterface } from '../models/user.js'
 import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
 import { getPairAsync } from '@prosopo/contract'

@@ -61,7 +61,7 @@ export const exec = (
     })
 
     return new Promise((resolve, reject) => {
-        prc.on('close', function (code) {
+        prc.on('close', (code) => {
             if (pipe || pipe === undefined) {
                 console.log('')
             }

@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AwaitedProcessedArgs } from './argv.js'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { AwaitedProcessedArgs } from './argv.js'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Server } from 'node:net'
+import type { Server } from 'node:net'
 import { loadEnv } from './env.js'
 import { start } from './start.js'
 import fs from 'fs'

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import { Captcha } from '@prosopo/types'
+import type { Captcha } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import Chainable = Cypress.Chainable
-import { SolutionRecord } from '@prosopo/types-database'
+import type { SolutionRecord } from '@prosopo/types-database'
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace

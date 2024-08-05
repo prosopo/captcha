@@ -16,7 +16,7 @@
 // PROSOPO_SITE_KEY=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
 
 import { EnvironmentTypesSchema, NetworkNamesSchema } from '@prosopo/types'
-import { ProsopoClientConfigInput } from '@prosopo/types'
+import type { ProsopoClientConfigInput } from '@prosopo/types'
 
 const getWeb2 = (): boolean | undefined => {
     return process.env.PROSOPO_WEB2 === 'true' ? true : process.env.PROSOPO_WEB2 === 'false' ? false : undefined

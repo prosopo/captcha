@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
+import type { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
 import { Extension } from './Extension.js'
-import { InjectedAccount } from '@polkadot/extension-inject/types'
-import { InjectedExtension } from '@polkadot/extension-inject/types'
-import { KeypairType } from '@polkadot/util-crypto/types'
+import type { InjectedAccount } from '@polkadot/extension-inject/types'
+import type { InjectedExtension } from '@polkadot/extension-inject/types'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError, hexHash } from '@prosopo/common'
 import { default as Signer } from '@polkadot/extension-base/page/Signer'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'

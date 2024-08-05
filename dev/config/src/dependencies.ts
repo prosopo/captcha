@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Glob } from 'glob'
-import { ProjectReference } from 'typescript'
+import type { ProjectReference } from 'typescript'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import child_process from 'child_process'
@@ -122,7 +122,7 @@ export async function getExternalsFromReferences(
                     if (err) {
                         reject(err)
                     }
-                    fs.readFile(new URL(packageJsonPath, import.meta.url), function (err, buffer) {
+                    fs.readFile(new URL(packageJsonPath, import.meta.url), (err, buffer) => {
                         if (err) {
                             reject(err)
                         } else {

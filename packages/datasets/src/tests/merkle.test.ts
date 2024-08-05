@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
+import { CaptchaItemTypes, CaptchaTypes, type Dataset, type RawSolution } from '@prosopo/types'
 import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../index.js'
 import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
@@ -55,7 +55,7 @@ async function getDataset(): Promise<Dataset> {
     }
 }
 
-describe('DATASETS MERKLE TREE', async function () {
+describe('DATASETS MERKLE TREE', async () => {
     let DATASET: Dataset
     beforeAll(async () => {
         DATASET = await getDataset()

@@ -13,7 +13,7 @@
 // limitations under the License.
 import { LogLevels as ConsolaLogLevels, createConsola } from 'consola/browser'
 import { ProsopoEnvError } from './error.js'
-import { enum as zEnum, infer as zInfer } from 'zod'
+import { enum as zEnum, type infer as zInfer } from 'zod'
 
 // allows access to log levels via index, e.g. myLogger[LogLevel.enum.debug](...) or myLogger['error'](...), etc
 type LoggerLevelFns = {
@@ -52,7 +52,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         error: logger.error,
         fatal: logger.fatal,
         setLogLevel: (level: LogLevel | string) => {
-            let logLevel = NaN
+            let logLevel = Number.NaN
             level = getLogLevel(level) // sanitise
             switch (level) {
                 case LogLevel.enum.trace:

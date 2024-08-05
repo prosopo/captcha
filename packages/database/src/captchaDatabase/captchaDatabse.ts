@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { UserCommitmentRecord, UserCommitmentRecordSchema } from '@prosopo/types-database'
+import { type UserCommitmentRecord, UserCommitmentRecordSchema } from '@prosopo/types-database'
 import { getLoggerDefault } from '@prosopo/common'
 import mongoose from 'mongoose'
 const logger = getLoggerDefault()

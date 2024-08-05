@@ -21,7 +21,7 @@ const logger = getLogger(`Info`, `vite.config.js`)
 const dir = path.resolve('.')
 loadEnv(dir)
 // https://vitejs.dev/config/
-export default defineConfig(function ({ command, mode }) {
+export default defineConfig(({ command, mode }) => {
     logger.info(`Running at ${dir} in ${mode} mode`)
     // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
     // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes

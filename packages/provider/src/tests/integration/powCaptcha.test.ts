@@ -13,7 +13,7 @@
 // limitations under the License.
 import { describe, it, expect } from 'vitest'
 import fetch from 'node-fetch'
-import { ApiPaths, PoWCaptcha, PowCaptchaSolutionResponse } from '@prosopo/types'
+import { ApiPaths, type PoWCaptcha, type PowCaptchaSolutionResponse } from '@prosopo/types'
 import { sha256 } from '@noble/hashes/sha256'
 
 // Define the endpoint path and base URL

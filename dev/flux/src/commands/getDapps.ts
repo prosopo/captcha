@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 import { main } from '../lib/getDapps.js'
 

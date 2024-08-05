@@ -15,18 +15,18 @@ import {
     ApiParams,
     ApiPaths,
     CaptchaStatus,
-    ImageVerificationResponse,
+    type ImageVerificationResponse,
     ServerPowCaptchaVerifyRequestBody,
-    VerificationResponse,
+    type VerificationResponse,
     VerifySolutionBody,
 } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { decodeProcaptchaOutput } from '@prosopo/types'
 import { handleErrors } from './errorHandler.js'
 import { verifySignature } from './authMiddleware.js'
-import express, { NextFunction, Request, Response, Router } from 'express'
+import express, { type NextFunction, type Request, type Response, type Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Database } from '@prosopo/types-database'
+import type { Database } from '@prosopo/types-database'
 import { ProsopoContractError } from '@prosopo/common'
-import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { type ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { at } from '@prosopo/util'
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto/address'
 import { hexToU8a } from '@polkadot/util/hex'
@@ -69,7 +69,7 @@ export async function promiseQueue<T>(array: (() => Promise<T>)[]): Promise<Prom
 }
 
 export function parseBlockNumber(blockNumberString: string) {
-    return parseInt(blockNumberString.replace(/,/g, ''))
+    return Number.parseInt(blockNumberString.replace(/,/g, ''))
 }
 
 /**

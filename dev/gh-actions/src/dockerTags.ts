@@ -39,8 +39,8 @@ export async function fetchTags(namespace: string, repository: string): Promise<
 }
 
 export const semVerLt = (a: string, b: string): number => {
-    const aParts = a.split('.').map((part) => parseInt(part, 10))
-    const bParts = b.split('.').map((part) => parseInt(part, 10))
+    const aParts = a.split('.').map((part) => Number.parseInt(part, 10))
+    const bParts = b.split('.').map((part) => Number.parseInt(part, 10))
 
     if (aParts.length !== bParts.length || aParts.length !== 3) {
         // not semver, so compare lexicographically

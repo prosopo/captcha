@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Account,
+    type Account,
     ApiParams,
-    CaptchaResponseBody,
-    CaptchaSolution,
-    ProcaptchaCallbacks,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type CaptchaResponseBody,
+    type CaptchaSolution,
+    type ProcaptchaCallbacks,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-    RandomProvider,
-    StoredEvents,
-    TCaptchaSubmitResult,
+    type ProcaptchaState,
+    type ProcaptchaStateUpdateFn,
+    type RandomProvider,
+    type StoredEvents,
+    type TCaptchaSubmitResult,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ExtensionWeb2, ExtensionWeb3 } from '@prosopo/account'

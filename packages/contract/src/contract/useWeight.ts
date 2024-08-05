@@ -15,7 +15,7 @@
 // Copyright 2017-2023 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN } from '@polkadot/util/bn'
 import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util/bn'
 import { calcInterval } from './useBlockInterval.js'

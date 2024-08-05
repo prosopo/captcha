@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
-import { EnvironmentTypes } from '@prosopo/types'
+import type { EnvironmentTypes } from '@prosopo/types'
 
 export type HardcodedProvider = {
     address: string

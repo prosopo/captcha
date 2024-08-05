@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { formatEnvToArray } from '../lib/formatEnv.js'
 import fs from 'fs'
 import path from 'path'

@@ -14,13 +14,13 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
-    Features,
+    type Features,
     FeaturesEnum,
     NetworkNamesSchema,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaToken,
+    type ProcaptchaToken,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
@@ -122,8 +122,8 @@ const setValidChallengeLength = (
     const challengeValidLengthAttribute =
         renderOptions?.['challenge-valid-length'] || element.getAttribute('data-challenge-valid-length')
     if (challengeValidLengthAttribute) {
-        config.captchas.image.solutionTimeout = parseInt(challengeValidLengthAttribute)
-        config.captchas.pow.solutionTimeout = parseInt(challengeValidLengthAttribute)
+        config.captchas.image.solutionTimeout = Number.parseInt(challengeValidLengthAttribute)
+        config.captchas.pow.solutionTimeout = Number.parseInt(challengeValidLengthAttribute)
     }
 }
 

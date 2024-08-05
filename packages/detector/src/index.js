@@ -13,19 +13,19 @@
 // limitations under the License.
 //@ts-nocheck
 var _0x655c40 = _0x3c14
-;(function (_0x193fd7, _0x327d6e) {
+;((_0x193fd7, _0x327d6e) => {
     var _0x1d6ff6 = _0x3c14,
         _0x3d7ba6 = _0x193fd7()
     while (!![]) {
         try {
             var _0x7b96c9 =
-                (-parseInt(_0x1d6ff6(0x480)) / 0x1) * (-parseInt(_0x1d6ff6(0x4a5)) / 0x2) +
-                (-parseInt(_0x1d6ff6(0x359)) / 0x3) * (parseInt(_0x1d6ff6(0x4e6)) / 0x4) +
-                -parseInt(_0x1d6ff6(0x350)) / 0x5 +
-                parseInt(_0x1d6ff6(0x229)) / 0x6 +
-                (parseInt(_0x1d6ff6(0x2c3)) / 0x7) * (-parseInt(_0x1d6ff6(0x147)) / 0x8) +
-                parseInt(_0x1d6ff6(0x44b)) / 0x9 +
-                (-parseInt(_0x1d6ff6(0x458)) / 0xa) * (-parseInt(_0x1d6ff6(0x13c)) / 0xb)
+                (-Number.parseInt(_0x1d6ff6(0x480)) / 0x1) * (-Number.parseInt(_0x1d6ff6(0x4a5)) / 0x2) +
+                (-Number.parseInt(_0x1d6ff6(0x359)) / 0x3) * (Number.parseInt(_0x1d6ff6(0x4e6)) / 0x4) +
+                -Number.parseInt(_0x1d6ff6(0x350)) / 0x5 +
+                Number.parseInt(_0x1d6ff6(0x229)) / 0x6 +
+                (Number.parseInt(_0x1d6ff6(0x2c3)) / 0x7) * (-Number.parseInt(_0x1d6ff6(0x147)) / 0x8) +
+                Number.parseInt(_0x1d6ff6(0x44b)) / 0x9 +
+                (-Number.parseInt(_0x1d6ff6(0x458)) / 0xa) * (-Number.parseInt(_0x1d6ff6(0x13c)) / 0xb)
             if (_0x7b96c9 === _0x327d6e) break
             else _0x3d7ba6['push'](_0x3d7ba6['shift']())
         } catch (_0x4cc893) {
@@ -33,24 +33,22 @@ var _0x655c40 = _0x3c14
         }
     }
 })(_0x4955, 0xdbcf6)
-var extendStatics = function (_0x4ff1a9, _0x10497e) {
-    return (
+var extendStatics = (_0x4ff1a9, _0x10497e) => (
         (extendStatics =
             Object['setPrototypeOf'] ||
             ({ __proto__: [] } instanceof Array &&
-                function (_0xe36445, _0x5abc36) {
+                ((_0xe36445, _0x5abc36) => {
                     var _0x53cefc = _0x3c14
                     _0xe36445[_0x53cefc(0x310)] = _0x5abc36
-                }) ||
-            function (_0x83efb, _0x1f4180) {
+                })) ||
+            ((_0x83efb, _0x1f4180) => {
                 var _0x11cdac = _0x3c14
                 for (var _0x1e09fa in _0x1f4180)
                     if (Object['prototype']['hasOwnProperty'][_0x11cdac(0x247)](_0x1f4180, _0x1e09fa))
                         _0x83efb[_0x1e09fa] = _0x1f4180[_0x1e09fa]
-            }),
+            })),
         extendStatics(_0x4ff1a9, _0x10497e)
     )
-}
 function __extends(_0x955903, _0x5ef92c) {
     var _0x5d638e = _0x3c14
     if (typeof _0x5ef92c !== _0x5d638e(0x1a9) && _0x5ef92c !== null)
@@ -90,11 +88,11 @@ function __awaiter(_0x183fe5, _0x9d145b, _0x2c5154, _0x5cdd32) {
     function _0x88f13f(_0x3d660e) {
         return _0x3d660e instanceof _0x2c5154
             ? _0x3d660e
-            : new _0x2c5154(function (_0x3d45bd) {
+            : new _0x2c5154((_0x3d45bd) => {
                   _0x3d45bd(_0x3d660e)
               })
     }
-    return new (_0x2c5154 || (_0x2c5154 = Promise))(function (_0xf969f4, _0x3e1317) {
+    return new (_0x2c5154 || (_0x2c5154 = Promise))((_0xf969f4, _0x3e1317) => {
         var _0x47bdfd = _0x3c14
         function _0x588db6(_0x54c9bf) {
             try {
@@ -124,7 +122,7 @@ function __generator(_0x52650c, _0xf5c5ce) {
     var _0x1fc127 = _0x3c14,
         _0x9774c5 = {
             label: 0x0,
-            sent: function () {
+            sent: () => {
                 if (_0x200ca6[0x0] & 0x1) throw _0x200ca6[0x1]
                 return _0x200ca6[0x1]
             },
@@ -144,9 +142,7 @@ function __generator(_0x52650c, _0xf5c5ce) {
         _0x1feea7
     )
     function _0xc012b5(_0x45d449) {
-        return function (_0x703512) {
-            return _0x2885f7([_0x45d449, _0x703512])
-        }
+        return (_0x703512) => _0x2885f7([_0x45d449, _0x703512])
     }
     function _0x2885f7(_0x4372b6) {
         var _0x372277 = _0x1fc127
@@ -234,24 +230,18 @@ function __spreadArray(_0x26f22f, _0x4344e1, _0x3096a3) {
 }
 var version$1 = _0x655c40(0x328)
 function wait(_0x5ced80, _0x491f57) {
-    return new Promise(function (_0x4818fe) {
-        return setTimeout(_0x4818fe, _0x5ced80, _0x491f57)
-    })
+    return new Promise((_0x4818fe) => setTimeout(_0x4818fe, _0x5ced80, _0x491f57))
 }
 function requestIdleCallbackIfAvailable(_0x367beb, _0x476a89) {
     var _0x28ad86 = _0x655c40
-    _0x476a89 === void 0x0 && (_0x476a89 = Infinity)
+    _0x476a89 === void 0x0 && (_0x476a89 = Number.POSITIVE_INFINITY)
     var _0x267d23 = window[_0x28ad86(0x2b2)]
     return _0x267d23
-        ? new Promise(function (_0x15bfc9) {
-              return _0x267d23['call'](
+        ? new Promise((_0x15bfc9) => _0x267d23['call'](
                   window,
-                  function () {
-                      return _0x15bfc9()
-                  },
+                  () => _0x15bfc9(),
                   { timeout: _0x476a89 }
-              )
-          })
+              ))
         : wait(Math['min'](_0x367beb, _0x476a89))
 }
 function isPromise(_0x4d4cdc) {
@@ -263,12 +253,8 @@ function awaitIfAsync(_0x12e18d, _0x59cf60) {
         var _0x26c9e1 = _0x12e18d()
         isPromise(_0x26c9e1)
             ? _0x26c9e1['then'](
-                  function (_0x40e74b) {
-                      return _0x59cf60(!![], _0x40e74b)
-                  },
-                  function (_0x5795f0) {
-                      return _0x59cf60(![], _0x5795f0)
-                  }
+                  (_0x40e74b) => _0x59cf60(!![], _0x40e74b),
+                  (_0x5795f0) => _0x59cf60(![], _0x5795f0)
               )
             : _0x59cf60(!![], _0x26c9e1)
     } catch (_0x44bcfb) {
@@ -280,7 +266,7 @@ function mapWithBreaks(_0x56ed3c, _0x49aae6, _0x17da03) {
         _0x17da03 === void 0x0 && (_0x17da03 = 0x10),
         __awaiter(this, void 0x0, void 0x0, function () {
             var _0x157c3f, _0x1aef92, _0x36808b, _0x3ed8f3
-            return __generator(this, function (_0x5657d0) {
+            return __generator(this, (_0x5657d0) => {
                 var _0x35cd4a = _0x3c14
                 switch (_0x5657d0[_0x35cd4a(0x3d3)]) {
                     case 0x0:
@@ -309,9 +295,7 @@ function mapWithBreaks(_0x56ed3c, _0x49aae6, _0x17da03) {
 }
 function suppressUnhandledRejectionWarning(_0x5ccd60) {
     var _0x586a11 = _0x655c40
-    _0x5ccd60[_0x586a11(0x1db)](void 0x0, function () {
-        return void 0x0
-    })
+    _0x5ccd60[_0x586a11(0x1db)](void 0x0, () => void 0x0)
 }
 function x64Add(_0x5c85f0, _0x29ff61) {
     ;(_0x5c85f0 = [_0x5c85f0[0x0] >>> 0x10, _0x5c85f0[0x0] & 0xffff, _0x5c85f0[0x1] >>> 0x10, _0x5c85f0[0x1] & 0xffff]),
@@ -540,19 +524,17 @@ function excludes(_0x375680, _0x1ed857) {
     return !includes$1(_0x375680, _0x1ed857)
 }
 function toInt(_0x540a6e) {
-    return parseInt(_0x540a6e)
+    return Number.parseInt(_0x540a6e)
 }
 function toFloat(_0x132b52) {
-    return parseFloat(_0x132b52)
+    return Number.parseFloat(_0x132b52)
 }
 function replaceNaN(_0x486edf, _0x164545) {
     var _0x1aefc1 = _0x655c40
     return typeof _0x486edf === _0x1aefc1(0x1dd) && isNaN(_0x486edf) ? _0x164545 : _0x486edf
 }
 function countTruthy$1(_0xbefcaa) {
-    return _0xbefcaa['reduce'](function (_0x25fc6c, _0xc2bd4a) {
-        return _0x25fc6c + (_0xc2bd4a ? 0x1 : 0x0)
-    }, 0x0)
+    return _0xbefcaa['reduce']((_0x25fc6c, _0xc2bd4a) => _0x25fc6c + (_0xc2bd4a ? 0x1 : 0x0), 0x0)
 }
 function round(_0x36025c, _0x6c45c6) {
     var _0x5ad461 = _0x655c40
@@ -572,7 +554,7 @@ function parseSimpleCssSelector(_0x2d3b59) {
         _0x6360f0 = _0x16cf4a[0x1] || void 0x0,
         _0x3001ef = {},
         _0x55e79e = /([.:#][\w-]+|\[.+?\])/gi,
-        _0x1560dd = function (_0x1bc54d, _0x37b06d) {
+        _0x1560dd = (_0x1bc54d, _0x37b06d) => {
             var _0x1df4c0 = _0x298e81
             ;(_0x3001ef[_0x1bc54d] = _0x3001ef[_0x1bc54d] || []), _0x3001ef[_0x1bc54d][_0x1df4c0(0x27e)](_0x37b06d)
         }
@@ -619,10 +601,10 @@ function isFinalResultLoaded(_0x48729c) {
     return typeof _0x48729c !== _0x48196a(0x1a9)
 }
 function loadSource(_0x1e2ac0, _0x58eba0) {
-    var _0x447ff8 = new Promise(function (_0x17db4e) {
+    var _0x447ff8 = new Promise((_0x17db4e) => {
         var _0x29c963 = _0x3c14,
             _0x19e7a6 = Date[_0x29c963(0x2e2)]()
-        awaitIfAsync(_0x1e2ac0[_0x29c963(0x200)](null, _0x58eba0), function () {
+        awaitIfAsync(_0x1e2ac0[_0x29c963(0x200)](null, _0x58eba0), () => {
             var _0x16d639 = _0x29c963,
                 _0x2efbb9 = []
             for (var _0x205d73 = 0x0; _0x205d73 < arguments[_0x16d639(0x157)]; _0x205d73++) {
@@ -630,19 +612,14 @@ function loadSource(_0x1e2ac0, _0x58eba0) {
             }
             var _0x32781b = Date[_0x16d639(0x2e2)]() - _0x19e7a6
             if (!_0x2efbb9[0x0])
-                return _0x17db4e(function () {
-                    return { error: ensureErrorWithMessage(_0x2efbb9[0x1]), duration: _0x32781b }
-                })
+                return _0x17db4e(() => ({ error: ensureErrorWithMessage(_0x2efbb9[0x1]), duration: _0x32781b }))
             var _0x5e79e5 = _0x2efbb9[0x1]
             if (isFinalResultLoaded(_0x5e79e5))
-                return _0x17db4e(function () {
-                    return { value: _0x5e79e5, duration: _0x32781b }
-                })
-            _0x17db4e(function () {
-                return new Promise(function (_0x361eaf) {
+                return _0x17db4e(() => ({ value: _0x5e79e5, duration: _0x32781b }))
+            _0x17db4e(() => new Promise((_0x361eaf) => {
                     var _0x1a7454 = _0x3c14,
                         _0x593328 = Date[_0x1a7454(0x2e2)]()
-                    awaitIfAsync(_0x5e79e5, function () {
+                    awaitIfAsync(_0x5e79e5, () => {
                         var _0x298a07 = _0x1a7454,
                             _0x4b837e = []
                         for (var _0x4f615e = 0x0; _0x4f615e < arguments[_0x298a07(0x157)]; _0x4f615e++) {
@@ -653,33 +630,26 @@ function loadSource(_0x1e2ac0, _0x58eba0) {
                             return _0x361eaf({ error: ensureErrorWithMessage(_0x4b837e[0x1]), duration: _0x188b55 })
                         _0x361eaf({ value: _0x4b837e[0x1], duration: _0x188b55 })
                     })
-                })
-            })
+                }))
         })
     })
     return (
         suppressUnhandledRejectionWarning(_0x447ff8),
         function _0x1c324f() {
-            return _0x447ff8['then'](function (_0x2f0681) {
-                return _0x2f0681()
-            })
+            return _0x447ff8['then']((_0x2f0681) => _0x2f0681())
         }
     )
 }
 function loadSources(_0x59ea86, _0x1dc2c0, _0x282506) {
     var _0x1946a8 = _0x655c40,
-        _0x4c1d14 = Object[_0x1946a8(0x14b)](_0x59ea86)[_0x1946a8(0x314)](function (_0x372a49) {
-            return excludes(_0x282506, _0x372a49)
-        }),
-        _0x5ab79d = mapWithBreaks(_0x4c1d14, function (_0x555f41) {
-            return loadSource(_0x59ea86[_0x555f41], _0x1dc2c0)
-        })
+        _0x4c1d14 = Object[_0x1946a8(0x14b)](_0x59ea86)[_0x1946a8(0x314)]((_0x372a49) => excludes(_0x282506, _0x372a49)),
+        _0x5ab79d = mapWithBreaks(_0x4c1d14, (_0x555f41) => loadSource(_0x59ea86[_0x555f41], _0x1dc2c0))
     return (
         suppressUnhandledRejectionWarning(_0x5ab79d),
         function _0x2be0d1() {
             return __awaiter(this, void 0x0, void 0x0, function () {
                 var _0x57d5b1, _0x377036, _0x20b0a8, _0x475edb, _0x59d4cc
-                return __generator(this, function (_0x24dc5c) {
+                return __generator(this, (_0x24dc5c) => {
                     var _0xc2517a = _0x3c14
                     switch (_0x24dc5c[_0xc2517a(0x3d3)]) {
                         case 0x0:
@@ -688,7 +658,7 @@ function loadSources(_0x59ea86, _0x1dc2c0, _0x282506) {
                             _0x57d5b1 = _0x24dc5c[_0xc2517a(0x25f)]()
                             return [
                                 0x4,
-                                mapWithBreaks(_0x57d5b1, function (_0x6e366a) {
+                                mapWithBreaks(_0x57d5b1, (_0x6e366a) => {
                                     var _0x544fcf = _0x6e366a()
                                     return suppressUnhandledRejectionWarning(_0x544fcf), _0x544fcf
                                 }),
@@ -1733,9 +1703,7 @@ function _0x4955() {
         'isBrave',
         'label',
     ]
-    _0x4955 = function () {
-        return _0x3924d2
-    }
+    _0x4955 = () => _0x3924d2
     return _0x4955()
 }
 function isDesktopSafari() {
@@ -1867,11 +1835,11 @@ function getAudioFingerprint() {
         _0x24e7bd = _0x58eb60[0x0],
         _0x1c54eb = _0x58eb60[0x1],
         _0x2c4c3a = _0x24e7bd[_0x308db5(0x1db)](
-            function (_0x5545f3) {
+            (_0x5545f3) => {
                 var _0x1b51a4 = _0x308db5
                 return getHash(_0x5545f3['getChannelData'](0x0)[_0x1b51a4(0x41f)](_0xff42fc))
             },
-            function (_0x1d2967) {
+            (_0x1d2967) => {
                 var _0x4e8d9b = _0x308db5
                 if (_0x1d2967[_0x4e8d9b(0x204)] === _0x4e8d9b(0x4af) || _0x1d2967[_0x4e8d9b(0x204)] === 'suspended')
                     return -0x3
@@ -1880,9 +1848,7 @@ function getAudioFingerprint() {
         )
     return (
         suppressUnhandledRejectionWarning(_0x2c4c3a),
-        function () {
-            return _0x1c54eb(), _0x2c4c3a
-        }
+        () => (_0x1c54eb(), _0x2c4c3a)
     )
 }
 function doesCurrentBrowserSuspendAudioContext() {
@@ -1893,29 +1859,27 @@ function startRenderingAudio(_0x1a5d14) {
         _0x22e7a6 = 0x1f4,
         _0x2ded81 = 0x1f4,
         _0x5c06ac = 0x1388,
-        _0x235893 = function () {
-            return void 0x0
-        },
-        _0x1cd105 = new Promise(function (_0x98710, _0x76d2bd) {
+        _0x235893 = () => void 0x0,
+        _0x1cd105 = new Promise((_0x98710, _0x76d2bd) => {
             var _0x2477f6 = _0x3c14,
                 _0x5e2897 = ![],
                 _0x1d787e = 0x0,
                 _0x1c102d = 0x0
-            _0x1a5d14[_0x2477f6(0x416)] = function (_0x15e7e3) {
+            _0x1a5d14[_0x2477f6(0x416)] = (_0x15e7e3) => {
                 var _0x4e4fce = _0x2477f6
                 return _0x98710(_0x15e7e3[_0x4e4fce(0x2ac)])
             }
-            var _0x23bcc2 = function () {
+            var _0x23bcc2 = () => {
                     var _0x596708 = _0x2477f6
                     setTimeout(
-                        function () {
+                        () => {
                             var _0x4d90ef = _0x3c14
                             return _0x76d2bd(makeInnerError(_0x4d90ef(0x4af)))
                         },
                         Math[_0x596708(0x460)](_0x2ded81, _0x1c102d + _0x5c06ac - Date[_0x596708(0x2e2)]())
                     )
                 },
-                _0x3b093a = function () {
+                _0x3b093a = () => {
                     var _0x52093f = _0x2477f6
                     try {
                         var _0x2fb5fb = _0x1a5d14[_0x52093f(0x1a4)]()
@@ -1937,7 +1901,7 @@ function startRenderingAudio(_0x1a5d14) {
                     }
                 }
             _0x3b093a(),
-                (_0x235893 = function () {
+                (_0x235893 = () => {
                     !_0x5e2897 && ((_0x5e2897 = !![]), _0x1c102d > 0x0 && _0x23bcc2())
                 })
         })
@@ -1961,7 +1925,7 @@ function withIframe(_0x17db81, _0x25b853, _0x433ff3) {
         _0x433ff3 === void 0x0 && (_0x433ff3 = 0x32),
         __awaiter(this, void 0x0, void 0x0, function () {
             var _0x147297, _0x3bfcd2
-            return __generator(this, function (_0x5b8884) {
+            return __generator(this, (_0x5b8884) => {
                 var _0x241d86 = _0x3c14
                 switch (_0x5b8884[_0x241d86(0x3d3)]) {
                     case 0x0:
@@ -1979,13 +1943,13 @@ function withIframe(_0x17db81, _0x25b853, _0x433ff3) {
                         _0x5b8884[_0x241d86(0x330)]['push']([0x4, , 0xa, 0xb])
                         return [
                             0x4,
-                            new Promise(function (_0x28fc59, _0x25723a) {
+                            new Promise((_0x28fc59, _0x25723a) => {
                                 var _0x22241d = _0x241d86,
                                     _0x735b87 = ![],
-                                    _0x208176 = function () {
+                                    _0x208176 = () => {
                                         ;(_0x735b87 = !![]), _0x28fc59()
                                     },
-                                    _0x3d646c = function (_0x1c4dcb) {
+                                    _0x3d646c = (_0x1c4dcb) => {
                                         ;(_0x735b87 = !![]), _0x25723a(_0x1c4dcb)
                                     }
                                 ;(_0x3bfcd2[_0x22241d(0x1e4)] = _0x208176), (_0x3bfcd2[_0x22241d(0x31b)] = _0x3d646c)
@@ -1999,7 +1963,7 @@ function withIframe(_0x17db81, _0x25b853, _0x433ff3) {
                                     ? (_0x3bfcd2[_0x22241d(0x399)] = _0x25b853)
                                     : (_0x3bfcd2[_0x22241d(0x31e)] = 'about:blank')
                                 _0x147297[_0x22241d(0x300)][_0x22241d(0x362)](_0x3bfcd2)
-                                var _0x32da97 = function () {
+                                var _0x32da97 = () => {
                                     var _0x557afd = _0x22241d,
                                         _0x5776d2,
                                         _0x7186f2
@@ -2144,7 +2108,7 @@ var testString = _0x655c40(0x495),
         _0x655c40(0x48c),
     ]
 function getFonts() {
-    return withIframe(function (_0x4eb78c, _0x160865) {
+    return withIframe((_0x4eb78c, _0x160865) => {
         var _0xf0f25b = _0x3c14,
             _0x553f42 = _0x160865[_0xf0f25b(0x259)],
             _0x3697e6 = _0x553f42[_0xf0f25b(0x300)]
@@ -2152,7 +2116,7 @@ function getFonts() {
         var _0x1046b3 = _0x553f42[_0xf0f25b(0x277)](_0xf0f25b(0x29d)),
             _0x2c5891 = {},
             _0x1275e5 = {},
-            _0x10a990 = function (_0x402f95) {
+            _0x10a990 = (_0x402f95) => {
                 var _0x521dbc = _0xf0f25b,
                     _0xc5c233 = _0x553f42[_0x521dbc(0x277)]('span'),
                     _0xd360b7 = _0xc5c233[_0x521dbc(0x4e4)]
@@ -2166,21 +2130,17 @@ function getFonts() {
                     _0xc5c233
                 )
             },
-            _0x1ea9db = function (_0x434411, _0x2c8078) {
+            _0x1ea9db = (_0x434411, _0x2c8078) => {
                 var _0x44254b = _0xf0f25b
                 return _0x10a990('\x27'[_0x44254b(0x46a)](_0x434411, '\x27,')[_0x44254b(0x46a)](_0x2c8078))
             },
-            _0x27b8f2 = function () {
-                return baseFonts['map'](_0x10a990)
-            },
-            _0x101426 = function () {
+            _0x27b8f2 = () => baseFonts['map'](_0x10a990),
+            _0x101426 = () => {
                 var _0x1ffc44 = _0xf0f25b,
                     _0x57ecfe = {},
-                    _0x4b62c3 = function (_0x44dc2b) {
+                    _0x4b62c3 = (_0x44dc2b) => {
                         var _0x4631ee = _0x3c14
-                        _0x57ecfe[_0x44dc2b] = baseFonts[_0x4631ee(0x14f)](function (_0x345ba3) {
-                            return _0x1ea9db(_0x44dc2b, _0x345ba3)
-                        })
+                        _0x57ecfe[_0x44dc2b] = baseFonts[_0x4631ee(0x14f)]((_0x345ba3) => _0x1ea9db(_0x44dc2b, _0x345ba3))
                     }
                 for (var _0x314628 = 0x0, _0xd02809 = fontList; _0x314628 < _0xd02809[_0x1ffc44(0x157)]; _0x314628++) {
                     var _0x17056d = _0xd02809[_0x314628]
@@ -2188,9 +2148,9 @@ function getFonts() {
                 }
                 return _0x57ecfe
             },
-            _0x36dc26 = function (_0x11fae7) {
+            _0x36dc26 = (_0x11fae7) => {
                 var _0x2aa269 = _0xf0f25b
-                return baseFonts[_0x2aa269(0x31c)](function (_0x5e36ec, _0x56cc02) {
+                return baseFonts[_0x2aa269(0x31c)]((_0x5e36ec, _0x56cc02) => {
                     var _0x4b4d20 = _0x2aa269
                     return (
                         _0x11fae7[_0x56cc02][_0x4b4d20(0x3a3)] !== _0x2c5891[_0x5e36ec] ||
@@ -2205,9 +2165,7 @@ function getFonts() {
             ;(_0x2c5891[baseFonts[_0x13a884]] = _0x445854[_0x13a884]['offsetWidth']),
                 (_0x1275e5[baseFonts[_0x13a884]] = _0x445854[_0x13a884][_0xf0f25b(0x1a8)])
         }
-        return fontList['filter'](function (_0x3e4ea9) {
-            return _0x36dc26(_0x3ccc24[_0x3e4ea9])
-        })
+        return fontList['filter']((_0x3e4ea9) => _0x36dc26(_0x3ccc24[_0x3e4ea9]))
     })
 }
 function getPlugins() {
@@ -2361,9 +2319,7 @@ function getDeviceMemory() {
 function getScreenResolution() {
     var _0x279867 = _0x655c40,
         _0xbbcf3 = screen,
-        _0xea83a0 = function (_0x199df7) {
-            return replaceNaN(toInt(_0x199df7), null)
-        },
+        _0xea83a0 = (_0x199df7) => replaceNaN(toInt(_0x199df7), null),
         _0x580a4b = [_0xea83a0(_0xbbcf3['width']), _0xea83a0(_0xbbcf3[_0x279867(0x203)])]
     return _0x580a4b['sort']()['reverse'](), _0x580a4b
 }
@@ -2373,7 +2329,7 @@ var screenFrameCheckInterval = 0x9c4,
     screenFrameSizeTimeoutId
 function watchScreenFrame() {
     if (screenFrameSizeTimeoutId !== void 0x0) return
-    var _0x28079f = function () {
+    var _0x28079f = () => {
         var _0xb73ae2 = getCurrentScreenFrame()
         isFrameSizeNull(_0xb73ae2)
             ? (screenFrameSizeTimeoutId = setTimeout(_0x28079f, screenFrameCheckInterval))
@@ -2382,13 +2338,11 @@ function watchScreenFrame() {
     _0x28079f()
 }
 function getScreenFrame() {
-    var _0x1edd34 = this
     return (
         watchScreenFrame(),
-        function () {
-            return __awaiter(_0x1edd34, void 0x0, void 0x0, function () {
+        () => __awaiter(this, void 0x0, void 0x0, function () {
                 var _0xcd1cda
-                return __generator(this, function (_0x5a751f) {
+                return __generator(this, (_0x5a751f) => {
                     var _0x40f5e4 = _0x3c14
                     switch (_0x5a751f['label']) {
                         case 0x0:
@@ -2407,25 +2361,21 @@ function getScreenFrame() {
                     }
                 })
             })
-        }
     )
 }
 function getRoundedScreenFrame() {
-    var _0x31b668 = this,
+    var 
         _0x1bdd4e = getScreenFrame()
-    return function () {
-        return __awaiter(_0x31b668, void 0x0, void 0x0, function () {
+    return () => __awaiter(this, void 0x0, void 0x0, function () {
             var _0x2f38ae, _0x17b080
-            return __generator(this, function (_0x43fa0e) {
+            return __generator(this, (_0x43fa0e) => {
                 var _0x4f96fe = _0x3c14
                 switch (_0x43fa0e['label']) {
                     case 0x0:
                         return [0x4, _0x1bdd4e()]
                     case 0x1:
                         ;(_0x2f38ae = _0x43fa0e[_0x4f96fe(0x25f)]()),
-                            (_0x17b080 = function (_0x562d89) {
-                                return _0x562d89 === null ? null : round(_0x562d89, roundingPrecision)
-                            })
+                            (_0x17b080 = (_0x562d89) => _0x562d89 === null ? null : round(_0x562d89, roundingPrecision))
                         return [
                             0x2,
                             [
@@ -2438,7 +2388,6 @@ function getRoundedScreenFrame() {
                 }
             })
         })
-    }
 }
 function getCurrentScreenFrame() {
     var _0x562510 = _0x655c40,
@@ -2870,7 +2819,7 @@ function getDomBlockers(_0x15fc71) {
         _0xa24e1e = _0x4da88b[_0x40381a(0x196)]
     return __awaiter(this, void 0x0, void 0x0, function () {
         var _0x548369, _0xf9ee94, _0x1c04af, _0x4107db, _0xfebf46, _0x31e60c
-        return __generator(this, function (_0x240744) {
+        return __generator(this, (_0x240744) => {
             var _0xe0b12f = _0x3c14
             switch (_0x240744[_0xe0b12f(0x3d3)]) {
                 case 0x0:
@@ -2879,21 +2828,17 @@ function getDomBlockers(_0x15fc71) {
                         (_0xf9ee94 = Object[_0xe0b12f(0x14b)](_0x548369)),
                         (_0x1c04af = (_0x31e60c = [])[_0xe0b12f(0x46a)][_0xe0b12f(0x4d9)](
                             _0x31e60c,
-                            _0xf9ee94['map'](function (_0x14a3ef) {
-                                return _0x548369[_0x14a3ef]
-                            })
+                            _0xf9ee94['map']((_0x14a3ef) => _0x548369[_0x14a3ef])
                         ))
                     return [0x4, getBlockedSelectors(_0x1c04af)]
                 case 0x1:
                     _0x4107db = _0x240744[_0xe0b12f(0x25f)]()
                     _0xa24e1e && printDebug(_0x548369, _0x4107db)
-                    ;(_0xfebf46 = _0xf9ee94[_0xe0b12f(0x314)](function (_0x378c84) {
+                    ;(_0xfebf46 = _0xf9ee94[_0xe0b12f(0x314)]((_0x378c84) => {
                         var _0x1584a1 = _0xe0b12f,
                             _0x3a688a = _0x548369[_0x378c84],
                             _0x216eb7 = countTruthy$1(
-                                _0x3a688a[_0x1584a1(0x14f)](function (_0x539f18) {
-                                    return _0x4107db[_0x539f18]
-                                })
+                                _0x3a688a[_0x1584a1(0x14f)]((_0x539f18) => _0x4107db[_0x539f18])
                             )
                         return _0x216eb7 > _0x3a688a['length'] * 0.6
                     })),
@@ -2910,7 +2855,7 @@ function getBlockedSelectors(_0x509ecb) {
     var _0x122537
     return __awaiter(this, void 0x0, void 0x0, function () {
         var _0x4495ef, _0x34f4d6, _0x17b1dd, _0x10c29f, _0x46cd67, _0x3e9151, _0x522f3f, _0x46cd67
-        return __generator(this, function (_0x4683cc) {
+        return __generator(this, (_0x4683cc) => {
             var _0x4719f4 = _0x3c14
             switch (_0x4683cc['label']) {
                 case 0x0:
@@ -2958,7 +2903,7 @@ function forceShow(_0x2b87ce) {
 function _0x3c14(_0x2c10be, _0x2bb735) {
     var _0x4955ea = _0x4955()
     return (
-        (_0x3c14 = function (_0x3c14d3, _0x207f0f) {
+        (_0x3c14 = (_0x3c14d3, _0x207f0f) => {
             _0x3c14d3 = _0x3c14d3 - 0x13a
             var _0x57c9c1 = _0x4955ea[_0x3c14d3]
             return _0x57c9c1
@@ -3059,9 +3004,7 @@ function doesMatch(_0x4497c4) {
     return matchMedia(_0x176331(0x1b0)[_0x176331(0x46a)](_0x4497c4, ')'))[_0x176331(0x4eb)]
 }
 var M = Math,
-    fallbackFn = function () {
-        return 0x0
-    }
+    fallbackFn = () => 0x0
 function getMathFingerprint() {
     var _0x21bd44 = _0x655c40,
         _0x5e33ae = M[_0x21bd44(0x382)] || fallbackFn,
@@ -3079,39 +3022,39 @@ function getMathFingerprint() {
         _0x1bac6f = M['exp'] || fallbackFn,
         _0x4fb0c8 = M['expm1'] || fallbackFn,
         _0x48319a = M[_0x21bd44(0x275)] || fallbackFn,
-        _0x23b542 = function (_0x2bc945) {
+        _0x23b542 = (_0x2bc945) => {
             var _0x24e7aa = _0x21bd44
             return M[_0x24e7aa(0x18f)](M['PI'], _0x2bc945)
         },
-        _0x2c4884 = function (_0x14e037) {
+        _0x2c4884 = (_0x14e037) => {
             var _0x5dad3c = _0x21bd44
             return M['log'](_0x14e037 + M[_0x5dad3c(0x1c0)](_0x14e037 * _0x14e037 - 0x1))
         },
-        _0x3ec2d1 = function (_0x29bc3b) {
+        _0x3ec2d1 = (_0x29bc3b) => {
             var _0x2b72ec = _0x21bd44
             return M[_0x2b72ec(0x3ea)](_0x29bc3b + M['sqrt'](_0x29bc3b * _0x29bc3b + 0x1))
         },
-        _0x2804e3 = function (_0x184a04) {
+        _0x2804e3 = (_0x184a04) => {
             var _0x12c1ae = _0x21bd44
             return M[_0x12c1ae(0x3ea)]((0x1 + _0x184a04) / (0x1 - _0x184a04)) / 0x2
         },
-        _0x388648 = function (_0x16b0a7) {
+        _0x388648 = (_0x16b0a7) => {
             var _0x31e2eb = _0x21bd44
             return M['exp'](_0x16b0a7) - 0x1 / M[_0x31e2eb(0x3e6)](_0x16b0a7) / 0x2
         },
-        _0x5c535a = function (_0x356079) {
+        _0x5c535a = (_0x356079) => {
             var _0x622ac4 = _0x21bd44
             return (M[_0x622ac4(0x3e6)](_0x356079) + 0x1 / M[_0x622ac4(0x3e6)](_0x356079)) / 0x2
         },
-        _0x4f7a66 = function (_0x11844c) {
+        _0x4f7a66 = (_0x11844c) => {
             var _0x4c781c = _0x21bd44
             return M[_0x4c781c(0x3e6)](_0x11844c) - 0x1
         },
-        _0x1e605d = function (_0x238bbd) {
+        _0x1e605d = (_0x238bbd) => {
             var _0x2d2e74 = _0x21bd44
             return (M['exp'](0x2 * _0x238bbd) - 0x1) / (M[_0x2d2e74(0x3e6)](0x2 * _0x238bbd) + 0x1)
         },
-        _0x4d915a = function (_0x51b0e9) {
+        _0x4d915a = (_0x51b0e9) => {
             var _0x4a7e34 = _0x21bd44
             return M[_0x4a7e34(0x3ea)](0x1 + _0x51b0e9)
         }
@@ -3162,7 +3105,7 @@ var defaultText = _0x655c40(0x454),
         system: [{ fontFamily: 'system-ui' }],
     }
 function getFontPreferences() {
-    return withNaturalFonts(function (_0x2fac65, _0x1dd115) {
+    return withNaturalFonts((_0x2fac65, _0x1dd115) => {
         var _0x19c9bd = _0x3c14,
             _0x129259 = {},
             _0x58c772 = {}
@@ -3207,7 +3150,7 @@ function withNaturalFonts(_0x5f666d, _0x17555c) {
     var _0x278787 = _0x655c40
     return (
         _0x17555c === void 0x0 && (_0x17555c = 0xfa0),
-        withIframe(function (_0x58e035, _0x57c806) {
+        withIframe((_0x58e035, _0x57c806) => {
             var _0x102209 = _0x3c14,
                 _0xb066f0 = _0x57c806[_0x102209(0x259)],
                 _0x54774c = _0xb066f0[_0x102209(0x300)],
@@ -3220,9 +3163,7 @@ function withNaturalFonts(_0x5f666d, _0x17555c) {
             var _0x4e4639 = _0xb066f0[_0x102209(0x277)](_0x102209(0x29d))
             return (
                 (_0x4e4639[_0x102209(0x18b)] = __spreadArray([], Array((_0x17555c / 0x14) << 0x0), !![])
-                    [_0x102209(0x14f)](function () {
-                        return 'word'
-                    })
+                    [_0x102209(0x14f)](() => 'word')
                     [_0x102209(0x218)]('\x20')),
                 _0x54774c[_0x102209(0x362)](_0x4e4639),
                 _0x5f666d(_0xb066f0, _0x54774c)
@@ -3256,7 +3197,7 @@ function getArchitecture() {
     var _0x3abb09 = _0x655c40,
         _0x1ab453 = new Float32Array(0x1),
         _0x1083cb = new Uint8Array(_0x1ab453[_0x3abb09(0x23c)])
-    return (_0x1ab453[0x0] = Infinity), (_0x1ab453[0x0] = _0x1ab453[0x0] - _0x1ab453[0x0]), _0x1083cb[0x3]
+    return (_0x1ab453[0x0] = Number.POSITIVE_INFINITY), (_0x1ab453[0x0] = _0x1ab453[0x0] - _0x1ab453[0x0]), _0x1083cb[0x3]
 }
 var sources$1 = {
     fonts: getFonts,
@@ -3338,7 +3279,7 @@ function componentsToCanonicalString(_0x123bb6) {
 function componentsToDebugString(_0xd77136) {
     return JSON['stringify'](
         _0xd77136,
-        function (_0xe08a90, _0x2d841b) {
+        (_0xe08a90, _0x2d841b) => {
             if (_0x2d841b instanceof Error) return errorToObject(_0x2d841b)
             return _0x2d841b
         },
@@ -3373,7 +3314,7 @@ function makeAgent(_0x37c26a, _0x5e28e0) {
         get: function (_0x309bfc) {
             return __awaiter(this, void 0x0, void 0x0, function () {
                 var _0x3ea050, _0xf98455, _0x51816c
-                return __generator(this, function (_0x129394) {
+                return __generator(this, (_0x129394) => {
                     var _0x155843 = _0x3c14
                     switch (_0x129394[_0x155843(0x3d3)]) {
                         case 0x0:
@@ -3427,7 +3368,7 @@ function load$1(_0x199fd4) {
         _0x5d7d15 = _0x58e422 === void 0x0 ? !![] : _0x58e422
     return __awaiter(this, void 0x0, void 0x0, function () {
         var _0x1e3870
-        return __generator(this, function (_0x599b8b) {
+        return __generator(this, (_0x599b8b) => {
             var _0xa84a7 = _0x3c14
             switch (_0x599b8b[_0xa84a7(0x3d3)]) {
                 case 0x0:
@@ -3461,7 +3402,7 @@ var version = _0x655c40(0x357),
         HeadlessChrome: 'headless_chrome',
         Unknown: 'unknown',
     },
-    BotdError = (function (_0x19fc89) {
+    BotdError = ((_0x19fc89) => {
         __extends(_0x34cfe3, _0x19fc89)
         function _0x34cfe3(_0x360c83, _0x3a57a0) {
             var _0x11d17a = _0x3c14,
@@ -3492,9 +3433,8 @@ function detect(_0x1b303d, _0x35013c) {
 function collect(_0x4ac3c8) {
     return __awaiter(this, void 0x0, void 0x0, function () {
         var _0x4f4403,
-            _0x5dac36,
-            _0x3f33b6 = this
-        return __generator(this, function (_0x401d8a) {
+            _0x5dac36
+        return __generator(this, (_0x401d8a) => {
             var _0xe75bd4 = _0x3c14
             switch (_0x401d8a['label']) {
                 case 0x0:
@@ -3502,10 +3442,9 @@ function collect(_0x4ac3c8) {
                     return [
                         0x4,
                         Promise[_0xe75bd4(0x3a2)](
-                            _0x5dac36[_0xe75bd4(0x14f)](function (_0x5c34c4) {
-                                return __awaiter(_0x3f33b6, void 0x0, void 0x0, function () {
+                            _0x5dac36[_0xe75bd4(0x14f)]((_0x5c34c4) => __awaiter(this, void 0x0, void 0x0, function () {
                                     var _0x22a686, _0x4ad3a3, _0x37db93, _0x3a73a4, _0x125a1c
-                                    return __generator(this, function (_0x1b183d) {
+                                    return __generator(this, (_0x1b183d) => {
                                         var _0x21e15b = _0x3c14
                                         switch (_0x1b183d['label']) {
                                             case 0x0:
@@ -3548,8 +3487,7 @@ function collect(_0x4ac3c8) {
                                                 return [0x2]
                                         }
                                     })
-                                })
-                            })
+                                }))
                         ),
                     ]
                 case 0x1:
@@ -3592,12 +3530,12 @@ function includes(_0x1d32f7) {
     for (var _0x5bab15 = 0x1; _0x5bab15 < arguments[_0x259050(0x157)]; _0x5bab15++) {
         _0x156010[_0x5bab15 - 0x1] = arguments[_0x5bab15]
     }
-    var _0xed12c7 = function (_0x56341d) {
+    var _0xed12c7 = (_0x56341d) => {
         var _0xb24574 = _0x259050
         if (typeof _0x56341d === _0xb24574(0x187)) {
             if (arrayIncludes(_0x1d32f7, _0x56341d)) return { value: !![] }
         } else {
-            var _0x2e6897 = arrayFind(_0x1d32f7, function (_0x3d24e7) {
+            var _0x2e6897 = arrayFind(_0x1d32f7, (_0x3d24e7) => {
                 var _0x4cbefd = _0xb24574
                 return _0x56341d[_0x4cbefd(0x391)](_0x3d24e7)
             })
@@ -3613,9 +3551,7 @@ function includes(_0x1d32f7) {
 }
 function countTruthy(_0x2e1ecc) {
     var _0x3aace4 = _0x655c40
-    return _0x2e1ecc[_0x3aace4(0x21d)](function (_0x3dff85, _0x102d52) {
-        return _0x3dff85 + (_0x102d52 ? 0x1 : 0x0)
-    }, 0x0)
+    return _0x2e1ecc[_0x3aace4(0x21d)]((_0x3dff85, _0x102d52) => _0x3dff85 + (_0x102d52 ? 0x1 : 0x0), 0x0)
 }
 function detectDocumentAttributes(_0x4c5268) {
     var _0x3d9c5e = _0x655c40,
@@ -3959,7 +3895,7 @@ function areMimeTypesConsistent() {
 function getNotificationPermissions() {
     return __awaiter(this, void 0x0, void 0x0, function () {
         var _0x221e8a, _0x50879f
-        return __generator(this, function (_0x4ae5ec) {
+        return __generator(this, (_0x4ae5ec) => {
             var _0x5a3a2d = _0x3c14
             switch (_0x4ae5ec['label']) {
                 case 0x0:
@@ -4160,7 +4096,7 @@ var sources = {
         process: getProcess,
         distinctiveProps: checkDistinctiveProperties,
     },
-    BotDetector = (function () {
+    BotDetector = (() => {
         var _0x2c6b73 = _0x655c40
         function _0x1a4dd3() {
             var _0xb6c406 = _0x3c14
@@ -4219,7 +4155,7 @@ function load(_0x12d6ad) {
         _0x4829b4 = _0x443d60 === void 0x0 ? !![] : _0x443d60
     return __awaiter(this, void 0x0, void 0x0, function () {
         var _0x7a2600
-        return __generator(this, function (_0x3ce60b) {
+        return __generator(this, (_0x3ce60b) => {
             var _0x26e37e = _0x3c14
             switch (_0x3ce60b[_0x26e37e(0x3d3)]) {
                 case 0x0:
@@ -4248,9 +4184,9 @@ function getEngine() {
 }
 const ENGINE_IDENTIFIER = getEngine(),
     ENGINE_DETAILS = {
-        0x50: { name: 'V8', isBlink: !![], isGecko: ![], isWebkit: ![] },
-        0x3a: { name: _0x655c40(0x228), isBlink: ![], isGecko: !![], isWebkit: ![] },
-        0x4d: { name: _0x655c40(0x386), isBlink: ![], isGecko: ![], isWebkit: !![] },
+        80: { name: 'V8', isBlink: !![], isGecko: ![], isWebkit: ![] },
+        58: { name: _0x655c40(0x228), isBlink: ![], isGecko: !![], isWebkit: ![] },
+        77: { name: _0x655c40(0x386), isBlink: ![], isGecko: ![], isWebkit: !![] },
     },
     ENGINE = ENGINE_DETAILS[ENGINE_IDENTIFIER] || { name: null, isBlink: ![], isGecko: ![], isWebkit: ![] },
     IS_BLINK = ENGINE['isBlink'],
@@ -4299,7 +4235,7 @@ const createPerformanceLogger = () => {
         const _0x698e7c = {}
         let _0x5bebd4 = 0x0
         return {
-            logTestResult: ({ test: _0x12aeb9, passed: _0x510435, time: time = 0x0 }) => {
+            logTestResult: ({ test: _0x12aeb9, passed: _0x510435, time = 0x0 }) => {
                 _0x5bebd4 += time
                 const _0xf644a4 = time['toFixed'](0x2) + 'ms'
                 _0x698e7c[_0x12aeb9] = _0xf644a4

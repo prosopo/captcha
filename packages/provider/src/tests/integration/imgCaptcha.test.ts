@@ -13,7 +13,7 @@
 // limitations under the License.
 import { describe, it, expect } from 'vitest'
 import fetch from 'node-fetch'
-import { ApiPaths, Captcha, CaptchaResponseBody, CaptchaSolutionResponse } from '@prosopo/types'
+import { ApiPaths, type Captcha, type CaptchaResponseBody, type CaptchaSolutionResponse } from '@prosopo/types'
 import { getPairAsync } from '@prosopo/contract'
 import { stringToU8a, u8aToHex } from '@polkadot/util'
 import { datasetWithSolutionHashes } from '@prosopo/datasets'

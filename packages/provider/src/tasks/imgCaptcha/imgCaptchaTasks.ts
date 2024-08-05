@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Captcha,
-    CaptchaConfig,
-    CaptchaSolution,
+    type Captcha,
+    type CaptchaConfig,
+    type CaptchaSolution,
     CaptchaStatus,
-    DappUserSolutionResult,
+    type DappUserSolutionResult,
     DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
-    Hash,
-    PendingCaptchaRequest,
+    type Hash,
+    type PendingCaptchaRequest,
 } from '@prosopo/types'
-import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError } from '@prosopo/common'
+import type { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { type Logger, ProsopoEnvError } from '@prosopo/common'
 import { u8aToHex, stringToHex, hexToU8a } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { compareCaptchaSolutions, computePendingRequestHash, parseAndSortCaptchaSolutions } from '@prosopo/datasets'
 import { shuffleArray } from '../../util.js'
 import { at } from '@prosopo/util'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { buildTreeAndGetCommitmentId } from './imgCaptchaTasksUtils.js'
 
 export class ImgCaptchaManager {
@@ -187,7 +187,7 @@ export class ImgCaptchaManager {
                 processed: false,
                 batched: false,
                 stored: false,
-                requestedAtTimestamp: parseInt(timestamp),
+                requestedAtTimestamp: Number.parseInt(timestamp),
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {

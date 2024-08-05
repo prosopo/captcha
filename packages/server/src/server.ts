@@ -11,19 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import {
-    CaptchaTimeoutOutput,
+    type CaptchaTimeoutOutput,
     ContractAbi,
-    NetworkConfig,
+    type NetworkConfig,
     NetworkNamesSchema,
     ProcaptchaOutputSchema,
-    ProcaptchaToken,
-    ProsopoServerConfigOutput,
+    type ProcaptchaToken,
+    type ProsopoServerConfigOutput,
 } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, ProsopoApiError, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type LogLevel, type Logger, ProsopoApiError, ProsopoContractError, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { getZeroAddress } from '@prosopo/contract'
 import { ProviderApi } from '@prosopo/api'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
@@ -92,7 +92,7 @@ export class ProsopoServer {
         const providerApi = await this.getProviderApi(providerUrl)
         if (challenge) {
             const powTimeout = this.config.timeouts.pow.cachedTimeout
-            const recent = timestamp ? Date.now() - parseInt(timestamp) < powTimeout : false
+            const recent = timestamp ? Date.now() - Number.parseInt(timestamp) < powTimeout : false
             if (!recent) {
                 this.logger.error('PoW captcha is not recent')
                 return false
@@ -101,7 +101,7 @@ export class ProsopoServer {
             return result.verified
         }
         const imageTimeout = this.config.timeouts.image.cachedTimeout
-        const recent = timestamp ? Date.now() - parseInt(timestamp) < imageTimeout : false
+        const recent = timestamp ? Date.now() - Number.parseInt(timestamp) < imageTimeout : false
         if (!recent) {
             this.logger.error('Image captcha is not recent')
             return false

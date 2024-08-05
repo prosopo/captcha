@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
+import type { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle.js'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'

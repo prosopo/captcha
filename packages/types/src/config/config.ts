@@ -24,14 +24,14 @@ import {
     DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from './timeouts.js'
 import { NetworkNamesSchema, ProsopoNetworkSchema } from './network.js'
-import { input } from 'zod'
+import type { input } from 'zod'
 import { literal } from 'zod'
 import { number } from 'zod'
 import { object } from 'zod'
-import { output } from 'zod'
+import type { output } from 'zod'
 import { record, string, enum as zEnum } from 'zod'
 import { union } from 'zod'
-import { infer as zInfer } from 'zod'
+import type { infer as zInfer } from 'zod'
 import networks from '../networks/index.js'
 import z, { boolean } from 'zod'
 

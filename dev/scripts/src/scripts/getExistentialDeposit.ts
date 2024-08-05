@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { NetworkNames, networks } from '@prosopo/types'
+import { type NetworkNames, networks } from '@prosopo/types'
 import { get } from '@prosopo/util'
 import { oneUnit } from '@prosopo/tx'
 

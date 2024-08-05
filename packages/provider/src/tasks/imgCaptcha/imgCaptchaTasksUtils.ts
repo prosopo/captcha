@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash } from '@prosopo/datasets'
-import { CaptchaSolution } from '@prosopo/types'
+import type { CaptchaSolution } from '@prosopo/types'
 
 /**
  * Build merkle tree and get commitment from contract, returning the tree, commitment, and commitmentId

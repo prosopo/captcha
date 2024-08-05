@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
 import { BN } from '@polkadot/util/bn'
 
 /**
@@ -45,6 +45,6 @@ export const verifyRecency = async (challenge: string, maxVerifiedTime: number) 
     }
 
     const currentTimestamp = Date.now()
-    const challengeTimestamp = parseInt(timestamp, 10)
+    const challengeTimestamp = Number.parseInt(timestamp, 10)
     return currentTimestamp - challengeTimestamp <= maxVerifiedTime
 }

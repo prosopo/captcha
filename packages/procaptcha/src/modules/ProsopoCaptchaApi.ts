@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaMerkleTree, computeCaptchaSolutionHash } from '@prosopo/datasets'
-import {
+import type {
     CaptchaResponseBody,
     CaptchaSolution,
     CaptchaSolutionResponse,
     ProsopoCaptchaApiInterface,
     RandomProvider,
 } from '@prosopo/types'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import type { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoDatasetError, ProsopoEnvError } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
-import { Signer } from '@polkadot/api/types'
-import { TCaptchaSubmitResult } from '@prosopo/types'
+import type { ProviderApi } from '@prosopo/api'
+import type { Signer } from '@polkadot/api/types'
+import type { TCaptchaSubmitResult } from '@prosopo/types'
 import { stringToHex } from '@polkadot/util/string'
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {

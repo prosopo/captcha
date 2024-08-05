@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, it, expect, vi } from 'vitest'
-import { Request, Response, NextFunction } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import { ProsopoApiError, ProsopoBaseError, ProsopoEnvError } from '@prosopo/common'
 import { ZodError } from 'zod'
 import { handleErrors } from '../../../api/errorHandler.js'

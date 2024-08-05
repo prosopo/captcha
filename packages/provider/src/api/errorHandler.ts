@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // We need the unused params to make express recognise this function as an error handler
-import { NextFunction, Request, Response } from 'express'
-import { ProsopoApiError, ProsopoBaseError } from '@prosopo/common'
-import { ZodError } from 'zod'
+import type { NextFunction, Request, Response } from 'express'
+import { type ProsopoApiError, ProsopoBaseError } from '@prosopo/common'
+import type { ZodError } from 'zod'
 
 export const handleErrors = (
     err: ProsopoApiError | SyntaxError | ZodError,

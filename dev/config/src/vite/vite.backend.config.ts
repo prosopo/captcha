@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { default as ClosePlugin } from './vite-plugin-close-and-copy.js'
-import { Drop } from 'esbuild'
-import { UserConfig } from 'vite'
+import type { Drop } from 'esbuild'
+import type { UserConfig } from 'vite'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'

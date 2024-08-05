@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CliCommandAny } from './cliCommand.js'
+import type { CliCommandAny } from './cliCommand.js'
 import { LogLevel, Loggable, ProsopoCliError, getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
-import yargs, { Argv } from 'yargs'
+import yargs, { type Argv } from 'yargs'
 
 const dirname = process.cwd()
 const logger = getLogger(LogLevel.enum.info, `${dirname}`)

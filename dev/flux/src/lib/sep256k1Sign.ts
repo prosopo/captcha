@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN_BE_256_OPTS } from '@polkadot/util-crypto/bn'
-import { Keypair } from '@polkadot/util-crypto/types'
+import type { Keypair } from '@polkadot/util-crypto/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { base58Decode, base64Encode, cryptoWaitReady, sha256AsU8a } from '@polkadot/util-crypto'

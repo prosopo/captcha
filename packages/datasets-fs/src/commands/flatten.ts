@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { CaptchaItemTypes, type Data, DataSchema, type LabelledItem } from '@prosopo/types'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'

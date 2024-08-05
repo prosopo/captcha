@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import { ApiParams, ProcaptchaToken } from '@prosopo/types'
+import { ApiParams, type ProcaptchaToken } from '@prosopo/types'
 import { ExtensionAccountSelect } from './components/ExtensionAccountSelect.js'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Account,
+    type Account,
     ApiParams,
-    ProcaptchaCallbacks,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type ProcaptchaCallbacks,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaState,
-    ProcaptchaStateUpdateFn,
-    RandomProvider,
+    type ProcaptchaState,
+    type ProcaptchaStateUpdateFn,
+    type RandomProvider,
     encodeProcaptchaOutput,
 } from '@prosopo/types'
 import { ExtensionWeb2 } from '@prosopo/account'

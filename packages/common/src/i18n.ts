@@ -16,7 +16,7 @@ import { LanguageDetector as MiddlewareLanguageDetector } from 'i18next-http-mid
 import { initReactI18next } from 'react-i18next'
 import { isClientSide } from './utils.js'
 import Backend from 'i18next-http-backend'
-import i18n, { InitOptions } from 'i18next'
+import i18n, { type InitOptions } from 'i18next'
 import translationEn from './locales/en.json' assert { type: 'json' }
 
 const commonOptions: InitOptions = {

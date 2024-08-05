@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { commandProviderSetDataset, commandVersion } from './commands/index.js'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'

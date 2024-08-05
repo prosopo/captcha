@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
 import { buildDataset } from '@prosopo/datasets'
-import { DatasetRaw } from '@prosopo/types'
+import type { DatasetRaw } from '@prosopo/types'
 
 export const providerValidateDataset = async (
     datasetRaw: DatasetRaw,

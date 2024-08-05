@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeypairType } from '@polkadot/util-crypto/types'
+import type { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto/mnemonic'

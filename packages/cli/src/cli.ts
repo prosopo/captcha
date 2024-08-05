@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { getPairAsync } from '@prosopo/contract'
 import { isMain } from '@prosopo/util'
 import { loadEnv } from './env.js'

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProcaptchaLocalStorage, ProsopoLocalStorageSchema } from '@prosopo/types'
+import { type ProcaptchaLocalStorage, ProsopoLocalStorageSchema } from '@prosopo/types'
 import { hexToString } from '@polkadot/util'
 import { stringToHex } from '@polkadot/util/string'
 

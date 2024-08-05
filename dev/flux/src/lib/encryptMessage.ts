@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import openpgp, { WebStream } from 'openpgp'
+import openpgp, { type WebStream } from 'openpgp'
 
 /**
  * To encrypt a message with an array of encryption public keys

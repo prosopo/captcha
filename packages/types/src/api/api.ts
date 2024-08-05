@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
+import type {
     CaptchaResponseBody,
     CaptchaSolutionResponse,
     GetPowCaptchaResponse,
@@ -22,8 +22,8 @@ import {
     ProviderRegistered,
     RandomProvider,
 } from '../provider/index.js'
-import { CaptchaSolution } from '../datasets/index.js'
-import { StoredEvents } from '../procaptcha/index.js'
+import type { CaptchaSolution } from '../datasets/index.js'
+import type { StoredEvents } from '../procaptcha/index.js'
 
 export interface ProviderApiInterface {
     getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<CaptchaResponseBody>

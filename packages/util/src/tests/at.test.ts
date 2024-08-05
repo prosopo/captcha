@@ -42,9 +42,9 @@ describe('at', () => {
     })
 
     test('infinite index', () => {
-        expect(() => at([1, 2, 3], Infinity)).to.throw()
-        expect(() => at([1, 2, 3], -Infinity)).to.throw()
-        expect(() => at([1, 2, 3], NaN)).to.throw()
+        expect(() => at([1, 2, 3], Number.POSITIVE_INFINITY)).to.throw()
+        expect(() => at([1, 2, 3], Number.NEGATIVE_INFINITY)).to.throw()
+        expect(() => at([1, 2, 3], Number.NaN)).to.throw()
     })
 
     test('compatible with string', () => {

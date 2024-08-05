@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { ContractPromise } from '@polkadot/api-contract/promise'
-import { DispatchError, Event } from '@polkadot/types/interfaces'
-import { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
-import { Logger, ProsopoContractError } from '@prosopo/common'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { SubmittableResult } from '@polkadot/api/submittable'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { ContractPromise } from '@polkadot/api-contract/promise'
+import type { DispatchError, Event } from '@polkadot/types/interfaces'
+import type { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
+import { type Logger, ProsopoContractError } from '@prosopo/common'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { SubmittableResult } from '@polkadot/api/submittable'
 import { at } from '@prosopo/util'
 import { filterAndDecodeContractEvents, formatEvent } from './helpers.js'
 import { getDispatchError } from '@prosopo/tx'

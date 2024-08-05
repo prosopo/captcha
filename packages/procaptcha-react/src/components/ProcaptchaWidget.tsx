@@ -29,7 +29,7 @@ import {
 } from '@prosopo/web-components'
 import { Logo } from '@prosopo/web-components'
 import { Manager } from '@prosopo/procaptcha'
-import { ProcaptchaConfigSchema, ProcaptchaProps } from '@prosopo/types'
+import { ProcaptchaConfigSchema, type ProcaptchaProps } from '@prosopo/types'
 import { useProcaptcha } from '@prosopo/procaptcha-common'
 import { useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent.js'
@@ -127,7 +127,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
                                         <div style={{ flex: 1 }}>
                                             <Logo themeColor={themeColor} aria-label="Prosopo logo"></Logo>
                                         </div>

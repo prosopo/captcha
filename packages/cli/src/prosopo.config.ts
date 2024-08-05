@@ -84,7 +84,7 @@ export default function getConfig(
         },
         server: {
             baseURL: process.env.PROSOPO_API_BASE_URL || 'http://localhost',
-            port: process.env.PROSOPO_API_PORT ? parseInt(process.env.PROSOPO_API_PORT) : 9229,
+            port: process.env.PROSOPO_API_PORT ? Number.parseInt(process.env.PROSOPO_API_PORT) : 9229,
         },
         networks: networksConfig,
         captchaSolutions: captchaSolutionsConfig,

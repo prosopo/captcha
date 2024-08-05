@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'

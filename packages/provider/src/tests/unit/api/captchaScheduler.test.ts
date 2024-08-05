@@ -13,8 +13,8 @@
 // limitations under the License.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CronJob } from 'cron'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { ProsopoConfigOutput } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { storeCaptchasExternally } from '../../../api/captchaScheduler.js'

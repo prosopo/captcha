@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { UseTranslationOptions, UseTranslationResponse, useTranslation as useTranslationDefault } from 'react-i18next'
+import { type UseTranslationOptions, type UseTranslationResponse, useTranslation as useTranslationDefault } from 'react-i18next'
 import i18n from '../i18n.js'
 
 function useTranslation(

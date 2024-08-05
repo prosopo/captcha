@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util'
-import { IDappAccount, IProviderAccount, Payee } from '@prosopo/types'
+import { type IDappAccount, type IProviderAccount, Payee } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getSecret } from '@prosopo/cli'

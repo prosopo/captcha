@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
-import { MutableRefObject, useEffect, useRef, useState } from 'react'
+import type { Account, ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
+import { type MutableRefObject, useEffect, useRef, useState } from 'react'
 import { startCollector } from '@prosopo/procaptcha'
 
 type CollectorProps = {

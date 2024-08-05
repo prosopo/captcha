@@ -12,45 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { AsyncFactory, Logger, ProsopoDBError, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { AsyncFactory, type Logger, ProsopoDBError, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
-    Captcha,
-    CaptchaSolution,
+    type Captcha,
+    type CaptchaSolution,
     CaptchaStates,
     CaptchaStatus,
-    DatasetBase,
-    DatasetWithIds,
-    DatasetWithIdsAndTree,
+    type DatasetBase,
+    type DatasetWithIds,
+    type DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
-    Hash,
-    PendingCaptchaRequest,
-    PowCaptcha,
+    type Hash,
+    type PendingCaptchaRequest,
+    type PowCaptcha,
     ScheduledTaskNames,
-    ScheduledTaskResult,
+    type ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
 import {
     CaptchaRecordSchema,
-    Database,
+    type Database,
     DatasetRecordSchema,
     PendingRecordSchema,
     PowCaptchaRecordSchema,
-    ScheduledTaskRecord,
+    type ScheduledTaskRecord,
     ScheduledTaskRecordSchema,
     ScheduledTaskSchema,
-    SolutionRecord,
+    type SolutionRecord,
     SolutionRecordSchema,
-    Tables,
-    UserCommitmentRecord,
+    type Tables,
+    type UserCommitmentRecord,
     UserCommitmentRecordSchema,
     UserCommitmentSchema,
-    UserSolutionRecord,
+    type UserSolutionRecord,
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { DeleteResult, ServerApiVersion } from 'mongodb'
+import { type DeleteResult, ServerApiVersion } from 'mongodb'
 import { isHex } from '@polkadot/util/is'
-import mongoose, { Connection } from 'mongoose'
+import mongoose, { type Connection } from 'mongoose'
 
 mongoose.set('strictQuery', false)
 

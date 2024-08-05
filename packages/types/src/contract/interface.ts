@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AbiMetadata } from './artifacts.js'
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util/bn'
-import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
-import { ContractOptions } from '@polkadot/api-contract/types'
-import { ContractPromise } from '@polkadot/api-contract'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger } from '@prosopo/common'
-import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
+import type { AbiMetadata } from './artifacts.js'
+import type { ApiPromise } from '@polkadot/api/promise/Api'
+import type { BN } from '@polkadot/util/bn'
+import type { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
+import type { ContractOptions } from '@polkadot/api-contract/types'
+import type { ContractPromise } from '@polkadot/api-contract'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { Logger } from '@prosopo/common'
+import type { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 
 export interface IProsopoCaptchaContract {
     api: ApiPromise

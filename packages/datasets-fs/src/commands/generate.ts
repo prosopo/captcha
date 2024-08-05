@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { DataSchema, Item, LabelledDataSchema, LabelledItem, LabelsContainerSchema } from '@prosopo/types'
+import { DataSchema, type Item, LabelledDataSchema, type LabelledItem, LabelsContainerSchema } from '@prosopo/types'
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { lodash, setSeedGlobal } from '@prosopo/util/lodash'

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DatasetWithIdsAndTree } from '@prosopo/types'
+import type { DatasetWithIdsAndTree } from '@prosopo/types'
 
 export const dummyUserAccount = {
     address: '5H9NydeNeQ1Jkr9YehjJDGB1tgc3VuoYGvG7na4zvNDg4k3r',

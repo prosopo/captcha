@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProcaptchaCallbacks } from './manager.js'
-import { ProcaptchaClientConfigInput } from '../config/index.js'
+import type { ProcaptchaCallbacks } from './manager.js'
+import type { ProcaptchaClientConfigInput } from '../config/index.js'
 
 /**
  * The props for the Procaptcha component.

@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util/bn'
+import type { BN } from '@polkadot/util/bn'
 import { ProviderEnvironment } from './provider.js'
 import { mnemonicGenerate } from '@polkadot/util-crypto/mnemonic'
-import { Dapp, Provider } from '@prosopo/types'
+import type { Dapp, Provider } from '@prosopo/types'
 
 export type TestAccount = {
     mnemonic: string

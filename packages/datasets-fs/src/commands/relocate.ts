@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { InputOutputArgsSchema as InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
+import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutput.js'
 import { get } from '@prosopo/util'
 import { lodash } from '@prosopo/util/lodash'
 import fs from 'fs'

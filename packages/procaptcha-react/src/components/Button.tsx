@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { darkTheme, lightTheme } from '@prosopo/web-components'
-import React, { ButtonHTMLAttributes, CSSProperties, useMemo, useState } from 'react'
+import type React from 'react'
+import { type ButtonHTMLAttributes, type CSSProperties, useMemo, useState } from 'react'
 import addDataAttr from '../util/index.js'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

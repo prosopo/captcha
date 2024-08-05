@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    Captcha,
+    type Captcha,
     CaptchaTypes,
-    CaptchaWithoutId,
+    type CaptchaWithoutId,
     CaptchasSchema,
     CaptchasWithNumericSolutionSchema,
     SelectAllCaptchaSchema,
 } from './captcha.js'
-import { Hash } from '@prosopo/types'
+import type { Hash } from '@prosopo/types'
 import { array, nativeEnum, number, object, string } from 'zod'
 
 export type DatasetBase = {

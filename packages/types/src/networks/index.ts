@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { NetworkNamesSchema, NetworkPairTypeSchema } from '../config/network.js'
-import { ProsopoNetworksSchemaInput } from '../config/index.js'
+import type { ProsopoNetworksSchemaInput } from '../config/index.js'
 
 const pairTypeSr25519 = NetworkPairTypeSchema.parse('sr25519')
 

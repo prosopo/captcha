@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { Keypair } from '@polkadot/util-crypto/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
+import type { Keypair } from '@polkadot/util-crypto/types'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { base58Decode, base64Encode } from '@polkadot/util-crypto'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 import { sign } from '../lib/sep256k1Sign.js'

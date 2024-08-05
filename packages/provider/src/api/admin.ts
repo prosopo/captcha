@@ -13,7 +13,7 @@
 // limitations under the License.
 import { AdminApiPaths } from '@prosopo/types'
 import { Tasks } from '../index.js'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { Router } from 'express'
 import { authMiddleware } from './authMiddleware.js'
 

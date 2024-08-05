@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Properties } from 'csstype'
+import type { Properties } from 'csstype'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
-import { Captcha } from '@prosopo/types'
+import type { Captcha } from '@prosopo/types'
 
 export interface CaptchaWidgetProps {
     challenge: Captcha

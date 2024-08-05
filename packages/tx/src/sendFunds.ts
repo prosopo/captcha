@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AnyNumber } from '@polkadot/types-codec/types'
-import { ApiPromise } from '@polkadot/api'
+import type { AnyNumber } from '@polkadot/types-codec/types'
+import type { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
-import { ISubmittableResult } from '@polkadot/types/types'
-import { Index } from '@polkadot/types/interfaces'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { ISubmittableResult } from '@polkadot/types/types'
+import type { Index } from '@polkadot/types/interfaces'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, getLogger } from '@prosopo/common'
 import { getBalance, oneUnit } from './balances/index.js'
 import { getDispatchError } from './getDispatchError.js'

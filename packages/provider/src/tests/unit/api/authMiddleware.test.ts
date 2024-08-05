@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, it, expect, vi } from 'vitest'
-import { Request, Response, NextFunction } from 'express'
-import { KeyringPair } from '@polkadot/keyring/types'
+import type { Request, Response, NextFunction } from 'express'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import type { ProviderEnvironment } from '@prosopo/types-env'
 import { hexToU8a, isHex } from '@polkadot/util'
 import { authMiddleware } from '../../../api/authMiddleware.js'
-import { Tasks } from '../../../tasks/tasks.js'
+import type { Tasks } from '../../../tasks/tasks.js'
 
 vi.mock('@polkadot/util', () => ({
     hexToU8a: vi.fn(),

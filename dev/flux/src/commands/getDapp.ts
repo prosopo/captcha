@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as z from 'zod'
-import { ArgumentsCamelCase, Argv } from 'yargs'
+import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { FLUX_URL, getAuth, getIndividualFluxAppDetails } from '../lib/auth.js'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 const fluxGetDappArgs = z.object({
     app: z.string(),

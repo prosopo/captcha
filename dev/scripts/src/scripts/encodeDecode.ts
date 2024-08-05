@@ -35,7 +35,7 @@ function isBN(arg: string): boolean {
 }
 
 function main() {
-    const ss58Format = process.env.PROSOPO_SS58_FORMAT ? parseInt(process.env.PROSOPO_SS58_FORMAT) : 42
+    const ss58Format = process.env.PROSOPO_SS58_FORMAT ? Number.parseInt(process.env.PROSOPO_SS58_FORMAT) : 42
     const arg = at(process.argv.slice(2), 0).trim()
     const argIsHex = isHex(arg)
     const argIsAddress = isAddress(arg, false, ss58Format)

@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaConfig, CaptchaSolutionConfig, DatasetRaw, ProsopoConfigOutput } from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
-import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { KeyringPair } from '@polkadot/keyring/types'
+import { type CaptchaConfig, CaptchaSolutionConfig, DatasetRaw, type ProsopoConfigOutput } from '@prosopo/types'
+import type { Database } from '@prosopo/types-database'
+import { type Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import type { ProviderEnvironment } from '@prosopo/types-env'
+import type { KeyringPair } from '@polkadot/keyring/types'
 import { PowCaptchaManager } from './powCaptcha/powTasks.js'
 import { ImgCaptchaManager } from './imgCaptcha/imgCaptchaTasks.js'
 import { DatasetManager } from './dataset/datasetTasks.js'

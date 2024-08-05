@@ -14,7 +14,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ProsopoEnvError } from '@prosopo/common'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash } from '@prosopo/datasets'
-import { CaptchaSolution } from '@prosopo/types'
+import type { CaptchaSolution } from '@prosopo/types'
 import { buildTreeAndGetCommitmentId } from '../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js'
 
 vi.mock('@prosopo/datasets', () => ({

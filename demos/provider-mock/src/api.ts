@@ -13,8 +13,8 @@
 // limitations under the License.
 import { ApiPaths, VerifySolutionBody, decodeProcaptchaOutput } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
-import { VerifySolutionBodyTypeOutput } from '@prosopo/types'
-import express, { Router } from 'express'
+import type { VerifySolutionBodyTypeOutput } from '@prosopo/types'
+import express, { type Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
