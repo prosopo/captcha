@@ -98,7 +98,7 @@ jobs:
             - name: Cleanup caches
               if: always()
               env:
-                REF: ${{ github.event.pull_request.head.ref || github.ref }}
+                  REF: ${{ github.event.pull_request.head.ref || github.ref }}
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
