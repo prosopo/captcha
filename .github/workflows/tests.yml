@@ -122,7 +122,7 @@ jobs:
                     cp dev/scripts/env.test dev/scripts/.env.test
                     cp dev/scripts/env.test packages/cli/.env.test
                     cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                    echo NODE_ENV: $NODE_ENV
+                    echo NODE_ENV: "$NODE_ENV"
 
             - name: Start the docker images
               run: |

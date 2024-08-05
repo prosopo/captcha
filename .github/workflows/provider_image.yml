@@ -154,11 +154,11 @@ jobs:
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    CONTAINER=$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')
+                    CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
                     sleep 20s
-                    docker logs $CONTAINER >& provider.log
-                    echo $(cat provider.log)
-                    grep -oE "Version: \".*\"" provider.log || (echo $(cat provider.log) && exit 1)
+                    docker logs "$CONTAINER" >& provider.log
+                    cat provider.log
+                    grep -oE "Version: \".*\"" provider.log || (cat provider.log && exit 1)
 
             - name: Build the provider-mock package
               id: build_provider_mock_package
@@ -186,9 +186,9 @@ jobs:
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider mock container runs
               run: |
-                  CONTAINER=$(docker run -d -p 9229:9229 prosopo/provider-mock:dev)
+                  CONTAINER="$(docker run -d -p 9229:9229 prosopo/provider-mock:dev)"
                   sleep 10s
-                  docker logs $CONTAINER >& provider-mock.log
+                  docker logs "$CONTAINER" >& provider-mock.log
                   cat provider-mock.log
                   RESPONSE=$(curl --location 'http://localhost:9229/v1/prosopo/provider/image/dapp/verify' --header 'Content-Type: application/json' --data '{"token": "0x0000c03543346872666a7739446a585a547a56334d777a727241723950314d4a685372765747577169316553757955706e684dc03547727776614546357a58623236467a397263517044575335374374455248704e6568584350634e6f48474b75745159010000000000", "dappUserSignature":"0x8656e1566313c6b707c41cdf333789b138509c1202a245f42d7d6652878c54030a8d660e04580bb565d5738c6578f5e69a066ecf8847856da3ba83dfd5701a8f"}' | jq --raw-output '.status')
                   if [ "$RESPONSE" = "User verified" ]; then exit 0; else exit 1; fi
