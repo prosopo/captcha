@@ -83,10 +83,6 @@ jobs:
                         exit 1
                     fi
 
-                # split into major, minor, patch
-                MAJOR=$(echo $VERSION | cut -d. -f1)
-                MINOR=$(echo $VERSION | cut -d. -f2)
-                PATCH=$(echo $VERSION | cut -d. -f3)
                 echo "version=$VERSION"
 
                 # export the next version numbers
