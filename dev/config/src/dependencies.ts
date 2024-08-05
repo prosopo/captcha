@@ -15,12 +15,12 @@ import { Glob } from 'glob'
 import type { ProjectReference } from 'typescript'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
-import child_process from 'child_process'
-import fs from 'fs'
-import path from 'path'
-import util from 'util'
+import child_process from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+import util from 'node:util'
 
-const logger = getLogger(`Info`, `config.dependencies.js`)
+const logger = getLogger("Info", "config.dependencies.js")
 const exec = util.promisify(child_process.exec)
 // find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/

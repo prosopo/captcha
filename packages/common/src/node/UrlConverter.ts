@@ -101,7 +101,7 @@ export class UrlConverter {
         this.longestSymbolLength = this.symbols.reduce((longest, symb) => {
             return Math.max(longest, symb.length)
         }, 0)
-        const maxSymbols = Math.pow(2, this.symbolNBits)
+        const maxSymbols = 2 ** this.symbolNBits
         if (this.symbols.length > maxSymbols) {
             throw new ProsopoError('DEVELOPER.GENERAL', {
                 context: {
@@ -211,7 +211,7 @@ export class UrlConverter {
                 const usedBitsInSymbol = bitCount % this.symbolNBits
                 const unusedBitsInSymbol = this.symbolNBits - usedBitsInSymbol
                 // truncate the number by bits used
-                const max = Math.pow(2, unusedBitsInSymbol)
+                const max = 2 ** unusedBitsInSymbol
                 const remNum = num % max
                 // make num occupy left most bits of a byte
                 const shift = this.byteNBits - unusedBitsInSymbol
@@ -280,7 +280,7 @@ export class UrlConverter {
 
     private bitTruncLeft(num: number, nBits: number) {
         const threshNBits = this.byteNBits - nBits
-        const thresh = Math.pow(2, threshNBits)
+        const thresh = 2 ** threshNBits
         return thresh <= 0 ? 0 : num % thresh
     }
 

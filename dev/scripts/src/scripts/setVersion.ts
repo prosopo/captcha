@@ -15,8 +15,8 @@ import { getLogLevel, getLogger } from '@prosopo/common'
 import { getRootDir } from '@prosopo/config'
 import { loadEnv } from '@prosopo/cli'
 import { parse, stringify } from '@iarna/toml'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
@@ -57,7 +57,7 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
                 results.push(...find(fullPath, filter))
             }
         } catch (e) {
-            log.debug(`Not a directory: {fullPath}`)
+            log.debug("Not a directory: {fullPath}")
         }
     }
     return results
@@ -105,7 +105,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
                     }
                 }
             }
-            fs.writeFileSync(pth, JSON.stringify(jsonContent, null, 4) + '\n')
+            fs.writeFileSync(pth, `${JSON.stringify(jsonContent, null, 4)}\n`)
         })
 
     // replace version in tomls
@@ -126,9 +126,9 @@ export default async function setVersion(version: string, ignore?: string[]) {
                 }
             } else {
                 // replace dependency versions in all toml files
-                tomlContent['package'].version = version
+                tomlContent.package.version = version
             }
-            fs.writeFileSync(pth, stringify(tomlContent) + '\n')
+            fs.writeFileSync(pth, `${stringify(tomlContent)}\n`)
         })
 
     // go through tomls again now versions have updated and update the version field for dependencies with paths set, as we can follow the path to get the version
@@ -157,6 +157,6 @@ export default async function setVersion(version: string, ignore?: string[]) {
                     }
                 }
             }
-            fs.writeFileSync(pth, stringify(tomlContent as any) + '\n')
+            fs.writeFileSync(pth, `${stringify(tomlContent as any)}\n`)
         })
 }

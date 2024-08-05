@@ -43,15 +43,12 @@ export function getEventsFromMethodName(
     contractMethodName: string
 ): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
-    if (response && response.contractEvents) {
+    if (response?.contractEvents) {
         return (
-            response &&
-            response.contractEvents &&
-            response.contractEvents.filter((x) => x.event.identifier === eventName)
+            response?.contractEvents?.filter((x) => x.event.identifier === eventName)
         )
-    } else {
-        return []
     }
+        return []
 }
 
 /** Encodes arguments, padding and converting to hex if necessary
@@ -108,13 +105,13 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
     return records
         .filter(({ event }) => {
             const data = event.toPrimitive().data
-            if (data instanceof Array) {
+            if (Array.isArray(data)) {
                 return false
             }
             if (!(data instanceof Object)) {
                 return false
             }
-            return event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
+            return event.toPrimitive().section === 'contracts' && data.contracts === contractAddress.toString()
         })
         .map((record): DecodedEvent | null => {
             try {
@@ -182,7 +179,7 @@ export function getOptions(
             ? storageDeposit.isCharge && storageDeposit.asCharge.gt(BN_ZERO)
                 ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
-                ? storageDeposit.asRefund && storageDeposit.asRefund.gt(BN_ZERO)
+                ? storageDeposit.asRefund?.gt(BN_ZERO)
                     ? storageDeposit.asRefund.toBn().muln(gasIncreaseFactor)
                     : null
                 : null

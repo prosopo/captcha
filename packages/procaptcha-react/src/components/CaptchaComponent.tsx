@@ -119,7 +119,7 @@ const CaptchaComponent = ({
                             </div>
                         </div>
                     </div>
-                    <div {...addDataAttr({ dev: { cy: 'captcha-' + index } })}>
+                    <div {...addDataAttr({ dev: { cy: `captcha-${index}` } })}>
                         {captcha && (
                             <CaptchaWidget
                                 challenge={captcha}
@@ -144,7 +144,7 @@ const CaptchaComponent = ({
                             display: 'flex',
                             width: '100%',
                         }}
-                    ></div>
+                    />
                     <div
                         style={{
                             padding: `0 ${theme.spacing}px`,

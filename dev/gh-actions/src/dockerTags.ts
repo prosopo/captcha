@@ -50,7 +50,7 @@ export const semVerLt = (a: string, b: string): number => {
     for (let i = 0; i < aParts.length; i++) {
         if (aParts[i]! < bParts[i]!) {
             return -1
-        } else if (aParts[i]! > bParts[i]!) {
+        }if (aParts[i]! > bParts[i]!) {
             return 1
         }
     }

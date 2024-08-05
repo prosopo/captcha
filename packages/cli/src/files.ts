@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoCliError } from '@prosopo/common'
-import { Readable } from 'stream'
-import fs, { type WriteStream, createWriteStream } from 'fs'
+import { Readable } from 'node:stream'
+import fs, { type WriteStream, createWriteStream } from 'node:fs'
 
 export function loadJSONFile(filePath: string) {
     try {

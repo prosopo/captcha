@@ -119,7 +119,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                                             themeColor={themeColor}
                                                             labelText={'I am human'}
                                                             aria-label="human checkbox"
-                                                        ></Checkbox>
+                                                        />
                                                     )}
                                                 </div>
                                             </div>
@@ -130,7 +130,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
                                 <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                                     <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT} rel="noreferrer">
                                         <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor} aria-label="Prosopo logo"></Logo>
+                                            <Logo themeColor={themeColor} aria-label="Prosopo logo" />
                                         </div>
                                     </a>
                                 </div>

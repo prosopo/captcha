@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteCommonJSConfig } from '@prosopo/config'
-import path from 'path'
+import path from 'node:path'
 
 export default function () {
     return ViteCommonJSConfig('file-server', path.resolve('./tsconfig.cjs.json'))

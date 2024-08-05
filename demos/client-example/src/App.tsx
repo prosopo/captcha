@@ -128,9 +128,8 @@ function App(props: AppProps) {
     const getMessage = () => {
         if (isError) {
             return <Alert severity="error">{message}</Alert>
-        } else {
-            return <Alert severity="success">{message}</Alert>
         }
+            return <Alert severity="success">{message}</Alert>
     }
 
     const onError = (error: Error) => {

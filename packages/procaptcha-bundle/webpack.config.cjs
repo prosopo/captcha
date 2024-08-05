@@ -13,7 +13,7 @@
 // limitations under the License.
 /* eslint-disable @typescript-eslint/no-var-requires */
 const getWebpackConfig = require('@prosopo/config/webpack/webpack.config')
-const path = require('path')
+const path = require('node:path')
 const args = process.argv.slice(2)
 const mode = args.indexOf('--mode') > -1 ? args[args.indexOf('--mode') + 1] : 'development'
 const webpackConfig = getWebpackConfig(mode)

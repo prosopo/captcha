@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { assert, describe, test } from 'vitest'
-import { exec } from 'child_process'
+import { exec } from 'node:child_process'
 import { getCliPkgDir } from '@prosopo/config'
-import { promisify } from 'util'
+import { promisify } from 'node:util'
 const execPromise = promisify(exec)
 
 describe('provider bundle', () => {

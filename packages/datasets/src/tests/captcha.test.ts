@@ -37,7 +37,7 @@ import {
     sortAndComputeHashes,
     verifyProof,
 } from '../captcha/index.js'
-import path from 'path'
+import path from 'node:path'
 
 describe('CAPTCHA FUNCTIONS', async () => {
     let MOCK_ITEMS: Item[]

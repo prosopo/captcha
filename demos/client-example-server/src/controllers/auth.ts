@@ -24,7 +24,7 @@ import { getPairAsync } from '@prosopo/contract'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -55,11 +55,10 @@ const verify = async (
 
         const verified = (await response.json()).verified
         return verified
-    } else {
+    }
         // verify using the TypeScript library
         const verified = await prosopoServer.isVerified(token)
         return verified
-    }
 }
 
 const signup = async (
@@ -182,7 +181,7 @@ const isAuth = (req: Request, res: Response) => {
     }
 
     const token = at(authHeader.split(' '), 1)
-    let decodedToken
+    let decodedToken: string | JwtPayload = ''
     try {
         decodedToken = jwt.verify(token, 'secret')
     } catch (err) {

@@ -62,23 +62,21 @@ function x64Rotl(m: number[], n: number) {
     n %= 64
     if (n === 32) {
         return [at(m, 1), at(m, 0)]
-    } else if (n < 32) {
+    }if (n < 32) {
         return [(at(m, 0) << n) | (at(m, 1) >>> (32 - n)), (at(m, 1) << n) | (at(m, 0) >>> (32 - n))]
-    } else {
+    }
         n -= 32
         return [(at(m, 1) << n) | (at(m, 0) >>> (32 - n)), (at(m, 0) << n) | (at(m, 1) >>> (32 - n))]
-    }
 }
 
 function x64LeftShift(m: number[], n: number) {
     n %= 64
     if (n === 0) {
         return m
-    } else if (n < 32) {
+    }if (n < 32) {
         return [(at(m, 0) << n) | (at(m, 1) >>> (32 - n)), at(m, 1) << n]
-    } else {
-        return [at(m, 1) << (n - 32), 0]
     }
+        return [at(m, 1) << (n - 32), 0]
 }
 
 function x64Xor(m: number[], n: number[]) {
@@ -207,10 +205,10 @@ function x64hash128(key: string, seed: number) {
     h1 = x64Add(h1, h2)
     h2 = x64Add(h2, h1)
     return (
-        ('00000000' + (at(h1, 0) >>> 0).toString(16)).slice(-8) +
-        ('00000000' + (at(h1, 1) >>> 0).toString(16)).slice(-8) +
-        ('00000000' + (at(h2, 0) >>> 0).toString(16)).slice(-8) +
-        ('00000000' + (at(h2, 1) >>> 0).toString(16)).slice(-8)
+        (`00000000${(at(h1, 0) >>> 0).toString(16)}`).slice(-8) +
+        (`00000000${(at(h1, 1) >>> 0).toString(16)}`).slice(-8) +
+        (`00000000${(at(h2, 0) >>> 0).toString(16)}`).slice(-8) +
+        (`00000000${(at(h2, 1) >>> 0).toString(16)}`).slice(-8)
     )
 }
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Logger } from '@prosopo/common'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export const nodejsPolarsNativeFilePlugin = (logger: Logger, nodeFiles: string[], outDir: string) => {
     const name = 'nodejs-polars-native-file-plugin'
@@ -56,7 +56,7 @@ export const nodejsPolarsNativeFilePlugin = (logger: Logger, nodeFiles: string[]
                 if (path.basename(id) === path.basename(file)) {
                     logger.debug(name, 'load', id)
                     // whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
-                    const newCode = ``
+                    const newCode = ""
                     return newCode
                 }
             }

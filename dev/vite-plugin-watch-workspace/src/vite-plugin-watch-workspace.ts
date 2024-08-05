@@ -15,7 +15,7 @@ import type { Plugin } from 'vite'
 import { build } from 'esbuild'
 import debug from 'debug'
 import fg from 'fast-glob'
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
 
@@ -39,7 +39,7 @@ type VitePluginWatchExternalOptions = {
     ignorePaths?: string[]
 }
 
-const log = debug(`vite-plugin-watch-workspace`)
+const log = debug("vite-plugin-watch-workspace")
 
 const FILE_TYPES = ['ts', 'tsx']
 

@@ -29,7 +29,7 @@ const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
     const ref: MutableRefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (ref && ref.current) {
+        if (ref?.current) {
             startCollector(setStoredMouseEvents, setStoredTouchEvents, setStoredKeyboardEvents, ref.current)
         }
     }, [])
@@ -43,7 +43,7 @@ const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
         if (account) onProcessData(userEvents)
     }, [sendData, account])
 
-    return <div ref={ref}></div>
+    return <div ref={ref} />
 }
 
 export default Collector

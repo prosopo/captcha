@@ -43,7 +43,7 @@ export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => 
             }
         }
     `
-    return <StyledDiv></StyledDiv>
+    return <StyledDiv />
 }
 
 export default LoadingSpinner

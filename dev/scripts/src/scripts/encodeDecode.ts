@@ -50,46 +50,46 @@ function main() {
             const decodedAddress = decodeAddress(encodedAddress, false, ss58Format)
             if (encodedAddress === arg) {
                 const hexAddress = u8aToHex(decodedAddress)
-                output.push({ name: `Hex address`, value: hexAddress })
-                output.push({ name: `Address bytes`, value: decodedAddress.toString() })
+                output.push({ name: "Hex address", value: hexAddress })
+                output.push({ name: "Address bytes", value: decodedAddress.toString() })
             } else {
-                output.push({ name: `Encoded address`, value: encodedAddress })
-                output.push({ name: `Address as hex`, value: u8aToHex(decodeAddress(encodedAddress)) })
+                output.push({ name: "Encoded address", value: encodedAddress })
+                output.push({ name: "Address as hex", value: u8aToHex(decodeAddress(encodedAddress)) })
             }
         } catch (e) {
-            output.push({ name: `Failure encoding/decoding address`, value: `FAIL - ${e}` })
+            output.push({ name: "Failure encoding/decoding address", value: `FAIL - ${e}` })
         }
     }
     if (argIsHex) {
-        output.push({ name: `Decoding hex to string`, value: hexToString(arg) })
+        output.push({ name: "Decoding hex to string", value: hexToString(arg) })
         try {
-            output.push({ name: `Decoding hex to number`, value: hexToNumber(arg).toString() })
+            output.push({ name: "Decoding hex to number", value: hexToNumber(arg).toString() })
         } catch (e) {
-            output.push({ name: `Decoding hex to number`, value: `FAIL - ${e}` })
+            output.push({ name: "Decoding hex to number", value: `FAIL - ${e}` })
         }
-        output.push({ name: `Decoding string to hex to u8a`, value: hexToU8a(stringToHex(arg)).toString() })
+        output.push({ name: "Decoding string to hex to u8a", value: hexToU8a(stringToHex(arg)).toString() })
     } else {
-        output.push({ name: `Hashing string using blake2AsHex`, value: blake2AsHex(arg) })
+        output.push({ name: "Hashing string using blake2AsHex", value: blake2AsHex(arg) })
     }
 
     if (isJSON(arg)) {
         const u8aMaybe = JSON.parse(arg)
-        output.push({ name: `Found JSON`, value: u8aMaybe })
+        output.push({ name: "Found JSON", value: u8aMaybe })
         // pad the array
         const padded = new Uint8Array(new Uint8ClampedArray(u8aMaybe))
         padded.set(u8aMaybe)
-        output.push({ name: `uint8array`, value: padded.toString() })
+        output.push({ name: "uint8array", value: padded.toString() })
 
         const hex = u8aToHex(padded)
-        output.push({ name: `u8aToHex`, value: u8aToHex(padded) })
-        output.push({ name: `encodeAddress(_, ss58Format)`, value: encodeAddress(hex, ss58Format) })
-        output.push({ name: `u8aToString`, value: u8aToString(padded) })
+        output.push({ name: "u8aToHex", value: u8aToHex(padded) })
+        output.push({ name: "encodeAddress(_, ss58Format)", value: encodeAddress(hex, ss58Format) })
+        output.push({ name: "u8aToString", value: u8aToString(padded) })
 
-        output.push({ name: `stringToHex`, value: stringToHex(arg) })
+        output.push({ name: "stringToHex", value: stringToHex(arg) })
     }
 
     if (isBN(arg)) {
-        output.push({ name: `BN`, value: new BN(arg).toString() })
+        output.push({ name: "BN", value: new BN(arg).toString() })
     }
 
     console.log('\nTABLE OUTPUT\n')

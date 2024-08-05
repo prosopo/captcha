@@ -15,8 +15,8 @@ import * as z from 'zod'
 import type { ArgumentsCamelCase, Argv } from 'yargs'
 import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { formatEnvToArray } from '../lib/formatEnv.js'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const fluxFormatEnvArgs = z.object({
     file: z.string(),

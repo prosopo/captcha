@@ -14,14 +14,14 @@
 import type { Plugin } from 'vite'
 import { getLogger } from '@prosopo/common'
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 export interface ClosePluginOptions {
     srcDir: string
     destDir: string[]
 }
 
-const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
+const log = getLogger("Info", "config.vite.vite-plugin-close.js")
 
 /**
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.

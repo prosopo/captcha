@@ -16,7 +16,7 @@ import { InputOutputArgsSchema, InputOutputCliCommand } from '../utils/inputOutp
 import { LabelledDataSchema, type LabelledItem } from '@prosopo/types'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({})
 export type ArgsSchemaType = typeof ArgsSchema

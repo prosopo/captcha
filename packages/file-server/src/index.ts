@@ -16,7 +16,7 @@ import dotenv from 'dotenv'
 import express, { type Request, type Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
-import stream from 'stream'
+import stream from 'node:stream'
 
 const parseArray = (value: string) => {
     try {

@@ -14,7 +14,7 @@
 import * as z from 'zod'
 import { CliCommand } from '../cli/cliCommand.js'
 import { ProsopoDatasetError, ProsopoError } from '@prosopo/common'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const InputArgsSchema = z.object({
     input: z.string(),

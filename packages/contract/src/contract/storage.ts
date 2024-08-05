@@ -46,7 +46,7 @@ export const getPrimitiveTypes = (abiJson: AbiMetadata): PrimitiveTypes => {
     const types = abiJson.types.filter((type) => {
         if (type.type.def.primitive) {
             return true
-        } else if (type.type.path && type.type.path.length > 0) {
+        }if (type.type.path && type.type.path.length > 0) {
             const path = Array.from(type.type.path) as string[]
             return at(path, 0).indexOf('primitive') > -1 && at(path, 1) === 'types'
         }
@@ -121,7 +121,7 @@ export function getStorageKeyAndType(
         // This is a primitive storage field (e.g. u16, u32, etc.)
         if (hexToNumber(rootKey) === 0) {
             const primitiveStorageTypes = getPrimitiveTypes(json)
-            if (storage.layout && storage.layout.leaf && storage.layout.leaf.ty) {
+            if (storage.layout?.leaf?.ty) {
                 const type = storage.layout.leaf.ty
                 if (primitiveStorageTypes[type]) {
                     return {

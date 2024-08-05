@@ -14,7 +14,7 @@
 import { at } from '@prosopo/util'
 import { getRootDir } from '@prosopo/config'
 import { glob } from 'glob'
-import fs from 'fs'
+import fs from 'node:fs'
 
 const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
 //

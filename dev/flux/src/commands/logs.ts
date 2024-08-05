@@ -17,8 +17,8 @@ import { LogLevel, type Logger, getLogger } from '@prosopo/common'
 import { consoleTableWithWrapping } from '@prosopo/util'
 import { getPrivateKey, getPublicKey } from './process.env.js'
 import { main } from '../lib/logs.js'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const fluxAuthArgs = z.object({
     app: z.string(),
@@ -35,7 +35,7 @@ const writeLogs = (file: string, result: { url: string; logs: string }[]) => {
         console.log('file deleted successfully')
     })
     // write logs as individual lines to a file
-    fs.appendFileSync(filePath, `host, log\n`)
+    fs.appendFileSync(filePath, "host, log\n")
     Object.values(result).map(({ url, logs }) => {
         const paddedURL = url.padEnd(32, ' ')
         logs.split('\\n').map((log) => fs.appendFileSync(filePath, `${paddedURL}, ${log}\n`))

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteCommonJSConfig } from './src/vite/index.js'
-import path from 'path'
+import path from 'node:path'
 
 export default function () {
     return ViteCommonJSConfig('config', path.resolve('./tsconfig.cjs.json'), 'src/index.ts')

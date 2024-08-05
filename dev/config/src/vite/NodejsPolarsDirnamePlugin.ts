@@ -33,7 +33,7 @@ export const nodejsPolarsDirnamePlugin = (logger: Logger) => {
                 // replace all instances of __dirname with the path relative to the output bundle
                 logger.debug(name, 'transform', id)
                 const newCode = code.replaceAll(
-                    `__dirname`,
+                    "__dirname",
                     `new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`
                 )
                 return newCode

@@ -13,7 +13,7 @@
 // limitations under the License.
 import { type CaptchasContainer, CaptchasContainerSchema, DataSchema } from '@prosopo/types'
 import { at } from '@prosopo/util'
-import fs from 'fs'
+import fs from 'node:fs'
 
 // recursively list files in a directory
 export function* fsWalk(
@@ -76,7 +76,7 @@ export const fsEq = (pth1: string, pth2: string) => {
 export const readDataJson = (pth: string) => {
     let content = fs.readFileSync(pth).toString()
     // TODO use getPaths() here to find the repo dir
-    content = content.replaceAll('${repo}', __dirname + '/../../../..')
+    content = content.replaceAll('${repo}', `${__dirname}/../../../..`)
     const dataJson = JSON.parse(content.toString())
     const data = DataSchema.parse(dataJson)
     return data
@@ -118,16 +118,16 @@ export const captchasEq = (first: CaptchasContainer, second: CaptchasContainer) 
 
 export const substituteRepoDir = () => {
     // read all json files in the test data dir
-    for (const pth of fsWalk(__dirname + '/data')) {
+    for (const pth of fsWalk(`${__dirname}/data`)) {
         if (!pth.endsWith('.json')) {
             continue
         }
         // make a backup of each file
-        fs.copyFileSync(pth, pth + '.bak')
+        fs.copyFileSync(pth, `${pth}.bak`)
         // replace ${repo} with the path to the repo
         let content = fs.readFileSync(pth).toString()
         // TODO use getPaths() here to find the repo dir
-        content = content.replaceAll('${repo}', __dirname + '/../../../..')
+        content = content.replaceAll('${repo}', `${__dirname}/../../../..`)
         // rewrite the file
         fs.writeFileSync(pth, content)
     }
@@ -135,11 +135,11 @@ export const substituteRepoDir = () => {
 
 export const restoreRepoDir = () => {
     // read all json files in the test data dir
-    for (const pth of fsWalk(__dirname + '/data')) {
+    for (const pth of fsWalk(`${__dirname}/data`)) {
         if (!pth.endsWith('.json')) {
             continue
         }
         // restore the backup of each file
-        fs.renameSync(pth + '.bak', pth)
+        fs.renameSync(`${pth}.bak`, pth)
     }
 }

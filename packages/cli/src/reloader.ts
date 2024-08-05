@@ -19,7 +19,7 @@ import { ProviderEnvironment } from '@prosopo/env'
 import type { Server } from 'node:net'
 import { loadEnv } from './env.js'
 import { start } from './start.js'
-import fs from 'fs'
+import fs from 'node:fs'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
 

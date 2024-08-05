@@ -75,7 +75,6 @@ export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
         }
 
         return { schedule: argv.schedule as string }
-    } else {
-        return { schedule: null }
     }
+        return { schedule: null }
 }

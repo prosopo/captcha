@@ -113,10 +113,9 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<HTMLEleme
                         .then(() => {
                             cy.clickNextButton()
                         })
-                } else {
+                }
                     console.log('No images to select')
                     return cy.clickNextButton()
-                }
             })
         })
     })

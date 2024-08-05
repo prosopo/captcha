@@ -16,8 +16,8 @@ import { at } from '@prosopo/util'
 import { getEnv } from '@prosopo/cli'
 import dotenv from 'dotenv'
 import fg from 'fast-glob'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const ignore = [
     '**/node_modules/**',

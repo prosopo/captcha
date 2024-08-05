@@ -134,9 +134,8 @@ export class ProsopoServer {
                 timestamp,
                 challenge
             )
-        } else {
+        }
             // If we don't have a providerURL, something has gone deeply wrong
             throw new ProsopoApiError('API.BAD_REQUEST', { context: { message: 'No provider URL' } })
-        }
     }
 }

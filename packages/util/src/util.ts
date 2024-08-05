@@ -23,7 +23,7 @@ export const flatten = (obj: object, prefix = ''): Record<string, unknown> => {
     const flattenedObj: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
         if (value instanceof Object) {
-            Object.assign(flattenedObj, flatten(value, prefix + key + '.'))
+            Object.assign(flattenedObj, flatten(value, `${prefix + key}.`))
         } else {
             flattenedObj[prefix + key] = value
         }

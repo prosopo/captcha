@@ -39,7 +39,7 @@ export class Environment implements ProsopoEnvironment {
         this.defaultEnvironment = this.config.defaultEnvironment
         this.defaultNetwork = this.config.defaultNetwork
         this.pair = pair
-        this.logger = getLogger(this.config.logLevel, `ProsopoEnvironment`)
+        this.logger = getLogger(this.config.logLevel, "ProsopoEnvironment")
         if (
             this.config.defaultNetwork &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultNetwork) &&

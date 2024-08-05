@@ -82,7 +82,7 @@ describe('DATASETS MERKLE TREE', async () => {
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
 
         tree.build(captchaHashes)
-        expect(tree.root!.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
+        expect(tree.root?.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
     })
     test('Tree proof works when computing leaf hashes', () => {
         const dataset = DATASET
@@ -110,7 +110,7 @@ describe('DATASETS MERKLE TREE', async () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
-        expect(tree.root!.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
+        expect(tree.root?.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
     })
     test('Tree proof works when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()

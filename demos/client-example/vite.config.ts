@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as path from 'path'
+import * as path from 'node:path'
 import { VitePluginCloseAndCopy } from '@prosopo/config'
 import { VitePluginWatchWorkspace } from '@prosopo/vite-plugin-watch-workspace'
 import { defineConfig } from 'vite'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import react from '@vitejs/plugin-react'
-const logger = getLogger(`Info`, `vite.config.js`)
+const logger = getLogger("Info", "vite.config.js")
 const dir = path.resolve('.')
 loadEnv(dir)
 // https://vitejs.dev/config/
@@ -72,7 +72,7 @@ export default defineConfig(async ({ command, mode }) => {
                 workspaceRoot: path.resolve('../..'),
                 currentPackage: `${path.resolve('.')}/**/*`,
                 format: 'esm',
-                ignorePaths: [`${path.resolve('../..')}/demos/*`, `${path.resolve('../..')}/dev/*`, `**/dist/**/*`],
+                ignorePaths: [`${path.resolve('../..')}/demos/*`, `${path.resolve('../..')}/dev/*`, "**/dist/**/*"],
             }),
         ],
         server: { port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230 },

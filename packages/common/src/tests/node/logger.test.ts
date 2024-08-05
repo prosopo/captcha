@@ -53,7 +53,7 @@ describe('logging', () => {
                         levelCased.slice(0, j) + levelCased.slice(j, j + 1).toUpperCase() + levelCased.slice(j + 1)
                     logger.setLogLevel(level)
                     expect(logger.getLogLevel()).to.equal(level)
-                    logger.setLogLevel(i == 0 ? 'info' : 'debug')
+                    logger.setLogLevel(i === 0 ? 'info' : 'debug')
                 }
             }
         }

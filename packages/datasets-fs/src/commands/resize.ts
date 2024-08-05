@@ -19,7 +19,7 @@ import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util/lodash'
 import { u8aToHex } from '@polkadot/util/u8a'
 import cliProgress from 'cli-progress'
-import fs from 'fs'
+import fs from 'node:fs'
 import sharp from 'sharp'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
@@ -143,7 +143,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
         this.logger.info('verifying data')
         DataSchema.parse(data)
 
-        this.logger.info(`writing data`)
+        this.logger.info("writing data")
         fs.mkdirSync(args.output.split('/').slice(0, -1).join('/'), { recursive: true })
         fs.writeFileSync(outputMapFile, JSON.stringify(data, null, 4))
     }

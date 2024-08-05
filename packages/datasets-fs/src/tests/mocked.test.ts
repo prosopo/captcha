@@ -23,8 +23,8 @@ import { blake2b } from '@noble/hashes/blake2b'
 import { captchasEqFs, fsEq, fsWalk, restoreRepoDir, substituteRepoDir } from './utils.js'
 import { getRootDir, getTestResultsDir } from '@prosopo/config'
 import { u8aToHex } from '@polkadot/util/u8a'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 import sharp from 'sharp'
 
 describe('dataset commands', () => {
@@ -93,7 +93,7 @@ describe('dataset commands', () => {
         })
         // make sure the results are the same as the expected results
         if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v2.json`)) {
-            throw new Error(`captchas not equal`)
+            throw new Error("captchas not equal")
         }
 
         // test that the solutions array and unlabelled array per captcha never conflict
@@ -106,7 +106,7 @@ describe('dataset commands', () => {
             // both should not be undefined
             if (solutions === undefined || unlabelled === undefined) {
                 console.log(captcha)
-                throw new Error(`solutions or unlabelled array is undefined`)
+                throw new Error("solutions or unlabelled array is undefined")
             }
             for (const solution of solutions) {
                 // solution should not be in unlabelled
@@ -156,7 +156,7 @@ describe('dataset commands', () => {
         })
         // make sure the results are the same as the expected results
         if (!captchasEqFs(output, `${__dirname}/data/flat_resized/captchas_v1.json`)) {
-            throw new Error(`captchas not equal`)
+            throw new Error("captchas not equal")
         }
     })
 
@@ -273,7 +273,7 @@ describe('dataset commands', () => {
                 throw new Error(`unable to find image ${pth} in data.json`)
             }
             // correct name, so check category
-            if (item.label != category) {
+            if (item.label !== category) {
                 throw new Error(`expected ${category} but found ${item.label}`)
             }
             // type should be image

@@ -58,7 +58,7 @@ export function u8aToHex(value: Uint8Array | null, bitLength = -1, isPrefixed = 
     const empty = isPrefixed ? '0x' : ''
     if (!value?.length) {
         return empty
-    } else if (bitLength > 0) {
+    }if (bitLength > 0) {
         const length = Math.ceil(bitLength / 8)
         if (value.length > length) {
             return `${hex(value.subarray(0, length / 2), empty)}…${hex(value.subarray(value.length - length / 2), '')}`

@@ -20,7 +20,7 @@ import { blake2b } from '@noble/hashes/blake2b'
 import { lodash } from '@prosopo/util/lodash'
 import { u8aToHex } from '@polkadot/util/u8a'
 import cliProgress from 'cli-progress'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
     allowDuplicates: z.boolean().optional(),

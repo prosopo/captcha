@@ -20,7 +20,7 @@ import { blake2AsHex } from '@polkadot/util-crypto/blake2'
 import { lodash } from '@prosopo/util/lodash'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const ArgsSchema = GenerateArgsSchema.extend({
     solved: z.number().optional(),
@@ -76,7 +76,7 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
             bar.increment()
 
             if (this.targets.length <= 1) {
-                throw new ProsopoDatasetError(new Error(`not enough different labels in labelled data`), {
+                throw new ProsopoDatasetError(new Error("not enough different labels in labelled data"), {
                     translationKey: 'DATASET.NOT_ENOUGH_LABELS',
                 })
             }
@@ -157,14 +157,14 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
         for (let i = 0; i < unsolved; i++) {
             bar.increment()
             if (this.unlabelled.length <= size) {
-                throw new ProsopoDatasetError(new Error(`unlabelled map file does not contain enough data`), {
+                throw new ProsopoDatasetError(new Error("unlabelled map file does not contain enough data"), {
                     translationKey: 'DATASET.NOT_ENOUGH_IMAGES',
                 })
             }
             // pick a random label to be the target
             // note that these are potentially different to the labelled data labels
             if (this.labels.length <= 0) {
-                throw new ProsopoDatasetError(new Error(`no labels found for unlabelled data`), {
+                throw new ProsopoDatasetError(new Error("no labels found for unlabelled data"), {
                     translationKey: 'DATASET.NOT_ENOUGH_LABELS',
                 })
             }

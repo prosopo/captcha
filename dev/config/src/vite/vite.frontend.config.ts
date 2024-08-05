@@ -15,7 +15,7 @@ import type { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
 import type { Drop } from 'esbuild'
 import type { UserConfig } from 'vite'
 import { VitePluginCloseAndCopy } from './index.js'
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -23,10 +23,10 @@ import { default as viteReact } from '@vitejs/plugin-react'
 import { wasm } from '@rollup/plugin-wasm'
 import css from 'rollup-plugin-import-css'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import path from 'path'
+import path from 'node:path'
 import typescript from '@rollup/plugin-typescript'
 import viteTsconfigPaths from 'vite-tsconfig-paths'
-const logger = getLogger(`Info`, `vite.config.js`)
+const logger = getLogger("Info", "vite.config.js")
 
 export default async function (
     packageName: string,
@@ -86,7 +86,7 @@ export default async function (
 
     // Required to print RegExp in console (e.g. alias keys)
     const proto = RegExp.prototype as any
-    proto['toJSON'] = RegExp.prototype.toString
+    proto.toJSON = RegExp.prototype.toString
 
     // drop console logs if in production mode
     let drop: undefined | Drop[]

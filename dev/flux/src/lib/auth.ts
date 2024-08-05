@@ -20,7 +20,7 @@ import { sign } from './sep256k1Sign.js'
 import qs from 'qs'
 
 loadEnv()
-const log = getLogger(`Info`, `auth.js`)
+const log = getLogger("Info", "auth.js")
 export const FLUX_URL = new URL('https://api.runonflux.io/')
 
 interface ResponseLoginPhrase {
@@ -122,13 +122,13 @@ export const verifyLogin = async (zelid: string, signature: string, loginPhrase:
     const response = await fetch(apiUrl, {
         method: 'POST',
         body: data,
-        headers: { 'Content-Type': `application/x-www-form-urlencoded` },
+        headers: { 'Content-Type': "application/x-www-form-urlencoded" },
     })
     return await errorHandler(response)
 }
 
 const getLoginPhrase = async (url: URL): Promise<string> => {
-    const apiURL = new URL(`id/loginphrase`, url)
+    const apiURL = new URL("id/loginphrase", url)
     log.info('Calling:', apiURL.href)
     const response = await fetch(apiURL.toString())
     return (await errorHandler<ResponseLoginPhrase>(response)).data

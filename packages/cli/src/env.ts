@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from '@prosopo/common'
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
-import path from 'path'
+import path from 'node:path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

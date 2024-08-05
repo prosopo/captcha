@@ -50,7 +50,7 @@ export function getPair(
     const keyring = new Keyring({ type: pairType, ss58Format })
     if (!secret && account) {
         return keyring.addFromAddress(account)
-    } else if (secret && typeof secret === 'string') {
+    }if (secret && typeof secret === 'string') {
         if (mnemonicValidate(secret)) {
             return keyring.addFromMnemonic(secret)
         }

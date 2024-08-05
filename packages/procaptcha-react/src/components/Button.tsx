@@ -66,12 +66,11 @@ const Button: React.FC<ButtonProps> = ({ themeColor, buttonType, text, onClick }
                 ...baseStyle,
                 backgroundColor: hover ? theme.palette.grey[600] : 'transparent',
             }
-        } else {
+        }
             return {
                 ...baseStyle,
                 backgroundColor: hover ? theme.palette.primary.main : theme.palette.background.default,
             }
-        }
     }, [buttonType, hover, theme])
 
     return (

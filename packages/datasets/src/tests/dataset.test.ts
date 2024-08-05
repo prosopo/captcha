@@ -16,7 +16,7 @@ import { at } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { computeItemHash, matchItemsToSolutions } from '../index.js'
 import { validateDatasetContent } from '../index.js'
-import path from 'path'
+import path from 'node:path'
 
 describe('DATASET FUNCTIONS', async () => {
     let MOCK_ITEMS: Item[]

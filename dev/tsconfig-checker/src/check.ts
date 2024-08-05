@@ -14,8 +14,8 @@
 
 import * as glob from 'glob'
 import { at, get } from '@prosopo/util'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 import z from 'zod'
 
 const readPackageJson = (dir: string): JSON => {

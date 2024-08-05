@@ -14,8 +14,8 @@
 import { ProsopoEnvError } from '@prosopo/common'
 import { exec } from '../util/index.js'
 import { lodash } from '@prosopo/util/lodash'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 type TypeChainDir = {
     dir: string

@@ -158,7 +158,7 @@ export class TransactionQueue {
                                 await this.submit()
                             } else if (result.status.isUsurped) {
                                 // This shouldn't happen as it means we've submitted a nonce with too low a value
-                                this.logger.debug(`Transaction was usurped.`)
+                                this.logger.debug("Transaction was usurped.")
                                 reject(
                                     new ProsopoTxQueueError(new Error('CONTRACT.TX_QUEUE_ERROR'), {
                                         logLevel: this.logger.getLogLevel(),
@@ -175,7 +175,7 @@ export class TransactionQueue {
                                 await this.submit()
                             } else if (result.status.isFuture) {
                                 // This shouldn't happen as it means we've submitted a nonce with too high a value
-                                this.logger.debug(`Transaction is scheduled for a future block.`)
+                                this.logger.debug("Transaction is scheduled for a future block.")
                                 reject(
                                     new ProsopoTxQueueError(new Error('CONTRACT.TX_QUEUE_ERROR'), {
                                         logLevel: this.logger.getLogLevel(),
@@ -200,12 +200,11 @@ export class TransactionQueue {
                         }
                     )
                 })
-            } else {
+            }
                 this.logger.debug('TxQueue empty')
                 this.running = false
                 this.busy = false
                 return undefined
-            }
         } catch (error) {
             throw new ProsopoTxQueueError(new Error('CONTRACT.TX_QUEUE_ERROR'), {
                 context: { error },

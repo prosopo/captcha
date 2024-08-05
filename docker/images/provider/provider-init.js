@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { exec } from 'child_process'
+import { exec } from 'node:child_process'
 
 // Function to execute a shell command and return it as a Promise.
 function execShellCommand(cmd) {

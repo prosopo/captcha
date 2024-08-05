@@ -16,7 +16,7 @@ import { at } from '@prosopo/util'
 import { getLogger } from '@prosopo/common'
 import { getSocketURL, getZelIdAuthHeader, prefixIPAddress } from './url.js'
 
-const log = getLogger(`Info`, `logs.js`)
+const log = getLogger("Info", "logs.js")
 
 async function getLogs(
     zelid: string,

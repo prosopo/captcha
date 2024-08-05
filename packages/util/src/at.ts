@@ -34,7 +34,7 @@ export function at<T extends readonly unknown[]>(items: T | string, index: numbe
         throw new Error('Array is empty')
     }
 
-    if (!isFinite(index)) {
+    if (!Number.isFinite(index)) {
         throw new Error(`Index ${index} is not a finite number`)
     }
 

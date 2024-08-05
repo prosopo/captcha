@@ -16,7 +16,7 @@ import { DataSchema, type Item, LabelledDataSchema, type LabelledItem, LabelsCon
 import { OutputArgsSchema, OutputCliCommand } from '../utils/output.js'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { lodash, setSeedGlobal } from '@prosopo/util/lodash'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const ArgsSchema = OutputArgsSchema.extend({
     labels: z.string().optional(),

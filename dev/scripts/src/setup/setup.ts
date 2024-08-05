@@ -22,7 +22,7 @@ import { getEnvFile } from '@prosopo/cli'
 import { isAddress } from '@polkadot/util-crypto'
 import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
 import fse from 'fs-extra'
-import path from 'path'
+import path from 'node:path'
 import { setupProvider } from './provider.js'
 
 const logger = getLogger(LogLevel.enum.info, 'setup')
@@ -47,7 +47,7 @@ function getDefaultProvider(): IProviderAccount {
         url: process.env.PROSOPO_API_PORT ? `http://${host}:${process.env.PROSOPO_API_PORT}` : `http://${host}:9229`,
         fee: 10,
         payee: Payee.dapp,
-        stake: new BN(Math.pow(10, 13)),
+        stake: new BN(10 ** 13),
         datasetFile: getDatasetFilePath(),
         address: process.env.PROSOPO_PROVIDER_ADDRESS || '',
         secret: getSecret(),
@@ -58,7 +58,7 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        fundAmount: new BN(Math.pow(10, 12)),
+        fundAmount: new BN(10 ** 12),
     }
 }
 
@@ -80,7 +80,7 @@ function updateEnvFileVar(source: string, name: string, value: string) {
     if (envVar.test(source)) {
         return source.replace(envVar, `$1${value}`)
     }
-    return source + `\n${name}=${value}`
+    return `${source}\n${name}=${value}`
 }
 
 export async function updateEnvFile(vars: Record<string, string>) {
@@ -166,6 +166,6 @@ export async function setup(force: boolean) {
         process.exit()
     } else {
         console.error('no secret found in .env file')
-        throw new ProsopoEnvError(`GENERAL.NO_MNEMONIC_OR_SEED`)
+        throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED")
     }
 }

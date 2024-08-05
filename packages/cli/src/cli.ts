@@ -19,7 +19,7 @@ import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import ReloadingAPI from './reloader.js'
 import getConfig from './prosopo.config.js'
-import process from 'process'
+import process from 'node:process'
 
 const log = getLogger(LogLevel.enum.info, 'CLI')
 

@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as path from 'path'
+import * as path from 'node:path'
 import { VitePluginCloseAndCopy } from '@prosopo/config'
 import { defineConfig } from 'vite'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
 import react from '@vitejs/plugin-react'
-const logger = getLogger(`Info`, `vite.config.js`)
+const logger = getLogger("Info", "vite.config.js")
 const dir = path.resolve('.')
 loadEnv(dir)
 // https://vitejs.dev/config/

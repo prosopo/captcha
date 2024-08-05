@@ -21,7 +21,7 @@ import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { isHex } from '@polkadot/util'
 import { setup } from '../setup/index.js'
-import path from 'path'
+import path from 'node:path'
 import setVersion from '../scripts/setVersion.js'
 import yargs from 'yargs'
 const rootDir = path.resolve('.')

@@ -17,7 +17,7 @@ import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { at } from '@prosopo/util'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
 
-const logger = getLogger(`Info`, `dataset.ts`)
+const logger = getLogger("Info", "dataset.ts")
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     return datasetRaw.captchas.map(async (captcha) => {
@@ -48,18 +48,17 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
         )
         if (captchaRaw) {
             return captcha.items.every((item, index) => item.hash === at(captchaRaw.items, index).hash)
-        } else {
-            return false
         }
+            return false
     })
 
     return hashes.every((hash) => hash)
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    logger.debug(`Adding solution hashes to dataset`)
+    logger.debug("Adding solution hashes to dataset")
     const dataset = await addSolutionHashesToDataset(datasetRaw)
-    logger.debug(`Building dataset merkle trees`)
+    logger.debug("Building dataset merkle trees")
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(

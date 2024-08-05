@@ -102,7 +102,7 @@ export class ContractDeployer {
                         contract.method.method.toString()
                     )
                 })
-            } else {
+            }
                 // eslint-disable-next-line no-async-promise-executor
                 return new Promise(async (resolve, reject) => {
                     const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
@@ -137,12 +137,10 @@ export class ContractDeployer {
                         }
                     })
                 })
-            }
-        } else {
+        }
             throw new ProsopoContractError('CONTRACT.UNKNOWN_ERROR', {
                 context: { error, deployer: this.pair.address },
             })
-        }
     }
 }
 
@@ -153,8 +151,8 @@ export async function dryRunDeploy(
     contractAbi: Abi,
     wasm: Uint8Array,
     pair: KeyringPair,
-    params: any[] = [],
-    value = 0,
+    params: any[],
+    value,
     weight: UseWeight,
     constructorIndex = 0,
     salt?: string,

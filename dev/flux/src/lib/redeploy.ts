@@ -16,7 +16,7 @@ import { errorHandler } from '../errorHandler.js'
 import { getLogger } from '@prosopo/common'
 import { getZelIdAuthHeader } from './url.js'
 
-const log = getLogger(`Info`, `deploy.js`)
+const log = getLogger("Info", "deploy.js")
 
 interface ResponseSoftRedeploy {
     status: string

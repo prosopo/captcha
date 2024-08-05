@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type UserConfig, defineConfig } from 'vite'
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import { getExternalsFromReferences } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
 import { default as noBundlePlugin } from 'vite-plugin-no-bundle'
 import VitePluginCloseAndCopy from './vite-plugin-close-and-copy.js'
-import path from 'path'
+import path from 'node:path'
 import replace from '@rollup/plugin-replace'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-const log = getLogger(`Info`, `vite.commonjs.config.ts`)
+const log = getLogger("Info", "vite.commonjs.config.ts")
 
 export default async function (name: string, tsConfigPath: string, entry?: string): Promise<UserConfig> {
     log.info(`ViteCommonJSConfig: ${name}`)

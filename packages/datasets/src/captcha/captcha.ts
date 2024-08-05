@@ -89,7 +89,7 @@ export function sortAndComputeHashes(
 
     return stored.map(({ salt, items = [], target = '', captchaId, solved }, index) => {
         const item = at(received, index)
-        if (captchaId != item.captchaId) {
+        if (captchaId !== item.captchaId) {
             throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
         }
 
@@ -135,22 +135,21 @@ export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Cap
  */
 export function computeCaptchaHash(
     captcha: CaptchaWithoutId,
-    includeSolution = false,
-    includeSalt = false,
+    includeSolution,
+    includeSalt,
     sortItemHashes: boolean
 ): string {
     try {
         const itemHashes: string[] = captcha.items.map((item, index) => {
             if (item.hash) {
                 return item.hash
-            } else {
+            }
                 throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', {
                     context: {
                         computeCaptchaHashName: computeCaptchaHash.name,
                         index,
                     },
                 })
-            }
         })
         return hexHashArray([
             captcha.target,
@@ -180,11 +179,10 @@ export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution
 export async function computeItemHash(item: Item): Promise<HashedItem> {
     if (item.type === 'text') {
         return { ...item, hash: hexHash(item.data) }
-    } else if (item.type === 'image') {
+    }if (item.type === 'image') {
         return { ...item, hash: hexHash(await downloadImage(item.data)) }
-    } else {
-        throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_FORMAT')
     }
+        throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_FORMAT')
 }
 
 /**
@@ -208,15 +206,14 @@ export function matchItemsToSolutions(
                 throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_HASH')
             }
             return solution
-        } else if (typeof solution === 'number') {
+        }if (typeof solution === 'number') {
             // else solution must be a number
             // so lookup the item at that index
             const item = at(items, solution)
             // get the hash of the item
             return item.hash
-        } else {
-            throw new ProsopoDatasetError('CAPTCHA.INVALID_SOLUTION_TYPE')
         }
+            throw new ProsopoDatasetError('CAPTCHA.INVALID_SOLUTION_TYPE')
     })
 }
 

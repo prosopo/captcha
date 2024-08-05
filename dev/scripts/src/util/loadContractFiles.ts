@@ -17,7 +17,7 @@ import { Abi } from '@polkadot/api-contract'
 import { ProsopoError } from '@prosopo/common'
 import { hexToU8a, isWasm } from '@polkadot/util'
 import fse from 'fs-extra'
-import path from 'path'
+import path from 'node:path'
 
 const __dirname = path.resolve()
 export async function AbiJSON(filePath: string): Promise<Abi> {
@@ -32,9 +32,8 @@ export async function AbiJSON(filePath: string): Promise<Abi> {
             })
         )
         return new Abi(json)
-    } else {
-        throw new ProsopoError('FS.FILE_NOT_FOUND', { context: { error: `File ${filePath} does not exist` } })
     }
+        throw new ProsopoError('FS.FILE_NOT_FOUND', { context: { error: `File ${filePath} does not exist` } })
 }
 
 export async function Wasm(filePath: string): Promise<Uint8Array> {
@@ -47,10 +46,9 @@ export async function Wasm(filePath: string): Promise<Uint8Array> {
 
         if (isWasm(wasmBytes)) {
             return wasmBytes
-        } else {
+        }
             console.error(`Error loading contract wasm: ${wasm.slice(0, 10)}...`)
             process.exit(1)
-        }
     } else {
         throw new ProsopoError('FS.FILE_NOT_FOUND', { context: { error: `File ${filePath} does not exist` } })
     }
