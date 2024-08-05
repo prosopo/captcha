@@ -22,4 +22,8 @@ export interface ProcaptchaProps {
     config: ProcaptchaClientConfigInput
     // optional set of callbacks for various captcha events
     callbacks?: Partial<ProcaptchaCallbacks>
+    // optional bot detection function
+    detectBot?: () => Promise<{ bot: boolean }>
+    // optional button onClick handler
+    buttonElement?: HTMLButtonElement
 }
