@@ -1,16 +1,11 @@
 FROM debian:stable-slim
 
-RUN apt-get update && apt-get install -y curl protobuf-compiler && rm -rf /var/lib/apt/lists/*
-
-RUN curl -sL https://github.com/paritytech/substrate-contracts-node/releases/download/v0.24.0/substrate-contracts-node-linux.tar.gz -o /root/substrate-contracts-node-linux.tar.gz
-
-RUN tar -xvf /root/substrate-contracts-node-linux.tar.gz -C /root
-
-RUN mv /root/artifacts/substrate-contracts-node-linux/substrate-contracts-node /usr/local/bin/
-
-RUN rm /root/substrate-contracts-node-linux.tar.gz && rm -rf /root/artifacts
-
-RUN apt-get autoremove -y && apt-get clean -y
+RUN apt-get update && apt-get install -y curl protobuf-compiler && rm -rf /var/lib/apt/lists/* && \
+    curl -sL https://github.com/paritytech/substrate-contracts-node/releases/download/v0.24.0/substrate-contracts-node-linux.tar.gz -o /root/substrate-contracts-node-linux.tar.gz && \
+    tar -xvf /root/substrate-contracts-node-linux.tar.gz -C /root && \
+    mv /root/artifacts/substrate-contracts-node-linux/substrate-contracts-node /usr/local/bin/ && \
+    rm /root/substrate-contracts-node-linux.tar.gz && rm -rf /root/artifacts && \
+    apt-get autoremove -y && apt-get clean -y
 
 EXPOSE 30333 9933 9944 9615
 
