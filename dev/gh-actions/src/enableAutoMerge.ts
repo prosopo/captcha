@@ -24,7 +24,7 @@ const main = async () => {
         throw new Error('REPO env variable not set')
     }
 
-    // TODO get the type from graphql definition
+    // biome-ignore lint/suspicious/noExplicitAny: TODO get the type from graphql definition
     const pr: any = await graphql(
         `  
     query {
