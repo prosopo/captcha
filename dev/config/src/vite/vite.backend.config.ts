@@ -97,7 +97,7 @@ export default async function (
         },
         esbuild: {
             platform: 'node',
-            target: 'node18',
+            target: 'node20',
             drop,
             legalComments: 'none',
         },
@@ -106,7 +106,7 @@ export default async function (
             outDir,
             minify: isProduction,
             ssr: true,
-            target: 'node18',
+            target: 'node20',
             lib: {
                 entry: entryAbsolute,
                 name: bundleName,
