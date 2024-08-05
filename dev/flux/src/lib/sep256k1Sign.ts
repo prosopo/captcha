@@ -30,8 +30,8 @@ function hash256(buffer: Buffer) {
     return Buffer.from(sha256AsU8a(sha256AsU8a(buffer)))
 }
 
-function hasher(message: string, messagePrefix: string): Buffer {
-    messagePrefix = messagePrefix || '\u0018Bitcoin Signed Message:\n'
+function hasher(message: string, messagePrefixIn: string): Buffer {
+    const messagePrefix = messagePrefixIn || '\u0018Bitcoin Signed Message:\n'
     const messagePrefixBuffer = Buffer.from(messagePrefix, 'utf8')
     const messageBuffer = Buffer.from(message, 'utf8')
     const messageVISize = varuint.encodingLength(messageBuffer.length)
