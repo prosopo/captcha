@@ -49,16 +49,16 @@
         "@polkadot/types-codec": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/common": "1.0.2",
-        "@prosopo/types": "1.0.2",
-        "@prosopo/util": "1.0.2",
-        "@prosopo/captcha-contract": "1.0.2",
+        "@prosopo/common": "2.0.0",
+        "@prosopo/types": "2.0.0",
+        "@prosopo/util": "2.0.0",
+
         "@prosopo/typechain-types": "1.1.15",
-        "@prosopo/tx": "1.0.2",
+        "@prosopo/tx": "2.0.0",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {
-        "@prosopo/config": "1.0.2",
+        "@prosopo/config": "2.0.0",
         "@polkadot/api-augment": "10.13.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6"

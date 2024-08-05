@@ -89,7 +89,7 @@
         "demos/*"
     ],
     "dependencies": {
-        "@prosopo/flux": "1.0.2"
+        "@prosopo/flux": "2.0.0"
     },
     "devDependencies": {
         "@biomejs/biome": "1.8.3",
