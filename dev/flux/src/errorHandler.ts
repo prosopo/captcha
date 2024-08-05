@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoApiError } from '@prosopo/common'
+// biome-ignore lint/suspicious/noExplicitAny: TODO set return type?
 export async function streamToJson(stream: ReadableStream<Uint8Array>): Promise<Record<any, any>> {
     return await new Response(stream).json()
 }
