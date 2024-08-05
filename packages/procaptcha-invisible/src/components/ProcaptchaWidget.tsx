@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Manager } from '@prosopo/procaptcha-pow'
-import { ProcaptchaProps } from '@prosopo/types'
+import type { ProcaptchaProps } from '@prosopo/types'
 import { buildUpdateState, useProcaptcha } from '@prosopo/procaptcha-common'
 import { useEffect, useRef, useState } from 'react'
 
@@ -45,6 +45,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
         }
     }, [])
 
-    return <div ref={captchaRef}>Protected by Procaptcha</div>
+    return (
+        <div ref={captchaRef}>
+            Protected by <a href="https://prosopo.io">Procaptcha</a>
+        </div>
+    )
 }
 export default Procaptcha
