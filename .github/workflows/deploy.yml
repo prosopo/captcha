@@ -167,44 +167,44 @@ jobs:
                     JS_FOLDER="/usr/share/nginx/html/js"
 
                     # Get the most recent version of the js_server image
-                    docker pull prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}
+                    docker pull "prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}"
 
                     # Create a temporary container from the latest image
                     echo "Building Docker image..."
-                    OLD_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }})
+                    OLD_CONTAINER_ID="$(docker create "prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}")"
 
                     # Remove the old js temp folder
                     rm -rf ./js_bundles_host_temp
 
                     # Copy out the old files
-                    docker cp $OLD_CONTAINER_ID:$JS_FOLDER ./js_bundles_host_temp
+                    docker cp "$OLD_CONTAINER_ID:$JS_FOLDER" ./js_bundles_host_temp
 
                     # Build the new image
-                    docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${{ steps.env.outputs.docker_version_tag }} --no-cache
+                    docker build --file ./docker/images/js.server.dockerfile . -t "prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}" --no-cache
 
                     # Run the new image
-                    NEW_CONTAINER_ID=$(docker create prosopo/js_server:${{ steps.env.outputs.docker_version_tag }})
+                    NEW_CONTAINER_ID="$(docker create "prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}")"
 
                     # Copy the legacy files across
-                    docker cp ./js_bundles_host_temp/ $NEW_CONTAINER_ID:$JS_FOLDER/
+                    docker cp ./js_bundles_host_temp/ "$NEW_CONTAINER_ID:$JS_FOLDER/"
 
                     # Copy the new bundle files to the container into a folder with the version name
-                    docker cp packages/procaptcha-bundle/dist/bundle/. $NEW_CONTAINER_ID:$JS_FOLDER
+                    docker cp packages/procaptcha-bundle/dist/bundle/. "$NEW_CONTAINER_ID:$JS_FOLDER"
 
                     # Start the new container
-                    docker start $NEW_CONTAINER_ID
+                    docker start "$NEW_CONTAINER_ID"
 
                     # Move procaptcha.bundle.js
-                    docker exec $NEW_CONTAINER_ID mv $JS_FOLDER/procaptcha.bundle.js $JS_FOLDER/procaptcha.bundle.${{ steps.env.outputs.docker_version_tag }}.js
+                    docker exec "$NEW_CONTAINER_ID" mv "$JS_FOLDER/procaptcha.bundle.js" "$JS_FOLDER/procaptcha.bundle.${{ steps.env.outputs.docker_version_tag }}.js"
 
                     # Symlink JS_FOLDER/procaptcha.bundle.js to JS_FOLDER/procaptcha.bundle.VERSION.js
-                    docker exec $NEW_CONTAINER_ID ln -sf $JS_FOLDER/procaptcha.bundle.${{ steps.env.outputs.docker_version_tag }}.js $JS_FOLDER/procaptcha.bundle.js
+                    docker exec "$NEW_CONTAINER_ID" ln -sf "$JS_FOLDER/procaptcha.bundle.${{ steps.env.outputs.docker_version_tag }}.js" "$JS_FOLDER/procaptcha.bundle.js"
 
                     # Commit the changes to the container
-                    docker commit $NEW_CONTAINER_ID prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}
+                    docker commit "$NEW_CONTAINER_ID" "prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}"
 
                     # Check this new docker image works locally
-                    docker run -d -p 3080:80 prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}
+                    docker run -d -p 3080:80 "prosopo/js_server:${{ steps.env.outputs.docker_version_tag }}"
 
                     # Start the bundle demo & run the cypress tests against the new bundle
                     # npx concurrently "npm run start:bundle" "npm run -w @prosopo/cypress-shared cypress:run:client-bundle-example:js_server" --success "first" --kill-others
