@@ -17,5 +17,12 @@
             "**/*.json",
             "**/*.jsonc"
         ]
+    },
+    "linter": {
+        "rules": {
+            "style": {
+                "noParameterAssign": "warn"
+            }
+        }
     }
 }
