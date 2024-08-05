@@ -122,7 +122,9 @@ const getExternalFileLists = async (
             })
         )
     ).flatMap((filesConfigs) => filesConfigs.flat())
-    filesConfigs.map(([file, tsconfig]) => (externalFiles[file] = tsconfig))
+    for(const [file, tsconfig] of filesConfigs) {
+        externalFiles[file] = tsconfig
+    }
     return externalFiles
 }
 
