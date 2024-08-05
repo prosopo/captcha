@@ -8,7 +8,8 @@
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 0",
-        "build": "tsc"
+        "build": "tsc --build --verbose",
+        "clean": "tsc --build --clean"
     },
     "devDependencies": {
         "typescript": "5.3.2"
