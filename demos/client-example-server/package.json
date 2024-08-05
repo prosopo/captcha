@@ -10,12 +10,11 @@
     },
     "scripts": {
         "test": "echo \"No test specified\"",
-        "dev": "vite serve --mode=development --config ./vite.config.ts --host",
+        "dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
         "start": "node ./dist/app.js",
         "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
         "build": "tsc --build --verbose",
-        "bundle:prod": "vite build --mode=production --config ./vite.config.ts",
-        "bundle:dev": "vite build --mode=development --config ./vite.config.ts",
+        "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
         "clean": "tsc --build --clean"
     },
     "repository": {
