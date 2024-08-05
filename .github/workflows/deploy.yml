@@ -114,7 +114,7 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+            - run: npm i -g npm@$(jq -r .engines.npm < package.json)
 
             - run: npm ci
 

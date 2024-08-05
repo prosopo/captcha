@@ -58,7 +58,7 @@ jobs:
                   node-version-file: '.nvmrc'
 
             - name: Install
-              run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+              run: npm i -g npm@$(jq -r .engines.npm < package.json)
 
             - name: Enable auto-merge on PR
               env:
