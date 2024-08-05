@@ -13,7 +13,7 @@
         "cmd": "f() { (cmd=$1; shift; printf \"$cmd\" $@ | bash -ex) ;}; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:all": "npm run ws -- build",
-        "build:all:cjs": "npm run ws -- build:cjs",
+        "build:all:cjs": "npm run ws -- --if-present build:cjs",
         "bundle:all": "npm run ws -- --if-present bundle",
         "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle",
         "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
