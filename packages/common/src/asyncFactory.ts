@@ -18,10 +18,12 @@ export abstract class AsyncFactory {
         throw new ProsopoEnvError('GENERAL.ASYNC_FACTORY_CREATE')
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
     public static async create(...args: any[]) {
         return await Object.create(AsyncFactory.prototype).init(...args)
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
     public abstract init(...args: any[]): Promise<this>
 }
 
