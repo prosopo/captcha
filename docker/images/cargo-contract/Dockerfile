@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 ARG TOOLCHAIN_VERSION=1.77.0
 
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     # required for downloading the setup script for rust
     curl \
     # all deps for building cargo-contract
