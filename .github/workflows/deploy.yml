@@ -143,8 +143,17 @@ jobs:
               if: ${{ steps.env.outputs.staging }}
               run: |
 
-                  # upload the bundle to the staging release, overwriting any existing bundle used for staging before.
-                  gh release upload ${{ steps.env.outputs.env }}-release packages/procaptcha-bundle/dist/bundle/* --clobber
+                  # stop on errors, print commands, fail on pipe fails
+                  set -euo pipefail
+
+                  # the tag for the release
+                  TAG=${{ steps.env.outputs.env }}-release
+
+                  # find the staging release, list the assets, then delete each asset. This stops any assets being carried over from one staging release to the next
+                  gh release view $TAG --json assets | jq '.assets[].name' | tr -d '"' | xargs -P 1 --verbose -I {} "gh release delete-asset $TAG {} -y"
+
+                  # upload the bundle to the staging release
+                  gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
 
             - name: Build docker js_server
               run: |
