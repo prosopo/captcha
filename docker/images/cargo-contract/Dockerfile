@@ -6,6 +6,7 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 # The version of the toolchain to install
 ARG TOOLCHAIN_VERSION=1.77.0
 
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y \
     # required for downloading the setup script for rust
     curl \
@@ -14,7 +15,8 @@ RUN apt-get update && apt-get install -y \
     g++ \
     pkg-config \
     openssl \
-    libssl-dev
+    libssl-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set rustup and cargo home dirs
 ENV RUSTUP_HOME=/usr/local/rustup
