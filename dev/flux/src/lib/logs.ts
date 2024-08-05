@@ -27,10 +27,10 @@ async function getLogs(
     appComponentName: string,
     lineCount = 100
 ) {
-    lineCount = Math.min(lineCount, 1000)
+    const lineCountLocal = Math.min(lineCount, 1000)
     // https://176-9-52-22-16187.node.api.runonflux.io/apps/applog/emailTriggerSignupApi_emailTriggerServer/100
     const socketURL = getSocketURL(nodeAPIURL)
-    const apiUrl = new URL(`/apps/applog/${appComponentName}_${appName}/${lineCount}`, socketURL.href)
+    const apiUrl = new URL(`/apps/applog/${appComponentName}_${appName}/${lineCountLocal}`, socketURL.href)
     const Zelidauth = getZelIdAuthHeader(zelid, signature, loginPhrase)
     const response = await fetch(apiUrl, {
         method: 'GET',
