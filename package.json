@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/captcha",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "author": "Prosopo",
     "type": "module",
     "repository": {
@@ -13,7 +13,7 @@
         "cmd": "f() { (cmd=$1; shift; printf \"$cmd\" $@ | bash -ex) ;}; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:all": "npm run ws -- build",
-        "build:all:cjs": "npm run ws -- build:cjs",
+        "build:all:cjs": "npm run ws -- --if-present build:cjs",
         "bundle:all": "npm run ws -- --if-present bundle",
         "build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle",
         "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
@@ -24,8 +24,6 @@
         "clean-ts:dist": "rimraf '**/dist'",
         "clean:ts": "run-p clean-ts:*",
         "clean:all": "npm run ws -- clean",
-        "deploy_protocol": "npm run -w @prosopo/scripts cli deploy_protocol -- --logLevel=debug --update_env",
-        "deploy_dapp": "npm run -w @prosopo/scripts cli deploy_dapp -- --logLevel=debug --update_env",
         "version": "f() { npm run -w @prosopo/scripts cli -- version -v $@; npm i; }; f",
         "publish:dry-run": "npm --workspaces publish --dry-run",
         "publish": "npm --workspaces publish --access=public",
@@ -34,7 +32,7 @@
         "ws": "f() { (set -e; npm run --silent ws:ls | while read -r line; do npm run -w $line $@; done); }; f",
         "cli": "npm -w @prosopo/cli run cli",
         "setup": "npm -w @prosopo/scripts run setup",
-        "setup:all": "npm run deploy_protocol && npm run setup",
+        "setup:all": "npm run setup",
         "start:provider": "npm -w @prosopo/cli run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
@@ -89,7 +87,7 @@
         "demos/*"
     ],
     "dependencies": {
-        "@prosopo/flux": "1.0.2"
+        "@prosopo/flux": "2.0.0"
     },
     "devDependencies": {
         "@biomejs/biome": "1.8.3",
