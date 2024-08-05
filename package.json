@@ -32,7 +32,7 @@
         "ws": "f() { (set -e; npm run --silent ws:ls | while read -r line; do npm run -w $line $@; done); }; f",
         "cli": "npm -w @prosopo/cli run cli",
         "setup": "npm -w @prosopo/scripts run setup",
-        "setup:all": "npm run deploy_protocol && npm run setup",
+        "setup:all": "npm run setup",
         "start:provider": "npm -w @prosopo/cli run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
         "start:demo": "npm -w @prosopo/client-example run start",
