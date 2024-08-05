@@ -7,6 +7,7 @@
     },
     "scripts": {
         "test": "echo \"No test specified\"",
+        "test": "echo \"No test specified\"",
         "start": "vite serve ./src --port 9232 --config vite.config.ts",
         "clean": "echo 'nothing to clean'"
     },
