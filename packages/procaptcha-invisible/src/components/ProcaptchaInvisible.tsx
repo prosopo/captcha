@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { useEffect, useState, useRef, type LazyExoticComponent, type ReactElement, lazy, Suspense } from 'react'
-import type { BotDetectionFunction, ProcaptchaEvents } from '@prosopo/types'
+import type {
+    BotDetectionFunction,
+    ProcaptchaCallbacks,
+    ProcaptchaClientConfigOutput,
+    ProcaptchaEvents,
+} from '@prosopo/types'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { isBot } from '@prosopo/detector'
@@ -30,10 +35,11 @@ const customDetectBot: BotDetectionFunction = async () => {
     })
 }
 
-export const ProcaptchaInvisible = (props: ProcaptchaProps, detectBot = customDetectBot) => {
-    const config = props.config
-    const callbacks = props.callbacks || {}
-    console.log(detectBot)
+export const ProcaptchaInvisible = (
+    config: ProcaptchaClientConfigOutput,
+    callbacks: ProcaptchaCallbacks,
+    detectBot = customDetectBot
+) => {
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
 
     const captchaRef = useRef<HTMLDivElement>(null)
@@ -43,13 +49,13 @@ export const ProcaptchaInvisible = (props: ProcaptchaProps, detectBot = customDe
             const result = await detectBot()
             if (result.bot) {
                 setComponentToRender(
-                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
+                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={config.theme} />}>
                         <Procaptcha config={config} callbacks={callbacks} />
                     </Suspense>
                 )
             } else {
                 setComponentToRender(
-                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
+                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={config.theme} />}>
                         <ProcaptchaWidget config={config} callbacks={callbacks} />
                     </Suspense>
                 )
