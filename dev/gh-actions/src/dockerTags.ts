@@ -48,9 +48,17 @@ export const semVerLt = (a: string, b: string): number => {
     }
 
     for (let i = 0; i < aParts.length; i++) {
-        if (aParts[i]! < bParts[i]!) {
+        const aPart = aParts[i]
+        const bPart = bParts[i]
+        if(aPart === undefined) {
+            throw new Error(`aPart is undefined for ${a}`)
+        }
+        if(bPart === undefined) {
+            throw new Error(`bPart is undefined for ${b}`)
+        }
+        if (aPart < bPart) {
             return -1
-        }if (aParts[i]! > bParts[i]!) {
+        }if (aPart > bPart) {
             return 1
         }
     }
