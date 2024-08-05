@@ -17,6 +17,7 @@ export const nodejsPolarsDirnamePlugin = (logger: Logger) => {
     const name = 'nodejs-polars-dirname-plugin'
     return {
         name,
+        // biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options type
         resolveId(source: string, importer: string | undefined, options: any) {
             // aim for the node_modules/nodejs-polars/bin/native-polars.js file
             if (source.endsWith('nodejs-polars/bin/native-polars.js')) {
