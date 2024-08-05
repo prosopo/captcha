@@ -10,7 +10,7 @@ RUN mv /root/artifacts/substrate-contracts-node-linux/substrate-contracts-node /
 
 RUN rm /root/substrate-contracts-node-linux.tar.gz && rm -rf /root/artifacts
 
-RUN apt autoremove -y && apt clean -y
+RUN apt-get autoremove -y && apt-get clean -y
 
 EXPOSE 30333 9933 9944 9615
 
