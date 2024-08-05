@@ -12,7 +12,7 @@
     "scripts": {
         "test": "echo \"No test specified\"",
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose tsconfig.json"
+        "build": "tsc --build --verbose"
     },
     "dependencies": {
         "@prosopo/cli": "1.0.2",
