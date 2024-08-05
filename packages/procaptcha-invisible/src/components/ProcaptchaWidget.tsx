@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react'
 const Procaptcha = (props: ProcaptchaProps) => {
     const config = props.config
     const callbacks = props.callbacks || {}
+    const buttonElement = props.buttonElement
     const [state, _updateState] = useProcaptcha(useState, useRef)
     // get the state update mechanism
     const updateState = buildUpdateState(state, _updateState)
@@ -26,24 +27,30 @@ const Procaptcha = (props: ProcaptchaProps) => {
     const captchaRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const element = captchaRef.current
-        if (!element) return
+        if (buttonElement) {
+            buttonElement.addEventListener('click', () => {
+                manager.current.resetState()
 
-        const form = element.closest('form')
-        if (!form) return
+                const element = captchaRef.current
+                if (!element) return
 
-        const handleSubmit = () => {
-            manager.current.resetState()
+                const form = element.closest('form')
+                if (!form) return
+
+                const handleSubmit = () => {
+                    manager.current.resetState()
+                }
+
+                form.addEventListener('submit', handleSubmit)
+
+                manager.current.start()
+
+                return () => {
+                    form.removeEventListener('submit', handleSubmit)
+                }
+            })
         }
-
-        form.addEventListener('submit', handleSubmit)
-
-        manager.current.start()
-
-        return () => {
-            form.removeEventListener('submit', handleSubmit)
-        }
-    }, [])
+    }, [buttonElement])
 
     return (
         <div ref={captchaRef}>

@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { useEffect, useState, useRef, type LazyExoticComponent, type ReactElement, lazy, Suspense } from 'react'
-import {
+import type {
     BotDetectionFunction,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigOutput,
     ProcaptchaEvents,
-    ProsopoClientConfigOutput,
 } from '@prosopo/types'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { Procaptcha } from '@prosopo/procaptcha-react'
@@ -36,15 +35,12 @@ const customDetectBot: BotDetectionFunction = async () => {
     })
 }
 
-export const ProcaptchaInvisible = (props: {
-    config: ProcaptchaClientConfigOutput
-    callbacks: ProcaptchaCallbacks
-    detectBot?: BotDetectionFunction
-}) => {
+export const ProcaptchaInvisible = (props: ProcaptchaProps) => {
     const { config, callbacks } = props
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
     const detectBot = props.detectBot || customDetectBot
     useEffect(() => {
+        // add on submit here
         const detectAndSetComponent = async () => {
             const result = await detectBot()
             console.log('Is bot: ', result.bot)

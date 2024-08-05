@@ -40,6 +40,7 @@ interface ProcaptchaRenderOptions {
     'open-callback'?: string | (() => void)
     'close-callback'?: string | (() => void)
     'error-callback'?: string | (() => void)
+    'submit-callback'?: string | (() => void)
 }
 
 const BUNDLE_NAME = 'procaptcha.bundle.js'
@@ -145,6 +146,9 @@ const getDefaultCallbacks = (element: Element) => ({
     onOpen: () => {
         console.log('Challenge opened')
     },
+    onSubmit: () => {
+        console.log('Form submitted')
+    },
 })
 
 const setTheme = (
@@ -165,6 +169,7 @@ function setUserCallbacks(
         onError: (error: Error) => void
         onClose: () => void
         onOpen: () => void
+        onSubmit: () => void
     },
     element: Element
 ) {
@@ -227,6 +232,18 @@ function setUserCallbacks(
                     ? renderOptions?.['open-callback']
                     : element.getAttribute('data-open-callback')
             if (onOpenCallbackName) callbacks.onOpen = getWindowCallback(onOpenCallbackName)
+        }
+    }
+
+    if (renderOptions?.['submit-callback']) {
+        if (typeof renderOptions['submit-callback'] === 'function') {
+            callbacks.onSubmit = renderOptions['submit-callback']
+        } else {
+            const onSubmitCallbackName =
+                typeof renderOptions?.['submit-callback'] === 'string'
+                    ? renderOptions?.['submit-callback']
+                    : element.getAttribute('data-submit-callback')
+            if (onSubmitCallbackName) callbacks.onSubmit = getWindowCallback(onSubmitCallbackName)
         }
     }
 }
