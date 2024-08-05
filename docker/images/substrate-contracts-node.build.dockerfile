@@ -1,4 +1,4 @@
-# hadolint ignore=DL3006
+# hadolint ignore=DL3007
 FROM docker.io/paritytech/ci-unified:latest AS builder
 
 RUN git clone --depth 1 -b astar https://github.com/prosopo-io/substrate-contracts-node
@@ -9,6 +9,7 @@ RUN cargo build --verbose --locked --release
 
 FROM debian:bookworm-slim
 
+# hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get upgrade -y --only-upgrade --no-install-recommends libstdc++6 && \
     apt-get install -y --no-install-recommends procps && \
