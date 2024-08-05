@@ -55,6 +55,9 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v3
+              with:
+                # all history
+                fetch-depth: 0
 
             # fail-fast step to check if the version has been bumped
             # when running manually, there won't be a version line change, so we need to skip this step in that case
