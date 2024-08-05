@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { useEffect, useState, useRef, type LazyExoticComponent, type ReactElement, lazy, Suspense } from 'react'
-import type {
+import {
     BotDetectionFunction,
     ProcaptchaCallbacks,
     ProcaptchaClientConfigOutput,
     ProcaptchaEvents,
+    ProsopoClientConfigOutput,
 } from '@prosopo/types'
 import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import { Procaptcha } from '@prosopo/procaptcha-react'
@@ -35,27 +36,40 @@ const customDetectBot: BotDetectionFunction = async () => {
     })
 }
 
-export const ProcaptchaInvisible = (
-    config: ProcaptchaClientConfigOutput,
-    callbacks: ProcaptchaCallbacks,
-    detectBot = customDetectBot
-) => {
+export const ProcaptchaInvisible = (props: {
+    config: ProcaptchaClientConfigOutput
+    callbacks: ProcaptchaCallbacks
+    detectBot?: BotDetectionFunction
+}) => {
+    const { config, callbacks } = props
     const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
-
-    const captchaRef = useRef<HTMLDivElement>(null)
-
+    const detectBot = props.detectBot || customDetectBot
     useEffect(() => {
         const detectAndSetComponent = async () => {
             const result = await detectBot()
+            console.log('Is bot: ', result.bot)
+            console.log('Config:', config)
             if (result.bot) {
                 setComponentToRender(
-                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={config.theme} />}>
+                    <Suspense
+                        fallback={
+                            <div>
+                                Protected by <a href="https://prosopo.io">Procaptcha</a>
+                            </div>
+                        }
+                    >
                         <Procaptcha config={config} callbacks={callbacks} />
                     </Suspense>
                 )
             } else {
                 setComponentToRender(
-                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={config.theme} />}>
+                    <Suspense
+                        fallback={
+                            <div>
+                                Protected by <a href="https://prosopo.io">Procaptcha</a>
+                            </div>
+                        }
+                    >
                         <ProcaptchaWidget config={config} callbacks={callbacks} />
                     </Suspense>
                 )
