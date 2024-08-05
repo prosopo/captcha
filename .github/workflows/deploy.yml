@@ -137,7 +137,7 @@ jobs:
                     # Navigate to the JS bundle directory and build
                     echo "Building JS bundle..."
 
-                    NODE_ENV=${{ steps.env.outputs.env }} npm -w @prosopo/procaptcha-bundle run bundle
+                    NODE_ENV="${{ steps.env.outputs.env }}" npm -w @prosopo/procaptcha-bundle run bundle
 
             - name: Deploy staging js bundle
               if: ${{ steps.env.outputs.staging }}
@@ -219,8 +219,8 @@ jobs:
                     # Navigate to the provider CLI directory and build
                     echo "Navigating to 'packages/cli' and bundling..."
                     cd packages/cli
-                    NODE_ENV=${{ steps.env.outputs.env }} npm run build
-                    NODE_ENV=${{ steps.env.outputs.env }} npm run bundle
+                    NODE_ENV="${{ steps.env.outputs.env }}" npm run build
+                    NODE_ENV="${{ steps.env.outputs.env }}" npm run bundle
 
                     # Navigate back to the project root
                     echo "Navigating back to project root..."

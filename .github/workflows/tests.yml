@@ -96,7 +96,7 @@ jobs:
             # bundle procaptcha-bundle using webpack
             - name: Webpack Bundle procaptcha-bundle
               run: |
-                  NODE_ENV=development npm run -w @prosopo/procaptcha-bundle bundle:webpack
+                  NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle bundle:webpack
 
             - name: Build JS bundle
               run: |
@@ -110,7 +110,7 @@ jobs:
                     echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
                     cd packages/procaptcha-bundle
 
-                    NODE_ENV=production npm run bundle
+                    NODE_ENV="production" npm run bundle
 
             - name: Setup env
               run: |

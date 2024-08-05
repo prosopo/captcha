@@ -102,7 +102,7 @@ jobs:
                     cp dev/scripts/env.test dev/scripts/.env.test
                     cp dev/scripts/env.test packages/cli/.env.test
                     cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                    echo NODE_ENV: $NODE_ENV
+                    echo NODE_ENV: "$NODE_ENV"
 
             - name: Start the docker images
               run: |
@@ -111,13 +111,13 @@ jobs:
                   sleep 10s
 
             # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-            - run: NODE_ENV=test npm run deploy_protocol
-            - run: NODE_ENV=test npm run setup
+            - run: NODE_ENV="test" npm run deploy_protocol
+            - run: NODE_ENV="test" npm run setup
 
             # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
             # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
             # by the cypress tests to find the elements they need to interact with
-            - run: NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
+            - run: NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
 
             - name: Run the cypress tests on client-example
               run: |

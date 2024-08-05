@@ -101,7 +101,7 @@ jobs:
 
                     cp ./dev/scripts/env.production ./packages/cli/.env.production
                     cp ./dev/scripts/env.production ./.env.production
-                    NODE_ENV=production npm run -w @prosopo/cli bundle
+                    NODE_ENV="production" npm run -w @prosopo/cli bundle
 
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
@@ -147,7 +147,7 @@ jobs:
             # Generate a mnemonic for the provider image
             - name: Generate mnemonic and add to env file
               run: |
-                  PROSOPO_ROOT_DIR=$(pwd) NODE_ENV=production node dev/scripts/dist/scripts/generateMnemonic.js --env
+                  PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" node dev/scripts/dist/scripts/generateMnemonic.js --env
 
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider bundle runs
