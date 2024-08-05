@@ -4,7 +4,7 @@ name: cache
 
 on:
     push:
-        branches: [main, dev]
+        branches: [main, dev, staging]
     workflow_dispatch:
 
 concurrency:
@@ -83,10 +83,7 @@ jobs:
             - run: npm -w @prosopo/protocol run test:all
 
             # install cypress so we don't have to do that every time
-            - name: Cypress install
-              run: |
-                  npm i --save-dev cypress
-                  npx cypress install
+            - run: npx cypress install
 
             - run: ls -la ~/.cache/Cypress || true
             - run: ls -la protocol/cargo-cache || true
