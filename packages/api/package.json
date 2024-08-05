@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/api",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "description": "Wrapper for the provider API",
     "main": "dist/index.js",
     "type": "module",
