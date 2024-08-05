@@ -86,22 +86,28 @@ jobs:
                 echo "version=$VERSION"
 
                 # export the next version numbers
+                # shellcheck disable=SC2086
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
 
                 # if branch is main, then prod, else staging
                 if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
                     echo "production"
-                    echo "env=production" >> $GITHUB_OUTPUT
-                    echo "production=true" >> $GITHUB_OUTPUT
-                    echo "docker_latest_tag=latest" >> $GITHUB_OUTPUT
-                    echo "docker_version_tag=$VERSION" >> $GITHUB_OUTPUT
+                    # shellcheck disable=SC2086
+                    { 
+                        echo "env=production"; 
+                        echo "production=true"; 
+                        echo "docker_latest_tag=latest"; 
+                        echo "docker_version_tag=$VERSION" 
+                    } >> $GITHUB_OUTPUT
                 elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
                     echo "staging"
-                    echo "env=staging" >> $GITHUB_OUTPUT
-                    echo "staging=true" >> $GITHUB_OUTPUT
-                    echo "docker_tag=staging" >> $GITHUB_OUTPUT
-                    echo "docker_latest_tag=staging" >> $GITHUB_OUTPUT
-                    echo "docker_version_tag=staging" >> $GITHUB_OUTPUT  
+                    # shellcheck disable=SC2086
+                    { 
+                        echo "env=staging"; 
+                        echo "staging=true"; 
+                        echo "docker_latest_tag=staging"; 
+                        echo "docker_version_tag=staging" 
+                    } >> $GITHUB_OUTPUT
                 else
                     echo "cannot deploy from branch ${{ github.ref }}"
                     exit 1
