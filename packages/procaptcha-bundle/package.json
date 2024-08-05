@@ -25,7 +25,7 @@
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
         "start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
         "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
-        "bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; vite build --config webpack.config.cjs --mode $NODE_ENV"
+        "bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode $NODE_ENV"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
