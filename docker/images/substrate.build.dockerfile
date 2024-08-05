@@ -8,12 +8,11 @@ RUN cargo build --verbose --locked --release
 
 FROM debian:bookworm-slim
 
+# hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get upgrade -y --only-upgrade libstdc++6
-
-RUN apt-get install -y procps
-
-RUN rm -rf /var/lib/apt/lists/*
+    apt-get upgrade -y --only-upgrade libstdc++6 && \
+    apt-get install -y procps && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /builds/substrate/target/release/substrate /usr/local/bin
 
