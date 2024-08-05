@@ -2,6 +2,9 @@ FROM node:20
 
 WORKDIR /usr/src/app
 
+# set shell to bash and error on any failure, unset variables, and pipefail
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
 COPY ./packages/cli/dist/bundle/ ./
 
 # make the provider cli executable
