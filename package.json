@@ -21,8 +21,6 @@
         "clean:npm": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"package-lock.json\" -type f -delete ",
         "clean:all": "npm run clean:npm && npm run clean:ts",
         "clean:reset": "npm run clean:all && npm run clean:npm",
-        "deploy_protocol": "npm run -w @prosopo/scripts cli deploy_protocol -- --logLevel=debug --update_env",
-        "deploy_dapp": "npm run -w @prosopo/scripts cli deploy_dapp -- --logLevel=debug --update_env",
         "clean:ts": "find . -name \"*.tsbuildinfo\" -type f -delete && find . -name \"dist\" -type d -prune -exec rm -rf '{}' + ",
         "version": "f() { npm run -w @prosopo/scripts cli -- version -v $@; npm i; }; f",
         "publish:dry-run": "npm --workspaces publish --dry-run",
