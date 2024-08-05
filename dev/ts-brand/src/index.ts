@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any ctor
 export type Ctor<T> = new (...args: any[]) => T
 // resolve intersection types
-// eslint-disable-next-line
+// biome-ignore lint/complexity/noBannedTypes: this is a hack to resolve types, so ignore
 export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] }
 
 export const brandKey = Symbol('brand')
@@ -43,5 +45,6 @@ export const unbrand = <T>(value: T) => {
 }
 
 export const getBrand = <T>(value: T) => {
+    // biome-ignore lint/suspicious/noExplicitAny: casting to any to access the brand key if it exists
     return (value as any)[brandKey] || ''
 }
