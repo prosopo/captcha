@@ -45,7 +45,9 @@ const FILE_TYPES = ['ts', 'tsx']
 
 const RELATIVE_PATH_REGEX = /(\.+\/)*/
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 const getTsConfigFollowExtends = (filename: string, rootDir?: string): { [key: string]: any } => {
+    // biome-ignore lint/suspicious/noExplicitAny: TODO replace any
     let extendedConfig: { [key: string]: any } = {}
     const config = ts.readConfigFile(filename, ts.sys.readFile).config
     if (config.extends) {
@@ -162,6 +164,7 @@ const getOutExtension = (fileExtension: string) => {
     }
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 const getOutDir = (file: string, tsconfig: { [key: string]: any }) => {
     const rootFolder = tsconfig.compilerOptions.rootDir.replace(RELATIVE_PATH_REGEX, '')
     const outFolder = tsconfig.compilerOptions.outDir.replace(RELATIVE_PATH_REGEX, '')
@@ -184,6 +187,7 @@ const getOutFile = (outdir: string, file: string, fileExtension: string) => {
  *  - ignorePaths: paths or globs to ignore (optional)
  * @constructor
  */
+// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 export const VitePluginWatchWorkspace = async (config: VitePluginWatchExternalOptions): Promise<Plugin<any>> => {
     const externalFiles = await getExternalFileLists(
         config.workspaceRoot,
