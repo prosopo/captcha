@@ -1,6 +1,7 @@
 FROM docker.io/library/debian:stable-slim
 
-SHELL ["/bin/bash", "-c"]
+# set shell to bash and error on any failure, unset variables, and pipefail
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 # The version of the toolchain to install
 ARG TOOLCHAIN_VERSION=1.77.0
