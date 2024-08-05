@@ -65,7 +65,7 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - name: Check contract version matches provider version
+            - name: Check nvmrc version matches
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
@@ -73,7 +73,7 @@ jobs:
                   nvmrcs=$(find . -name '.nvmrc' -not -path '*/node_modules/*' -exec cat {} +)
 
                   # check all .nvmrc files are the same content
-                  if [ $(echo "$nvmrcs" | uniq | wc -l) -gt 1 ]; then
+                  if [ "$(echo "$nvmrcs" | uniq | wc -l)" -gt 1 ]; then
                     echo "ERROR: .nvmrc files are not consistent"
                     echo "$nvmrcs"
                     exit 1
