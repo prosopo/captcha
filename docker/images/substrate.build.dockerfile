@@ -10,8 +10,8 @@ FROM debian:bookworm-slim
 
 # hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get upgrade -y --only-upgrade libstdc++6 && \
-    apt-get install -y procps && \
+    apt-get upgrade -y --only-upgrade --no-install-recommends libstdc++6 && \
+    apt-get install -y --no-install-recommends procps && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /builds/substrate/target/release/substrate /usr/local/bin
