@@ -78,7 +78,7 @@ jobs:
                   echo "Previous version: $PREV"
 
                   # switch back to the current state
-                  git switch -
+                  git checkout ${{ github.sha }}
 
                   # break next and previous versions into major, minor, patch
                   NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
