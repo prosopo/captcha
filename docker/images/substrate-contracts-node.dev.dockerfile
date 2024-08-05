@@ -9,4 +9,4 @@ RUN apt-get update && apt-get install -y curl protobuf-compiler && rm -rf /var/l
 
 EXPOSE 30333 9933 9944 9615
 
-ENTRYPOINT /usr/local/bin/substrate-contracts-node --dev -d ./chain-data --unsafe-ws-external --rpc-external --prometheus-external -lerror,runtime::contracts=debug
+ENTRYPOINT ["/usr/local/bin/substrate-contracts-node", "--dev", "-d", "./chain-data", "--unsafe-ws-external", "--rpc-external", "--prometheus-external", "-lerror,runtime::contracts=debug"]
