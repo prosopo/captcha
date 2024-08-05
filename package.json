@@ -24,8 +24,6 @@
         "clean-ts:dist": "rimraf '**/dist'",
         "clean:ts": "run-p clean-ts:*",
         "clean:all": "npm run ws -- clean",
-        "deploy_protocol": "npm run -w @prosopo/scripts cli deploy_protocol -- --logLevel=debug --update_env",
-        "deploy_dapp": "npm run -w @prosopo/scripts cli deploy_dapp -- --logLevel=debug --update_env",
         "version": "f() { npm run -w @prosopo/scripts cli -- version -v $@; npm i; }; f",
         "publish:dry-run": "npm --workspaces publish --dry-run",
         "publish": "npm --workspaces publish --access=public",
