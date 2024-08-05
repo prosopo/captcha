@@ -23,6 +23,7 @@ type BaseErrorOptions<ContextType> = {
 }
 
 interface BaseContextParams {
+    // biome-ignore lint/suspicious/noExplicitAny: TODO remove any
     [key: string]: any
     failedFuncName?: string
 }
