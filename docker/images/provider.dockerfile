@@ -18,4 +18,4 @@ RUN npm i
 
 EXPOSE 9229 80 443
 
-CMD exec /bin/bash -c "npx provider --api"
+CMD ["exec", "/bin/bash", "-c", "npx provider --api"]
