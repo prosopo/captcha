@@ -19,6 +19,7 @@ export const nodejsPolarsNativeFilePlugin = (logger: Logger, nodeFiles: string[]
     const name = 'nodejs-polars-native-file-plugin'
     return {
         name,
+        // biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options type
         resolveId(source: string, importer: string | undefined, options: any) {
             // return the id if this plugin can resolve the import
             for (const file of nodeFiles) {
@@ -62,6 +63,7 @@ export const nodejsPolarsNativeFilePlugin = (logger: Logger, nodeFiles: string[]
             }
             return null
         },
+        // biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options/bundle type
         generateBundle(options: any, bundle: any) {
             for (const fileAbs of nodeFiles) {
                 const file = path.basename(fileAbs)
