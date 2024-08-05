@@ -18,10 +18,8 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "bundle:dev": "vite build --config vite.config.ts --mode development",
-        "bundle:staging": "vite build --config vite.config.ts --mode development",
-        "bundle:prod": "vite build --config vite.config.ts --mode production",
-        "test": "npx vitest run --config ./vite.test.config.ts",
+        "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
+        "test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
         "cli": "node ./dist/cli.js",
         "start": "node ./dist/cli.js --api"
     },

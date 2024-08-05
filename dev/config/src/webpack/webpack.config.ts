@@ -122,7 +122,7 @@ export default (mode: string) => {
                           },
                       }),
                   ]
-                : undefined,
+                : [],
             usedExports: true,
         },
     }
