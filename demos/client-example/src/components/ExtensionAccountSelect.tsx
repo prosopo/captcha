@@ -35,7 +35,7 @@ export const ExtensionAccountSelect = ({
         return () => {
             prom.then((unsub) => unsub())
         }
-    }, [])
+    }, [dappName])
 
     const account: InjectedAccountWithMeta | null = accounts.find((a) => a.address === value) || null
 
