@@ -131,5 +131,4 @@ jobs:
                   sleep 10s
 
             # deploy protocol and run the unit tests
-            - run: npm run deploy_protocol
             - run: npm run test

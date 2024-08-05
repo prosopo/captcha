@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-frictionless-example",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "private": true,
     "type": "module",
     "engines": {
@@ -11,20 +11,20 @@
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
-        "@prosopo/common": "1.0.2",
-        "@prosopo/procaptcha": "1.0.2",
-        "@prosopo/procaptcha-frictionless": "1.0.2",
-        "@prosopo/types": "1.0.2",
+        "@prosopo/common": "2.0.0",
+        "@prosopo/procaptcha": "2.0.0",
+        "@prosopo/procaptcha-frictionless": "2.0.0",
+        "@prosopo/types": "2.0.0",
         "@types/react-dom": "^18.3.0",
         "electron": "25.8.4",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "web-vitals": "^2.1.4",
-        "@prosopo/procaptcha-pow": "1.0.2"
+        "@prosopo/procaptcha-pow": "2.0.0"
     },
     "devDependencies": {
-        "@prosopo/cli": "1.0.2",
-        "@prosopo/config": "1.0.2",
+        "@prosopo/cli": "2.0.0",
+        "@prosopo/config": "2.0.0",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
         "tslib": "2.6.2",

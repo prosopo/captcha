@@ -55,27 +55,27 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v3
+              with:
+                # all history
+                fetch-depth: 0
 
             # fail-fast step to check if the version has been bumped
             # when running manually, there won't be a version line change, so we need to skip this step in that case
             - name: Detect version bump
               run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
                   # get the next version as the version currently set in the root package.json
                   NEXT=$(jq -r '.version' package.json)
                   echo "Next version: $NEXT"
 
-                  # checkout the repo back to before this pr
-                  git checkout ${{ github.event.before }}
+                  # checkout the dest branch
+                  git checkout ${{ github.event.pull_request.base.ref }}
 
                   # get the previous version as the version currently set in the root package.json in the before state
                   PREV=$(jq -r '.version' package.json)
                   echo "Previous version: $PREV"
-
-                  # switch back to the current state
-                  git switch -
 
                   # break next and previous versions into major, minor, patch
                   NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
