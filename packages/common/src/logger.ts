@@ -53,8 +53,8 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         fatal: logger.fatal,
         setLogLevel: (level: LogLevel | string) => {
             let logLevel = Number.NaN
-            level = getLogLevel(level) // sanitise
-            switch (level) {
+            const levelSafe = getLogLevel(level) // sanitise
+            switch (levelSafe) {
                 case LogLevel.enum.trace:
                     logLevel = ConsolaLogLevels.trace
                     break
@@ -97,10 +97,10 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
  * @param logLevel
  */
 export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
-    logLevel = logLevel || process.env.PROSOPO_LOG_LEVEL || 'Info'
-    logLevel = logLevel.toString().toLowerCase()
+    const logLevelLocal = logLevel || process.env.PROSOPO_LOG_LEVEL || 'Info'
+    const logLevelStr = logLevelLocal.toString().toLowerCase()
     try {
-        return LogLevel.parse(logLevel)
+        return LogLevel.parse(logLevelStr)
     } catch (e) {
         throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', { context: { logLevel } })
     }
