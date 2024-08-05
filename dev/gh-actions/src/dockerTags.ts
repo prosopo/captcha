@@ -22,8 +22,10 @@ export async function fetchTags(namespace: string, repository: string): Promise<
 
     while (nextPageUrl) {
         try {
+            // biome-ignore lint/suspicious/noExplicitAny: TODO replace any
             const response: any = await axios.get(nextPageUrl)
             const data = response.data
+            // biome-ignore lint/suspicious/noExplicitAny: TODO replace any
             tags.push(...data.results.map((tag: any) => tag.name))
             nextPageUrl = data.next
             page++
