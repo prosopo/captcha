@@ -24,7 +24,7 @@ import { getPairAsync } from '@prosopo/contract'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
-import jwt, { JwtPayload } from 'jsonwebtoken'
+import jwt, { type JwtPayload } from 'jsonwebtoken'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
