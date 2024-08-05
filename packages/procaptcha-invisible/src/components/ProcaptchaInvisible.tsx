@@ -11,18 +11,53 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {LazyExoticComponent, Suspense, lazy} from 'react'
-import {ProcaptchaEvents} from '@prosopo/types'
-import {ReactElement} from 'react'
+import { useEffect, useState, useRef, type LazyExoticComponent, type ReactElement, lazy, Suspense } from 'react'
+import type { BotDetectionFunction, ProcaptchaEvents } from '@prosopo/types'
+import { ProcaptchaPlaceholder } from '@prosopo/web-components'
+import { Procaptcha } from '@prosopo/procaptcha-react'
+import { isBot } from '@prosopo/detector'
 
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>
-// https://github.com/microsoft/TypeScript/issues/42873
+// // https://github.com/microsoft/TypeScript/issues/42873
 const ProcaptchaWidget: LazyExoticComponent<(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement> = lazy(
     async () => import('./ProcaptchaWidget.js')
 )
 
-export const ProcaptchaInvisible = (props: ProcaptchaProps) => (
-    <Suspense fallback=''>
-        <ProcaptchaWidget config={props.config} callbacks={props.callbacks}></ProcaptchaWidget>
-    </Suspense>
-)
+const customDetectBot: BotDetectionFunction = async () => {
+    return await isBot().then((result) => {
+        const bot = result.isBot
+        return { bot }
+    })
+}
+
+export const ProcaptchaInvisible = (props: ProcaptchaProps, detectBot = customDetectBot) => {
+    const config = props.config
+    const callbacks = props.callbacks || {}
+    console.log(detectBot)
+    const [componentToRender, setComponentToRender] = useState(<ProcaptchaPlaceholder darkMode={config.theme} />)
+
+    const captchaRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const detectAndSetComponent = async () => {
+            const result = await detectBot()
+            if (result.bot) {
+                setComponentToRender(
+                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
+                        <Procaptcha config={config} callbacks={callbacks} />
+                    </Suspense>
+                )
+            } else {
+                setComponentToRender(
+                    <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
+                        <ProcaptchaWidget config={config} callbacks={callbacks} />
+                    </Suspense>
+                )
+            }
+        }
+
+        detectAndSetComponent()
+    }, [config, callbacks, detectBot])
+
+    return componentToRender
+}

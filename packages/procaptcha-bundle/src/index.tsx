@@ -14,13 +14,13 @@
 import {
     ApiParams,
     EnvironmentTypesSchema,
-    Features,
+    type Features,
     FeaturesEnum,
     NetworkNamesSchema,
-    ProcaptchaClientConfigInput,
-    ProcaptchaClientConfigOutput,
+    type ProcaptchaClientConfigInput,
+    type ProcaptchaClientConfigOutput,
     ProcaptchaConfigSchema,
-    ProcaptchaToken,
+    type ProcaptchaToken,
 } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
@@ -236,7 +236,7 @@ const renderLogic = (
     config: ProcaptchaClientConfigOutput,
     renderOptions?: ProcaptchaRenderOptions
 ) => {
-    elements.forEach((element) => {
+    for (const element of elements) {
         const callbacks = getDefaultCallbacks(element)
 
         setUserCallbacks(renderOptions, callbacks, element)
@@ -257,7 +257,7 @@ const renderLogic = (
                 createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
                 break
         }
-    })
+    }
 }
 
 // Implicit render for targeting all elements with class 'procaptcha'
