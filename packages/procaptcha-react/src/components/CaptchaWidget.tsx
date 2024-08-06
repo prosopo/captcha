@@ -24,6 +24,7 @@ export interface CaptchaWidgetProps {
     themeColor: 'light' | 'dark'
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 const getHash = (item: any) => {
     if (!item.hash) {
         throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', { context: { item } })
@@ -40,12 +41,14 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
     // Assumes a 3x3 grid, could be made more generic
     const fullSpacing = `${theme.spacing.unit}px`
     const halfSpacing = `${theme.spacing.half}px`
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     const paddingForImageColumns: { [key: number]: any } = {
         0: { paddingLeft: 0, paddingRight: halfSpacing, paddingTop: halfSpacing, paddingBottom: halfSpacing },
         1: { paddingLeft: halfSpacing, paddingRight: halfSpacing, paddingTop: halfSpacing, paddingBottom: halfSpacing },
         2: { paddingLeft: halfSpacing, paddingRight: 0, paddingTop: halfSpacing, paddingBottom: halfSpacing },
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     const paddingForImageRows: { [key: number]: any } = {
         0: { paddingTop: fullSpacing },
         2: { paddingBottom: fullSpacing },
