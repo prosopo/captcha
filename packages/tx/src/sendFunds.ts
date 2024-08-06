@@ -48,13 +48,15 @@ export const send = async (
         balance.div(unit).toString(),
         'UNIT'
     )
-    // eslint-disable-next-line no-async-promise-executor
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: TODO fix
     return new Promise<ISubmittableResult>(async (resolve, reject) => {
         const unsub = await api.tx.balances
             .transferAllowDeath(toAddress, amount)
             .signAndSend(fromPair, { nonce }, (result: ISubmittableResult) => {
                 if (result.status.isInBlock || result.status.isFinalized) {
+                    // biome-ignore lint/complexity/noForEach: TODO fix
                     result.events
+                        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                         .filter(({ event: { section } }: any): boolean => section === 'system')
                         .forEach((event): void => {
                             const {
