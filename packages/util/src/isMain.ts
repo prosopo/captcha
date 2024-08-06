@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath } from "node:url";
 // https://stackoverflow.com/a/76582917
 /**
  * Determines whether a module is the entry point for the running node process.
@@ -31,18 +31,23 @@ import { fileURLToPath } from 'node:url'
  * }
  * ```
  */
-export const isMain = (moduleOrImportMetaUrl: NodeModule | string, binName?: string) => {
-    if (typeof moduleOrImportMetaUrl === 'string') {
-        return (
-            process.argv[1] === fileURLToPath(moduleOrImportMetaUrl) ||
-            // could be running with npx
-            (binName && process.argv[1] && process.argv[1].indexOf(`node_modules/.bin/${binName}`) > -1)
-        )
-    }
+export const isMain = (
+	moduleOrImportMetaUrl: NodeModule | string,
+	binName?: string,
+) => {
+	if (typeof moduleOrImportMetaUrl === "string") {
+		return (
+			process.argv[1] === fileURLToPath(moduleOrImportMetaUrl) ||
+			// could be running with npx
+			(binName &&
+				process.argv[1] &&
+				process.argv[1].indexOf(`node_modules/.bin/${binName}`) > -1)
+		);
+	}
 
-    if (typeof require !== 'undefined' && 'exports' in moduleOrImportMetaUrl) {
-        return require.main === moduleOrImportMetaUrl
-    }
+	if (typeof require !== "undefined" && "exports" in moduleOrImportMetaUrl) {
+		return require.main === moduleOrImportMetaUrl;
+	}
 
-    return false
-}
+	return false;
+};

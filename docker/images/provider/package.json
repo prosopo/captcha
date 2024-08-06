@@ -1,8 +1,8 @@
 {
-    "type": "module",
-    "engines": {
-        "node": ">=20",
-        "npm": ">=9"
-    },
-    "version": "1.0.2"
+	"type": "module",
+	"engines": {
+		"node": ">=20",
+		"npm": ">=9"
+	},
+	"version": "1.0.2"
 }

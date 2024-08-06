@@ -12,29 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type EnvironmentTypes, EnvironmentTypesSchema, ProsopoClientConfigSchema } from '@prosopo/types'
-import { ProcaptchaFrictionless } from '@prosopo/procaptcha-frictionless'
-import { useState } from 'react'
+import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
+import {
+	type EnvironmentTypes,
+	EnvironmentTypesSchema,
+	ProsopoClientConfigSchema,
+} from "@prosopo/types";
+import { useState } from "react";
 
 function App() {
-    const [account, setAccount] = useState<string>('')
-    const config = ProsopoClientConfigSchema.parse({
-        userAccountAddress: account,
-        account: {
-            address: process.env.PROSOPO_SITE_KEY || '',
-        },
-        web2: process.env.PROSOPO_WEB2 === 'true',
-        dappName: 'client-example',
-        defaultEnvironment:
-            (process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
-        serverUrl: process.env.PROSOPO_SERVER_URL || '',
-        atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === 'true' || false,
-    })
-    return (
-        <div style={{ height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-            <ProcaptchaFrictionless config={config} />
-        </div>
-    )
+	const [account, setAccount] = useState<string>("");
+	const config = ProsopoClientConfigSchema.parse({
+		userAccountAddress: account,
+		account: {
+			address: process.env.PROSOPO_SITE_KEY || "",
+		},
+		web2: process.env.PROSOPO_WEB2 === "true",
+		dappName: "client-example",
+		defaultEnvironment:
+			(process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes) ||
+			EnvironmentTypesSchema.enum.development,
+		serverUrl: process.env.PROSOPO_SERVER_URL || "",
+		atlasUri: process.env._DEV_ONLY_WATCH_EVENTS === "true" || false,
+	});
+	return (
+		<div
+			style={{ height: "100%", justifyContent: "center", alignItems: "center" }}
+		>
+			<ProcaptchaFrictionless config={config} />
+		</div>
+	);
 }
 
-export default App
+export default App;

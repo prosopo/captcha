@@ -1,3 +1,4 @@
+import i18n, { type InitOptions } from "i18next";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,40 +12,41 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { default as LanguageDetector } from 'i18next-browser-languagedetector'
-import { LanguageDetector as MiddlewareLanguageDetector } from 'i18next-http-middleware'
-import { initReactI18next } from 'react-i18next'
-import { isClientSide } from './utils.js'
-import Backend from 'i18next-http-backend'
-import i18n, { type InitOptions } from 'i18next'
-import translationEn from './locales/en.json' assert { type: 'json' }
+import { default as LanguageDetector } from "i18next-browser-languagedetector";
+import Backend from "i18next-http-backend";
+import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
+import { initReactI18next } from "react-i18next";
+import translationEn from "./locales/en.json" assert { type: "json" };
+import { isClientSide } from "./utils.js";
 
 const commonOptions: InitOptions = {
-    debug: false,
-    fallbackLng: 'en',
-    resources: {
-        en: {
-            translation: translationEn,
-        },
-    },
-}
+	debug: false,
+	fallbackLng: "en",
+	resources: {
+		en: {
+			translation: translationEn,
+		},
+	},
+};
 
 const reactOptions: InitOptions = {
-    react: {
-        useSuspense: false,
-    },
-}
+	react: {
+		useSuspense: false,
+	},
+};
 
-const nodeOptions: InitOptions = {}
+const nodeOptions: InitOptions = {};
 
 if (isClientSide()) {
-    i18n.use(LanguageDetector)
-        .use(initReactI18next)
-        .init({ ...commonOptions, ...reactOptions })
+	i18n
+		.use(LanguageDetector)
+		.use(initReactI18next)
+		.init({ ...commonOptions, ...reactOptions });
 } else {
-    i18n.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
-        .use(MiddlewareLanguageDetector)
-        .init({ ...commonOptions, ...nodeOptions })
+	i18n
+		.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
+		.use(MiddlewareLanguageDetector)
+		.init({ ...commonOptions, ...nodeOptions });
 }
 
-export default i18n
+export default i18n;

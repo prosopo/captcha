@@ -1,3 +1,5 @@
+import { hexToString } from "@polkadot/util";
+import { stringToHex } from "@polkadot/util/string";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +13,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type ProcaptchaLocalStorage, ProsopoLocalStorageSchema } from '@prosopo/types'
-import { hexToString } from '@polkadot/util'
-import { stringToHex } from '@polkadot/util/string'
+import {
+	type ProcaptchaLocalStorage,
+	ProsopoLocalStorageSchema,
+} from "@prosopo/types";
 
-const PROCAPTCHA_STORAGE_KEY = '@prosopo/procaptcha'
+const PROCAPTCHA_STORAGE_KEY = "@prosopo/procaptcha";
 
 /**
  * Gets procaptcha storage object from localStorage
  */
 function getProcaptchaStorage(): ProcaptchaLocalStorage {
-    return ProsopoLocalStorageSchema.parse(
-        JSON.parse(hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || '0x7b7d'))
-    )
+	return ProsopoLocalStorageSchema.parse(
+		JSON.parse(
+			hexToString(localStorage.getItem(PROCAPTCHA_STORAGE_KEY) || "0x7b7d"),
+		),
+	);
 }
 
 /**
@@ -31,26 +36,29 @@ function getProcaptchaStorage(): ProcaptchaLocalStorage {
  * @param storage
  */
 function setProcaptchaStorage(storage: ProcaptchaLocalStorage) {
-    localStorage.setItem(PROCAPTCHA_STORAGE_KEY, stringToHex(JSON.stringify(ProsopoLocalStorageSchema.parse(storage))))
+	localStorage.setItem(
+		PROCAPTCHA_STORAGE_KEY,
+		stringToHex(JSON.stringify(ProsopoLocalStorageSchema.parse(storage))),
+	);
 }
 
 /**
  * Sets default `account`
  */
 function setAccount(account: string) {
-    setProcaptchaStorage({ ...getProcaptchaStorage(), account })
+	setProcaptchaStorage({ ...getProcaptchaStorage(), account });
 }
 
 /**
  * Gets default `account`
  */
 function getAccount(): string | null {
-    return getProcaptchaStorage().account || null
+	return getProcaptchaStorage().account || null;
 }
 
 export default {
-    setAccount,
-    getAccount,
-    setProcaptchaStorage,
-    getProcaptchaStorage,
-}
+	setAccount,
+	getAccount,
+	setProcaptchaStorage,
+	getProcaptchaStorage,
+};

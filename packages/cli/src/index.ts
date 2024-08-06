@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './argv.js'
-export * from './cli.js'
-export * from './start.js'
-export * from './process.env.js'
-export * from './files.js'
-export { default as defaultConfig } from './prosopo.config.js'
-export * from './env.js'
+export * from "./argv.js";
+export * from "./cli.js";
+export * from "./start.js";
+export * from "./process.env.js";
+export * from "./files.js";
+export { default as defaultConfig } from "./prosopo.config.js";
+export * from "./env.js";

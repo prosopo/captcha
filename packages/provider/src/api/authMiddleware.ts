@@ -11,64 +11,72 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from '@polkadot/keyring/types'
-import type { NextFunction, Request, Response } from 'express'
-import { ProsopoApiError, ProsopoEnvError } from '@prosopo/common'
-import type { ProviderEnvironment } from '@prosopo/types-env'
-import type { Tasks } from '../index.js'
-import { hexToU8a, isHex } from '@polkadot/util'
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { hexToU8a, isHex } from "@polkadot/util";
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { NextFunction, Request, Response } from "express";
+import type { Tasks } from "../index.js";
 
 export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const { signature, blocknumber } = extractHeaders(req)
+	return async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const { signature, blocknumber } = extractHeaders(req);
 
-            if (!env.pair) {
-                throw new ProsopoEnvError('CONTRACT.CANNOT_FIND_KEYPAIR')
-            }
+			if (!env.pair) {
+				throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
+			}
 
-            verifyEnvironmentKeyPair(env)
-            verifySignature(signature, blocknumber, env.pair)
+			verifyEnvironmentKeyPair(env);
+			verifySignature(signature, blocknumber, env.pair);
 
-            next()
-        } catch (err) {
-            console.error('Auth Middleware Error:', err)
-            res.status(401).json({ error: 'Unauthorized', message: err })
-        }
-    }
-}
+			next();
+		} catch (err) {
+			console.error("Auth Middleware Error:", err);
+			res.status(401).json({ error: "Unauthorized", message: err });
+		}
+	};
+};
 
 const extractHeaders = (req: Request) => {
-    const signature = req.headers.signature as string
-    const blocknumber = req.headers.blocknumber as string
+	const signature = req.headers.signature as string;
+	const blocknumber = req.headers.blocknumber as string;
 
-    if (!signature || !blocknumber) {
-        throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', {
-            context: { error: 'Missing signature or block number', code: 400 },
-        })
-    }
+	if (!signature || !blocknumber) {
+		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
+			context: { error: "Missing signature or block number", code: 400 },
+		});
+	}
 
-    if (Array.isArray(signature) || Array.isArray(blocknumber) || !isHex(signature)) {
-        throw new ProsopoApiError('CONTRACT.INVALID_DATA_FORMAT', {
-            context: { error: 'Invalid header format', code: 400 },
-        })
-    }
+	if (
+		Array.isArray(signature) ||
+		Array.isArray(blocknumber) ||
+		!isHex(signature)
+	) {
+		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
+			context: { error: "Invalid header format", code: 400 },
+		});
+	}
 
-    return { signature, blocknumber }
-}
+	return { signature, blocknumber };
+};
 
 const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
-    if (!env.pair) {
-        throw new ProsopoEnvError('CONTRACT.CANNOT_FIND_KEYPAIR')
-    }
-}
+	if (!env.pair) {
+		throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
+	}
+};
 
-export const verifySignature = (signature: string, blockNumber: string, pair: KeyringPair) => {
-    const u8Sig = hexToU8a(signature)
+export const verifySignature = (
+	signature: string,
+	blockNumber: string,
+	pair: KeyringPair,
+) => {
+	const u8Sig = hexToU8a(signature);
 
-    if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {
-        throw new ProsopoApiError('GENERAL.INVALID_SIGNATURE', {
-            context: { error: 'Signature verification failed', code: 401 },
-        })
-    }
-}
+	if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {
+		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+			context: { error: "Signature verification failed", code: 401 },
+		});
+	}
+};

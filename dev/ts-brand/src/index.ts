@@ -13,39 +13,39 @@
 // limitations under the License.
 
 // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any ctor
-export type Ctor<T> = new (...args: any[]) => T
+export type Ctor<T> = new (...args: any[]) => T;
 // resolve intersection types
 // biome-ignore lint/complexity/noBannedTypes: this is a hack to resolve types, so ignore
-export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] }
+export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] };
 
-export const brandKey = Symbol('brand')
+export const brandKey = Symbol("brand");
 
 export type Brand<T, U> = Resolve<
-    T & {
-        [brandKey]: U
-    }
->
+	T & {
+		[brandKey]: U;
+	}
+>;
 
 // biome-ignore lint/suspicious/noExplicitAny: casting to any to access the brand key if it exists
-export type Unbrand<T> = T extends Brand<infer U, any> ? U : T
+export type Unbrand<T> = T extends Brand<infer U, any> ? U : T;
 
 export const brandClass = <T, const U>(ctor: Ctor<T>, name: U) => {
-    return ctor as Ctor<Brand<T, typeof name>>
-}
+	return ctor as Ctor<Brand<T, typeof name>>;
+};
 
 export const unbrandClass = <T>(ctor: Ctor<T>) => {
-    return ctor as Ctor<Unbrand<T>>
-}
+	return ctor as Ctor<Unbrand<T>>;
+};
 
 export const brand = <T, const U>(value: T, name: U) => {
-    return value as Brand<T, typeof name>
-}
+	return value as Brand<T, typeof name>;
+};
 
 export const unbrand = <T>(value: T) => {
-    return value as Unbrand<T>
-}
+	return value as Unbrand<T>;
+};
 
 export const getBrand = <T>(value: T) => {
-    // biome-ignore lint/suspicious/noExplicitAny: casting to any to access the brand key if it exists
-    return (value as any)[brandKey] || ''
-}
+	// biome-ignore lint/suspicious/noExplicitAny: casting to any to access the brand key if it exists
+	return (value as any)[brandKey] || "";
+};

@@ -1,3 +1,4 @@
+import process from "node:process";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,66 +12,72 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, getLogger } from '@prosopo/common'
-import type { ProsopoConfigOutput } from '@prosopo/types'
-import { getPairAsync } from '@prosopo/contract'
-import { isMain } from '@prosopo/util'
-import { loadEnv } from './env.js'
-import { processArgs } from './argv.js'
-import ReloadingAPI from './reloader.js'
-import getConfig from './prosopo.config.js'
-import process from 'node:process'
+import { LogLevel, getLogger } from "@prosopo/common";
+import { getPairAsync } from "@prosopo/contract";
+import type { ProsopoConfigOutput } from "@prosopo/types";
+import { isMain } from "@prosopo/util";
+import { processArgs } from "./argv.js";
+import { loadEnv } from "./env.js";
+import getConfig from "./prosopo.config.js";
+import ReloadingAPI from "./reloader.js";
 
-const log = getLogger(LogLevel.enum.info, 'CLI')
+const log = getLogger(LogLevel.enum.info, "CLI");
 
 async function main() {
-    const envPath = loadEnv()
+	const envPath = loadEnv();
 
-    // quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-    const config: ProsopoConfigOutput = getConfig(undefined, undefined, undefined, {
-        solved: { count: 2 },
-        unsolved: { count: 0 },
-    })
+	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
+	const config: ProsopoConfigOutput = getConfig(
+		undefined,
+		undefined,
+		undefined,
+		{
+			solved: { count: 2 },
+			unsolved: { count: 0 },
+		},
+	);
 
-    if (config.devOnlyWatchEvents) {
-        log.warn(
-            `
+	if (config.devOnlyWatchEvents) {
+		log.warn(
+			`
         ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
         EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
         ⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️⚠️ ⚠️ ️
-            `
-        )
-    }
+            `,
+		);
+	}
 
-    const pair = await getPairAsync(
-        config.networks[config.defaultNetwork],
-        config.account.secret,
-        config.account.address
-    )
+	const pair = await getPairAsync(
+		config.networks[config.defaultNetwork],
+		config.account.secret,
+		config.account.address,
+	);
 
-    log.info(`Pair address: ${pair.address}`)
+	log.info(`Pair address: ${pair.address}`);
 
-    log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`)
+	log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`);
 
-    const processedArgs = await processArgs(process.argv, pair, config)
+	const processedArgs = await processArgs(process.argv, pair, config);
 
-    log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`)
-    if (processedArgs.api) {
-        await new ReloadingAPI(envPath, config, pair, processedArgs).start().then(() => {
-            log.info('Reloading API started...')
-        })
-    } else {
-        process.exit(0)
-    }
+	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
+	if (processedArgs.api) {
+		await new ReloadingAPI(envPath, config, pair, processedArgs)
+			.start()
+			.then(() => {
+				log.info("Reloading API started...");
+			});
+	} else {
+		process.exit(0);
+	}
 }
 
 //if main process
-if (isMain(import.meta.url, 'provider')) {
-    main()
-        .then(() => {
-            log.info('Running main process...')
-        })
-        .catch((error) => {
-            log.error(error)
-        })
+if (isMain(import.meta.url, "provider")) {
+	main()
+		.then(() => {
+			log.info("Running main process...");
+		})
+		.catch((error) => {
+			log.error(error);
+		});
 }

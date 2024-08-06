@@ -11,52 +11,54 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import type { KeypairType } from "@polkadot/util-crypto/types";
+import { ProsopoEnvError } from "@prosopo/common";
 
 export function getSs58Format(): number {
-    return Number.parseInt(process.env.SS58_FORMAT || '') || 42
+	return Number.parseInt(process.env.SS58_FORMAT || "") || 42;
 }
 
 export function getPairType(): KeypairType {
-    return (process.env.PROSOPO_PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
+	return (
+		(process.env.PROSOPO_PAIR_TYPE as KeypairType) || ("sr25519" as KeypairType)
+	);
 }
 
 export function getAddress(who?: string): string | undefined {
-    if (!who) {
-        who = 'PROVIDER'
-    } else {
-        who = who.toUpperCase()
-    }
-    return process.env[`PROSOPO_${who}_ADDRESS`]
+	if (!who) {
+		who = "PROVIDER";
+	} else {
+		who = who.toUpperCase();
+	}
+	return process.env[`PROSOPO_${who}_ADDRESS`];
 }
 
 export function getPassword(who?: string): string | undefined {
-    if (!who) {
-        who = 'PROVIDER'
-    } else {
-        who = who.toUpperCase()
-    }
-    return process.env[`PROSOPO_${who}_ACCOUNT_PASSWORD`]
+	if (!who) {
+		who = "PROVIDER";
+	} else {
+		who = who.toUpperCase();
+	}
+	return process.env[`PROSOPO_${who}_ACCOUNT_PASSWORD`];
 }
 
 export function getSecret(who?: string): string | undefined {
-    if (!who) {
-        who = 'PROVIDER'
-    } else {
-        who = who.toUpperCase()
-    }
-    return (
-        process.env[`PROSOPO_${who}_MNEMONIC`] ||
-        process.env[`PROSOPO_${who}_SEED`] ||
-        process.env[`PROSOPO_${who}_URI`] ||
-        process.env[`PROSOPO_${who}_JSON`]
-    )
+	if (!who) {
+		who = "PROVIDER";
+	} else {
+		who = who.toUpperCase();
+	}
+	return (
+		process.env[`PROSOPO_${who}_MNEMONIC`] ||
+		process.env[`PROSOPO_${who}_SEED`] ||
+		process.env[`PROSOPO_${who}_URI`] ||
+		process.env[`PROSOPO_${who}_JSON`]
+	);
 }
 
 export function getDB(): string {
-    if (!process.env.PROSOPO_DATABASE_HOST) {
-        throw new ProsopoEnvError('DATABASE.DATABASE_HOST_UNDEFINED')
-    }
-    return process.env.PROSOPO_DATABASE_HOST
+	if (!process.env.PROSOPO_DATABASE_HOST) {
+		throw new ProsopoEnvError("DATABASE.DATABASE_HOST_UNDEFINED");
+	}
+	return process.env.PROSOPO_DATABASE_HOST;
 }

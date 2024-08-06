@@ -11,27 +11,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { DispatchError } from '@polkadot/types/interfaces'
+import type { DispatchError } from "@polkadot/types/interfaces";
 
 /** Convert a dispatch error to a readable message
  * @param dispatchError
  */
 export function getDispatchError(dispatchError: DispatchError): string {
-    let message: string = dispatchError.type
+	let message: string = dispatchError.type;
 
-    if (dispatchError.isModule) {
-        try {
-            const mod = dispatchError.asModule
-            const error = dispatchError.registry.findMetaError(mod)
+	if (dispatchError.isModule) {
+		try {
+			const mod = dispatchError.asModule;
+			const error = dispatchError.registry.findMetaError(mod);
 
-            message = `${error.section}.${error.name}`
-        } catch (error) {
-            console.log('ERROR GETTING ERROR!', error)
-            // swallow
-        }
-    } else if (dispatchError.isToken) {
-        message = `${dispatchError.type}.${dispatchError.asToken.type}`
-    }
+			message = `${error.section}.${error.name}`;
+		} catch (error) {
+			console.log("ERROR GETTING ERROR!", error);
+			// swallow
+		}
+	} else if (dispatchError.isToken) {
+		message = `${dispatchError.type}.${dispatchError.asToken.type}`;
+	}
 
-    return message
+	return message;
 }

@@ -12,59 +12,72 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import '@cypress/xpath'
-import type { Captcha } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { at } from '@prosopo/util'
-import { checkboxClass } from '../support/commands.js'
-import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import "@cypress/xpath";
+import { ProsopoDatasetError } from "@prosopo/common";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import type { Captcha } from "@prosopo/types";
+import { at } from "@prosopo/util";
+import { checkboxClass } from "../support/commands.js";
 
-describe('Captchas', () => {
-    beforeEach(() => {
-        const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
-            captchaContentId: captcha.captchaContentId,
-            solution: captcha.solution,
-        }))
+describe("Captchas", () => {
+	beforeEach(() => {
+		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
+			captchaContentId: captcha.captchaContentId,
+			solution: captcha.solution,
+		}));
 
-        if (!solutions) {
-            throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
-                context: { datasetWithSolutionHashes },
-            })
-        }
-        cy.intercept('/dummy').as('dummy')
+		if (!solutions) {
+			throw new ProsopoDatasetError(
+				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
+				{
+					context: { datasetWithSolutionHashes },
+				},
+			);
+		}
+		cy.intercept("/dummy").as("dummy");
 
-        // visit the base URL specified on command line when running cypress
-        return cy.visit(Cypress.env('default_page')).then(() => {
-            cy.get(checkboxClass).should('be.visible')
-            // wrap the solutions to make them available to the tests
-            cy.wrap(solutions).as('solutions')
-        })
-    })
+		// visit the base URL specified on command line when running cypress
+		return cy.visit(Cypress.env("default_page")).then(() => {
+			cy.get(checkboxClass).should("be.visible");
+			// wrap the solutions to make them available to the tests
+			cy.wrap(solutions).as("solutions");
+		});
+	});
 
-    it("Captchas load when 'I am human' is pressed", () => {
-        cy.clickIAmHuman().then((captchas) => {
-            expect(captchas.length).to.be.gt(0)
-        })
-    })
+	it("Captchas load when 'I am human' is pressed", () => {
+		cy.clickIAmHuman().then((captchas) => {
+			expect(captchas.length).to.be.gt(0);
+		});
+	});
 
-    it('Number of displayed captchas equals number received in response', () => {
-        cy.clickIAmHuman().then((captchas: Captcha[]) => {
-            cy.wait(2000)
-            cy.captchaImages().then(() => {
-                console.log("captchas in 'Number of displayed captchas equals number received in response'", captchas)
-                cy.get('@captchaImages').should('have.length', at(captchas, 0).items.length)
-            })
-        })
-    })
+	it("Number of displayed captchas equals number received in response", () => {
+		cy.clickIAmHuman().then((captchas: Captcha[]) => {
+			cy.wait(2000);
+			cy.captchaImages().then(() => {
+				console.log(
+					"captchas in 'Number of displayed captchas equals number received in response'",
+					captchas,
+				);
+				cy.get("@captchaImages").should(
+					"have.length",
+					at(captchas, 0).items.length,
+				);
+			});
+		});
+	});
 
-    // move to component testing later
-    it('Can select an item', () => {
-        cy.clickIAmHuman().then(() => {
-            cy.wait(2000)
-            cy.captchaImages().then(() => {
-                cy.get('@captchaImages').first().click()
-                cy.get('@captchaImages').first().siblings().first().should('have.css', 'opacity', '1')
-            })
-        })
-    })
-})
+	// move to component testing later
+	it("Can select an item", () => {
+		cy.clickIAmHuman().then(() => {
+			cy.wait(2000);
+			cy.captchaImages().then(() => {
+				cy.get("@captchaImages").first().click();
+				cy.get("@captchaImages")
+					.first()
+					.siblings()
+					.first()
+					.should("have.css", "opacity", "1");
+			});
+		});
+	});
+});

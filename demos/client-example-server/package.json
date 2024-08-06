@@ -1,52 +1,52 @@
 {
-    "name": "@prosopo/client-example-server",
-    "version": "1.0.2",
-    "description": "Backend for client-example",
-    "main": "dist/app.js",
-    "type": "module",
-    "engines": {
-        "node": ">=20",
-        "npm": ">=9"
-    },
-    "scripts": {
-        "test": "echo \"No test specified\"",
-        "dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
-        "start": "node ./dist/app.js",
-        "start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-        "build": "tsc --build --verbose",
-        "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
-        "clean": "tsc --build --clean"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/prosopo/client-example-server.git"
-    },
-    "author": "PROSOPO LIMITED <info@prosopo.io>",
-    "license": "Apache-2.0",
-    "bugs": {
-        "url": "https://github.com/prosopo/client-example-server/issues"
-    },
-    "homepage": "https://github.com/prosopo/client-example-server#readme",
-    "dependencies": {
-        "@noble/hashes": "^1.3.1",
-        "@polkadot/util": "12.6.2",
-        "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/api": "1.0.2",
-        "@prosopo/contract": "1.0.2",
-        "@prosopo/procaptcha": "1.0.2",
-        "@prosopo/server": "1.0.2",
-        "@prosopo/types": "1.0.2",
-        "@typegoose/auto-increment": "^4.5.0",
-        "cors": "^2.8.5",
-        "jsonwebtoken": "^9.0.0",
-        "mongoose": "^8.5.1",
-        "zod": "^3.22.3"
-    },
-    "devDependencies": {
-        "@prosopo/config": "1.0.2",
-        "@types/jsonwebtoken": "^9.0.2",
-        "tslib": "2.6.2",
-        "typescript": "5.1.6",
-        "vite": "^5.1.7"
-    }
+	"name": "@prosopo/client-example-server",
+	"version": "1.0.2",
+	"description": "Backend for client-example",
+	"main": "dist/app.js",
+	"type": "module",
+	"engines": {
+		"node": ">=20",
+		"npm": ">=9"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
+		"start": "node ./dist/app.js",
+		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
+		"build": "tsc --build --verbose",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
+		"clean": "tsc --build --clean"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/client-example-server.git"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/client-example-server/issues"
+	},
+	"homepage": "https://github.com/prosopo/client-example-server#readme",
+	"dependencies": {
+		"@noble/hashes": "^1.3.1",
+		"@polkadot/util": "12.6.2",
+		"@polkadot/util-crypto": "12.6.2",
+		"@prosopo/api": "1.0.2",
+		"@prosopo/contract": "1.0.2",
+		"@prosopo/procaptcha": "1.0.2",
+		"@prosopo/server": "1.0.2",
+		"@prosopo/types": "1.0.2",
+		"@typegoose/auto-increment": "^4.5.0",
+		"cors": "^2.8.5",
+		"jsonwebtoken": "^9.0.0",
+		"mongoose": "^8.5.1",
+		"zod": "^3.22.3"
+	},
+	"devDependencies": {
+		"@prosopo/config": "1.0.2",
+		"@types/jsonwebtoken": "^9.0.2",
+		"tslib": "2.6.2",
+		"typescript": "5.1.6",
+		"vite": "^5.1.7"
+	}
 }

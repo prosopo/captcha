@@ -1,3 +1,4 @@
+import path from "node:path";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,161 +12,177 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BN } from '@polkadot/util'
-import { type IDappAccount, type IProviderAccount, Payee } from '@prosopo/types'
-import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, getSecret } from '@prosopo/cli'
-import { generateMnemonic, getPairAsync } from '@prosopo/contract'
-import { get } from '@prosopo/util'
-import { getEnvFile } from '@prosopo/cli'
-import { isAddress } from '@polkadot/util-crypto'
-import { updateDemoHTMLFiles, updateEnvFiles } from '../util/index.js'
-import fse from 'fs-extra'
-import path from 'node:path'
-import { setupProvider } from './provider.js'
+import { BN } from "@polkadot/util";
+import { isAddress } from "@polkadot/util-crypto";
+import { defaultConfig, getSecret } from "@prosopo/cli";
+import { getEnvFile } from "@prosopo/cli";
+import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { generateMnemonic, getPairAsync } from "@prosopo/contract";
+import { ProviderEnvironment } from "@prosopo/env";
+import {
+	type IDappAccount,
+	type IProviderAccount,
+	Payee,
+} from "@prosopo/types";
+import { get } from "@prosopo/util";
+import fse from "fs-extra";
+import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
+import { setupProvider } from "./provider.js";
 
-const logger = getLogger(LogLevel.enum.info, 'setup')
-const __dirname = path.resolve()
+const logger = getLogger(LogLevel.enum.info, "setup");
+const __dirname = path.resolve();
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
-    const rootDir = process.env.PROSOPO_ROOT_DIR || path.resolve(__dirname, '../..')
-    logger.info('Root dir:', rootDir)
-    return rootDir
+	const rootDir =
+		process.env.PROSOPO_ROOT_DIR || path.resolve(__dirname, "../..");
+	logger.info("Root dir:", rootDir);
+	return rootDir;
 }
 
 function getDatasetFilePath() {
-    const datasetFile = process.env.PROSOPO_PROVIDER_DATASET_FILE || path.resolve('../data/captchas.json')
-    logger.info('Dataset file:', datasetFile)
-    return datasetFile
+	const datasetFile =
+		process.env.PROSOPO_PROVIDER_DATASET_FILE ||
+		path.resolve("../data/captchas.json");
+	logger.info("Dataset file:", datasetFile);
+	return datasetFile;
 }
 
 function getDefaultProvider(): IProviderAccount {
-    const host = process.env.PROSOPO_PROVIDER_HOST || 'localhost'
-    return {
-        url: process.env.PROSOPO_API_PORT ? `http://${host}:${process.env.PROSOPO_API_PORT}` : `http://${host}:9229`,
-        fee: 10,
-        payee: Payee.dapp,
-        stake: new BN(10 ** 13),
-        datasetFile: getDatasetFilePath(),
-        address: process.env.PROSOPO_PROVIDER_ADDRESS || '',
-        secret: getSecret(),
-        captchaDatasetId: '',
-    }
+	const host = process.env.PROSOPO_PROVIDER_HOST || "localhost";
+	return {
+		url: process.env.PROSOPO_API_PORT
+			? `http://${host}:${process.env.PROSOPO_API_PORT}`
+			: `http://${host}:9229`,
+		fee: 10,
+		payee: Payee.dapp,
+		stake: new BN(10 ** 13),
+		datasetFile: getDatasetFilePath(),
+		address: process.env.PROSOPO_PROVIDER_ADDRESS || "",
+		secret: getSecret(),
+		captchaDatasetId: "",
+	};
 }
 
 function getDefaultDapp(): IDappAccount {
-    return {
-        secret: '//Eve',
-        fundAmount: new BN(10 ** 12),
-    }
+	return {
+		secret: "//Eve",
+		fundAmount: new BN(10 ** 12),
+	};
 }
 
 async function copyEnvFile() {
-    try {
-        const rootDir = getRootDir()
-        // TODO move all env files to a single template location
-        const tplLocation = path.resolve(rootDir, './dev/scripts')
-        const tplEnvFile = getEnvFile(tplLocation, 'env')
-        const envFile = getEnvFile(tplLocation, '.env')
-        await fse.copy(tplEnvFile, envFile, { overwrite: false })
-    } catch (err) {
-        logger.debug(err)
-    }
+	try {
+		const rootDir = getRootDir();
+		// TODO move all env files to a single template location
+		const tplLocation = path.resolve(rootDir, "./dev/scripts");
+		const tplEnvFile = getEnvFile(tplLocation, "env");
+		const envFile = getEnvFile(tplLocation, ".env");
+		await fse.copy(tplEnvFile, envFile, { overwrite: false });
+	} catch (err) {
+		logger.debug(err);
+	}
 }
 
 function updateEnvFileVar(source: string, name: string, value: string) {
-    const envVar = new RegExp(`.*(${name}=)(.*)`, 'g')
-    if (envVar.test(source)) {
-        return source.replace(envVar, `$1${value}`)
-    }
-    return `${source}\n${name}=${value}`
+	const envVar = new RegExp(`.*(${name}=)(.*)`, "g");
+	if (envVar.test(source)) {
+		return source.replace(envVar, `$1${value}`);
+	}
+	return `${source}\n${name}=${value}`;
 }
 
 export async function updateEnvFile(vars: Record<string, string>) {
-    const rootDir = getRootDir()
-    const envFile = getEnvFile(rootDir, '.env')
+	const rootDir = getRootDir();
+	const envFile = getEnvFile(rootDir, ".env");
 
-    let readEnvFile = await fse.readFile(envFile, 'utf8')
+	let readEnvFile = await fse.readFile(envFile, "utf8");
 
-    for (const key in vars) {
-        readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key))
-    }
-    logger.info(`Updating ${envFile}`)
-    await fse.writeFile(envFile, readEnvFile)
+	for (const key in vars) {
+		readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key));
+	}
+	logger.info(`Updating ${envFile}`);
+	await fse.writeFile(envFile, readEnvFile);
 }
 
 export async function setup(force: boolean) {
-    const defaultProvider = getDefaultProvider()
-    const defaultDapp = getDefaultDapp()
+	const defaultProvider = getDefaultProvider();
+	const defaultDapp = getDefaultDapp();
 
-    if (defaultProvider.secret) {
-        const hasProviderAccount = defaultProvider.address && defaultProvider.secret
-        logger.debug('ENVIRONMENT', process.env.NODE_ENV)
+	if (defaultProvider.secret) {
+		const hasProviderAccount =
+			defaultProvider.address && defaultProvider.secret;
+		logger.debug("ENVIRONMENT", process.env.NODE_ENV);
 
-        const [mnemonic, address] = !hasProviderAccount
-            ? await generateMnemonic()
-            : [defaultProvider.secret, defaultProvider.address]
+		const [mnemonic, address] = !hasProviderAccount
+			? await generateMnemonic()
+			: [defaultProvider.secret, defaultProvider.address];
 
-        logger.debug(`Address: ${address}`)
-        logger.debug(`Mnemonic: ${mnemonic}`)
-        logger.debug('Writing .env file...')
-        await copyEnvFile()
+		logger.debug(`Address: ${address}`);
+		logger.debug(`Mnemonic: ${mnemonic}`);
+		logger.debug("Writing .env file...");
+		await copyEnvFile();
 
-        if (!process.env.PROSOPO_SITE_KEY) {
-            throw new ProsopoEnvError('DEVELOPER.PROSOPO_SITE_KEY_MISSING')
-        }
+		if (!process.env.PROSOPO_SITE_KEY) {
+			throw new ProsopoEnvError("DEVELOPER.PROSOPO_SITE_KEY_MISSING");
+		}
 
-        const config = defaultConfig()
-        const providerSecret = config.account.secret
-        const network = config.networks[config.defaultNetwork]
-        const pair = await getPairAsync(network, providerSecret)
+		const config = defaultConfig();
+		const providerSecret = config.account.secret;
+		const network = config.networks[config.defaultNetwork];
+		const pair = await getPairAsync(network, providerSecret);
 
-        const env = new ProviderEnvironment(defaultConfig(), pair)
-        await env.isReady()
+		const env = new ProviderEnvironment(defaultConfig(), pair);
+		await env.isReady();
 
-        defaultProvider.secret = mnemonic
+		defaultProvider.secret = mnemonic;
 
-        env.logger.info(`Registering provider... ${defaultProvider.address}`)
+		env.logger.info(`Registering provider... ${defaultProvider.address}`);
 
-        defaultProvider.pair = await getPairAsync(network, providerSecret)
+		defaultProvider.pair = await getPairAsync(network, providerSecret);
 
-        // If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
-        // If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
-        // If a DAPP_SECRET is present, we want the PROSOPO_SITE_KEY account to register itself.
-        // Otherwise, a test account like //Eve is used to register the PROSOPO_SITE_KEY account.
-        defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
-        let dappAddressToRegister = defaultDapp.pair.address
-        if (process.env.PROSOPO_SITE_KEY && isAddress(process.env.PROSOPO_SITE_KEY)) {
-            dappAddressToRegister = process.env.PROSOPO_SITE_KEY
-            if (process.env.PROSOPO_SITE_PRIVATE_KEY) {
-                defaultDapp.secret = process.env.PROSOPO_SITE_PRIVATE_KEY
-                defaultDapp.pair = await getPairAsync(network, defaultDapp.secret)
-                dappAddressToRegister = defaultDapp.pair.address
-            }
-        }
+		// If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
+		// If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
+		// If a DAPP_SECRET is present, we want the PROSOPO_SITE_KEY account to register itself.
+		// Otherwise, a test account like //Eve is used to register the PROSOPO_SITE_KEY account.
+		defaultDapp.pair = await getPairAsync(network, defaultDapp.secret);
+		let dappAddressToRegister = defaultDapp.pair.address;
+		if (
+			process.env.PROSOPO_SITE_KEY &&
+			isAddress(process.env.PROSOPO_SITE_KEY)
+		) {
+			dappAddressToRegister = process.env.PROSOPO_SITE_KEY;
+			if (process.env.PROSOPO_SITE_PRIVATE_KEY) {
+				defaultDapp.secret = process.env.PROSOPO_SITE_PRIVATE_KEY;
+				defaultDapp.pair = await getPairAsync(network, defaultDapp.secret);
+				dappAddressToRegister = defaultDapp.pair.address;
+			}
+		}
 
-        await setupProvider(env, defaultProvider)
+		await setupProvider(env, defaultProvider);
 
-        env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`)
+		env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`);
 
-        if (!hasProviderAccount) {
-            await updateEnvFile({
-                PROVIDER_MNEMONIC: `"${mnemonic}"`,
-                PROVIDER_ADDRESS: address,
-            })
-        }
-        env.logger.debug('Updating env files with PROSOPO_SITE_KEY')
-        await updateDemoHTMLFiles(
-            [/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
-            defaultDapp.pair.address,
-            env.logger
-        )
-        await updateEnvFiles(['NEXT_PUBLIC_PROSOPO_SITE_KEY', 'PROSOPO_SITE_KEY'], defaultDapp.pair.address, env.logger)
-        process.exit()
-    } else {
-        console.error('no secret found in .env file')
-        throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED")
-    }
+		if (!hasProviderAccount) {
+			await updateEnvFile({
+				PROVIDER_MNEMONIC: `"${mnemonic}"`,
+				PROVIDER_ADDRESS: address,
+			});
+		}
+		env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
+		await updateDemoHTMLFiles(
+			[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+			defaultDapp.pair.address,
+			env.logger,
+		);
+		await updateEnvFiles(
+			["NEXT_PUBLIC_PROSOPO_SITE_KEY", "PROSOPO_SITE_KEY"],
+			defaultDapp.pair.address,
+			env.logger,
+		);
+		process.exit();
+	} else {
+		console.error("no secret found in .env file");
+		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
+	}
 }

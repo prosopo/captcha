@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { DecodedEvent } from '@polkadot/api-contract/types'
-import type { SubmittableResult } from '@polkadot/api/submittable'
+import type { DecodedEvent } from "@polkadot/api-contract/types";
+import type { SubmittableResult } from "@polkadot/api/submittable";
 
 export interface TransactionResponse {
-    from: string
-    txHash?: string
-    blockHash?: string
-    error?: {
-// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-        message?: any
-// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-        data?: any
-    }
-    result: SubmittableResult
-    events?: DecodedEvent[]
+	from: string;
+	txHash?: string;
+	blockHash?: string;
+	error?: {
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		message?: any;
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		data?: any;
+	};
+	result: SubmittableResult;
+	events?: DecodedEvent[];
 }

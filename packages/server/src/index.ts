@@ -11,13 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoServer } from './server.js'
-export { ProsopoServer } from './server.js'
-export { getServerConfig, getServerUrl } from './config.js'
-import type { ProsopoServerConfigOutput } from '@prosopo/types'
-import { getPairAsync } from '@prosopo/contract'
-export const PublicProsopoServer = async (config: ProsopoServerConfigOutput) => {
-    // if site key is '' then it will burn address
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], undefined, config.account.address)
-    return new ProsopoServer(config, pair)
-}
+import { ProsopoServer } from "./server.js";
+export { ProsopoServer } from "./server.js";
+export { getServerConfig, getServerUrl } from "./config.js";
+import { getPairAsync } from "@prosopo/contract";
+import type { ProsopoServerConfigOutput } from "@prosopo/types";
+export const PublicProsopoServer = async (
+	config: ProsopoServerConfigOutput,
+) => {
+	// if site key is '' then it will burn address
+	const pair = await getPairAsync(
+		config.networks[config.defaultNetwork],
+		undefined,
+		config.account.address,
+	);
+	return new ProsopoServer(config, pair);
+};

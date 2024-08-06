@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import dotenv from "dotenv";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,26 +14,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { defineConfig } from 'vitest/config'
-import dotenv from 'dotenv'
-import fs from 'node:fs'
-import path from 'node:path'
-process.env.NODE_ENV = 'test'
+import { defineConfig } from "vitest/config";
+process.env.NODE_ENV = "test";
 // if .env.test exists at this level, use it, otherwise use the one at the root
-const envFile = `.env.${process.env.NODE_ENV || 'development'}`
-let envPath = envFile
+const envFile = `.env.${process.env.NODE_ENV || "development"}`;
+let envPath = envFile;
 if (fs.existsSync(envFile)) {
-    envPath = path.resolve(envFile)
+	envPath = path.resolve(envFile);
 } else if (fs.existsSync(`../../${envFile}`)) {
-    envPath = path.resolve(`../../${envFile}`)
+	envPath = path.resolve(`../../${envFile}`);
 } else {
-    throw new Error(`No ${envFile} file found`)
+	throw new Error(`No ${envFile} file found`);
 }
 
-dotenv.config({ path: envPath })
+dotenv.config({ path: envPath });
 
 export default defineConfig({
-    test: {
-        environment: 'jsdom',
-    },
-})
+	test: {
+		environment: "jsdom",
+	},
+});

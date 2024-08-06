@@ -1,3 +1,5 @@
+import type { ProsopoServerConfigOutput } from "@prosopo/types";
+import express from "express";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,34 +13,38 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Connection } from 'mongoose'
-import type { ProsopoServerConfigOutput } from '@prosopo/types'
-import { isAuth, login, signup } from '../controllers/auth.js'
-import express from 'express'
+import type { Connection } from "mongoose";
+import { isAuth, login, signup } from "../controllers/auth.js";
 
-const router = express.Router()
+const router = express.Router();
 
 function getRoutes(
-    mongoose: Connection,
-    config: ProsopoServerConfigOutput,
-    verifyEndpoint: string,
-    verifyType: string
+	mongoose: Connection,
+	config: ProsopoServerConfigOutput,
+	verifyEndpoint: string,
+	verifyType: string,
 ): express.Router {
-    router.post('/login', login.bind(null, mongoose, config, verifyEndpoint, verifyType))
+	router.post(
+		"/login",
+		login.bind(null, mongoose, config, verifyEndpoint, verifyType),
+	);
 
-    router.post('/signup', signup.bind(null, mongoose, config, verifyEndpoint, verifyType))
+	router.post(
+		"/signup",
+		signup.bind(null, mongoose, config, verifyEndpoint, verifyType),
+	);
 
-    router.get('/private', isAuth)
+	router.get("/private", isAuth);
 
-    router.get('/public', (req, res) => {
-        res.status(200).json({ message: 'here is your public resource' })
-    })
+	router.get("/public", (req, res) => {
+		res.status(200).json({ message: "here is your public resource" });
+	});
 
-    // will match any other path
-    router.use('/', (req, res) => {
-        res.status(404).json({ error: 'page not found' })
-    })
-    return router
+	// will match any other path
+	router.use("/", (req, res) => {
+		res.status(404).json({ error: "page not found" });
+	});
+	return router;
 }
 
-export default getRoutes
+export default getRoutes;

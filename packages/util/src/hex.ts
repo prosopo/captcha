@@ -11,34 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { isArray } from './checks.js'
+import { isArray } from "./checks.js";
 
-type Hash = string | number[]
+type Hash = string | number[];
 
-const U8 = new Array(256)
-const U16 = new Array(256 * 256)
+const U8 = new Array(256);
+const U16 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-    U8[n] = n.toString(16).padStart(2, '0')
+	U8[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
-    const s = i << 8
-    for (let j = 0; j < 256; j++) {
-        U16[s | j] = U8[i] + U8[j]
-    }
+	const s = i << 8;
+	for (let j = 0; j < 256; j++) {
+		U16[s | j] = U8[i] + U8[j];
+	}
 }
 
 /** @internal */
 // biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 function hex(value: any, result: string) {
-    const mod = value.length % 2 | 0
-    const length = (value.length - mod) | 0
-    for (let i = 0; i < length; i += 2) {
-        result += U16[(value[i] << 8) | value[i + 1]]
-    }
-    if (mod) {
-        result += U8[value[length] | 0]
-    }
-    return result
+	const mod = (value.length % 2) | 0;
+	const length = (value.length - mod) | 0;
+	for (let i = 0; i < length; i += 2) {
+		result += U16[(value[i] << 8) | value[i + 1]];
+	}
+	if (mod) {
+		result += U8[value[length] | 0];
+	}
+	return result;
 }
 /**
  * @name u8aToHex
@@ -54,25 +54,30 @@ function hex(value: any, result: string) {
  * u8aToHex(new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0xf])); // 0x68656c0f
  * ```
  */
-export function u8aToHex(value: Uint8Array | null, bitLength = -1, isPrefixed = true) {
-    // this is not 100% correct sinmce we support isPrefixed = false....
-    const empty = isPrefixed ? '0x' : ''
-    if (!value?.length) {
-        return empty
-    }if (bitLength > 0) {
-        const length = Math.ceil(bitLength / 8)
-        if (value.length > length) {
-            return `${hex(value.subarray(0, length / 2), empty)}…${hex(value.subarray(value.length - length / 2), '')}`
-        }
-    }
-    return hex(value, empty)
+export function u8aToHex(
+	value: Uint8Array | null,
+	bitLength = -1,
+	isPrefixed = true,
+) {
+	// this is not 100% correct sinmce we support isPrefixed = false....
+	const empty = isPrefixed ? "0x" : "";
+	if (!value?.length) {
+		return empty;
+	}
+	if (bitLength > 0) {
+		const length = Math.ceil(bitLength / 8);
+		if (value.length > length) {
+			return `${hex(value.subarray(0, length / 2), empty)}…${hex(value.subarray(value.length - length / 2), "")}`;
+		}
+	}
+	return hex(value, empty);
 }
 
 export const hashToHex = (hash: Hash) => {
-    if (isArray(hash)) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return u8aToHex(new Uint8Array(hash))
-    }
-    return hash.toString()
-}
+	if (isArray(hash)) {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		return u8aToHex(new Uint8Array(hash));
+	}
+	return hash.toString();
+};

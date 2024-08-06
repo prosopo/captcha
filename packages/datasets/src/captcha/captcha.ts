@@ -1,3 +1,10 @@
+import { isHex } from "@polkadot/util";
+import {
+	ProsopoDatasetError,
+	ProsopoEnvError,
+	hexHash,
+	hexHashArray,
+} from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +19,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    type AssetsResolver,
-    type Captcha,
-    type CaptchaSolution,
-    CaptchaSolutionArraySchema,
-    type CaptchaWithoutId,
-    type DatasetRaw,
-    DatasetWithNumericSolutionSchema,
-    type HashedItem,
-    type HashedSolution,
-    type Item,
-    type RawSolution,
-} from '@prosopo/types'
-import { ProsopoDatasetError, ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
-import { at } from '@prosopo/util'
-import { downloadImage } from './util.js'
-import { isHex } from '@polkadot/util'
+	type AssetsResolver,
+	type Captcha,
+	type CaptchaSolution,
+	CaptchaSolutionArraySchema,
+	type CaptchaWithoutId,
+	type DatasetRaw,
+	DatasetWithNumericSolutionSchema,
+	type HashedItem,
+	type HashedSolution,
+	type Item,
+	type RawSolution,
+} from "@prosopo/types";
+import { at } from "@prosopo/util";
+import { downloadImage } from "./util.js";
 
-export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
+export const NO_SOLUTION_VALUE = "NO_SOLUTION";
 
 /**
  * Parse a dataset
@@ -37,27 +42,36 @@ export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
  * @param datasetJSON
  */
 export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
-    try {
-        const result = DatasetWithNumericSolutionSchema.parse(datasetJSON)
+	try {
+		const result = DatasetWithNumericSolutionSchema.parse(datasetJSON);
 
-        const result2: DatasetRaw = {
-            format: result.format,
-            captchas: result.captchas.map((captcha) => {
-                return {
-                    ...captcha,
-                    solution: captcha.solution ? matchItemsToSolutions(captcha.solution, captcha.items) : [],
-                    unlabelled: captcha.unlabelled ? matchItemsToSolutions(captcha.unlabelled, captcha.items) : [],
-                }
-            }),
-        }
-        if (result.datasetId !== undefined) result2.datasetId = result.datasetId
-        if (result.contentTree !== undefined) result2.contentTree = result.contentTree
-        if (result.datasetContentId !== undefined) result2.datasetContentId = result.datasetContentId
-        if (result.solutionTree !== undefined) result2.solutionTree = result.solutionTree
-        return result2
-    } catch (err) {
-        throw new ProsopoDatasetError('DATASET.DATASET_PARSE_ERROR', { context: { error: err } })
-    }
+		const result2: DatasetRaw = {
+			format: result.format,
+			captchas: result.captchas.map((captcha) => {
+				return {
+					...captcha,
+					solution: captcha.solution
+						? matchItemsToSolutions(captcha.solution, captcha.items)
+						: [],
+					unlabelled: captcha.unlabelled
+						? matchItemsToSolutions(captcha.unlabelled, captcha.items)
+						: [],
+				};
+			}),
+		};
+		if (result.datasetId !== undefined) result2.datasetId = result.datasetId;
+		if (result.contentTree !== undefined)
+			result2.contentTree = result.contentTree;
+		if (result.datasetContentId !== undefined)
+			result2.datasetContentId = result.datasetContentId;
+		if (result.solutionTree !== undefined)
+			result2.solutionTree = result.solutionTree;
+		return result2;
+	} catch (err) {
+		throw new ProsopoDatasetError("DATASET.DATASET_PARSE_ERROR", {
+			context: { error: err },
+		});
+	}
 }
 
 /**
@@ -65,49 +79,55 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
  * @param {JSON} captchaJSON captcha solutions received from the api
  * @return {CaptchaSolution[]} an array of parsed and sorted captcha solutions
  */
-export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): CaptchaSolution[] {
-    try {
-        return CaptchaSolutionArraySchema.parse(captchaJSON).map((captcha) => ({
-            ...captcha,
-            solution: captcha.solution.sort(),
-        }))
-    } catch (err) {
-        throw new ProsopoDatasetError('DATASET.SOLUTION_PARSE_ERROR', { context: { error: err } })
-    }
+export function parseAndSortCaptchaSolutions(
+	captchaJSON: CaptchaSolution[],
+): CaptchaSolution[] {
+	try {
+		return CaptchaSolutionArraySchema.parse(captchaJSON).map((captcha) => ({
+			...captcha,
+			solution: captcha.solution.sort(),
+		}));
+	} catch (err) {
+		throw new ProsopoDatasetError("DATASET.SOLUTION_PARSE_ERROR", {
+			context: { error: err },
+		});
+	}
 }
 
 export function captchaSort<T extends { captchaId: string }>(a: T, b: T) {
-    return a.captchaId.localeCompare(b.captchaId)
+	return a.captchaId.localeCompare(b.captchaId);
 }
 
 export function sortAndComputeHashes(
-    received: CaptchaSolution[],
-    stored: Captcha[]
+	received: CaptchaSolution[],
+	stored: Captcha[],
 ): { captchaId: string; hash: string }[] {
-    received.sort(captchaSort)
-    stored.sort(captchaSort)
+	received.sort(captchaSort);
+	stored.sort(captchaSort);
 
-    return stored.map(({ salt, items = [], target = '', captchaId, solved }, index) => {
-        const item = at(received, index)
-        if (captchaId !== item.captchaId) {
-            throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
-        }
+	return stored.map(
+		({ salt, items = [], target = "", captchaId, solved }, index) => {
+			const item = at(received, index);
+			if (captchaId !== item.captchaId) {
+				throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH");
+			}
 
-        return {
-            hash: computeCaptchaHash(
-                {
-                    solution: solved ? item.solution : [],
-                    salt,
-                    items,
-                    target,
-                },
-                true,
-                true,
-                false
-            ),
-            captchaId,
-        }
-    })
+			return {
+				hash: computeCaptchaHash(
+					{
+						solution: solved ? item.solution : [],
+						salt,
+						items,
+						target,
+					},
+					true,
+					true,
+					false,
+				),
+				captchaId,
+			};
+		},
+	);
 }
 
 /**
@@ -116,13 +136,16 @@ export function sortAndComputeHashes(
  * @param  {Captcha[]} stored
  * @return {boolean}
  */
-export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): boolean {
-    if (received.length && stored.length && received.length === stored.length) {
-        const hashes = sortAndComputeHashes(received, stored)
-        return hashes.every(({ hash, captchaId }) => hash === captchaId)
-    }
+export function compareCaptchaSolutions(
+	received: CaptchaSolution[],
+	stored: Captcha[],
+): boolean {
+	if (received.length && stored.length && received.length === stored.length) {
+		const hashes = sortAndComputeHashes(received, stored);
+		return hashes.every(({ hash, captchaId }) => hash === captchaId);
+	}
 
-    return false
+	return false;
 }
 
 /**
@@ -134,42 +157,46 @@ export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Cap
  * @return {string} the hex string hash
  */
 export function computeCaptchaHash(
-    captcha: CaptchaWithoutId,
-    includeSolution,
-    includeSalt,
-    sortItemHashes: boolean
+	captcha: CaptchaWithoutId,
+	includeSolution,
+	includeSalt,
+	sortItemHashes: boolean,
 ): string {
-    try {
-        const itemHashes: string[] = captcha.items.map((item, index) => {
-            if (item.hash) {
-                return item.hash
-            }
-                throw new ProsopoDatasetError('CAPTCHA.MISSING_ITEM_HASH', {
-                    context: {
-                        computeCaptchaHashName: computeCaptchaHash.name,
-                        index,
-                    },
-                })
-        })
-        return hexHashArray([
-            captcha.target,
-            // empty array hashes as empty string, undefined solution results in the array [`NO_SOLUTION`]
-            // [undefined] also hashes as empty string, which is why we don't use it
-            ...(includeSolution ? getSolutionValueToHash(captcha.solution) : []),
-            includeSalt ? captcha.salt : '',
-            sortItemHashes ? itemHashes.sort() : itemHashes,
-        ])
-    } catch (err) {
-        throw new ProsopoDatasetError('DATASET.HASH_ERROR', { context: { error: err } })
-    }
+	try {
+		const itemHashes: string[] = captcha.items.map((item, index) => {
+			if (item.hash) {
+				return item.hash;
+			}
+			throw new ProsopoDatasetError("CAPTCHA.MISSING_ITEM_HASH", {
+				context: {
+					computeCaptchaHashName: computeCaptchaHash.name,
+					index,
+				},
+			});
+		});
+		return hexHashArray([
+			captcha.target,
+			// empty array hashes as empty string, undefined solution results in the array [`NO_SOLUTION`]
+			// [undefined] also hashes as empty string, which is why we don't use it
+			...(includeSolution ? getSolutionValueToHash(captcha.solution) : []),
+			includeSalt ? captcha.salt : "",
+			sortItemHashes ? itemHashes.sort() : itemHashes,
+		]);
+	} catch (err) {
+		throw new ProsopoDatasetError("DATASET.HASH_ERROR", {
+			context: { error: err },
+		});
+	}
 }
 
 /** Return the sorted solution value or ['NO_SOLUTION'] if there is no solution. Ensures that an empty array is a valid
  * solution
  * @param solution
  */
-export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution[]) {
-    return solution !== undefined ? solution.sort() : [NO_SOLUTION_VALUE]
+export function getSolutionValueToHash(
+	solution?: HashedSolution[] | RawSolution[],
+) {
+	return solution !== undefined ? solution.sort() : [NO_SOLUTION_VALUE];
 }
 
 /** Compute the hash of a captcha item, downloading the image if necessary
@@ -177,12 +204,13 @@ export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution
  * @return {Promise<HashedItem>} the hex string hash of the item
  */
 export async function computeItemHash(item: Item): Promise<HashedItem> {
-    if (item.type === 'text') {
-        return { ...item, hash: hexHash(item.data) }
-    }if (item.type === 'image') {
-        return { ...item, hash: hexHash(await downloadImage(item.data)) }
-    }
-        throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_FORMAT')
+	if (item.type === "text") {
+		return { ...item, hash: hexHash(item.data) };
+	}
+	if (item.type === "image") {
+		return { ...item, hash: hexHash(await downloadImage(item.data)) };
+	}
+	throw new ProsopoDatasetError("CAPTCHA.INVALID_ITEM_FORMAT");
 }
 
 /**
@@ -192,29 +220,30 @@ export async function computeItemHash(item: Item): Promise<HashedItem> {
  * @param {Item[]} items
  */
 export function matchItemsToSolutions(
-    solutions: RawSolution[] | HashedSolution[],
-    items: HashedItem[] | undefined
+	solutions: RawSolution[] | HashedSolution[],
+	items: HashedItem[] | undefined,
 ): HashedSolution[] {
-    if (!items) {
-        return []
-    }
-    return solutions.map((solution: string | number) => {
-        if (typeof solution === 'string' && isHex(solution)) {
-            // solution must already be a hash
-            // check that solution is in items array
-            if (!items?.some((item) => item.hash === solution)) {
-                throw new ProsopoDatasetError('CAPTCHA.INVALID_ITEM_HASH')
-            }
-            return solution
-        }if (typeof solution === 'number') {
-            // else solution must be a number
-            // so lookup the item at that index
-            const item = at(items, solution)
-            // get the hash of the item
-            return item.hash
-        }
-            throw new ProsopoDatasetError('CAPTCHA.INVALID_SOLUTION_TYPE')
-    })
+	if (!items) {
+		return [];
+	}
+	return solutions.map((solution: string | number) => {
+		if (typeof solution === "string" && isHex(solution)) {
+			// solution must already be a hash
+			// check that solution is in items array
+			if (!items?.some((item) => item.hash === solution)) {
+				throw new ProsopoDatasetError("CAPTCHA.INVALID_ITEM_HASH");
+			}
+			return solution;
+		}
+		if (typeof solution === "number") {
+			// else solution must be a number
+			// so lookup the item at that index
+			const item = at(items, solution);
+			// get the hash of the item
+			return item.hash;
+		}
+		throw new ProsopoDatasetError("CAPTCHA.INVALID_SOLUTION_TYPE");
+	});
 }
 
 /**
@@ -223,7 +252,12 @@ export function matchItemsToSolutions(
  * @return {string} the hex string hash
  */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHashArray([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt])
+	return hexHashArray([
+		captcha.captchaId,
+		captcha.captchaContentId,
+		[...captcha.solution].sort(),
+		captcha.salt,
+	]);
 }
 
 /**
@@ -233,8 +267,12 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @param  {string} salt
  * @return {string}
  */
-export function computePendingRequestHash(captchaIds: string[], userAccount: string | number[], salt: string): string {
-    return hexHashArray([...captchaIds.sort(), userAccount, salt])
+export function computePendingRequestHash(
+	captchaIds: string[],
+	userAccount: string | number[],
+	salt: string,
+): string {
+	return hexHashArray([...captchaIds.sort(), userAccount, salt]);
 }
 
 /**
@@ -242,6 +280,12 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
  * @param  {Item} item
  * @param  {AssetsResolver} assetsResolver
  */
-export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined): Item {
-    return { ...item, data: assetsResolver?.resolveAsset(item.data).getURL() || item.data }
+export function parseCaptchaAssets(
+	item: Item,
+	assetsResolver: AssetsResolver | undefined,
+): Item {
+	return {
+		...item,
+		data: assetsResolver?.resolveAsset(item.data).getURL() || item.data,
+	};
 }

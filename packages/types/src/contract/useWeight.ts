@@ -1,3 +1,4 @@
+import type { WeightV2 } from "@polkadot/types/interfaces";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +12,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { BN } from '@polkadot/util/bn'
-import type { WeightV2 } from '@polkadot/types/interfaces'
+import type { BN } from "@polkadot/util/bn";
 
 export interface UseWeight {
-    executionTime: number
-    isEmpty: boolean
-    isValid: boolean
-    isWeightV2: boolean
-    megaGas: BN
-    megaRefTime: BN
-    proofSize: BN
-    percentage: number
-    weight: BN
-    weightV2: WeightV2
+	executionTime: number;
+	isEmpty: boolean;
+	isValid: boolean;
+	isWeightV2: boolean;
+	megaGas: BN;
+	megaRefTime: BN;
+	proofSize: BN;
+	percentage: number;
+	weight: BN;
+	weightV2: WeightV2;
 }

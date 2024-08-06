@@ -11,26 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { sha256 } from '@noble/hashes/sha256'
+import { sha256 } from "@noble/hashes/sha256";
 
 export const solvePoW = (data: string, difficulty: number): number => {
-    let nonce = 0
-    const prefix = '0'.repeat(difficulty)
+	let nonce = 0;
+	const prefix = "0".repeat(difficulty);
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        const message = new TextEncoder().encode(nonce + data)
-        const hashHex = bufferToHex(sha256(message))
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		const message = new TextEncoder().encode(nonce + data);
+		const hashHex = bufferToHex(sha256(message));
 
-        if (hashHex.startsWith(prefix)) {
-            return nonce
-        }
+		if (hashHex.startsWith(prefix)) {
+			return nonce;
+		}
 
-        nonce += 1
-    }
-}
+		nonce += 1;
+	}
+};
 
 const bufferToHex = (buffer: Uint8Array): string =>
-    Array.from(buffer)
-        .map((byte) => byte.toString(16).padStart(2, '0'))
-        .join('')
+	Array.from(buffer)
+		.map((byte) => byte.toString(16).padStart(2, "0"))
+		.join("");
