@@ -39,18 +39,22 @@ export class Cli extends Loggable {
             .middleware((argv: any) => {
                 this.logger.setLogLevel(argv.logLevel)
             }, true)
-        this.#commands.forEach((command) => {
+
+        for(const command of this.#commands) {
+
             y = y.command({
                 command: command.getCommandName(),
                 describe: command.getDescription(),
                 builder: command.getOptions(),
+                // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                 handler: async (argv: any) => {
                     this.logger.debug(`running ${command.getCommandName()}}`)
                     const args = await command.parse(argv)
                     await command.exec(args)
                 },
             })
-        })
+        }
+        
         if (!this.#commands.find((c) => c.getCommandName() === '$0')) {
             // no default command
             y = y.command(
