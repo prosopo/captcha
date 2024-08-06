@@ -24,6 +24,7 @@ export class PowCaptchaManager {
     db: Database
     POW_SEPARATOR: string
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
     constructor(pair: any, db: Database) {
         this.pair = pair
         this.db = db
