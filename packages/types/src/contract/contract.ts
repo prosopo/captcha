@@ -20,7 +20,9 @@ export interface TransactionResponse {
     txHash?: string
     blockHash?: string
     error?: {
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         message?: any
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         data?: any
     }
     result: SubmittableResult
