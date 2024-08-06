@@ -61,7 +61,7 @@ export async function batch(
     const paymentInfo = await batchExtrinsic.paymentInfo(pair)
     logger.info('Sender balance Before', balance.data.free.div(oneUnit(contract.api as ApiPromise)).toString(), 'UNIT')
     logger.info('Payment Info', paymentInfo.toHuman())
-    // eslint-disable-next-line no-async-promise-executor
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: TODO fix
     return await new Promise(async (resolve, reject) => {
         const unsub = await batchExtrinsic.signAndSend(pair, options, async (result: SubmittableResult) => {
             //logger.debug('DispatchInfo', result.dispatchInfo?.toHuman())
