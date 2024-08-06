@@ -45,8 +45,7 @@ export function useWeightImpl(
 				.div(BN_TEN)
 		: BN_ZERO);
 	const proofSize = <BN>(api.consts.system.blockWeights
-		?
-			// @ts-ignore
+		? // @ts-ignore
 			api.consts.system.blockWeights.perClass.normal.maxExtrinsic
 				.unwrapOrDefault()
 				.proofSize.toBn()
@@ -93,8 +92,7 @@ export function useWeightImpl(
 				.mul(blockTime)
 				.div(
 					api.consts.system.blockWeights
-						? 
-							// @ts-ignore
+						? // @ts-ignore
 							api.consts.system.blockWeights.perClass.normal.maxExtrinsic
 								.unwrapOrDefault()
 								.refTime.toBn()
