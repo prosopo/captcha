@@ -34,6 +34,7 @@ const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
         }
     }, [])
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: TODO should depend on mouse/touch/kb events, but I think this will break things
     useEffect(() => {
         const userEvents = {
             mouseEvents,
@@ -41,7 +42,7 @@ const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
             keyboardEvents,
         }
         if (account) onProcessData(userEvents)
-    }, [sendData, account])
+    }, [onProcessData, account])
 
     return <div ref={ref} />
 }
