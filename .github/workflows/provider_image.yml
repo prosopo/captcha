@@ -197,6 +197,7 @@ jobs:
 
             # load the provider-mock AMD64 image
             - name: Load the Provider Container
+              if: steps.npm_released.outputs.npm_released == 'true'
               run: docker load -i provider-mock-amd64.tar
 
             # Check that the version command works when running the bundle in the provider image
