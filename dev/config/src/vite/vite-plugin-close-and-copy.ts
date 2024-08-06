@@ -28,32 +28,32 @@ const log = getLogger("Info", "config.vite.vite-plugin-close.js")
  *   @param { ClosePluginOptions } options - The options object
  **/
 export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Plugin {
-    const __dirname = path.resolve()
-    return {
-        name: 'close-plugin', // required, will show up in warnings and errors
-        buildStart() {
-            log.info('Bundle build started')
-        },
-        buildEnd(error) {
-            log.info('Build end')
-            if (error) {
-                console.log(error)
-                log.error(error)
-            }
-        },
-        closeBundle() {
-            if (options) {
-                options.destDir.forEach((destDir) => {
-                    clearOutputDirJS(__dirname, destDir)
-                    log.info(`Bundle cleared from ${options.destDir}`)
-                    copyBundle(__dirname, options.srcDir, destDir)
-                    log.info(`Bundle copied to ${options.destDir}`)
-                })
-            }
-            log.info('Bundle closed')
-        },
-    }
-}
+		const __dirname = path.resolve();
+		return {
+			name: "close-plugin", // required, will show up in warnings and errors
+			buildStart() {
+				log.info("Bundle build started");
+			},
+			buildEnd(error) {
+				log.info("Build end");
+				if (error) {
+					console.log(error);
+					log.error(error);
+				}
+			},
+			closeBundle() {
+				if (options) {
+					for (const destDir of options.destDir) {
+						clearOutputDirJS(__dirname, destDir);
+						log.info(`Bundle cleared from ${options.destDir}`);
+						copyBundle(__dirname, options.srcDir, destDir);
+						log.info(`Bundle copied to ${options.destDir}`);
+					}
+					log.info("Bundle closed");
+				}
+			},
+		};
+	}
 
 const clearOutputDirJS = (__dirname: string, destDir: string) =>
     fs
