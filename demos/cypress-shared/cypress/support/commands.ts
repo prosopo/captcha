@@ -23,7 +23,9 @@ declare global {
 		interface Chainable<Subject = any> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
 			captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>;
-			clickCorrectCaptchaImages(captcha: Captcha): Chainable<void>;
+			clickCorrectCaptchaImages(
+				captcha: Captcha,
+			): Chainable<JQuery<HTMLElement>>;
 			getSelectors(captcha: Captcha): Cypress.Chainable<string[]>;
 			clickNextButton(): Cypress.Chainable<void>;
 		}
@@ -109,7 +111,9 @@ function getSelectors(captcha: Captcha) {
 	return cy.get("@selectors");
 }
 
-function clickCorrectCaptchaImages(captcha: Captcha): Chainable<void> {
+function clickCorrectCaptchaImages(
+	captcha: Captcha,
+): Chainable<JQuery<HTMLElement>> {
 	return cy.captchaImages().then(() => {
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
