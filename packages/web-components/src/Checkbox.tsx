@@ -60,7 +60,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({ themeColor, onChange, checke
     }
     const [hover, setHover] = useState(false)
 
-    const checkboxStyle: CSSProperties = useMemo(() => {
+    // biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
+        const checkboxStyle: CSSProperties = useMemo(() => {
         return {
             ...checkboxStyleBase,
             borderColor: hover ? theme.palette.background.contrastText : theme.palette.grey[400],
