@@ -36,6 +36,7 @@ describe('buildTreeAndGetCommitmentId', () => {
     })
 
     it('should build a tree and return the commitmentId', () => {
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(computeCaptchaSolutionHash as any)
             .mockReturnValueOnce('hashedSolution1')
             .mockReturnValueOnce('hashedSolution2')
@@ -49,6 +50,7 @@ describe('buildTreeAndGetCommitmentId', () => {
     })
 
     it('should throw an error if commitmentId does not exist', () => {
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(CaptchaMerkleTree as any).mockImplementation(() => ({
             build: vi.fn(),
             root: { hash: null },
