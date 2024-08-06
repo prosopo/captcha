@@ -19,6 +19,7 @@ export function isBot(): Promise<{
                   security: undefined
                   mode: undefined
                   extension: undefined
+                  // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                   engine: any
               }
             | undefined
@@ -28,6 +29,7 @@ export function isBot(): Promise<{
                   headlessRating: number
                   stealthRating: number
                   systemFonts: string
+                  // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                   platformEstimate: any[]
                   chromium: boolean
                   likeHeadless: {
@@ -37,35 +39,46 @@ export function isBot(): Promise<{
                       noMimeTypes: boolean
                       notificationIsDenied: boolean
                       hasKnownBgColor: boolean
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       prefersLightColor: any
                       uaDataIsBlank: boolean
                       pdfIsDisabled: boolean
                       noTaskbar: boolean
                       hasVvpScreenRes: boolean
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       hasSwiftShader: any
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       noWebShare: any
                       noContentIndex: boolean
                       noContactsManager: boolean
                       noDownlinkMax: boolean
                   }
                   headless: {
+                    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       webDriverIsOn: any
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       hasHeadlessUA: any
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       hasHeadlessWorkerUA: any
                   }
                   stealth: {
                       hasIframeProxy: boolean
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       hasHighChromeIndex: any
                       hasBadChromeRuntime: boolean
                       hasToStringProxy: boolean
+                      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                       hasBadWebGL: any
                   }
               }
             | undefined
     }
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     isBotBotD: any
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     botScore: any
     isBot: boolean
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     botType: any
 }>
 export function getFingerprint(): Promise<string>
