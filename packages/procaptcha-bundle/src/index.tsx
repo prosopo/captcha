@@ -83,6 +83,7 @@ const getParentForm = (element: Element): HTMLFormElement | null =>
 	element.closest("form") as HTMLFormElement;
 
 const getWindowCallback = (callbackName: string, element: Element) => {
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	const fn = (window as any)[callbackName.replace("window.", "")];
 	if (typeof fn !== "function") {
 		throw new Error(
