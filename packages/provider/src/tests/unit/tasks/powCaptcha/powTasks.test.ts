@@ -67,8 +67,8 @@ describe('PowCaptchaManager', () => {
             const origin = 'origin'
             const timestamp = Date.now().toString()
             const challenge = `${timestamp}___${userAccount}___${dappAccount}`
-
-            ;(pair.sign as any).mockReturnValueOnce('signedChallenge')
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+            ;(pair.sign as any).mockReturnValueOnce('signedChallenge')// biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(u8aToHex as any).mockReturnValueOnce('hexSignedChallenge')
 
             const result = await powCaptchaManager.getPowCaptchaChallenge(userAccount, dappAccount, origin)
@@ -89,9 +89,9 @@ describe('PowCaptchaManager', () => {
             const signature = 'testSignature'
             const nonce = 12345
             const timeout = 1000
-
-            ;(checkRecentPowSolution as any).mockImplementation(() => true)
-            ;(checkPowSignature as any).mockImplementation(() => true)
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+            ;(checkRecentPowSolution as any).mockImplementation(() => true)// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+            ;(checkPowSignature as any).mockImplementation(() => true)// biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(checkPowSolution as any).mockImplementation(() => true)
 
             const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -115,7 +115,7 @@ describe('PowCaptchaManager', () => {
             const signature = 'testSignature'
             const nonce = 12345
             const timeout = 1000
-
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(checkRecentPowSolution as any).mockImplementation(() => {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE', {
                     context: {
@@ -147,8 +147,8 @@ describe('PowCaptchaManager', () => {
                 challenge,
                 checked: false,
             }
-
-            ;(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(challengeRecord)
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+            ;(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(challengeRecord)// biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(checkRecentPowSolution as any).mockImplementation(() => true)
 
             const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(dappAccount, challenge, timeout)
@@ -163,7 +163,7 @@ describe('PowCaptchaManager', () => {
             const dappAccount = 'dappAccount'
             const challenge = 'timestamp___userAccount___dappAccount'
             const timeout = 1000
-
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(null)
 
             await expect(
