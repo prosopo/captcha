@@ -71,7 +71,9 @@ describe('DatasetManager', () => {
         const mockDatasetRaw = { captchas: [], format: 'SelectAll' } as DatasetRaw
         const mockValidatedDataset = { datasetId: '123', datasetContentId: '456' }
 
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(parseCaptchaDataset as any).mockReturnValue(mockDatasetRaw)
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(datasetTasksUtils.providerValidateDataset as any).mockResolvedValue(mockValidatedDataset)
 
         await datasetManager.providerSetDatasetFromFile(mockFile as unknown as JSON)
@@ -116,6 +118,7 @@ describe('DatasetManager', () => {
 
     it('should store commitments externally if mongoCaptchaUri is set', async () => {
         const mockCommitments = [{ id: 'commitment1' }]
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(db.getUnstoredDappUserCommitments as any).mockResolvedValue(mockCommitments)
 
         await datasetManager.storeCommitmentsExternal()
