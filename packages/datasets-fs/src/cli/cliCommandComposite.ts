@@ -31,6 +31,7 @@ export abstract class CliCommandComposite<T extends z.ZodTypeAny> extends CliCom
     public override getOptions(): { [key: string]: Options } {
         // merge options in turn from each command. Command order matters, latter commands will overwrite earlier ones
         return this.#commands.reduce((prev, command) => {
+            // biome-ignore lint/performance/noAccumulatingSpread: TODO fix
             return { ...prev, ...command.getOptions() }
         }, {})
     }
