@@ -55,8 +55,12 @@
 		"lint:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
 		"lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} shellcheck {}",
 		"lint:yaml": "yamllint .",
-		"lint:py": "ruff check .",
-		"lint-fix:py": "ruff check --fix --unsafe-fixes . ",
+		"lint-py:check": "ruff check .",
+		"lint-py:format": "ruff format --check --diff .",
+		"lint:py": "run-s lint-py:*",
+		"lint-fix-py:check": "ruff check --fix --unsafe-fixes .",
+		"lint-fix-py:format": "ruff format .",
+		"lint-fix:py": "run-s lint-fix-py:*",
 		"lint:js": "biome check .",
 		"lint-fix:js": "npm run --silent lint:js -- --fix --unsafe",
 		"lint:html": "htmlhint '**/*.{html,svg}' --config htmlhint.json",
@@ -85,7 +89,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
 		"@prosopo/flux": "2.0.0"
 	},
