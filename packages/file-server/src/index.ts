@@ -52,8 +52,8 @@ const main = async () => {
     const env = getEnv()
 
     const app = express()
-
-    env.paths.forEach((loc: string) => {
+    
+    for (const loc of env.paths) {
         // allow local filesystem lookup at each location
         // http://localhost:3000/a.jpg
         // serve path set to /
@@ -62,7 +62,7 @@ const main = async () => {
         // url: pronode1.duckdns.org/a.jpg`
         app.use('/', express.static(loc))
         console.info(`Serving files from ${loc}`)
-    })
+    }
 
     app.get('*', async (req: Request, res: Response) => {
         for (const remote of env.remotes) {
