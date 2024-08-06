@@ -129,7 +129,8 @@ export class TransactionQueue {
                 this.logger.debug('Submitting item', queueItem.method)
                 const { method, extrinsic, callback, pair } = queueItem
 
-                // eslint-disable-next-line no-async-promise-executor
+                
+                // biome-ignore lint/suspicious/noAsyncPromiseExecutor: TODO fix
                 return new Promise(async (resolve, reject) => {
                     // use either the optional pair supplied with the queue item or the default pair
                     const submittingPair = pair || this.pair
