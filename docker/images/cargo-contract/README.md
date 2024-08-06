@@ -1,8 +1,10 @@
+# README
+
 dockerfile with cargo-contract precompiled into smallest image possible.
 
 ## To run
 
-```
+```bash
 cd protocol
 docker run --rm -it -u $(id -u):$(id -g) --cpu-quota=-1 -v $PWD:/src -v $PWD/cargo-cache:/usr/local/cargo/registry prosopo/cargo-contract:4.1.1 'cd contracts/captcha && cargo contract build'
 ```

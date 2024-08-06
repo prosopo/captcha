@@ -141,7 +141,7 @@ Verify that your provider was registered by calling the `/v1/prosopo/providers/`
 
 ### Curl
 
-```
+```bash
 curl --location --request GET '127.0.0.1:3000/v1/prosopo/providers/'
 {"accounts":["YOUR PROVIDER ADDRESS"]}
 ```

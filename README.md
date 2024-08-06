@@ -12,7 +12,7 @@ Prosopo captcha can be easily implemented in your application via a script tag o
 ### Add the Procaptcha Widget to your Web page via a script tag
 
 First, you must include the Procaptcha JavaScript resource somewhere in your HTML page. The `<script>` must be loaded
-via HTTPS and can be placed anywhere on the page. Inside the <head> tag or immediately after the `.procaptcha` container
+via HTTPS and can be placed anywhere on the page. Inside the `<head>` tag or immediately after the `.procaptcha` container
 are both fine.
 
 ```html
@@ -300,13 +300,13 @@ user will not be presented with an image CAPTCHA challenge.
 
 Serve **different** types of CAPTCHA by setting the `captchaType` to `frictionless`, `pow`, `image`.
 
-#### Example of setting CAPTCHA type implicitly
+### Example of setting CAPTCHA type implicitly
 
 ```html
 <div class="procaptcha" data-sitekey="your_site_key" data-captcha-type="frictionless"></div>
 ```
 
-#### Example of setting CAPTCHA type explicitly
+### Example of setting CAPTCHA type explicitly
 
 ```javascript
 document.getElementById('procaptcha-script').addEventListener('load', function () {

@@ -32,7 +32,7 @@ export default defineConfig(async function ({ command, mode }) {
 })
 ```
 
-#### Options
+### Options
 
 - `workspaceRoot` - The root of your monorepo.
 - `currentPackage` - The path to the package that is currently being built. Can be a path or a glob.
