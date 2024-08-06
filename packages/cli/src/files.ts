@@ -23,6 +23,7 @@ export function loadJSONFile(filePath: string) {
     }
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 export function writeJSONFile(filePath: string, jsonData: Record<string, any>) {
     return new Promise((resolve, reject) => {
         const writeStream: WriteStream = createWriteStream(filePath)
