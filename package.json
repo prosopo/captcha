@@ -57,7 +57,7 @@
         "lint:yaml": "yamllint .",
         "lint:py": "ruff check .",
         "lint-fix:py": "ruff format .",
-        "lint:js": "biome lint .",
+        "lint:js": "biome check .",
         "lint-fix:js": "npm run --silent lint:js -- --fix --unsafe",
         "lint:html": "htmlhint '**/*.{html,svg}' --config htmlhint.json",
         "lint:md": "markdownlint '**/*.md' --ignore-path .gitignore",
