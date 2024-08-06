@@ -17,6 +17,7 @@ import { ProcaptchaPlaceholder } from '@prosopo/web-components'
 import type { ReactElement } from 'react'
 
 //https://github.com/microsoft/TypeScript/issues/42873
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 const ProcaptchaWidget: LazyExoticComponent<(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement> = lazy(
     async () => import('./ProcaptchaWidget.js')
 )
