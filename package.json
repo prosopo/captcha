@@ -70,7 +70,7 @@
         "lint-rs:fmt": "npm run --silent docker:rust -- 'find . -name \"Cargo.toml\" ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"cargo fmt --check --manifest-path {} || exit 255\"'",
         "lint:rs": "run-s lint-rs:fmt lint-rs:clippy lint-rs:check",
         "lint-fix-rs:fmt": "npm run --silent docker:rust -- 'find . -name \"Cargo.toml\" ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"cargo fmt  --manifest-path {} || exit 255\"'",
-        "lint-fix-rs:clippy": "npm run --silent docker:rust -- 'find . -name \"Cargo.toml\" ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"cargo clippy --manifest-path {} --fix -- -D warnings -A clippy::too_many_arguments || exit 255\"'",
+        "lint-fix-rs:clippy": "npm run --silent docker:rust -- 'find . -name \"Cargo.toml\" ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"cargo clippy --manifest-path {} --fix --allow-dirty -- -D warnings -A clippy::too_many_arguments || exit 255\"'",
         "lint-fix:rs": "run-s lint-fix-rs:fmt lint-fix-rs:clippy",
         "lint:toml": "npm run --silent docker:rust -- 'find . -name \"*.toml\" ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"rustfmt --check {} || exit 255\"'",
         "lint-fix:toml": "npm run --silent docker:rust -- 'find . -name \"*.toml\" ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"rustfmt {} || exit 255\"'",

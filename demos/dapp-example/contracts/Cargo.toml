@@ -48,12 +48,6 @@ default-features = false
 features = [ "derive" ]
 optional = true
 
-[dependencies.prosopo]
-git = "https://github.com/prosopo-io/protocol"
-branch = "master"
-default-features = false
-features = [ "ink-as-dependency" ]
-
 [lib]
 name = "dapp"
 path = "lib.rs"
@@ -71,8 +65,7 @@ std = [
   "ink_primitives/std",
   "ink_prelude/std",
   "scale/std",
-  "scale-info/std",
-  "prosopo/std"
+  "scale-info/std"
 ]
 ink-as-dependency = [ ]
 
