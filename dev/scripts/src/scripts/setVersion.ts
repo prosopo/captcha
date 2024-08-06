@@ -63,9 +63,9 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
     return results
 }
 
-export default async function setVersion(version: string, ignore?: string[]) {
-    log.info('Setting version to ', version)
-    version = parseVersion(version)
+export default async function setVersion(versionIn: string, ignore?: string[]) {
+    log.info('Setting version to ', versionIn)
+    const version = parseVersion(versionIn)
     const root = getRootDir()
     const ignorePaths = ['node_modules', 'cargo-cache', ...(ignore ?? [])]
     log.debug('Ignoring paths: ', ignorePaths)
@@ -79,7 +79,8 @@ export default async function setVersion(version: string, ignore?: string[]) {
         return basename === 'package.json' || basename === 'Cargo.toml'
     })
     // split into json and toml
-    files
+    // biome-ignore lint/complexity/noForEach: TODO fix
+        files
         .filter((pth) => path.extname(pth) === '.json')
         .forEach((pth) => {
             log.debug('setting version in', pth)
@@ -109,7 +110,8 @@ export default async function setVersion(version: string, ignore?: string[]) {
         })
 
     // replace version in tomls
-    files
+    // biome-ignore lint/complexity/noForEach: TODO fix
+        files
         .filter((pth) => path.extname(pth) === '.toml')
         .filter((pth) => {
             // ignore node_modules and any user specified paths
@@ -119,9 +121,12 @@ export default async function setVersion(version: string, ignore?: string[]) {
             log.debug('setting version in', pth)
             const content = fs.readFileSync(pth, 'utf8')
             // replace version in all toml files
-            const tomlContent: any = parse(content)
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+                        const tomlContent: any = parse(content)
             if (tomlContent.workspace) {
+                // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                 if ((tomlContent.workspace as any).version) {
+                    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                     ;(tomlContent.workspace as any).version = version
                 }
             } else {
@@ -132,7 +137,8 @@ export default async function setVersion(version: string, ignore?: string[]) {
         })
 
     // go through tomls again now versions have updated and update the version field for dependencies with paths set, as we can follow the path to get the version
-    files
+    // biome-ignore lint/complexity/noForEach: TODO fix
+        files
         .filter((pth) => path.extname(pth) === '.toml')
         .forEach((pth) => {
             log.debug('setting dependency versions in', pth)
@@ -140,7 +146,9 @@ export default async function setVersion(version: string, ignore?: string[]) {
             // replace version in all toml files
             const tomlContent = parse(content)
             if (tomlContent.workspace) {
+                // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                 if ((tomlContent.workspace as any).version) {
+                    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
                     ;(tomlContent.workspace as any).version = version
                 }
             } else {
@@ -157,6 +165,7 @@ export default async function setVersion(version: string, ignore?: string[]) {
                     }
                 }
             }
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
             fs.writeFileSync(pth, `${stringify(tomlContent as any)}\n`)
         })
 }
