@@ -53,9 +53,9 @@ export const getPrimitiveTypes = (abiJson: AbiMetadata): PrimitiveTypes => {
         return false
     })
 
-    types.forEach((type) => {
+    for(const type of types) {
         primitiveTypes[type.id] = type.type.def.primitive || ''
-    })
+    }
     return primitiveTypes
 }
 
