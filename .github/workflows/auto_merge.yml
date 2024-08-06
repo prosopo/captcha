@@ -6,65 +6,65 @@ on:
     pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  auto_merge:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      - name: Print contexts
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-          ENV_CONTEXT: ${{ toJson(env) }}
-          VARS_CONTEXT: ${{ toJson(vars) }}
-          JOB_CONTEXT: ${{ toJson(job) }}
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-          SECRETS_CONTEXT: ${{ toJson(secrets) }}
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-          NEEDS_CONTEXT: ${{ toJson(needs) }}
-          INPUTS_CONTEXT: ${{ toJson(inputs) }}
-        run: |
-          echo "******************************"
-          echo "github:" "$GITHUB_CONTEXT"
-          echo "******************************"
-          echo "env:" "$ENV_CONTEXT"
-          echo "******************************"
-          echo "vars:" "$VARS_CONTEXT"
-          echo "******************************"
-          echo "job:" "$JOB_CONTEXT"
-          echo "******************************"
-          echo "steps:" "$STEPS_CONTEXT"
-          echo "******************************"
-          echo "runner:" "$RUNNER_CONTEXT"
-          echo "******************************"
-          echo "secrets:" "$SECRETS_CONTEXT"
-          echo "******************************"
-          echo "strategy:" "$STRATEGY_CONTEXT"
-          echo "******************************"
-          echo "matrix:" "$MATRIX_CONTEXT"
-          echo "******************************"
-          echo "needs:" "$NEEDS_CONTEXT"
-          echo "******************************"
-          echo "inputs:" "$INPUTS_CONTEXT"
-          echo "******************************"
+    auto_merge:
+        runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                    echo "******************************"
+                    echo "github:" "$GITHUB_CONTEXT"
+                    echo "******************************"
+                    echo "env:" "$ENV_CONTEXT"
+                    echo "******************************"
+                    echo "vars:" "$VARS_CONTEXT"
+                    echo "******************************"
+                    echo "job:" "$JOB_CONTEXT"
+                    echo "******************************"
+                    echo "steps:" "$STEPS_CONTEXT"
+                    echo "******************************"
+                    echo "runner:" "$RUNNER_CONTEXT"
+                    echo "******************************"
+                    echo "secrets:" "$SECRETS_CONTEXT"
+                    echo "******************************"
+                    echo "strategy:" "$STRATEGY_CONTEXT"
+                    echo "******************************"
+                    echo "matrix:" "$MATRIX_CONTEXT"
+                    echo "******************************"
+                    echo "needs:" "$NEEDS_CONTEXT"
+                    echo "******************************"
+                    echo "inputs:" "$INPUTS_CONTEXT"
+                    echo "******************************"
 
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: ".nvmrc"
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: ".nvmrc"
 
-      - name: Install
-        run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+            - name: Install
+              run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
-      - name: Enable auto-merge on PR
-        env:
-          GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-        run: |
-          echo "Enabling auto-merge on PR"
-            cd dev/gh-actions
-            npm i
-            PR_NUMBER=${{ github.event.number }} REPO=${{ github.event.repository.name }} npx tsx src/enableAutoMerge.ts
+            - name: Enable auto-merge on PR
+              env:
+                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+              run: |
+                echo "Enabling auto-merge on PR"
+                    cd dev/gh-actions
+                    npm i
+                    PR_NUMBER=${{ github.event.number }} REPO=${{ github.event.repository.name }} npx tsx src/enableAutoMerge.ts
