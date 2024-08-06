@@ -24,6 +24,7 @@ import fs from 'node:fs'
 const log = getLogger(LogLevel.enum.info, 'CLI')
 
 export default class ReloadingAPI {
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
     private _envWatcher: any
     private _envPath: string
     private _config: ProsopoConfigOutput
