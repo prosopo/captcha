@@ -81,6 +81,7 @@ const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
 const getParentForm = (element: Element): HTMLFormElement | null => element.closest('form') as HTMLFormElement
 
 const getWindowCallback = (callbackName: string) => {
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     const fn = (window as any)[callbackName.replace('window.', '')]
     if (typeof fn !== 'function') {
         throw new Error(`Callback ${callbackName} is not defined on the window object`)
@@ -234,8 +235,7 @@ const renderLogic = (
     elements: Element[],
     config: ProcaptchaClientConfigOutput,
     renderOptions?: ProcaptchaRenderOptions
-) => {
-    elements.forEach((element) => {
+) => {for (const element of elements) {
         const callbacks = getDefaultCallbacks(element)
 
         setUserCallbacks(renderOptions, callbacks, element)
@@ -253,7 +253,7 @@ const renderLogic = (
                 createRoot(element).render(<Procaptcha config={config} callbacks={callbacks} />)
                 break
         }
-    })
+    }
 }
 
 // Implicit render for targeting all elements with class 'procaptcha'
