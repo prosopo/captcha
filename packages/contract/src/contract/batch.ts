@@ -33,6 +33,7 @@ import { oneUnit } from '@prosopo/tx'
 export async function batch(
     contract: ContractPromise,
     pair: IKeyringPair,
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix any
     extrinsics: SubmittableExtrinsic<any>[],
     logger: Logger
 ): Promise<void> {
