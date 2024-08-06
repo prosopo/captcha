@@ -36,6 +36,7 @@ export interface IProsopoCaptchaContract {
         args: T[],
         value?: BN | undefined
     ): Promise<SubmittableExtrinsic>
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
     queryAtBlock<T>(blockHash: BlockHash, methodName: string, args?: any[]): Promise<T>
     getExtrinsicAndGasEstimates<T>(
         contractMethodName: string,
