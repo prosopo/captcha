@@ -117,7 +117,6 @@ function clickCorrectCaptchaImages(captcha: Captcha): Chainable<void> {
 			cy.get(selectors.join(", ")).then((elements) => {
 				if (elements.length > 0) {
 					cy.wrap(elements).click({ multiple: true });
-					cy.clickNextButton();
 				}
 				console.log("No images to select");
 				cy.clickNextButton();
