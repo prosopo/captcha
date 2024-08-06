@@ -38,6 +38,7 @@ export class ContractDeployer {
     private wasm: Uint8Array
     private readonly code: CodePromise
     private readonly pair: KeyringPair
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     private readonly params: any[]
     private readonly constructorIndex: number
     private readonly value: number
@@ -50,6 +51,7 @@ export class ContractDeployer {
         abi: Abi,
         wasm: Uint8Array,
         pair: KeyringPair,
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         params: any[] = [],
         value = 0,
         constructorIndex = 0,
@@ -70,6 +72,7 @@ export class ContractDeployer {
         this.transactionQueue = transactionQueue
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     async deploy(): Promise<CodeSubmittableResult<any>> {
         const weight = await getWeight(this.api)
         const { contract, error } = await dryRunDeploy(
@@ -104,9 +107,11 @@ export class ContractDeployer {
                 })
             }
                 // eslint-disable-next-line no-async-promise-executor
+                // biome-ignore lint/suspicious/noAsyncPromiseExecutor: TODO fix
                 return new Promise(async (resolve, reject) => {
                     const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
                         if (result.status.isFinalized || result.status.isInBlock) {
+                            // biome-ignore lint/complexity/noForEach: TODO fix
                             result.events
                                 .filter(({ event: { section } }): boolean => section === 'system')
                                 .forEach((event): void => {
@@ -151,6 +156,7 @@ export async function dryRunDeploy(
     contractAbi: Abi,
     wasm: Uint8Array,
     pair: KeyringPair,
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     params: any[],
     value,
     weight: UseWeight,
