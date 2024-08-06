@@ -67,7 +67,7 @@ const main = async () => {
     app.get('*', async (req: Request, res: Response) => {
         for (const remote of env.remotes) {
             console.info('trying', remote, req.url)
-            let img
+            let img: Buffer
             try {
                 const result = await fetch(`${remote}${req.url}`)
                 if (result.status !== 200) {
@@ -75,8 +75,8 @@ const main = async () => {
                     continue
                 }
                 console.info('found', remote, req.url)
-                img = await result.arrayBuffer()
-                img = Buffer.from(img)
+                const imgTmp = await result.arrayBuffer()
+                img = Buffer.from(imgTmp)
             } catch (error) {
                 console.warn('error', remote, req.url, error)
                 continue
