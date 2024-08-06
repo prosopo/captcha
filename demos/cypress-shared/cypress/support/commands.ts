@@ -23,7 +23,7 @@ declare global {
 		interface Chainable<Subject = any> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
 			captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>;
-			clickCorrectCaptchaImages(captcha: Captcha): Chainable<JQuery<Node>>;
+			clickCorrectCaptchaImages(captcha: Captcha): Chainable<void>;
 			getSelectors(captcha: Captcha): Cypress.Chainable<string[]>;
 			clickNextButton(): Cypress.Chainable<void>;
 		}
@@ -109,25 +109,18 @@ function getSelectors(captcha: Captcha) {
 	return cy.get("@selectors");
 }
 
-function clickCorrectCaptchaImages(
-	captcha: Captcha,
-): Chainable<JQuery<HTMLElement>> {
+function clickCorrectCaptchaImages(captcha: Captcha): Chainable<void> {
 	return cy.captchaImages().then(() => {
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
 			// Click the correct images
-			return cy.get(selectors.join(", ")).then((elements) => {
+			cy.get(selectors.join(", ")).then((elements) => {
 				if (elements.length > 0) {
-					return cy
-						.wrap(elements)
-						.click({ multiple: true })
-						.then(() => {
-							cy.clickNextButton();
-							cy.wait(0);
-						});
+					cy.wrap(elements).click({ multiple: true });
+					cy.clickNextButton();
 				}
 				console.log("No images to select");
-				return cy.clickNextButton();
+				cy.clickNextButton();
 			});
 		});
 	});
@@ -136,7 +129,8 @@ function clickCorrectCaptchaImages(
 function clickNextButton() {
 	cy.intercept("POST", "**/prosopo/provider/solution").as("postSolution");
 	// Go to the next captcha or submit solution
-	cy.get('[data-cy="button-next"]').click({ force: true });
+	cy.get('button[data-cy="button-next"]').click({ force: true });
+	cy.wait(0);
 }
 
 Cypress.Commands.addAll({
