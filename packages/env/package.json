@@ -1,49 +1,49 @@
 {
-	"name": "@prosopo/env",
-	"version": "1.0.2",
-	"description": "Path env prosopo environment",
-	"main": "dist/index.js",
-	"type": "module",
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
-	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
-	},
-	"dependencies": {
-		"@polkadot/api": "10.13.1",
-		"@polkadot/keyring": "12.6.2",
-		"@polkadot/rpc-provider": "10.13.1",
-		"@polkadot/util": "12.6.2",
-		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/captcha-contract": "1.0.2",
-		"@prosopo/common": "1.0.2",
-		"@prosopo/contract": "1.0.2",
-		"@prosopo/database": "1.0.2",
-		"@prosopo/types": "1.0.2",
-		"@prosopo/types-database": "1.0.2",
-		"@prosopo/types-env": "1.0.2",
-		"@prosopo/util": "1.0.2"
-	},
-	"overrides": {
-		"@polkadot/keyring": "12.6.2"
-	},
-	"devDependencies": {
-		"@prosopo/config": "1.0.2",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6"
-	},
-	"author": "Prosopo",
-	"license": "Apache-2.0",
-	"sideEffects": false
+    "name": "@prosopo/env",
+    "version": "2.0.0",
+    "description": "Path env prosopo environment",
+    "main": "dist/index.js",
+    "type": "module",
+    "engines": {
+        "node": ">=20",
+        "npm": ">=9"
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        }
+    },
+    "scripts": {
+        "test": "echo \"No test specified\"",
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build"
+    },
+    "dependencies": {
+        "@polkadot/api": "10.13.1",
+        "@polkadot/keyring": "12.6.2",
+        "@polkadot/rpc-provider": "10.13.1",
+        "@polkadot/util": "12.6.2",
+        "@polkadot/util-crypto": "12.6.2",
+
+        "@prosopo/common": "2.0.0",
+        "@prosopo/contract": "2.0.0",
+        "@prosopo/database": "2.0.0",
+        "@prosopo/types": "2.0.0",
+        "@prosopo/types-database": "2.0.0",
+        "@prosopo/types-env": "2.0.0",
+        "@prosopo/util": "2.0.0"
+    },
+    "overrides": {
+        "@polkadot/keyring": "12.6.2"
+    },
+    "devDependencies": {
+        "@prosopo/config": "2.0.0",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
+    },
+    "author": "Prosopo",
+    "license": "Apache-2.0",
+    "sideEffects": false
 }

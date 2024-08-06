@@ -82,15 +82,19 @@ const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
 const getParentForm = (element: Element): HTMLFormElement | null =>
 	element.closest("form") as HTMLFormElement;
 
-const getWindowCallback = (callbackName: string) => {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+const getWindowCallback = (callbackName: string, element: Element) => {
 	const fn = (window as any)[callbackName.replace("window.", "")];
 	if (typeof fn !== "function") {
 		throw new Error(
 			`Callback ${callbackName} is not defined on the window object`,
 		);
 	}
-	return fn;
+
+	// wrap the user callback function so that the token is added to the form
+	return (token: ProcaptchaToken) => {
+		handleOnHuman(element, token);
+		fn();
+	};
 };
 
 const handleOnHuman = (element: Element, token: ProcaptchaToken) => {
@@ -187,7 +191,8 @@ function setUserCallbacks(
 			typeof renderOptions?.callback === "string"
 				? renderOptions?.callback
 				: element.getAttribute("data-callback");
-		if (callbackName) callbacks.onHuman = getWindowCallback(callbackName);
+		if (callbackName)
+			callbacks.onHuman = getWindowCallback(callbackName, element);
 	}
 
 	if (typeof renderOptions?.["chalexpired-callback"] === "function") {

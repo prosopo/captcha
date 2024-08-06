@@ -1,41 +1,41 @@
 {
-	"name": "@prosopo/file-server",
-	"version": "1.0.2",
-	"description": "Simple static file server",
-	"main": "dist/index.js",
-	"type": "module",
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
-	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"start": "node ./dist/index.js"
-	},
-	"dependencies": {
-		"@prosopo/util": "1.0.2",
-		"dotenv": "^16.0.1",
-		"express": "^4.18.2",
-		"node-fetch": "^3.3.2",
-		"sharp": "^0.32.4"
-	},
-	"devDependencies": {
-		"@prosopo/config": "1.0.2",
-		"@types/express": "^4.17.17",
-		"@types/node": "^20.5.9",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6"
-	},
-	"author": "Prosopo",
-	"license": "Apache-2.0",
-	"sideEffects": false
+    "name": "@prosopo/file-server",
+    "version": "2.0.0",
+    "description": "Simple static file server",
+    "main": "dist/index.js",
+    "type": "module",
+    "engines": {
+        "node": ">=20",
+        "npm": ">=9"
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/cjs/index.cjs"
+        }
+    },
+    "scripts": {
+        "test": "echo \"No test specified\"",
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "build:cjs": "npx vite --config vite.cjs.config.ts build",
+        "start": "node ./dist/index.js"
+    },
+    "dependencies": {
+        "@prosopo/util": "2.0.0",
+        "dotenv": "^16.0.1",
+        "express": "^4.18.2",
+        "node-fetch": "^3.3.2",
+        "sharp": "^0.32.4"
+    },
+    "devDependencies": {
+        "@prosopo/config": "2.0.0",
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.5.9",
+        "tslib": "2.6.2",
+        "typescript": "5.1.6"
+    },
+    "author": "Prosopo",
+    "license": "Apache-2.0",
+    "sideEffects": false
 }

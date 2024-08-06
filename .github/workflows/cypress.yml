@@ -111,8 +111,7 @@ jobs:
                   sleep 10s
 
             # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-            - run: NODE_ENV="test" npm run deploy_protocol
-            - run: NODE_ENV="test" npm run setup
+            - run: NODE_ENV=test npm run setup
 
             # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
             # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used

@@ -236,7 +236,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   # do a gh release with the contract sources + bundle
-                  gh release create --generate-notes "v${{ steps.env.outputs.version }}" "./protocol/target/ink/captcha/captcha.contract" "./protocol/target/ink/proxy/proxy.contract" "./protocol/target/ink/common/common.contract" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release create --generate-notes "v${{ steps.env.outputs.version }}" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
 
             - name: Npm release
               if: ${{ steps.env.outputs.production }}
