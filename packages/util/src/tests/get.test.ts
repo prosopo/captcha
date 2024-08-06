@@ -23,6 +23,7 @@ describe('get', () => {
         const v4: number | undefined = get({ a: 1, b: undefined }, 'a')
         const v5: number | undefined = get({ a: 1, b: undefined }, 'a', false)
         // cast from any
+        // biome-ignore lint/suspicious/noExplicitAny: has to be any
         const v6: number = get(JSON.parse('{"a": 1}') as any, 'a')
         // cast from unknown
         const v7: number = get(JSON.parse('{"a": 1}') as unknown, 'a')
