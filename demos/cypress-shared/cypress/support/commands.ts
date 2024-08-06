@@ -134,8 +134,9 @@ function clickCorrectCaptchaImages(
 
 function clickNextButton() {
 	cy.intercept("POST", "**/prosopo/provider/solution").as("postSolution");
+	cy.get('[data-cy="button-next"]').should("be.visible");
 	// Go to the next captcha or submit solution
-	return cy.get('[data-cy="button-next"]', { withinSubject: null }).click();
+	return cy.get('[data-cy="button-next"]').click();
 }
 
 Cypress.Commands.addAll({
