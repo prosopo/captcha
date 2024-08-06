@@ -79,7 +79,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                 }
                 console.log('imageStyle index ', index, imageStyle)
                 return (
-                    <div style={imageStyle} key={index}>
+                    <div style={imageStyle} key={item.hash}>
                         <div
                             style={{
                                 cursor: 'pointer',
@@ -104,6 +104,7 @@ export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: Capt
                                         height: 'auto', // make the img tag responsive to its container
                                     }}
                                     src={item.data}
+                                    // biome-ignore lint/a11y/noRedundantAlt: has to contain image
                                     alt={`Captcha image ${index + 1}`}
                                 />
                             </div>
