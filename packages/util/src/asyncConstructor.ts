@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// biome-ignore lint/suspicious/noExplicitAny: has to be any
 export type Constructor<T> = new (...args: any[]) => T
 
 // Construct a new instance of a class by calling its constructor and then calling its async constructor method.
