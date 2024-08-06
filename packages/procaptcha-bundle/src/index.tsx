@@ -93,7 +93,7 @@ const getWindowCallback = (callbackName: string, element: Element) => {
 	// wrap the user callback function so that the token is added to the form
 	return (token: ProcaptchaToken) => {
 		handleOnHuman(element, token);
-		fn();
+		fn(token);
 	};
 };
 
