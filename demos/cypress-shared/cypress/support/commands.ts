@@ -134,6 +134,9 @@ function clickCorrectCaptchaImages(
 
 function clickNextButton() {
 	cy.intercept("POST", "**/prosopo/provider/solution").as("postSolution");
+	cy.wait("@postSolution", { timeout: 12000 })
+		.its("response.statusCode")
+		.should("eq", 200);
 	cy.get('[data-cy="button-next"]').should("be.visible");
 	// Go to the next captcha or submit solution
 	return cy.get('[data-cy="button-next"]').click();
