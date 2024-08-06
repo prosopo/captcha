@@ -130,8 +130,8 @@ jobs:
           docker container ls
           sleep 10s
 
-      - name: Start a provider
-        run: npm run start:provider && sleep 10s
-
-      # deploy protocol and run the unit tests
-      - run: npm run test
+      - name: Start services and run tests
+        run: |
+          npx concurrently \
+          "npm run start:provider" \
+          "sleep 10s && NODE_ENV=test npm run test"
