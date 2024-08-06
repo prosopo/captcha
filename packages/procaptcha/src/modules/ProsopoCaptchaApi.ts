@@ -58,15 +58,15 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
         try {
             const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
             // convert https/http to match page
-            captchaChallenge.captchas.forEach((captcha) => {
-                captcha.items.forEach((item) => {
+            for(const captcha of captchaChallenge.captchas) {
+                for(const item of captcha.items) {
                     if (item.data) {
                         // drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
                         // https://stackoverflow.com/a/18320348/7215926
                         item.data = item.data.replace(/^http(s)*:\/\//, '//')
                     }
-                })
-            })
+                }
+            }
 
             return captchaChallenge
         } catch (error) {
