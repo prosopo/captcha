@@ -29,8 +29,10 @@ import {
 
 function main() {
     const fns: {
+        // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
         [key: string]: (...args: any[]) => any
     } = {
+        // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
         arg: (arg: any) => arg,
         isHex,
         hexToString,
