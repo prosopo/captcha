@@ -151,6 +151,7 @@ export const AbiCellSpec = z.object({
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 export const AbiStorageFieldSpec: any = z.lazy(() =>
     z.object({
         name: AbiText.optional(),
