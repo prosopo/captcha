@@ -16,6 +16,9 @@
             "**/*.mts",
             "**/*.json",
             "**/*.jsonc"
+        ],
+        "ignore": [
+            "./packages/detector/src/index.js"
         ]
     },
     "linter": {
