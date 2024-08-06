@@ -85,6 +85,7 @@ export default async function (
     logger.debug(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
 
     // Required to print RegExp in console (e.g. alias keys)
+    // biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
     const proto = RegExp.prototype as any
     proto.toJSON = RegExp.prototype.toString
 
