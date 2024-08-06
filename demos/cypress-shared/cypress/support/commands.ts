@@ -18,7 +18,6 @@ import Chainable = Cypress.Chainable;
 import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
-	// eslint-disable-next-line @typescript-eslint/no-namespace
 	namespace Cypress {
 		// biome-ignore lint/suspicious/noExplicitAny: don't care for tests
 		interface Chainable<Subject = any> {

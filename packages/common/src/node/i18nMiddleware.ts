@@ -16,7 +16,6 @@ import { type HandleOptions, handle } from "i18next-http-middleware";
 import i18n from "../i18n.js";
 
 function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore not sure how to fix this
 	return handle(i18n, { ...options });
 }

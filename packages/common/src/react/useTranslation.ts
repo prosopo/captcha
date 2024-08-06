@@ -22,7 +22,6 @@ function useTranslation(
 	options?: UseTranslationOptions<"translation">,
 	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 ): UseTranslationResponse<"translation", any> & { t: typeof i18n.t } {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore not sure how to fix this
 	return useTranslationDefault("translation", { i18n, ...options });
 }

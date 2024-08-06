@@ -40,12 +40,10 @@ export default async function (
 	return defineConfig({
 		ssr: { external: allExternal },
 		plugins: [
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			replace({
 				"import.meta.url": "module", // Replaces ESM checks with CommonJS equivalent
 			}),
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			noBundlePlugin({
 				root: "src",

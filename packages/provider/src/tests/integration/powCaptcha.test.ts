@@ -34,7 +34,6 @@ const solvePoW = (data: string, difficulty: number): number => {
 	let nonce = 0;
 	const prefix = "0".repeat(difficulty);
 
-	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const message = new TextEncoder().encode(nonce + data);
 		const hashHex = bufferToHex(sha256(message));
@@ -52,7 +51,6 @@ const failPoW = (data: string, difficulty: number): number => {
 	let nonce = 0;
 	const prefix = "0".repeat(difficulty);
 
-	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const message = new TextEncoder().encode(nonce + data);
 		const hashHex = bufferToHex(sha256(message));

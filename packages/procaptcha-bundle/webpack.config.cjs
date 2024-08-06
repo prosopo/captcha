@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-/* eslint-disable @typescript-eslint/no-var-requires */
 const getWebpackConfig = require("@prosopo/config/webpack/webpack.config");
 const path = require("node:path");
 const args = process.argv.slice(2);

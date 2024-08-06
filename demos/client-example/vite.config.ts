@@ -81,7 +81,6 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 		},
 		plugins: [
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			react(),
 			// Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve

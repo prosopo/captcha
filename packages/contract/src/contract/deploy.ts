@@ -111,7 +111,6 @@ export class ContractDeployer {
 					);
 				});
 			}
-			// eslint-disable-next-line no-async-promise-executor
 			// biome-ignore lint/suspicious/noAsyncPromiseExecutor: TODO fix
 			return new Promise(async (resolve, reject) => {
 				const unsub = await contract?.signAndSend(

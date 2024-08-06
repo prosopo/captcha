@@ -39,14 +39,13 @@ export function useWeightImpl(
 	const megaRefTime = <BN>(api.consts.system.blockWeights
 		? api.consts.system.blockWeights.perClass.normal.maxExtrinsic
 				.unwrapOrDefault()
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore
 				.refTime.toBn()
 				.div(BN_MILLION)
 				.div(BN_TEN)
 		: BN_ZERO);
 	const proofSize = <BN>(api.consts.system.blockWeights
-		? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		?
 			// @ts-ignore
 			api.consts.system.blockWeights.perClass.normal.maxExtrinsic
 				.unwrapOrDefault()
@@ -94,7 +93,7 @@ export function useWeightImpl(
 				.mul(blockTime)
 				.div(
 					api.consts.system.blockWeights
-						? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						? 
 							// @ts-ignore
 							api.consts.system.blockWeights.perClass.normal.maxExtrinsic
 								.unwrapOrDefault()
@@ -119,7 +118,6 @@ export function useWeightImpl(
 			percentage,
 			proofSize: proofSize || BN_ZERO,
 			weight,
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			weightV2,
 		});

@@ -189,7 +189,6 @@ export default async function (
 				plugins: [
 					css(),
 					wasm(),
-					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 					// @ts-ignore
 					nodeResolve({
 						browser: true,
@@ -207,7 +206,6 @@ export default async function (
 					// I think we can use this plugin to build all packages instead of relying on the tsc step that's
 					// currently a precursor in package.json. However, it fails for the following reason:
 					// https://github.com/rollup/plugins/issues/243
-					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 					// @ts-ignore
 					typescript({
 						tsconfig: path.resolve("./tsconfig.json"),
@@ -219,7 +217,6 @@ export default async function (
 		},
 		plugins: [
 			// Not sure if we need this plugin or not, it works without it
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			viteReact(),
 			// Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve

@@ -49,7 +49,7 @@ export default async function (
 		"aws",
 		"webpack",
 		"vite",
-		"eslint",
+		"biome",
 	]);
 
 	// Add the node builtins (path, fs, os, etc.) to the external list
