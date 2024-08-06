@@ -57,6 +57,7 @@ export async function promiseQueue<T>(array: (() => Promise<T>)[]): Promise<Prom
                 if (res) {
                     ret.push({ data: res })
                 }
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
                 return curr() as any
             })
             .catch((err) => {
