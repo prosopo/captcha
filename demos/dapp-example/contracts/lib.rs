@@ -17,11 +17,8 @@ use ink_lang as ink;
 
 #[ink::contract]
 pub mod dapp {
+    use ink_storage::{traits::SpreadAllocate, Mapping};
     use prosopo::ProsopoRef;
-    use ink_storage::{
-        Mapping,
-        traits::SpreadAllocate,
-    };
 
     #[ink(storage)]
     #[derive(SpreadAllocate)]
@@ -39,7 +36,7 @@ pub mod dapp {
         /// The time in ms within which a user must have answered a captcha
         recency_threshold: u32,
         /// The address of the prosopo bot protection contract
-        prosopo_account: AccountId
+        prosopo_account: AccountId,
     }
 
     /// Event emitted when a token transfer occurs.
@@ -59,19 +56,41 @@ pub mod dapp {
         /// Returned if not enough balance to fulfill a request is available.
         InsufficientBalance,
         /// Returned if the user has not completed a captcha
-        UserNotHuman
+        UserNotHuman,
     }
 
     impl Dapp {
         /// Creates a new contract with the specified initial supply and loads an instance of the
         /// `prosopo` contract
         #[ink(constructor, payable)]
-        pub fn new(initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8, recency_threshold: u32) -> Self {
-            ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, initial_supply, faucet_amount, prosopo_account, human_threshold, recency_threshold))
+        pub fn new(
+            initial_supply: Balance,
+            faucet_amount: Balance,
+            prosopo_account: AccountId,
+            human_threshold: u8,
+            recency_threshold: u32,
+        ) -> Self {
+            ink_lang::codegen::initialize_contract(|contract| {
+                Self::new_init(
+                    contract,
+                    initial_supply,
+                    faucet_amount,
+                    prosopo_account,
+                    human_threshold,
+                    recency_threshold,
+                )
+            })
         }
 
         /// Default initializes the ERC-20 contract with the specified initial supply.
-        fn new_init(&mut self, initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8, recency_threshold: u32) {
+        fn new_init(
+            &mut self,
+            initial_supply: Balance,
+            faucet_amount: Balance,
+            prosopo_account: AccountId,
+            human_threshold: u8,
+            recency_threshold: u32,
+        ) {
             let caller = Self::env().caller();
             self.balances.insert(&caller, &initial_supply);
             self.total_supply = initial_supply;
@@ -90,7 +109,7 @@ pub mod dapp {
 
         /// Faucet function for sending tokens to humans
         #[ink(message)]
-        pub fn faucet(&mut self, accountid: AccountId)-> Result<(), Error>  {
+        pub fn faucet(&mut self, accountid: AccountId) -> Result<(), Error> {
             let token_holder = self.token_holder;
             if self.is_human(accountid, self.human_threshold, self.recency_threshold) {
                 self.transfer_from_to(&token_holder, &accountid, self.faucet_amount);
@@ -103,11 +122,19 @@ pub mod dapp {
         /// Calls the `Prosopo` contract to check if `accountid` is human
         #[ink(message)]
         pub fn is_human(&self, accountid: AccountId, threshold: u8, recency: u32) -> bool {
-            let prosopo_instance: ProsopoRef = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
-            prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap();
+            let prosopo_instance: ProsopoRef =
+                ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
+            prosopo_instance
+                .dapp_operator_is_human_user(accountid, threshold)
+                .unwrap();
             // check that the captcha was completed within the last X seconds
-            let last_correct_captcha = prosopo_instance.dapp_operator_last_correct_captcha(accountid).unwrap();
-            return last_correct_captcha.before_ms <= recency && prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap()
+            let last_correct_captcha = prosopo_instance
+                .dapp_operator_last_correct_captcha(accountid)
+                .unwrap();
+            return last_correct_captcha.before_ms <= recency
+                && prosopo_instance
+                    .dapp_operator_is_human_user(accountid, threshold)
+                    .unwrap();
         }
 
         /// Transfers `value` amount of tokens from the caller's account to account `to`.
