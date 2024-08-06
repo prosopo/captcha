@@ -28,6 +28,7 @@ for (let i = 0; i < 256; i++) {
 }
 
 /** @internal */
+// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 function hex(value: any, result: string) {
     const mod = value.length % 2 | 0
     const length = (value.length - mod) | 0
