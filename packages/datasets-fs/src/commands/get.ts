@@ -39,6 +39,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
         const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
         const list: string[] = []
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         const traverse = async (data: any) => {
             if (Array.isArray(data)) {
                 for (let i = 0; i < data.length; i++) {
@@ -61,7 +62,8 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
         const file = args.input
 
         // read the map file
-        const data: any = JSON.parse(fs.readFileSync(file, 'utf8'))
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+                const data: any = JSON.parse(fs.readFileSync(file, 'utf8'))
         await traverse(data)
 
         bar.start(list.length, 0)
