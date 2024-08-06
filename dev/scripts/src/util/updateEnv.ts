@@ -43,6 +43,7 @@ export async function updateDemoHTMLFiles(varMatchers: RegExp[], varValue: strin
         ignore: ignore,
     })
     logger.info('HTML files found', files)
+    // biome-ignore lint/complexity/noForEach: TODO fix
     files.forEach((file) => {
         // the following code loads a .env file, searches for the variable and replaces it
         // then saves the file
@@ -70,6 +71,7 @@ export async function updateDemoHTMLFiles(varMatchers: RegExp[], varValue: strin
 export async function updateEnvFiles(varNames: string[], varValue: string, logger: Logger, cwd?: string) {
     const files = await findEnvFiles(logger, cwd)
     logger.info('Env files found', files)
+    // biome-ignore lint/complexity/noForEach: TODO fix
     files.forEach((file) => {
         let write = false
         // the following code loads a .env file, searches for the variable and replaces it
