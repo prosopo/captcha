@@ -13,6 +13,7 @@
 // limitations under the License.
 import type { AccountId } from '@polkadot/types/interfaces/runtime'
 import { MerkleProof } from './merkle.js'
+// biome-ignore lint/suspicious/noShadowRestrictedNames: TODO fix
 import { array, nativeEnum, number, object, string, undefined, union, type infer as zInfer } from 'zod'
 import type { u32 } from '@polkadot/types-codec/primitive'
 
