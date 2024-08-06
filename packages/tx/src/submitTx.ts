@@ -24,6 +24,7 @@ export async function submitTx(
     transactionQueue: TransactionQueue,
     contract: IProsopoCaptchaContract,
     method: string,
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     args: any[],
     value: BN,
     pair?: KeyringPair
