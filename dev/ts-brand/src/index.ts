@@ -26,6 +26,7 @@ export type Brand<T, U> = Resolve<
     }
 >
 
+// biome-ignore lint/suspicious/noExplicitAny: casting to any to access the brand key if it exists
 export type Unbrand<T> = T extends Brand<infer U, any> ? U : T
 
 export const brandClass = <T, const U>(ctor: Ctor<T>, name: U) => {
