@@ -41,6 +41,7 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
 export function getEventsFromMethodName(
     response: ContractSubmittableResult,
     contractMethodName: string
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 ): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
     if (response?.contractEvents) {
@@ -55,7 +56,9 @@ export function getEventsFromMethodName(
  * the ABI types
  * @return encoded arguments
  */
-export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): Uint8Array[] {
+
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+export  function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): Uint8Array[] {
     const encodedArgs: Uint8Array[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
@@ -74,6 +77,7 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
  */
 export function getContractError(response: ContractCallOutcome): string | undefined {
     if (response.output) {
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         const out: any = response.output
         if (out.isOk) {
             const responseOk = out.asOk
