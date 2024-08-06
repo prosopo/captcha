@@ -36,6 +36,7 @@ export class Cli extends Loggable {
                 default: LogLevel.enum.info,
                 description: 'The log level',
             })
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
             .middleware((argv: any) => {
                 this.logger.setLogLevel(argv.logLevel)
             }, true)
