@@ -82,6 +82,7 @@ describe('Validation Functions', () => {
             const challenge = 'testChallenge'
             const signature = 'testSignature'
             const providerAddress = 'testAddress'
+            // biome-ignore lint/suspicious/noExplicitAny: don't care
             ;(signatureVerify as any).mockReturnValueOnce({ isValid: true })
 
             expect(() => checkPowSignature(challenge, signature, providerAddress)).not.toThrow()
@@ -91,6 +92,7 @@ describe('Validation Functions', () => {
             const challenge = 'testChallenge'
             const signature = 'testSignature'
             const providerAddress = 'testAddress'
+            // biome-ignore lint/suspicious/noExplicitAny: don't care
             ;(signatureVerify as any).mockReturnValueOnce({ isValid: false })
 
             expect(() => checkPowSignature(challenge, signature, providerAddress)).toThrow(
@@ -109,6 +111,7 @@ describe('Validation Functions', () => {
         it('should not throw an error for a recent solution', () => {
             const challenge = 'testChallenge'
             const timeout = 1000
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(verifyRecency as any).mockReturnValueOnce(true)
 
             expect(() => checkRecentPowSolution(challenge, timeout)).not.toThrow()
@@ -117,6 +120,7 @@ describe('Validation Functions', () => {
         it('should throw an error for a non-recent solution', () => {
             const challenge = 'testChallenge'
             const timeout = 1000
+            // biome-ignore lint/suspicious/noExplicitAny: TODO fix
             ;(verifyRecency as any).mockReturnValueOnce(false)
 
             expect(() => checkRecentPowSolution(challenge, timeout)).toThrow(
