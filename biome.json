@@ -21,7 +21,10 @@
     "linter": {
         "rules": {
             "style": {
-                "noParameterAssign": "warn"
+                "noParameterAssign": "off"
+            },
+            "a11y": {
+                "useKeyWithClickEvents": "off"
             }
         }
     }
