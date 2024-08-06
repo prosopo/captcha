@@ -8,6 +8,7 @@ docker run --rm -it -u $(id -u):$(id -g) --cpu-quota=-1 -v $PWD:/src -v $PWD/car
 ```
 
 Explanation:
+
 - `--rm`: remove container after command has finished
 - `-it`: setup tty terminal to make ctrl+c work
 - `-u`: set the uid and gid of the user running the command (ensuring files are created by _your_ user, not _root_)
@@ -18,4 +19,5 @@ Explanation:
 - `cd protocol/contracts/captcha && cargo contract build`: command to run, adjust as you need. This has cargo, rustup and cargo contract available.
 
 ## Troubleshooting
+
 Remove `target`, `cargo-cache` and `Cargo.lock`, then try again.

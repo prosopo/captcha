@@ -179,7 +179,7 @@ then sent to your server for verification. The are currently two options for ver
 
 To verify that the token is indeed real and valid, you must now verify it at the API endpoint:
 
-https://api.prosopo.io/siteverify
+<https://api.prosopo.io/siteverify>
 
 The endpoint expects a POST request with the `procaptcha-response` token. You must also pass your secret key, which you can obtain by [logging in to our customer portal](https://portal.prosopo.io).
 

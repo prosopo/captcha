@@ -32,7 +32,7 @@ You can then execute the commands as follows:
 You must first register your Provider in the network contract in order to be selected as a CAPTCHA Provider.
 
 ```bash
-$ npx provider provider_register --url https://YOUR_URL --fee 0 --payee Dapp
+npx provider provider_register --url https://YOUR_URL --fee 0 --payee Dapp
 ```
 
 ### Fund your Provider
@@ -41,7 +41,7 @@ It is necessary to fund your Provider with at least the minimum fee amount in or
 funds are used to incentivise good behaviour by Providers.
 
 ```bash
-$ npx provider provider_update --value 1000 --address YOUR_ADDRESS
+npx provider provider_update --value 1000 --address YOUR_ADDRESS
 ```
 
 ### Set a new Dataset
@@ -52,7 +52,7 @@ defined [here](https://github.com/prosopo/captcha/blob/main/packages/types/src/d
 dataset can be seen [here](https://github.com/prosopo/captcha/blob/main/dev/data/captchas.json).
 
 ```bash
-$ npx provider provider_set_data_set --file /path/to/dataset.json
+npx provider provider_set_data_set --file /path/to/dataset.json
 ```
 
 ### Start the API
@@ -60,7 +60,7 @@ $ npx provider provider_set_data_set --file /path/to/dataset.json
 Start the API and a begin to serve CAPTCHA challenges.
 
 ```bash
-$ npx provider start
+npx provider start
 ```
 
 ### Deregister your Provider
@@ -68,25 +68,25 @@ $ npx provider start
 When you no longer wish to be part of the Prosopo Network, you can stop serving CAPTCHA challenges by deregistering.
 
 ```bash
-$ npx provider provider_deregister
+npx provider provider_deregister
 ```
 
 ### List details of a single Provider
 
 ```bash
-$ npx provider provider_details --address PROVIDER_ADDRESS
+npx provider provider_details --address PROVIDER_ADDRESS
 ```
 
 ### Get a list of provider accounts from the contract
 
 ```bash
-$ npx provider provider_accounts
+npx provider provider_accounts
 ```
 
 ### View the Provider Version
 
 ```bash
-$ npx provider version
+npx provider version
 ```
 
 ## Full CLI Usage

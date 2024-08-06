@@ -25,5 +25,3 @@ npm run deploy_dapp
 #### Deploy via a User Interfacae
 
 Use [polkadot apps](https://polkadot.js.org/apps/) contract page.
-
-

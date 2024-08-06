@@ -3,6 +3,7 @@
 You need 3 files:
 
 1. a json file containing labelled data in the form:
+
     ```json
     [
         {
@@ -16,7 +17,9 @@ You need 3 files:
         ...
     ]
     ```
+
 1. a json file containing unlabelled data in the form:
+
     ```json
     [
         {
@@ -28,6 +31,7 @@ You need 3 files:
         ...
     ]
     ```
+
 1. (optional) a json file with an array of labels which unlabelled data can be categorised into. If not specified will default to the same labels as seen in the labelled data.
 
 Then build and run the cli, passing appropriate parameters:
@@ -38,6 +42,7 @@ Use `node ./dist/js/cli.ts --help` to inspect other parameters.
 Commands:
 
 1. `flatten` converts a hierarchical directory structure into a single directory with corresponding map file, e.g.
+
     ```
     data/
         dog/
@@ -47,7 +52,9 @@ Commands:
             b.png
             ...
     ```
+
     into
+
     ```
     data/
         a.png
@@ -55,7 +62,9 @@ Commands:
         ...
     map.json
     ```
+
     where `map.json` looks like:
+
     ```
     [
         {
@@ -69,6 +78,7 @@ Commands:
         ...
     ]
     ```
+
     e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js flatten --in ~/bench/test/data --out ~/bench/test/flat --overwrite`
 1. `generateDistinct` takes the 3 files described above and produces captcha challenges comprising 2 rounds, one labelled and one unlabelled.
    e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js generate distinct --out ~/bench/test/captchas.json --labelled ~/bench/test/flat/data.json --unlabelled ~/bench/test/flat/data.json --seed 0 --size 9 --allow-duplicates --solved 1 --unsolved 1 --overwrite --labels ~/bench/test/flat/labels.json`
