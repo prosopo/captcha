@@ -63,6 +63,7 @@ describe('storeCaptchasExternally', () => {
     })
 
     it('should throw an error if db is undefined', async () => {
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(ProviderEnvironment as any).mockImplementationOnce(() => ({
             isReady: vi.fn().mockResolvedValue(true),
             logger: {
@@ -78,6 +79,7 @@ describe('storeCaptchasExternally', () => {
     it('should log message when cron job runs', async () => {
         await storeCaptchasExternally(mockPair, mockConfig)
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
         const envInstance = (ProviderEnvironment as any).mock.results[0].value
         expect(envInstance.logger.log).toHaveBeenCalledWith('storeCommitmentsExternal task....')
     })
