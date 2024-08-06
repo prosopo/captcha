@@ -82,6 +82,7 @@ export function merge<T extends object | A[], U extends object | B[], A, B>(
             }
         } else if (isObject(task.dest)) {
             const src = task.src as object
+            // biome-ignore lint/suspicious/noExplicitAny: has to be any for casting
             const destAny = task.dest as any
             // for every entry in src
             for (const [key, value] of Object.entries(src)) {
