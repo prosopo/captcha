@@ -23,16 +23,18 @@ function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: n
 
     const itemRow: { [key: string]: string } = {}
     const remaining: { [key: string]: string } = {}
-    Object.entries(item).forEach(([key, value]) => {
+
+    for(const [key, value] of Object.entries(item)) {
         itemRow[key] = value?.slice ? value.slice(0, maxCellWidth) : value
         remaining[key] = value?.slice ? value.slice(maxCellWidth) : value
-    })
+    }
 
     return [itemRow, ...wrapItemToMultipleRows(remaining, maxCellWidth)]
 }
 
 export function consoleTableWithWrapping(data: { [key: string]: string }[], maxColWidth = 90) {
     const tableItems = data.reduce<{ [key: string]: string }[]>((prev, item) => {
+        // biome-ignore lint/performance/noAccumulatingSpread: TODO fix
         return [...prev, ...wrapItemToMultipleRows(item, maxColWidth)]
     }, [])
 
