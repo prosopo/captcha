@@ -113,9 +113,9 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                 defaultExportName: 'tx',
             },
         ]
-        let file = ''
-        // for each typechain dir, generate exports
-        typeChainExports.forEach((typeChainExport) => {
+        let file = ''// for each typechain dir, generate exports
+								for (const typeChainExport of typeChainExports) {
+
             const dirPath = `${src}/${typeChainExport.dir}`
             // there will be a single file named after the contract
             const files = fs.readdirSync(dirPath)
@@ -140,12 +140,12 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             }
             // process named exports, if any
             if (typeChainExport.exports !== undefined) {
-                typeChainExport.exports.forEach((namedExport) => {
+                for (const namedExport of typeChainExport.exports) {
                     const alias = namedExport.alias ? ` as ${namedExport.alias}` : ''
                     rootExports.push(`export { ${namedExport.name}${alias} } from './${typeChainExport.dir}/${file}'`)
-                })
             }
-        })
+            }
+                                }
 
         // shared dir is special, contains util fns. Export all
         rootExports.push(`export * from './shared/utils.js'`)
@@ -170,14 +170,15 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
         const argumentTypeNames = argumentTypes.map((entry) => entry.name)
         const uniqueTypes = [...argumentTypes]
         const locations: string[] = [...argumentTypes.map(() => 'types-arguments')]
-        returnTypes.forEach((entry) => {
+        for(const entry of returnTypes) {
+
             if (!argumentTypeNames.includes(entry.name)) {
                 uniqueTypes.push(entry)
                 locations.push('types-arguments')
             } else {
                 locations.push('types-returns')
             }
-        })
+								}
         uniqueTypes.forEach((entry, i) => {
             const location = locations[i]
             const prefix = entry.category === 'type' || entry.category === 'interface' ? ' type' : ''
