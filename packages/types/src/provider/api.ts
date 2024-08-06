@@ -35,7 +35,9 @@ export enum ApiPaths {
     SubmitImageCaptchaSolution = '/v1/prosopo/provider/solution',
     SubmitPowCaptchaSolution = '/v1/prosopo/provider/pow/solution',
     VerifyPowCaptchaSolution = '/v1/prosopo/provider/pow/verify',
+    // biome-ignore lint/style/useLiteralEnumMembers: TODO shouldn't be using enum
     VerifyImageCaptchaSolutionDapp = `/v1/prosopo/provider/image/${ApiParams.dapp}/verify`,
+    // biome-ignore lint/style/useLiteralEnumMembers: TODO shouldn't be using enum
     VerifyImageCaptchaSolutionUser = `/v1/prosopo/provider/image/${ApiParams.user}/verify`,
     GetProviderStatus = '/v1/prosopo/provider/status',
     GetProviderDetails = '/v1/prosopo/provider/details',
