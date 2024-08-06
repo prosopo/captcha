@@ -75,7 +75,7 @@ describe('providerValidateDataset', () => {
         } as unknown as DatasetRaw
         const minSolvedCaptchas = 1
         const minUnsolvedCaptchas = 1
-
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(buildDataset as any).mockResolvedValue({
             datasetId: null,
             datasetContentId: null,
@@ -103,6 +103,7 @@ describe('providerValidateDataset', () => {
             datasetId: 'datasetId',
             datasetContentId: 'datasetContentId',
         }
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix
         ;(buildDataset as any).mockResolvedValue(mockDataset)
 
         const result = await providerValidateDataset(datasetRaw, minSolvedCaptchas, minUnsolvedCaptchas)
