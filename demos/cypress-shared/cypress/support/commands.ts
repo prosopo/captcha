@@ -132,10 +132,8 @@ function clickCorrectCaptchaImages(
 function clickNextButton() {
 	cy.intercept("POST", "**/prosopo/provider/solution").as("postSolution");
 	// Go to the next captcha or submit solution
-	cy.get(".modalInner").within(() => {
-		cy.get('button[data-cy="button-next"]').click({ force: true });
-		cy.wait(0);
-	});
+	cy.get('button[data-cy="button-next"]').click({ force: true });
+	cy.wait(0);
 }
 
 Cypress.Commands.addAll({
