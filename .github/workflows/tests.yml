@@ -122,8 +122,6 @@ jobs:
             cp dev/scripts/env.test dev/scripts/.env.test
             cp dev/scripts/env.test packages/cli/.env.test
             cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-
-            NODE_ENV=test npm run setup
             
             echo NODE_ENV: $NODE_ENV
 
@@ -132,6 +130,7 @@ jobs:
           docker compose --file ./docker/docker-compose.test.yml up -d
           docker container ls
           sleep 10s
+          NODE_ENV=test npm run setup
 
       - name: Start services and run tests
         run: |
