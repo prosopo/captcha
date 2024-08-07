@@ -139,4 +139,5 @@ jobs:
         run: |
           npx concurrently \
           "npm run start:provider" \
-          "sleep 10s && NODE_ENV=test npm run test"
+          "sleep 10s && NODE_ENV=test npm run test" \
+           --success "first" --kill-others
