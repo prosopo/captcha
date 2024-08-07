@@ -112,6 +112,13 @@ jobs:
 
             NODE_ENV=production npm run bundle
 
+      - name: Start the docker images
+        run: |
+          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker container ls
+          sleep 10s
+
+
       - name: Setup env
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -127,11 +134,6 @@ jobs:
             
             echo NODE_ENV: $NODE_ENV
 
-      - name: Start the docker images
-        run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d
-          docker container ls
-          sleep 10s
 
       - name: Start services and run tests
         run: |
