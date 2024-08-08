@@ -26,14 +26,14 @@ async function disapprove(args: string[]) {
 	octokit.rest.reactions.createForIssueComment({
 		owner: github.context.repo.owner,
 		repo: github.context.repo.repo,
-		comment_id: github.context.payload.comment?.id,
+		comment_id: github.context.payload.comment?.id || -1,
 		content: "+1",
 	});
 	console.log("disapproving");
 	octokit.rest.pulls.createReview({
 		owner: github.context.repo.owner,
 		repo: github.context.repo.repo,
-		pull_number: github.context.payload.issue?.number,
+		pull_number: github.context.payload.issue?.number || -1,
 		event: "REQUEST_CHANGES",
 		body: `Disapproved by @${github.context.actor}`,
 	});
@@ -52,14 +52,14 @@ async function approve(args: string[]) {
 	octokit.rest.reactions.createForIssueComment({
 		owner: github.context.repo.owner,
 		repo: github.context.repo.repo,
-		comment_id: github.context.payload.comment?.id,
+		comment_id: github.context.payload.comment?.id || -1,
 		content: "+1",
 	});
 	console.log("approving");
 	octokit.rest.pulls.createReview({
 		owner: github.context.repo.owner,
 		repo: github.context.repo.repo,
-		pull_number: github.context.payload.issue?.number,
+		pull_number: github.context.payload.issue?.number || -1,
 		event: "APPROVE",
 		body: `Approved by @${github.context.actor}`,
 	});
@@ -77,7 +77,7 @@ async function help(args: string[]) {
 	octokit.rest.issues.createComment({
 		owner: github.context.repo.owner,
 		repo: github.context.repo.repo,
-		issue_number: github.context.payload.issue?.number,
+		issue_number: github.context.payload.issue?.number || -1,
 		body: `My commands are: ${Object.keys(commands).sort().join(", ")}`,
 	});
 	console.log("done");
@@ -95,7 +95,7 @@ async function usage(args: string[]) {
 	octokit.rest.reactions.createForIssueComment({
 		owner: github.context.repo.owner,
 		repo: github.context.repo.repo,
-		comment_id: github.context.payload.comment?.id,
+		comment_id: github.context.payload.comment?.id || -1,
 		content: "confused",
 	});
 	console.log("done");
