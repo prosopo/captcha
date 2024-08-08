@@ -1,10 +1,3 @@
-import { stringToHex } from "@polkadot/util/string";
-import { ExtensionWeb2 } from "@prosopo/account";
-import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
-import { sleep } from "@prosopo/procaptcha";
-import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +11,13 @@ import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { stringToHex } from "@polkadot/util/string";
+import { ExtensionWeb2 } from "@prosopo/account";
+import { ProviderApi } from "@prosopo/api";
+import { ProsopoEnvError } from "@prosopo/common";
+import { loadBalancer } from "@prosopo/load-balancer";
+import { sleep } from "@prosopo/procaptcha";
+import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,

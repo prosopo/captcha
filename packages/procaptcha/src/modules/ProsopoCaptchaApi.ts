@@ -1,8 +1,3 @@
-import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
-import type { Signer } from "@polkadot/api/types";
-import { stringToHex } from "@polkadot/util/string";
-import type { ProviderApi } from "@prosopo/api";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +11,11 @@ import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
+import type { Signer } from "@polkadot/api/types";
+import { stringToHex } from "@polkadot/util/string";
+import type { ProviderApi } from "@prosopo/api";
+import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import {
 	CaptchaMerkleTree,
 	computeCaptchaSolutionHash,
