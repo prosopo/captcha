@@ -1,6 +1,3 @@
-import { hexToU8a, u8aToHex } from "@polkadot/util";
-import { Option, Struct, str, u32 } from "scale-ts";
-import { number, object, string, type infer as zInfer } from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +11,9 @@ import { number, object, string, type infer as zInfer } from "zod";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { hexToU8a, u8aToHex } from "@polkadot/util";
+import { Option, Struct, str, u32 } from "scale-ts";
+import { number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
 export const ProcaptchaOutputSchema = object({

@@ -1,14 +1,3 @@
-import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { getPairAsync } from "@prosopo/contract";
-import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import {
-	ApiParams,
-	ApiPaths,
-	type Captcha,
-	type CaptchaResponseBody,
-	type CaptchaSolutionResponse,
-} from "@prosopo/types";
-import fetch from "node-fetch";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +11,17 @@ import fetch from "node-fetch";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { stringToU8a, u8aToHex } from "@polkadot/util";
+import { getPairAsync } from "@prosopo/contract";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import {
+	ApiParams,
+	ApiPaths,
+	type Captcha,
+	type CaptchaResponseBody,
+	type CaptchaSolutionResponse,
+} from "@prosopo/types";
+import fetch from "node-fetch";
 import { describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 
