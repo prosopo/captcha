@@ -15,6 +15,7 @@ import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 export default defineConfig({
+	video: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		default_page: "/",

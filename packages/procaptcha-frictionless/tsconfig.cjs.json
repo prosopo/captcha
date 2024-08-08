@@ -12,6 +12,9 @@
 			"path": "../../dev/config"
 		},
 		{
+			"path": "../detector/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha/tsconfig.cjs.json"
 		},
 		{

@@ -33,7 +33,7 @@ export default function addDataAttr({
 }) {
 	return {
 		...renameKeysForDataAttr(general),
-		...(process.env.NODE_ENV === "development"
+		...(process.env.NODE_ENV !== "production"
 			? renameKeysForDataAttr(dev)
 			: {}),
 	};

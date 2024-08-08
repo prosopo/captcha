@@ -166,8 +166,24 @@ jobs:
                   echo "Building the provider-mock package..."
                   npm run -w @prosopo/provider-mock build
 
+            - name: Get the latest released version of npm packages
+              id: npm_released
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                  RELEASED_VERSION=$(npm view @prosopo/util | grep latest | cut -f2 -d ' ')
+                  VERSION=$(cat package.json | jq -r '.version')
+                  if [[ "$RELEASED_VERSION" != "$VERSION" ]]; then
+                      echo "npm_released=false" >> $GITHUB_ENV
+                  elif [[ "$RELEASED_VERSION" == "$VERSION" ]]; then
+                      echo "npm_released=true" >> $GITHUB_ENV
+                  else
+                    echo "cannot determine if npm_released"
+                    exit 1
+                  fi
+
             # create the provider mock image for AMD64
             - name: Build the Provider Mock Container
+              if: steps.npm_released.outputs.npm_released == 'true'
               id: build_docker_provider_mock_amd64
               continue-on-error: false
               uses: docker/build-push-action@v5
@@ -181,10 +197,12 @@ jobs:
 
             # load the provider-mock AMD64 image
             - name: Load the Provider Container
+              if: steps.npm_released.outputs.npm_released == 'true'
               run: docker load -i provider-mock-amd64.tar
 
             # Check that the version command works when running the bundle in the provider image
             - name: Check provider mock container runs
+              if: steps.npm_released.outputs.npm_released == 'true'
               run: |
                   CONTAINER="$(docker run -d -p 9229:9229 prosopo/provider-mock:dev)"
                   sleep 10s

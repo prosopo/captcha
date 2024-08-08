@@ -84,34 +84,39 @@ export function getTsConfigs(
 		fs.readFileSync(tsConfigPath).toString(),
 	).references;
 	if (!tsConfigs.includes(tsConfigPath)) {
-		const ignore =
-			ignorePatterns && ignorePatterns.length > 0
-				? new RegExp(`${ignorePatterns.join("|")}`)
-				: undefined;
-		if (includeInitialTsConfig) {
-			tsConfigs.push(tsConfigPath);
-		}
+		if (references) {
+			const ignore =
+				ignorePatterns && ignorePatterns.length > 0
+					? new RegExp(`${ignorePatterns.join("|")}`)
+					: undefined;
+			if (includeInitialTsConfig) {
+				tsConfigs.push(tsConfigPath);
+			}
 
-		// ignore the packages we don't want to bundle
-		const filteredReferences = references.filter(
-			(reference: ProjectReference) =>
-				ignore ? !ignore.test(reference.path) : false,
-		);
-		// for each reference, get the tsconfig paths - recursively calling this function
-		for (const reference of filteredReferences) {
-			// remove tsconfig.*.json from the path and get the path to the new directory via the reference path
-			const refTSConfigPath = getReferenceTsConfigPath(tsConfigPath, reference);
-
-			// take the reference TS config path (refTSConfigPath) and get the tsconfig paths for it (newTsConfigs),
-			// adding both to a distinct list, as there may be duplicates
-			const newTsConfigs = getTsConfigs(
-				refTSConfigPath,
-				ignorePatterns,
-				tsConfigs,
+			// ignore the packages we don't want to bundle
+			const filteredReferences = references.filter(
+				(reference: ProjectReference) =>
+					ignore ? !ignore.test(reference.path) : false,
 			);
-			if (newTsConfigs.length > 0) {
-				const distinctTsConfigPaths = new Set(tsConfigs.concat(newTsConfigs));
-				tsConfigs = [...distinctTsConfigPaths];
+			// for each reference, get the tsconfig paths - recursively calling this function
+			for (const reference of filteredReferences) {
+				// remove tsconfig.*.json from the path and get the path to the new directory via the reference path
+				const refTSConfigPath = getReferenceTsConfigPath(
+					tsConfigPath,
+					reference,
+				);
+
+				// take the reference TS config path (refTSConfigPath) and get the tsconfig paths for it (newTsConfigs),
+				// adding both to a distinct list, as there may be duplicates
+				const newTsConfigs = getTsConfigs(
+					refTSConfigPath,
+					ignorePatterns,
+					tsConfigs,
+				);
+				if (newTsConfigs.length > 0) {
+					const distinctTsConfigPaths = new Set(tsConfigs.concat(newTsConfigs));
+					tsConfigs = [...distinctTsConfigPaths];
+				}
 			}
 		}
 	}
