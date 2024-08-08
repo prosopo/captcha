@@ -67,17 +67,15 @@ jobs:
             - name: Check node version matches
               run: |
               
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    # find all package.json files, recursively
-                    pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
-                    
-                    # extract the node version from the package.json files
-                      versions=$(jq -r '.engines.node' "$pkgJsons")
+                # find all package.json files, recursively
+                # extract the node version from the package.json files
+                versions=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*' -exec jq -r '.engines.node // empty' {} \;)
 
-                      # ensure all npm versions are the same
-                      if [ "$(echo "$versions" | uniq | wc -l)" -ne 1 ]; then
-                        echo "Versions are not consistent across packages"
-                        echo "$versions"
-                        exit 1
-                      fi
+                # ensure all node versions are the same
+                if [ "$(echo "$versions" | uniq | wc -l)" -ne 1 ]; then
+                    echo "Versions are not consistent across packages"
+                    echo "$versions"
+                    exit 1
+                fi
