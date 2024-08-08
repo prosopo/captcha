@@ -138,6 +138,6 @@ jobs:
       - name: Start services and run tests
         run: |
           npx concurrently \
-          "npm run start:provider" \
+          "NODE_ENV=test npm run start:provider" \
           "sleep 10s && NODE_ENV=test npm run test" \
            --success "first" --kill-others
