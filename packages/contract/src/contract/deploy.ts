@@ -168,7 +168,7 @@ export async function dryRunDeploy(
 	pair: KeyringPair,
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	params: any[],
-	value,
+	value: number,
 	weight: UseWeight,
 	constructorIndex = 0,
 	salt?: string,

@@ -158,8 +158,8 @@ export function compareCaptchaSolutions(
  */
 export function computeCaptchaHash(
 	captcha: CaptchaWithoutId,
-	includeSolution,
-	includeSalt,
+	includeSolution: boolean,
+	includeSalt: boolean,
 	sortItemHashes: boolean,
 ): string {
 	try {
