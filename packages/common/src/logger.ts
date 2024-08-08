@@ -93,7 +93,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
 					);
 			}
 			logger.level = logLevel;
-			currentLevel = level;
+			currentLevel = levelSafe;
 		},
 		getLogLevel: () => {
 			return currentLevel;
