@@ -44,6 +44,18 @@ export class CaptchaMerkleTree {
 		this.layers = [];
 	}
 
+    getRoot() {
+        if(this.root === undefined) {
+            throw new ProsopoError("DATASET.MERKLE_ERROR", {
+                context: {
+                    error: "root undefined",
+                    failedFuncName: this.getRoot.name,
+                },
+            });
+        }
+        return this.root;
+    }
+
 	build(leaves: string[]) {
 		// allow rebuild
 		if (this.layers.length) {

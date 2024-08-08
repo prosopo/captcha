@@ -97,7 +97,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 		);
 
 		tree.build(captchasHashed);
-		const commitmentId = tree.root?.hash;
+		const commitmentId = tree.getRoot().hash;
 
 		const tx: ContractSubmittableResult | undefined = undefined;
 
