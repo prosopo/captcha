@@ -152,7 +152,7 @@ describe("ImgCaptchaManager", () => {
 			(db.getRandomCaptcha as any).mockResolvedValue([]);
 			(randomAsHex as any).mockReturnValue("randomSalt");
 			(computePendingRequestHash as any).mockReturnValue("computedHash");
-			(pair.sign as any).mockReturnValue("signedTime");
+			(pair.sign as any).mockReturnValue("signedTimestamp");
 			(u8aToHex as any).mockReturnValue("hexSignedTime");
 			(shuffleArray as any).mockReturnValue([]);
 
@@ -165,7 +165,7 @@ describe("ImgCaptchaManager", () => {
 				captchas: [],
 				requestHash: "computedHash",
 				timestamp: expect.any(String),
-				signedTime: "hexSignedTime",
+				signedTimestamp: "hexSignedTime",
 			});
 		});
 
@@ -263,7 +263,6 @@ describe("ImgCaptchaManager", () => {
 				pendingRecord,
 				userAccount,
 				captchaIds,
-				timestamp.toString(),
 			);
 
 		expect(result).toBe(true);
@@ -289,7 +288,6 @@ describe("ImgCaptchaManager", () => {
 				pendingRecord,
 				userAccount,
 				captchaIds,
-				timestamp.toString(),
 			);
 
 		expect(result).toBe(false);

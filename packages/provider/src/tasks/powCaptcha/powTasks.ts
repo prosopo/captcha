@@ -15,13 +15,16 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import { u8aToHex } from "@polkadot/util";
 import { stringToHex } from "@polkadot/util";
 import { ProsopoEnvError } from "@prosopo/common";
-import type { PoWCaptcha } from "@prosopo/types";
+import { ApiParams, type PoWCaptcha } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
+import { at } from "@prosopo/util";
 import {
 	checkPowSignature,
 	checkPowSolution,
 	checkRecentPowSolution,
 } from "./powTasksUtils.js";
+
+export const POW_SEPARATOR = "___";
 
 export class PowCaptchaManager {
 	pair: KeyringPair;
@@ -31,7 +34,7 @@ export class PowCaptchaManager {
 	constructor(pair: KeyringPair, db: Database) {
 		this.pair = pair;
 		this.db = db;
-		this.POW_SEPARATOR = "___";
+		this.POW_SEPARATOR = POW_SEPARATOR;
 	}
 
 	/**
@@ -70,6 +73,7 @@ export class PowCaptchaManager {
 	 * @param {string} signature - proof that the Provider provided the challenge
 	 * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+	 * @param timestampSignature
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: string,
@@ -77,9 +81,25 @@ export class PowCaptchaManager {
 		signature: string,
 		nonce: number,
 		timeout: number,
+
+		timestampSignature: string,
 	): Promise<boolean> {
 		checkRecentPowSolution(challenge, timeout);
-		checkPowSignature(challenge, signature, this.pair.address);
+		const challengeSplit = challenge.split(this.POW_SEPARATOR);
+		const userAddress = at(challengeSplit, 1);
+		const timestamp = at(challengeSplit, 0);
+		checkPowSignature(
+			timestamp,
+			timestampSignature,
+			userAddress,
+			ApiParams.timestamp,
+		);
+		checkPowSignature(
+			challenge,
+			signature,
+			this.pair.address,
+			ApiParams.challenge,
+		);
 		checkPowSolution(nonce, challenge, difficulty);
 
 		await this.db.storePowCaptchaRecord(challenge, false);

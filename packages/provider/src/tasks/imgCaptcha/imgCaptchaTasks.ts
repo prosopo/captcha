@@ -177,6 +177,7 @@ export class ImgCaptchaManager {
 		);
 		if (!verification.isValid) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
+			this.logger.info("Invalid requestHash signature");
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: { failedFuncName: this.dappUserSolution.name, userAccount },
 			});
@@ -190,6 +191,7 @@ export class ImgCaptchaManager {
 		);
 
 		if (!timestampSigVerify.isValid) {
+			this.logger.info("Invalid timestamp signature");
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: {
@@ -212,9 +214,8 @@ export class ImgCaptchaManager {
 			pendingRecord,
 			userAccount,
 			unverifiedCaptchaIds,
-			timestamp,
 		);
-
+		console.log("Pending request", pendingRequest);
 		if (pendingRequest) {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
@@ -250,6 +251,10 @@ export class ImgCaptchaManager {
 				requestedAtTimestamp: Number.parseInt(timestamp),
 			};
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
+
+			console.log(receivedCaptchas);
+			console.log(storedCaptchas);
+
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
 				response = {
 					captchas: captchaIds.map((id) => ({
@@ -268,6 +273,8 @@ export class ImgCaptchaManager {
 					verified: false,
 				};
 			}
+		} else {
+			this.logger.info("Request hash not found");
 		}
 		return response;
 	}
@@ -318,25 +325,17 @@ export class ImgCaptchaManager {
 	 * @param {PendingCaptchaRequest} pendingRecord
 	 * @param {string} userAccount
 	 * @param {string[]} captchaIds
-	 * @param timestamp
 	 */
 	async validateDappUserSolutionRequestIsPending(
 		requestHash: string,
 		pendingRecord: PendingCaptchaRequest,
 		userAccount: string,
 		captchaIds: string[],
-		timestamp: string,
 	): Promise<boolean> {
 		const currentTime = Date.now();
 		// only proceed if there is a pending record
 		if (!pendingRecord) {
 			this.logger.info("No pending record found");
-			return false;
-		}
-
-		// ensure that the timestamp sent up is the same as that stored in the pending record
-		if (pendingRecord.deadlineTimestamp.toString() !== timestamp) {
-			this.logger.info("Timestamp mismatch");
 			return false;
 		}
 

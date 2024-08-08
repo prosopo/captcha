@@ -207,6 +207,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				signature.provider.challenge,
 				nonce,
 				verifiedTimeout,
+				signature.user.timestamp,
 			);
 			const response: PowCaptchaSolutionResponse = { verified };
 			return res.json(response);
