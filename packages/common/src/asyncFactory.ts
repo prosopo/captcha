@@ -20,7 +20,7 @@ export abstract class AsyncFactory {
 
 	// biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
 	public static async create(...args: any[]) {
-        console.log('in create')
+		console.log("in create");
 		// biome-ignore lint/complexity/noThisInStatic: have to use `this` to get the child class's prototype instead of this class's prototype
 		return await Object.create(this.prototype).init(...args);
 	}
