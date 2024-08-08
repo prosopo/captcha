@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -12,15 +12,9 @@
     },
     "scripts": {
         "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose tsconfig.json",
+        "build": "tsc --build --verbose",
         "build:cjs": "npx vite --config vite.cjs.config.ts build",
-        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix --quiet",
-        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
-        "prettier:fix": "npm run prettier -- --write",
-        "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix",
-        "test": "NODE_ENV=test vitest --run --config vite.test.config.ts"
+        "test": "NODE_ENV=${NODE_ENV:-test}; vitest --run --config vite.test.config.ts"
     },
     "exports": {
         ".": {
@@ -37,19 +31,17 @@
     "dependencies": {
         "@polkadot/api": "10.13.1",
         "@polkadot/api-contract": "10.13.1",
-        "@polkadot/keyring": "12.6.2",
-        "@polkadot/rpc-provider": "10.13.1",
         "@polkadot/util": "12.6.2",
         "@polkadot/util-crypto": "12.6.2",
-        "@prosopo/account": "1.0.2",
-        "@prosopo/api": "1.0.2",
-        "@prosopo/captcha-contract": "1.0.2",
-        "@prosopo/common": "1.0.2",
-        "@prosopo/contract": "1.0.2",
-        "@prosopo/datasets": "1.0.2",
-        "@prosopo/procaptcha-common": "1.0.2",
-        "@prosopo/types": "1.0.2",
-        "@prosopo/util": "1.0.2",
+        "@prosopo/account": "2.0.0",
+        "@prosopo/api": "2.0.0",
+
+        "@prosopo/common": "2.0.0",
+        "@prosopo/datasets": "2.0.0",
+        "@prosopo/load-balancer": "2.0.0",
+        "@prosopo/procaptcha-common": "2.0.0",
+        "@prosopo/types": "2.0.0",
+        "@prosopo/util": "2.0.0",
         "jsdom": "^24.1.0"
     },
     "overrides": {
@@ -65,7 +57,7 @@
         }
     },
     "devDependencies": {
-        "@prosopo/config": "1.0.2",
+        "@prosopo/config": "2.0.0",
         "dotenv": "^16.0.1",
         "tslib": "2.6.2",
         "typescript": "5.1.6",

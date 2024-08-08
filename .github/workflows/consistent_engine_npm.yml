@@ -4,7 +4,7 @@ name: consistent_engine_npm
 
 on:
     pull_request:
-        branches: [main, dev, release/*]
+        branches: [main, dev, staging, release/*]
         paths:
             - '**/package.json'
             - '.github/workflows/consistent_engine_npm.yml'

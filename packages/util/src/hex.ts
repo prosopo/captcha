@@ -13,7 +13,7 @@
 // limitations under the License.
 import { isArray } from './checks.js'
 
-export type Hash = string | number[]
+type Hash = string | number[]
 
 const U8 = new Array(256)
 const U16 = new Array(256 * 256)

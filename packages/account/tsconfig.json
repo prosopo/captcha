@@ -4,6 +4,7 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "lib": ["es6", "dom"],
+        "allowJs": true,
         "jsxImportSource": "@emotion/react"
     },
     "include": ["src", "src/**/*.json"],
@@ -11,6 +12,9 @@
     "references": [
         {
             "path": "../common"
+        },
+        {
+            "path": "../detector"
         },
         {
             "path": "../types"

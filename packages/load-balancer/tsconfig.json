@@ -1,0 +1,25 @@
+{
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": ["src", "src/**/*.json"],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../contract"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        },
+        {
+            "path": "../util"
+        }
+    ]
+}

@@ -14,17 +14,16 @@
 import {
     ApiParams,
     ApiPaths,
+    CaptchaStatus,
     ImageVerificationResponse,
     ServerPowCaptchaVerifyRequestBody,
     VerificationResponse,
     VerifySolutionBody,
 } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract/types-returns'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'
 import { decodeProcaptchaOutput } from '@prosopo/types'
-import { getBlockTimeMs, getCurrentBlockNumber } from '@prosopo/contract'
 import { handleErrors } from './errorHandler.js'
 import { verifySignature } from './authMiddleware.js'
 import express, { NextFunction, Request, Response, Router } from 'express'
@@ -59,8 +58,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             verifySignature(dappUserSignature, blockNumber.toString(), keyPair)
 
             const solution = await (commitmentId
-                ? tasks.getDappUserCommitmentById(commitmentId)
-                : tasks.getDappUserCommitmentByAccount(user))
+                ? tasks.imgCaptchaManager.getDappUserCommitmentById(commitmentId)
+                : tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user))
 
             // No solution exists
             if (!solution) {
@@ -81,11 +80,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
                 return res.json(disapprovedResponse)
             }
 
+            const maxVerifiedTime = parsed.maxVerifiedTime || 60 * 1000 // Default to 1 minute
+
             // Check if solution was completed recently
-            if (parsed.maxVerifiedTime) {
-                const currentBlockNumber = await getCurrentBlockNumber(tasks.contract.api)
-                const blockTimeMs = getBlockTimeMs(tasks.contract.api)
-                const timeSinceCompletion = (currentBlockNumber - solution.completedAt) * blockTimeMs
+            if (maxVerifiedTime) {
+                const currentTime = Date.now()
+                const timeSinceCompletion = currentTime - solution.requestedAtTimestamp
+
                 // A solution exists but has timed out
                 if (timeSinceCompletion > parsed.maxVerifiedTime) {
                     const expiredResponse: VerificationResponse = {
@@ -149,13 +150,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies a dapp's solution as being approved or not
      *
-     * @param {string} dappAccount - Dapp User id
-     * @param {string} challenge - The captcha solution to look up
+     * @param {string} token - Token containing dapp, blockNumber and challenge
+     * @param {string} dappSignature - Signed token
+     * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
      */
     router.post(ApiPaths.VerifyPowCaptchaSolution, async (req, res, next) => {
         try {
             const { token, dappSignature, verifiedTimeout } = ServerPowCaptchaVerifyRequestBody.parse(req.body)
-
             const { dapp, blockNumber, challenge } = decodeProcaptchaOutput(token)
 
             if (!challenge) {
@@ -172,7 +173,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
             // Will throw an error if the signature is invalid
             verifySignature(dappSignature, blockNumber.toString(), dappPair)
 
-            const approved = await tasks.serverVerifyPowCaptchaSolution(dapp, challenge, verifiedTimeout)
+            const approved = await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
+                dapp,
+                challenge,
+                verifiedTimeout
+            )
 
             const verificationResponse: VerificationResponse = {
                 status: req.t(approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'),

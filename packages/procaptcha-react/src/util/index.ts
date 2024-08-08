@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
-    return Object.keys(data).reduce((prev, curr) => ({ ...prev, [`data-${curr}`]: data[curr] }), {})
+	return Object.keys(data).reduce(
+		(prev, curr) => ({ ...prev, [`data-${curr}`]: data[curr] }),
+		{},
+	);
 }
 
 /**
@@ -21,14 +24,16 @@ function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
  * dev - only in development mode
  */
 export default function addDataAttr({
-    general,
-    dev,
+	general,
+	dev,
 }: {
-    general?: { [key: string]: string }
-    dev?: { [key: string]: string }
+	general?: { [key: string]: string };
+	dev?: { [key: string]: string };
 }) {
-    return {
-        ...renameKeysForDataAttr(general),
-        ...(process.env.NODE_ENV === 'development' ? renameKeysForDataAttr(dev) : {}),
-    }
+	return {
+		...renameKeysForDataAttr(general),
+		...(process.env.NODE_ENV !== "production"
+			? renameKeysForDataAttr(dev)
+			: {}),
+	};
 }

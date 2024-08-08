@@ -6,7 +6,7 @@ name: lockstep_version
 
 on:
     pull_request:
-        branches: [main, dev, release/*]
+        branches: [main, dev, staging, release/*]
         paths:
             - '**/package.json'
             - '**/Cargo.toml'

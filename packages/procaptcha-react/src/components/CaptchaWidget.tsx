@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaWithProof } from '@prosopo/types'
 import { Properties } from 'csstype'
 import { ProsopoDatasetError } from '@prosopo/common'
 import { darkTheme, lightTheme } from '@prosopo/web-components'
 import { useMemo } from 'react'
+import { Captcha } from '@prosopo/types'
 
 export interface CaptchaWidgetProps {
-    challenge: CaptchaWithProof
+    challenge: Captcha
     solution: string[]
     onClick: (hash: string) => void
     themeColor: 'light' | 'dark'
@@ -32,7 +32,7 @@ const getHash = (item: any) => {
 }
 
 export const CaptchaWidget = ({ challenge, solution, onClick, themeColor }: CaptchaWidgetProps) => {
-    const items = challenge.captcha.items
+    const items = challenge.items
     const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
 
     const isTouchDevice = 'ontouchstart' in window

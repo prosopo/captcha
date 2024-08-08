@@ -13,7 +13,6 @@
 // limitations under the License.
 export * from './vite/index.js'
 export * from './dependencies.js'
-export * from './polkadot/index.js'
 export * from './provider/index.js'
 export * from './projectInfo.js'
 export * from './webpack/index.js'

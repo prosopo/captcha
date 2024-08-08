@@ -13,7 +13,6 @@
 // limitations under the License.
 export * from './tasks/index.js'
 export * from './util.js'
-export * from './batch/index.js'
 export * from './api/captcha.js'
 export * from './api/verify.js'
 export * from './api/admin.js'

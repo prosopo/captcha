@@ -26,9 +26,6 @@
             "path": "../../packages/contract"
         },
         {
-            "path": "../../contracts/captcha"
-        },
-        {
             "path": "../../packages/database"
         },
         {
@@ -44,6 +41,9 @@
             "path": "../../packages/file-server"
         },
         {
+            "path": "../../packages/load-balancer"
+        },
+        {
             "path": "../../packages/procaptcha"
         },
         {
@@ -57,9 +57,6 @@
         },
         {
             "path": "../../packages/procaptcha-pow"
-        },
-        {
-            "path": "../../protocol"
         },
         {
             "path": "../../packages/provider"

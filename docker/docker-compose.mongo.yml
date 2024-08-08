@@ -1,5 +1,4 @@
 # https://docs.docker.com/cloud/ecs-integration/
-version: '3.8'
 services:
     database:
         image: mongo:5.0.4

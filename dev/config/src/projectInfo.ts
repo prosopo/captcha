@@ -11,14 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import fs from 'fs'
-
-export const getContractNames = () => {
-    return fs.readdirSync(getProtocolContractsDir()).filter((name) => {
-        // test is dir
-        return fs.statSync(`${getProtocolContractsDir()}/${name}`).isDirectory()
-    })
-}
 
 // Top Level
 
@@ -109,9 +101,3 @@ export const getTypesEnvPkgDir = () => `${getPackagesDir()}/types-env`
 export const getUtilPkgDir = () => `${getPackagesDir()}/util`
 
 export const getWebComponentsPkgDir = () => `${getPackagesDir()}/web-components`
-
-// Contracts
-
-export const getContractsDir = () => `${getRootDir()}/contracts`
-
-export const getProtocolContractsDir = () => `${getProtocolDir()}/contracts`

@@ -8,9 +8,6 @@
     "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
-            "path": "../../contracts/captcha/tsconfig.cjs.json"
-        },
-        {
             "path": "../api/tsconfig.cjs.json"
         },
         {
@@ -21,6 +18,9 @@
         },
         {
             "path": "../datasets/tsconfig.cjs.json"
+        },
+        {
+            "path": "../load-balancer/tsconfig.cjs.json"
         },
         {
             "path": "../procaptcha-common/tsconfig.cjs.json"

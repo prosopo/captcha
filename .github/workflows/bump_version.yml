@@ -73,14 +73,6 @@ jobs:
                     # replace the version in all package.json files
                     xargs -I % sh -c "cat % | jq '.version = \"${{ github.event.inputs.version }}\"' > %.new && mv %.new %" <<< "$pkgJsons"
 
-                    # find all Cargo.toml files
-                    cargoTomls=$(find . -name Cargo.toml -prune -not -path '*/protocol/cargo-cache/*')
-                    # replace the first version line in all Cargo.toml files
-                    xargs -I % sh -c "sed -i '0,/version =/s/version =.*/version = \"${{ github.event.inputs.version }}\"/' %" <<< "$cargoTomls"
-                    
-                    # rebuild typechain
-                    npm run build:typechain
-
                     # lint
                     npm run lint:fix
 
