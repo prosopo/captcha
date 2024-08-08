@@ -19,6 +19,7 @@ import {
 	ApiPaths,
 	type Captcha,
 	type CaptchaResponseBody,
+	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 } from "@prosopo/types";
 import fetch from "node-fetch";
@@ -88,7 +89,7 @@ describe("Image Captcha Integration Tests", () => {
 		});
 	});
 	describe("SubmitImageCaptchaSolution", () => {
-		it("should verify a correctly completed PoW captcha as true", async () => {
+		it("should verify a correctly completed image captcha as true", async () => {
 			const pair = await getPairAsync(
 				undefined,
 				dummyUserAccount.seed,
@@ -119,7 +120,9 @@ describe("Image Captcha Integration Tests", () => {
 			const solvedCaptchas = datasetWithSolutionHashes.captchas.map(
 				(captcha) => ({
 					captchaContentId: captcha.captchaContentId,
-					solution: captcha.solution,
+					solution: captcha.solution
+						? captcha.solution.map((s) => s.toString())
+						: captcha.solution,
 					salt: captcha.salt,
 				}),
 			);
@@ -141,15 +144,20 @@ describe("Image Captcha Integration Tests", () => {
 				};
 			});
 
-			const body = {
-				captchas: temp,
-				dapp: dappAccount,
-				requestHash: data.requestHash,
-				signature: u8aToHex(pair.sign(stringToU8a(data.requestHash))),
-				timestampSignature:
-					data[ApiParams.signature][ApiParams.provider][ApiParams.timestamp],
-				timestamp: data.timestamp,
-				user: userAccount,
+			const body: CaptchaSolutionBodyType = {
+				[ApiParams.captchas]: temp,
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.requestHash]: data.requestHash,
+				[ApiParams.signature]: {
+					[ApiParams.user]: {
+						[ApiParams.requestHash]: u8aToHex(
+							pair.sign(stringToU8a(data.requestHash)),
+						),
+					},
+					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
+				},
+				[ApiParams.timestamp]: data.timestamp,
+				[ApiParams.user]: userAccount,
 			};
 
 			const solveThatCaptcha = await fetch(
@@ -163,8 +171,10 @@ describe("Image Captcha Integration Tests", () => {
 					body: JSON.stringify(body),
 				},
 			);
+			const jsonRes = await solveThatCaptcha.json();
+			console.log(jsonRes);
 
-			const res = (await solveThatCaptcha.json()) as CaptchaSolutionResponse;
+			const res = jsonRes as CaptchaSolutionResponse;
 			expect(res.status).toBe("You correctly answered the captchas");
 		});
 	});
