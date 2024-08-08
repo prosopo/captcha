@@ -130,7 +130,7 @@ jobs:
             cp dev/scripts/env.test packages/cli/.env.test
             cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 
-            NODE_ENV=test npm run setup
+            NODE_ENV="test" npm run setup
             
             echo NODE_ENV: "$NODE_ENV"
 

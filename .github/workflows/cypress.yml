@@ -137,13 +137,13 @@ jobs:
               with:
                   name: cypress-screenshots
                   path: ./demos/cypress-shared/cypress/screenshots
-                  if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+                  if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
             # after the test run completes store videos and any screenshots
             - uses: actions/upload-artifact@v4
-                # store videos only on failures
+              # store videos only on failures
               if: failure()
               with:
                   name: cypress-videos
                   path: ./demos/cypress-shared/cypress/videos
-                  if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+                  if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`

@@ -170,11 +170,13 @@ jobs:
               id: npm_released
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                  RELEASED_VERSION=$(npm view @prosopo/util | grep latest | cut -f2 -d ' ')
-                  VERSION=$(cat package.json | jq -r '.version')
+                  RELEASED_VERSION="$(npm view @prosopo/util | grep latest | cut -f2 -d ' ')"
+                  VERSION="$(jq -r .engines.npm < package.json)"
                   if [[ "$RELEASED_VERSION" != "$VERSION" ]]; then
+                      # shellcheck disable=SC2086
                       echo "npm_released=false" >> $GITHUB_ENV
                   elif [[ "$RELEASED_VERSION" == "$VERSION" ]]; then
+                      # shellcheck disable=SC2086
                       echo "npm_released=true" >> $GITHUB_ENV
                   else
                     echo "cannot determine if npm_released"

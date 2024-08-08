@@ -19,6 +19,7 @@ import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
 	namespace Cypress {
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
 		interface Chainable<Subject = any> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
 			captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>;
