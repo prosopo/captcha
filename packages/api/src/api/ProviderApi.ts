@@ -41,10 +41,10 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 	private account: string;
 
 	constructor(network: NetworkConfig, providerUrl: string, account: string) {
-		if (!providerUrl.startsWith("http")) {
-			providerUrl = `https://${providerUrl}`;
-		}
-		super(providerUrl);
+		const providerUrlWithProtocol = !providerUrl.startsWith("http")
+			? `https://${providerUrl}`
+			: providerUrl;
+		super(providerUrlWithProtocol);
 		this.network = network;
 		this.account = account;
 	}
@@ -67,8 +67,8 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 		userAccount: string,
 		salt: string,
 		timestamp: string,
-		timestampSignature: string,
-		signature?: string,
+		providerTimestampSignature: string,
+		userRequestHashSignature: string,
 	): Promise<CaptchaSolutionResponse> {
 		const captchaSolutionBody: CaptchaSolutionBodyType =
 			CaptchaSolutionBody.parse({
@@ -77,9 +77,15 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 				[ApiParams.user]: userAccount,
 				[ApiParams.dapp]: this.account,
 				salt,
-				signature,
 				[ApiParams.timestamp]: timestamp,
-				[ApiParams.timestampSignature]: timestampSignature,
+				[ApiParams.signature]: {
+					[ApiParams.user]: {
+						[ApiParams.requestHash]: userRequestHashSignature,
+					},
+					[ApiParams.provider]: {
+						[ApiParams.timestamp]: providerTimestampSignature,
+					},
+				},
 			});
 		return this.post(ApiPaths.SubmitImageCaptchaSolution, captchaSolutionBody);
 	}
@@ -129,19 +135,22 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 		challenge: GetPowCaptchaResponse,
 		userAccount: string,
 		dappAccount: string,
-		randomProvider: RandomProvider,
 		nonce: number,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,
-			[ApiParams.signature]: challenge.signature,
+			[ApiParams.timestamp]: challenge.timestamp,
 			// TODO add utility to convert `string` to string
 			[ApiParams.user]: userAccount.toString(),
 			[ApiParams.dapp]: dappAccount.toString(),
 			[ApiParams.nonce]: nonce,
 			[ApiParams.verifiedTimeout]: timeout,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+			},
 		});
 		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
 	}

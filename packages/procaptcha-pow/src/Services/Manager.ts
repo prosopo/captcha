@@ -1,9 +1,3 @@
-import { ExtensionWeb2 } from "@prosopo/account";
-import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
-import { sleep } from "@prosopo/procaptcha";
-import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +11,13 @@ import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { stringToHex } from "@polkadot/util/string";
+import { ExtensionWeb2 } from "@prosopo/account";
+import { ProviderApi } from "@prosopo/api";
+import { ProsopoEnvError } from "@prosopo/common";
+import { loadBalancer } from "@prosopo/load-balancer";
+import { sleep } from "@prosopo/procaptcha";
+import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -108,6 +109,17 @@ export const Manager = (
 		return dappAccount;
 	};
 
+	const getExtension = (possiblyAccount?: Account) => {
+		const account = possiblyAccount || getAccount();
+		if (!account.extension) {
+			throw new ProsopoEnvError("ACCOUNT.NO_POLKADOT_EXTENSION", {
+				context: { error: "Extension not loaded" },
+			});
+		}
+
+		return account.extension;
+	};
+
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
 
@@ -192,11 +204,30 @@ export const Manager = (
 		);
 
 		const solution = solvePoW(challenge.challenge, challenge.difficulty);
+
+		const user = getAccount();
+
+		const signer = getExtension(user).signer;
+
+		if (!signer || !signer.signRaw) {
+			throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+				context: {
+					error:
+						"Signer is not defined, cannot sign message to prove account ownership",
+				},
+			});
+		}
+
+		const userTimestampSignature = await signer.signRaw({
+			address: userAccount,
+			data: stringToHex(challenge[ApiParams.timestamp]),
+			type: "bytes",
+		});
+
 		const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 			challenge,
 			getAccount().account.address,
 			getDappAccount(),
-			getRandomProviderResponse,
 			solution,
 			config.captchas.pow.verifiedTimeout,
 		);
@@ -215,7 +246,13 @@ export const Manager = (
 					[ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
 					[ApiParams.nonce]: solution,
 					[ApiParams.timestamp]: challenge.timestamp,
-					[ApiParams.timestampSignature]: challenge.timestampSignature,
+					[ApiParams.signature]: {
+						[ApiParams.provider]: challenge.signature.provider,
+						[ApiParams.user]: {
+							[ApiParams.timestamp]:
+								userTimestampSignature.signature.toString(),
+						},
+					},
 				}),
 			);
 			setValidChallengeTimeout();

@@ -1,16 +1,3 @@
-import {
-	type ZodDefault,
-	type ZodNumber,
-	type ZodObject,
-	type ZodOptional,
-	array,
-	type input,
-	number,
-	object,
-	type output,
-	string,
-	type infer as zInfer,
-} from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +11,19 @@ import {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+	type ZodDefault,
+	type ZodNumber,
+	type ZodObject,
+	type ZodOptional,
+	array,
+	type input,
+	number,
+	object,
+	type output,
+	string,
+	type infer as zInfer,
+} from "zod";
 import { ApiParams } from "../api/params.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
@@ -38,10 +38,8 @@ export enum ApiPaths {
 	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
-	// biome-ignore lint/style/useLiteralEnumMembers: TODO shouldn't be using enum
-	VerifyImageCaptchaSolutionDapp = `/v1/prosopo/provider/image/${ApiParams.dapp}/verify`,
-	// biome-ignore lint/style/useLiteralEnumMembers: TODO shouldn't be using enum
-	VerifyImageCaptchaSolutionUser = `/v1/prosopo/provider/image/${ApiParams.user}/verify`,
+	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
+	VerifyImageCaptchaSolutionUser = "/v1/prosopo/provider/image/user/verify",
 	GetProviderStatus = "/v1/prosopo/provider/status",
 	GetProviderDetails = "/v1/prosopo/provider/details",
 	SubmitUserEvents = "/v1/prosopo/provider/events",
@@ -126,8 +124,6 @@ export interface DappUserSolutionResult {
 	[ApiParams.captchas]: CaptchaIdAndProof[];
 	partialFee?: string;
 	[ApiParams.verified]: boolean;
-	[ApiParams.timestamp]: string;
-	[ApiParams.timestampSignature]: string;
 }
 
 export interface CaptchaSolutionResponse extends DappUserSolutionResult {
@@ -152,7 +148,11 @@ export type CaptchaResponseBody = {
 	[ApiParams.captchas]: Captcha[];
 	[ApiParams.requestHash]: string;
 	[ApiParams.timestamp]: string;
-	[ApiParams.timestampSignature]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: {
+			[ApiParams.timestamp]: string;
+		};
+	};
 };
 
 export const CaptchaSolutionBody = object({
@@ -160,9 +160,15 @@ export const CaptchaSolutionBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.captchas]: array(CaptchaSolutionSchema),
 	[ApiParams.requestHash]: string(),
-	[ApiParams.signature]: string(), // the signature to prove account ownership
 	[ApiParams.timestamp]: string(),
-	[ApiParams.timestampSignature]: string(),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.requestHash]: string(),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.timestamp]: string(),
+		}),
+	}),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -210,9 +216,13 @@ export interface ImageVerificationResponse extends VerificationResponse {
 export interface GetPowCaptchaResponse {
 	[ApiParams.challenge]: string;
 	[ApiParams.difficulty]: number;
-	[ApiParams.signature]: string;
 	[ApiParams.timestamp]: string;
-	[ApiParams.timestampSignature]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: {
+			[ApiParams.timestamp]: string;
+			[ApiParams.challenge]: string;
+		};
+	};
 }
 
 export interface PowCaptchaSolutionResponse {
@@ -249,7 +259,14 @@ export type ServerPowCaptchaVerifyRequestBodyType = zInfer<
 export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.challenge]: string(),
 	[ApiParams.difficulty]: number(),
-	[ApiParams.signature]: string(),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: string(),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: string(),
+		}),
+	}),
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.nonce]: number(),

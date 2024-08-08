@@ -1,8 +1,3 @@
-import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
-import type { Signer } from "@polkadot/api/types";
-import { stringToHex } from "@polkadot/util/string";
-import type { ProviderApi } from "@prosopo/api";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +11,11 @@ import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
+import type { Signer } from "@polkadot/api/types";
+import { stringToHex } from "@polkadot/util/string";
+import type { ProviderApi } from "@prosopo/api";
+import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import {
 	CaptchaMerkleTree,
 	computeCaptchaSolutionHash,
@@ -88,7 +88,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 		solutions: CaptchaSolution[],
 		salt: string,
 		timestamp: string,
-		timestampSignature: string,
+		providerTimestampSignature: string,
 	): Promise<TCaptchaSubmitResult> {
 		const tree = new CaptchaMerkleTree();
 
@@ -97,11 +97,18 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 		);
 
 		tree.build(captchasHashed);
-		const commitmentId = tree.getRoot().hash;
+
+		if (!tree.root) {
+			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
+				context: { error: "Merkle tree root is undefined" },
+			});
+		}
+
+		const commitmentId = tree.root.hash;
 
 		const tx: ContractSubmittableResult | undefined = undefined;
 
-		let signature: string | undefined = undefined;
+		let userRequestHashSignature: string | undefined = undefined;
 
 		if (!signer || !signer.signRaw) {
 			throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
@@ -120,7 +127,7 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 			data: stringToHex(requestHash),
 			type: "bytes",
 		});
-		signature = signed.signature;
+		userRequestHashSignature = signed.signature;
 
 		try {
 			result = await this.providerApi.submitCaptchaSolution(
@@ -129,8 +136,8 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 				this.userAccount,
 				salt,
 				timestamp,
-				timestampSignature,
-				signature,
+				providerTimestampSignature,
+				userRequestHashSignature,
 			);
 		} catch (error) {
 			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {

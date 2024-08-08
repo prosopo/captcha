@@ -1,15 +1,3 @@
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { isHex, u8aToHex } from "@polkadot/util";
-import { ProviderApi } from "@prosopo/api";
-import {
-	type LogLevel,
-	type Logger,
-	ProsopoApiError,
-	ProsopoContractError,
-	ProsopoEnvError,
-	getLogger,
-} from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +11,18 @@ import {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Keyring } from "@polkadot/keyring";
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { isHex, u8aToHex } from "@polkadot/util";
+import { ProviderApi } from "@prosopo/api";
+import {
+	type LogLevel,
+	type Logger,
+	ProsopoApiError,
+	ProsopoContractError,
+	ProsopoEnvError,
+	getLogger,
+} from "@prosopo/common";
 import {
 	type CaptchaTimeoutOutput,
 	ContractAbi,
@@ -79,6 +79,7 @@ export class ProsopoServer {
 	 * @param blockNumber
 	 * @param timeouts
 	 * @param providerUrl
+	 * @param timestamp
 	 * @param challenge
 	 */
 	public async verifyProvider(

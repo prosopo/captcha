@@ -49,19 +49,21 @@ export const checkPowSolution = (
 export const checkPowSignature = (
 	challenge: string,
 	signature: string,
-	providerAddress: string,
+	address: string,
+	signatureType?: string,
 ): void => {
 	const signatureVerification = signatureVerify(
 		stringToHex(challenge),
 		signature,
-		providerAddress,
+		address,
 	);
 	if (!signatureVerification.isValid) {
 		throw new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
 			context: {
-				ERROR: "Provider signature is invalid for this message",
+				ERROR: `Signature is invalid for this message: ${signatureType}`,
 				failedFuncName: checkPowSignature.name,
 				signature,
+				signatureType,
 			},
 		});
 	}

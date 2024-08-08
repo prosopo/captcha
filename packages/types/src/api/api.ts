@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import type { CaptchaSolution } from "../datasets/index.js";
 import type { StoredEvents } from "../procaptcha/index.js";
 import type {
@@ -36,7 +35,7 @@ export interface ProviderApiInterface {
 		userAccount: string,
 		salt: string,
 		timestamp: string,
-		timestampSignature: string,
+		providerTimestampSignature: string,
 		signature?: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
@@ -63,7 +62,6 @@ export interface ProviderApiInterface {
 		challenge: GetPowCaptchaResponse,
 		userAccount: string,
 		dappAccount: string,
-		randomProvider: RandomProvider,
 		nonce: number,
 	): Promise<PowCaptchaSolutionResponse>;
 	submitUserEvents(events: StoredEvents, string: string): Promise<unknown>;

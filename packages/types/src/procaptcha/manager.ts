@@ -1,8 +1,3 @@
-import type {
-	InjectedAccount,
-	InjectedExtension,
-} from "@polkadot/extension-inject/types";
-import { object } from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +11,11 @@ import { object } from "zod";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type {
+	InjectedAccount,
+	InjectedExtension,
+} from "@polkadot/extension-inject/types";
+import { object } from "zod";
 import { ApiParams } from "../api/index.js";
 import type { CaptchaResponseBody } from "../provider/index.js";
 import type { ProsopoCaptchaApiInterface } from "./api.js";

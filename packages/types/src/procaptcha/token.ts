@@ -1,6 +1,3 @@
-import { hexToU8a, u8aToHex } from "@polkadot/util";
-import { Option, Struct, str, u32 } from "scale-ts";
-import { number, object, string, type infer as zInfer } from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +11,9 @@ import { number, object, string, type infer as zInfer } from "zod";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { hexToU8a, u8aToHex } from "@polkadot/util";
+import { Option, Struct, str, u32 } from "scale-ts";
+import { number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
 export const ProcaptchaOutputSchema = object({
@@ -25,7 +25,14 @@ export const ProcaptchaOutputSchema = object({
 	[ApiParams.challenge]: string().optional(),
 	[ApiParams.nonce]: number().optional(),
 	[ApiParams.timestamp]: string(),
-	[ApiParams.timestampSignature]: string(),
+	[ApiParams.signature]: object({
+		[ApiParams.provider]: object({
+			[ApiParams.timestamp]: string(),
+		}),
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: string(),
+		}).optional(),
+	}),
 });
 
 /**
@@ -47,7 +54,11 @@ export const ProcaptchaTokenCodec = Struct({
 	[ApiParams.challenge]: Option(str),
 	[ApiParams.nonce]: Option(u32),
 	[ApiParams.timestamp]: str,
-	[ApiParams.timestampSignature]: str,
+	[ApiParams.signature]: Struct({
+		[ApiParams.provider]: Struct({
+			[ApiParams.timestamp]: str,
+		}),
+	}),
 });
 
 export const ProcaptchaTokenSpec = string().startsWith("0x");

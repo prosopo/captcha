@@ -1,15 +1,3 @@
-import { cryptoWaitReady } from "@polkadot/util-crypto";
-import { randomAsHex } from "@polkadot/util-crypto/random";
-import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
-import { ProviderApi } from "@prosopo/api";
-import {
-	ProsopoDatasetError,
-	ProsopoEnvError,
-	ProsopoError,
-	trimProviderUrl,
-} from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
-import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +11,18 @@ import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { cryptoWaitReady } from "@polkadot/util-crypto";
+import { randomAsHex } from "@polkadot/util-crypto/random";
+import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
+import { ProviderApi } from "@prosopo/api";
+import {
+	ProsopoDatasetError,
+	ProsopoEnvError,
+	ProsopoError,
+	trimProviderUrl,
+} from "@prosopo/common";
+import { loadBalancer } from "@prosopo/load-balancer";
+import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -280,7 +280,7 @@ export function Manager(
 					captchaSolution,
 					salt,
 					challenge.timestamp,
-					challenge.timestampSignature,
+					challenge.signature.provider.timestamp,
 				);
 
 			// mark as is human if solution has been approved
@@ -313,7 +313,11 @@ export function Manager(
 						[ApiParams.commitmentId]: hashToHex(submission[1]),
 						[ApiParams.blockNumber]: blockNumber,
 						[ApiParams.timestamp]: challenge.timestamp,
-						[ApiParams.timestampSignature]: challenge.timestampSignature,
+						[ApiParams.signature]: {
+							[ApiParams.provider]: {
+								[ApiParams.timestamp]: challenge.signature.provider.timestamp,
+							},
+						},
 					}),
 				);
 				setValidChallengeTimeout();
@@ -461,8 +465,8 @@ export function Manager(
 		return blockNumber;
 	};
 
-	const getExtension = (account?: Account) => {
-		account = account || getAccount();
+	const getExtension = (possiblyAccount?: Account) => {
+		const account = possiblyAccount || getAccount();
 		if (!account.extension) {
 			throw new ProsopoEnvError("ACCOUNT.NO_POLKADOT_EXTENSION", {
 				context: { error: "Extension not loaded" },

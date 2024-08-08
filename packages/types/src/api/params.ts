@@ -17,7 +17,6 @@ export enum ApiParams {
 	dapp = "dapp",
 	provider = "provider",
 	blockNumber = "blockNumber",
-	signature = "signature",
 	requestHash = "requestHash",
 	captchas = "captchas",
 	commitmentId = "commitmentId",
@@ -36,6 +35,6 @@ export enum ApiParams {
 	timeouts = "timeouts",
 	token = "token",
 	secret = "secret",
-	timestampSignature = "timestampSignature",
 	timestamp = "timestamp",
+	signature = "signature",
 }

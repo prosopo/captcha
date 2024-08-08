@@ -1,4 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,27 +11,30 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { KeyringPair } from "@polkadot/keyring/types";
 import { u8aToHex } from "@polkadot/util";
 import { stringToHex } from "@polkadot/util";
 import { ProsopoEnvError } from "@prosopo/common";
-import type { PoWCaptcha } from "@prosopo/types";
+import { ApiParams, type PoWCaptcha } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
+import { at } from "@prosopo/util";
 import {
 	checkPowSignature,
 	checkPowSolution,
 	checkRecentPowSolution,
 } from "./powTasksUtils.js";
 
+export const POW_SEPARATOR = "___";
+
 export class PowCaptchaManager {
 	pair: KeyringPair;
 	db: Database;
 	POW_SEPARATOR: string;
 
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	constructor(pair: any, db: Database) {
+	constructor(pair: KeyringPair, db: Database) {
 		this.pair = pair;
 		this.db = db;
-		this.POW_SEPARATOR = "___";
+		this.POW_SEPARATOR = POW_SEPARATOR;
 	}
 
 	/**
@@ -40,6 +42,7 @@ export class PowCaptchaManager {
 	 *
 	 * @param {string} userAccount - user that is solving the captcha
 	 * @param {string} dappAccount - dapp that is requesting the captcha
+	 * @param origin - not currently used
 	 */
 	async getPowCaptchaChallenge(
 		userAccount: string,
@@ -51,9 +54,15 @@ export class PowCaptchaManager {
 
 		// Use blockhash, userAccount and dappAccount for string for challenge
 		const challenge = `${timestamp}___${userAccount}___${dappAccount}`;
-		const signature = u8aToHex(this.pair.sign(stringToHex(challenge)));
-
-		return { challenge, difficulty, signature, timestamp };
+		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
+		const timestampSignature = u8aToHex(this.pair.sign(stringToHex(timestamp)));
+		return {
+			challenge,
+			difficulty,
+			signature: challengeSignature,
+			timestamp,
+			timestampSignature,
+		};
 	}
 
 	/**
@@ -64,6 +73,7 @@ export class PowCaptchaManager {
 	 * @param {string} signature - proof that the Provider provided the challenge
 	 * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+	 * @param timestampSignature
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: string,
@@ -71,9 +81,25 @@ export class PowCaptchaManager {
 		signature: string,
 		nonce: number,
 		timeout: number,
+
+		timestampSignature: string,
 	): Promise<boolean> {
 		checkRecentPowSolution(challenge, timeout);
-		checkPowSignature(challenge, signature, this.pair.address);
+		const challengeSplit = challenge.split(this.POW_SEPARATOR);
+		const userAddress = at(challengeSplit, 1);
+		const timestamp = at(challengeSplit, 0);
+		checkPowSignature(
+			timestamp,
+			timestampSignature,
+			userAddress,
+			ApiParams.timestamp,
+		);
+		checkPowSignature(
+			challenge,
+			signature,
+			this.pair.address,
+			ApiParams.challenge,
+		);
 		checkPowSolution(nonce, challenge, difficulty);
 
 		await this.db.storePowCaptchaRecord(challenge, false);

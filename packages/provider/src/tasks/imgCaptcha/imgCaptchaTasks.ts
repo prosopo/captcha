@@ -1,12 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, stringToHex, u8aToHex } from "@polkadot/util";
-import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
-import {
-	compareCaptchaSolutions,
-	computePendingRequestHash,
-	parseAndSortCaptchaSolutions,
-} from "@prosopo/datasets";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +11,16 @@ import {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { hexToU8a, stringToHex, u8aToHex } from "@polkadot/util";
+import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
+import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import {
+	compareCaptchaSolutions,
+	computePendingRequestHash,
+	parseAndSortCaptchaSolutions,
+} from "@prosopo/datasets";
 import {
 	type Captcha,
 	type CaptchaConfig,
@@ -80,7 +81,7 @@ export class ImgCaptchaManager {
 		captchas: Captcha[];
 		requestHash: string;
 		timestamp: string;
-		signedTime: string;
+		signedTimestamp: string;
 	}> {
 		const dataset = await this.db.getDatasetDetails(datasetId);
 		if (!dataset) {
@@ -123,7 +124,7 @@ export class ImgCaptchaManager {
 		);
 
 		const currentTime = Date.now();
-		const signedTime = u8aToHex(
+		const signedTimestamp = u8aToHex(
 			this.pair.sign(stringToHex(currentTime.toString())),
 		);
 
@@ -144,7 +145,7 @@ export class ImgCaptchaManager {
 			captchas,
 			requestHash,
 			timestamp: currentTime.toString(),
-			signedTime,
+			signedTimestamp,
 		};
 	}
 
@@ -154,7 +155,9 @@ export class ImgCaptchaManager {
 	 * @param {string} dappAccount
 	 * @param {string} requestHash
 	 * @param {JSON} captchas
-	 * @param {string} signature
+	 * @param {string} requestHashSignature
+	 * @param timestamp
+	 * @param timestampSignature
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -162,24 +165,25 @@ export class ImgCaptchaManager {
 		dappAccount: string,
 		requestHash: string,
 		captchas: CaptchaSolution[],
-		signature: string, // the signature to indicate ownership of account
+		requestHashSignature: string, // the signature to indicate ownership of account
 		timestamp: string,
 		timestampSignature: string,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(requestHash),
-			signature,
+			requestHashSignature,
 			userAccount,
 		);
 		if (!verification.isValid) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
+			this.logger.info("Invalid requestHash signature");
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: { failedFuncName: this.dappUserSolution.name, userAccount },
 			});
 		}
 
-		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
+		// check that the timestamp signature is valid and signed by the provider
 		const timestampSigVerify = signatureVerify(
 			stringToHex(timestamp),
 			timestampSignature,
@@ -187,6 +191,7 @@ export class ImgCaptchaManager {
 		);
 
 		if (!timestampSigVerify.isValid) {
+			this.logger.info("Invalid timestamp signature");
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: {
@@ -200,35 +205,34 @@ export class ImgCaptchaManager {
 		let response: DappUserSolutionResult = {
 			captchas: [],
 			verified: false,
-			timestamp: timestamp,
-			timestampSignature,
 		};
 
-		const { storedCaptchas, receivedCaptchas, captchaIds } =
-			await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
-
-		const { tree, commitmentId } =
-			buildTreeAndGetCommitmentId(receivedCaptchas);
-
 		const pendingRecord = await this.db.getDappUserPending(requestHash);
+		const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
 		const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
 			requestHash,
 			pendingRecord,
 			userAccount,
-			captchaIds,
+			unverifiedCaptchaIds,
 		);
-
-		const datasetId = at(storedCaptchas, 0).datasetId;
-
-		if (!datasetId) {
-			throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH", {
-				context: { failedFuncName: this.dappUserSolution.name },
-			});
-		}
-
-		// Only do stuff if the request is in the local DB
-		const userSignature = hexToU8a(signature);
+		console.log("Pending request", pendingRequest);
 		if (pendingRequest) {
+			const { storedCaptchas, receivedCaptchas, captchaIds } =
+				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
+
+			const { tree, commitmentId } =
+				buildTreeAndGetCommitmentId(receivedCaptchas);
+
+			const datasetId = at(storedCaptchas, 0).datasetId;
+
+			if (!datasetId) {
+				throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH", {
+					context: { failedFuncName: this.dappUserSolution.name },
+				});
+			}
+
+			// Only do stuff if the request is in the local DB
+			const userSignature = hexToU8a(requestHashSignature);
 			// prevent this request hash from being used twice
 			await this.db.updateDappUserPendingStatus(requestHash);
 			const commit: UserCommitmentRecord = {
@@ -247,14 +251,16 @@ export class ImgCaptchaManager {
 				requestedAtTimestamp: Number.parseInt(timestamp),
 			};
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
+
+			console.log(receivedCaptchas);
+			console.log(storedCaptchas);
+
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
 						proof: tree.proof(id),
 					})),
-					timestamp: timestamp,
-					timestampSignature: timestampSignature,
 					verified: true,
 				};
 				await this.db.approveDappUserCommitment(commitmentId);
@@ -264,11 +270,11 @@ export class ImgCaptchaManager {
 						captchaId: id,
 						proof: [[]],
 					})),
-					timestamp,
-					timestampSignature,
 					verified: false,
 				};
 			}
+		} else {
+			this.logger.info("Request hash not found");
 		}
 		return response;
 	}
@@ -327,6 +333,12 @@ export class ImgCaptchaManager {
 		captchaIds: string[],
 	): Promise<boolean> {
 		const currentTime = Date.now();
+		// only proceed if there is a pending record
+		if (!pendingRecord) {
+			this.logger.info("No pending record found");
+			return false;
+		}
+
 		if (pendingRecord.deadlineTimestamp < currentTime) {
 			// deadline for responding to the captcha has expired
 			this.logger.info("Deadline for responding to captcha has expired");

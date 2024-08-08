@@ -1,6 +1,3 @@
-import { validateAddress } from "@polkadot/util-crypto/address";
-import { ProsopoApiError } from "@prosopo/common";
-import { parseCaptchaAssets } from "@prosopo/datasets";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +11,9 @@ import { parseCaptchaAssets } from "@prosopo/datasets";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { validateAddress } from "@polkadot/util-crypto/address";
+import { ProsopoApiError } from "@prosopo/common";
+import { parseCaptchaAssets } from "@prosopo/datasets";
 import {
 	ApiParams,
 	ApiPaths,
@@ -25,6 +25,7 @@ import {
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
 	GetPowCaptchaChallengeRequestBody,
+	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 } from "@prosopo/types";
@@ -70,9 +71,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							parseCaptchaAssets(item, env.assetsResolver),
 						),
 					})),
-					requestHash: taskData.requestHash,
-					timestamp: taskData.timestamp,
-					timestampSignature: taskData.signedTime,
+					[ApiParams.requestHash]: taskData.requestHash,
+					[ApiParams.timestamp]: taskData.timestamp,
+					[ApiParams.signature]: {
+						[ApiParams.provider]: {
+							[ApiParams.timestamp]: taskData.signedTimestamp,
+						},
+					},
 				};
 				return res.json(captchaResponse);
 			} catch (err) {
@@ -114,9 +119,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					parsed[ApiParams.dapp],
 					parsed[ApiParams.requestHash],
 					parsed[ApiParams.captchas],
-					parsed[ApiParams.signature],
+					parsed[ApiParams.signature].user.requestHash,
 					parsed[ApiParams.timestamp],
-					parsed[ApiParams.timestampSignature],
+					parsed[ApiParams.signature].provider.timestamp,
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -159,7 +164,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				dapp,
 				origin,
 			);
-			return res.json(challenge);
+
+			const getPowCaptchaResponse: GetPowCaptchaResponse = {
+				challenge: challenge.challenge,
+				difficulty: challenge.difficulty,
+				timestamp: challenge.timestamp,
+				signature: {
+					provider: {
+						timestamp: challenge.timestampSignature,
+						challenge: challenge.signature,
+					},
+				},
+			};
+
+			return res.json(getPowCaptchaResponse);
 		} catch (err) {
 			tasks.logger.error(err);
 			return next(
@@ -186,9 +204,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 				challenge,
 				difficulty,
-				signature,
+				signature.provider.challenge,
 				nonce,
 				verifiedTimeout,
+				signature.user.timestamp,
 			);
 			const response: PowCaptchaSolutionResponse = { verified };
 			return res.json(response);
