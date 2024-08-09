@@ -74,7 +74,9 @@ describe("PowCaptchaManager", () => {
 				`[0-9]+___${userAccount}___${dappAccount}`,
 			);
 
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(pair.sign as any).mockReturnValueOnce("signedChallenge");
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(u8aToHex as any).mockReturnValueOnce("hexSignedChallenge");
 
 			const result = await powCaptchaManager.getPowCaptchaChallenge(
@@ -100,9 +102,11 @@ describe("PowCaptchaManager", () => {
 			const timestampSignature = "testTimestampSignature";
 			const nonce = 12345;
 			const timeout = 1000;
-
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(checkRecentPowSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(checkPowSolution as any).mockImplementation(() => true);
 
 			const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -143,7 +147,7 @@ describe("PowCaptchaManager", () => {
 			const nonce = 12345;
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
-
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(checkRecentPowSolution as any).mockImplementation(() => {
 				throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
 					context: {
@@ -182,10 +186,10 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				checked: false,
 			};
-
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
-			);
+			); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(checkRecentPowSolution as any).mockImplementation(() => true);
 
 			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
@@ -204,7 +208,7 @@ describe("PowCaptchaManager", () => {
 			const dappAccount = "dappAccount";
 			const challenge = "timestamp___userAccount___dappAccount";
 			const timeout = 1000;
-
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(null);
 
 			await expect(

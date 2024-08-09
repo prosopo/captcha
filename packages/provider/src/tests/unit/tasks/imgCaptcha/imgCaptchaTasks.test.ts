@@ -55,7 +55,7 @@ vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 describe("ImgCaptchaManager", () => {
 	let db: Database;
 	let pair: KeyringPair;
-	let logger: Logger;
+	let logger: Logger; // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	let captchaConfig: any;
 	let imgCaptchaManager: ImgCaptchaManager;
 
@@ -108,6 +108,7 @@ describe("ImgCaptchaManager", () => {
 				},
 			] as unknown as Captcha[];
 
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getRandomCaptcha as any).mockResolvedValue(captchaDocs);
 
 			const result = await imgCaptchaManager.getCaptchaWithProof(
@@ -124,7 +125,7 @@ describe("ImgCaptchaManager", () => {
 			const datasetId = "datasetId";
 			const size = 3;
 			const solved = true;
-
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getRandomCaptcha as any).mockResolvedValue(null);
 
 			await expect(
@@ -148,12 +149,13 @@ describe("ImgCaptchaManager", () => {
 			const userAccount = "userAccount";
 			const dataset = { datasetId, captchas: [] };
 
-			(db.getDatasetDetails as any).mockResolvedValue(dataset);
-			(db.getRandomCaptcha as any).mockResolvedValue([]);
-			(randomAsHex as any).mockReturnValue("randomSalt");
-			(computePendingRequestHash as any).mockReturnValue("computedHash");
-			(pair.sign as any).mockReturnValue("signedTimestamp");
-			(u8aToHex as any).mockReturnValue("hexSignedTime");
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(randomAsHex as any).mockReturnValue("randomSalt"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(computePendingRequestHash as any).mockReturnValue("computedHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(pair.sign as any).mockReturnValue("signedTimestamp"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(u8aToHex as any).mockReturnValue("hexSignedTime"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(shuffleArray as any).mockReturnValue([]);
 
 			const result = await imgCaptchaManager.getRandomCaptchasAndRequestHash(
@@ -172,7 +174,7 @@ describe("ImgCaptchaManager", () => {
 		it("should throw an error if dataset details are not found", async () => {
 			const datasetId = "datasetId";
 			const userAccount = "userAccount";
-
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getDatasetDetails as any).mockResolvedValue(null);
 
 			await expect(
@@ -205,8 +207,8 @@ describe("ImgCaptchaManager", () => {
 				datasetId: "dataset1",
 			},
 		] as unknown as Captcha[];
-
-		(parseAndSortCaptchaSolutions as any).mockReturnValue(captchas);
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		(parseAndSortCaptchaSolutions as any).mockReturnValue(captchas); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getCaptchaById as any).mockResolvedValue(storedCaptchas);
 
 		const result =
@@ -225,8 +227,8 @@ describe("ImgCaptchaManager", () => {
 		const captchas = [
 			{ captchaId: "captcha1", solution: "solution1", salt: "salt1" },
 		] as unknown as CaptchaSolution[];
-
-		(parseAndSortCaptchaSolutions as any).mockReturnValue(captchas);
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		(parseAndSortCaptchaSolutions as any).mockReturnValue(captchas); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getCaptchaById as any).mockResolvedValue([]);
 
 		await expect(
@@ -254,7 +256,7 @@ describe("ImgCaptchaManager", () => {
 		} as unknown as PendingCaptchaRequest;
 		const userAccount = "userAccount";
 		const captchaIds = ["captcha1"];
-
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(computePendingRequestHash as any).mockReturnValue("requestHash");
 
 		const result =
@@ -313,7 +315,7 @@ describe("ImgCaptchaManager", () => {
 			stored: false,
 			requestedAtTimestamp: 0,
 		};
-
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
 
 		const result =
@@ -324,7 +326,7 @@ describe("ImgCaptchaManager", () => {
 
 	it("should throw an error if dapp user commitment is not found by ID", async () => {
 		const commitmentId = "commitmentId";
-
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getDappUserCommitmentById as any).mockResolvedValue(null);
 
 		await expect(
@@ -358,7 +360,7 @@ describe("ImgCaptchaManager", () => {
 				requestedAtTimestamp: 0,
 			},
 		];
-
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
 			dappUserCommitments,
 		);
@@ -372,7 +374,7 @@ describe("ImgCaptchaManager", () => {
 	it("should return undefined if no approved dapp user commitment is found by account", async () => {
 		const userAccount = "userAccount";
 		const dappUserCommitments: UserCommitmentRecord[] = [];
-
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
 			dappUserCommitments,
 		);

@@ -194,7 +194,7 @@ export async function getDependencies(
 	const deps: string[] = [];
 	const peerDeps: string[] = [];
 	// for each line, check if there is an unmet optional dependency
-	stdout.split("\n").forEach((line) => {
+	for (const line of stdout.split("\n")) {
 		if (line.includes("UNMET OPTIONAL DEPENDENCY")) {
 			//  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
 			const parts = line.match(peerDepsRegex);
@@ -208,7 +208,7 @@ export async function getDependencies(
 				deps.push(at(parts, 1));
 			}
 		}
-	});
+	}
 	// dedupe and return deps and peer deps
 	return {
 		dependencies: deps.filter((x, i) => i === deps.indexOf(x)),
@@ -270,7 +270,7 @@ export function getFilesInDirs(
 	const ignorePatterns = excludePatterns.map(
 		(pattern) => `${startDir}/**/${pattern}`,
 	);
-	includePatterns.forEach((searchPattern) => {
+	for (const searchPattern of includePatterns) {
 		// get matching module directories
 		const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf(".") > -1 ? "" : "/*"}`;
 		const globResult = new Glob(globPattern, {
@@ -280,6 +280,6 @@ export function getFilesInDirs(
 		for (const filePath of globResult) {
 			files.push(filePath);
 		}
-	});
+	}
 	return files;
 }

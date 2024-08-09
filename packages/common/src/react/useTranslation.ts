@@ -11,15 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { UseTranslationOptions, UseTranslationResponse, useTranslation as useTranslationDefault } from 'react-i18next'
-import i18n from '../i18n.js'
+import {
+	type UseTranslationOptions,
+	type UseTranslationResponse,
+	useTranslation as useTranslationDefault,
+} from "react-i18next";
+import i18n from "../i18n.js";
 
 function useTranslation(
-    options?: UseTranslationOptions<'translation'>
-): UseTranslationResponse<'translation', any> & { t: typeof i18n.t } {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore not sure how to fix this
-    return useTranslationDefault('translation', { i18n, ...options })
+	options?: UseTranslationOptions<"translation">,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
+): UseTranslationResponse<"translation", any> & { t: typeof i18n.t } {
+	// @ts-ignore not sure how to fix this
+	return useTranslationDefault("translation", { i18n, ...options });
 }
 
-export default useTranslation
+export default useTranslation;

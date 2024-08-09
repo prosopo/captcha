@@ -1,32 +1,32 @@
 {
-    "extends": "../../tsconfig.cjs.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist/cjs",
-        "lib": ["es6", "dom"]
-    },
-    "include": ["src/index.tsx", "src/index.html"],
-    "references": [
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../procaptcha/tsconfig.cjs.json"
-        },
-        {
-            "path": "../procaptcha-frictionless/tsconfig.cjs.json"
-        },
-        {
-            "path": "../procaptcha-pow/tsconfig.cjs.json"
-        },
-        {
-            "path": "../procaptcha-react/tsconfig.cjs.json"
-        },
-        {
-            "path": "../types/tsconfig.cjs.json"
-        },
-        {
-            "path": "../util/tsconfig.cjs.json"
-        }
-    ]
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs",
+		"lib": ["es6", "dom"]
+	},
+	"include": ["src/index.tsx", "src/index.html"],
+	"references": [
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../procaptcha/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-frictionless/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-pow/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-react/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
+		}
+	]
 }

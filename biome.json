@@ -1,19 +1,34 @@
 {
-    "vcs": {
-        "useIgnoreFile": true
-    },
-    "files": {
-        "include": [
-            "**/*.js",
-            "**/*.jsx",
-            "**/*.cjs",
-            "**/*.mjs",
-            "**/*.ts",
-            "**/*.tsx",
-            "**/*.cts",
-            "**/*.mts",
-            "**/*.json",
-            "**/*.jsonc"
-        ]
-    }
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
+	"files": {
+		"include": [
+			"**/*.js",
+			"**/*.jsx",
+			"**/*.cjs",
+			"**/*.mjs",
+			"**/*.ts",
+			"**/*.tsx",
+			"**/*.cts",
+			"**/*.mts",
+			"**/*.json",
+			"**/*.jsonc",
+			"**/*.css"
+		],
+		"ignore": ["./packages/detector/src/index.js", "*.bundle.js"]
+	},
+	"linter": {
+		"rules": {
+			"style": {
+				"noParameterAssign": "off"
+			},
+			"a11y": {
+				"useKeyWithClickEvents": "off"
+			}
+		}
+	}
 }

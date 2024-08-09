@@ -56,8 +56,8 @@ jobs:
 
             - uses: actions/checkout@v3
               with:
-                # all history
-                fetch-depth: 0
+                  # all history
+                  fetch-depth: 0
 
             # fail-fast step to check if the version has been bumped
             # when running manually, there won't be a version line change, so we need to skip this step in that case
@@ -78,20 +78,20 @@ jobs:
                   echo "Previous version: $PREV"
 
                   # break next and previous versions into major, minor, patch
-                  NEXT_MAJOR=$(echo $NEXT | cut -d. -f1)
-                  NEXT_MINOR=$(echo $NEXT | cut -d. -f2)
-                  NEXT_PATCH=$(echo $NEXT | cut -d. -f3)
-                  PREV_MAJOR=$(echo $PREV | cut -d. -f1)
-                  PREV_MINOR=$(echo $PREV | cut -d. -f2)
-                  PREV_PATCH=$(echo $PREV | cut -d. -f3)
+                  NEXT_MAJOR=$(echo "$NEXT" | cut -d. -f1)
+                  NEXT_MINOR=$(echo "$NEXT" | cut -d. -f2)
+                  NEXT_PATCH=$(echo "$NEXT" | cut -d. -f3)
+                  PREV_MAJOR=$(echo "$PREV" | cut -d. -f1)
+                  PREV_MINOR=$(echo "$PREV" | cut -d. -f2)
+                  PREV_PATCH=$(echo "$PREV" | cut -d. -f3)
 
                   # compare the versions, checking for an *increasing* version
 
-                  if [[ $NEXT_MAJOR -gt $PREV_MAJOR ]]; then
+                  if [[ "$NEXT_MAJOR" -gt "$PREV_MAJOR" ]]; then
                       echo "Major version bump"
-                  elif [[ $NEXT_MAJOR -eq $PREV_MAJOR && $NEXT_MINOR -gt $PREV_MINOR ]]; then
+                  elif [[ "$NEXT_MAJOR" -eq "$PREV_MAJOR" && "$NEXT_MINOR" -gt "$PREV_MINOR" ]]; then
                       echo "Minor version bump"
-                  elif [[ $NEXT_MAJOR -eq $PREV_MAJOR && $NEXT_MINOR -eq $PREV_MINOR && $NEXT_PATCH -gt $PREV_PATCH ]]; then
+                  elif [[ "$NEXT_MAJOR" -eq "$PREV_MAJOR" && "$NEXT_MINOR" -eq "$PREV_MINOR" && "$NEXT_PATCH" -gt "$PREV_PATCH" ]]; then
                       echo "Patch version bump"
                   else
                       echo "Version not bumped / not an increasing version"

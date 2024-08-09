@@ -11,25 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise, WsProvider } from '@polkadot/api'
-import { at } from '@prosopo/util'
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import { at } from "@prosopo/util";
 
 async function run(blockNumber: string | number) {
-    // Construct
-    const provider = 'ws://localhost:9944'
-    const wsProvider = new WsProvider(provider)
-    const api = await ApiPromise.create({ provider: wsProvider })
+	// Construct
+	const provider = "ws://localhost:9944";
+	const wsProvider = new WsProvider(provider);
+	const api = await ApiPromise.create({ provider: wsProvider });
 
-    // Do something
-    const blockHash = await api.rpc.chain.getBlockHash(blockNumber)
+	// Do something
+	const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
 
-    const block = await api.rpc.chain.getBlock(blockHash)
-    console.log(JSON.stringify(block.toJSON(), null, 2))
+	const block = await api.rpc.chain.getBlock(blockHash);
+	console.log(JSON.stringify(block.toJSON(), null, 2));
 }
 
 run(at(process.argv.slice(2), 0))
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error)
-        process.exit(-1)
-    })
+	.then(() => process.exit(0))
+	.catch((error) => {
+		console.error(error);
+		process.exit(-1);
+	});

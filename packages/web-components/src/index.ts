@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './CaptchaPlaceholder.js'
-export * from './LoadingSpinner.js'
-export * from './theme.js'
-export * from './Checkbox.js'
-export { default as Logo } from './Logo.js'
-export * from './Containers.js'
-export * from './WidgetConstants.js'
+export * from "./CaptchaPlaceholder.js";
+export * from "./LoadingSpinner.js";
+export * from "./theme.js";
+export * from "./Checkbox.js";
+export { default as Logo } from "./Logo.js";
+export * from "./Containers.js";
+export * from "./WidgetConstants.js";
