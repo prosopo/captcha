@@ -219,14 +219,8 @@ jobs:
                     cp ./dev/scripts/env.${{ steps.env.outputs.env }} ./packages/cli/.env.${{ steps.env.outputs.env }}
 
                     # Navigate to the provider CLI directory and build
-                    echo "Navigating to 'packages/cli' and bundling..."
-                    cd packages/cli
-                    NODE_ENV="${{ steps.env.outputs.env }}" npm run build
-                    NODE_ENV="${{ steps.env.outputs.env }}" npm run bundle
-
-                    # Navigate back to the project root
-                    echo "Navigating back to project root..."
-                    cd ../..
+                    NODE_ENV="${{ steps.env.outputs.env }}" npm run -w @prosopo/cli build
+                    NODE_ENV="${{ steps.env.outputs.env }}" npm run -w @prosopo/cli bundle
 
             # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Github release
