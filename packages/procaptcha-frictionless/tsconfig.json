@@ -1,27 +1,27 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": ["es6", "dom"],
-        "allowJs": true
-    },
-    "include": ["src", "src/**/*.json", "src/index.html"],
-    "references": [
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../detector"
-        },
-        {
-            "path": "../procaptcha-react"
-        },
-        {
-            "path": "../procaptcha-pow"
-        },
-        {
-            "path": "../web-components"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"allowJs": true
+	},
+	"include": ["src", "src/**/*.json", "src/index.html"],
+	"references": [
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../detector"
+		},
+		{
+			"path": "../procaptcha-react"
+		},
+		{
+			"path": "../procaptcha-pow"
+		},
+		{
+			"path": "../web-components"
+		}
+	]
 }

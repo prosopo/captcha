@@ -1,23 +1,23 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": ["es6", "dom"]
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../api"
-        },
-        {
-            "path": "../contract"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"]
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../contract"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		}
+	]
 }

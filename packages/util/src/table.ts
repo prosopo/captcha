@@ -12,29 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // https://stackoverflow.com/a/75872362/1178971
-function wrapItemToMultipleRows(item: { [key: string]: string }, maxCellWidth: number): { [key: string]: string }[] {
-    const isRemainingData = Object.values(item).find((value) => {
-        return value && value.length > 0
-    })
+function wrapItemToMultipleRows(
+	item: { [key: string]: string },
+	maxCellWidth: number,
+): { [key: string]: string }[] {
+	const isRemainingData = Object.values(item).find((value) => {
+		return value && value.length > 0;
+	});
 
-    if (!isRemainingData) {
-        return []
-    }
+	if (!isRemainingData) {
+		return [];
+	}
 
-    const itemRow: { [key: string]: string } = {}
-    const remaining: { [key: string]: string } = {}
-    Object.entries(item).forEach(([key, value]) => {
-        itemRow[key] = value?.slice ? value.slice(0, maxCellWidth) : value
-        remaining[key] = value?.slice ? value.slice(maxCellWidth) : value
-    })
+	const itemRow: { [key: string]: string } = {};
+	const remaining: { [key: string]: string } = {};
 
-    return [itemRow, ...wrapItemToMultipleRows(remaining, maxCellWidth)]
+	for (const [key, value] of Object.entries(item)) {
+		itemRow[key] = value?.slice ? value.slice(0, maxCellWidth) : value;
+		remaining[key] = value?.slice ? value.slice(maxCellWidth) : value;
+	}
+
+	return [itemRow, ...wrapItemToMultipleRows(remaining, maxCellWidth)];
 }
 
-export function consoleTableWithWrapping(data: { [key: string]: string }[], maxColWidth = 90) {
-    const tableItems = data.reduce<{ [key: string]: string }[]>((prev, item) => {
-        return [...prev, ...wrapItemToMultipleRows(item, maxColWidth)]
-    }, [])
+export function consoleTableWithWrapping(
+	data: { [key: string]: string }[],
+	maxColWidth = 90,
+) {
+	const tableItems = data.reduce<{ [key: string]: string }[]>((prev, item) => {
+		// biome-ignore lint/performance/noAccumulatingSpread: TODO fix
+		return [...prev, ...wrapItemToMultipleRows(item, maxColWidth)];
+	}, []);
 
-    console.table(tableItems)
+	console.table(tableItems);
 }

@@ -20,13 +20,13 @@ docker compose --file ./docker/docker-compose.development.yml up -d
 
 Run all of the following commands from the root of the workspace.
 
-#### Install the dependencies
+### Install the dependencies
 
 ```bash
 npm install
 ```
 
-#### Set up the environment variables
+### Set up the environment variables
 
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development
@@ -36,19 +36,19 @@ cp dev/scripts/env.development packages/cli/.env.development
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development
 ```
 
-#### Build the packages
+### Build the packages
 
 ```bash
 npm run build:all
 ```
 
-#### Start the local services
+### Start the local services
 
 ```bash
 npm run start:all
 ```
 
-#### Single Command
+### Single Command
 
 You can use this single command to run all of the above commands at once.
 

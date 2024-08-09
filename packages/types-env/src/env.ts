@@ -1,3 +1,6 @@
+import type { Keyring } from "@polkadot/keyring";
+import type { KeyringPair } from "@polkadot/keyring/types";
+import type { Logger } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,25 +14,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { AssetsResolver, EnvironmentTypes, NetworkNames } from '@prosopo/types'
-import type { Database } from '@prosopo/types-database'
-import type { Keyring } from '@polkadot/keyring'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import type { Logger } from '@prosopo/common'
-import type { ProsopoBasicConfigOutput } from '@prosopo/types'
+import type {
+	AssetsResolver,
+	EnvironmentTypes,
+	NetworkNames,
+} from "@prosopo/types";
+import type { ProsopoBasicConfigOutput } from "@prosopo/types";
+import type { Database } from "@prosopo/types-database";
 
 export interface ProsopoEnvironment {
-    config: ProsopoBasicConfigOutput
-    db: Database | undefined
-    contractAddress: string
-    defaultEnvironment: EnvironmentTypes
-    defaultNetwork: NetworkNames
-    contractName: string
-    logger: Logger
-    assetsResolver: AssetsResolver | undefined
-    keyring: Keyring
-    pair: KeyringPair | undefined
-    getDb(): Database
-    isReady(): Promise<void>
-    importDatabase(): Promise<void>
+	config: ProsopoBasicConfigOutput;
+	db: Database | undefined;
+	contractAddress: string;
+	defaultEnvironment: EnvironmentTypes;
+	defaultNetwork: NetworkNames;
+	contractName: string;
+	logger: Logger;
+	assetsResolver: AssetsResolver | undefined;
+	keyring: Keyring;
+	pair: KeyringPair | undefined;
+	getDb(): Database;
+	isReady(): Promise<void>;
+	importDatabase(): Promise<void>;
 }

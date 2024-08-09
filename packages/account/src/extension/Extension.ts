@@ -11,17 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, ProcaptchaClientConfigOutput } from '@prosopo/types'
+import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 
 /**
  * Class to interface with accounts.
  */
 export abstract class Extension {
-    /**
-     * Find an account given an address.
-     * @returns the account
-     * @throws if the account is not found
-     * @param config
-     */
-    public abstract getAccount(config: ProcaptchaClientConfigOutput): Promise<Account>
+	/**
+	 * Find an account given an address.
+	 * @returns the account
+	 * @throws if the account is not found
+	 * @param config
+	 */
+	public abstract getAccount(
+		config: ProcaptchaClientConfigOutput,
+	): Promise<Account>;
 }
