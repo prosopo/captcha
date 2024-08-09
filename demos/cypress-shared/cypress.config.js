@@ -13,7 +13,7 @@
 // limitations under the License.
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
+
 export default defineConfig({
 	video: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
@@ -37,10 +37,7 @@ export default defineConfig({
 						modulePreload: { polyfill: true },
 						mode: "development",
 					},
-					plugins: [nodePolyfills({
-                       // Whether to polyfill `node:` protocol imports.
-                       protocolImports: true,
-                     })],
+					plugins: [],
 				}),
 			);
 		},
