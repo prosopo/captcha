@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { fileURLToPath } from "node:url";
+
+// biome-ignore lint/style/useNodejsImportProtocol: TODO Breaks bundling otherwise, should this be pulled into own pkg?
+import { fileURLToPath } from "url";
+
 // https://stackoverflow.com/a/76582917
 /**
  * Determines whether a module is the entry point for the running node process.
