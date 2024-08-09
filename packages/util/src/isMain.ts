@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// biome-ignore lint/style/useNodejsImportProtocol: TODO Breaks bundling otherwise, should this be pulled into own pkg?
-import { fileURLToPath } from "url";
+import { fileURLToPath } from "node:url";
 
 // https://stackoverflow.com/a/76582917
 /**
