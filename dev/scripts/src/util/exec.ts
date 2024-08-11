@@ -11,70 +11,68 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { spawn } from 'child_process'
-import { stdin } from 'process'
+import { spawn } from "node:child_process";
+import { stdin } from "node:process";
 
 export interface ExecOutput {
-    stdout: string
-    stderr: string
-    code: number | null
+	stdout: string;
+	stderr: string;
+	code: number | null;
 }
 
 export const exec = (
-    command: string,
-    options?: {
-        pipe?: boolean
-        printCmd?: boolean
-    }
+	command: string,
+	options?: {
+		pipe?: boolean;
+		printCmd?: boolean;
+	},
 ): Promise<ExecOutput> => {
-    let { pipe, printCmd } = options || {}
-    pipe = pipe === undefined || pipe // map undefined to true
-    printCmd = printCmd === undefined || printCmd // map undefined to true
+	let { pipe, printCmd } = options || {};
+	pipe = pipe === undefined || pipe; // map undefined to true
+	printCmd = printCmd === undefined || printCmd; // map undefined to true
 
-    if (printCmd) {
-        console.log(`[exec] ${command}`)
-    }
+	if (printCmd) {
+		console.log(`[exec] ${command}`);
+	}
 
-    const prc = spawn(command, {
-        shell: true,
-    })
+	const prc = spawn(command, {
+		shell: true,
+	});
 
-    if (pipe || pipe === undefined) {
-        // https://github.com/microsoft/TypeScript/issues/44605
-        // Building a second time fixes this issue
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        prc.stdout.pipe(process.stdout)
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        prc.stderr.pipe(process.stderr)
-    }
-    stdin.pipe(prc.stdin)
+	if (pipe || pipe === undefined) {
+		// https://github.com/microsoft/TypeScript/issues/44605
+		// Building a second time fixes this issue
+		// @ts-ignore
+		prc.stdout.pipe(process.stdout);
+		// @ts-ignore
+		prc.stderr.pipe(process.stderr);
+	}
+	stdin.pipe(prc.stdin);
 
-    const stdoutData: string[] = []
-    const stderrData: string[] = []
-    prc.stdout.on('data', (data) => {
-        stdoutData.push(data.toString())
-    })
-    prc.stderr.on('data', (data) => {
-        stderrData.push(data.toString())
-    })
+	const stdoutData: string[] = [];
+	const stderrData: string[] = [];
+	prc.stdout.on("data", (data) => {
+		stdoutData.push(data.toString());
+	});
+	prc.stderr.on("data", (data) => {
+		stderrData.push(data.toString());
+	});
 
-    return new Promise((resolve, reject) => {
-        prc.on('close', function (code) {
-            if (pipe || pipe === undefined) {
-                console.log('')
-            }
-            const output: ExecOutput = {
-                stdout: stdoutData.join(''),
-                stderr: stderrData.join(''),
-                code,
-            }
-            if (code === 0) {
-                resolve(output)
-            } else {
-                reject(output)
-            }
-        })
-    })
-}
+	return new Promise((resolve, reject) => {
+		prc.on("close", (code) => {
+			if (pipe || pipe === undefined) {
+				console.log("");
+			}
+			const output: ExecOutput = {
+				stdout: stdoutData.join(""),
+				stderr: stderrData.join(""),
+				code,
+			};
+			if (code === 0) {
+				resolve(output);
+			} else {
+				reject(output);
+			}
+		});
+	});
+};

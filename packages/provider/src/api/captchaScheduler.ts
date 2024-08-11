@@ -1,3 +1,6 @@
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { ProviderEnvironment } from "@prosopo/env";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,28 +14,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CronJob } from 'cron'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoConfigOutput } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/env'
-import { Tasks } from '../tasks/tasks.js'
+import { CronJob } from "cron";
+import { Tasks } from "../tasks/tasks.js";
 
-export async function storeCaptchasExternally(pair: KeyringPair, config: ProsopoConfigOutput) {
-    const env = new ProviderEnvironment(config, pair)
-    await env.isReady()
+export async function storeCaptchasExternally(
+	pair: KeyringPair,
+	config: ProsopoConfigOutput,
+) {
+	const env = new ProviderEnvironment(config, pair);
+	await env.isReady();
 
-    const tasks = new Tasks(env)
+	const tasks = new Tasks(env);
 
-    // Set the cron schedule to run every hour
-    const cronSchedule = '0 * * * *'
+	// Set the cron schedule to run every hour
+	const cronSchedule = "0 * * * *";
 
-    const job = new CronJob(cronSchedule, async () => {
-        env.logger.log('storeCommitmentsExternal task....')
-        await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
-            env.logger.error(err)
-        })
-    })
+	const job = new CronJob(cronSchedule, async () => {
+		env.logger.log("storeCommitmentsExternal task....");
+		await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
+			env.logger.error(err);
+		});
+	});
 
-    job.start()
+	job.start();
 }
