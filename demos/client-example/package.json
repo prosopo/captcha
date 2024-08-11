@@ -1,69 +1,64 @@
 {
-    "name": "@prosopo/client-example",
-    "version": "1.0.2",
-    "private": true,
-    "type": "module",
-    "engines": {
-        "node": ">=20",
-        "npm": ">=9"
-    },
-    "dependencies": {
-        "@emotion/react": "^11.9.3",
-        "@emotion/styled": "^11.9.3",
-        "@mui/material": "^5.9.1",
-        "@polkadot/extension-dapp": "0.46.9",
-        "@polkadot/extension-inject": "0.46.9",
-        "@prosopo/common": "1.0.2",
-        "@prosopo/procaptcha": "1.0.2",
-        "@prosopo/procaptcha-frictionless": "1.0.2",
-        "@prosopo/procaptcha-react": "1.0.2",
-        "@prosopo/server": "1.0.2",
-        "@prosopo/types": "1.0.2",
-        "@types/react-dom": "^18.3.0",
-        "electron": "25.8.4",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1",
-        "react-router-dom": "^6.22.3"
-    },
-    "overrides": {
-        "@polkadot/extension-inject": {
-            "@polkadot/api": {
-                "version": "10.13.1"
-            }
-        },
-        "@polkadot/extension-dapp": {
-            "@polkadot/api": {
-                "version": "10.13.1"
-            }
-        }
-    },
-    "devDependencies": {
-        "@prosopo/cli": "1.0.2",
-        "@prosopo/config": "1.0.2",
-        "@prosopo/vite-plugin-watch-workspace": "1.0.2",
-        "@types/node": "^20.3.1",
-        "css-loader": "^6.8.1",
-        "tslib": "2.6.2",
-        "typescript": "5.1.6"
-    },
-    "scripts": {
-        "test": "echo \"No test specified\"",
-        "start": "vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
-        "build": "tsc --build --verbose",
-        "bundle:prod": "vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
-        "bundle:dev": "vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
-        "clean": "tsc --build --clean"
-    },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
-    }
+	"name": "@prosopo/client-example",
+	"version": "2.0.0",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": ">=20",
+		"npm": ">=9"
+	},
+	"dependencies": {
+		"@emotion/react": "^11.9.3",
+		"@emotion/styled": "^11.9.3",
+		"@mui/material": "^5.9.1",
+		"@polkadot/extension-dapp": "0.46.9",
+		"@polkadot/extension-inject": "0.46.9",
+		"@prosopo/common": "2.0.0",
+		"@prosopo/procaptcha": "2.0.0",
+		"@prosopo/procaptcha-frictionless": "2.0.0",
+		"@prosopo/procaptcha-react": "2.0.0",
+		"@prosopo/server": "2.0.0",
+		"@prosopo/types": "2.0.0",
+		"@types/react-dom": "^18.3.0",
+		"electron": "25.8.4",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^6.22.3"
+	},
+	"overrides": {
+		"@polkadot/extension-inject": {
+			"@polkadot/api": {
+				"version": "10.13.1"
+			}
+		},
+		"@polkadot/extension-dapp": {
+			"@polkadot/api": {
+				"version": "10.13.1"
+			}
+		}
+	},
+	"devDependencies": {
+		"@prosopo/cli": "2.0.0",
+		"@prosopo/config": "2.0.0",
+		"@prosopo/vite-plugin-watch-workspace": "2.0.0",
+		"@types/node": "^20.3.1",
+		"css-loader": "^6.8.1",
+		"tslib": "2.6.2",
+		"typescript": "5.1.6"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config vite.config.ts --port 9230 --host --force",
+		"build": "tsc --build --verbose",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config vite.config.ts --outDir dist --emptyOutDir",
+		"clean": "tsc --build --clean"
+	},
+	"browserslist": {
+		"production": [">0.2%", "not dead", "not op_mini all"],
+		"development": [
+			"last 1 chrome version",
+			"last 1 firefox version",
+			"last 1 safari version"
+		]
+	}
 }

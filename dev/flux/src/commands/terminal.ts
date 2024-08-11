@@ -1,3 +1,5 @@
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import type { ArgumentsCamelCase, Argv } from "yargs";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,46 +13,50 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as z from 'zod'
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { getPrivateKey, getPublicKey } from './process.env.js'
-import { main } from '../lib/terminal.js'
+import * as z from "zod";
+import { main } from "../lib/terminal.js";
+import { getPrivateKey, getPublicKey } from "./process.env.js";
 
 const fluxAuthArgs = z.object({
-    app: z.string(),
-    ip: z.string().optional(),
-})
+	app: z.string(),
+	ip: z.string().optional(),
+});
 
 export default (cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'flux.cli.auth')
+	const logger =
+		cmdArgs?.logger || getLogger(LogLevel.enum.info, "flux.cli.auth");
 
-    return {
-        command: 'terminal',
-        describe: 'Start a terminal to a Flux Node',
-        builder: (yargs: Argv) =>
-            yargs
-                .option('app', {
-                    type: 'string' as const,
-                    demandOption: false,
-                    desc: 'Name of the app to authenticate with',
-                } as const)
-                .option('ip', {
-                    type: 'string' as const,
-                    demandOption: false,
-                    desc: 'IP address of Flux machine to authenticate with',
-                } as const),
-        handler: async (argv: ArgumentsCamelCase) => {
-            try {
-                const privateKey = getPrivateKey()
-                const publicKey = getPublicKey()
-                const parsedArgs = fluxAuthArgs.parse(argv)
-                const result = await main(publicKey, privateKey, parsedArgs.app, parsedArgs.ip)
-                logger.info(result)
-            } catch (err) {
-                logger.error(err)
-            }
-        },
-        middlewares: [],
-    }
-}
+	return {
+		command: "terminal",
+		describe: "Start a terminal to a Flux Node",
+		builder: (yargs: Argv) =>
+			yargs
+				.option("app", {
+					type: "string" as const,
+					demandOption: false,
+					desc: "Name of the app to authenticate with",
+				} as const)
+				.option("ip", {
+					type: "string" as const,
+					demandOption: false,
+					desc: "IP address of Flux machine to authenticate with",
+				} as const),
+		handler: async (argv: ArgumentsCamelCase) => {
+			try {
+				const privateKey = getPrivateKey();
+				const publicKey = getPublicKey();
+				const parsedArgs = fluxAuthArgs.parse(argv);
+				const result = await main(
+					publicKey,
+					privateKey,
+					parsedArgs.app,
+					parsedArgs.ip,
+				);
+				logger.info(result);
+			} catch (err) {
+				logger.error(err);
+			}
+		},
+		middlewares: [],
+	};
+};

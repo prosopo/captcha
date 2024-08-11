@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import fs from 'fs'
-import path from 'path'
+import fs from "node:fs";
+import path from "node:path";
 
 /** Convert an env file to an array of quoted strings
 For example an env file like this:
@@ -27,15 +27,15 @@ would become an array of quoted strings like this:
 */
 
 export const formatEnvToArray = (envPath: string) => {
-    const envFile = path.resolve(envPath)
-    const env = fs.readFileSync(envFile, 'utf8')
-    return `[${env
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => {
-            const [key, ...value] = line.split('=')
-            if (!value[0]) return `"${key}="`
-            return `"${key}=${value.join('=').replace(/"/g, '\\"')}"`
-        })
-        .join(',')}]`
-}
+	const envFile = path.resolve(envPath);
+	const env = fs.readFileSync(envFile, "utf8");
+	return `[${env
+		.split("\n")
+		.filter(Boolean)
+		.map((line) => {
+			const [key, ...value] = line.split("=");
+			if (!value[0]) return `"${key}="`;
+			return `"${key}=${value.join("=").replace(/"/g, '\\"')}"`;
+		})
+		.join(",")}]`;
+};

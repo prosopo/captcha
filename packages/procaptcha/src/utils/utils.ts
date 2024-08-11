@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export const sleep = (ms: number) => {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
+	return new Promise((resolve) => setTimeout(resolve, ms));
+};

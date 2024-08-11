@@ -1,29 +1,29 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": ["dom", "dom.iterable", "esnext"]
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../../packages/procaptcha-react"
-        },
-        {
-            "path": "../../packages/procaptcha-frictionless"
-        },
-        {
-            "path": "../../packages/cli"
-        },
-        {
-            "path": "../../packages/types"
-        },
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../../dev/vite-plugin-watch-workspace"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["dom", "dom.iterable", "esnext"]
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../../packages/procaptcha-react"
+		},
+		{
+			"path": "../../packages/procaptcha-frictionless"
+		},
+		{
+			"path": "../../packages/cli"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../../dev/vite-plugin-watch-workspace"
+		}
+	]
 }

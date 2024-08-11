@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export class HttpError extends Error {
-    constructor(
-        public status: number,
-        public statusText: string,
-        public url: string
-    ) {
-        super(`HTTP error! status: ${status} (${statusText}) for URL: ${url}`)
-        this.name = 'HttpError'
-    }
+	constructor(
+		public status: number,
+		public statusText: string,
+		public url: string,
+	) {
+		super(`HTTP error! status: ${status} (${statusText}) for URL: ${url}`);
+		this.name = "HttpError";
+	}
 }

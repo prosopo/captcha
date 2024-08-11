@@ -50,33 +50,33 @@
 // }
 
 export interface AppUpdateSpecification {
-    name: string
-    compose: {
-        name: string
-        description: string
-        repotag: string
-        ports: string
-        domains: string
-        environmentParameters: string
-        commands: string
-        containerPorts: string
-        containerData: string
-        cpu: number
-        ram: number
-        hdd: number
-        tiered: boolean
-        secrets: string
-        repoauth: string
-    }[]
-    contacts: string
-    description: string
-    expire: number
-    geolocation: string[]
-    hash: string
-    height: number
-    instances: number
-    owner: string
-    version: number
-    nodes: string[]
-    staticip: boolean
+	name: string;
+	compose: {
+		name: string;
+		description: string;
+		repotag: string;
+		ports: string;
+		domains: string;
+		environmentParameters: string;
+		commands: string;
+		containerPorts: string;
+		containerData: string;
+		cpu: number;
+		ram: number;
+		hdd: number;
+		tiered: boolean;
+		secrets: string;
+		repoauth: string;
+	}[];
+	contacts: string;
+	description: string;
+	expire: number;
+	geolocation: string[];
+	hash: string;
+	height: number;
+	instances: number;
+	owner: string;
+	version: number;
+	nodes: string[];
+	staticip: boolean;
 }

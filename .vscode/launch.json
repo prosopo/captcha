@@ -1,17 +1,17 @@
 {
-    "version": "1.0.0",
-    "configurations": [
-        {
-            "name": "tsx",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/tsx",
-            "runtimeArgs": ["--transpile-only", "--esm"],
-            "program": "${workspaceRoot}/dev/scripts/src/cli/index.ts",
-            "args": ["version"],
-            "cwd": "${workspaceRoot}",
-            "internalConsoleOptions": "openOnSessionStart",
-            "skipFiles": ["<node_internals>/**", "node_modules/**"]
-        }
-    ]
+	"version": "1.0.0",
+	"configurations": [
+		{
+			"name": "tsx",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/tsx",
+			"runtimeArgs": ["--transpile-only", "--esm"],
+			"program": "${workspaceRoot}/dev/scripts/src/cli/index.ts",
+			"args": ["version"],
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": ["<node_internals>/**", "node_modules/**"]
+		}
+	]
 }

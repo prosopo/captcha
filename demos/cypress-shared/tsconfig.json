@@ -1,19 +1,19 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "lib": ["ES2021", "dom"],
-        "types": ["cypress", "node"],
-        "noEmit": true,
-        "noEmitOnError": true,
-        "sourceMap": false
-    },
-    "include": ["**/*.ts"],
-    "references": [
-        {
-            "path": "../../packages/types"
-        },
-        {
-            "path": "../../packages/util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"lib": ["ES2021", "dom"],
+		"types": ["cypress", "node"],
+		"noEmit": true,
+		"noEmitOnError": true,
+		"sourceMap": false
+	},
+	"include": ["**/*.ts"],
+	"references": [
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/util"
+		}
+	]
 }

@@ -1,3 +1,4 @@
+import type { ProcaptchaClientConfigInput } from "../config/index.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +12,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProcaptchaCallbacks } from './manager.js'
-import { ProcaptchaClientConfigInput } from '../config/index.js'
+import type { ProcaptchaCallbacks } from "./manager.js";
 
 /**
  * The props for the Procaptcha component.
  */
 export interface ProcaptchaProps {
-    // the configuration for procaptcha
-    config: ProcaptchaClientConfigInput
-    // optional set of callbacks for various captcha events
-    callbacks?: Partial<ProcaptchaCallbacks>
+	// the configuration for procaptcha
+	config: ProcaptchaClientConfigInput;
+	// optional set of callbacks for various captcha events
+	callbacks?: Partial<ProcaptchaCallbacks>;
 }

@@ -12,54 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { useEffect, useState } from 'react'
-import { useTranslation } from '@prosopo/common'
-import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
+import { web3AccountsSubscribe, web3Enable } from "@polkadot/extension-dapp";
+import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+import { useTranslation } from "@prosopo/common";
+import { useEffect, useState } from "react";
 
 export const ExtensionAccountSelect = ({
-    value,
-    dappName,
-    onChange,
+	value,
+	dappName,
+	onChange,
 }: {
-    value?: string
-    dappName: string
-    onChange: (value: string) => void
+	value?: string;
+	dappName: string;
+	onChange: (value: string) => void;
 }) => {
-    const { t } = useTranslation()
-    const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-    useEffect(() => {
-        const prom = web3Enable(dappName).then(() => {
-            return web3AccountsSubscribe(setAccounts)
-        })
-        return () => {
-            prom.then((unsub) => unsub())
-        }
-    }, [])
+	const { t } = useTranslation();
+	const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
+	useEffect(() => {
+		const prom = web3Enable(dappName).then(() => {
+			return web3AccountsSubscribe(setAccounts);
+		});
+		return () => {
+			prom.then((unsub) => unsub());
+		};
+	}, [dappName]);
 
-    const account: InjectedAccountWithMeta | null = accounts.find((a) => a.address === value) || null
+	const account: InjectedAccountWithMeta | null =
+		accounts.find((a) => a.address === value) || null;
 
-    return (
-        // react select box
-        <select
-            id="select-account"
-            onChange={(e) => {
-                const value = e.target.value
-                const account = accounts.find((a) => a.address === value) || null
-                if (account) {
-                    console.log('Selected account:', value)
-                    onChange(account.address)
-                } else {
-                    console.log('Deselected account')
-                    onChange('')
-                }
-            }}
-            value={accounts.length > 0 && account ? account.address : undefined}
-            style={{ width: '550px', borderRadius: '4px', padding: '16.5px 14px' }}
-        >
-            {accounts.map(({ address, meta: { name } }) => (
-                <option value={address}>{name}</option>
-            ))}
-        </select>
-    )
-}
+	return (
+		// react select box
+		<select
+			id="select-account"
+			onChange={(e) => {
+				const value = e.target.value;
+				const account = accounts.find((a) => a.address === value) || null;
+				if (account) {
+					console.log("Selected account:", value);
+					onChange(account.address);
+				} else {
+					console.log("Deselected account");
+					onChange("");
+				}
+			}}
+			value={accounts.length > 0 && account ? account.address : undefined}
+			style={{ width: "550px", borderRadius: "4px", padding: "16.5px 14px" }}
+		>
+			{accounts.map(({ address, meta: { name } }) => (
+				<option key={address} value={address}>
+					{name}
+				</option>
+			))}
+		</select>
+	);
+};

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export default {
-    watch: false,
-    mode: 'development',
-    server: {
-        https: false,
-        host: true,
-        cors: true,
-    },
-}
+	watch: false,
+	mode: "development",
+	server: {
+		https: false,
+		host: true,
+		cors: true,
+	},
+};

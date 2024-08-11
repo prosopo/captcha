@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export enum FeaturesEnum {
-    Image = 'image',
-    Pow = 'pow',
-    Frictionless = 'frictionless',
+	Image = "image",
+	Pow = "pow",
+	Frictionless = "frictionless",
 }
 
-export type Features = `${FeaturesEnum}`
+export type Features = `${FeaturesEnum}`;

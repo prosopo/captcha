@@ -12,30 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export type ProsopoMouseEvent = {
-    x: number
-    y: number
-    timestamp: number
-}
+	x: number;
+	y: number;
+	timestamp: number;
+};
 
 export type ProsopoTouchEvent = {
-    x: number
-    y: number
-    timestamp: number
-}
+	x: number;
+	y: number;
+	timestamp: number;
+};
 
 export type ProsopoKeyboardEvent = {
-    key: string
-    timestamp: number
-    isShiftKey: boolean
-    isCtrlKey: boolean
-}
+	key: string;
+	timestamp: number;
+	isShiftKey: boolean;
+	isCtrlKey: boolean;
+};
 
 export type StoredEvents = {
-    mouseEvents?: ProsopoMouseEvent[]
-    touchEvents?: ProsopoTouchEvent[]
-    keyboardEvents?: ProsopoKeyboardEvent[]
-}
+	mouseEvents?: ProsopoMouseEvent[];
+	touchEvents?: ProsopoTouchEvent[];
+	keyboardEvents?: ProsopoKeyboardEvent[];
+};
 
 export interface StoredEventRecord extends StoredEvents {
-    accountId?: string
+	accountId?: string;
 }

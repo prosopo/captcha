@@ -11,46 +11,49 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise, WsProvider } from '@polkadot/api'
+import { ApiPromise, WsProvider } from "@polkadot/api";
 
-import { get } from '@prosopo/util'
-import { hideBin } from 'yargs/helpers'
-import yargs from 'yargs'
+import { get } from "@prosopo/util";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 const providers = {
-    local: { endpoint: 'ws://substrate-node:9944' },
-    polkadot: { endpoint: 'wss://rpc.polkadot.io' },
-    rococo: { endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443' },
-}
+	local: { endpoint: "ws://substrate-node:9944" },
+	polkadot: { endpoint: "wss://rpc.polkadot.io" },
+	rococo: { endpoint: "wss://rococo-contracts-rpc.polkadot.io:443" },
+};
 
 async function getContractInfoOf(contractAddress: string, provider: string) {
-    const wsProvider = new WsProvider(get(providers, provider).endpoint)
-    const api = await ApiPromise.create({ provider: wsProvider })
-    return await api.query.contracts.contractInfoOf(contractAddress)
+	const wsProvider = new WsProvider(get(providers, provider).endpoint);
+	const api = await ApiPromise.create({ provider: wsProvider });
+	return await api.query.contracts.contractInfoOf(contractAddress);
 }
 
 async function run(argv: string[]) {
-    const parsed = await yargs(hideBin(argv))
-        .usage('Usage:  [options]')
-        .option('contract', {
-            type: 'string',
-            demand: true,
-            desc: 'The contract to get the info of',
-        })
-        .option('network', {
-            type: 'string',
-            demand: false,
-            desc: 'The network to use',
-        })
-        .parse()
-    return await getContractInfoOf(parsed.contract, parsed.network ? parsed.network : 'development')
+	const parsed = await yargs(hideBin(argv))
+		.usage("Usage:  [options]")
+		.option("contract", {
+			type: "string",
+			demand: true,
+			desc: "The contract to get the info of",
+		})
+		.option("network", {
+			type: "string",
+			demand: false,
+			desc: "The network to use",
+		})
+		.parse();
+	return await getContractInfoOf(
+		parsed.contract,
+		parsed.network ? parsed.network : "development",
+	);
 }
 run(process.argv.slice(2))
-    .then((result) => {
-        console.log(result.toHuman())
-        process.exit()
-    })
-    .catch((error) => {
-        console.error(error)
-        process.exit(1)
-    })
+	.then((result) => {
+		console.log(result.toHuman());
+		process.exit();
+	})
+	.catch((error) => {
+		console.error(error);
+		process.exit(1);
+	});

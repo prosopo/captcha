@@ -147,3 +147,6 @@ js_bundles_host_temp
 
 # ignore captcha
 captcha.json
+
+# ignore bundle stats
+**/stats.html

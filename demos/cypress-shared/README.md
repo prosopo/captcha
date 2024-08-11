@@ -4,11 +4,11 @@
 
 ### Install Node.js
 
-https://nodejs.org/en/download/package-manager
+<https://nodejs.org/en/download/package-manager>
 
 ### Install Cypress
 
-https://docs.cypress.io/guides/getting-started/installing-cypress
+<https://docs.cypress.io/guides/getting-started/installing-cypress>
 
 ### Set up the containers
 
@@ -20,13 +20,13 @@ docker compose --file ./docker/docker-compose.development.yml up -d
 
 Run all of the following commands from the root of the workspace.
 
-#### Install the dependencies
+### Install the dependencies
 
 ```bash
 npm install
 ```
 
-#### Set up the environment variables
+### Set up the environment variables
 
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development
@@ -36,19 +36,19 @@ cp dev/scripts/env.development packages/cli/.env.development
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development
 ```
 
-#### Build the packages
+### Build the packages
 
 ```bash
 npm run build:all
 ```
 
-#### Start the local services
+### Start the local services
 
 ```bash
 npm run start:all
 ```
 
-#### Single Command
+### Single Command
 
 You can use this single command to run all of the above commands at once.
 
@@ -79,6 +79,6 @@ This tests the JavaScript bundle in a static HTML page. Make sure to build the b
 bundle will be copied to the client-bundle-example folder by the vite build command.
 
 ```bash
-npm -w @prosopo/procaptcha-bundle run bundle:dev
+NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
 npm -w @prosopo/cypress-shared run cypress:open:client-example-bundle
 ```

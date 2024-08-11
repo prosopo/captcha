@@ -11,29 +11,31 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CssBaseline } from '@mui/material'
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import FrictionlessRoot from './routes/frictionless.js'
-import ImageCaptchaRoot from './routes/root.js'
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { CssBaseline } from "@mui/material";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import FrictionlessRoot from "./routes/frictionless.js";
+import ImageCaptchaRoot from "./routes/root.js";
 
 const router = createBrowserRouter([
-    {
-        path: '/',
-        element: <ImageCaptchaRoot />,
-    },
-    {
-        path: '/frictionless',
-        element: <FrictionlessRoot />,
-    },
-])
+	{
+		path: "/",
+		element: <ImageCaptchaRoot />,
+	},
+	{
+		path: "/frictionless",
+		element: <FrictionlessRoot />,
+	},
+]);
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
+const root = ReactDOM.createRoot(
+	document.getElementById("root") as HTMLElement,
+);
 
 root.render(
-    <React.Fragment>
-        <CssBaseline />
-        <RouterProvider router={router} />
-    </React.Fragment>
-)
+	<React.Fragment>
+		<CssBaseline />
+		<RouterProvider router={router} />
+	</React.Fragment>,
+);

@@ -34,7 +34,7 @@ the [client-example](https://github.com/prosopo/captcha/tree/main/demos/client-e
 
 You can run in development mode to make changes to the client-example-server by following these instructions:
 
-### 1. Build & Deploy
+### Build & Deploy
 
 From the root of this repository, run the following commands:
 
@@ -48,7 +48,7 @@ npm run setup:all && \
 npm run start:server
 ```
 
-### 2. Use the API
+### Use the API
 
 The server should now be running at localhost:9228. You can customise this in the `.env.development` file. Run this
 example API in conjunction with the [client-example](https://github.com/prosopo/captcha/tree/main/demos/client-example)

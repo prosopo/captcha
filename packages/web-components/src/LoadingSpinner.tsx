@@ -1,3 +1,5 @@
+import styled from "@emotion/styled";
+import { useMemo } from "react";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +13,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { darkTheme, lightTheme } from './theme.js'
-import { useMemo } from 'react'
-import styled from '@emotion/styled'
+import { darkTheme, lightTheme } from "./theme.js";
 
 export interface LoadingSpinnerComponentProps {
-    themeColor: 'light' | 'dark'
+	themeColor: "light" | "dark";
 }
 
-export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => {
-    const theme = useMemo(() => (themeColor === 'light' ? lightTheme : darkTheme), [themeColor])
-    const StyledDiv = styled.div`
+export const LoadingSpinner = ({
+	themeColor,
+}: LoadingSpinnerComponentProps) => {
+	const theme = useMemo(
+		() => (themeColor === "light" ? lightTheme : darkTheme),
+		[themeColor],
+	);
+	const StyledDiv = styled.div`
         margin-top: 0;
         margin-left: 15px;
         margin-right: 15px;
@@ -42,8 +47,8 @@ export const LoadingSpinner = ({ themeColor }: LoadingSpinnerComponentProps) => 
                 transform: rotate(360deg);
             }
         }
-    `
-    return <StyledDiv></StyledDiv>
-}
+    `;
+	return <StyledDiv />;
+};
 
-export default LoadingSpinner
+export default LoadingSpinner;
