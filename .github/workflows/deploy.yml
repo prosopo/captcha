@@ -141,6 +141,30 @@ jobs:
 
                     NODE_ENV="${{ steps.env.outputs.env }}" npm -w @prosopo/procaptcha-bundle run bundle
 
+            - name: Push the JS Bundle to the js-bundle branch
+              run: |
+                 set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                    # Checkout js-bundle branch
+                    git fetch origin js-bundle:js-bundle
+                    git checkout js-bundle
+                    
+                    # Copy built bundle to js-bundle branch
+                    cp packages/procaptcha-bundle/dist/bundle/* .
+                    
+                    # set the author in git
+                    git config user.name "prosoponator[bot]"
+                    git config user.email "dev@prosopo.io"
+                    
+                    git add -A
+                    git commit -m 'Deploy JS bundle from staging'
+                    
+                    # Push the bundle to js-bundle branch
+                    git push origin js-bundle --force
+                    
+                    # Return to the original branch
+                    git checkout ${{ github.ref }}
+
+
             - name: Deploy staging js bundle
               if: ${{ steps.env.outputs.staging }}
               env:
@@ -158,26 +182,6 @@ jobs:
 
                   # upload the bundle to the staging release
                   gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
-                
-                  # Checkout js-bundle branch
-                  git fetch origin js-bundle:js-bundle
-                  git checkout js-bundle
-                
-                  # Copy built bundle to js-bundle branch
-                  cp packages/procaptcha-bundle/dist/bundle/* .
-                
-                  # set the author in git
-                  git config user.name "prosoponator[bot]"
-                  git config user.email "dev@prosopo.io"
-                
-                  git add -A
-                  git commit -m 'Deploy JS bundle from staging'
-                
-                  # Push the bundle to js-bundle branch
-                  git push origin js-bundle --force
-                
-                  # Return to the original branch
-                  git checkout ${{ github.ref }}
 
             - name: Build docker js_server
               run: |
