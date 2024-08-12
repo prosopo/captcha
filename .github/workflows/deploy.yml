@@ -154,10 +154,30 @@ jobs:
                   TAG=${{ steps.env.outputs.env }}-release
 
                   # find the staging release, list the assets, then delete each asset. This stops any assets being carried over from one staging release to the next
-                  gh release view $TAG --json assets | jq '.assets[].name' | tr -d '"' | xargs -P 1 --verbose -I {} "gh release delete-asset $TAG {} -y"
+                  gh release view $TAG --json assets | jq '.assets[].name' | tr -d '"' | xargs -P 1 --verbose -I {} gh release delete-asset $TAG {} -y
 
                   # upload the bundle to the staging release
                   gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
+                
+                  # Checkout js-bundle branch
+                  git fetch origin js-bundle:js-bundle
+                  git checkout js-bundle
+                
+                  # Copy built bundle to js-bundle branch
+                  cp packages/procaptcha-bundle/dist/bundle/* .
+                
+                  # set the author in git
+                  git config user.name "prosoponator[bot]"
+                  git config user.email "dev@prosopo.io"
+                
+                  git add -A
+                  git commit -m 'Deploy JS bundle from staging'
+                
+                  # Push the bundle to js-bundle branch
+                  git push origin js-bundle --force
+                
+                  # Return to the original branch
+                  git checkout ${{ github.ref }}
 
             - name: Build docker js_server
               run: |
