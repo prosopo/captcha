@@ -156,27 +156,6 @@ jobs:
 
                   # upload the bundle to the staging release
                   gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
-                
-                  # Checkout js-bundle branch
-                  git fetch origin js-bundle:js-bundle
-                  git checkout js-bundle
-                
-                  # Copy built bundle to js-bundle branch
-                  cp packages/procaptcha-bundle/dist/bundle/* .
-                
-                  # set the author in git
-                  git config user.name "prosoponator[bot]"
-                  git config user.email "dev@prosopo.io"
-                
-                  git add -A
-                  git commit -m 'Deploy JS bundle from staging'
-                
-                  # Push the bundle to js-bundle branch
-                  git push origin js-bundle --force
-                
-                  # Return to the original branch
-                  git checkout ${{ github.ref }}
-
 
             - name: Build docker js_server
               if: ${{ steps.env.outputs.env == 'production' }}
@@ -280,6 +259,13 @@ jobs:
                   docker tag prosopo/js_server:${{ steps.env.outputs.docker_version_tag }} prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}
                   docker push prosopo/js_server:latest
 
+            - name: Get Prosopo JS Server Flux App Name
+              run: |
+                # shellcheck disable=SC2086
+                { 
+                    echo "JS_SERVER_FLUX_APP_NAME=${{ steps.env.outputs.env }}_JS_SERVER_FLUX_APP_NAME"  | tr '[:lower:]' '[:upper:]';
+                } >> $GITHUB_ENV
+
             - name: Redeploy flux docker js_server
               env:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
@@ -289,7 +275,7 @@ jobs:
                     echo "Installing @prosopo/flux..."
                     npm i -g @prosopo/flux
                     echo "Soft redeploying flux docker js_server."
-                    npx flux redeploy --app ProcaptchaJavascriptServer
+                    npx flux redeploy --app ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
                   else
                     echo "Skipping flux redeploy."
                   fi
