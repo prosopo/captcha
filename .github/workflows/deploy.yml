@@ -278,7 +278,7 @@ jobs:
 
                   # Push latest
                   docker tag prosopo/js_server:${{ steps.env.outputs.docker_version_tag }} prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}
-                  docker push prosopo/js_server:latest
+                  docker push prosopo/js_server:${{ steps.env.outputs.docker_latest_tag }}
 
             - name: Get Prosopo JS Server Flux App Name
               run: |
