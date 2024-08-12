@@ -1,6 +1,7 @@
 services:
     provider:
         image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+        pull_policy: always
         build:
             context: ..
             dockerfile: ./docker/images/provider.dockerfile
