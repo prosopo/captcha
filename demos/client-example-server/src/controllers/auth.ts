@@ -158,7 +158,7 @@ const login = async (
   const prosopoServer = new ProsopoServer(config, pair);
   // checks if email exists
   await User.findOne({
-    email: req.body.email,
+    email: { $eq: req.body.email },
   })
     .then(async (dbUser) => {
       if (!dbUser) {
