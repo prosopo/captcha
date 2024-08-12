@@ -160,7 +160,6 @@ jobs:
                   gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
 
             - name: Build docker js_server
-              if: ${{ steps.env.outputs.env == 'production' }}
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
