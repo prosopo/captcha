@@ -23,87 +23,92 @@ import connectionFactory from "./utils/connection.js";
 import memoryServerSetup from "./utils/database.js";
 
 export function loadEnv() {
-	dotenv.config({ path: getEnvFile() });
+  dotenv.config({ path: getEnvFile() });
 }
 
 export function getEnvFile(filename = ".env", filepath = "./") {
-	const env = process.env.NODE_ENV || "development";
-	return path.join(filepath, `${filename}.${env}`);
+  const env = process.env.NODE_ENV || "development";
+  return path.join(filepath, `${filename}.${env}`);
 }
 
 enum ProsopoVerificationType {
-	api = "api",
-	local = "local",
+  api = "api",
+  local = "local",
 }
 
 async function main() {
-	const logger = getLoggerDefault();
-	loadEnv();
+  const logger = getLoggerDefault();
+  loadEnv();
 
-	const verifyEndpoint =
-		process.env.PROSOPO_VERIFY_ENDPOINT || "https://api.prosopo.io/siteverify";
+  const apiPrefix =
+    process.env.NODE_ENV && process.env.NODE_ENV === "production"
+      ? ""
+      : `${process.env.NODE_ENV}-`;
+  const verifyEndpoint =
+    process.env.PROSOPO_VERIFY_ENDPOINT ||
+    `https://${apiPrefix}api.prosopo.io/siteverify`;
 
-	const verifyType: ProsopoVerificationType = Object.keys(
-		ProsopoVerificationType,
-	).includes(process.env.PROSOPO_VERIFICATION_TYPE as string)
-		? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
-		: ProsopoVerificationType.api;
+  const verifyType: ProsopoVerificationType = Object.keys(
+    ProsopoVerificationType,
+  ).includes(process.env.PROSOPO_VERIFICATION_TYPE as string)
+    ? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
+    : ProsopoVerificationType.api;
 
-	const app = express();
+  const app = express();
 
-	app.use(cors({ origin: true, credentials: true }));
+  app.use(cors({ origin: true, credentials: true }));
 
-	app.use(express.urlencoded({ extended: true }));
+  app.use(express.urlencoded({ extended: true }));
 
-	app.use(express.json());
+  app.use(express.json());
 
-	app.use((_, res, next) => {
-		res.setHeader("Access-Control-Allow-Origin", "*");
-		res.setHeader(
-			"Access-Control-Allow-Methods",
-			"GET, POST, PUT, PATCH, DELETE",
-		);
-		res.setHeader(
-			"Access-Control-Allow-Headers",
-			"Origin, Content-Type, X-Auth-Token, Authorization",
-		);
-		next();
-	});
+  app.use((_, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, PATCH, DELETE",
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, Content-Type, X-Auth-Token, Authorization",
+    );
+    next();
+  });
 
-	app.options("/*", (_, res) => {
-		res.sendStatus(200);
-	});
+  app.options("/*", (_, res) => {
+    res.sendStatus(200);
+  });
 
-	const uri = await memoryServerSetup();
-	console.log("mongo uri", uri);
-	const mongoose = connectionFactory(uri);
-	if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
-		const mnemonicError = new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
-			context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
-			logger,
-		});
+  const uri = await memoryServerSetup();
+  console.log("mongo uri", uri);
+  const mongoose = connectionFactory(uri);
+  if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
+    const mnemonicError = new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
+      context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
+      logger,
+    });
 
-		logger.error(mnemonicError);
-	}
+    logger.error(mnemonicError);
+  }
 
-	const config = getServerConfig();
+  const config = getServerConfig();
 
-	console.log("Config", config);
+  console.log("Config", config);
 
-	app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType));
+  app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType));
 
-	app.listen(
-		config.serverUrl
-			? Number.parseInt(at(config.serverUrl.split(":"), 2))
-			: 9228,
-	);
+  app.listen(
+    config.serverUrl
+      ? Number.parseInt(at(config.serverUrl.split(":"), 2))
+      : 9228,
+  );
 }
 
 main()
-	.then(() => {
-		console.log("Server started");
-	})
-	.catch((err) => {
-		console.log(err);
-		process.exit();
-	});
+  .then(() => {
+    console.log("Server started");
+  })
+  .catch((err) => {
+    console.log(err);
+    process.exit();
+  });
