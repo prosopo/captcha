@@ -152,7 +152,7 @@ export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
 export type CaptchaResponseBody = {
   [ApiParams.captchas]: Captcha[];
   [ApiParams.requestHash]: string;
-  [ApiParams.timestamp]: string;
+  [ApiParams.timestamp]: number;
   [ApiParams.signature]: {
     [ApiParams.provider]: {
       [ApiParams.timestamp]: string;
@@ -165,7 +165,7 @@ export const CaptchaSolutionBody = object({
   [ApiParams.dapp]: string(),
   [ApiParams.captchas]: array(CaptchaSolutionSchema),
   [ApiParams.requestHash]: string(),
-  [ApiParams.timestamp]: string(),
+  [ApiParams.timestamp]: number(),
   [ApiParams.signature]: object({
     [ApiParams.user]: object({
       [ApiParams.requestHash]: string(),

@@ -17,22 +17,22 @@ import { number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
 export const ProcaptchaOutputSchema = object({
-	[ApiParams.commitmentId]: string().optional(),
-	[ApiParams.providerUrl]: string().optional(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.user]: string(),
-	[ApiParams.blockNumber]: number(),
-	[ApiParams.challenge]: string().optional(),
-	[ApiParams.nonce]: number().optional(),
-	[ApiParams.timestamp]: string(),
-	[ApiParams.signature]: object({
-		[ApiParams.provider]: object({
-			[ApiParams.timestamp]: string(),
-		}),
-		[ApiParams.user]: object({
-			[ApiParams.timestamp]: string(),
-		}).optional(),
-	}),
+  [ApiParams.commitmentId]: string().optional(),
+  [ApiParams.providerUrl]: string().optional(),
+  [ApiParams.dapp]: string(),
+  [ApiParams.user]: string(),
+  [ApiParams.blockNumber]: number(),
+  [ApiParams.challenge]: string().optional(),
+  [ApiParams.nonce]: number().optional(),
+  [ApiParams.timestamp]: number(),
+  [ApiParams.signature]: object({
+    [ApiParams.provider]: object({
+      [ApiParams.timestamp]: string(),
+    }),
+    [ApiParams.user]: object({
+      [ApiParams.timestamp]: string(),
+    }).optional(),
+  }),
 });
 
 /**
@@ -46,43 +46,43 @@ export type ProcaptchaOutput = zInfer<typeof ProcaptchaOutputSchema>;
  * The codec for encoding and decoding the procaptcha output to a hex string.
  */
 export const ProcaptchaTokenCodec = Struct({
-	[ApiParams.commitmentId]: Option(str),
-	[ApiParams.providerUrl]: Option(str),
-	[ApiParams.dapp]: str,
-	[ApiParams.user]: str,
-	[ApiParams.blockNumber]: u32,
-	[ApiParams.challenge]: Option(str),
-	[ApiParams.nonce]: Option(u32),
-	[ApiParams.timestamp]: str,
-	[ApiParams.signature]: Struct({
-		[ApiParams.provider]: Struct({
-			[ApiParams.timestamp]: str,
-		}),
-	}),
+  [ApiParams.commitmentId]: Option(str),
+  [ApiParams.providerUrl]: Option(str),
+  [ApiParams.dapp]: str,
+  [ApiParams.user]: str,
+  [ApiParams.blockNumber]: u32,
+  [ApiParams.challenge]: Option(str),
+  [ApiParams.nonce]: Option(u32),
+  [ApiParams.timestamp]: u32,
+  [ApiParams.signature]: Struct({
+    [ApiParams.provider]: Struct({
+      [ApiParams.timestamp]: str,
+    }),
+  }),
 });
 
 export const ProcaptchaTokenSpec = string().startsWith("0x");
 export type ProcaptchaToken = zInfer<typeof ProcaptchaTokenSpec>;
 
 export const encodeProcaptchaOutput = (
-	procaptchaOutput: ProcaptchaOutput,
+  procaptchaOutput: ProcaptchaOutput,
 ): ProcaptchaToken => {
-	return u8aToHex(
-		ProcaptchaTokenCodec.enc({
-			[ApiParams.commitmentId]: undefined,
-			[ApiParams.providerUrl]: undefined,
-			[ApiParams.challenge]: undefined,
-			[ApiParams.nonce]: undefined,
-			// override any optional fields by spreading the procaptchaOutput
-			...procaptchaOutput,
-		}),
-	);
+  return u8aToHex(
+    ProcaptchaTokenCodec.enc({
+      [ApiParams.commitmentId]: undefined,
+      [ApiParams.providerUrl]: undefined,
+      [ApiParams.challenge]: undefined,
+      [ApiParams.nonce]: undefined,
+      // override any optional fields by spreading the procaptchaOutput
+      ...procaptchaOutput,
+    }),
+  );
 };
 
 export const decodeProcaptchaOutput = (
-	procaptchaToken: ProcaptchaToken,
+  procaptchaToken: ProcaptchaToken,
 ): ProcaptchaOutput => {
-	return ProcaptchaOutputSchema.parse(
-		ProcaptchaTokenCodec.dec(hexToU8a(procaptchaToken)),
-	);
+  return ProcaptchaOutputSchema.parse(
+    ProcaptchaTokenCodec.dec(hexToU8a(procaptchaToken)),
+  );
 };
