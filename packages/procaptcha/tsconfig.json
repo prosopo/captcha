@@ -1,38 +1,38 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": ["es6", "dom"]
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../../contracts/captcha"
-        },
-        {
-            "path": "../account"
-        },
-        {
-            "path": "../api"
-        },
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../contract"
-        },
-        {
-            "path": "../datasets"
-        },
-        {
-            "path": "../procaptcha-common"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"]
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../account"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../contract"
+		},
+		{
+			"path": "../datasets"
+		},
+		{
+			"path": "../load-balancer"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		}
+	]
 }

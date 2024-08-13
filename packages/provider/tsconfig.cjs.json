@@ -1,49 +1,51 @@
 {
-    "extends": "../../tsconfig.cjs.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist/cjs"
-    },
-    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
-    "references": [
-        {
-            "path": "../../contracts/captcha/tsconfig.cjs.json"
-        },
-        {
-            "path": "../api"
-        },
-        {
-            "path": "../common/tsconfig.cjs.json"
-        },
-        {
-            "path": "../../dev/config/tsconfig.cjs.json"
-        },
-        {
-            "path": "../contract/tsconfig.cjs.json"
-        },
-        {
-            "path": "../database/tsconfig.cjs.json"
-        },
-        {
-            "path": "../datasets/tsconfig.cjs.json"
-        },
-        {
-            "path": "../env/tsconfig.cjs.json"
-        },
-        {
-            "path": "../tx/tsconfig.cjs.json"
-        },
-        {
-            "path": "../types/tsconfig.cjs.json"
-        },
-        {
-            "path": "../types-database/tsconfig.cjs.json"
-        },
-        {
-            "path": "../types-env/tsconfig.cjs.json"
-        },
-        {
-            "path": "../util/tsconfig.cjs.json"
-        }
-    ]
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs"
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.json",
+		"./src/**/*.d.ts",
+		"./src/**/*.tsx"
+	],
+	"references": [
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../contract/tsconfig.cjs.json"
+		},
+		{
+			"path": "../database/tsconfig.cjs.json"
+		},
+		{
+			"path": "../datasets/tsconfig.cjs.json"
+		},
+		{
+			"path": "../env/tsconfig.cjs.json"
+		},
+		{
+			"path": "../tx/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types-database/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types-env/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
+		}
+	]
 }

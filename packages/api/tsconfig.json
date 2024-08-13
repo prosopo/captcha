@@ -1,19 +1,16 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../util"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../../contracts/captcha"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../types"
+		}
+	]
 }

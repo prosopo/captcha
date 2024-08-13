@@ -4,9 +4,9 @@ This package contains the scripts and configuration for setting up a development
 
 ## Prerequisites
 
--   A unix-style environment (Linux, MacOS, WSL2)
--   [Docker](https://docs.docker.com/get-docker/)
--   [Node.js](https://nodejs.org/en/download/)
+- A unix-style environment (Linux, MacOS, WSL2)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Node.js](https://nodejs.org/en/download/)
 
 ## Dev Setup
 
@@ -131,6 +131,7 @@ This is shorthand for the following command:
 ```bash
 npm run -w @prosopo/scripts cli deploy_protocol --update_env
 ```
+
 Specify the current working directory if you are running from a different location.
 
 ```bash
