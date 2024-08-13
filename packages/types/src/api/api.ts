@@ -34,7 +34,7 @@ export interface ProviderApiInterface {
     requestHash: string,
     userAccount: string,
     salt: string,
-    timestamp: number,
+    timestamp: string,
     providerTimestampSignature: string,
     signature?: string,
   ): Promise<CaptchaSolutionResponse>;

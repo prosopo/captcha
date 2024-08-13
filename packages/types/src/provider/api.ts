@@ -152,7 +152,7 @@ export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
 export type CaptchaResponseBody = {
   [ApiParams.captchas]: Captcha[];
   [ApiParams.requestHash]: string;
-  [ApiParams.timestamp]: number;
+  [ApiParams.timestamp]: string;
   [ApiParams.signature]: {
     [ApiParams.provider]: {
       [ApiParams.timestamp]: string;
@@ -165,7 +165,7 @@ export const CaptchaSolutionBody = object({
   [ApiParams.dapp]: string(),
   [ApiParams.captchas]: array(CaptchaSolutionSchema),
   [ApiParams.requestHash]: string(),
-  [ApiParams.timestamp]: number(),
+  [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
     [ApiParams.user]: object({
       [ApiParams.requestHash]: string(),
@@ -221,7 +221,7 @@ export interface ImageVerificationResponse extends VerificationResponse {
 export interface GetPowCaptchaResponse {
   [ApiParams.challenge]: PoWChallengeId;
   [ApiParams.difficulty]: number;
-  [ApiParams.timestamp]: number;
+  [ApiParams.timestamp]: string;
   [ApiParams.signature]: {
     [ApiParams.provider]: {
       [ApiParams.timestamp]: string;

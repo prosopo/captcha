@@ -24,7 +24,7 @@ export const ProcaptchaOutputSchema = object({
   [ApiParams.blockNumber]: number(),
   [ApiParams.challenge]: string().optional(),
   [ApiParams.nonce]: number().optional(),
-  [ApiParams.timestamp]: bigint(),
+  [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
     [ApiParams.provider]: object({
       [ApiParams.timestamp]: string(),
@@ -53,7 +53,7 @@ export const ProcaptchaTokenCodec = Struct({
   [ApiParams.blockNumber]: u32,
   [ApiParams.challenge]: Option(str),
   [ApiParams.nonce]: Option(u32),
-  [ApiParams.timestamp]: u64,
+  [ApiParams.timestamp]: str,
   [ApiParams.signature]: Struct({
     [ApiParams.provider]: Struct({
       [ApiParams.timestamp]: str,
@@ -67,6 +67,7 @@ export type ProcaptchaToken = zInfer<typeof ProcaptchaTokenSpec>;
 export const encodeProcaptchaOutput = (
   procaptchaOutput: ProcaptchaOutput,
 ): ProcaptchaToken => {
+  console.log("encoding", procaptchaOutput);
   return u8aToHex(
     ProcaptchaTokenCodec.enc({
       [ApiParams.commitmentId]: undefined,
