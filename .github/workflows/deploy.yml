@@ -244,7 +244,8 @@ jobs:
                     echo "Installing @prosopo/flux..."
                     npm i -g @prosopo/flux
                     echo "Soft redeploying flux docker js_server."
-                    npx flux redeploy --app ProcaptchaJavascriptServer
+                  
+                    npx flux redeploy ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
                   else
                     echo "Skipping flux redeploy."
                   fi
