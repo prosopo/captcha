@@ -161,12 +161,9 @@ const login = async (
     email: { $eq: req.body.email },
   })
     .then(async (dbUser) => {
-      if (!dbUser) {
-        res.status(404).json({ message: "user not found" });
-      } else {
-        const payload = SubscribeBodySpec.parse(
-          req.body[ApiParams.procaptchaResponse],
-        );
+      if (dbUser) {
+        console.log(req.body);
+        const payload = SubscribeBodySpec.parse(req.body);
 
         const token = payload[ApiParams.procaptchaResponse];
 
@@ -184,6 +181,8 @@ const login = async (
           config.account.secret,
         );
 
+        console.log("verified", verified);
+
         if (verified) {
           // password hash
           // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
@@ -192,16 +191,23 @@ const login = async (
           );
           if (passwordHash !== dbUser.password) {
             // password doesnt match
-            res.status(401).json({ message: "invalid credentials" });
+            return res.status(401).json({ message: "invalid credentials" });
           } else {
             // password match
             const token = jwt.sign({ email: req.body.email }, "secret", {
               expiresIn: "1h",
             });
-            res.status(200).json({ message: "user logged in", token: token });
+            return res
+              .status(200)
+              .json({ message: "user logged in", token: token });
           }
+        } else {
+          return res
+            .status(401)
+            .json({ message: "user has not completed a captcha", verified });
         }
       }
+      return res.status(404).json({ message: "user not found" });
     })
     .catch((err) => {
       console.error("error", err);

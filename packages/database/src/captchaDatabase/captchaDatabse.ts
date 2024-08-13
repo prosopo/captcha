@@ -13,33 +13,41 @@ import { getLoggerDefault } from "@prosopo/common";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
+  type UserCommitmentRecord,
+  UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import mongoose from "mongoose";
+import { PowCaptcha } from "@prosopo/types";
 const logger = getLoggerDefault();
 
-const StoredCaptcha = mongoose.model(
-	"StoredCaptcha",
-	UserCommitmentRecordSchema,
+const StoredImageCaptcha = mongoose.model(
+  "StoredImageCaptcha",
+  UserCommitmentRecordSchema,
+);
+
+const StoredPoWCaptcha = mongoose.model(
+  "StoredPoWCaptcha",
+  UserCommitmentRecordSchema,
 );
 
 export const saveCaptchas = async (
-	events: UserCommitmentRecord[],
-	atlasUri: string,
+  imageCaptchaEvents: UserCommitmentRecord[],
+  powCaptchaEvents: PowCaptcha[],
+  atlasUri: string,
 ) => {
-	const connection = mongoose.createConnection(atlasUri, {
-		authSource: "admin",
-	});
-	await new Promise<void>((resolve, reject) => {
-		connection
-			.once("open", () => {
-				logger.info("Connected to MongoDB Atlas");
-				resolve();
-			})
-			.on("error", reject);
-	});
-	await StoredCaptcha.insertMany(events);
-	logger.info("Mongo Saved Events");
-	await connection.close();
+  const connection = mongoose.createConnection(atlasUri, {
+    authSource: "admin",
+  });
+  await new Promise<void>((resolve, reject) => {
+    connection
+      .once("open", () => {
+        logger.info("Connected to MongoDB Atlas");
+        resolve();
+      })
+      .on("error", reject);
+  });
+  await StoredImageCaptcha.insertMany(imageCaptchaEvents);
+  await StoredPoWCaptcha.insertMany(powCaptchaEvents);
+  logger.info("Mongo Saved Events");
+  await connection.close();
 };
