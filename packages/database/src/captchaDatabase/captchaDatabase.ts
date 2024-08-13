@@ -13,6 +13,7 @@ import { getLoggerDefault } from "@prosopo/common";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+  PowCaptchaRecordSchema,
   type UserCommitmentRecord,
   UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
@@ -27,7 +28,7 @@ const StoredImageCaptcha = mongoose.model(
 
 const StoredPoWCaptcha = mongoose.model(
   "StoredPoWCaptcha",
-  UserCommitmentRecordSchema,
+  PowCaptchaRecordSchema,
 );
 
 export const saveCaptchas = async (

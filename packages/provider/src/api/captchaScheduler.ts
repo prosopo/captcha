@@ -18,23 +18,28 @@ import { CronJob } from "cron";
 import { Tasks } from "../tasks/tasks.js";
 
 export async function storeCaptchasExternally(
-	pair: KeyringPair,
-	config: ProsopoConfigOutput,
+  pair: KeyringPair,
+  config: ProsopoConfigOutput,
 ) {
-	const env = new ProviderEnvironment(config, pair);
-	await env.isReady();
+  const env = new ProviderEnvironment(config, pair);
+  await env.isReady();
 
-	const tasks = new Tasks(env);
+  const tasks = new Tasks(env);
 
-	// Set the cron schedule to run every hour
-	const cronSchedule = "0 * * * *";
+  // Set the cron schedule to run on user configured schedule or every hour
+  const defaultSchedule = "0 * * * *";
+  const cronSchedule = config.captchaScheduler
+    ? config.captchaScheduler.schedule
+      ? config.captchaScheduler.schedule
+      : defaultSchedule
+    : defaultSchedule;
 
-	const job = new CronJob(cronSchedule, async () => {
-		env.logger.log("storeCommitmentsExternal task....");
-		await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
-			env.logger.error(err);
-		});
-	});
+  const job = new CronJob(cronSchedule, async () => {
+    env.logger.log("storeCommitmentsExternal task....");
+    await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
+      env.logger.error(err);
+    });
+  });
 
-	job.start();
+  job.start();
 }
