@@ -476,37 +476,6 @@ export function Manager(
 		return account.extension;
 	};
 
-	const exportData = async (events: StoredEvents) => {
-		const procaptchaStorage = storage.getProcaptchaStorage();
-		const providerUrlFromStorage = procaptchaStorage.providerUrl;
-		let providerApi: ProviderApi;
-
-		if (providerUrlFromStorage) {
-			providerApi = await loadProviderApi(providerUrlFromStorage);
-		} else {
-			const getRandomProviderResponse: RandomProvider =
-				getRandomActiveProvider();
-			const providerUrl = trimProviderUrl(
-				getRandomProviderResponse.provider.url.toString(),
-			);
-			providerApi = await loadProviderApi(providerUrl);
-		}
-
-		const providerUrl =
-			storage.getProcaptchaStorage().providerUrl ||
-			state.captchaApi?.provider.provider.url.toString();
-		if (!providerUrl) {
-			return;
-		}
-
-		let account = "";
-		try {
-			account = getAccount().account.address;
-		} catch (e) {
-			console.error(e);
-		}
-		await providerApi.submitUserEvents(events, account);
-	};
 
 	return {
 		start,
@@ -514,6 +483,5 @@ export function Manager(
 		submit,
 		select,
 		nextRound,
-		exportData,
 	};
 }
