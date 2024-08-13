@@ -93,6 +93,7 @@ export class DatasetManager {
     this.logger.info(`Storing ${commitments.length} commitments externally`);
 
     const powRecords = await this.db.getUnstoredDappUserPoWCommitments();
+    this.logger.info(`Storing ${powRecords.length} pow challenges externally`);
 
     await saveCaptchas(commitments, powRecords, this.config.mongoCaptchaUri);
     await this.db.markDappUserCommitmentsStored(

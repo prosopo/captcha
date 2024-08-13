@@ -21,15 +21,8 @@ import mongoose from "mongoose";
 import { PowCaptcha } from "@prosopo/types";
 const logger = getLoggerDefault();
 
-const StoredImageCaptcha = mongoose.model(
-  "StoredImageCaptcha",
-  UserCommitmentRecordSchema,
-);
-
-const StoredPoWCaptcha = mongoose.model(
-  "StoredPoWCaptcha",
-  PowCaptchaRecordSchema,
-);
+let StoredImageCaptcha: mongoose.Model<UserCommitmentRecord>;
+let StoredPoWCaptcha: mongoose.Model<PowCaptcha>;
 
 export const saveCaptchas = async (
   imageCaptchaEvents: UserCommitmentRecord[],
@@ -43,12 +36,26 @@ export const saveCaptchas = async (
     connection
       .once("open", () => {
         logger.info("Connected to MongoDB Atlas");
+        StoredImageCaptcha = connection.model<UserCommitmentRecord>(
+          "StoredImageCaptcha",
+          UserCommitmentRecordSchema,
+        );
+        StoredPoWCaptcha = connection.model<PowCaptcha>(
+          "StoredPoWCaptcha",
+          PowCaptchaRecordSchema,
+        );
         resolve();
       })
       .on("error", reject);
   });
-  await StoredImageCaptcha.insertMany(imageCaptchaEvents);
-  await StoredPoWCaptcha.insertMany(powCaptchaEvents);
-  logger.info("Mongo Saved Events");
+  if (imageCaptchaEvents.length) {
+    await StoredImageCaptcha.insertMany(imageCaptchaEvents);
+    logger.info("Mongo Saved Image Events");
+  }
+  if (powCaptchaEvents.length) {
+    await StoredPoWCaptcha.insertMany(powCaptchaEvents);
+    logger.info("Mongo Saved PoW Events");
+  }
+
   await connection.close();
 };
