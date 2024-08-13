@@ -314,7 +314,7 @@ export function Manager(
             [ApiParams.dapp]: getDappAccount(),
             [ApiParams.commitmentId]: hashToHex(submission[1]),
             [ApiParams.blockNumber]: blockNumber,
-            [ApiParams.timestamp]: BigInt(challenge.timestamp),
+            [ApiParams.timestamp]: challenge.timestamp,
             [ApiParams.signature]: {
               [ApiParams.provider]: {
                 [ApiParams.timestamp]: challenge.signature.provider.timestamp,
