@@ -241,7 +241,7 @@ export const Manager = (
           [ApiParams.challenge]: challenge.challenge,
           [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
           [ApiParams.nonce]: solution,
-          [ApiParams.timestamp]: challenge.timestamp,
+          [ApiParams.timestamp]: BigInt(challenge.timestamp),
           [ApiParams.signature]: {
             [ApiParams.provider]: challenge.signature.provider,
             [ApiParams.user]: {

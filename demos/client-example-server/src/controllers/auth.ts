@@ -61,6 +61,7 @@ const verify = async (
     });
 
     const verified = (await response.json()).verified;
+    console.log("Verified", verified);
     return verified;
   }
   // verify using the TypeScript library
