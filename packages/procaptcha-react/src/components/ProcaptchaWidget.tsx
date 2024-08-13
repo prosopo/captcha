@@ -145,13 +145,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 							</div>
 						</div>
 					</WidthBasedStylesDiv>
-					{config.devOnlyWatchEvents && (
-						<Collector
-							onProcessData={manager.exportData}
-							sendData={state.sendData}
-							account={state.account}
-						/>
-					)}
 				</ContainerDiv>
 			</div>
 		</div>
