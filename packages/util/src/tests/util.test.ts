@@ -11,22 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test } from 'vitest'
-import { flatten } from '../util.js'
+import { describe, expect, test } from "vitest";
+import { flatten } from "../util.js";
 
-describe('util', () => {
-    test('flatten obj', () => {
-        const obj = {
-            a: {
-                b: {
-                    c: 1,
-                },
-            },
-            d: 2,
-        }
-        expect(flatten(obj)).to.deep.equal({
-            'a.b.c': 1,
-            d: 2,
-        })
-    })
-})
+describe("util", () => {
+	test("flatten obj", () => {
+		const obj = {
+			a: {
+				b: {
+					c: 1,
+				},
+			},
+			d: 2,
+		};
+		expect(flatten(obj)).to.deep.equal({
+			"a.b.c": 1,
+			d: 2,
+		});
+	});
+});

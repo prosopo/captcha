@@ -3,133 +3,137 @@
 name: tests
 
 on:
-    pull_request:
-        branches: [main, dev, release/*]
-    workflow_dispatch:
+  pull_request:
+    branches: [main, dev, staging, release/*]
+  workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
-    CARGO_TERM_COLOR: always
-    GH_TOKEN: ${{ github.token }}
-    NODE_ENV: test
+  CARGO_TERM_COLOR: always
+  GH_TOKEN: ${{ github.token }}
+  NODE_ENV: test
 
 jobs:
-    check:
-        runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false
-        steps:
-            - name: Print contexts
-              env:
-                  GITHUB_CONTEXT: ${{ toJson(github) }}
-                  ENV_CONTEXT: ${{ toJson(env) }}
-                  VARS_CONTEXT: ${{ toJson(vars) }}
-                  JOB_CONTEXT: ${{ toJson(job) }}
-                  STEPS_CONTEXT: ${{ toJson(steps) }}
-                  RUNNER_CONTEXT: ${{ toJson(runner) }}
-                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
-                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
-                  NEEDS_CONTEXT: ${{ toJson(needs) }}
-                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
-              run: |
-                  echo "******************************"
-                  echo "github:" "$GITHUB_CONTEXT"
-                  echo "******************************"
-                  echo "env:" "$ENV_CONTEXT"
-                  echo "******************************"
-                  echo "vars:" "$VARS_CONTEXT"
-                  echo "******************************"
-                  echo "job:" "$JOB_CONTEXT"
-                  echo "******************************"
-                  echo "steps:" "$STEPS_CONTEXT"
-                  echo "******************************"
-                  echo "runner:" "$RUNNER_CONTEXT"
-                  echo "******************************"
-                  echo "secrets:" "$SECRETS_CONTEXT"
-                  echo "******************************"
-                  echo "strategy:" "$STRATEGY_CONTEXT"
-                  echo "******************************"
-                  echo "matrix:" "$MATRIX_CONTEXT"
-                  echo "******************************"
-                  echo "needs:" "$NEEDS_CONTEXT"
-                  echo "******************************"
-                  echo "inputs:" "$INPUTS_CONTEXT"
-                  echo "******************************"
+  check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Print contexts
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          ENV_CONTEXT: ${{ toJson(env) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          JOB_CONTEXT: ${{ toJson(job) }}
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+          NEEDS_CONTEXT: ${{ toJson(needs) }}
+          INPUTS_CONTEXT: ${{ toJson(inputs) }}
+        run: |
+          echo "******************************"
+          echo "github:" "$GITHUB_CONTEXT"
+          echo "******************************"
+          echo "env:" "$ENV_CONTEXT"
+          echo "******************************"
+          echo "vars:" "$VARS_CONTEXT"
+          echo "******************************"
+          echo "job:" "$JOB_CONTEXT"
+          echo "******************************"
+          echo "steps:" "$STEPS_CONTEXT"
+          echo "******************************"
+          echo "runner:" "$RUNNER_CONTEXT"
+          echo "******************************"
+          echo "secrets:" "$SECRETS_CONTEXT"
+          echo "******************************"
+          echo "strategy:" "$STRATEGY_CONTEXT"
+          echo "******************************"
+          echo "matrix:" "$MATRIX_CONTEXT"
+          echo "******************************"
+          echo "needs:" "$NEEDS_CONTEXT"
+          echo "******************************"
+          echo "inputs:" "$INPUTS_CONTEXT"
+          echo "******************************"
 
-            - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
-            - run: mkdir -p ~/.cache/Cypress
+      - run: mkdir -p protocol/cargo-cache
+      - run: mkdir -p protocol/target
+      - run: mkdir -p node_modules
+      - run: mkdir -p ~/.cache/Cypress
 
-            - name: Restore cache
-              uses: actions/cache/restore@v3
-              with:
-                  # must restore all cache dirs, and they must exist ahead of this!
-                  path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      ~/.cache/Cypress
-                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
-                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
-                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
-                  key: some-unused-cache-key
-                  restore-keys: |
-                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          # must restore all cache dirs, and they must exist ahead of this!
+          path: |
+            protocol/cargo-cache
+            protocol/target
+            node_modules
+            ~/.cache/Cypress
+          # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+          # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+          # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+          key: some-unused-cache-key
+          restore-keys: |
+            project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+      - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
-            - run: npm ci
+      - run: npm ci
 
-            # build all packages in workspace
-            - run: npm run build:all
-            - run: npm run build:all:cjs
+      # build all packages in workspace
+      - run: npm run build:all
+      - run: npm run build:all:cjs
 
-            # bundle procaptcha-bundle using webpack
-            - name: Webpack Bundle procaptcha-bundle
-              run: |
-                  npm run -w @prosopo/procaptcha-bundle bundle:dev:webpack
+      # bundle procaptcha-bundle using webpack
+      - name: Webpack Bundle procaptcha-bundle
+        run: |
+            NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle bundle:webpack
 
-            - name: Build JS bundle
-              run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+      - name: Build JS bundle
+        run: |
+          set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    # Copy the rococo env file to production env file
-                    echo "Copying the rococo env to production env file in procaptcha-bundle"
-                    cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+            # Copy the rococo env file to production env file
+            echo "Copying the rococo env to production env file in procaptcha-bundle"
+            cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
-                    # Navigate to the JS bundle directory and build
-                    echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
-                    cd packages/procaptcha-bundle
+            NODE_ENV="production" npm run -w @prosopo/procaptcha-bundle bundle
 
-                    NODE_ENV=production npm run bundle:prod
+      - name: Start the docker images
+        run: |
+          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker container ls
+          sleep 10s
 
-            - name: Setup env
-              run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    cp demos/client-example-server/env.development demos/client-example-server/.env.test
-                    cp demos/client-example/env.development demos/client-example/.env.test
-                    cp dev/scripts/env.test .env.test
-                    cp dev/scripts/env.test dev/scripts/.env.test
-                    cp dev/scripts/env.test packages/cli/.env.test
-                    cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                    echo NODE_ENV: $NODE_ENV
+      - name: Setup env
+        run: |
+          set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-            - name: Start the docker images
-              run: |
-                  docker compose --file ./docker/docker-compose.test.yml up -d
-                  docker container ls
-                  sleep 10s
+            cp demos/client-example-server/env.development demos/client-example-server/.env.test
+            cp demos/client-example/env.development demos/client-example/.env.test
+            cp dev/scripts/env.test .env.test
+            cp dev/scripts/env.test dev/scripts/.env.test
+            cp dev/scripts/env.test packages/cli/.env.test
+            cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 
-            # deploy protocol and run the unit tests
-            - run: npm run deploy_protocol
-            - run: npm run test
+            NODE_ENV="test" npm run setup
+            
+            echo NODE_ENV: "$NODE_ENV"
+
+
+      - name: Start services and run tests
+        run: |
+          npx concurrently \
+          "NODE_ENV=test npm run start:provider" \
+          "sleep 10s && NODE_ENV=test npm run test" \
+           --success "first" --kill-others

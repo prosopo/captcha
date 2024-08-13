@@ -1,4 +1,3 @@
-version: '3.8'
 services:
     provider:
         image: prosopo/fluxprovider:${PROVIDER_IMAGE_VERSION}

@@ -13,16 +13,16 @@
 // limitations under the License.
 
 export interface MerkleNodeInterface {
-    hash: string
-    parent: string | null
+	hash: string;
+	parent: string | null;
 }
 
-export type MerkleLeaf = string
+export type MerkleLeaf = string;
 
-export type MerkleLayer = MerkleLeaf[]
+export type MerkleLayer = MerkleLeaf[];
 
-export type MerkleProofLayer = [MerkleLeaf, MerkleLeaf]
+export type MerkleProofLayer = [MerkleLeaf, MerkleLeaf];
 
-export type MerkleRootLayer = [MerkleLeaf]
+export type MerkleRootLayer = [MerkleLeaf];
 
-export type MerkleProof = [...MerkleProofLayer[], MerkleRootLayer]
+export type MerkleProof = [...MerkleProofLayer[], MerkleRootLayer];

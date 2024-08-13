@@ -12,53 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import '@cypress/xpath'
-import { Captcha } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { checkboxClass } from '../support/commands.js'
-import { datasetWithSolutionHashes } from '@prosopo/datasets'
+import "@cypress/xpath";
+import { ProsopoDatasetError } from "@prosopo/common";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import type { Captcha } from "@prosopo/types";
+import { checkboxClass } from "../support/commands.js";
 
-describe('Captchas', () => {
-    beforeEach(() => {
-        const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
-            captchaContentId: captcha.captchaContentId,
-            solution: captcha.solution,
-        }))
+describe("Captchas", () => {
+	beforeEach(() => {
+		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
+			captchaContentId: captcha.captchaContentId,
+			solution: captcha.solution,
+		}));
 
-        if (!solutions) {
-            throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
-                context: { datasetWithSolutionHashes },
-            })
-        }
+		if (!solutions) {
+			throw new ProsopoDatasetError(
+				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
+				{
+					context: { datasetWithSolutionHashes },
+				},
+			);
+		}
 
-        cy.intercept('/dummy').as('dummy')
+		cy.intercept("/dummy").as("dummy");
 
-        // visit the base URL specified on command line when running cypress
-        return cy.visit(Cypress.env('default_page')).then(() => {
-            cy.get(checkboxClass).should('be.visible')
-            // wrap the solutions to make them available to the tests
-            cy.wrap(solutions).as('solutions')
-        })
-    })
+		// visit the base URL specified on command line when running cypress
+		return cy.visit(Cypress.env("default_page")).then(() => {
+			cy.get(checkboxClass).should("be.visible");
+			// wrap the solutions to make them available to the tests
+			cy.wrap(solutions).as("solutions");
+		});
+	});
 
-    it('Selecting the correct images passes the captcha', () => {
-        cy.clickIAmHuman().then(() => {
-            // Make sure the images are loaded
-            cy.captchaImages().then(() => {
-                // Solve the captchas
-                cy.get('@captchas')
-                    .each((captcha: Captcha) => {
-                        cy.log('in each function')
-                        // Click correct images and submit the solution
-                        cy.clickCorrectCaptchaImages(captcha)
-                    })
-                    .then(() => {
-                        // Get inputs of type checkbox
-                        cy.get("input[type='checkbox']").then((checkboxes) => {
-                            cy.wrap(checkboxes).first().should('be.checked')
-                        })
-                    })
-            })
-        })
-    })
-})
+	it("Selecting the correct images passes the captcha", () => {
+		cy.clickIAmHuman().then(() => {
+			// Make sure the images are loaded
+			cy.captchaImages().then(() => {
+				// Solve the captchas
+				cy.get("@captchas")
+					.each((captcha: Captcha) => {
+						cy.log("in each function");
+						// Click correct images and submit the solution
+						cy.clickCorrectCaptchaImages(captcha);
+					})
+					.then(() => {
+						// Get inputs of type checkbox
+						cy.get("input[type='checkbox']").then((checkboxes) => {
+							cy.wrap(checkboxes).first().should("be.checked");
+						});
+					});
+			});
+		});
+	});
+});
