@@ -4,7 +4,7 @@ name: cache
 
 on:
     push:
-        branches: [main, dev]
+        branches: [main, dev, staging]
     workflow_dispatch:
 
 concurrency:
@@ -70,23 +70,12 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
 
-            - run: npm -w @prosopo/protocol run rustfmt
-
-            - run: npm -w @prosopo/protocol run clippy
-
-            - run: npm -w @prosopo/protocol run build:all
-
-            - run: npm -w @prosopo/protocol run test:all
-
             # install cypress so we don't have to do that every time
-            - name: Cypress install
-              run: |
-                  npm i --save-dev cypress
-                  npx cypress install
+            - run: npx cypress install
 
             - run: ls -la ~/.cache/Cypress || true
             - run: ls -la protocol/cargo-cache || true
@@ -108,16 +97,18 @@ jobs:
             # remove all but the latest cache, leaving only the cache we just saved
             - name: Cleanup caches
               if: always()
+              env:
+                  REF: ${{ github.event.pull_request.head.ref || github.ref }}
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
                     set +e; gh extension install actions/gh-actions-cache; set -e
                     echo "Fetching list of cache key"
-                    cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R ${{ github.repository }} --key project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
+                    cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R "${{ github.repository }}" --key "project-cache-$REF-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
                     echo caches to be removed:
-                    echo ${cacheKeys}
+                    echo "${cacheKeys}"
                     set +e
                     for cacheKey in $cacheKeys
                     do
-                        gh actions-cache delete $cacheKey -R ${{ github.repository }} --confirm
+                        gh actions-cache delete "$cacheKey" -R "${{ github.repository }}" --confirm
                     done

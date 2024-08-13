@@ -11,28 +11,32 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaResponseBody } from '../provider/index.js'
-import { CaptchaSolution } from '../datasets/index.js'
-import { IProsopoCaptchaContract } from '../contract/index.js'
-import { ProviderApiInterface } from '../api/index.js'
-import { RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import { Signer } from '@polkadot/api/types'
-import { TCaptchaSubmitResult } from './client.js'
+import type { Signer } from "@polkadot/api/types";
+import type { ProviderApiInterface } from "../api/index.js";
+import type { IProsopoCaptchaContract } from "../contract/index.js";
+import type { CaptchaSolution } from "../datasets/index.js";
+import type {
+  CaptchaResponseBody,
+  GetPowCaptchaResponse,
+  PowCaptchaSolutionResponse,
+  RandomProvider,
+} from "../provider/index.js";
+import type { TCaptchaSubmitResult } from "./client.js";
 
 export interface ProsopoCaptchaApiInterface {
-    userAccount: string
-    contract: IProsopoCaptchaContract
-    provider: RandomProvider
-    providerApi: ProviderApiInterface
-    dappAccount: string
-    web2: boolean
-    getCaptchaChallenge(): Promise<CaptchaResponseBody>
-    verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: CaptchaResponseBody): void
-    submitCaptchaSolution(
-        signer: Signer,
-        requestHash: string,
-        datasetId: string,
-        solutions: CaptchaSolution[],
-        salt: string
-    ): Promise<TCaptchaSubmitResult>
+  userAccount: string;
+  contract: IProsopoCaptchaContract | string;
+  provider: RandomProvider;
+  providerApi: ProviderApiInterface;
+  dappAccount: string;
+  web2: boolean;
+  getCaptchaChallenge(): Promise<CaptchaResponseBody>;
+  submitCaptchaSolution(
+    signer: Signer,
+    requestHash: string,
+    solutions: CaptchaSolution[],
+    salt: string,
+    timestamp: string,
+    providerTimestampSignature: string,
+  ): Promise<TCaptchaSubmitResult>;
 }

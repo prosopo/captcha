@@ -11,36 +11,39 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { graphql } from '@octokit/graphql'
+import { graphql } from "@octokit/graphql";
 
 const main = async () => {
-    if (process.env.GITHUB_TOKEN === undefined) {
-        throw new Error('GITHUB_TOKEN env variable not set')
-    }
-    if (process.env.PR_NUMBER === undefined) {
-        throw new Error('PR_NUMBER env variable not set')
-    }
+	if (process.env.GITHUB_TOKEN === undefined) {
+		throw new Error("GITHUB_TOKEN env variable not set");
+	}
+	if (process.env.PR_NUMBER === undefined) {
+		throw new Error("PR_NUMBER env variable not set");
+	}
+	if (process.env.REPO === undefined) {
+		throw new Error("REPO env variable not set");
+	}
 
-    // TODO get the type from graphql definition
-    const pr: any = await graphql(
-        `  
+	// biome-ignore lint/suspicious/noExplicitAny: TODO get the type from graphql definition
+	const pr: any = await graphql(
+		`  
     query {
-      repository(owner: "prosopo", name: "captcha") {
+      repository(owner: "prosopo", name: ${process.env.REPO}) {
         pullRequest(number: ${process.env.PR_NUMBER}) {
           id
         }
       }
     }
   `,
-        {
-            headers: {
-                authorization: `token ` + process.env.GITHUB_TOKEN,
-            },
-        }
-    )
+		{
+			headers: {
+				authorization: `token ${process.env.GITHUB_TOKEN}`,
+			},
+		},
+	);
 
-    await graphql(
-        `    
+	await graphql(
+		`    
     mutation {
       enablePullRequestAutoMerge(input: {
         pullRequestId: "${pr.repository.pullRequest.id}",
@@ -52,12 +55,12 @@ const main = async () => {
       }
     }
     `,
-        {
-            headers: {
-                authorization: `token ` + process.env.GITHUB_TOKEN,
-            },
-        }
-    )
-}
+		{
+			headers: {
+				authorization: `token ${process.env.GITHUB_TOKEN}`,
+			},
+		},
+	);
+};
 
-main()
+main();

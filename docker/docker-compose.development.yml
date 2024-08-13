@@ -1,12 +1,4 @@
-version: '3.8'
 services:
-    substrate:
-        image: prosopo/substrate-contracts-node:v0.41.18dp
-        ports:
-            - '9615:9615'
-            - '9944:9944'
-            - '9933:9933'
-            - '30333:30333'
     database:
         image: mongo:5.0.4
         # volumes:

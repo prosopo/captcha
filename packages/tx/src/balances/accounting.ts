@@ -11,21 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiPromise } from '@polkadot/api/promise/Api'
-import { BN } from '@polkadot/util/bn'
-import { ProsopoApiError } from '@prosopo/common'
+import type { ApiPromise } from "@polkadot/api/promise/Api";
+import { BN } from "@polkadot/util/bn";
+import { ProsopoApiError } from "@prosopo/common";
 
 export const oneUnit = (api: ApiPromise): BN => {
-    if (api.registry.chainDecimals[0] === undefined) {
-        throw new ProsopoApiError('CONTRACT.CHAIN_DECIMALS_UNDEFINED')
-    }
-    const chainDecimals = new BN(api.registry.chainDecimals[0])
-    return new BN((10 ** chainDecimals.toNumber()).toString())
-}
+	if (api.registry.chainDecimals[0] === undefined) {
+		throw new ProsopoApiError("CONTRACT.CHAIN_DECIMALS_UNDEFINED");
+	}
+	const chainDecimals = new BN(api.registry.chainDecimals[0]);
+	return new BN((10 ** chainDecimals.toNumber()).toString());
+};
 
-export const getBalance = async (api: ApiPromise, address: string): Promise<BN> => {
-    const {
-        data: { free: previousFree },
-    } = await api.query.system.account(address)
-    return previousFree
-}
+export const getBalance = async (
+	api: ApiPromise,
+	address: string,
+): Promise<BN> => {
+	const {
+		data: { free: previousFree },
+	} = await api.query.system.account(address);
+	return previousFree;
+};
