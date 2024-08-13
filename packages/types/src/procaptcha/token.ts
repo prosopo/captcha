@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { hexToU8a, u8aToHex } from "@polkadot/util";
-import { Option, Struct, str, u32 } from "scale-ts";
-import { number, object, string, type infer as zInfer } from "zod";
+import { Option, Struct, str, u32, u64 } from "scale-ts";
+import { bigint, number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
 export const ProcaptchaOutputSchema = object({
@@ -24,7 +24,7 @@ export const ProcaptchaOutputSchema = object({
   [ApiParams.blockNumber]: number(),
   [ApiParams.challenge]: string().optional(),
   [ApiParams.nonce]: number().optional(),
-  [ApiParams.timestamp]: number(),
+  [ApiParams.timestamp]: bigint(),
   [ApiParams.signature]: object({
     [ApiParams.provider]: object({
       [ApiParams.timestamp]: string(),
@@ -53,7 +53,7 @@ export const ProcaptchaTokenCodec = Struct({
   [ApiParams.blockNumber]: u32,
   [ApiParams.challenge]: Option(str),
   [ApiParams.nonce]: Option(u32),
-  [ApiParams.timestamp]: u32,
+  [ApiParams.timestamp]: u64,
   [ApiParams.signature]: Struct({
     [ApiParams.provider]: Struct({
       [ApiParams.timestamp]: str,

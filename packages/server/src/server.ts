@@ -151,7 +151,7 @@ export class ProsopoServer {
         blockNumber,
         this.config.timeouts,
         providerUrl,
-        timestamp,
+        Number(timestamp),
         challenge,
       );
     }
