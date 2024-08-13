@@ -116,9 +116,7 @@ export class ProsopoServer {
       return result.verified;
     }
     const imageTimeout = this.config.timeouts.image.cachedTimeout;
-    const recent = timestamp
-      ? Date.now() - Number.parseInt(timestamp) < imageTimeout
-      : false;
+    const recent = timestamp ? Date.now() - timestamp < imageTimeout : false;
     if (!recent) {
       this.logger.error("Image captcha is not recent");
       return false;
