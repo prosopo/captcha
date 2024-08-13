@@ -71,14 +71,14 @@ const getNetwork = (config: ProcaptchaClientConfigOutput) => {
 	return network;
 };
 
-const getRandomActiveProvider = (): RandomProvider => {
+const getRandomActiveProvider = (config: ProcaptchaClientConfigOutput): RandomProvider => {
 	const randomIntBetween = (min: number, max: number) =>
 		Math.floor(Math.random() * (max - min + 1) + min);
 
 	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
 	//  to ensure that the random selection was completed within a certain timeframe
 
-	const PROVIDERS = loadBalancer("development");
+	const PROVIDERS = loadBalancer(config.defaultEnvironment);
 
 	const randomProvderObj = at(
 		PROVIDERS,
@@ -175,7 +175,7 @@ export function Manager(
 			const contract = getNetwork(config).contract.address;
 
 			// get a random provider
-			const getRandomProviderResponse = getRandomActiveProvider();
+			const getRandomProviderResponse = getRandomActiveProvider(getConfig());
 
 			const blockNumber = getRandomProviderResponse.blockNumber;
 			const providerUrl = getRandomProviderResponse.provider.url;
@@ -476,37 +476,6 @@ export function Manager(
 		return account.extension;
 	};
 
-	const exportData = async (events: StoredEvents) => {
-		const procaptchaStorage = storage.getProcaptchaStorage();
-		const providerUrlFromStorage = procaptchaStorage.providerUrl;
-		let providerApi: ProviderApi;
-
-		if (providerUrlFromStorage) {
-			providerApi = await loadProviderApi(providerUrlFromStorage);
-		} else {
-			const getRandomProviderResponse: RandomProvider =
-				getRandomActiveProvider();
-			const providerUrl = trimProviderUrl(
-				getRandomProviderResponse.provider.url.toString(),
-			);
-			providerApi = await loadProviderApi(providerUrl);
-		}
-
-		const providerUrl =
-			storage.getProcaptchaStorage().providerUrl ||
-			state.captchaApi?.provider.provider.url.toString();
-		if (!providerUrl) {
-			return;
-		}
-
-		let account = "";
-		try {
-			account = getAccount().account.address;
-		} catch (e) {
-			console.error(e);
-		}
-		await providerApi.submitUserEvents(events, account);
-	};
 
 	return {
 		start,
@@ -514,6 +483,5 @@ export function Manager(
 		submit,
 		select,
 		nextRound,
-		exportData,
 	};
 }
