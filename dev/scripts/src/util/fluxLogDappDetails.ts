@@ -14,20 +14,20 @@
 
 // Helper function to parse logs and extract URLs
 export function extractReferrersFromLogs(logsText: string) {
-    const urls = [
-        ...logsText.split('\n').reduce((accumulator, line) => {
-            // Regex to find strings starting with http or https
-            const matches = line.match(/"(https?:\/\/[^"]+)"/g)
-            if (matches) {
-                matches.forEach((match) => {
-                    // Removing the leading and trailing double quotes from the match
-                    const url = match.substring(1, match.length - 1)
-                    accumulator.add(url)
-                })
-            }
-            return accumulator
-        }, new Set()),
-    ]
+	const urls = [
+		...logsText.split("\n").reduce((accumulator, line) => {
+			// Regex to find strings starting with http or https
+			const matches = line.match(/"(https?:\/\/[^"]+)"/g);
+			if (matches) {
+				for (const match of matches) {
+					// Removing the leading and trailing double quotes from the match
+					const url = match.substring(1, match.length - 1);
+					accumulator.add(url);
+				}
+			}
+			return accumulator;
+		}, new Set()),
+	];
 
-    return urls.join('           ')
+	return urls.join("           ");
 }

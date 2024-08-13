@@ -1,26 +1,28 @@
 {
-    "extends": "../../tsconfig.cjs.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist/cjs",
-        "lib": ["es6", "dom"]
-    },
-    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
-    "references": [
-        {
-            "path": "../../contracts/captcha/tsconfig.cjs.json"
-        },
-        {
-            "path": "../api/tsconfig.cjs.json"
-        },
-        {
-            "path": "../contract/tsconfig.cjs.json"
-        },
-        {
-            "path": "../types/tsconfig.cjs.json"
-        },
-        {
-            "path": "../util/tsconfig.cjs.json"
-        }
-    ]
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs",
+		"lib": ["es6", "dom"]
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.json",
+		"./src/**/*.d.ts",
+		"./src/**/*.tsx"
+	],
+	"references": [
+		{
+			"path": "../api/tsconfig.cjs.json"
+		},
+		{
+			"path": "../contract/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
+		}
+	]
 }

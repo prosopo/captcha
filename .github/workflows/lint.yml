@@ -4,7 +4,7 @@ name: lint
 
 on:
     pull_request:
-        branches: [main, dev, release/*]
+        branches: [main, dev, staging, release/*]
     workflow_dispatch:
 
 concurrency:
@@ -86,19 +86,10 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
 
             - run: npm run -w @prosopo/scripts build
 
-            - name: lint
-              run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-
-                    # get the files which have changed in the PR
-                    files=$(curl -L -s -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.v3+json" "${{ github.event.pull_request.url }}/files" | jq -r '.[] | .filename')
-
-                    echo "files: $files"
-
-                    npm run lint:cmd -- $files
+            - run: npm run lint

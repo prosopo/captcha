@@ -1,23 +1,23 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "NodeNext"
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../../packages/cli"
-        },
-        {
-            "path": "../../packages/common"
-        },
-        {
-            "path": "../../packages/types"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"module": "NodeNext"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../../packages/cli"
+		},
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/types"
+		}
+	]
 }

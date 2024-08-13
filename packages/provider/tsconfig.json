@@ -1,49 +1,46 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../../contracts/captcha"
-        },
-        {
-            "path": "../api"
-        },
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../contract"
-        },
-        {
-            "path": "../database"
-        },
-        {
-            "path": "../datasets"
-        },
-        {
-            "path": "../env"
-        },
-        {
-            "path": "../tx"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../types-database"
-        },
-        {
-            "path": "../types-env"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../contract"
+		},
+		{
+			"path": "../database"
+		},
+		{
+			"path": "../datasets"
+		},
+		{
+			"path": "../env"
+		},
+		{
+			"path": "../tx"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../types-database"
+		},
+		{
+			"path": "../types-env"
+		},
+		{
+			"path": "../util"
+		}
+	]
 }
