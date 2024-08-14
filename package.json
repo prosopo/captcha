@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -91,9 +91,13 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
-		"@prosopo/flux": "2.0.0"
+		"@prosopo/flux": "2.0.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.8.3",
