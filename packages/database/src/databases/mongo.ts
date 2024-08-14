@@ -687,9 +687,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async markDappUserPoWCommitmentsStored(
     challenges: string[],
   ): Promise<void> {
-    console.log("THESE ARE THE CHALLENGES\n\n---\n\n", challenges)
-    console.log("matchinng the challenges\n\n---\n\n", await this.tables?.powCaptcha.find({ challenge: { $in: challenges } }).lean())
-
     await this.tables?.powCaptcha.updateMany(
       { challenge: { $in: challenges } },
       { $set: { stored: true } },
