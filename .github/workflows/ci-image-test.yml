@@ -1,0 +1,68 @@
+name: ci-image-test
+
+on:
+    push:
+        branches:
+            - ci-image
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            - run: git --version
+            - run: npm --version
+            - run: node --version
+            - run: nvm --version
+            - run: docker --version
+            - run: gh --version
+            - run: pip --version
+            - run: pipx --version
+            - run: ansible --version
+            - run: shellcheck --version
+            - run: caddy --version
+            - run: yamllint --version
+            - run: ruff --version
+            - run: rustc --version
+            - run: cargo --version
