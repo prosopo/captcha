@@ -293,9 +293,11 @@ jobs:
 
             - name: Print the JS_SERVER name
               env:
+                  VAR_NAME: env.JS_SERVER_FLUX_APP_NAME
                   JS_SERVER_FLUX_APP_NAME: ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
               run: |
                 echo "JS_SERVER_FLUX_APP_NAME: $JS_SERVER_FLUX_APP_NAME"
+                echo "VAR NAME: $VAR_NAME"
 
             - name: Redeploy flux docker js_server
               env:
