@@ -73,9 +73,6 @@ jobs:
                     # replace the version in all package.json files
                     xargs -I % sh -c "cat % | jq '.version = \"${{ github.event.inputs.version }}\"' > %.new && mv %.new %" <<< "$pkgJsons"
 
-                    # lint
-                    npm run lint:fix
-
                     # set the author in git
                     git config user.name "prosoponator[bot]"
                     git config user.email "dev@prosopo.io"
