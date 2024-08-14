@@ -63,6 +63,8 @@ ENV PATH="$NVM_DIR/versions/node//v20.16.0/bin:$PATH"
 
 RUN rm -rf /var/lib/apt/lists/*
 
+ENV PATH="/usr/bin/:$PATH"
+
 RUN echo "alias pip='pip3'" >> ~/.bashrc
 
 ENTRYPOINT [ "/bin/bash", "-e" ]
