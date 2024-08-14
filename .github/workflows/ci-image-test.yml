@@ -66,3 +66,4 @@ jobs:
             - run: ruff --version
             - run: rustc --version
             - run: cargo --version
+            - run: docker run hello-world
