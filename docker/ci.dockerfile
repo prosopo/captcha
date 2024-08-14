@@ -13,7 +13,22 @@ RUN curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --de
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
 RUN apt-get update
 
-RUN apt-get install --no-install-recommends -y git pipx npm python3.8 python3-pip python3.8-venv shellcheck yamllint caddy
+RUN apt-get install -y git
+RUN apt-get install -y pipx
+RUN apt-get install -y npm
+RUN apt-get install -y python3.8
+RUN apt-get install -y python3-pip
+RUN apt-get install -y python3.8-venv
+RUN apt-get install -y shellcheck
+RUN apt-get install -y yamllint
+RUN apt-get install -y caddy
+RUN apt-get install -y wget
+RUN mkdir -p -m 755 /etc/apt/keyrings \
+    && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update \
+    && apt-get install gh -y
 
 # RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
 
@@ -22,5 +37,8 @@ RUN apt-get install --no-install-recommends -y git pipx npm python3.8 python3-pi
 # RUN pip install ruff
 
 RUN rm -rf /var/lib/apt/lists/*
+
+RUN echo "alias pip='pip3'" >> ~/.bashrc
+
 
 ENTRYPOINT [ "/bin/bash", "-euxo", "pipefail" ]
