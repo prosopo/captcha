@@ -1,364 +1,364 @@
 {
-    "items": [
-        {
-            "hash": "0x760fa7f860a1e0925b827f6aa83e52d7e76a70f55e263da07c6997b6c641987f78dc208ce97cec2eb3d68a2e653acc7d308ce4e242891573b4d50281822f5485",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x760fa7f860a1e0925b827f6aa83e52d7e76a70f55e263da07c6997b6c641987f78dc208ce97cec2eb3d68a2e653acc7d308ce4e242891573b4d50281822f5485.png",
-            "type": "image",
-            "label": "bird"
-        },
-        {
-            "hash": "0x0659321c2c380fab15f2405128e2439faac7cb8555e217bcafa5bc8a354d6cfce7015203e5e61101a31dfbc637a8d5c65d85b6ee48867499895957c4db5af16a",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x0659321c2c380fab15f2405128e2439faac7cb8555e217bcafa5bc8a354d6cfce7015203e5e61101a31dfbc637a8d5c65d85b6ee48867499895957c4db5af16a.png",
-            "type": "image",
-            "label": "bird"
-        },
-        {
-            "hash": "0x88f06b2a1ce4f7e9b491a84919b59939a76baea88a48e88e95ebe48383cc15631d8524b7a9ec73cc4cba7568dcc1c7bddef4ff45c6992300e10111baf4a61971",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x88f06b2a1ce4f7e9b491a84919b59939a76baea88a48e88e95ebe48383cc15631d8524b7a9ec73cc4cba7568dcc1c7bddef4ff45c6992300e10111baf4a61971.png",
-            "type": "image",
-            "label": "bird"
-        },
-        {
-            "hash": "0x8ca8bc45e79bd59205fbd77b24e09e4c6ee437f27d02fc30b825037cfae6f2583f7b9d0b6a004c5a2ef9774ca1d3b45ffb94fdfabcffcdddfcd5838f2a489d3b",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x8ca8bc45e79bd59205fbd77b24e09e4c6ee437f27d02fc30b825037cfae6f2583f7b9d0b6a004c5a2ef9774ca1d3b45ffb94fdfabcffcdddfcd5838f2a489d3b.png",
-            "type": "image",
-            "label": "bird"
-        },
-        {
-            "hash": "0x22938433d07d39fcfbb9538233f57b537d673b0c6022d2cb1b730e42a43b317a50313def95c6e651b0ca1154510ea462a4feee3a0e71bc8f42837bd0e1737c41",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x22938433d07d39fcfbb9538233f57b537d673b0c6022d2cb1b730e42a43b317a50313def95c6e651b0ca1154510ea462a4feee3a0e71bc8f42837bd0e1737c41.png",
-            "type": "image",
-            "label": "bird"
-        },
-        {
-            "hash": "0x1a1b08462b094f2def0d8e2659dd1bfe3dbf25fc5b06222b45471d6a84c19f6f69ed996190e05de668bd4afe6df30c6f2b942a3047503e70d95034b155695c45",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x1a1b08462b094f2def0d8e2659dd1bfe3dbf25fc5b06222b45471d6a84c19f6f69ed996190e05de668bd4afe6df30c6f2b942a3047503e70d95034b155695c45.png",
-            "type": "image",
-            "label": "bird"
-        },
-        {
-            "hash": "0x3d02bf1afaea86d6cc0aea9e84c6745f845faa308ceac297166fd0850a944f808b10728c2f38f67ea87962ca4a1b4f4074bbaa630caf0d91998184a32e11a77d",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x3d02bf1afaea86d6cc0aea9e84c6745f845faa308ceac297166fd0850a944f808b10728c2f38f67ea87962ca4a1b4f4074bbaa630caf0d91998184a32e11a77d.png",
-            "type": "image",
-            "label": "bus"
-        },
-        {
-            "hash": "0x72b1fdf0560059de27bc796fd0ac98e083277157b2ac2ee1f5812ab4e34a781aa15b7372961dc69c4f562df5143ce356b184acd9409803ce1d443ca39d257952",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x72b1fdf0560059de27bc796fd0ac98e083277157b2ac2ee1f5812ab4e34a781aa15b7372961dc69c4f562df5143ce356b184acd9409803ce1d443ca39d257952.png",
-            "type": "image",
-            "label": "bus"
-        },
-        {
-            "hash": "0x7da2f1e8dd907863f6ffd9dd3a3d24d3ac28797a3429210c24be3c83e1cc6028e040250e7c765f99a85a3edd7d0a3978b46a8bfff134120b309c494d7484e24d",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x7da2f1e8dd907863f6ffd9dd3a3d24d3ac28797a3429210c24be3c83e1cc6028e040250e7c765f99a85a3edd7d0a3978b46a8bfff134120b309c494d7484e24d.png",
-            "type": "image",
-            "label": "bus"
-        },
-        {
-            "hash": "0x02606f6d654cc3780b67077783d8b1d0d482b224ccd0908f9e38e55a16cf6e5eb62b42559e48d881107d00fe2fe3d0d275879d700dcde504c855576548101503",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x02606f6d654cc3780b67077783d8b1d0d482b224ccd0908f9e38e55a16cf6e5eb62b42559e48d881107d00fe2fe3d0d275879d700dcde504c855576548101503.png",
-            "type": "image",
-            "label": "bus"
-        },
-        {
-            "hash": "0x0e3aafb28186acb2b51acd0123c55650b5019c0854e1e478ef1e61aba0033cc3b9d651e314602929a077a67fde2bfbe68c99ec89823abb381a8994aa7098e63a",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x0e3aafb28186acb2b51acd0123c55650b5019c0854e1e478ef1e61aba0033cc3b9d651e314602929a077a67fde2bfbe68c99ec89823abb381a8994aa7098e63a.png",
-            "type": "image",
-            "label": "bus"
-        },
-        {
-            "hash": "0xc322ec6d7a03c9baade16ee7a71414edfe6839d7cbe5805f3632d158616d9b51f455d1daa39167359a189878905ec8d77f3e44022ec4481197f85a98d38ed345",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc322ec6d7a03c9baade16ee7a71414edfe6839d7cbe5805f3632d158616d9b51f455d1daa39167359a189878905ec8d77f3e44022ec4481197f85a98d38ed345.png",
-            "type": "image",
-            "label": "bus"
-        },
-        {
-            "hash": "0xa791e01f34c89768df8a82869d31e5ce813adb84a3cdc7be5ebe55503375fc89d49974a3a8987292b92423ded092e488130957f4725e93d21c14d0a91a2f81ed",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xa791e01f34c89768df8a82869d31e5ce813adb84a3cdc7be5ebe55503375fc89d49974a3a8987292b92423ded092e488130957f4725e93d21c14d0a91a2f81ed.png",
-            "type": "image",
-            "label": "car"
-        },
-        {
-            "hash": "0x00db19a7c62a7ed3998c596215d455077cfa6ea6a9a0d9e5e9189cbde565cf1cc11e18046e01434a67937e9574c35ac3a1ed293dc2bb606e8d419aed61edf70e",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x00db19a7c62a7ed3998c596215d455077cfa6ea6a9a0d9e5e9189cbde565cf1cc11e18046e01434a67937e9574c35ac3a1ed293dc2bb606e8d419aed61edf70e.png",
-            "type": "image",
-            "label": "car"
-        },
-        {
-            "hash": "0xdf36bf20893c56da991a71f1244aaf032cf938334ce4645a856e96a2170508e5ba6b74948f43314eda7782e1169051e4ee1b276b9b8a048e08068f4d3af3e55a",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xdf36bf20893c56da991a71f1244aaf032cf938334ce4645a856e96a2170508e5ba6b74948f43314eda7782e1169051e4ee1b276b9b8a048e08068f4d3af3e55a.png",
-            "type": "image",
-            "label": "car"
-        },
-        {
-            "hash": "0x7f45ee498813ebe3d314d9071d126341ab14887d8754d5571d4858f93a07c7a8d19687a76f3f2f42dc110f573626c32f52475bc6e0d8b714c2773a13cf08f8bd",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x7f45ee498813ebe3d314d9071d126341ab14887d8754d5571d4858f93a07c7a8d19687a76f3f2f42dc110f573626c32f52475bc6e0d8b714c2773a13cf08f8bd.png",
-            "type": "image",
-            "label": "car"
-        },
-        {
-            "hash": "0x9b7dfbc8196a9d5b140f56b7eec0467c9d8a3e38ff7c017c33700040f6c98e2b79a0960f7a919d7f1ed7b435a49dce508b113ebda88331629ee8492ca29439af",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x9b7dfbc8196a9d5b140f56b7eec0467c9d8a3e38ff7c017c33700040f6c98e2b79a0960f7a919d7f1ed7b435a49dce508b113ebda88331629ee8492ca29439af.png",
-            "type": "image",
-            "label": "car"
-        },
-        {
-            "hash": "0x884c86c6b69bd29db658b3612f484bdf78e1420434082a68636f69e3d90e3cd76cf9718e099ff0ab16d7f27d8c5a3c09dcbd136d9ee01cd1d4ec72de672bea66",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x884c86c6b69bd29db658b3612f484bdf78e1420434082a68636f69e3d90e3cd76cf9718e099ff0ab16d7f27d8c5a3c09dcbd136d9ee01cd1d4ec72de672bea66.png",
-            "type": "image",
-            "label": "car"
-        },
-        {
-            "hash": "0x1e553d6c4afd65c3441aa00970ca9e5919c1c9efc19ee800e45d61eb26e442e7a7dd9a80b34882a18887856b14e9df9e6dd979427bbdbb9e8090df394b0844b7",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x1e553d6c4afd65c3441aa00970ca9e5919c1c9efc19ee800e45d61eb26e442e7a7dd9a80b34882a18887856b14e9df9e6dd979427bbdbb9e8090df394b0844b7.png",
-            "type": "image",
-            "label": "cat"
-        },
-        {
-            "hash": "0xde8990cc77d25bdc35d4c258113dc8243af7dfb5ce3a1b00ac2e656ce84ea06c1d2a0d9740787eb1dbcc70226f18a3eaf0e16f627d828ad56d22ebc3ffa8ec49",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xde8990cc77d25bdc35d4c258113dc8243af7dfb5ce3a1b00ac2e656ce84ea06c1d2a0d9740787eb1dbcc70226f18a3eaf0e16f627d828ad56d22ebc3ffa8ec49.png",
-            "type": "image",
-            "label": "cat"
-        },
-        {
-            "hash": "0xf5fe66c66f4b33e003096b4bb2c5d0ca52638b5ae4dab7b5e5925bb56c1393feb68f2552320883ba54debf91c400be7d9e6727c020bab1d07738d269f0793bcf",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xf5fe66c66f4b33e003096b4bb2c5d0ca52638b5ae4dab7b5e5925bb56c1393feb68f2552320883ba54debf91c400be7d9e6727c020bab1d07738d269f0793bcf.png",
-            "type": "image",
-            "label": "cat"
-        },
-        {
-            "hash": "0x2670edc73900aac804f21106694f1f1d46ce843abb622f5b638e7974f3dcec96ad031000205786f2745a72f8397e63a410058b16cca850418cda76c82629375c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x2670edc73900aac804f21106694f1f1d46ce843abb622f5b638e7974f3dcec96ad031000205786f2745a72f8397e63a410058b16cca850418cda76c82629375c.png",
-            "type": "image",
-            "label": "cat"
-        },
-        {
-            "hash": "0x55709825a4883482be0d647137464f012f61009149ebe8d27b2ad8445064741592795a3d02da53fc9b42e049d0e8d764ba195541267baa2788cd6985197647f8",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x55709825a4883482be0d647137464f012f61009149ebe8d27b2ad8445064741592795a3d02da53fc9b42e049d0e8d764ba195541267baa2788cd6985197647f8.png",
-            "type": "image",
-            "label": "cat"
-        },
-        {
-            "hash": "0x5068adcbae2342e7208e394f57b5921df657b1e53b2696cfcb885a9298597fd7645ee1f1a0ff423be46645ca3a30d929ca59a23139ecab0e6ffecd76f3bc6558",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x5068adcbae2342e7208e394f57b5921df657b1e53b2696cfcb885a9298597fd7645ee1f1a0ff423be46645ca3a30d929ca59a23139ecab0e6ffecd76f3bc6558.png",
-            "type": "image",
-            "label": "cat"
-        },
-        {
-            "hash": "0xe8198b8b0e5c51c576f50853c448467a55e33005cc185225a57849c63e84267c340d2d142d391955053ebe14b0322550480341468cf5e9fcaedbf73873e9b245",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xe8198b8b0e5c51c576f50853c448467a55e33005cc185225a57849c63e84267c340d2d142d391955053ebe14b0322550480341468cf5e9fcaedbf73873e9b245.png",
-            "type": "image",
-            "label": "deer"
-        },
-        {
-            "hash": "0x4fb674a19e4db835814fffc3872df8a661694e0deec3af347cd19e199c5539e5988c72052e79f21e0035d328d522aec983ac2379209eebd56859bdd5f400a70c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x4fb674a19e4db835814fffc3872df8a661694e0deec3af347cd19e199c5539e5988c72052e79f21e0035d328d522aec983ac2379209eebd56859bdd5f400a70c.png",
-            "type": "image",
-            "label": "deer"
-        },
-        {
-            "hash": "0x8cf36665bbccaec073e346777f974edbbd7ec534e78426d6ae13dc39740271024527e945fef06d8dd78b1345c87e1b3f90f28385531910d3a0795f45a7030438",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x8cf36665bbccaec073e346777f974edbbd7ec534e78426d6ae13dc39740271024527e945fef06d8dd78b1345c87e1b3f90f28385531910d3a0795f45a7030438.png",
-            "type": "image",
-            "label": "deer"
-        },
-        {
-            "hash": "0xbc50b9d2fc9272318a3a51e555ab744a1205112d38e308caac67975ff367fabc636a6567072bdd3bda1368ccc78863c6ea115f91cb7e4a57349baca6d6d01e24",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xbc50b9d2fc9272318a3a51e555ab744a1205112d38e308caac67975ff367fabc636a6567072bdd3bda1368ccc78863c6ea115f91cb7e4a57349baca6d6d01e24.png",
-            "type": "image",
-            "label": "deer"
-        },
-        {
-            "hash": "0x367af181b8fb20198197e3d7c0b52a36c2ff3ac4dc790056a7d055b0baee38c03a9038c79fc59510764de08bbb7c14307c2d21ebcb4313599782687cb40a0646",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x367af181b8fb20198197e3d7c0b52a36c2ff3ac4dc790056a7d055b0baee38c03a9038c79fc59510764de08bbb7c14307c2d21ebcb4313599782687cb40a0646.png",
-            "type": "image",
-            "label": "deer"
-        },
-        {
-            "hash": "0xf17c8e32e5ab57f059d1c9478d2891d9354673608e8c0826d2e488807ae869a63721bf7be34855ba555f36fc9d722e4f1f78033a4996fe3562328f93c0bd88e4",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xf17c8e32e5ab57f059d1c9478d2891d9354673608e8c0826d2e488807ae869a63721bf7be34855ba555f36fc9d722e4f1f78033a4996fe3562328f93c0bd88e4.png",
-            "type": "image",
-            "label": "deer"
-        },
-        {
-            "hash": "0xd3dd338481d82174ef911f76605f1c9ecf20660a65e23ab2130211c6533d018b021303d37423a641188cbe56a447beee86916cea9be935b1cbca88eb1c1c31fb",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xd3dd338481d82174ef911f76605f1c9ecf20660a65e23ab2130211c6533d018b021303d37423a641188cbe56a447beee86916cea9be935b1cbca88eb1c1c31fb.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0x9134327ca5ec7a5c6e1f6d8e8aa395c445d439dc32c1bbc84721b18d04fcee8394a559c362bcf6bb1e92e2d8edcf6d5dd73f1cf302a38dd646bbed2d27a6ce8f",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x9134327ca5ec7a5c6e1f6d8e8aa395c445d439dc32c1bbc84721b18d04fcee8394a559c362bcf6bb1e92e2d8edcf6d5dd73f1cf302a38dd646bbed2d27a6ce8f.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0x99da74b964a5dd03c619aa375ccf5dd69eb34fba3bf0e48f8e34ce2c9a1f4bf5fffcd1be4fcebebfdea61ab27bb8d36060950d6c19b7c8a89c7316a724db7a4c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x99da74b964a5dd03c619aa375ccf5dd69eb34fba3bf0e48f8e34ce2c9a1f4bf5fffcd1be4fcebebfdea61ab27bb8d36060950d6c19b7c8a89c7316a724db7a4c.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0xd8df8225474e38f1034448afeee0bdcb2888f7ea09ef5f280317cf2c8a3be2f804b0e36fe5769c1f20de3de5b87e174b7bac19807cc5f181938344d53326df7f",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xd8df8225474e38f1034448afeee0bdcb2888f7ea09ef5f280317cf2c8a3be2f804b0e36fe5769c1f20de3de5b87e174b7bac19807cc5f181938344d53326df7f.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0xc5293e66e847653ca0361f1fd1460c573a66be57b769a8a41b8fb8b42da4417ff1a91c4ef037ca5b2a1f0b5797dc62db2090d88047a80a09e93eacc080e60bb2",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc5293e66e847653ca0361f1fd1460c573a66be57b769a8a41b8fb8b42da4417ff1a91c4ef037ca5b2a1f0b5797dc62db2090d88047a80a09e93eacc080e60bb2.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0x9401d4dde02ebdcdd64827653b90b3337485c8fb59796ee6dbefd3866404b47ca4663175b7acfad49eac177baeb8df7304bced6713f85d50767144dcb436c66c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x9401d4dde02ebdcdd64827653b90b3337485c8fb59796ee6dbefd3866404b47ca4663175b7acfad49eac177baeb8df7304bced6713f85d50767144dcb436c66c.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0x977448bb1fa3594a3d91b2a37acd6967ca42252f0062ed5253040f200230395e7924a4dcc392bf26ec6d2c7c1d3204db2c5fcedb4c9d21a2a90ee018df2e6ae6",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x977448bb1fa3594a3d91b2a37acd6967ca42252f0062ed5253040f200230395e7924a4dcc392bf26ec6d2c7c1d3204db2c5fcedb4c9d21a2a90ee018df2e6ae6.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0xc8d934f2e7ac8429086669bb0788296844946834b5a3d2f3a44db276e06d7856c3782692d8bb9ba4122098d4027ca3642f32cdc7978f44493634b21b82c735c7",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc8d934f2e7ac8429086669bb0788296844946834b5a3d2f3a44db276e06d7856c3782692d8bb9ba4122098d4027ca3642f32cdc7978f44493634b21b82c735c7.png",
-            "type": "image",
-            "label": "dog"
-        },
-        {
-            "hash": "0xa6d77ccef52e07120c9295502b9dc972107f704abf6f4fd57dd2b8664db9fdc2c104e30e69e2c61cf1d88f8cdaeea204a2c332d49fd7ad1f61bbda7ea22bb77e",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xa6d77ccef52e07120c9295502b9dc972107f704abf6f4fd57dd2b8664db9fdc2c104e30e69e2c61cf1d88f8cdaeea204a2c332d49fd7ad1f61bbda7ea22bb77e.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0xef422469bc366be01145782e49c5b31a6c58f7d3945291c374a4e23196686121639c2fef9e7f967b37a958fda67cce10e92fc927f6c32b0f0f0ceeaea31ae0ad",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xef422469bc366be01145782e49c5b31a6c58f7d3945291c374a4e23196686121639c2fef9e7f967b37a958fda67cce10e92fc927f6c32b0f0f0ceeaea31ae0ad.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0xc9473fa10f0aa11856eef9683cf99fa7f2bac77e5b0ab0f08a99c002289b0ca684bfbe7504dd3124dea9fb1f4be68caf09a4c3fa0bfa890a371ace855e649c16",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc9473fa10f0aa11856eef9683cf99fa7f2bac77e5b0ab0f08a99c002289b0ca684bfbe7504dd3124dea9fb1f4be68caf09a4c3fa0bfa890a371ace855e649c16.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0x46640f912f03eb60cd4afbb8d6fc14b2f0c14ab93dee203681ab997cd7e43cb58d1782b31d549a158180c7a2f9b2c500c848a2047e740d8c4ac14a320d607320",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x46640f912f03eb60cd4afbb8d6fc14b2f0c14ab93dee203681ab997cd7e43cb58d1782b31d549a158180c7a2f9b2c500c848a2047e740d8c4ac14a320d607320.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0xf9ce625ee02e278eff475f7920b6fa7617c7078ed61e9ec50375fd47acb0c1aaeda231a779d0b76fb22a5a4e618779a70bff135bf02ebc8b68739d1fad67134c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xf9ce625ee02e278eff475f7920b6fa7617c7078ed61e9ec50375fd47acb0c1aaeda231a779d0b76fb22a5a4e618779a70bff135bf02ebc8b68739d1fad67134c.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0x25e0a29caac87e8258350c623bba6aebf0a427f0419bde1889d3b365de8f83ad5dfd4c5e8bf7952da3e8864a689b9f0ddc730d6184e85a7b420d349c3d7b8ecd",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x25e0a29caac87e8258350c623bba6aebf0a427f0419bde1889d3b365de8f83ad5dfd4c5e8bf7952da3e8864a689b9f0ddc730d6184e85a7b420d349c3d7b8ecd.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0x3e8e0f6276b6ab68722cc3e827c0a4a9d7d1575ace6527a3c76e103c0f3a4259530d3a6e626af0b19e35a5d13505013c67553fe498b0fe0e7a4060d4003324a8",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x3e8e0f6276b6ab68722cc3e827c0a4a9d7d1575ace6527a3c76e103c0f3a4259530d3a6e626af0b19e35a5d13505013c67553fe498b0fe0e7a4060d4003324a8.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0x441aee1e0f3c90af8f5d96eece0d476a722fe93883aff615c3c966fac27e814c451eb6fb92ad18c20ae5c798fc23b55a180db9c4d416e8cb3ea0b85cec7565f7",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x441aee1e0f3c90af8f5d96eece0d476a722fe93883aff615c3c966fac27e814c451eb6fb92ad18c20ae5c798fc23b55a180db9c4d416e8cb3ea0b85cec7565f7.png",
-            "type": "image",
-            "label": "horse"
-        },
-        {
-            "hash": "0xb31d7cab98df328d0f4a32b2969ec8e294cb4c2d1ab8bf46471a113b63c0d39c3ccb5cca55a8b46a2161c836a9fb1643e0d673e933cf21c8e4f4e46f0e1f0e96",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xb31d7cab98df328d0f4a32b2969ec8e294cb4c2d1ab8bf46471a113b63c0d39c3ccb5cca55a8b46a2161c836a9fb1643e0d673e933cf21c8e4f4e46f0e1f0e96.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x0398b3b46e8e5ffe4206919c2f0f30b94c8867097533128b12df6ff241e2e97764acf8d8fd2955875594b11c2a41f0d3e0071843f09f67a2dbad678072db4455",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x0398b3b46e8e5ffe4206919c2f0f30b94c8867097533128b12df6ff241e2e97764acf8d8fd2955875594b11c2a41f0d3e0071843f09f67a2dbad678072db4455.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x77fe0772ef80332ac3cb48d5c84be6fefec0ad90607ec45c509edda2a6b63e389895693821a9ee99a2d824cf71fa9bea4458ca3de8353ae60f489fa6e3961878",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x77fe0772ef80332ac3cb48d5c84be6fefec0ad90607ec45c509edda2a6b63e389895693821a9ee99a2d824cf71fa9bea4458ca3de8353ae60f489fa6e3961878.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x42c68ccc53bc41eb731952ea2adce62be61a7b81c167f6f0b2ba4ee1d2d449d45c44eddc48f9c169902cf35ba1c8739a09848faf8c632775ca257026e4a79f8f",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x42c68ccc53bc41eb731952ea2adce62be61a7b81c167f6f0b2ba4ee1d2d449d45c44eddc48f9c169902cf35ba1c8739a09848faf8c632775ca257026e4a79f8f.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x4ce6c8a8dd7b35afebf35ee25514694c947bcb082acd370fa5cee4b650548bcf0e21a864e1a99320dea5369f1b3a6b5240bcbca420972a8f1ec06a713b900b82",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x4ce6c8a8dd7b35afebf35ee25514694c947bcb082acd370fa5cee4b650548bcf0e21a864e1a99320dea5369f1b3a6b5240bcbca420972a8f1ec06a713b900b82.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x4190ae0531224be458e3a14e13af0751311ea350636a365f9144438555c56cea075a70d2c6d0c64fb8311ff674cd2b357b0c07de388a5014129e159b9f29d31b",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x4190ae0531224be458e3a14e13af0751311ea350636a365f9144438555c56cea075a70d2c6d0c64fb8311ff674cd2b357b0c07de388a5014129e159b9f29d31b.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x475b502023789ec81e8653253906a75d0e4e17857117b367999268a5b0b7a8638256eca95d8cc7280a275de8c884a442abb3dd3f7b9f28f2de79df39628ba8a6",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x475b502023789ec81e8653253906a75d0e4e17857117b367999268a5b0b7a8638256eca95d8cc7280a275de8c884a442abb3dd3f7b9f28f2de79df39628ba8a6.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0xeeeb9ef59478b2dada8acea00d7d3de0f163de5f8beea5128808fd43e616f89312476541912e0e1b29881bd58f28713bd3ebae0fbd29e0b3fb60ff310386b808",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xeeeb9ef59478b2dada8acea00d7d3de0f163de5f8beea5128808fd43e616f89312476541912e0e1b29881bd58f28713bd3ebae0fbd29e0b3fb60ff310386b808.png",
-            "type": "image",
-            "label": "plane"
-        },
-        {
-            "hash": "0x8343903b4ce3b63ffc4a66e805a18dc1cc136a91c8f67f15f261aec61c9ad58ad1856c84fe0ac97d1edc4b21f6b5b1842cc7b211328e460ed75bfad3dbb9ff16",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x8343903b4ce3b63ffc4a66e805a18dc1cc136a91c8f67f15f261aec61c9ad58ad1856c84fe0ac97d1edc4b21f6b5b1842cc7b211328e460ed75bfad3dbb9ff16.png",
-            "type": "image",
-            "label": "train"
-        },
-        {
-            "hash": "0x69926ed2721a19f01cf8829611399412e74e5780c64f00c1610aba0a832d9e440399f13471e8cc019fcc2ec372571d1b1a583a967f21fa1cd68607cadf2f7f8c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x69926ed2721a19f01cf8829611399412e74e5780c64f00c1610aba0a832d9e440399f13471e8cc019fcc2ec372571d1b1a583a967f21fa1cd68607cadf2f7f8c.png",
-            "type": "image",
-            "label": "train"
-        },
-        {
-            "hash": "0x5cafe30f3eed6c7e6f64e34a081e50317892ac7f235c5fe865e224d8363d65b1b2d9f1f6c8b5736c0f3a932740b9b31eefd7f0ec13a16e4dfca541012adc0b2d",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x5cafe30f3eed6c7e6f64e34a081e50317892ac7f235c5fe865e224d8363d65b1b2d9f1f6c8b5736c0f3a932740b9b31eefd7f0ec13a16e4dfca541012adc0b2d.png",
-            "type": "image",
-            "label": "train"
-        },
-        {
-            "hash": "0xe94dcbd223afb4dfc9fb7f04095114ce611e6acb5b34384aef88728ab85dd30dcd8581bab1b66e0c6c370e75d03d7f8ac222eacb25d211f91a805ef63099fe3c",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xe94dcbd223afb4dfc9fb7f04095114ce611e6acb5b34384aef88728ab85dd30dcd8581bab1b66e0c6c370e75d03d7f8ac222eacb25d211f91a805ef63099fe3c.png",
-            "type": "image",
-            "label": "train"
-        },
-        {
-            "hash": "0x077d377cd794017fffc8c70c12fc056d7f03f1e24c54b56bc6c13af8a75f033b0883b64502b9afa5329819ac429318ca42f4e2cb5b446ca7a3b5a169ca5354a2",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x077d377cd794017fffc8c70c12fc056d7f03f1e24c54b56bc6c13af8a75f033b0883b64502b9afa5329819ac429318ca42f4e2cb5b446ca7a3b5a169ca5354a2.png",
-            "type": "image",
-            "label": "train"
-        },
-        {
-            "hash": "0x511c1fb6c24e2db829767c0503ed3fb5d83d2fc512bd4f53879f2a639095a05b9a104f968dae26e8fa2385c9978c55fa0a646fa07694b6403e4497ad7ad10a59",
-            "data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x511c1fb6c24e2db829767c0503ed3fb5d83d2fc512bd4f53879f2a639095a05b9a104f968dae26e8fa2385c9978c55fa0a646fa07694b6403e4497ad7ad10a59.png",
-            "type": "image",
-            "label": "train"
-        }
-    ]
+	"items": [
+		{
+			"hash": "0x760fa7f860a1e0925b827f6aa83e52d7e76a70f55e263da07c6997b6c641987f78dc208ce97cec2eb3d68a2e653acc7d308ce4e242891573b4d50281822f5485",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x760fa7f860a1e0925b827f6aa83e52d7e76a70f55e263da07c6997b6c641987f78dc208ce97cec2eb3d68a2e653acc7d308ce4e242891573b4d50281822f5485.png",
+			"type": "image",
+			"label": "bird"
+		},
+		{
+			"hash": "0x0659321c2c380fab15f2405128e2439faac7cb8555e217bcafa5bc8a354d6cfce7015203e5e61101a31dfbc637a8d5c65d85b6ee48867499895957c4db5af16a",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x0659321c2c380fab15f2405128e2439faac7cb8555e217bcafa5bc8a354d6cfce7015203e5e61101a31dfbc637a8d5c65d85b6ee48867499895957c4db5af16a.png",
+			"type": "image",
+			"label": "bird"
+		},
+		{
+			"hash": "0x88f06b2a1ce4f7e9b491a84919b59939a76baea88a48e88e95ebe48383cc15631d8524b7a9ec73cc4cba7568dcc1c7bddef4ff45c6992300e10111baf4a61971",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x88f06b2a1ce4f7e9b491a84919b59939a76baea88a48e88e95ebe48383cc15631d8524b7a9ec73cc4cba7568dcc1c7bddef4ff45c6992300e10111baf4a61971.png",
+			"type": "image",
+			"label": "bird"
+		},
+		{
+			"hash": "0x8ca8bc45e79bd59205fbd77b24e09e4c6ee437f27d02fc30b825037cfae6f2583f7b9d0b6a004c5a2ef9774ca1d3b45ffb94fdfabcffcdddfcd5838f2a489d3b",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x8ca8bc45e79bd59205fbd77b24e09e4c6ee437f27d02fc30b825037cfae6f2583f7b9d0b6a004c5a2ef9774ca1d3b45ffb94fdfabcffcdddfcd5838f2a489d3b.png",
+			"type": "image",
+			"label": "bird"
+		},
+		{
+			"hash": "0x22938433d07d39fcfbb9538233f57b537d673b0c6022d2cb1b730e42a43b317a50313def95c6e651b0ca1154510ea462a4feee3a0e71bc8f42837bd0e1737c41",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x22938433d07d39fcfbb9538233f57b537d673b0c6022d2cb1b730e42a43b317a50313def95c6e651b0ca1154510ea462a4feee3a0e71bc8f42837bd0e1737c41.png",
+			"type": "image",
+			"label": "bird"
+		},
+		{
+			"hash": "0x1a1b08462b094f2def0d8e2659dd1bfe3dbf25fc5b06222b45471d6a84c19f6f69ed996190e05de668bd4afe6df30c6f2b942a3047503e70d95034b155695c45",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x1a1b08462b094f2def0d8e2659dd1bfe3dbf25fc5b06222b45471d6a84c19f6f69ed996190e05de668bd4afe6df30c6f2b942a3047503e70d95034b155695c45.png",
+			"type": "image",
+			"label": "bird"
+		},
+		{
+			"hash": "0x3d02bf1afaea86d6cc0aea9e84c6745f845faa308ceac297166fd0850a944f808b10728c2f38f67ea87962ca4a1b4f4074bbaa630caf0d91998184a32e11a77d",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x3d02bf1afaea86d6cc0aea9e84c6745f845faa308ceac297166fd0850a944f808b10728c2f38f67ea87962ca4a1b4f4074bbaa630caf0d91998184a32e11a77d.png",
+			"type": "image",
+			"label": "bus"
+		},
+		{
+			"hash": "0x72b1fdf0560059de27bc796fd0ac98e083277157b2ac2ee1f5812ab4e34a781aa15b7372961dc69c4f562df5143ce356b184acd9409803ce1d443ca39d257952",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x72b1fdf0560059de27bc796fd0ac98e083277157b2ac2ee1f5812ab4e34a781aa15b7372961dc69c4f562df5143ce356b184acd9409803ce1d443ca39d257952.png",
+			"type": "image",
+			"label": "bus"
+		},
+		{
+			"hash": "0x7da2f1e8dd907863f6ffd9dd3a3d24d3ac28797a3429210c24be3c83e1cc6028e040250e7c765f99a85a3edd7d0a3978b46a8bfff134120b309c494d7484e24d",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x7da2f1e8dd907863f6ffd9dd3a3d24d3ac28797a3429210c24be3c83e1cc6028e040250e7c765f99a85a3edd7d0a3978b46a8bfff134120b309c494d7484e24d.png",
+			"type": "image",
+			"label": "bus"
+		},
+		{
+			"hash": "0x02606f6d654cc3780b67077783d8b1d0d482b224ccd0908f9e38e55a16cf6e5eb62b42559e48d881107d00fe2fe3d0d275879d700dcde504c855576548101503",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x02606f6d654cc3780b67077783d8b1d0d482b224ccd0908f9e38e55a16cf6e5eb62b42559e48d881107d00fe2fe3d0d275879d700dcde504c855576548101503.png",
+			"type": "image",
+			"label": "bus"
+		},
+		{
+			"hash": "0x0e3aafb28186acb2b51acd0123c55650b5019c0854e1e478ef1e61aba0033cc3b9d651e314602929a077a67fde2bfbe68c99ec89823abb381a8994aa7098e63a",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x0e3aafb28186acb2b51acd0123c55650b5019c0854e1e478ef1e61aba0033cc3b9d651e314602929a077a67fde2bfbe68c99ec89823abb381a8994aa7098e63a.png",
+			"type": "image",
+			"label": "bus"
+		},
+		{
+			"hash": "0xc322ec6d7a03c9baade16ee7a71414edfe6839d7cbe5805f3632d158616d9b51f455d1daa39167359a189878905ec8d77f3e44022ec4481197f85a98d38ed345",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc322ec6d7a03c9baade16ee7a71414edfe6839d7cbe5805f3632d158616d9b51f455d1daa39167359a189878905ec8d77f3e44022ec4481197f85a98d38ed345.png",
+			"type": "image",
+			"label": "bus"
+		},
+		{
+			"hash": "0xa791e01f34c89768df8a82869d31e5ce813adb84a3cdc7be5ebe55503375fc89d49974a3a8987292b92423ded092e488130957f4725e93d21c14d0a91a2f81ed",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xa791e01f34c89768df8a82869d31e5ce813adb84a3cdc7be5ebe55503375fc89d49974a3a8987292b92423ded092e488130957f4725e93d21c14d0a91a2f81ed.png",
+			"type": "image",
+			"label": "car"
+		},
+		{
+			"hash": "0x00db19a7c62a7ed3998c596215d455077cfa6ea6a9a0d9e5e9189cbde565cf1cc11e18046e01434a67937e9574c35ac3a1ed293dc2bb606e8d419aed61edf70e",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x00db19a7c62a7ed3998c596215d455077cfa6ea6a9a0d9e5e9189cbde565cf1cc11e18046e01434a67937e9574c35ac3a1ed293dc2bb606e8d419aed61edf70e.png",
+			"type": "image",
+			"label": "car"
+		},
+		{
+			"hash": "0xdf36bf20893c56da991a71f1244aaf032cf938334ce4645a856e96a2170508e5ba6b74948f43314eda7782e1169051e4ee1b276b9b8a048e08068f4d3af3e55a",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xdf36bf20893c56da991a71f1244aaf032cf938334ce4645a856e96a2170508e5ba6b74948f43314eda7782e1169051e4ee1b276b9b8a048e08068f4d3af3e55a.png",
+			"type": "image",
+			"label": "car"
+		},
+		{
+			"hash": "0x7f45ee498813ebe3d314d9071d126341ab14887d8754d5571d4858f93a07c7a8d19687a76f3f2f42dc110f573626c32f52475bc6e0d8b714c2773a13cf08f8bd",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x7f45ee498813ebe3d314d9071d126341ab14887d8754d5571d4858f93a07c7a8d19687a76f3f2f42dc110f573626c32f52475bc6e0d8b714c2773a13cf08f8bd.png",
+			"type": "image",
+			"label": "car"
+		},
+		{
+			"hash": "0x9b7dfbc8196a9d5b140f56b7eec0467c9d8a3e38ff7c017c33700040f6c98e2b79a0960f7a919d7f1ed7b435a49dce508b113ebda88331629ee8492ca29439af",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x9b7dfbc8196a9d5b140f56b7eec0467c9d8a3e38ff7c017c33700040f6c98e2b79a0960f7a919d7f1ed7b435a49dce508b113ebda88331629ee8492ca29439af.png",
+			"type": "image",
+			"label": "car"
+		},
+		{
+			"hash": "0x884c86c6b69bd29db658b3612f484bdf78e1420434082a68636f69e3d90e3cd76cf9718e099ff0ab16d7f27d8c5a3c09dcbd136d9ee01cd1d4ec72de672bea66",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x884c86c6b69bd29db658b3612f484bdf78e1420434082a68636f69e3d90e3cd76cf9718e099ff0ab16d7f27d8c5a3c09dcbd136d9ee01cd1d4ec72de672bea66.png",
+			"type": "image",
+			"label": "car"
+		},
+		{
+			"hash": "0x1e553d6c4afd65c3441aa00970ca9e5919c1c9efc19ee800e45d61eb26e442e7a7dd9a80b34882a18887856b14e9df9e6dd979427bbdbb9e8090df394b0844b7",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x1e553d6c4afd65c3441aa00970ca9e5919c1c9efc19ee800e45d61eb26e442e7a7dd9a80b34882a18887856b14e9df9e6dd979427bbdbb9e8090df394b0844b7.png",
+			"type": "image",
+			"label": "cat"
+		},
+		{
+			"hash": "0xde8990cc77d25bdc35d4c258113dc8243af7dfb5ce3a1b00ac2e656ce84ea06c1d2a0d9740787eb1dbcc70226f18a3eaf0e16f627d828ad56d22ebc3ffa8ec49",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xde8990cc77d25bdc35d4c258113dc8243af7dfb5ce3a1b00ac2e656ce84ea06c1d2a0d9740787eb1dbcc70226f18a3eaf0e16f627d828ad56d22ebc3ffa8ec49.png",
+			"type": "image",
+			"label": "cat"
+		},
+		{
+			"hash": "0xf5fe66c66f4b33e003096b4bb2c5d0ca52638b5ae4dab7b5e5925bb56c1393feb68f2552320883ba54debf91c400be7d9e6727c020bab1d07738d269f0793bcf",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xf5fe66c66f4b33e003096b4bb2c5d0ca52638b5ae4dab7b5e5925bb56c1393feb68f2552320883ba54debf91c400be7d9e6727c020bab1d07738d269f0793bcf.png",
+			"type": "image",
+			"label": "cat"
+		},
+		{
+			"hash": "0x2670edc73900aac804f21106694f1f1d46ce843abb622f5b638e7974f3dcec96ad031000205786f2745a72f8397e63a410058b16cca850418cda76c82629375c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x2670edc73900aac804f21106694f1f1d46ce843abb622f5b638e7974f3dcec96ad031000205786f2745a72f8397e63a410058b16cca850418cda76c82629375c.png",
+			"type": "image",
+			"label": "cat"
+		},
+		{
+			"hash": "0x55709825a4883482be0d647137464f012f61009149ebe8d27b2ad8445064741592795a3d02da53fc9b42e049d0e8d764ba195541267baa2788cd6985197647f8",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x55709825a4883482be0d647137464f012f61009149ebe8d27b2ad8445064741592795a3d02da53fc9b42e049d0e8d764ba195541267baa2788cd6985197647f8.png",
+			"type": "image",
+			"label": "cat"
+		},
+		{
+			"hash": "0x5068adcbae2342e7208e394f57b5921df657b1e53b2696cfcb885a9298597fd7645ee1f1a0ff423be46645ca3a30d929ca59a23139ecab0e6ffecd76f3bc6558",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x5068adcbae2342e7208e394f57b5921df657b1e53b2696cfcb885a9298597fd7645ee1f1a0ff423be46645ca3a30d929ca59a23139ecab0e6ffecd76f3bc6558.png",
+			"type": "image",
+			"label": "cat"
+		},
+		{
+			"hash": "0xe8198b8b0e5c51c576f50853c448467a55e33005cc185225a57849c63e84267c340d2d142d391955053ebe14b0322550480341468cf5e9fcaedbf73873e9b245",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xe8198b8b0e5c51c576f50853c448467a55e33005cc185225a57849c63e84267c340d2d142d391955053ebe14b0322550480341468cf5e9fcaedbf73873e9b245.png",
+			"type": "image",
+			"label": "deer"
+		},
+		{
+			"hash": "0x4fb674a19e4db835814fffc3872df8a661694e0deec3af347cd19e199c5539e5988c72052e79f21e0035d328d522aec983ac2379209eebd56859bdd5f400a70c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x4fb674a19e4db835814fffc3872df8a661694e0deec3af347cd19e199c5539e5988c72052e79f21e0035d328d522aec983ac2379209eebd56859bdd5f400a70c.png",
+			"type": "image",
+			"label": "deer"
+		},
+		{
+			"hash": "0x8cf36665bbccaec073e346777f974edbbd7ec534e78426d6ae13dc39740271024527e945fef06d8dd78b1345c87e1b3f90f28385531910d3a0795f45a7030438",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x8cf36665bbccaec073e346777f974edbbd7ec534e78426d6ae13dc39740271024527e945fef06d8dd78b1345c87e1b3f90f28385531910d3a0795f45a7030438.png",
+			"type": "image",
+			"label": "deer"
+		},
+		{
+			"hash": "0xbc50b9d2fc9272318a3a51e555ab744a1205112d38e308caac67975ff367fabc636a6567072bdd3bda1368ccc78863c6ea115f91cb7e4a57349baca6d6d01e24",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xbc50b9d2fc9272318a3a51e555ab744a1205112d38e308caac67975ff367fabc636a6567072bdd3bda1368ccc78863c6ea115f91cb7e4a57349baca6d6d01e24.png",
+			"type": "image",
+			"label": "deer"
+		},
+		{
+			"hash": "0x367af181b8fb20198197e3d7c0b52a36c2ff3ac4dc790056a7d055b0baee38c03a9038c79fc59510764de08bbb7c14307c2d21ebcb4313599782687cb40a0646",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x367af181b8fb20198197e3d7c0b52a36c2ff3ac4dc790056a7d055b0baee38c03a9038c79fc59510764de08bbb7c14307c2d21ebcb4313599782687cb40a0646.png",
+			"type": "image",
+			"label": "deer"
+		},
+		{
+			"hash": "0xf17c8e32e5ab57f059d1c9478d2891d9354673608e8c0826d2e488807ae869a63721bf7be34855ba555f36fc9d722e4f1f78033a4996fe3562328f93c0bd88e4",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xf17c8e32e5ab57f059d1c9478d2891d9354673608e8c0826d2e488807ae869a63721bf7be34855ba555f36fc9d722e4f1f78033a4996fe3562328f93c0bd88e4.png",
+			"type": "image",
+			"label": "deer"
+		},
+		{
+			"hash": "0xd3dd338481d82174ef911f76605f1c9ecf20660a65e23ab2130211c6533d018b021303d37423a641188cbe56a447beee86916cea9be935b1cbca88eb1c1c31fb",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xd3dd338481d82174ef911f76605f1c9ecf20660a65e23ab2130211c6533d018b021303d37423a641188cbe56a447beee86916cea9be935b1cbca88eb1c1c31fb.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0x9134327ca5ec7a5c6e1f6d8e8aa395c445d439dc32c1bbc84721b18d04fcee8394a559c362bcf6bb1e92e2d8edcf6d5dd73f1cf302a38dd646bbed2d27a6ce8f",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x9134327ca5ec7a5c6e1f6d8e8aa395c445d439dc32c1bbc84721b18d04fcee8394a559c362bcf6bb1e92e2d8edcf6d5dd73f1cf302a38dd646bbed2d27a6ce8f.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0x99da74b964a5dd03c619aa375ccf5dd69eb34fba3bf0e48f8e34ce2c9a1f4bf5fffcd1be4fcebebfdea61ab27bb8d36060950d6c19b7c8a89c7316a724db7a4c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x99da74b964a5dd03c619aa375ccf5dd69eb34fba3bf0e48f8e34ce2c9a1f4bf5fffcd1be4fcebebfdea61ab27bb8d36060950d6c19b7c8a89c7316a724db7a4c.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0xd8df8225474e38f1034448afeee0bdcb2888f7ea09ef5f280317cf2c8a3be2f804b0e36fe5769c1f20de3de5b87e174b7bac19807cc5f181938344d53326df7f",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xd8df8225474e38f1034448afeee0bdcb2888f7ea09ef5f280317cf2c8a3be2f804b0e36fe5769c1f20de3de5b87e174b7bac19807cc5f181938344d53326df7f.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0xc5293e66e847653ca0361f1fd1460c573a66be57b769a8a41b8fb8b42da4417ff1a91c4ef037ca5b2a1f0b5797dc62db2090d88047a80a09e93eacc080e60bb2",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc5293e66e847653ca0361f1fd1460c573a66be57b769a8a41b8fb8b42da4417ff1a91c4ef037ca5b2a1f0b5797dc62db2090d88047a80a09e93eacc080e60bb2.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0x9401d4dde02ebdcdd64827653b90b3337485c8fb59796ee6dbefd3866404b47ca4663175b7acfad49eac177baeb8df7304bced6713f85d50767144dcb436c66c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x9401d4dde02ebdcdd64827653b90b3337485c8fb59796ee6dbefd3866404b47ca4663175b7acfad49eac177baeb8df7304bced6713f85d50767144dcb436c66c.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0x977448bb1fa3594a3d91b2a37acd6967ca42252f0062ed5253040f200230395e7924a4dcc392bf26ec6d2c7c1d3204db2c5fcedb4c9d21a2a90ee018df2e6ae6",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x977448bb1fa3594a3d91b2a37acd6967ca42252f0062ed5253040f200230395e7924a4dcc392bf26ec6d2c7c1d3204db2c5fcedb4c9d21a2a90ee018df2e6ae6.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0xc8d934f2e7ac8429086669bb0788296844946834b5a3d2f3a44db276e06d7856c3782692d8bb9ba4122098d4027ca3642f32cdc7978f44493634b21b82c735c7",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc8d934f2e7ac8429086669bb0788296844946834b5a3d2f3a44db276e06d7856c3782692d8bb9ba4122098d4027ca3642f32cdc7978f44493634b21b82c735c7.png",
+			"type": "image",
+			"label": "dog"
+		},
+		{
+			"hash": "0xa6d77ccef52e07120c9295502b9dc972107f704abf6f4fd57dd2b8664db9fdc2c104e30e69e2c61cf1d88f8cdaeea204a2c332d49fd7ad1f61bbda7ea22bb77e",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xa6d77ccef52e07120c9295502b9dc972107f704abf6f4fd57dd2b8664db9fdc2c104e30e69e2c61cf1d88f8cdaeea204a2c332d49fd7ad1f61bbda7ea22bb77e.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0xef422469bc366be01145782e49c5b31a6c58f7d3945291c374a4e23196686121639c2fef9e7f967b37a958fda67cce10e92fc927f6c32b0f0f0ceeaea31ae0ad",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xef422469bc366be01145782e49c5b31a6c58f7d3945291c374a4e23196686121639c2fef9e7f967b37a958fda67cce10e92fc927f6c32b0f0f0ceeaea31ae0ad.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0xc9473fa10f0aa11856eef9683cf99fa7f2bac77e5b0ab0f08a99c002289b0ca684bfbe7504dd3124dea9fb1f4be68caf09a4c3fa0bfa890a371ace855e649c16",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xc9473fa10f0aa11856eef9683cf99fa7f2bac77e5b0ab0f08a99c002289b0ca684bfbe7504dd3124dea9fb1f4be68caf09a4c3fa0bfa890a371ace855e649c16.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0x46640f912f03eb60cd4afbb8d6fc14b2f0c14ab93dee203681ab997cd7e43cb58d1782b31d549a158180c7a2f9b2c500c848a2047e740d8c4ac14a320d607320",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x46640f912f03eb60cd4afbb8d6fc14b2f0c14ab93dee203681ab997cd7e43cb58d1782b31d549a158180c7a2f9b2c500c848a2047e740d8c4ac14a320d607320.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0xf9ce625ee02e278eff475f7920b6fa7617c7078ed61e9ec50375fd47acb0c1aaeda231a779d0b76fb22a5a4e618779a70bff135bf02ebc8b68739d1fad67134c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xf9ce625ee02e278eff475f7920b6fa7617c7078ed61e9ec50375fd47acb0c1aaeda231a779d0b76fb22a5a4e618779a70bff135bf02ebc8b68739d1fad67134c.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0x25e0a29caac87e8258350c623bba6aebf0a427f0419bde1889d3b365de8f83ad5dfd4c5e8bf7952da3e8864a689b9f0ddc730d6184e85a7b420d349c3d7b8ecd",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x25e0a29caac87e8258350c623bba6aebf0a427f0419bde1889d3b365de8f83ad5dfd4c5e8bf7952da3e8864a689b9f0ddc730d6184e85a7b420d349c3d7b8ecd.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0x3e8e0f6276b6ab68722cc3e827c0a4a9d7d1575ace6527a3c76e103c0f3a4259530d3a6e626af0b19e35a5d13505013c67553fe498b0fe0e7a4060d4003324a8",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x3e8e0f6276b6ab68722cc3e827c0a4a9d7d1575ace6527a3c76e103c0f3a4259530d3a6e626af0b19e35a5d13505013c67553fe498b0fe0e7a4060d4003324a8.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0x441aee1e0f3c90af8f5d96eece0d476a722fe93883aff615c3c966fac27e814c451eb6fb92ad18c20ae5c798fc23b55a180db9c4d416e8cb3ea0b85cec7565f7",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x441aee1e0f3c90af8f5d96eece0d476a722fe93883aff615c3c966fac27e814c451eb6fb92ad18c20ae5c798fc23b55a180db9c4d416e8cb3ea0b85cec7565f7.png",
+			"type": "image",
+			"label": "horse"
+		},
+		{
+			"hash": "0xb31d7cab98df328d0f4a32b2969ec8e294cb4c2d1ab8bf46471a113b63c0d39c3ccb5cca55a8b46a2161c836a9fb1643e0d673e933cf21c8e4f4e46f0e1f0e96",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xb31d7cab98df328d0f4a32b2969ec8e294cb4c2d1ab8bf46471a113b63c0d39c3ccb5cca55a8b46a2161c836a9fb1643e0d673e933cf21c8e4f4e46f0e1f0e96.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x0398b3b46e8e5ffe4206919c2f0f30b94c8867097533128b12df6ff241e2e97764acf8d8fd2955875594b11c2a41f0d3e0071843f09f67a2dbad678072db4455",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x0398b3b46e8e5ffe4206919c2f0f30b94c8867097533128b12df6ff241e2e97764acf8d8fd2955875594b11c2a41f0d3e0071843f09f67a2dbad678072db4455.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x77fe0772ef80332ac3cb48d5c84be6fefec0ad90607ec45c509edda2a6b63e389895693821a9ee99a2d824cf71fa9bea4458ca3de8353ae60f489fa6e3961878",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x77fe0772ef80332ac3cb48d5c84be6fefec0ad90607ec45c509edda2a6b63e389895693821a9ee99a2d824cf71fa9bea4458ca3de8353ae60f489fa6e3961878.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x42c68ccc53bc41eb731952ea2adce62be61a7b81c167f6f0b2ba4ee1d2d449d45c44eddc48f9c169902cf35ba1c8739a09848faf8c632775ca257026e4a79f8f",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x42c68ccc53bc41eb731952ea2adce62be61a7b81c167f6f0b2ba4ee1d2d449d45c44eddc48f9c169902cf35ba1c8739a09848faf8c632775ca257026e4a79f8f.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x4ce6c8a8dd7b35afebf35ee25514694c947bcb082acd370fa5cee4b650548bcf0e21a864e1a99320dea5369f1b3a6b5240bcbca420972a8f1ec06a713b900b82",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x4ce6c8a8dd7b35afebf35ee25514694c947bcb082acd370fa5cee4b650548bcf0e21a864e1a99320dea5369f1b3a6b5240bcbca420972a8f1ec06a713b900b82.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x4190ae0531224be458e3a14e13af0751311ea350636a365f9144438555c56cea075a70d2c6d0c64fb8311ff674cd2b357b0c07de388a5014129e159b9f29d31b",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x4190ae0531224be458e3a14e13af0751311ea350636a365f9144438555c56cea075a70d2c6d0c64fb8311ff674cd2b357b0c07de388a5014129e159b9f29d31b.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x475b502023789ec81e8653253906a75d0e4e17857117b367999268a5b0b7a8638256eca95d8cc7280a275de8c884a442abb3dd3f7b9f28f2de79df39628ba8a6",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x475b502023789ec81e8653253906a75d0e4e17857117b367999268a5b0b7a8638256eca95d8cc7280a275de8c884a442abb3dd3f7b9f28f2de79df39628ba8a6.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0xeeeb9ef59478b2dada8acea00d7d3de0f163de5f8beea5128808fd43e616f89312476541912e0e1b29881bd58f28713bd3ebae0fbd29e0b3fb60ff310386b808",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xeeeb9ef59478b2dada8acea00d7d3de0f163de5f8beea5128808fd43e616f89312476541912e0e1b29881bd58f28713bd3ebae0fbd29e0b3fb60ff310386b808.png",
+			"type": "image",
+			"label": "plane"
+		},
+		{
+			"hash": "0x8343903b4ce3b63ffc4a66e805a18dc1cc136a91c8f67f15f261aec61c9ad58ad1856c84fe0ac97d1edc4b21f6b5b1842cc7b211328e460ed75bfad3dbb9ff16",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x8343903b4ce3b63ffc4a66e805a18dc1cc136a91c8f67f15f261aec61c9ad58ad1856c84fe0ac97d1edc4b21f6b5b1842cc7b211328e460ed75bfad3dbb9ff16.png",
+			"type": "image",
+			"label": "train"
+		},
+		{
+			"hash": "0x69926ed2721a19f01cf8829611399412e74e5780c64f00c1610aba0a832d9e440399f13471e8cc019fcc2ec372571d1b1a583a967f21fa1cd68607cadf2f7f8c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x69926ed2721a19f01cf8829611399412e74e5780c64f00c1610aba0a832d9e440399f13471e8cc019fcc2ec372571d1b1a583a967f21fa1cd68607cadf2f7f8c.png",
+			"type": "image",
+			"label": "train"
+		},
+		{
+			"hash": "0x5cafe30f3eed6c7e6f64e34a081e50317892ac7f235c5fe865e224d8363d65b1b2d9f1f6c8b5736c0f3a932740b9b31eefd7f0ec13a16e4dfca541012adc0b2d",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x5cafe30f3eed6c7e6f64e34a081e50317892ac7f235c5fe865e224d8363d65b1b2d9f1f6c8b5736c0f3a932740b9b31eefd7f0ec13a16e4dfca541012adc0b2d.png",
+			"type": "image",
+			"label": "train"
+		},
+		{
+			"hash": "0xe94dcbd223afb4dfc9fb7f04095114ce611e6acb5b34384aef88728ab85dd30dcd8581bab1b66e0c6c370e75d03d7f8ac222eacb25d211f91a805ef63099fe3c",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0xe94dcbd223afb4dfc9fb7f04095114ce611e6acb5b34384aef88728ab85dd30dcd8581bab1b66e0c6c370e75d03d7f8ac222eacb25d211f91a805ef63099fe3c.png",
+			"type": "image",
+			"label": "train"
+		},
+		{
+			"hash": "0x077d377cd794017fffc8c70c12fc056d7f03f1e24c54b56bc6c13af8a75f033b0883b64502b9afa5329819ac429318ca42f4e2cb5b446ca7a3b5a169ca5354a2",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x077d377cd794017fffc8c70c12fc056d7f03f1e24c54b56bc6c13af8a75f033b0883b64502b9afa5329819ac429318ca42f4e2cb5b446ca7a3b5a169ca5354a2.png",
+			"type": "image",
+			"label": "train"
+		},
+		{
+			"hash": "0x511c1fb6c24e2db829767c0503ed3fb5d83d2fc512bd4f53879f2a639095a05b9a104f968dae26e8fa2385c9978c55fa0a646fa07694b6403e4497ad7ad10a59",
+			"data": "${repo}/packages/datasets-fs/src/tests/data/flat_resized/images/0x511c1fb6c24e2db829767c0503ed3fb5d83d2fc512bd4f53879f2a639095a05b9a104f968dae26e8fa2385c9978c55fa0a646fa07694b6403e4497ad7ad10a59.png",
+			"type": "image",
+			"label": "train"
+		}
+	]
 }

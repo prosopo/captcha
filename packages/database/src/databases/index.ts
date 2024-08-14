@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DatabaseTypes } from '@prosopo/types'
-import { ProsopoDatabase as MongoDatabase } from './mongo.js'
-import { MongoMemoryDatabase } from './mongoMemory.js'
+import { DatabaseTypes } from "@prosopo/types";
+import { ProsopoDatabase as MongoDatabase } from "./mongo.js";
+import { MongoMemoryDatabase } from "./mongoMemory.js";
 export const Databases = {
-    [DatabaseTypes.Values.mongo]: MongoDatabase,
-    [DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
-}
+	[DatabaseTypes.Values.mongo]: MongoDatabase,
+	[DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
+};

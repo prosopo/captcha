@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { fetchTags } from './dockerTags.js'
+import { fetchTags } from "./dockerTags.js";
 
 const main = async () => {
-    // get args
-    const args = process.argv.slice(2)
-    const tags = await fetchTags(String(args[0]), String(args[1]))
-    console.log(tags)
-}
+	// get args
+	const args = process.argv.slice(2);
+	const tags = await fetchTags(String(args[0]), String(args[1]));
+	console.log(tags);
+};
 
-main()
+main();

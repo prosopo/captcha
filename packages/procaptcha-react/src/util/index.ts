@@ -13,6 +13,7 @@
 // limitations under the License.
 function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
 	return Object.keys(data).reduce(
+		// biome-ignore lint/performance/noAccumulatingSpread: TODO fix
 		(prev, curr) => ({ ...prev, [`data-${curr}`]: data[curr] }),
 		{},
 	);

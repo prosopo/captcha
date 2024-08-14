@@ -1,31 +1,31 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../contract"
-        },
-        {
-            "path": "../database"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../types-database"
-        },
-        {
-            "path": "../types-env"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../contract"
+		},
+		{
+			"path": "../database"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../types-database"
+		},
+		{
+			"path": "../types-env"
+		},
+		{
+			"path": "../util"
+		}
+	]
 }

@@ -7,24 +7,22 @@
 # sure your domain's A/AAAA DNS records are properly pointed to
 # this machine's public IP, then replace ":80" below with your
 # domain name.
-
 {
-    auto_https disable_redirects
-    debug
+	auto_https disable_redirects
+	debug
 }
 
 pronode3.prosopo.io {
-        # Set this path to your site's directory.
-        reverse_proxy provider:9229
+	# Set this path to your site's directory.
+	reverse_proxy provider:9229
 
-        # Enable the static file server.
-        file_server
+	# Enable the static file server.
+	file_server
 
-        # logs
-        log {
-          output file /var/log/caddy/pronode3.prosopo.io-access.log
-        }
-
+	# logs
+	log {
+		output file /var/log/caddy/pronode3.prosopo.io-access.log
+	}
 }
 
 # Refer to the Caddy docs for more information:

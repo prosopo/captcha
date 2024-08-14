@@ -1,29 +1,29 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": ["es6", "dom"]
-    },
-    "include": ["src", "src/**/*.json", "src/index.html"],
-    "references": [
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../procaptcha"
-        },
-        {
-            "path": "../procaptcha-react"
-        },
-        {
-            "path": "../procaptcha-pow"
-        },
-        {
-            "path": "../procaptcha-frictionless"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"]
+	},
+	"include": ["src", "src/**/*.json", "src/index.html"],
+	"references": [
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../procaptcha"
+		},
+		{
+			"path": "../procaptcha-react"
+		},
+		{
+			"path": "../procaptcha-pow"
+		},
+		{
+			"path": "../procaptcha-frictionless"
+		},
+		{
+			"path": "../util"
+		}
+	]
 }

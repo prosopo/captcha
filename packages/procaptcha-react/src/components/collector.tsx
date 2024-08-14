@@ -1,3 +1,4 @@
+import { startCollector } from "@prosopo/procaptcha";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,39 +12,53 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account, ProsopoKeyboardEvent, ProsopoMouseEvent, ProsopoTouchEvent, StoredEvents } from '@prosopo/types'
-import { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { startCollector } from '@prosopo/procaptcha'
+import type {
+	Account,
+	ProsopoKeyboardEvent,
+	ProsopoMouseEvent,
+	ProsopoTouchEvent,
+	StoredEvents,
+} from "@prosopo/types";
+import { type MutableRefObject, useEffect, useRef, useState } from "react";
 
 type CollectorProps = {
-    onProcessData: (data: StoredEvents) => void
-    sendData: boolean
-    account: Account | undefined
-}
+	onProcessData: (data: StoredEvents) => void;
+	sendData: boolean;
+	account: Account | undefined;
+};
 
 const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
-    const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([])
-    const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([])
-    const [keyboardEvents, setStoredKeyboardEvents] = useState<ProsopoKeyboardEvent[]>([])
+	const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([]);
+	const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([]);
+	const [keyboardEvents, setStoredKeyboardEvents] = useState<
+		ProsopoKeyboardEvent[]
+	>([]);
 
-    const ref: MutableRefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
+	const ref: MutableRefObject<HTMLDivElement | null> =
+		useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (ref && ref.current) {
-            startCollector(setStoredMouseEvents, setStoredTouchEvents, setStoredKeyboardEvents, ref.current)
-        }
-    }, [])
+	useEffect(() => {
+		if (ref?.current) {
+			startCollector(
+				setStoredMouseEvents,
+				setStoredTouchEvents,
+				setStoredKeyboardEvents,
+				ref.current,
+			);
+		}
+	}, []);
 
-    useEffect(() => {
-        const userEvents = {
-            mouseEvents,
-            touchEvents,
-            keyboardEvents,
-        }
-        if (account) onProcessData(userEvents)
-    }, [sendData, account])
+	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO should depend on mouse/touch/kb events, but I think this will break things
+	useEffect(() => {
+		const userEvents = {
+			mouseEvents,
+			touchEvents,
+			keyboardEvents,
+		};
+		if (account) onProcessData(userEvents);
+	}, [onProcessData, account]);
 
-    return <div ref={ref}></div>
-}
+	return <div ref={ref} />;
+};
 
-export default Collector
+export default Collector;

@@ -19,6 +19,7 @@ import type { ReactElement } from "react";
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 // https://github.com/microsoft/TypeScript/issues/42873
 const ProcaptchaWidget: LazyExoticComponent<
+	// biome-ignore lint/suspicious/noExplicitAny: TODO remove any
 	(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement
 > = lazy(async () => import("./ProcaptchaWidget.js"));
 

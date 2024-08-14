@@ -83,6 +83,7 @@ const getParentForm = (element: Element): HTMLFormElement | null =>
   element.closest("form") as HTMLFormElement;
 
 const getWindowCallback = (callbackName: string) => {
+  // biome-ignore lint/suspicious/noExplicitAny: TODO fix
   const fn = (window as any)[callbackName.replace("window.", "")];
   if (typeof fn !== "function") {
     throw new Error(
@@ -93,6 +94,7 @@ const getWindowCallback = (callbackName: string) => {
 };
 
 const handleOnHuman = (element: Element, token: ProcaptchaToken) => {
+  removeProcaptchaResponse();
   const form = getParentForm(element);
 
   if (!form) {
@@ -190,7 +192,11 @@ function setUserCallbacks(
   element: Element,
 ) {
   if (typeof renderOptions?.callback === "function") {
-    callbacks.onHuman = renderOptions.callback;
+    const fn = renderOptions.callback;
+    callbacks.onHuman = (token: ProcaptchaToken) => {
+      handleOnHuman(element, token);
+      fn(token);
+    };
   } else {
     const callbackName =
       typeof renderOptions?.callback === "string"
@@ -205,8 +211,16 @@ function setUserCallbacks(
       };
   }
 
-  if (typeof renderOptions?.["chalexpired-callback"] === "function") {
-    callbacks.onChallengeExpired = renderOptions["chalexpired-callback"];
+  if (
+    renderOptions &&
+    renderOptions["chalexpired-callback"] &&
+    typeof renderOptions["chalexpired-callback"] === "function"
+  ) {
+    const fn = renderOptions["chalexpired-callback"];
+    callbacks.onChallengeExpired = () => {
+      removeProcaptchaResponse();
+      fn();
+    };
   } else {
     const chalExpiredCallbackName =
       typeof renderOptions?.["chalexpired-callback"] === "string"
@@ -220,8 +234,16 @@ function setUserCallbacks(
       };
   }
 
-  if (typeof renderOptions?.["expired-callback"] === "function") {
-    callbacks.onExpired = renderOptions["expired-callback"];
+  if (
+    renderOptions &&
+    renderOptions["expired-callback"] &&
+    typeof renderOptions["expired-callback"] === "function"
+  ) {
+    const fn = renderOptions["expired-callback"];
+    callbacks.onExpired = () => {
+      removeProcaptchaResponse();
+      fn();
+    };
   } else {
     const onExpiredCallbackName =
       typeof renderOptions?.["expired-callback"] === "string"
@@ -230,13 +252,21 @@ function setUserCallbacks(
     if (onExpiredCallbackName)
       callbacks.onExpired = () => {
         const fn = getWindowCallback(onExpiredCallbackName);
-        fn();
         removeProcaptchaResponse();
+        fn();
       };
   }
 
-  if (typeof renderOptions?.["error-callback"] === "function") {
-    callbacks.onError = renderOptions["error-callback"];
+  if (
+    renderOptions &&
+    renderOptions?.["error-callback"] &&
+    typeof renderOptions["error-callback"] === "function"
+  ) {
+    const fn = renderOptions["error-callback"];
+    callbacks.onError = () => {
+      removeProcaptchaResponse();
+      fn();
+    };
   } else {
     const errorCallbackName =
       typeof renderOptions?.["error-callback"] === "string"
@@ -245,8 +275,8 @@ function setUserCallbacks(
     if (errorCallbackName)
       callbacks.onError = () => {
         const fn = getWindowCallback(errorCallbackName);
-        fn();
         removeProcaptchaResponse();
+        fn();
       };
   }
 

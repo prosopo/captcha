@@ -13,10 +13,10 @@
 // limitations under the License.
 
 export interface Asset {
-    URI: string
-    getURL(): string
+	URI: string;
+	getURL(): string;
 }
 
 export interface AssetsResolver {
-    resolveAsset(assetURI: string): Asset
+	resolveAsset(assetURI: string): Asset;
 }

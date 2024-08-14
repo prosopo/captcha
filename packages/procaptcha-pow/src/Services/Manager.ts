@@ -215,7 +215,7 @@ export const Manager = (
 
     const userTimestampSignature = await signer.signRaw({
       address: userAccount,
-      data: stringToHex(challenge[ApiParams.timestamp]),
+      data: stringToHex(challenge[ApiParams.timestamp].toString()),
       type: "bytes",
     });
 

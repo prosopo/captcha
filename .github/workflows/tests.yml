@@ -84,8 +84,8 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
-      - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+          node-version-file: '.nvmrc'
+      - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
       - run: npm ci
 
@@ -96,7 +96,7 @@ jobs:
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |
-          NODE_ENV=development npm run -w @prosopo/procaptcha-bundle bundle:webpack
+            NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle bundle:webpack
 
       - name: Build JS bundle
         run: |
@@ -106,11 +106,7 @@ jobs:
             echo "Copying the rococo env to production env file in procaptcha-bundle"
             cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
-            # Navigate to the JS bundle directory and build
-            echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
-            cd packages/procaptcha-bundle
-
-            NODE_ENV=production npm run bundle
+            NODE_ENV="production" npm run -w @prosopo/procaptcha-bundle bundle
 
       - name: Start the docker images
         run: |
@@ -130,14 +126,14 @@ jobs:
             cp dev/scripts/env.test packages/cli/.env.test
             cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 
-            NODE_ENV=test npm run setup
+            NODE_ENV="test" npm run setup
             
-            echo NODE_ENV: $NODE_ENV
+            echo NODE_ENV: "$NODE_ENV"
 
 
       - name: Start services and run tests
         run: |
           npx concurrently \
-          "npm run start:provider" \
+          "NODE_ENV=test npm run start:provider" \
           "sleep 10s && NODE_ENV=test npm run test" \
            --success "first" --kill-others
