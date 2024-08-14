@@ -147,6 +147,7 @@ export interface PowCaptcha {
   userAccount: UserAccount;
   dappAccount: DappAccount;
   checked: boolean;
+  stored: boolean
 }
 
 export interface CaptchaSolution {
