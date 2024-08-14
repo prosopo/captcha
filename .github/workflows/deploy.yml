@@ -298,6 +298,7 @@ jobs:
               run: |
                 echo "JS_SERVER_FLUX_APP_NAME: $JS_SERVER_FLUX_APP_NAME"
                 echo "VAR NAME: $VAR_NAME"
+                echo "JS_SERVER_FLUX_APP_NAME: $JS_SERVER_FLUX_APP_NAME"
 
             - name: Redeploy flux docker js_server
               env:
