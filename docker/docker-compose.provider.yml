@@ -21,7 +21,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
     database:
-        image: mongo:5.0.4
+        image: ${MONGO_IMAGE:-mongo:5.0.4}
         volumes:
             - /data/db:/data/db
         ports:
