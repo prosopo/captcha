@@ -512,6 +512,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
     checked: boolean,
+    stored = false
   ): Promise<void> {
     const tables = this.getTables();
 
@@ -519,6 +520,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       challenge,
       ...components,
       checked,
+      stored
     };
 
     try {
@@ -526,6 +528,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       this.logger.info("PowCaptcha record added successfully", {
         challenge,
         checked,
+        stored
       });
     } catch (error) {
       this.logger.error("Failed to add PowCaptcha record", {
@@ -682,10 +685,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /** @description Mark a list of PoW captcha commits as stored
    */
   async markDappUserPoWCommitmentsStored(
-    challengeIds: string[],
+    challenges: string[],
   ): Promise<void> {
+    console.log("THESE ARE THE CHALLENGES\n\n---\n\n", challenges)
+    console.log("matchinng the challenges\n\n---\n\n", await this.tables?.powCaptcha.find({ challenge: { $in: challenges } }).lean())
+
     await this.tables?.powCaptcha.updateMany(
-      { challenge: { $in: challengeIds } },
+      { challenge: { $in: challenges } },
       { $set: { stored: true } },
       { upsert: false },
     );
