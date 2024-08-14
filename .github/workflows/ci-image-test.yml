@@ -54,7 +54,6 @@ jobs:
             - run: git --version
             - run: npm --version
             - run: node --version
-            - run: nvm --version
             - run: docker --version
             - run: gh --version
             - run: pip --version
