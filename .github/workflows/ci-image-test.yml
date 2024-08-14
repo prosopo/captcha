@@ -12,6 +12,7 @@ jobs:
             image: prosopo/ci:latest
             options: >
                 --volume ${{ github.workspace }}:/repo
+                --volume /var/run/docker.sock:/var/run/docker.sock
         steps:
             - name: Print contexts
               env:
