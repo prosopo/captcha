@@ -43,7 +43,7 @@ RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugi
 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
 
-RUN pipx install ansible-core --force && pipx ensurepath --force
+RUN pipx install ansible
 
 RUN pip install ruff
 
