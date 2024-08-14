@@ -51,6 +51,8 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
+            - run: |
+                echo path: $PATH
             - run: git --version
             - run: npm --version
             - run: node --version
