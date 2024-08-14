@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export function capitaliseFirstLetter(s: string) {
-    return s.charAt(0).toUpperCase() + s.slice(1)
+	return s.charAt(0).toUpperCase() + s.slice(1);
 }

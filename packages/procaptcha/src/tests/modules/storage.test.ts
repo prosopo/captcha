@@ -11,25 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test } from 'vitest'
-import storage from '../../modules/storage.js'
+import { describe, expect, test } from "vitest";
+import storage from "../../modules/storage.js";
 
-const { setAccount, getAccount, getProcaptchaStorage, setProcaptchaStorage } = storage
+const { setAccount, getAccount, getProcaptchaStorage, setProcaptchaStorage } =
+	storage;
 
-describe('storage tests', () => {
-    test('sets and gets account', async () => {
-        setAccount('abc')
-        expect(getAccount()).to.equal('abc')
-    })
+describe("storage tests", () => {
+	test("sets and gets account", async () => {
+		setAccount("abc");
+		expect(getAccount()).to.equal("abc");
+	});
 
-    test('sets provider URL and block number', async () => {
-        setAccount('abc')
-        const procaptchaStorage = getProcaptchaStorage()
-        setProcaptchaStorage({ ...procaptchaStorage, providerUrl: 'http://localhost:9229', blockNumber: 100 })
-        expect(getProcaptchaStorage()).toMatchObject({
-            account: 'abc',
-            providerUrl: 'http://localhost:9229',
-            blockNumber: 100,
-        })
-    })
-})
+	test("sets provider URL and block number", async () => {
+		setAccount("abc");
+		const procaptchaStorage = getProcaptchaStorage();
+		setProcaptchaStorage({
+			...procaptchaStorage,
+			providerUrl: "http://localhost:9229",
+			blockNumber: 100,
+		});
+		expect(getProcaptchaStorage()).toMatchObject({
+			account: "abc",
+			providerUrl: "http://localhost:9229",
+			blockNumber: 100,
+		});
+	});
+});

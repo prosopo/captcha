@@ -11,8 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { CaptchaSolutionResponse } from '../provider/api.js'
-import { Hash } from '../index.js'
+import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
+import type { Hash } from "../index.js";
+import type { CaptchaSolutionResponse } from "../provider/api.js";
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, Hash, ContractSubmittableResult?]
+export type TCaptchaSubmitResult = [
+	CaptchaSolutionResponse,
+	Hash,
+	ContractSubmittableResult?,
+];

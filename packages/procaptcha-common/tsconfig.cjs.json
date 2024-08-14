@@ -1,18 +1,23 @@
 {
-    "extends": "../../tsconfig.cjs.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist/cjs",
-        "lib": ["es6", "dom"],
-        "jsxImportSource": "@emotion/react"
-    },
-    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
-    "references": [
-        {
-            "path": "../common/tsconfig.cjs.json"
-        },
-        {
-            "path": "../types/tsconfig.cjs.json"
-        }
-    ]
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs",
+		"lib": ["es6", "dom"],
+		"jsxImportSource": "@emotion/react"
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.json",
+		"./src/**/*.d.ts",
+		"./src/**/*.tsx"
+	],
+	"references": [
+		{
+			"path": "../common/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
+		}
+	]
 }

@@ -11,18 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from './error.js'
+import { ProsopoEnvError } from "./error.js";
 
 export abstract class AsyncFactory {
-    constructor() {
-        throw new ProsopoEnvError('GENERAL.ASYNC_FACTORY_CREATE')
-    }
+  constructor() {
+    throw new ProsopoEnvError("GENERAL.ASYNC_FACTORY_CREATE");
+  }
 
-    public static async create(...args: any[]) {
-        return await Object.create(this.prototype).init(...args)
-    }
+  // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
+  public static async create(...args: any[]) {
+    // biome-ignore lint/complexity/noThisInStatic: have to use `this` to get the child class's prototype instead of this class's prototype
+    return await Object.create(this.prototype).init(...args);
+  }
 
-    public abstract init(...args: any[]): Promise<this>
+  // biome-ignore lint/suspicious/noExplicitAny: has to be any type to represent any args
+  public abstract init(...args: any[]): Promise<this>;
 }
 
-export default AsyncFactory
+export default AsyncFactory;

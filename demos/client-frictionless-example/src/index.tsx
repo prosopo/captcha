@@ -11,16 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CssBaseline } from '@mui/material'
-import App from './App.js'
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { CssBaseline } from "@mui/material";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.js";
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
+const root = ReactDOM.createRoot(
+	document.getElementById("root") as HTMLElement,
+);
 
 root.render(
-    <React.Fragment>
-        <CssBaseline />
-        <App />
-    </React.Fragment>
-)
+	<React.Fragment>
+		<CssBaseline />
+		<App />
+	</React.Fragment>,
+);

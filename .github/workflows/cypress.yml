@@ -85,7 +85,7 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version-file: '.nvmrc'
-            - run: npm i -g npm@$(cat package.json | jq -r .engines.npm)
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
 
@@ -102,7 +102,7 @@ jobs:
                     cp dev/scripts/env.test dev/scripts/.env.test
                     cp dev/scripts/env.test packages/cli/.env.test
                     cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-                    echo NODE_ENV: $NODE_ENV
+                    echo NODE_ENV: "$NODE_ENV"
 
             - name: Start the docker images
               run: |
@@ -111,12 +111,12 @@ jobs:
                   sleep 10s
 
             # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-            - run: NODE_ENV=test npm run setup
+            - run: NODE_ENV="test" npm run setup
 
             # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
             # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
             # by the cypress tests to find the elements they need to interact with
-            - run: NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
+            - run: NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
 
             - name: Run the cypress tests on client-example
               run: |
@@ -137,13 +137,13 @@ jobs:
               with:
                   name: cypress-screenshots
                   path: ./demos/cypress-shared/cypress/screenshots
-                  if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+                  if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
             # after the test run completes store videos and any screenshots
             - uses: actions/upload-artifact@v4
-                # store videos only on failures
+              # store videos only on failures
               if: failure()
               with:
                   name: cypress-videos
                   path: ./demos/cypress-shared/cypress/videos
-                  if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+                  if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`

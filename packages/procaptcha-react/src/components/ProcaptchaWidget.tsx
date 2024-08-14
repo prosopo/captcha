@@ -15,6 +15,9 @@ import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
+import { Manager } from "@prosopo/procaptcha";
+import { useProcaptcha } from "@prosopo/procaptcha-common";
+import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
 import {
 	Checkbox,
 	ContainerDiv,
