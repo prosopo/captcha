@@ -1,7 +1,9 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-SHELL [ "/bin/bash", "-euxo", "pipefail", "-c" ]
+# force bash to run in interactive mode so nvm is loaded
+RUN sed -i 's/[ -z "$PS1" ] && return/# [ -z "$PS1" ] && return/' ~/.bashrc
+SHELL [ "/bin/bash", "-e", "-c" ]
 
 VOLUME /repo
 WORKDIR /repo
@@ -42,6 +44,7 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+RUN source ~/.bashrc && nvm install 20 && nvm use 20
 
 RUN pipx install ansible
 
@@ -52,6 +55,5 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 RUN rm -rf /var/lib/apt/lists/*
 
 RUN echo "alias pip='pip3'" >> ~/.bashrc
-
 
 ENTRYPOINT [ "/bin/bash", "-euxo", "pipefail" ]
