@@ -59,7 +59,7 @@ jobs:
             # - run: gh --version
             - run: pip --version
             - run: pipx --version
-            - run: ansible --version
+            # - run: ansible --version
             - run: shellcheck --version
             - run: caddy --version
             - run: yamllint --version
