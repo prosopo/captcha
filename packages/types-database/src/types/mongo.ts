@@ -122,6 +122,7 @@ export const PowCaptchaRecordSchema = new Schema<PowCaptcha>({
   userAccount: { type: String, required: true },
   timestamp: { type: Number, required: true },
   checked: { type: Boolean, required: true },
+  stored: { type: Boolean, required: true },
 });
 
 // Set an index on the captchaId field, ascending
