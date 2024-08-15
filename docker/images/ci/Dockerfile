@@ -77,9 +77,8 @@ RUN export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN pipx install ansible-core \
-    && pipx install ruff
-
-RUN echo "export PS1='\w \$ '" >> /etc/bash.bashrc
+    && pipx install ruff \
+    && echo "export PS1='\w \$ '" >> /etc/bash.bashrc
 
 # Set the entrypoint
 ENTRYPOINT ["bash", "-e"]
