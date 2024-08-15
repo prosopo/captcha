@@ -25,8 +25,6 @@ export const getDevDir = () => `${getRootDir()}/dev`;
 
 export const getDemosDir = () => `${getRootDir()}/demos`;
 
-export const getProtocolDir = () => `${getRootDir()}/protocol`;
-
 export const getPackagesDir = () => `${getRootDir()}/packages`;
 
 export const getNodeModulesDir = () => `${getRootDir()}/node_modules`;
@@ -37,11 +35,6 @@ export const getConfigPkgDir = () => `${getDevDir()}/config`;
 
 export const getScriptsPkgDir = () => `${getDevDir()}/scripts`;
 
-// Protocol
-
-export const getProtocolCliDir = () => `${getProtocolDir()}/dist/cli`;
-
-export const getProtocolDistDir = () => `${getProtocolDir()}/target/ink`;
 
 // Demos
 
