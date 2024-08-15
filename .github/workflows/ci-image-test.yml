@@ -53,6 +53,7 @@ jobs:
 
             - run: |
                 which pipx
+                ls -la /usr/local/bin
             - run: git --version
             - run: npm --version
             - run: node --version
