@@ -41,29 +41,31 @@ RUN echo \
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.77
 
-RUN pipx install ansible
-
-RUN pip install ruff
-
-ENV NVM_DIR="/root/.nvm"
-ENV RUSTUP_HOME="/root/.cargo"
 ENV CARGO_HOME="/root/.cargo"
 ENV PATH="$CARGO_HOME/bin:$PATH"
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
 
 # force bash to run in interactive mode so nvm is loaded
 RUN sed -i 's/\[ -z "$PS1" \] \&\& return/# \[ -z "$PS1" \] \&\& return/' ~/.bashrc
 
 RUN source ~/.bashrc && nvm install 20 && nvm use 20
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.77
-
+ENV NVM_DIR="/root/.nvm"
 ENV PATH="$NVM_DIR/versions/node//v20.16.0/bin:$PATH"
 
-RUN rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/usr/bin/:$PATH"
+# Configure pipx to install applications globally
+ENV PIPX_BIN_DIR=/usr/local/bin \
+    PIPX_HOME=/usr/local/pipx
+
+RUN pipx install ansible-core
+
+RUN pipx install ruff
+
+RUN rm -rf /var/lib/apt/lists/*
 
 RUN echo "alias pip='pip3'" >> ~/.bashrc
 
