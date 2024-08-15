@@ -30,7 +30,7 @@ RUN apt-get update \
     # cleanup
     && apt-get autoremove \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set rustup and cargo home dirs
 ENV RUSTUP_HOME=/usr/local/rustup \
@@ -41,10 +41,17 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     NVM_DIR=/usr/local/nvm \
     PROFILE=/dev/null \
     NODE_VERSION=20.16.0 \
-    TOOLCHAIN_VERSION=1.77.0
+    TOOLCHAIN_VERSION=1.78.0
+
+# The version of cargo-contract to install
+ARG CARGO_CONTRACT_VERSION=4.1.1
+
 RUN mkdir -p $RUSTUP_HOME $CARGO_HOME $PIPX_HOME $NVM_DIR \
+    # Install nvm
     && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash \
+    # Install node
     && source ${NVM_DIR}/nvm.sh && nvm install --default ${NODE_VERSION} \
+    # Install Rust
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${TOOLCHAIN_VERSION} --profile minimal
 
 # Add cargo to the PATH
@@ -52,12 +59,29 @@ ENV PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
     # Add node to the PATH
     PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin:$PATH"
 
-RUN pipx install ansible-core \
-    && pipx install ruff \
+RUN export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
+    && apt-get update && apt-get install -y --no-install-recommends gcc g++ pkg-config openssl libssl-dev \
+    && rustup target add wasm32-unknown-unknown \
+    # Install clippy and rustfmt
+    && rustup component add rust-src \
+    && rustup component add clippy \
+    && rustup component add rustfmt \
+    # Install cargo-contract deps
+    && cargo install cargo-dylint dylint-link \
+    # Install cargo-contract
+    && cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract \
+    # Cleanup deps for installing cargo-contract (almost everything except gcc, that's needed for contract compilation)
+    && rm -rf ${CARGO_HOME}/registry/* ${CARGO_HOME}/git/* \
     && apt-get autoremove \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# RUN echo "alias pip='pip3'" >> ~/.bashrc
+RUN pipx install ansible-core \
+    && pipx install ruff \
+    && pipx clean \
+    && pip cache purge
 
-ENTRYPOINT [ "/bin/bash", "-e" ]
+RUN echo "export PS1='\w \$ '" >> /etc/bash.bashrc
+
+# Set the entrypoint
+ENTRYPOINT ["bash", "-e"]
