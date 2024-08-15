@@ -52,7 +52,7 @@ jobs:
                   echo "******************************"
 
             - run: |
-                echo path: $PATH
+                which pipx
             - run: git --version
             - run: npm --version
             - run: node --version
