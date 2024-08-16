@@ -72,9 +72,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Add cargo to the PATH
-ENV PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
-    # Add node to the PATH
-    PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin:$PATH"
+# Add node to the PATH
+ENV PATH="$CARGO_HOME/bin:$RUSTUP_HOME:$NVM_DIR/versions/node/v${NODE_VERSION}/bin:$PATH"
 
 # Set the entrypoint
 ENTRYPOINT ["bash", "-e"]
