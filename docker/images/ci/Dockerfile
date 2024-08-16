@@ -6,6 +6,20 @@ SHELL [ "/bin/bash", "-e", "-c" ]
 VOLUME /repo
 WORKDIR /repo
 
+# Set rustup and cargo home dirs
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    # Configure pipx to install applications globally
+    PIPX_BIN_DIR=/usr/local/bin \
+    PIPX_HOME=/usr/local/pipx \
+    NVM_DIR=/usr/local/nvm \
+    PROFILE=/dev/null \
+    NODE_VERSION=20.16.0 \
+    TOOLCHAIN_VERSION=1.78.0
+
+# The version of cargo-contract to install
+ARG CARGO_CONTRACT_VERSION=4.1.1
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl wget gnupg debian-keyring debian-archive-keyring apt-transport-https ca-certificates \
     # caddy
@@ -27,39 +41,20 @@ RUN apt-get update \
     # install deps
     && apt-get update \
     && apt-get install -y --no-install-recommends curl git pipx npm python3.8 python3-pip python3.8-venv shellcheck yamllint caddy gh docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
-    # cleanup
-    && apt-get autoremove \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Set rustup and cargo home dirs
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    # Configure pipx to install applications globally
-    PIPX_BIN_DIR=/usr/local/bin \
-    PIPX_HOME=/usr/local/pipx \
-    NVM_DIR=/usr/local/nvm \
-    PROFILE=/dev/null \
-    NODE_VERSION=20.16.0 \
-    TOOLCHAIN_VERSION=1.78.0
-
-# The version of cargo-contract to install
-ARG CARGO_CONTRACT_VERSION=4.1.1
-
-RUN mkdir -p $RUSTUP_HOME $CARGO_HOME $PIPX_HOME $NVM_DIR \
+    # Create the necessary directories
+    && mkdir -p $RUSTUP_HOME $CARGO_HOME $PIPX_HOME $NVM_DIR \
     # Install nvm
     && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash \
     # Install node
     && source ${NVM_DIR}/nvm.sh && nvm install --default ${NODE_VERSION} \
     # Install Rust
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${TOOLCHAIN_VERSION} --profile minimal
-
-# Add cargo to the PATH
-ENV PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
-    # Add node to the PATH
-    PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin:$PATH"
-
-RUN export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${TOOLCHAIN_VERSION} --profile minimal \
+    && pipx install ansible-core \
+    && pipx install ruff \
+    && echo "export PS1='\w \$ '" >> /etc/bash.bashrc \
+    # update path
+    && export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
+    # Install wasm32-unknown-unknown target
     && apt-get update && apt-get install -y --no-install-recommends gcc g++ pkg-config openssl libssl-dev \
     && rustup target add wasm32-unknown-unknown \
     # Install clippy and rustfmt
@@ -70,15 +65,16 @@ RUN export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
     && cargo install cargo-dylint dylint-link \
     # Install cargo-contract
     && cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract \
-    # Cleanup deps for installing cargo-contract (almost everything except gcc, that's needed for contract compilation)
+    # cleanup
     && rm -rf ${CARGO_HOME}/registry/* ${CARGO_HOME}/git/* \
     && apt-get autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN pipx install ansible-core \
-    && pipx install ruff \
-    && echo "export PS1='\w \$ '" >> /etc/bash.bashrc
+# Add cargo to the PATH
+ENV PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
+    # Add node to the PATH
+    PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin:$PATH"
 
 # Set the entrypoint
 ENTRYPOINT ["bash", "-e"]
