@@ -9,11 +9,12 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     auto_merge:
-        defaults:
-            run:
-                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >

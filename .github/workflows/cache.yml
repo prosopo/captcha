@@ -15,11 +15,12 @@ env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     build:
-        defaults:
-            run:
-                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >

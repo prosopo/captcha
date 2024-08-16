@@ -7,11 +7,12 @@ on:
         branches: [main, staging]
     workflow_dispatch:
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     deploy:
-        defaults:
-            run:
-                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >

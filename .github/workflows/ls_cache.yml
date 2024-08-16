@@ -13,11 +13,12 @@ env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     build:
-        defaults:
-            run:
-                shell: bash
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts

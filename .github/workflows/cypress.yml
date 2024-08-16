@@ -16,11 +16,12 @@ env:
     GH_TOKEN: ${{ github.token }}
     NODE_ENV: test
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     check:
-        defaults:
-            run:
-                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >
