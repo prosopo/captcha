@@ -53,8 +53,6 @@ jobs:
 
             - run: |
                 echo path: $PATH
-                which rustc
-                which cargo
             - run: git --version
             - run: npm --version
             - run: node --version
