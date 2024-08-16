@@ -19,11 +19,12 @@ env:
     ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     check:
-        defaults:
-            run:
-                shell: bash
         runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
         steps:
