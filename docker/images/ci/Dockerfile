@@ -53,18 +53,18 @@ RUN apt-get update \
     && pipx install ruff \
     && echo "export PS1='\w \$ '" >> /etc/bash.bashrc \
     # update path
-    && export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
-    # Install wasm32-unknown-unknown target
-    && apt-get update && apt-get install -y --no-install-recommends gcc g++ pkg-config openssl libssl-dev \
-    && rustup target add wasm32-unknown-unknown \
-    # Install clippy and rustfmt
-    && rustup component add rust-src \
-    && rustup component add clippy \
-    && rustup component add rustfmt \
-    # Install cargo-contract deps
-    && cargo install cargo-dylint dylint-link \
-    # Install cargo-contract
-    && cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract \
+    # && export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
+    # # Install wasm32-unknown-unknown target
+    # && apt-get update && apt-get install -y --no-install-recommends gcc g++ pkg-config openssl libssl-dev \
+    # && rustup target add wasm32-unknown-unknown \
+    # # Install clippy and rustfmt
+    # && rustup component add rust-src \
+    # && rustup component add clippy \
+    # && rustup component add rustfmt \
+    # # Install cargo-contract deps
+    # && cargo install cargo-dylint dylint-link \
+    # # Install cargo-contract
+    # && cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract \
     # cleanup
     && rm -rf ${CARGO_HOME}/registry/* ${CARGO_HOME}/git/* \
     && apt-get autoremove \
