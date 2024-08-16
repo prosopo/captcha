@@ -6,6 +6,9 @@ on: issue_comment
 
 jobs:
     comment:
+        defaults:
+            run:
+                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >

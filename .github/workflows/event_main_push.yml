@@ -18,6 +18,9 @@ env:
 
 jobs:
     event:
+        defaults:
+            run:
+                shell: bash
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts

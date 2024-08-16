@@ -17,6 +17,9 @@ env:
 
 jobs:
     build:
+        defaults:
+            run:
+                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >

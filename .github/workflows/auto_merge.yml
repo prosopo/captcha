@@ -11,6 +11,9 @@ concurrency:
 
 jobs:
     auto_merge:
+        defaults:
+            run:
+                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >
