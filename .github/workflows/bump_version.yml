@@ -17,6 +17,9 @@ concurrency:
 
 jobs:
     bump_version:
+        defaults:
+            run:
+                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >

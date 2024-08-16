@@ -9,6 +9,9 @@ on:
 
 jobs:
     deploy:
+        defaults:
+            run:
+                shell: bash
         container: 
             image: prosopo/ci:latest
             options: >
