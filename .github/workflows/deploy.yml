@@ -9,6 +9,11 @@ on:
 
 jobs:
     deploy:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
+                --volume /var/run/docker.sock:/var/run/docker.sock
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts

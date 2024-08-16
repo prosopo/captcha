@@ -6,6 +6,11 @@ on: issue_comment
 
 jobs:
     comment:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
+                --volume /var/run/docker.sock:/var/run/docker.sock
         # This job only runs for pull request comments
         if: ${{ github.event.issue.pull_request }}
         runs-on: ubuntu-latest

@@ -11,6 +11,11 @@ concurrency:
 
 jobs:
     auto_merge:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
+                --volume /var/run/docker.sock:/var/run/docker.sock
         runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
         steps:
