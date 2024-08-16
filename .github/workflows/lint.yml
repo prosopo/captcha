@@ -88,11 +88,6 @@ jobs:
                   restore-keys: |
                       project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
             - run: npm ci
 
             - run: npm run -w @prosopo/scripts build
