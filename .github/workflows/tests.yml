@@ -22,10 +22,10 @@ defaults:
 
 jobs:
   check:
-    # container: 
-    #     image: prosopo/ci:latest
-    #     options: >
-    #         --volume ${{ github.workspace }}:/repo
+    container: 
+        image: prosopo/ci:latest
+        options: >
+            --volume ${{ github.workspace }}:/repo
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -119,6 +119,7 @@ jobs:
           docker container ls
           sleep 10s
           docker inspect docker-database-1
+          docker network list
           exit 1
 
 
