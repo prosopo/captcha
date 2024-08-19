@@ -68,6 +68,7 @@ jobs:
           echo "******************************"
 
       - run: docker network list
+      - run: docker ps
 
       - uses: actions/checkout@v3
 
