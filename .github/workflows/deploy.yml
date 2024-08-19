@@ -291,6 +291,19 @@ jobs:
                     echo "JS_SERVER_FLUX_APP_NAME=${{ steps.env.outputs.env }}_JS_SERVER_FLUX_APP_NAME"  | tr '[:lower:]' '[:upper:]';
                 } >> $GITHUB_ENV
 
+            - name: echo github env
+              run: |
+                    echo "GITHUB_ENV: $GITHUB_ENV"
+
+            - name: Print the JS_SERVER name
+              env:
+                  VAR_NAME: ${{ env.JS_SERVER_FLUX_APP_NAME }}
+                  JS_SERVER_FLUX_APP_NAME: ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
+              run: |
+                echo "JS_SERVER_FLUX_APP_NAME: $JS_SERVER_FLUX_APP_NAME"
+                echo "VAR NAME: $VAR_NAME"
+                echo "JS_SERVER_FLUX_APP_NAME: $JS_SERVER_FLUX_APP_NAME"
+
             - name: Redeploy flux docker js_server
               env:
                   PROSOPO_ZELCORE_PRIVATE_KEY: ${{ secrets.PROSOPO_ZELCORE_PRIVATE_KEY }}
@@ -299,7 +312,7 @@ jobs:
                   if [[ "${{ steps.docker_js_server_release.outcome }}" == 'success' ]]; then
                     echo "Installing @prosopo/flux..."
                     npm i -g @prosopo/flux
-                    echo "Soft redeploying flux docker js_server."
+                    echo "Soft redeploying flux docker js_server: ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}"
                     npx flux redeploy ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
                   else
                     echo "Skipping flux redeploy."

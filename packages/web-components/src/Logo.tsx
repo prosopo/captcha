@@ -22,12 +22,12 @@ interface LogoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const LogoContainer = styled.div`
-    padding: 8px;
-    flex: 1 1 0;
+  padding: 4px;
+  flex: 1 1 0;
 `;
 
 const LogoInnerContainer = styled.div`
-    padding: 8px;
+  padding: 4px;
 `;
 
 const Logo: React.FC<LogoProps> = ({ themeColor }: LogoProps) => {

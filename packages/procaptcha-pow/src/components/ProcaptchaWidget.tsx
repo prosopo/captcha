@@ -1,3 +1,5 @@
+import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
+import type { ProcaptchaProps } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +13,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-/** @jsxImportSource @emotion/react */
-import { ContainerDiv, WidthBasedStylesDiv } from "./Containers.js";
-import { LoadingSpinner } from "./LoadingSpinner.js";
-import Logo from "./Logo.js";
 import {
+	Checkbox,
+	ContainerDiv,
+	LoadingSpinner,
+	Logo,
 	WIDGET_BORDER,
 	WIDGET_BORDER_RADIUS,
 	WIDGET_DIMENSIONS,
@@ -24,16 +26,44 @@ import {
 	WIDGET_PADDING,
 	WIDGET_URL,
 	WIDGET_URL_TEXT,
-} from "./WidgetConstants.js";
-import { darkTheme, lightTheme } from "./theme.js";
+	WidthBasedStylesDiv,
+	darkTheme,
+	lightTheme,
+} from "@prosopo/web-components";
+import { useEffect, useRef, useState } from "react";
+import { Manager } from "../Services/Manager.js";
 
-type PlaceholderProps = { darkMode: "light" | "dark" | undefined };
+const Procaptcha = (props: ProcaptchaProps) => {
+	const config = props.config;
+	const themeColor = config.theme === "light" ? "light" : "dark";
+	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
+	const callbacks = props.callbacks || {};
+	const [state, _updateState] = useProcaptcha(useState, useRef);
+	// get the state update mechanism
+	const updateState = buildUpdateState(state, _updateState);
+	const manager = useRef(Manager(config, state, updateState, callbacks));
+	const captchaRef = useRef<HTMLInputElement>(null);
 
-export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
-	const themeColor = props.darkMode === "light" ? "light" : "dark";
-	const theme = props.darkMode === "light" ? lightTheme : darkTheme;
+	useEffect(() => {
+		const element = captchaRef.current;
+		if (!element) return;
+
+		const form = element.closest("form");
+		if (!form) return;
+
+		const handleSubmit = () => {
+			manager.current.resetState();
+		};
+
+		form.addEventListener("submit", handleSubmit);
+
+		return () => {
+			form.removeEventListener("submit", handleSubmit);
+		};
+	}, []);
+
 	return (
-		<div>
+		<div ref={captchaRef}>
 			<div
 				style={{
 					maxWidth: WIDGET_MAX_WIDTH,
@@ -60,11 +90,15 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
 									overflow: "hidden",
 								}}
 							>
-								<div style={{ display: "flex", flexDirection: "column" }}>
+								<div
+									style={{ display: "inline-flex", flexDirection: "column" }}
+								>
 									<div
 										style={{
+											display: "flex",
+											justifyContent: "flex-start",
 											alignItems: "center",
-											flex: 1,
+											flexWrap: "wrap",
 										}}
 									>
 										<div
@@ -81,16 +115,27 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
 													display: "flex",
 												}}
 											>
-												<div style={{ display: "inline-flex" }}>
-													<LoadingSpinner
-														themeColor={themeColor}
-														aria-label="Loading spinner"
-													/>
+												<div style={{ flex: 1 }}>
+													{state.loading ? (
+														<LoadingSpinner
+															themeColor={themeColor}
+															aria-label="Loading spinner"
+														/>
+													) : (
+														<Checkbox
+															checked={state.isHuman}
+															onChange={manager.current.start}
+															themeColor={themeColor}
+															labelText={"I am human"}
+															aria-label="human checkbox"
+														/>
+													)}
 												</div>
 											</div>
 										</div>
 									</div>
 								</div>
+
 								<div
 									style={{ display: "inline-flex", flexDirection: "column" }}
 								>
@@ -113,3 +158,4 @@ export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
 		</div>
 	);
 };
+export default Procaptcha;
