@@ -294,9 +294,13 @@ jobs:
                     echo "JS_SERVER_FLUX_APP_NAME=${{ steps.env.outputs.env }}_JS_SERVER_FLUX_APP_NAME"  | tr '[:lower:]' '[:upper:]';
                 } >> $GITHUB_ENV
 
+            - name: echo github env
+              run: |
+                    echo "GITHUB_ENV: $GITHUB_ENV"
+
             - name: Print the JS_SERVER name
               env:
-                  VAR_NAME: env.JS_SERVER_FLUX_APP_NAME
+                  VAR_NAME: ${{ env.JS_SERVER_FLUX_APP_NAME }}
                   JS_SERVER_FLUX_APP_NAME: ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
               run: |
                 echo "JS_SERVER_FLUX_APP_NAME: $JS_SERVER_FLUX_APP_NAME"

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/client-pow-example",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"private": true,
 	"type": "module",
 	"engines": {
@@ -11,11 +11,11 @@
 		"@emotion/react": "^11.9.3",
 		"@emotion/styled": "^11.9.3",
 		"@mui/material": "^5.9.1",
-		"@prosopo/common": "2.0.0",
-		"@prosopo/procaptcha": "2.0.0",
-		"@prosopo/procaptcha-pow": "2.0.0",
-		"@prosopo/procaptcha-react": "2.0.0",
-		"@prosopo/types": "2.0.0",
+		"@prosopo/common": "2.0.1",
+		"@prosopo/procaptcha": "2.0.1",
+		"@prosopo/procaptcha-pow": "2.0.1",
+		"@prosopo/procaptcha-react": "2.0.1",
+		"@prosopo/types": "2.0.1",
 		"@types/react-dom": "^18.3.0",
 		"electron": "25.8.4",
 		"react": "^18.3.1",
@@ -23,8 +23,8 @@
 		"web-vitals": "^2.1.4"
 	},
 	"devDependencies": {
-		"@prosopo/cli": "2.0.0",
-		"@prosopo/config": "2.0.0",
+		"@prosopo/cli": "2.0.1",
+		"@prosopo/config": "2.0.1",
 		"@types/node": "^20.3.1",
 		"css-loader": "^6.8.1",
 		"tslib": "2.6.2",
@@ -38,7 +38,11 @@
 		"clean": "tsc --build --clean"
 	},
 	"browserslist": {
-		"production": [">0.2%", "not dead", "not op_mini all"],
+		"production": [
+			">0.2%",
+			"not dead",
+			"not op_mini all"
+		],
 		"development": [
 			"last 1 chrome version",
 			"last 1 firefox version",

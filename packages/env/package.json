@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"type": "module",
@@ -26,20 +26,19 @@
 		"@polkadot/rpc-provider": "10.13.1",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-
-		"@prosopo/common": "2.0.0",
-		"@prosopo/contract": "2.0.0",
-		"@prosopo/database": "2.0.0",
-		"@prosopo/types": "2.0.0",
-		"@prosopo/types-database": "2.0.0",
-		"@prosopo/types-env": "2.0.0",
-		"@prosopo/util": "2.0.0"
+		"@prosopo/common": "2.0.1",
+		"@prosopo/contract": "2.0.1",
+		"@prosopo/database": "2.0.1",
+		"@prosopo/types": "2.0.1",
+		"@prosopo/types-database": "2.0.1",
+		"@prosopo/types-env": "2.0.1",
+		"@prosopo/util": "2.0.1"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.0.0",
+		"@prosopo/config": "2.0.1",
 		"tslib": "2.6.2",
 		"typescript": "5.1.6"
 	},
