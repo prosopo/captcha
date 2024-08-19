@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -17,16 +17,15 @@
 		"bundle:all": "npm run ws -- --if-present bundle",
 		"build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle",
 		"clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
-		"clean-npm:node-modules": "rimraf '**/node_modules'",
-		"clean-npm:package-lock": "rimraf '**/package-lock.json'",
+		"clean-npm:node-modules": "rimraf --glob --verbose '**/node_modules'",
+		"clean-npm:package-lock": "rimraf --glob --verbose '**/package-lock.json'",
 		"clean:npm": "run-p clean-npm:*",
-		"clean-ts:buildinfo": "rimraf '**/*.tsbuildinfo'",
-		"clean-ts:dist": "rimraf '**/dist'",
+		"clean-ts:buildinfo": "rimraf --glob --verbose '**/*.tsbuildinfo'",
+		"clean-ts:dist": "rimraf --glob --verbose '**/dist'",
 		"clean:ts": "run-p clean-ts:*",
 		"clean:all": "npm run ws -- clean",
 		"i": "npm i",
 		"nuke": "run-s clean:ts clean:npm i",
-		"deploy_protocol": "npm run -w @prosopo/scripts cli deploy_protocol -- --logLevel=debug --update_env",
 		"deploy_dapp": "npm run -w @prosopo/scripts cli deploy_dapp -- --logLevel=debug --update_env",
 		"version": "f() { npm run -w @prosopo/scripts cli -- version -v $@; npm i; }; f",
 		"publish:dry-run": "npm --workspaces publish --dry-run",
@@ -91,9 +90,13 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
-		"@prosopo/flux": "2.0.0"
+		"@prosopo/flux": "2.0.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.8.3",

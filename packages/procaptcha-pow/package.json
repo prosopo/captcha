@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-pow",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -24,22 +24,23 @@
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@emotion/react": "^11.11.1",
-		"@prosopo/account": "2.0.0",
+		"@prosopo/account": "2.0.1",
 		"@polkadot/api": "10.13.1",
 		"@polkadot/keyring": "12.6.2",
 		"@polkadot/rpc-provider": "10.13.1",
-		"@prosopo/api": "2.0.0",
-
-		"@prosopo/common": "2.0.0",
-		"@prosopo/contract": "2.0.0",
-		"@prosopo/procaptcha": "2.0.0",
-		"@prosopo/procaptcha-common": "2.0.0",
-		"@prosopo/types": "2.0.0",
-		"@prosopo/util": "2.0.0",
-		"@prosopo/web-components": "2.0.0",
+		"@prosopo/api": "2.0.1",
+		"@prosopo/common": "2.0.1",
+		"@prosopo/contract": "2.0.1",
+		"@prosopo/procaptcha": "2.0.1",
+		"@prosopo/procaptcha-common": "2.0.1",
+		"@prosopo/types": "2.0.1",
+		"@prosopo/util": "2.0.1",
+		"@prosopo/web-components": "2.0.1",
 		"react": "^18.3.1"
 	},
 	"overrides": {
@@ -50,7 +51,7 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.0.0",
+		"@prosopo/config": "2.0.1",
 		"tslib": "2.6.2",
 		"typescript": "5.1.6"
 	},
