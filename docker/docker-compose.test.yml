@@ -7,11 +7,10 @@ services:
             - '27017:27017'
         networks:
             - pronet
-            - default
         environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=root
             - MONGO_INITDB_DATABASE=prosopo
 networks:
     pronet:
-        driver: bridge
+        driver: host
