@@ -6,11 +6,11 @@ services:
         ports:
             - '27017:27017'
         networks:
-            - prosopo
+            - pronet
         environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=root
             - MONGO_INITDB_DATABASE=prosopo
 networks:
-    prosopo:
+    pronet:
         driver: bridge
