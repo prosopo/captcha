@@ -5,7 +5,7 @@ services:
         #   - ./db:/data/db
         ports:
             - '27017:27017'
-        network:
+        networks:
             - prosopo
         environment:
             - MONGO_INITDB_ROOT_USERNAME=root
