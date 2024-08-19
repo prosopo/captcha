@@ -21,7 +21,7 @@ type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 const ProcaptchaWidget: LazyExoticComponent<
 	// biome-ignore lint/suspicious/noExplicitAny: TODO remove any
 	(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement
-> = lazy(async () => import("./Captcha.js"));
+> = lazy(async () => import("./ProcaptchaWidget.js"));
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
 	<Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>

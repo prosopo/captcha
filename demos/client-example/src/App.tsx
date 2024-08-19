@@ -164,8 +164,6 @@ function App(props: AppProps) {
 			<Box
 				className={"App"}
 				sx={{
-					width: "100%",
-					maxWidth: 500,
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",
@@ -178,7 +176,7 @@ function App(props: AppProps) {
 
 					<Box>
 						<h1>{label}</h1>
-						<form>
+						<form style={{ minWidth: "100px" }}>
 							<FormGroup
 								sx={{ "& .MuiTextField-root,#select-account": { m: 1 } }}
 							>

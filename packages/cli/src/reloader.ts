@@ -1,9 +1,3 @@
-import fs from "node:fs";
-import type { Server } from "node:net";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { LogLevel, getLogger } from "@prosopo/common";
-import { ProviderEnvironment } from "@prosopo/env";
-import type { ProsopoConfigOutput } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +11,12 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import fs from "node:fs";
+import type { Server } from "node:net";
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { LogLevel, getLogger } from "@prosopo/common";
+import { ProviderEnvironment } from "@prosopo/env";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { AwaitedProcessedArgs } from "./argv.js";
 import { loadEnv } from "./env.js";
 import { start } from "./start.js";
