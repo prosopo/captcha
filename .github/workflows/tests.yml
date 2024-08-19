@@ -120,8 +120,6 @@ jobs:
           sleep 10s
           docker inspect docker-database-1
           docker network list
-          exit 1
-
 
       - name: Setup env
         run: |
