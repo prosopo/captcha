@@ -11,3 +11,6 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=root
             - MONGO_INITDB_DATABASE=prosopo
+networks:
+    prosopo:
+        driver: bridge
