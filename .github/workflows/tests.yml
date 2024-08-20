@@ -67,8 +67,11 @@ jobs:
           echo "inputs:" "$INPUTS_CONTEXT"
           echo "******************************"
 
+      - run: docker ps
+      - run: docker ps
       - run: docker network list
       - run: docker ps
+      - run: docker network create pronet
 
       - uses: actions/checkout@v3
 
