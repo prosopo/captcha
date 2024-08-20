@@ -56,9 +56,6 @@ export default async function (
 		"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
 			process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode,
 		),
-		"process.env.PROSOPO_DEFAULT_NETWORK": JSON.stringify(
-			process.env.PROSOPO_DEFAULT_NETWORK,
-		),
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
 			process.env.PROSOPO_SERVER_URL,
 		),

@@ -74,11 +74,6 @@ export default async function (
 				process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 			),
 		}),
-		...(process.env.PROSOPO_DEFAULT_NETWORK && {
-			"process.env.PROSOPO_DEFAULT_NETWORK": JSON.stringify(
-				process.env.PROSOPO_DEFAULT_NETWORK,
-			),
-		}),
 	};
 
 	logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
