@@ -74,7 +74,6 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
 		});
 
 		const pair = await getPairAsync(
-			config.networks[config.defaultNetwork],
 			secret,
 			"",
 		);
