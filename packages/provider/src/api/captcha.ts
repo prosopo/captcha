@@ -24,6 +24,7 @@ import {
   type CaptchaSolutionBodyType,
   type CaptchaSolutionResponse,
   type DappUserSolutionResult,
+  decodeProcaptchaOutput,
   GetPowCaptchaChallengeRequestBody,
   type GetPowCaptchaResponse,
   type PowCaptchaSolutionResponse,

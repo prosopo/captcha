@@ -245,8 +245,7 @@ export class ImgCaptchaManager {
         userSignature: Array.from(userSignature),
         requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
         completedAt: 0, //temp
-        processed: false,
-        batched: false,
+        checked: false,
         stored: false,
         requestedAtTimestamp: timestamp,
       };

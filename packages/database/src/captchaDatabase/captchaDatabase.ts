@@ -1,4 +1,3 @@
-import { getLoggerDefault } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +11,10 @@ import { getLoggerDefault } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { getLoggerDefault } from "@prosopo/common";
 import {
+  PowCaptchaRecord,
   PowCaptchaRecordSchema,
   type UserCommitmentRecord,
   UserCommitmentRecordSchema,
@@ -22,7 +24,7 @@ import { PowCaptcha } from "@prosopo/types";
 const logger = getLoggerDefault();
 
 let StoredImageCaptcha: mongoose.Model<UserCommitmentRecord>;
-let StoredPoWCaptcha: mongoose.Model<PowCaptcha>;
+let StoredPoWCaptcha: mongoose.Model<PowCaptchaRecord>;
 
 export const saveCaptchas = async (
   imageCaptchaEvents: UserCommitmentRecord[],
@@ -40,7 +42,7 @@ export const saveCaptchas = async (
           "StoredImageCaptcha",
           UserCommitmentRecordSchema,
         );
-        StoredPoWCaptcha = connection.model<PowCaptcha>(
+        StoredPoWCaptcha = connection.model<PowCaptchaRecord>(
           "StoredPoWCaptcha",
           PowCaptchaRecordSchema,
         );

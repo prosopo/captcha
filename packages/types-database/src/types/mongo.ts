@@ -35,7 +35,7 @@ import {
   ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import { type Connection, type Model, Schema } from "mongoose";
+import mongoose, { type Connection, type Model, Schema } from "mongoose";
 import {
   type ZodType,
   any,
@@ -52,8 +52,7 @@ import {
 export interface UserCommitmentRecord
   extends Omit<Commit, "userSignaturePart1" | "userSignaturePart2"> {
   userSignature: number[];
-  processed: boolean;
-  batched: boolean;
+  checked: boolean;
   stored?: boolean;
   requestedAtTimestamp: number;
 }
@@ -68,8 +67,7 @@ export const UserCommitmentSchema = object({
   userSignature: array(number()),
   completedAt: number(),
   requestedAt: number(),
-  processed: boolean(),
-  batched: boolean(),
+  checked: boolean(),
   stored: boolean().optional(),
   requestedAtTimestamp: number(),
 }) satisfies ZodType<UserCommitmentRecord>;
@@ -116,7 +114,9 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
 
-export const PowCaptchaRecordSchema = new Schema<PowCaptcha>({
+export type PowCaptchaRecord = mongoose.Document & PowCaptcha;
+
+export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   challenge: { type: String, required: true },
   dappAccount: { type: String, required: true },
   userAccount: { type: String, required: true },
@@ -138,8 +138,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   requestedAt: { type: Number, required: true },
   completedAt: { type: Number, required: true },
   userSignature: { type: [Number], required: true },
-  processed: { type: Boolean, required: true },
-  batched: { type: Boolean, required: true },
+  checked: { type: Boolean, required: true },
   stored: { type: Boolean, required: false },
   requestedAtTimestamp: { type: Number, required: true },
 });
@@ -169,6 +168,7 @@ SolutionRecordSchema.index({ captchaId: 1 });
 
 export const UserSolutionSchema = CaptchaSolutionSchema.extend({
   processed: boolean(),
+  checked: boolean(),
   commitmentId: string(),
 });
 export type UserSolutionRecord = zInfer<typeof UserSolutionSchema>;
@@ -179,6 +179,7 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
     salt: { type: String, required: true },
     solution: [{ type: String, required: true }],
     processed: { type: Boolean, required: true },
+    checked: { type: Boolean, required: true },
     commitmentId: { type: String, required: true },
   },
   { _id: false },
@@ -334,25 +335,21 @@ export interface Database {
 
   getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
-  getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+  getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
   getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
   markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
+  markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+
   getUnstoredDappUserPoWCommitments(): Promise<PowCaptcha[]>;
 
   markDappUserPoWCommitmentsStored(challengeIds: string[]): Promise<void>;
 
-  getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
-
   flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
 
   flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
-
-  flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
-
-  getLastBatchCommitTime(): Promise<Date>;
 
   getLastScheduledTaskStatus(
     task: ScheduledTaskNames,

@@ -100,7 +100,7 @@ export class ProsopoServer {
     }
     const signatureHex = u8aToHex(dappUserSignature);
 
-    const providerApi = await this.getProviderApi(providerUrl);
+    const providerApi = this.getProviderApi(providerUrl);
     if (challenge) {
       const powTimeout = this.config.timeouts.pow.cachedTimeout;
       const recent = timestamp ? Date.now() - timestamp < powTimeout : false;
