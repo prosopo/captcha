@@ -114,8 +114,8 @@ export class PowCaptchaManager {
       false,
       false,
       difficulty,
-      timestampSignature,
       signature,
+      timestampSignature,
     );
     return true;
   }

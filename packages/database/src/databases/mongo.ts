@@ -58,6 +58,7 @@ import {
 } from "@prosopo/types-database";
 import { type DeleteResult, ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
+import { boolean, number, string } from "zod";
 
 mongoose.set("strictQuery", false);
 
@@ -518,7 +519,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
     checked: boolean,
-    stored = false,
+    stored: boolean,
     difficulty: number,
     signature: string,
     userSignature: string,
