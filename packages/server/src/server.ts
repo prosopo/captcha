@@ -37,36 +37,27 @@ import { get } from "@prosopo/util";
 
 export class ProsopoServer {
   config: ProsopoServerConfigOutput;
-  prosopoContractAddress: string;
   dappContractAddress: string | undefined;
   defaultEnvironment: string;
-  contractName: string;
   logger: Logger;
   keyring: Keyring;
   pair: KeyringPair | undefined;
-  network: NetworkConfig;
 
   constructor(config: ProsopoServerConfigOutput, pair?: KeyringPair) {
     this.config = config;
     this.pair = pair;
     this.defaultEnvironment = this.config.defaultEnvironment;
-    const networkName = NetworkNamesSchema.parse(this.config.defaultNetwork);
-    this.network = get(this.config.networks, networkName);
-    this.prosopoContractAddress = this.network.contract.address;
-    this.dappContractAddress = this.config.account.address;
-    this.contractName = this.network.contract.name;
     this.logger = getLogger(
       this.config.logLevel as unknown as LogLevel,
       "@prosopo/server",
     );
     this.keyring = new Keyring({
-      type: "sr25519", // TODO get this from the chain
+      type: "sr25519",
     });
   }
 
   getProviderApi(providerUrl: string): ProviderApi {
     return new ProviderApi(
-      this.network,
       providerUrl,
       this.dappContractAddress || "",
     );

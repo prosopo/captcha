@@ -37,15 +37,13 @@ import {
 import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi extends HttpClientBase implements ProviderApi {
-  private network: NetworkConfig;
   private account: string;
 
-  constructor(network: NetworkConfig, providerUrl: string, account: string) {
+  constructor(providerUrl: string, account: string) {
     const providerUrlWithProtocol = !providerUrl.startsWith("http")
       ? `https://${providerUrl}`
       : providerUrl;
     super(providerUrlWithProtocol);
-    this.network = network;
     this.account = account;
   }
 
@@ -55,9 +53,8 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
   ): Promise<CaptchaResponseBody> {
     const { provider, blockNumber } = randomProvider;
     const dappAccount = this.account;
-    const url = `${ApiPaths.GetImageCaptchaChallenge}/${
-      provider.datasetId
-    }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, "")}`;
+    const url = `${ApiPaths.GetImageCaptchaChallenge}/${provider.datasetId
+      }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, "")}`;
     return this.fetch(url);
   }
 

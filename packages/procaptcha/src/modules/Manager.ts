@@ -59,18 +59,6 @@ const defaultState = (): Partial<ProcaptchaState> => {
   };
 };
 
-const getNetwork = (config: ProcaptchaClientConfigOutput) => {
-  const network = config.networks[config.defaultNetwork];
-  if (!network) {
-    throw new ProsopoEnvError("DEVELOPER.NETWORK_NOT_FOUND", {
-      context: {
-        error: `No network found for environment ${config.defaultEnvironment}`,
-      },
-    });
-  }
-  return network;
-};
-
 const getRandomActiveProvider = (
   config: ProcaptchaClientConfigOutput,
 ): RandomProvider => {
@@ -174,7 +162,6 @@ export function Manager(
       await sleep(100);
 
       const account = await loadAccount();
-      const contract = getNetwork(config).contract.address;
 
       // get a random provider
       const getRandomProviderResponse = getRandomActiveProvider(getConfig());
@@ -186,7 +173,6 @@ export function Manager(
 
       const captchaApi = new ProsopoCaptchaApi(
         account.account.address,
-        contract,
         getRandomProviderResponse,
         providerApi,
         config.web2,
@@ -388,11 +374,10 @@ export function Manager(
 
   const loadProviderApi = async (providerUrl: string) => {
     const config = getConfig();
-    const network = getNetwork(config);
     if (!config.account.address) {
       throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
     }
-    return new ProviderApi(network, providerUrl, config.account.address);
+    return new ProviderApi(providerUrl, config.account.address);
   };
 
   const clearTimeout = () => {
