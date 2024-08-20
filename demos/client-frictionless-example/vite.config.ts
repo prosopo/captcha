@@ -41,9 +41,6 @@ export default defineConfig(({ command, mode }) => {
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,
 		),
-		"process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-			process.env.PROSOPO_CONTRACT_ADDRESS,
-		),
 		"process.env.PROSOPO_WEB2": JSON.stringify(process.env.PROSOPO_WEB2),
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
 			process.env.PROSOPO_SERVER_URL,

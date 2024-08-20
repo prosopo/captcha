@@ -43,16 +43,5 @@ export default function getTestConfig() {
 			port: 9229,
 			fileServePaths: "[]",
 		},
-		networks: {
-			development: {
-				endpoint: ["ws://localhost:9944"],
-				contract: {
-					address: process.env.PROSOPO_CONTRACT_ADDRESS || "",
-					name: "prosopo",
-				},
-				pairType: NetworkPairTypeSchema.parse("sr25519"),
-				ss58Format: 42,
-			},
-		},
 	});
 }
