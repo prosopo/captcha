@@ -31,7 +31,6 @@ import type { TCaptchaSubmitResult } from "@prosopo/types";
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
   userAccount: string;
-  contract: string;
   provider: RandomProvider;
   providerApi: ProviderApi;
   dappAccount: string;
@@ -39,14 +38,12 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 
   constructor(
     userAccount: string,
-    contract: string,
     provider: RandomProvider,
     providerApi: ProviderApi,
     web2: boolean,
     dappAccount: string,
   ) {
     this.userAccount = userAccount;
-    this.contract = contract;
     this.provider = provider;
     this.providerApi = providerApi;
     this._web2 = web2;
