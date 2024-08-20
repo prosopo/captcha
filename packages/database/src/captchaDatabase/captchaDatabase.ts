@@ -20,7 +20,7 @@ import {
   UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import mongoose from "mongoose";
-import { PowCaptcha } from "@prosopo/types";
+import { PoWCaptchaUser } from "@prosopo/types";
 const logger = getLoggerDefault();
 
 let StoredImageCaptcha: mongoose.Model<UserCommitmentRecord>;
@@ -28,7 +28,7 @@ let StoredPoWCaptcha: mongoose.Model<PowCaptchaRecord>;
 
 export const saveCaptchas = async (
   imageCaptchaEvents: UserCommitmentRecord[],
-  powCaptchaEvents: PowCaptcha[],
+  powCaptchaEvents: PoWCaptchaUser[],
   atlasUri: string,
 ) => {
   const connection = mongoose.createConnection(atlasUri, {

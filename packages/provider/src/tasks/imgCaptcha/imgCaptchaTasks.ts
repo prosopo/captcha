@@ -238,7 +238,7 @@ export class ImgCaptchaManager {
       const commit: UserCommitmentRecord = {
         id: commitmentId,
         userAccount: userAccount,
-        dappContract: dappAccount,
+        dappAccount,
         providerAccount: this.pair.address,
         datasetId,
         status: CaptchaStatus.pending,

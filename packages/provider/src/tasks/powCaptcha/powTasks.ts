@@ -65,8 +65,8 @@ export class PowCaptchaManager {
       challenge,
       difficulty,
       signature: challengeSignature,
-      timestamp,
-      timestampSignature,
+      requestedAtTimestamp: timestamp,
+      userSignature: timestampSignature,
     };
   }
 
@@ -110,8 +110,12 @@ export class PowCaptchaManager {
 
     await this.db.storePowCaptchaRecord(
       challenge,
-      { timestamp, userAccount, dappAccount },
+      { requestedAtTimestamp: timestamp, userAccount, dappAccount },
       false,
+      false,
+      difficulty,
+      timestampSignature,
+      signature,
     );
     return true;
   }

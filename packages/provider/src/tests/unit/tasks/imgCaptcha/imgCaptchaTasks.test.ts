@@ -303,7 +303,7 @@ describe("ImgCaptchaManager", () => {
     const dappUserCommitment: UserCommitmentRecord = {
       id: "commitmentId",
       userAccount: "userAccount",
-      dappContract: "dappContract",
+      dappAccount: "dappAccount",
       providerAccount: "providerAccount",
       datasetId: "datasetId",
       status: CaptchaStatus.approved,
@@ -346,7 +346,7 @@ describe("ImgCaptchaManager", () => {
       {
         id: "commitmentId",
         userAccount: "userAccount",
-        dappContract: "dappContract",
+        dappAccount: "dappAccount",
         providerAccount: "providerAccount",
         datasetId: "datasetId",
         status: CaptchaStatus.approved,

@@ -23,7 +23,8 @@ import {
   type DatasetBase,
   type DatasetWithIds,
   type Item,
-  type PowCaptcha,
+  type PoWCaptcha,
+  PoWCaptchaUser,
   PoWChallengeComponents,
   PoWChallengeId,
 } from "@prosopo/types";
@@ -57,9 +58,14 @@ export interface UserCommitmentRecord
   requestedAtTimestamp: number;
 }
 
+export interface PoWCaptchaStored extends PoWCaptchaUser {
+  checked: boolean;
+  stored: boolean;
+}
+
 export const UserCommitmentSchema = object({
   userAccount: string(),
-  dappContract: string(),
+  dappAccount: string(),
   datasetId: string(),
   providerAccount: string(),
   id: string(),
@@ -79,7 +85,7 @@ export interface SolutionRecord extends CaptchaSolution {
 
 export interface Tables {
   captcha: typeof Model<Captcha>;
-  powCaptcha: typeof Model<PowCaptcha>;
+  powCaptcha: typeof Model<PoWCaptchaStored>;
   dataset: typeof Model<DatasetWithIds>;
   solution: typeof Model<SolutionRecord>;
   usersolution: typeof Model<UserSolutionRecord>;
@@ -114,13 +120,15 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
 
-export type PowCaptchaRecord = mongoose.Document & PowCaptcha;
+export type PowCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   challenge: { type: String, required: true },
   dappAccount: { type: String, required: true },
   userAccount: { type: String, required: true },
-  timestamp: { type: Number, required: true },
+  requestedAtTimestamp: { type: Number, required: true },
+  difficulty: { type: Number, required: true },
+  userSignature: { type: String, required: true },
   checked: { type: Boolean, required: true },
   stored: { type: Boolean, required: true },
 });
@@ -130,7 +138,7 @@ PowCaptchaRecordSchema.index({ captchaId: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   userAccount: { type: String, required: true },
-  dappContract: { type: String, required: true },
+  dappAccount: { type: String, required: true },
   providerAccount: { type: String, required: true },
   datasetId: { type: String, required: true },
   id: { type: String, required: true },
@@ -343,7 +351,7 @@ export interface Database {
 
   markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
-  getUnstoredDappUserPoWCommitments(): Promise<PowCaptcha[]>;
+  getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]>;
 
   markDappUserPoWCommitmentsStored(challengeIds: string[]): Promise<void>;
 
@@ -372,9 +380,15 @@ export interface Database {
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
     checked: boolean,
+    stored: boolean,
+    difficulty: number,
+    signature: string,
+    userSignature: string,
   ): Promise<void>;
 
-  getPowCaptchaRecordByChallenge(challenge: string): Promise<PowCaptcha | null>;
+  getPowCaptchaRecordByChallenge(
+    challenge: string,
+  ): Promise<PoWCaptchaStored | null>;
 
   updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>;
 }

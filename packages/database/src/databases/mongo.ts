@@ -30,7 +30,6 @@ import {
   DatasetWithIdsAndTreeSchema,
   type Hash,
   type PendingCaptchaRequest,
-  type PowCaptcha,
   PoWChallengeComponents,
   PoWChallengeId,
   ScheduledTaskNames,
@@ -43,6 +42,7 @@ import {
   DatasetRecordSchema,
   PendingRecordSchema,
   PowCaptchaRecordSchema,
+  type PoWCaptchaStored,
   type ScheduledTaskRecord,
   ScheduledTaskRecordSchema,
   ScheduledTaskSchema,
@@ -506,6 +506,12 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    * @param {string} challenge The challenge string for the captcha.
    * @param components The components of the PoW challenge.
    * @param {boolean} checked Indicates if the captcha has been checked.
+   * @param stored
+   * @param difficulty
+   * @param signature
+   * @param userSignature
+   * @param signature
+   * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is added.
    */
   async storePowCaptchaRecord(
@@ -513,14 +519,20 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     components: PoWChallengeComponents,
     checked: boolean,
     stored = false,
+    difficulty: number,
+    signature: string,
+    userSignature: string,
   ): Promise<void> {
     const tables = this.getTables();
 
-    const powCaptchaRecord: PowCaptcha = {
+    const powCaptchaRecord: PoWCaptchaStored = {
       challenge,
       ...components,
       checked,
       stored,
+      difficulty,
+      signature,
+      userSignature,
     };
 
     try {
@@ -546,11 +558,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /**
    * @description Retrieves a PoW Captcha record by its challenge string.
    * @param {string} challenge The challenge string to search for.
-   * @returns {Promise<PowCaptcha | null>} A promise that resolves with the found record or null if not found.
+   * @returns {Promise<PoWCaptchaStored | null>} A promise that resolves with the found record or null if not found.
    */
   async getPowCaptchaRecordByChallenge(
     challenge: string,
-  ): Promise<PowCaptcha | null> {
+  ): Promise<PoWCaptchaStored | null> {
     if (!this.tables) {
       throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
         context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
@@ -559,9 +571,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     try {
-      const record: PowCaptcha | null | undefined = await this.tables.powCaptcha
-        .findOne({ challenge })
-        .lean();
+      const record: PoWCaptchaStored | null | undefined =
+        await this.tables.powCaptcha.findOne({ challenge }).lean();
       if (record) {
         this.logger.info("PowCaptcha record retrieved successfully", {
           challenge,
@@ -683,12 +694,12 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
   /** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
    */
-  async getUnstoredDappUserPoWCommitments(): Promise<PowCaptcha[]> {
+  async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]> {
     const docs = await this.tables?.powCaptcha
-      .find<PowCaptcha[]>({
+      .find<PoWCaptchaStored[]>({
         $or: [{ stored: false }, { stored: { $exists: false } }],
       })
-      .lean<PowCaptcha[]>();
+      .lean<PoWCaptchaStored[]>();
     return docs || [];
   }
 
