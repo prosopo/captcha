@@ -25,10 +25,7 @@ import type { Database } from "@prosopo/types-database";
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
 	db: Database | undefined;
-	contractAddress: string;
 	defaultEnvironment: EnvironmentTypes;
-	defaultNetwork: NetworkNames;
-	contractName: string;
 	logger: Logger;
 	assetsResolver: AssetsResolver | undefined;
 	keyring: Keyring;
