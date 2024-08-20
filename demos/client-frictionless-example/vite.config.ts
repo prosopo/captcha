@@ -34,9 +34,6 @@ export default defineConfig(({ command, mode }) => {
 		"process.env.WS_NO_BUFFER_UTIL": JSON.stringify("true"),
 		"process.env.WS_NO_UTF_8_VALIDATE": JSON.stringify("true"),
 		"process.env.NODE_ENV": JSON.stringify(mode),
-		"process.env.PROSOPO_SUBSTRATE_ENDPOINT": JSON.stringify(
-			process.env.PROSOPO_SUBSTRATE_ENDPOINT,
-		),
 		"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
 			process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 		),
