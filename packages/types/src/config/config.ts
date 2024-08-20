@@ -25,7 +25,6 @@ import {
   ApiPathRateLimits,
   ProviderDefaultRateLimits,
 } from "../provider/index.js";
-import { NetworkNamesSchema, ProsopoNetworkSchema } from "./network.js";
 import {
   DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
   DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -83,7 +82,6 @@ export const ProsopoBaseConfigSchema = object({
   defaultEnvironment: EnvironmentTypesSchema.default(
     EnvironmentTypesSchema.Values.production,
   ),
-  defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.astar),
   // The account with which to query the contract.merge sign transactions
   account: object({
     address: string().optional(),
@@ -114,8 +112,6 @@ export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     devOnlyWatchEvents: boolean().optional(),
   }),
 );
-export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworkSchema>;
-export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworkSchema>;
 
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>;
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>;
