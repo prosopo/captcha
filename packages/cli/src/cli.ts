@@ -30,7 +30,6 @@ async function main() {
 	const config: ProsopoConfigOutput = getConfig(
 		undefined,
 		undefined,
-		undefined,
 		{
 			solved: { count: 2 },
 			unsolved: { count: 0 },

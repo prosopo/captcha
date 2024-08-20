@@ -68,7 +68,7 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
 		getDB();
 
 		const secret = getSecret();
-		const config = getConfig(undefined, undefined, undefined, {
+		const config = getConfig(undefined, undefined, {
 			solved: { count: 2 },
 			unsolved: { count: 0 },
 		});

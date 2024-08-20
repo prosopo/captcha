@@ -17,7 +17,6 @@ import type { Logger } from "@prosopo/common";
 import type {
 	AssetsResolver,
 	EnvironmentTypes,
-	NetworkNames,
 } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";

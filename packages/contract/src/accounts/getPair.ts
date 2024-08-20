@@ -22,7 +22,6 @@ import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
-	type NetworkConfig,
 	NetworkPairTypeSchema,
 	type PolkadotSecretJSON,
 } from "@prosopo/types";

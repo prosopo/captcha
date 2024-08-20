@@ -15,8 +15,6 @@ import { getLogLevel } from "@prosopo/common";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,
-	NetworkNamesSchema,
-	NetworkPairTypeSchema,
 	ProsopoConfigSchema,
 } from "@prosopo/types";
 
@@ -25,7 +23,6 @@ export default function getTestConfig() {
 	return ProsopoConfigSchema.parse({
 		logLevel,
 		defaultEnvironment: EnvironmentTypesSchema.Values.development,
-		defaultNetwork: NetworkNamesSchema.Values.development,
 		account: {
 			password: "",
 			address: "",

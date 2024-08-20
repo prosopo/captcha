@@ -19,7 +19,6 @@ import {
   EnvironmentTypesSchema,
   type Features,
   FeaturesEnum,
-  NetworkNamesSchema,
   type ProcaptchaClientConfigInput,
   type ProcaptchaClientConfigOutput,
   ProcaptchaConfigSchema,

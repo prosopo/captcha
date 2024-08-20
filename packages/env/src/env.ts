@@ -19,7 +19,6 @@ import { Databases } from "@prosopo/database";
 import type {
 	AssetsResolver,
 	EnvironmentTypes,
-	NetworkNames,
 } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
