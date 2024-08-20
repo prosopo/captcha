@@ -118,7 +118,6 @@ describe("PoW Integration Tests", () => {
   describe("SubmitPowCaptchaSolution", () => {
     it("should verify a correctly completed PoW captcha as true", async () => {
       const userPair = await getPairAsync(
-        undefined,
         dummyUserAccount.seed,
         undefined,
         "sr25519",
@@ -188,7 +187,6 @@ describe("PoW Integration Tests", () => {
 
     it("should return false for incorrectly completed PoW captcha", async () => {
       const userPair = await getPairAsync(
-        undefined,
         dummyUserAccount.seed,
         undefined,
         "sr25519",

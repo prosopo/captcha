@@ -50,7 +50,6 @@ const main = async () => {
 	const ss58Format = argv.ss58Format;
 
 	const keypair = await getPairAsync(
-		undefined,
 		mnemonic,
 		undefined,
 		type,

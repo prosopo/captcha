@@ -91,7 +91,6 @@ describe("Image Captcha Integration Tests", () => {
 	describe("SubmitImageCaptchaSolution", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
 			const pair = await getPairAsync(
-				undefined,
 				dummyUserAccount.seed,
 				undefined,
 				"sr25519",

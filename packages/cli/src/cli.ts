@@ -48,7 +48,6 @@ async function main() {
 	}
 
 	const pair = await getPairAsync(
-		config.networks[config.defaultNetwork],
 		config.account.secret,
 		config.account.address,
 	);
