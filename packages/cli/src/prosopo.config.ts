@@ -54,9 +54,6 @@ export default function getConfig(
     defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
       ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
       : EnvironmentTypesSchema.enum.development,
-    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-      ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-      : NetworkNamesSchema.enum.development,
     account: {
       address: getAddress(who),
       password: getPassword(who),

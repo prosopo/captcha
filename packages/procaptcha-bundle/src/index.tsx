@@ -66,9 +66,6 @@ const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
     defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
       ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
       : EnvironmentTypesSchema.enum.development,
-    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-      ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-      : NetworkNamesSchema.enum.development,
     userAccountAddress: "",
     account: {
       address: siteKey,
