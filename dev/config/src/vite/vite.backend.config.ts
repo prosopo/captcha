@@ -79,11 +79,6 @@ export default async function (
 				process.env.PROSOPO_DEFAULT_NETWORK,
 			),
 		}),
-		...(process.env.PROSOPO_CONTRACT_ADDRESS && {
-			"process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-				process.env.PROSOPO_CONTRACT_ADDRESS,
-			),
-		}),
 	};
 
 	logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);

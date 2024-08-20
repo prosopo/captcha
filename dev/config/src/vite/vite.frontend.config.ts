@@ -68,9 +68,6 @@ export default async function (
 		"process.env.PROSOPO_MONGO_EVENTS_URI": JSON.stringify(
 			process.env.PROSOPO_MONGO_EVENTS_URI,
 		),
-		"process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-			process.env.PROSOPO_CONTRACT_ADDRESS,
-		),
 		"process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(
 			process.env.PROSOPO_PACKAGE_VERSION,
 		),
