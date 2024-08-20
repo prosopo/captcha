@@ -22,7 +22,6 @@ import {
   type GetPowCaptchaChallengeRequestBodyType,
   type GetPowCaptchaResponse,
   type ImageVerificationResponse,
-  type NetworkConfig,
   type PowCaptchaSolutionResponse,
   type ProcaptchaToken,
   type Provider,

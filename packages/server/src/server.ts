@@ -20,20 +20,15 @@ import {
   type Logger,
   ProsopoApiError,
   ProsopoContractError,
-  ProsopoEnvError,
   getLogger,
 } from "@prosopo/common";
 import {
   type CaptchaTimeoutOutput,
-  ContractAbi,
-  type NetworkConfig,
-  NetworkNamesSchema,
   ProcaptchaOutputSchema,
   type ProcaptchaToken,
   type ProsopoServerConfigOutput,
 } from "@prosopo/types";
 import { decodeProcaptchaOutput } from "@prosopo/types";
-import { get } from "@prosopo/util";
 
 export class ProsopoServer {
   config: ProsopoServerConfigOutput;
