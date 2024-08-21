@@ -16,15 +16,13 @@ import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
 import { getServerConfig } from "@prosopo/server";
 import { at } from "@prosopo/util";
 import cors from "cors";
-import dotenv from "dotenv";
+import { loadEnv } from "@prosopo/dotenv";
 import express from "express";
 import routesFactory from "./routes/routes.js";
 import connectionFactory from "./utils/connection.js";
 import memoryServerSetup from "./utils/database.js";
 
-export function loadEnv() {
-  dotenv.config({ path: getEnvFile() });
-}
+loadEnv();
 
 export function getEnvFile(filename = ".env", filepath = "./") {
   const env = process.env.NODE_ENV || "development";
