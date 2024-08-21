@@ -111,6 +111,7 @@
 		"INVALID_ITEM_HASH": "Invalid item hash",
 		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
 		"INVALID_BLOCK_NO": "Invalid block number",
+		"INVALID_TIMESTAMP": "Invalid timestamp",
 		"ID_MISMATCH": "captcha id mismatch",
 		"MISSING_ITEM_HASH": "missing item hash",
 		"INVALID_LEAF_HASH": "Invalid leaf hash",
