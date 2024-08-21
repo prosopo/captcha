@@ -153,6 +153,8 @@ export class PowCaptchaManager {
       });
     }
 
+    if (challengeRecord.checked) return false;
+
     const challengeDappAccount = challengeRecord.dappAccount;
 
     if (dappAccount !== challengeDappAccount) {
@@ -167,12 +169,7 @@ export class PowCaptchaManager {
 
     checkRecentPowSolution(challenge, timeout);
 
-    // Allow the challenge to be checked multiple times by the server. This allows the user to make a mistake and try
-    // again without having to request a new challenge
-    if (challengeRecord.checked) return true;
-
     await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true);
-
     return true;
   }
 }
