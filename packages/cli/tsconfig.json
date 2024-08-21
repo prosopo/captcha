@@ -17,6 +17,9 @@
 			"path": "../contract"
 		},
 		{
+			"path": "../dotenv"
+		},
+		{
 			"path": "../env"
 		},
 		{
