@@ -105,7 +105,6 @@ export const CaptchaWidget = ({
           // include the padding / margin / border in the width
           boxSizing: "border-box",
         };
-        console.log("imageStyle index ", index, imageStyle);
         return (
           <div style={imageStyle} key={item.hash}>
             <div
