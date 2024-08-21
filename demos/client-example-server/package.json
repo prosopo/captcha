@@ -33,6 +33,7 @@
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/api": "2.0.1",
 		"@prosopo/contract": "2.0.1",
+		"@prosopo/dotenv": "2.0.1",
 		"@prosopo/procaptcha": "2.0.1",
 		"@prosopo/server": "2.0.1",
 		"@prosopo/types": "2.0.1",
@@ -44,7 +45,6 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.1",
-		"@prosopo/dotenv": "2.0.1",
 		"@types/jsonwebtoken": "^9.0.2",
 		"tslib": "2.6.2",
 		"typescript": "5.1.6",
