@@ -21,13 +21,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
-import { Procaptcha } from "@prosopo/procaptcha-react";
 import { ApiParams, type ProcaptchaToken } from "@prosopo/types";
 import { useReducer, useState } from "react";
 import { ExtensionAccountSelect } from "./components/ExtensionAccountSelect.js";
 import config from "./config.js";
 import { Captcha } from "./Captcha.js";
+import NavBar from "./NavBar.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*", // Required for CORS support to work
@@ -144,121 +143,125 @@ function App(props: AppProps) {
   };
 
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Box
-        className={"App"}
-        sx={{
+    <div>
+      <div style={{ display: "flex", height: "64px" }}>
+        <NavBar />
+      </div>
+      <div
+        style={{
           display: "flex",
-          flexDirection: "column",
+          justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <Box>
-          <Typography component={"span"}>
-            {message ? getMessage() : null}
-          </Typography>
-
+        <Box
+          className={"App"}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           <Box>
-            <h1>{label}</h1>
-            <form style={{ minWidth: "100px" }}>
-              <FormGroup
-                sx={{ "& .MuiTextField-root,#select-account": { m: 1 } }}
-              >
-                {!config.web2 ? (
-                  <FormControl>
-                    <ExtensionAccountSelect
-                      dappName={config.dappName}
-                      value={account}
-                      onChange={setAccount}
-                      aria-label="Select account"
-                    />
-                  </FormControl>
-                ) : (
-                  <></>
-                )}
-                <FormControl>
-                  <TextField
-                    id="email"
-                    label="Email"
-                    type="text"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    onChange={(e) => setEmail(e.target.value)}
-                    aria-label="Email"
-                  />
-                </FormControl>
+            <Typography component={"span"}>
+              {message ? getMessage() : null}
+            </Typography>
 
-                {!isLogin && (
+            <Box>
+              <h1>{label}</h1>
+              <form style={{ minWidth: "100px" }}>
+                <FormGroup
+                  sx={{ "& .MuiTextField-root,#select-account": { m: 1 } }}
+                >
+                  {!config.web2 ? (
+                    <FormControl>
+                      <ExtensionAccountSelect
+                        dappName={config.dappName}
+                        value={account}
+                        onChange={setAccount}
+                        aria-label="Select account"
+                      />
+                    </FormControl>
+                  ) : (
+                    <></>
+                  )}
                   <FormControl>
                     <TextField
-                      id="name"
-                      label="Name"
+                      id="email"
+                      label="Email"
                       type="text"
-                      autoComplete="name"
-                      onChange={(e) => setName(e.target.value)}
-                      aria-label="Name"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      onChange={(e) => setEmail(e.target.value)}
+                      aria-label="Email"
                     />
                   </FormControl>
-                )}
 
-                <FormControl>
-                  <TextField
-                    id="password"
-                    label="Password"
-                    type="password"
-                    autoComplete="password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    aria-label="Password"
-                  />
-                </FormControl>
-                <FormControl sx={{ m: 1 }}>
-                  <Captcha
-                    captchaType={props.captchaType}
-                    setProcaptchaToken={setProcaptchaToken}
-                    key={updateKey}
-                  />
-                </FormControl>
-                <FormControl>
-                  <Box sx={{ p: 1 }}>
-                    <Stack
-                      direction="column"
-                      spacing={1}
-                      sx={{ "& button": { m: 1 } }}
-                    >
-                      <Button
-                        variant="contained"
-                        onClick={onActionHandler}
-                        aria-label={isLogin ? "Login" : "Sign up"}
-                        disabled={!procaptchaToken}
+                  {!isLogin && (
+                    <FormControl>
+                      <TextField
+                        id="name"
+                        label="Name"
+                        type="text"
+                        autoComplete="name"
+                        onChange={(e) => setName(e.target.value)}
+                        aria-label="Name"
+                      />
+                    </FormControl>
+                  )}
+
+                  <FormControl>
+                    <TextField
+                      id="password"
+                      label="Password"
+                      type="password"
+                      autoComplete="password"
+                      onChange={(e) => setPassword(e.target.value)}
+                      aria-label="Password"
+                    />
+                  </FormControl>
+                  <FormControl sx={{ m: 1 }}>
+                    <Captcha
+                      captchaType={props.captchaType}
+                      setProcaptchaToken={setProcaptchaToken}
+                      key={updateKey}
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <Box sx={{ p: 1 }}>
+                      <Stack
+                        direction="column"
+                        spacing={1}
+                        sx={{ "& button": { m: 1 } }}
                       >
-                        {isLogin ? "Login" : "Sign up"}
-                      </Button>
-                      <Box sx={{ display: "flex", justifyContent: "center" }}>
-                        <Box>
-                          <Typography>- or -</Typography>
+                        <Button
+                          variant="contained"
+                          onClick={onActionHandler}
+                          aria-label={isLogin ? "Login" : "Sign up"}
+                          disabled={!procaptchaToken}
+                        >
+                          {isLogin ? "Login" : "Sign up"}
+                        </Button>
+                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                          <Box>
+                            <Typography>- or -</Typography>
+                          </Box>
                         </Box>
-                      </Box>
-                      <Button
-                        onClick={onChangeHandler}
-                        aria-label={isLogin ? "Sign up" : "Login"}
-                      >
-                        {isLogin ? "Sign up" : "Login"}
-                      </Button>
-                    </Stack>
-                  </Box>
-                </FormControl>
-              </FormGroup>
-            </form>
+                        <Button
+                          onClick={onChangeHandler}
+                          aria-label={isLogin ? "Sign up" : "Login"}
+                        >
+                          {isLogin ? "Sign up" : "Login"}
+                        </Button>
+                      </Stack>
+                    </Box>
+                  </FormControl>
+                </FormGroup>
+              </form>
+            </Box>
           </Box>
         </Box>
-      </Box>
+      </div>
     </div>
   );
 }
