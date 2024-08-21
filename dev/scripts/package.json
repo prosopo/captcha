@@ -35,6 +35,7 @@
 		"@prosopo/database": "2.0.1",
 		"@prosopo/datasets": "2.0.1",
 		"@prosopo/datasets-fs": "2.0.1",
+		"@prosopo/dotenv": "2.0.1",
 		"@prosopo/env": "2.0.1",
 		"@prosopo/file-server": "2.0.1",
 		"@prosopo/procaptcha": "2.0.1",

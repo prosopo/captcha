@@ -23,7 +23,7 @@
 		"@prosopo/procaptcha-pow": "2.0.1"
 	},
 	"devDependencies": {
-		"@prosopo/cli": "2.0.1",
+		"@prosopo/dotenv": "2.0.1",
 		"@prosopo/config": "2.0.1",
 		"@types/node": "^20.3.1",
 		"css-loader": "^6.8.1",

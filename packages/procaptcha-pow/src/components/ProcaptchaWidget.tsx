@@ -31,7 +31,7 @@ import {
 	lightTheme,
 } from "@prosopo/web-components";
 import { useEffect, useRef, useState } from "react";
-import { Manager } from "../Services/Manager.js";
+import { Manager } from "../services/Manager.js";
 
 const Procaptcha = (props: ProcaptchaProps) => {
 	const config = props.config;
