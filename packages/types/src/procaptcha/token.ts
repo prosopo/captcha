@@ -56,6 +56,11 @@ export const ProcaptchaTokenCodec = Struct({
     [ApiParams.provider]: Struct({
       [ApiParams.timestamp]: str,
     }),
+    [ApiParams.user]: Option(
+      Struct({
+        [ApiParams.timestamp]: str,
+      }),
+    ),
   }),
 });
 
@@ -74,6 +79,12 @@ export const encodeProcaptchaOutput = (
       [ApiParams.nonce]: undefined,
       // override any optional fields by spreading the procaptchaOutput
       ...procaptchaOutput,
+      signature: {
+        ...procaptchaOutput.signature,
+        user: {
+          timestamp: procaptchaOutput.signature.user?.timestamp || "",
+        },
+      },
     }),
   );
 };

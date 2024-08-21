@@ -106,38 +106,76 @@ describe("PowCaptchaManager", () => {
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (checkPowSolution as any).mockImplementation(() => true);
 
-      const result = await powCaptchaManager.verifyPowCaptchaSolution(
+      const verifyPowCaptchaSolutionArgs: Parameters<
+        typeof powCaptchaManager.verifyPowCaptchaSolution
+      > = [
         challenge,
         difficulty,
         signature,
         nonce,
         timeout,
         timestampSignature,
+      ];
+
+      const result = await powCaptchaManager.verifyPowCaptchaSolution(
+        ...verifyPowCaptchaSolutionArgs,
       );
 
       expect(result).toBe(true);
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(challenge, timeout);
-      expect(checkPowSignature).toHaveBeenCalledWith(
+
+      // Will cause build to fail if args change
+      const checkRecentPowSolutionArgs: Parameters<
+        typeof checkRecentPowSolution
+      > = [challenge, timeout];
+
+      expect(checkRecentPowSolution).toHaveBeenCalledWith(
+        ...checkRecentPowSolutionArgs,
+      );
+
+      const checKPowSignatureArgs1: Parameters<typeof checkPowSignature> = [
         timestamp.toString(),
         timestampSignature,
         userAccount,
         ApiParams.timestamp,
-      );
-      expect(checkPowSignature).toHaveBeenCalledWith(
+      ];
+
+      expect(checkPowSignature).toHaveBeenCalledWith(...checKPowSignatureArgs1);
+
+      const checKPowSignatureArgs2: Parameters<typeof checkPowSignature> = [
         challenge,
         signature,
         pair.address,
         ApiParams.challenge,
-      );
-      expect(checkPowSolution).toHaveBeenCalledWith(
+      ];
+
+      expect(checkPowSignature).toHaveBeenCalledWith(...checKPowSignatureArgs2);
+
+      const checkPowSolutionArgs: Parameters<typeof checkPowSolution> = [
         nonce,
         challenge,
         difficulty,
-      );
-      expect(db.storePowCaptchaRecord).toHaveBeenCalledWith(
+      ];
+
+      expect(checkPowSolution).toHaveBeenCalledWith(...checkPowSolutionArgs);
+
+      const storePowCaptchaRecordArgs: Parameters<
+        typeof db.storePowCaptchaRecord
+      > = [
         challenge,
-        { timestamp, userAccount, dappAccount: pair.address },
+        {
+          requestedAtTimestamp: timestamp,
+          userAccount,
+          dappAccount: pair.address,
+        },
         false,
+        false,
+        difficulty,
+        signature,
+        timestampSignature,
+      ];
+
+      expect(db.storePowCaptchaRecord).toHaveBeenCalledWith(
+        ...storePowCaptchaRecordArgs,
       );
     });
 

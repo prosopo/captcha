@@ -32,7 +32,7 @@ import { decodeProcaptchaOutput } from "@prosopo/types";
 
 export class ProsopoServer {
   config: ProsopoServerConfigOutput;
-  dappContractAddress: string | undefined;
+  dappAccount: string | undefined;
   defaultEnvironment: string;
   logger: Logger;
   keyring: Keyring;
@@ -42,6 +42,7 @@ export class ProsopoServer {
     this.config = config;
     this.pair = pair;
     this.defaultEnvironment = this.config.defaultEnvironment;
+    this.dappAccount = this.config.account.address;
     this.logger = getLogger(
       this.config.logLevel as unknown as LogLevel,
       "@prosopo/server",
@@ -52,10 +53,7 @@ export class ProsopoServer {
   }
 
   getProviderApi(providerUrl: string): ProviderApi {
-    return new ProviderApi(
-      providerUrl,
-      this.dappContractAddress || "",
-    );
+    return new ProviderApi(providerUrl, this.dappAccount || "");
   }
 
   /**
@@ -83,7 +81,7 @@ export class ProsopoServer {
     }
     const signatureHex = u8aToHex(dappUserSignature);
 
-    const providerApi = await this.getProviderApi(providerUrl);
+    const providerApi = this.getProviderApi(providerUrl);
     if (challenge) {
       const powTimeout = this.config.timeouts.pow.cachedTimeout;
       const recent = timestamp ? Date.now() - timestamp < powTimeout : false;

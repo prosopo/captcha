@@ -238,15 +238,14 @@ export class ImgCaptchaManager {
       const commit: UserCommitmentRecord = {
         id: commitmentId,
         userAccount: userAccount,
-        dappContract: dappAccount,
+        dappAccount,
         providerAccount: this.pair.address,
         datasetId,
         status: CaptchaStatus.pending,
         userSignature: Array.from(userSignature),
         requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
         completedAt: 0, //temp
-        processed: false,
-        batched: false,
+        checked: false,
         stored: false,
         requestedAtTimestamp: timestamp,
       };

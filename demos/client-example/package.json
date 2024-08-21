@@ -38,7 +38,7 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/cli": "2.0.1",
+		"@prosopo/dotenv": "2.0.1",
 		"@prosopo/config": "2.0.1",
 		"@prosopo/vite-plugin-watch-workspace": "2.0.1",
 		"@types/node": "^20.3.1",

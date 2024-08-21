@@ -17,7 +17,7 @@ import { parseCaptchaDataset } from "@prosopo/datasets";
 import type {
   CaptchaConfig,
   DatasetRaw,
-  PowCaptcha,
+  PoWCaptchaUser,
   ProsopoConfigOutput,
   StoredEvents,
 } from "@prosopo/types";

@@ -30,7 +30,6 @@ import {
   DatasetWithIdsAndTreeSchema,
   type Hash,
   type PendingCaptchaRequest,
-  type PowCaptcha,
   PoWChallengeComponents,
   PoWChallengeId,
   ScheduledTaskNames,
@@ -43,6 +42,7 @@ import {
   DatasetRecordSchema,
   PendingRecordSchema,
   PowCaptchaRecordSchema,
+  type PoWCaptchaStored,
   type ScheduledTaskRecord,
   ScheduledTaskRecordSchema,
   ScheduledTaskSchema,
@@ -58,6 +58,7 @@ import {
 } from "@prosopo/types-database";
 import { type DeleteResult, ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
+import { boolean, number, string } from "zod";
 
 mongoose.set("strictQuery", false);
 
@@ -506,21 +507,33 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    * @param {string} challenge The challenge string for the captcha.
    * @param components The components of the PoW challenge.
    * @param {boolean} checked Indicates if the captcha has been checked.
+   * @param stored
+   * @param difficulty
+   * @param signature
+   * @param userSignature
+   * @param signature
+   * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is added.
    */
   async storePowCaptchaRecord(
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
     checked: boolean,
-    stored = false
+    stored: boolean,
+    difficulty: number,
+    signature: string,
+    userSignature: string,
   ): Promise<void> {
     const tables = this.getTables();
 
-    const powCaptchaRecord: PowCaptcha = {
+    const powCaptchaRecord: PoWCaptchaStored = {
       challenge,
       ...components,
       checked,
-      stored
+      stored,
+      difficulty,
+      signature,
+      userSignature,
     };
 
     try {
@@ -528,7 +541,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       this.logger.info("PowCaptcha record added successfully", {
         challenge,
         checked,
-        stored
+        stored,
       });
     } catch (error) {
       this.logger.error("Failed to add PowCaptcha record", {
@@ -546,11 +559,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /**
    * @description Retrieves a PoW Captcha record by its challenge string.
    * @param {string} challenge The challenge string to search for.
-   * @returns {Promise<PowCaptcha | null>} A promise that resolves with the found record or null if not found.
+   * @returns {Promise<PoWCaptchaStored | null>} A promise that resolves with the found record or null if not found.
    */
   async getPowCaptchaRecordByChallenge(
     challenge: string,
-  ): Promise<PowCaptcha | null> {
+  ): Promise<PoWCaptchaStored | null> {
     if (!this.tables) {
       throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
         context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
@@ -559,9 +572,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     try {
-      const record: PowCaptcha | null | undefined = await this.tables.powCaptcha
-        .findOne({ challenge })
-        .lean();
+      const record: PoWCaptchaStored | null | undefined =
+        await this.tables.powCaptcha.findOne({ challenge }).lean();
       if (record) {
         this.logger.info("PowCaptcha record retrieved successfully", {
           challenge,
@@ -635,17 +647,17 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     return docs ? docs.map((doc) => UserSolutionSchema.parse(doc)) : [];
   }
 
-  /** @description Get processed Dapp User captcha commitments from the commitments table
+  /** @description Get processed Dapp User image captcha commitments from the commitments table
    */
   async getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
     const docs = await this.tables?.commitment.find({ processed: true }).lean();
     return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
   }
 
-  /** @description Get Dapp User captcha commitments from the commitments table that have not been batched on-chain
+  /** @description Get checked Dapp User image captcha commitments from the commitments table
    */
-  async getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
-    const docs = await this.tables?.commitment.find({ batched: false }).lean();
+  async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+    const docs = await this.tables?.commitment.find({ checked: true }).lean();
     return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
   }
 
@@ -671,34 +683,35 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     );
   }
 
+  /** @description Mark a list of captcha commits as stored
+   */
+  async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+    await this.tables?.commitment.updateMany(
+      { id: { $in: commitmentIds } },
+      { $set: { checked: true } },
+      { upsert: false },
+    );
+  }
+
   /** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
    */
-  async getUnstoredDappUserPoWCommitments(): Promise<PowCaptcha[]> {
+  async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]> {
     const docs = await this.tables?.powCaptcha
-      .find<PowCaptcha[]>({
+      .find<PoWCaptchaStored[]>({
         $or: [{ stored: false }, { stored: { $exists: false } }],
       })
-      .lean<PowCaptcha[]>();
+      .lean<PoWCaptchaStored[]>();
     return docs || [];
   }
 
   /** @description Mark a list of PoW captcha commits as stored
    */
-  async markDappUserPoWCommitmentsStored(
-    challenges: string[],
-  ): Promise<void> {
+  async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
     await this.tables?.powCaptcha.updateMany(
       { challenge: { $in: challenges } },
       { $set: { stored: true } },
       { upsert: false },
     );
-  }
-
-  /** @description Get Dapp User captcha commitments from the commitments table that have been batched on-chain
-   */
-  async getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
-    const docs = await this.tables?.commitment.find({ batched: true }).lean();
-    return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
   }
 
   /** @description Remove processed Dapp User captcha solutions from the user solution table
@@ -1037,46 +1050,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         context: { error: err, commitmentIds },
       });
     }
-  }
-
-  /**
-   * @description Flag dapp users' commitments as used by calculated solution
-   * @param {string[]} commitmentIds
-   */
-  async flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
-    try {
-      const distinctCommitmentIds = [...new Set(commitmentIds)];
-      await this.tables?.commitment
-        ?.updateMany(
-          { id: { $in: distinctCommitmentIds } },
-          { $set: { batched: true } },
-          { upsert: false },
-        )
-        .lean();
-    } catch (err) {
-      throw new ProsopoDBError("DATABASE.COMMITMENT_FLAG_FAILED", {
-        context: { error: err, commitmentIds },
-      });
-    }
-  }
-
-  /**
-   * @description Get the last batch commit time or return 0 if none
-   */
-  async getLastBatchCommitTime(): Promise<Date> {
-    const cursor = this.tables?.scheduler
-      ?.findOne({
-        processName: ScheduledTaskNames.BatchCommitment,
-        status: ScheduledTaskStatus.Completed,
-      })
-      .sort({ timestamp: -1 });
-    const doc: ScheduledTaskRecord | null | undefined = await cursor?.lean();
-
-    if (doc) {
-      return doc.datetime;
-    }
-
-    return new Date(0);
   }
 
   /**
