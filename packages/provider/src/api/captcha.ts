@@ -168,10 +168,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
       const getPowCaptchaResponse: GetPowCaptchaResponse = {
         challenge: challenge.challenge,
         difficulty: challenge.difficulty,
-        timestamp: challenge.timestamp.toString(),
+        timestamp: challenge.requestedAtTimestamp.toString(),
         signature: {
           provider: {
-            timestamp: challenge.timestampSignature,
+            timestamp: challenge.userSignature,
             challenge: challenge.signature,
           },
         },
