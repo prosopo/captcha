@@ -29,6 +29,7 @@
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/common": "2.0.1",
 		"@prosopo/contract": "2.0.1",
+		"@prosopo/dotenv": "2.0.1",
 		"@prosopo/env": "2.0.1",
 		"@prosopo/provider": "2.0.1",
 		"@prosopo/types": "2.0.1",

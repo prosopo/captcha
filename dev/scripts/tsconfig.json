@@ -35,6 +35,9 @@
 			"path": "../../packages/datasets-fs"
 		},
 		{
+			"path": "../../packages/dotenv"
+		},
+		{
 			"path": "../../packages/env"
 		},
 		{
