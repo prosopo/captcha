@@ -81,7 +81,6 @@ const getRandomActiveProvider = (
       datasetId: randomProvderObj.datasetId,
       datasetIdContent: randomProvderObj.datasetIdContent,
     },
-    blockNumber: 0,
   };
 };
 
@@ -166,7 +165,6 @@ export function Manager(
       // get a random provider
       const getRandomProviderResponse = getRandomActiveProvider(getConfig());
 
-      const blockNumber = getRandomProviderResponse.blockNumber;
       const providerUrl = getRandomProviderResponse.provider.url;
       // get the provider api inst
       const providerApi = await loadProviderApi(providerUrl);
@@ -206,7 +204,6 @@ export function Manager(
         challenge,
         showModal: true,
         timeout,
-        blockNumber,
       });
     });
   };
@@ -242,7 +239,6 @@ export function Manager(
       );
 
       const account = getAccount();
-      const blockNumber = getBlockNumber();
       const signer = getExtension(account).signer;
 
       const first = at(challenge.captchas, 0);
@@ -291,7 +287,6 @@ export function Manager(
         storage.setProcaptchaStorage({
           ...storage.getProcaptchaStorage(),
           providerUrl,
-          blockNumber,
         });
         events.onHuman(
           encodeProcaptchaOutput({
@@ -299,7 +294,6 @@ export function Manager(
             [ApiParams.user]: account.account.address,
             [ApiParams.dapp]: getDappAccount(),
             [ApiParams.commitmentId]: hashToHex(submission[1]),
-            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.timestamp]: challenge.timestamp,
             [ApiParams.signature]: {
               [ApiParams.provider]: {
@@ -445,11 +439,6 @@ export function Manager(
 
     const dappAccount: string = state.dappAccount;
     return dappAccount;
-  };
-
-  const getBlockNumber = () => {
-    const blockNumber: number = state.blockNumber || 0;
-    return blockNumber;
   };
 
   const getExtension = (possiblyAccount?: Account) => {

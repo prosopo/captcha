@@ -62,7 +62,6 @@ export class ProsopoServer {
    * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
    * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
    * @param token
-   * @param blockNumber
    * @param timeouts
    * @param providerUrl
    * @param timestamp
@@ -70,15 +69,13 @@ export class ProsopoServer {
    */
   public async verifyProvider(
     token: string,
-    blockNumber: number,
     timeouts: CaptchaTimeoutOutput,
     providerUrl: string,
     timestamp: number,
     challenge?: string,
   ) {
     this.logger.info("Verifying with provider.");
-    const blockNumberString = blockNumber.toString();
-    const dappUserSignature = this.pair?.sign(blockNumberString);
+    const dappUserSignature = this.pair?.sign(timestamp.toString());
     if (!dappUserSignature) {
       throw new ProsopoContractError("CAPTCHA.INVALID_BLOCK_NO", {
         context: { error: "Block number not found" },
@@ -128,13 +125,12 @@ export class ProsopoServer {
 
     const payload = decodeProcaptchaOutput(token);
 
-    const { providerUrl, blockNumber, challenge, timestamp } =
+    const { providerUrl, challenge, timestamp } =
       ProcaptchaOutputSchema.parse(payload);
 
     if (providerUrl) {
       return await this.verifyProvider(
         token,
-        blockNumber,
         this.config.timeouts,
         providerUrl,
         Number(timestamp),

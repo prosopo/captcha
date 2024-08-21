@@ -49,11 +49,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
    * Provides a Captcha puzzle to a Dapp User
    * @param {string} datasetId - Provider datasetId
    * @param {string} userAccount - Dapp User AccountId
-   * @param {string} blockNumber - Block number
    * @return {Captcha} - The Captcha data
    */
   router.get(
-    `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
+    `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`,
     async (req, res, next) => {
       try {
         const { datasetId, user } = CaptchaRequestBody.parse(req.params);

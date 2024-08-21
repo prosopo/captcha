@@ -59,7 +59,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		const parsed = VerifySolutionBody.parse(req.body);
 		try {
 			const { dappUserSignature, token } = parsed;
-			const { user, dapp, blockNumber, commitmentId } =
+			const { user, dapp, timestamp, commitmentId } =
 				decodeProcaptchaOutput(token);
 
 			// Verify using the appropriate pair based on isDapp flag
@@ -68,7 +68,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				: env.keyring.addFromAddress(user);
 
 			// Will throw an error if the signature is invalid
-			verifySignature(dappUserSignature, blockNumber.toString(), keyPair);
+			verifySignature(dappUserSignature, timestamp.toString(), keyPair);
 
 			const solution = await (commitmentId
 				? tasks.imgCaptchaManager.getDappUserCommitmentById(commitmentId)
@@ -191,7 +191,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		try {
 			const { token, dappSignature, verifiedTimeout } =
 				ServerPowCaptchaVerifyRequestBody.parse(req.body);
-			const { dapp, blockNumber, challenge } = decodeProcaptchaOutput(token);
+			const { dapp, timestamp, challenge } = decodeProcaptchaOutput(token);
 
 			if (!challenge) {
 				const unverifiedResponse: VerificationResponse = {
@@ -205,7 +205,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			const dappPair = env.keyring.addFromAddress(dapp);
 
 			// Will throw an error if the signature is invalid
-			verifySignature(dappSignature, blockNumber.toString(), dappPair);
+			verifySignature(dappSignature, timestamp.toString(), dappPair);
 
 			const approved =
 				await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
