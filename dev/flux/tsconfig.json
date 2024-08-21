@@ -8,7 +8,7 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../packages/cli"
+			"path": "../../packages/dotenv"
 		},
 		{
 			"path": "../../packages/common"
