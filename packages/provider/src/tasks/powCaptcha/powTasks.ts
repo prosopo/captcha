@@ -88,6 +88,14 @@ export class PowCaptchaManager {
     timeout: number,
     timestampSignature: string,
   ): Promise<boolean> {
+    const challengeRecord =
+      await this.db.getPowCaptchaRecordByChallenge(challenge);
+
+    if (challengeRecord) {
+      // this challenge has already been submitted
+      return false;
+    }
+
     checkRecentPowSolution(challenge, timeout);
     const challengeSplit = challenge.split(this.POW_SEPARATOR);
     const timestamp = parseInt(at(challengeSplit, 0));
