@@ -50,10 +50,10 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     userAccount: string,
     randomProvider: RandomProvider,
   ): Promise<CaptchaResponseBody> {
-    const { provider, blockNumber } = randomProvider;
+    const { provider } = randomProvider;
     const dappAccount = this.account;
     const url = `${ApiPaths.GetImageCaptchaChallenge}/${provider.datasetId
-      }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, "")}`;
+      }/${userAccount}/${dappAccount}`;
     return this.fetch(url);
   }
 

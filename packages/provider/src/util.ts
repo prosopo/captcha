@@ -78,10 +78,6 @@ export async function promiseQueue<T>(
 	return ret;
 }
 
-export function parseBlockNumber(blockNumberString: string) {
-	return Number.parseInt(blockNumberString.replace(/,/g, ""));
-}
-
 /**
  * Check if there is a batch running.
  * If the batch task is running and not completed, return true.

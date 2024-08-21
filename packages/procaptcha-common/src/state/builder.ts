@@ -25,13 +25,13 @@ type useStateType = <T>(defaultValue: T) => [T, (value: T) => void];
 
 export const buildUpdateState =
 	(state: ProcaptchaState, onStateUpdate: ProcaptchaStateUpdateFn) =>
-	(nextState: Partial<ProcaptchaState>) => {
-		// mutate the current state. Note that this is in order of properties in the nextState object.
-		// e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
-		Object.assign(state, nextState);
-		// then call the update function for the frontend to do the same
-		onStateUpdate(nextState);
-	};
+		(nextState: Partial<ProcaptchaState>) => {
+			// mutate the current state. Note that this is in order of properties in the nextState object.
+			// e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
+			Object.assign(state, nextState);
+			// then call the update function for the frontend to do the same
+			onStateUpdate(nextState);
+		};
 
 /**
  * Wrap a ref to be the same format as useState.
@@ -75,10 +75,6 @@ export const useProcaptcha = (
 		useRef,
 		undefined,
 	);
-	const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(
-		useRef,
-		undefined,
-	);
 	const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] =
 		useRefAsState<NodeJS.Timeout | undefined>(useRef, undefined);
 	const [sendData, setSendData] = useState(false);
@@ -96,7 +92,6 @@ export const useProcaptcha = (
 			dappAccount,
 			submission,
 			timeout,
-			blockNumber,
 			successfullChallengeTimeout,
 			sendData,
 		},
@@ -122,8 +117,6 @@ export const useProcaptcha = (
 			if (nextState.timeout !== undefined) setTimeout(nextState.timeout);
 			if (nextState.successfullChallengeTimeout !== undefined)
 				setSuccessfullChallengeTimeout(nextState.timeout);
-			if (nextState.blockNumber !== undefined)
-				setBlockNumber(nextState.blockNumber);
 			if (nextState.sendData !== undefined) setSendData(nextState.sendData);
 		},
 	];

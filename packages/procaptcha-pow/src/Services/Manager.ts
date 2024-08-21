@@ -226,7 +226,6 @@ export const Manager = (
           [ApiParams.user]: getAccount().account.account.address,
           [ApiParams.dapp]: getDappAccount(),
           [ApiParams.challenge]: challenge.challenge,
-          [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
           [ApiParams.nonce]: solution,
           [ApiParams.timestamp]: challenge.timestamp,
           [ApiParams.signature]: {
@@ -263,7 +262,6 @@ export const Manager = (
         datasetId: randomProvderObj.datasetId,
         datasetIdContent: randomProvderObj.datasetIdContent,
       },
-      blockNumber: 0,
     };
   };
 

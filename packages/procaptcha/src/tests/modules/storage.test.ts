@@ -23,18 +23,16 @@ describe("storage tests", () => {
 		expect(getAccount()).to.equal("abc");
 	});
 
-	test("sets provider URL and block number", async () => {
+	test("sets provider URL", async () => {
 		setAccount("abc");
 		const procaptchaStorage = getProcaptchaStorage();
 		setProcaptchaStorage({
 			...procaptchaStorage,
 			providerUrl: "http://localhost:9229",
-			blockNumber: 100,
 		});
 		expect(getProcaptchaStorage()).toMatchObject({
 			account: "abc",
 			providerUrl: "http://localhost:9229",
-			blockNumber: 100,
 		});
 	});
 });
