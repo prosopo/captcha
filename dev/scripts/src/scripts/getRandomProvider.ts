@@ -20,24 +20,24 @@ import dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-	const config = defaultConfig();
-	const network = config.networks[config.defaultNetwork];
-	const pair = await getPairAsync(network, "//Alice");
-	const env = new ProviderEnvironment(defaultConfig(), pair);
-	await env.isReady();
-	const tasks = new Tasks(env);
-	const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ["", ""];
-	const dappContractAccount = process.env.PROSOPO_SITE_KEY || "";
-	// const provider = (await tasks.contract.query.getRandomActiveProvider(address, dappContractAccount)).value
-	//     .unwrap()
-	//     .unwrap()
-	console.log(
-		"Tasks no longer makes contract queries. Please update to add in RPC calls.",
-	);
-	process.exit();
+  const config = defaultConfig();
+  const network = config.networks[config.defaultNetwork];
+  const pair = await getPairAsync(network, "//Alice");
+  const env = new ProviderEnvironment(defaultConfig(), pair);
+  await env.isReady();
+  const tasks = new Tasks(env);
+  const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ["", ""];
+  const dappAccount = process.env.PROSOPO_SITE_KEY || "";
+  // const provider = (await tasks.contract.query.getRandomActiveProvider(address, dappAccount)).value
+  //     .unwrap()
+  //     .unwrap()
+  console.log(
+    "Tasks no longer makes contract queries. Please update to add in RPC calls.",
+  );
+  process.exit();
 }
 
 main().catch((error) => {
-	console.error(error);
-	process.exit();
+  console.error(error);
+  process.exit();
 });

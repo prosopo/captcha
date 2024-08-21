@@ -96,7 +96,7 @@ export type Commit = {
   userAccount: string;
   datasetId: Hash;
   status: CaptchaStatus;
-  dappContract: string;
+  dappAccount: string;
   providerAccount: string;
   requestedAt: number;
   completedAt: number;
@@ -141,15 +141,6 @@ export const PowChallengeIdSchema = custom<PoWChallengeId>((val: any) => {
   }
 });
 
-export interface PowCaptcha {
-  challenge: PoWChallengeId;
-  timestamp: Timestamp;
-  userAccount: UserAccount;
-  dappAccount: DappAccount;
-  checked: boolean;
-  stored: boolean
-}
-
 export interface CaptchaSolution {
   captchaId: string;
   captchaContentId: string;
@@ -158,7 +149,7 @@ export interface CaptchaSolution {
 }
 
 export type PoWChallengeComponents = {
-  timestamp: Timestamp;
+  requestedAtTimestamp: Timestamp;
   userAccount: UserAccount;
   dappAccount: DappAccount;
 };
@@ -167,8 +158,13 @@ export interface PoWCaptcha {
   challenge: PoWChallengeId;
   difficulty: number;
   signature: string;
-  timestamp: number;
-  timestampSignature: string;
+  requestedAtTimestamp: number;
+  userSignature: string;
+}
+
+export interface PoWCaptchaUser extends PoWCaptcha {
+  userAccount: UserAccount;
+  dappAccount: DappAccount;
 }
 
 export type CaptchaConfig = {
@@ -184,11 +180,6 @@ export type CaptchaSolutionConfig = {
   requiredNumberOfSolutions: number;
   solutionWinningPercentage: number;
   captchaBlockRecency: number;
-};
-
-export type LastCorrectCaptchaSchema = {
-  beforeMs: u32;
-  dappId: AccountId;
 };
 
 export const CaptchaSchema = object({

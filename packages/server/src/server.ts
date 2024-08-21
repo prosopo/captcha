@@ -38,7 +38,7 @@ import { get } from "@prosopo/util";
 export class ProsopoServer {
   config: ProsopoServerConfigOutput;
   prosopoContractAddress: string;
-  dappContractAddress: string | undefined;
+  dappAccount: string | undefined;
   defaultEnvironment: string;
   contractName: string;
   logger: Logger;
@@ -53,7 +53,7 @@ export class ProsopoServer {
     const networkName = NetworkNamesSchema.parse(this.config.defaultNetwork);
     this.network = get(this.config.networks, networkName);
     this.prosopoContractAddress = this.network.contract.address;
-    this.dappContractAddress = this.config.account.address;
+    this.dappAccount = this.config.account.address;
     this.contractName = this.network.contract.name;
     this.logger = getLogger(
       this.config.logLevel as unknown as LogLevel,
@@ -65,11 +65,7 @@ export class ProsopoServer {
   }
 
   getProviderApi(providerUrl: string): ProviderApi {
-    return new ProviderApi(
-      this.network,
-      providerUrl,
-      this.dappContractAddress || "",
-    );
+    return new ProviderApi(this.network, providerUrl, this.dappAccount || "");
   }
 
   /**
@@ -100,7 +96,7 @@ export class ProsopoServer {
     }
     const signatureHex = u8aToHex(dappUserSignature);
 
-    const providerApi = await this.getProviderApi(providerUrl);
+    const providerApi = this.getProviderApi(providerUrl);
     if (challenge) {
       const powTimeout = this.config.timeouts.pow.cachedTimeout;
       const recent = timestamp ? Date.now() - timestamp < powTimeout : false;
