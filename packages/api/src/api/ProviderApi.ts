@@ -67,27 +67,25 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     userAccount: string,
     salt: string,
     timestamp: string,
-    providerTimestampSignature: string,
+    providerRequestHashSignature: string,
     userRequestHashSignature: string,
   ): Promise<CaptchaSolutionResponse> {
-    const captchaSolutionBody: CaptchaSolutionBodyType =
-      CaptchaSolutionBody.parse({
-        captchas,
-        requestHash,
-        [ApiParams.user]: userAccount,
-        [ApiParams.dapp]: this.account,
-        salt,
-        [ApiParams.timestamp]: timestamp,
-        [ApiParams.signature]: {
-          [ApiParams.user]: {
-            [ApiParams.requestHash]: userRequestHashSignature,
-          },
-          [ApiParams.provider]: {
-            [ApiParams.timestamp]: providerTimestampSignature,
-          },
+    const body: CaptchaSolutionBodyType = {
+      [ApiParams.user]: userAccount,
+      [ApiParams.dapp]: this.account,
+      captchas,
+      requestHash,
+      [ApiParams.timestamp]: timestamp,
+      [ApiParams.signature]: {
+        [ApiParams.user]: {
+          [ApiParams.requestHash]: userRequestHashSignature,
         },
-      });
-    return this.post(ApiPaths.SubmitImageCaptchaSolution, captchaSolutionBody);
+        [ApiParams.provider]: {
+          [ApiParams.requestHash]: providerRequestHashSignature,
+        },
+      },
+    };
+    return this.post(ApiPaths.SubmitImageCaptchaSolution, body);
   }
 
   public verifyDappUser(

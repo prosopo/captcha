@@ -84,11 +84,19 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         return res.json(noSolutionResponse);
       }
 
-      // Mark solution as checked
-      if (isDapp && !solution.serverChecked) {
-        await tasks.imgCaptchaManager.db.markDappUserCommitmentsChecked([
-          solution.id,
-        ]);
+      if (isDapp) {
+        if (solution.serverChecked) {
+          const alreadyCheckedResponse: VerificationResponse = {
+            [ApiParams.status]: req.t("API.USER_ALREADY_VERIFIED"),
+            [ApiParams.verified]: false,
+          };
+          return res.json(alreadyCheckedResponse);
+        } else {
+          // Mark solution as checked
+          await tasks.imgCaptchaManager.db.markDappUserCommitmentsChecked([
+            solution.id,
+          ]);
+        }
       }
 
       // A solution exists but is disapproved

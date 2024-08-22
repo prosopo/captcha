@@ -37,6 +37,6 @@ export interface ProsopoCaptchaApiInterface {
     solutions: CaptchaSolution[],
     salt: string,
     timestamp: string,
-    providerTimestampSignature: string,
+    providerRequestHashSignature: string,
   ): Promise<TCaptchaSubmitResult>;
 }

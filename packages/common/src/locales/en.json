@@ -134,6 +134,7 @@
 		"USER_NOT_VERIFIED": "User not verified",
 		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
 		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
+		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
 		"UNKNOWN": "Unknown API error"
 	},
 	"CLI": {
