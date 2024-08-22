@@ -282,7 +282,7 @@ export function Manager(
           captchaSolution,
           salt,
           challenge.timestamp,
-          challenge.signature.provider.timestamp,
+          challenge.signature.provider.requestHash,
         );
 
       // mark as is human if solution has been approved
@@ -317,7 +317,8 @@ export function Manager(
             [ApiParams.timestamp]: challenge.timestamp,
             [ApiParams.signature]: {
               [ApiParams.provider]: {
-                [ApiParams.timestamp]: challenge.signature.provider.timestamp,
+                [ApiParams.requestHash]:
+                  challenge.signature.provider.requestHash,
               },
             },
           }),

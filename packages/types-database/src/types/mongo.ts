@@ -52,15 +52,19 @@ import {
 
 export interface UserCommitmentRecord
   extends Omit<Commit, "userSignaturePart1" | "userSignaturePart2"> {
+  ipAddress: string;
   userSignature: number[];
-  checked: boolean;
-  stored?: boolean;
+  userChecked: boolean;
+  serverChecked: boolean;
+  storedExternally?: boolean;
   requestedAtTimestamp: number;
 }
 
 export interface PoWCaptchaStored extends PoWCaptchaUser {
-  checked: boolean;
-  stored: boolean;
+  ipAddress: string;
+  userChecked: boolean;
+  serverChecked: boolean;
+  storedExternally: boolean;
 }
 
 export const UserCommitmentSchema = object({
@@ -73,8 +77,10 @@ export const UserCommitmentSchema = object({
   userSignature: array(number()),
   completedAt: number(),
   requestedAt: number(),
-  checked: boolean(),
-  stored: boolean().optional(),
+  ipAddress: string(),
+  userChecked: boolean(),
+  serverChecked: boolean(),
+  storedExternally: boolean().optional(),
   requestedAtTimestamp: number(),
 }) satisfies ZodType<UserCommitmentRecord>;
 
@@ -128,9 +134,11 @@ export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   userAccount: { type: String, required: true },
   requestedAtTimestamp: { type: Number, required: true },
   difficulty: { type: Number, required: true },
-  userSignature: { type: String, required: true },
-  checked: { type: Boolean, required: true },
-  stored: { type: Boolean, required: true },
+  ipAddress: { type: String, required: true },
+  userSignature: { type: String, required: false },
+  userChecked: { type: Boolean, required: true },
+  serverChecked: { type: Boolean, required: true },
+  storedExternally: { type: Boolean, required: true },
 });
 
 // Set an index on the captchaId field, ascending
@@ -145,9 +153,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   status: { type: String, required: true },
   requestedAt: { type: Number, required: true },
   completedAt: { type: Number, required: true },
+  ipAddress: { type: String, required: true },
   userSignature: { type: [Number], required: true },
-  checked: { type: Boolean, required: true },
-  stored: { type: Boolean, required: false },
+  serverChecked: { type: Boolean, required: true },
+  storedExternally: { type: Boolean, required: false },
   requestedAtTimestamp: { type: Number, required: true },
 });
 // Set an index on the commitment id field, descending
@@ -379,16 +388,24 @@ export interface Database {
   storePowCaptchaRecord(
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
-    checked: boolean,
-    stored: boolean,
     difficulty: number,
-    signature: string,
-    userSignature: string,
+    providerSignature: string,
+    ipAddress: string,
+    serverChecked?: boolean,
+    userChecked?: boolean,
+    storedExternally?: boolean,
+    userSignature?: string,
   ): Promise<void>;
 
   getPowCaptchaRecordByChallenge(
     challenge: string,
   ): Promise<PoWCaptchaStored | null>;
 
-  updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>;
+  updatePowCaptchaRecord(
+    challenge: PoWChallengeId,
+    serverChecked?: boolean,
+    userChecked?: boolean,
+    storedExternally?: boolean,
+    userSignature?: string,
+  ): Promise<void>;
 }

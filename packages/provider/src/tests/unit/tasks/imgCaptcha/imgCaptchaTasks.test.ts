@@ -154,8 +154,8 @@ describe("ImgCaptchaManager", () => {
       (db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (randomAsHex as any).mockReturnValue("randomSalt"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (computePendingRequestHash as any).mockReturnValue("computedHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (pair.sign as any).mockReturnValue("signedTimestamp"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (u8aToHex as any).mockReturnValue("hexSignedTime"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (pair.sign as any).mockReturnValue("hexSignedRequestHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (u8aToHex as any).mockReturnValue("hexSignedRequestHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (shuffleArray as any).mockReturnValue([]);
 
       const result = await imgCaptchaManager.getRandomCaptchasAndRequestHash(
@@ -167,7 +167,7 @@ describe("ImgCaptchaManager", () => {
         captchas: [],
         requestHash: "computedHash",
         timestamp: expect.any(Number),
-        signedTimestamp: "hexSignedTime",
+        signedRequestHash: "hexSignedRequestHash",
       });
     });
 
@@ -310,9 +310,11 @@ describe("ImgCaptchaManager", () => {
       userSignature: [],
       requestedAt: 0,
       completedAt: 0,
-      checked: false,
-      stored: false,
+      userChecked: true,
+      serverChecked: false,
+      storedExternally: false,
       requestedAtTimestamp: 0,
+      ipAddress: "0.0.0.0",
     };
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
@@ -353,9 +355,11 @@ describe("ImgCaptchaManager", () => {
         userSignature: [],
         requestedAt: 0,
         completedAt: 0,
-        checked: false,
-        stored: false,
+        userChecked: true,
+        serverChecked: false,
+        storedExternally: false,
         requestedAtTimestamp: 0,
+        ipAddress: "0.0.0.0",
       },
     ];
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix

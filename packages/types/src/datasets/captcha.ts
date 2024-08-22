@@ -157,9 +157,9 @@ export type PoWChallengeComponents = {
 export interface PoWCaptcha {
   challenge: PoWChallengeId;
   difficulty: number;
-  signature: string;
+  providerSignature: string;
   requestedAtTimestamp: number;
-  userSignature: string;
+  userSignature?: string;
 }
 
 export interface PoWCaptchaUser extends PoWCaptcha {

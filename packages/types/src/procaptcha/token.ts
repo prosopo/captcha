@@ -16,6 +16,31 @@ import { Option, Struct, str, u32, u64 } from "scale-ts";
 import { bigint, number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
+export const TimestampSignatureSchema = object({
+  [ApiParams.timestamp]: string(),
+});
+
+export type TimestampSignature = zInfer<typeof TimestampSignatureSchema>;
+
+export const RequestHashSignatureSchema = object({
+  [ApiParams.requestHash]: string(),
+});
+
+export type RequestHashSignature = zInfer<typeof RequestHashSignatureSchema>;
+
+export const ChallengeSignatureSchema = object({
+  [ApiParams.challenge]: string(),
+});
+
+export type ChallengeSignature = zInfer<typeof ChallengeSignatureSchema>;
+
+export const ProviderSignatureSchema = object({
+  [ApiParams.challenge]: string().optional(),
+  [ApiParams.requestHash]: string().optional(),
+});
+
+export type ProviderSignature = zInfer<typeof ProviderSignatureSchema>;
+
 export const ProcaptchaOutputSchema = object({
   [ApiParams.commitmentId]: string().optional(),
   [ApiParams.providerUrl]: string().optional(),
@@ -26,12 +51,8 @@ export const ProcaptchaOutputSchema = object({
   [ApiParams.nonce]: number().optional(),
   [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
-    [ApiParams.provider]: object({
-      [ApiParams.timestamp]: string(),
-    }),
-    [ApiParams.user]: object({
-      [ApiParams.timestamp]: string(),
-    }).optional(),
+    [ApiParams.provider]: ProviderSignatureSchema,
+    [ApiParams.user]: TimestampSignatureSchema.optional(),
   }),
 });
 
@@ -56,11 +77,12 @@ export const ProcaptchaTokenCodec = Struct({
   [ApiParams.timestamp]: str,
   [ApiParams.signature]: Struct({
     [ApiParams.provider]: Struct({
-      [ApiParams.timestamp]: str,
+      [ApiParams.challenge]: Option(str),
+      [ApiParams.requestHash]: Option(str),
     }),
     [ApiParams.user]: Option(
       Struct({
-        [ApiParams.timestamp]: str,
+        [ApiParams.timestamp]: Option(str),
       }),
     ),
   }),
@@ -82,9 +104,14 @@ export const encodeProcaptchaOutput = (
       // override any optional fields by spreading the procaptchaOutput
       ...procaptchaOutput,
       signature: {
-        ...procaptchaOutput.signature,
+        provider: {
+          challenge:
+            procaptchaOutput.signature.provider?.challenge || undefined,
+          requestHash:
+            procaptchaOutput.signature.provider?.requestHash || undefined,
+        },
         user: {
-          timestamp: procaptchaOutput.signature.user?.timestamp || "",
+          timestamp: procaptchaOutput.signature.user?.timestamp || undefined,
         },
       },
     }),

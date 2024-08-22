@@ -506,33 +506,37 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    * @description Adds a new PoW Captcha record to the database.
    * @param {string} challenge The challenge string for the captcha.
    * @param components The components of the PoW challenge.
-   * @param {boolean} checked Indicates if the captcha has been checked.
-   * @param stored
    * @param difficulty
-   * @param signature
-   * @param userSignature
-   * @param signature
+   * @param providerSignature
+   * @param ipAddress
+   * @param serverChecked
+   * @param userChecked
+   * @param storedExternally
    * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is added.
    */
   async storePowCaptchaRecord(
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
-    checked: boolean,
-    stored: boolean,
     difficulty: number,
-    signature: string,
-    userSignature: string,
+    providerSignature: string,
+    ipAddress: string,
+    serverChecked: boolean = false,
+    userChecked: boolean = false,
+    storedExternally: boolean = false,
+    userSignature?: string,
   ): Promise<void> {
     const tables = this.getTables();
 
     const powCaptchaRecord: PoWCaptchaStored = {
       challenge,
       ...components,
-      checked,
-      stored,
+      ipAddress,
+      userChecked,
+      serverChecked,
+      storedExternally,
       difficulty,
-      signature,
+      providerSignature,
       userSignature,
     };
 
@@ -540,17 +544,26 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await tables.powCaptcha.create(powCaptchaRecord);
       this.logger.info("PowCaptcha record added successfully", {
         challenge,
-        checked,
-        stored,
+        userChecked,
+        serverChecked,
+        storedExternally,
       });
     } catch (error) {
       this.logger.error("Failed to add PowCaptcha record", {
         error,
         challenge,
-        checked,
+        userChecked,
+        serverChecked,
+        storedExternally,
       });
       throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-        context: { error, challenge, checked },
+        context: {
+          error,
+          challenge,
+          userChecked,
+          serverChecked,
+          storedExternally,
+        },
         logger: this.logger,
       });
     }
@@ -597,42 +610,62 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /**
    * @description Updates a PoW Captcha record in the database.
    * @param {string} challenge The challenge string of the captcha to be updated.
-   * @param {boolean} checked New value indicating whether the captcha has been checked.
+   * @param serverChecked
+   * @param userChecked
+   * @param storedExternally
+   * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is updated.
    */
   async updatePowCaptchaRecord(
-    challenge: string,
-    checked: boolean,
+    challenge: PoWChallengeId,
+    serverChecked: boolean = false,
+    userChecked: boolean = false,
+    storedExternally: boolean = false,
+    userSignature?: string,
   ): Promise<void> {
     const tables = this.getTables();
-
+    const update = {
+      serverChecked,
+      userChecked,
+      storedExternally,
+      userSignature,
+    };
     try {
       const updateResult = await tables.powCaptcha.updateOne(
         { challenge },
-        { $set: { checked } },
+        {
+          $set: update,
+        },
       );
       if (updateResult.matchedCount === 0) {
         this.logger.info("No PowCaptcha record found to update", {
           challenge,
-          checked,
+          ...update,
         });
         throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-          context: { challenge, checked },
+          context: {
+            challenge,
+            ...update,
+          },
           logger: this.logger,
         });
       }
       this.logger.info("PowCaptcha record updated successfully", {
         challenge,
-        checked,
+        ...update,
       });
     } catch (error) {
       this.logger.error("Failed to update PowCaptcha record", {
         error,
         challenge,
-        checked,
+        ...update,
       });
       throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-        context: { error, challenge, checked },
+        context: {
+          error,
+          challenge,
+          ...update,
+        },
         logger: this.logger,
       });
     }

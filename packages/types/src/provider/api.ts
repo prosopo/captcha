@@ -35,7 +35,12 @@ import {
   PoWChallengeId,
   PowChallengeIdSchema,
 } from "../datasets/index.js";
-import { ProcaptchaTokenSpec } from "../procaptcha/index.js";
+import {
+  ChallengeSignature,
+  ProcaptchaTokenSpec,
+  RequestHashSignature,
+  RequestHashSignatureSchema,
+} from "../procaptcha/index.js";
 
 export enum ApiPaths {
   GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
@@ -154,9 +159,7 @@ export type CaptchaResponseBody = {
   [ApiParams.requestHash]: string;
   [ApiParams.timestamp]: string;
   [ApiParams.signature]: {
-    [ApiParams.provider]: {
-      [ApiParams.timestamp]: string;
-    };
+    [ApiParams.provider]: RequestHashSignature;
   };
 };
 
@@ -167,12 +170,8 @@ export const CaptchaSolutionBody = object({
   [ApiParams.requestHash]: string(),
   [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
-    [ApiParams.user]: object({
-      [ApiParams.requestHash]: string(),
-    }),
-    [ApiParams.provider]: object({
-      [ApiParams.timestamp]: string(),
-    }),
+    [ApiParams.user]: RequestHashSignatureSchema,
+    [ApiParams.provider]: RequestHashSignatureSchema,
   }),
 });
 
@@ -202,11 +201,6 @@ export interface ProviderRegistered {
   status: "Registered" | "Unregistered";
 }
 
-export interface ProviderDetails {
-  provider: Provider;
-  dbConnectionOk: boolean;
-}
-
 export interface VerificationResponse {
   [ApiParams.status]: string;
   [ApiParams.verified]: boolean;
@@ -223,10 +217,7 @@ export interface GetPowCaptchaResponse {
   [ApiParams.difficulty]: number;
   [ApiParams.timestamp]: string;
   [ApiParams.signature]: {
-    [ApiParams.provider]: {
-      [ApiParams.timestamp]: string;
-      [ApiParams.challenge]: string;
-    };
+    [ApiParams.provider]: ChallengeSignature;
   };
 }
 

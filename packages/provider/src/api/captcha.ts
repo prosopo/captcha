@@ -35,6 +35,8 @@ import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
 
+const NO_IP_ADDRESS = "NO_IP_ADDRESS";
+
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -75,7 +77,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
           [ApiParams.timestamp]: taskData.timestamp.toString(),
           [ApiParams.signature]: {
             [ApiParams.provider]: {
-              [ApiParams.timestamp]: taskData.signedTimestamp,
+              [ApiParams.requestHash]: taskData.signedRequestHash,
             },
           },
         };
@@ -121,7 +123,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
           parsed[ApiParams.captchas],
           parsed[ApiParams.signature].user.requestHash,
           parseInt(parsed[ApiParams.timestamp]),
-          parsed[ApiParams.signature].provider.timestamp,
+          parsed[ApiParams.signature].provider.requestHash,
+          req.ip || NO_IP_ADDRESS,
         );
 
       const returnValue: CaptchaSolutionResponse = {
@@ -165,14 +168,25 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         origin,
       );
 
+      await tasks.db.storePowCaptchaRecord(
+        challenge.challenge,
+        {
+          requestedAtTimestamp: challenge.requestedAtTimestamp,
+          userAccount: user,
+          dappAccount: dapp,
+        },
+        challenge.difficulty,
+        challenge.providerSignature,
+        req.ip || NO_IP_ADDRESS,
+      );
+
       const getPowCaptchaResponse: GetPowCaptchaResponse = {
         challenge: challenge.challenge,
         difficulty: challenge.difficulty,
         timestamp: challenge.requestedAtTimestamp.toString(),
         signature: {
           provider: {
-            timestamp: challenge.userSignature,
-            challenge: challenge.signature,
+            challenge: challenge.providerSignature,
           },
         },
       };
@@ -208,6 +222,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         nonce,
         verifiedTimeout,
         signature.user.timestamp,
+        req.ip || NO_IP_ADDRESS,
       );
       const response: PowCaptchaSolutionResponse = { verified };
       return res.json(response);

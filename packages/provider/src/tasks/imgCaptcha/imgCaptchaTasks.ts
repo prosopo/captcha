@@ -81,7 +81,7 @@ export class ImgCaptchaManager {
     captchas: Captcha[];
     requestHash: string;
     timestamp: number;
-    signedTimestamp: string;
+    signedRequestHash: string;
   }> {
     const dataset = await this.db.getDatasetDetails(datasetId);
     if (!dataset) {
@@ -124,8 +124,8 @@ export class ImgCaptchaManager {
     );
 
     const currentTime = Date.now();
-    const signedTimestamp = u8aToHex(
-      this.pair.sign(stringToHex(currentTime.toString())),
+    const signedRequestHash = u8aToHex(
+      this.pair.sign(stringToHex(requestHash)),
     );
 
     const timeLimit = captchas
@@ -145,7 +145,7 @@ export class ImgCaptchaManager {
       captchas,
       requestHash,
       timestamp: currentTime,
-      signedTimestamp,
+      signedRequestHash,
     };
   }
 
@@ -155,9 +155,10 @@ export class ImgCaptchaManager {
    * @param {string} dappAccount
    * @param {string} requestHash
    * @param {JSON} captchas
-   * @param {string} requestHashSignature
+   * @param {string} userRequestHashSignature
    * @param timestamp
-   * @param timestampSignature
+   * @param providerRequestHashSignature
+   * @param ipAddress
    * @return {Promise<DappUserSolutionResult>} result containing the contract event
    */
   async dappUserSolution(
@@ -165,39 +166,40 @@ export class ImgCaptchaManager {
     dappAccount: string,
     requestHash: string,
     captchas: CaptchaSolution[],
-    requestHashSignature: string, // the signature to indicate ownership of account
+    userRequestHashSignature: string, // the signature to indicate ownership of account
     timestamp: number,
-    timestampSignature: string,
+    providerRequestHashSignature: string,
+    ipAddress: string,
   ): Promise<DappUserSolutionResult> {
     // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
     const verification = signatureVerify(
       stringToHex(requestHash),
-      requestHashSignature,
+      userRequestHashSignature,
       userAccount,
     );
     if (!verification.isValid) {
       // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-      this.logger.info("Invalid requestHash signature");
+      this.logger.info("Invalid user requestHash signature");
       throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
         context: { failedFuncName: this.dappUserSolution.name, userAccount },
       });
     }
 
     // check that the timestamp signature is valid and signed by the provider
-    const timestampSigVerify = signatureVerify(
-      stringToHex(timestamp.toString()),
-      timestampSignature,
+    const providerRequestHashSignatureVerify = signatureVerify(
+      stringToHex(requestHash.toString()),
+      providerRequestHashSignature,
       this.pair.address,
     );
 
-    if (!timestampSigVerify.isValid) {
-      this.logger.info("Invalid timestamp signature");
+    if (!providerRequestHashSignatureVerify.isValid) {
+      this.logger.info("Invalid provider requestHash signature");
       // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
       throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
         context: {
           failedFuncName: this.dappUserSolution.name,
           userAccount,
-          error: "timestamp signature is invalid",
+          error: "requestHash signature is invalid",
         },
       });
     }
@@ -232,7 +234,7 @@ export class ImgCaptchaManager {
       }
 
       // Only do stuff if the request is in the local DB
-      const userSignature = hexToU8a(requestHashSignature);
+      const userSignature = hexToU8a(userRequestHashSignature);
       // prevent this request hash from being used twice
       await this.db.updateDappUserPendingStatus(requestHash);
       const commit: UserCommitmentRecord = {
@@ -245,14 +247,13 @@ export class ImgCaptchaManager {
         userSignature: Array.from(userSignature),
         requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
         completedAt: 0, //temp
-        checked: false,
-        stored: false,
+        userChecked: true,
+        serverChecked: false,
+        storedExternally: false,
         requestedAtTimestamp: timestamp,
+        ipAddress,
       };
       await this.db.storeDappUserSolution(receivedCaptchas, commit);
-
-      console.log(receivedCaptchas);
-      console.log(storedCaptchas);
 
       if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
         response = {
