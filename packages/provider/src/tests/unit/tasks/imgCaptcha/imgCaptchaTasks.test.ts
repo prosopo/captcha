@@ -348,11 +348,12 @@ describe("ImgCaptchaManager", () => {
 
   it("should get dapp user commitment by account", async () => {
     const userAccount = "userAccount";
+    const dappAccount = "dappAccount";
     const dappUserCommitments: UserCommitmentRecord[] = [
       {
         id: "commitmentId",
-        userAccount: "userAccount",
-        dappAccount: "dappAccount",
+        userAccount,
+        dappAccount,
         providerAccount: "providerAccount",
         datasetId: "datasetId",
         status: CaptchaStatus.approved,
@@ -371,22 +372,27 @@ describe("ImgCaptchaManager", () => {
       dappUserCommitments,
     );
 
-    const result =
-      await imgCaptchaManager.getDappUserCommitmentByAccount(userAccount);
+    const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
+      userAccount,
+      dappAccount,
+    );
 
     expect(result).toEqual(dappUserCommitments[0]);
   });
 
   it("should return undefined if no approved dapp user commitment is found by account", async () => {
     const userAccount = "userAccount";
+    const dappAccount = "dappAccount";
     const dappUserCommitments: UserCommitmentRecord[] = [];
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getDappUserCommitmentByAccount as any).mockResolvedValue(
       dappUserCommitments,
     );
 
-    const result =
-      await imgCaptchaManager.getDappUserCommitmentByAccount(userAccount);
+    const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
+      userAccount,
+      dappAccount,
+    );
 
     expect(result).toBeUndefined();
   });

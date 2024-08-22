@@ -92,12 +92,12 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 
   public verifyDappUser(
     token: ProcaptchaToken,
-    dappUserSignature: string,
+    signature: string,
     maxVerifiedTime?: number,
   ): Promise<ImageVerificationResponse> {
     const payload: VerifySolutionBodyTypeInput = {
       [ApiParams.token]: token,
-      [ApiParams.dappUserSignature]: dappUserSignature,
+      [ApiParams.dappSignature]: signature,
     };
     if (maxVerifiedTime) {
       payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
@@ -113,7 +113,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
   ): Promise<ImageVerificationResponse> {
     const payload: VerifySolutionBodyTypeInput = {
       [ApiParams.token]: token,
-      [ApiParams.dappUserSignature]: dappUserSignature,
+      [ApiParams.dappSignature]: dappUserSignature,
       ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
     };
 
