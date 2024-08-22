@@ -195,6 +195,7 @@ export interface PendingCaptchaRequest {
   [ApiParams.requestHash]: string;
   deadlineTimestamp: number; // unix timestamp
   requestedAtBlock: number; // expected block number
+  ipAddress: string;
 }
 
 export interface ProviderRegistered {

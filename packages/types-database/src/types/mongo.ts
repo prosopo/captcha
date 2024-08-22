@@ -219,6 +219,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
   requestHash: { type: String, required: true },
   deadlineTimestamp: { type: Number, required: true }, // unix timestamp
   requestedAtBlock: { type: Number, required: true },
+  ipAddress: { type: String, required: true },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -302,6 +303,7 @@ export interface Database {
     salt: string,
     deadlineTimestamp: number,
     requestedAtBlock: number,
+    ipAddress: string,
   ): Promise<void>;
 
   getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;

@@ -77,6 +77,7 @@ export class ImgCaptchaManager {
   async getRandomCaptchasAndRequestHash(
     datasetId: string,
     userAccount: string,
+    ipAddress: string,
   ): Promise<{
     captchas: Captcha[];
     requestHash: string;
@@ -140,6 +141,7 @@ export class ImgCaptchaManager {
       salt,
       deadlineTs,
       currentBlockNumber,
+      ipAddress,
     );
     return {
       captchas,
@@ -210,6 +212,11 @@ export class ImgCaptchaManager {
     };
 
     const pendingRecord = await this.db.getDappUserPending(requestHash);
+
+    if (pendingRecord.ipAddress !== ipAddress) {
+      return response;
+    }
+
     const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
     const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
       requestHash,
@@ -217,7 +224,6 @@ export class ImgCaptchaManager {
       userAccount,
       unverifiedCaptchaIds,
     );
-    console.log("Pending request", pendingRequest);
     if (pendingRequest) {
       const { storedCaptchas, receivedCaptchas, captchaIds } =
         await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);

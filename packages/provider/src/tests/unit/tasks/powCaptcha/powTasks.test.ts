@@ -109,7 +109,7 @@ describe("PowCaptchaManager", () => {
         userChecked: false,
         serverChecked: false,
         storedExternally: false,
-        ipAddress: "IPAddress",
+        ipAddress,
         providerSignature,
       };
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -122,6 +122,8 @@ describe("PowCaptchaManager", () => {
       (db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
         challengeRecord,
       );
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (db.updatePowCaptchaRecord as any).mockResolvedValue(true);
 
       const verifyPowCaptchaSolutionArgs: Parameters<
         typeof powCaptchaManager.verifyPowCaptchaSolution

@@ -148,7 +148,7 @@ describe("ImgCaptchaManager", () => {
       const datasetId = "datasetId";
       const userAccount = "userAccount";
       const dataset = { datasetId, captchas: [] };
-
+      const ipAddress = "0.0.0.0";
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -161,6 +161,7 @@ describe("ImgCaptchaManager", () => {
       const result = await imgCaptchaManager.getRandomCaptchasAndRequestHash(
         datasetId,
         userAccount,
+        ipAddress,
       );
 
       expect(result).toEqual({
@@ -174,6 +175,8 @@ describe("ImgCaptchaManager", () => {
     it("should throw an error if dataset details are not found", async () => {
       const datasetId = "datasetId";
       const userAccount = "userAccount";
+      const ipAddress = "0.0.0.0";
+
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getDatasetDetails as any).mockResolvedValue(null);
 
@@ -181,6 +184,7 @@ describe("ImgCaptchaManager", () => {
         imgCaptchaManager.getRandomCaptchasAndRequestHash(
           datasetId,
           userAccount,
+          ipAddress,
         ),
       ).rejects.toThrow(
         new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {

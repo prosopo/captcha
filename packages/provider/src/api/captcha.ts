@@ -65,6 +65,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
           await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
             datasetId,
             user,
+            req.ip || NO_IP_ADDRESS,
           );
         const captchaResponse: CaptchaResponseBody = {
           captchas: taskData.captchas.map((captcha: Captcha) => ({
