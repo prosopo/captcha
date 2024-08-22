@@ -58,7 +58,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
   ) {
     const parsed = VerifySolutionBody.parse(req.body);
     try {
-      const { dappUserSignature, token } = parsed;
+      const { dappSignature, token } = parsed;
       const { user, dapp, blockNumber, commitmentId } =
         decodeProcaptchaOutput(token);
 
@@ -68,11 +68,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         : env.keyring.addFromAddress(user);
 
       // Will throw an error if the signature is invalid
-      verifySignature(dappUserSignature, blockNumber.toString(), keyPair);
+      verifySignature(dappSignature, blockNumber.toString(), keyPair);
 
       const solution = await (commitmentId
         ? tasks.imgCaptchaManager.getDappUserCommitmentById(commitmentId)
-        : tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user));
+        : tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user, dapp));
 
       // No solution exists
       if (!solution) {
@@ -85,7 +85,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
       }
 
       // Mark solution as checked
-      if (isDapp) {
+      if (isDapp && !solution.serverChecked) {
         await tasks.imgCaptchaManager.db.markDappUserCommitmentsChecked([
           solution.id,
         ]);

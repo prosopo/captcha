@@ -179,7 +179,7 @@ export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
 
 export const VerifySolutionBody = object({
   [ApiParams.token]: ProcaptchaTokenSpec,
-  [ApiParams.dappUserSignature]: string(),
+  [ApiParams.dappSignature]: string(),
   [ApiParams.maxVerifiedTime]: number()
     .optional()
     .default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),

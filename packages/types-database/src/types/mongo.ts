@@ -337,7 +337,8 @@ export interface Database {
   ): Promise<UserCommitmentRecord | undefined>;
 
   getDappUserCommitmentByAccount(
-    accountId: string,
+    userAccount: string,
+    dappAccount: string,
   ): Promise<UserCommitmentRecord[]>;
 
   approveDappUserCommitment(commitmentId: string): Promise<void>;

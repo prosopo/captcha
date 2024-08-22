@@ -383,9 +383,12 @@ export class ImgCaptchaManager {
   /* Check if dapp user has verified solution in cache */
   async getDappUserCommitmentByAccount(
     userAccount: string,
+    dappAccount: string,
   ): Promise<UserCommitmentRecord | undefined> {
-    const dappUserSolutions =
-      await this.db.getDappUserCommitmentByAccount(userAccount);
+    const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
+      userAccount,
+      dappAccount,
+    );
     if (dappUserSolutions.length > 0) {
       for (const dappUserSolution of dappUserSolutions) {
         if (dappUserSolution.status === CaptchaStatus.approved) {

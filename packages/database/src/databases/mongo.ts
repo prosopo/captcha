@@ -687,10 +687,12 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
   }
 
-  /** @description Get checked Dapp User image captcha commitments from the commitments table
+  /** @description Get serverChecked Dapp User image captcha commitments from the commitments table
    */
   async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
-    const docs = await this.tables?.commitment.find({ checked: true }).lean();
+    const docs = await this.tables?.commitment
+      .find({ serverChecked: true })
+      .lean();
     return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
   }
 
@@ -721,7 +723,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
     await this.tables?.commitment.updateMany(
       { id: { $in: commitmentIds } },
-      { $set: { checked: true } },
+      { $set: { serverChecked: true } },
       { upsert: false },
     );
   }
@@ -1012,15 +1014,17 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
   /**
    * @description Get dapp user commitment by user account
-   * @param {string[]} userAccount
+   * @param {string} userAccount
+   * @param {string} dappAccount
    */
   async getDappUserCommitmentByAccount(
     userAccount: string,
+    dappAccount: string,
   ): Promise<UserCommitmentRecord[]> {
     const docs: UserCommitmentRecord[] | null | undefined =
       await this.tables?.commitment
         // sort by most recent first to avoid old solutions being used in development
-        ?.find({ userAccount }, { _id: 0 }, { sort: { _id: -1 } })
+        ?.find({ userAccount, dappAccount }, { _id: 0 }, { sort: { _id: -1 } })
         .lean();
 
     return docs ? (docs as UserCommitmentRecord[]) : [];
