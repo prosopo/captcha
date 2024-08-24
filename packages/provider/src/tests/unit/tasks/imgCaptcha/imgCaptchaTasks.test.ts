@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, stringToHex, u8aToHex } from "@polkadot/util";
-import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
+import { u8aToHex } from "@polkadot/util";
+import { randomAsHex } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
-  compareCaptchaSolutions,
   computePendingRequestHash,
   parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
@@ -26,7 +25,11 @@ import {
   CaptchaStatus,
   type PendingCaptchaRequest,
 } from "@prosopo/types";
-import type { Database, UserCommitmentRecord } from "@prosopo/types-database";
+import {
+  Database,
+  StoredStatusNames,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
@@ -310,13 +313,11 @@ describe("ImgCaptchaManager", () => {
       dappAccount: "dappAccount",
       providerAccount: "providerAccount",
       datasetId: "datasetId",
-      status: CaptchaStatus.approved,
-      userSignature: [],
-      requestedAt: 0,
-      completedAt: 0,
-      userChecked: true,
+      result: { status: CaptchaStatus.approved },
+      userSignature: "",
+      userSubmitted: true,
       serverChecked: false,
-      storedExternally: false,
+      storedStatus: StoredStatusNames.notStored,
       requestedAtTimestamp: 0,
       ipAddress: "0.0.0.0",
     };
@@ -356,13 +357,11 @@ describe("ImgCaptchaManager", () => {
         dappAccount,
         providerAccount: "providerAccount",
         datasetId: "datasetId",
-        status: CaptchaStatus.approved,
-        userSignature: [],
-        requestedAt: 0,
-        completedAt: 0,
-        userChecked: true,
+        result: { status: CaptchaStatus.approved },
+        userSignature: "",
+        userSubmitted: true,
         serverChecked: false,
-        storedExternally: false,
+        storedStatus: StoredStatusNames.notStored,
         requestedAtTimestamp: 0,
         ipAddress: "0.0.0.0",
       },

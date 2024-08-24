@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { u8aToHex } from "@polkadot/util";
-import { stringToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
+import { stringToHex, u8aToHex } from "@polkadot/util";
+import { getLoggerDefault, ProsopoEnvError } from "@prosopo/common";
 import {
   ApiParams,
+  CaptchaResult,
+  CaptchaStatus,
   POW_SEPARATOR,
   type PoWCaptcha,
   PoWChallengeId,
 } from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import { Database, StoredStatusNames } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import {
   checkPowSignature,
   checkPowSolution,
   checkRecentPowSolution,
 } from "./powTasksUtils.js";
-import { getLoggerDefault } from "@prosopo/common";
 
 const logger = getLoggerDefault();
 
@@ -109,7 +109,20 @@ export class PowCaptchaManager {
     );
 
     // Check recency before looking up the record to avoid unnecessary network connections
-    checkRecentPowSolution(challenge, timeout);
+    if (!checkRecentPowSolution(challenge, timeout)) {
+      await this.db.updatePowCaptchaRecord(
+        challenge,
+        {
+          status: CaptchaStatus.disapproved,
+          reason: "CAPTCHA.INVALID_TIMESTAMP",
+        },
+        false,
+        true,
+        StoredStatusNames.userSubmitted,
+        userTimestampSignature,
+      );
+      return false;
+    }
 
     const challengeRecord =
       await this.db.getPowCaptchaRecordByChallenge(challenge);
@@ -123,19 +136,39 @@ export class PowCaptchaManager {
     if (challengeRecord.ipAddress !== ipAddress) {
       // something strange is going on. Require a new captcha
       logger.debug("IP address does not match");
+      await this.db.updatePowCaptchaRecord(
+        challenge,
+        {
+          status: CaptchaStatus.disapproved,
+          reason: "CAPTCHA.IP_ADDRESS_MISMATCH",
+        },
+        false,
+        true,
+        StoredStatusNames.userSubmitted,
+        userTimestampSignature,
+      );
       return false;
     }
 
-    checkPowSolution(nonce, challenge, difficulty);
+    const correct = checkPowSolution(nonce, challenge, difficulty);
+
+    let result: CaptchaResult = { status: CaptchaStatus.approved };
+    if (!correct) {
+      result = {
+        status: CaptchaStatus.disapproved,
+        reason: "CAPTCHA.INVALID_SOLUTION",
+      };
+    }
 
     await this.db.updatePowCaptchaRecord(
       challenge,
+      result,
       false,
       true,
-      false,
+      StoredStatusNames.userSubmitted,
       userTimestampSignature,
     );
-    return true;
+    return correct;
   }
 
   /**
@@ -179,7 +212,13 @@ export class PowCaptchaManager {
 
     checkRecentPowSolution(challenge, timeout);
 
-    await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true);
+    await this.db.updatePowCaptchaRecord(
+      challengeRecord.challenge,
+      { status: CaptchaStatus.approved },
+      true,
+      true,
+      StoredStatusNames.serverChecked,
+    );
     return true;
   }
 }

@@ -34,12 +34,13 @@ export const ChallengeSignatureSchema = object({
 
 export type ChallengeSignature = zInfer<typeof ChallengeSignatureSchema>;
 
-export const ProviderSignatureSchema = object({
+export const SignatureTypesSchema = object({
   [ApiParams.challenge]: string().optional(),
   [ApiParams.requestHash]: string().optional(),
+  [ApiParams.timestamp]: string().optional(),
 });
 
-export type ProviderSignature = zInfer<typeof ProviderSignatureSchema>;
+export type SignatureTypes = zInfer<typeof SignatureTypesSchema>;
 
 export const ProcaptchaOutputSchema = object({
   [ApiParams.commitmentId]: string().optional(),
@@ -51,8 +52,8 @@ export const ProcaptchaOutputSchema = object({
   [ApiParams.nonce]: number().optional(),
   [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
-    [ApiParams.provider]: ProviderSignatureSchema,
-    [ApiParams.user]: TimestampSignatureSchema.optional(),
+    [ApiParams.provider]: SignatureTypesSchema,
+    [ApiParams.user]: SignatureTypesSchema,
   }),
 });
 
@@ -80,11 +81,10 @@ export const ProcaptchaTokenCodec = Struct({
       [ApiParams.challenge]: Option(str),
       [ApiParams.requestHash]: Option(str),
     }),
-    [ApiParams.user]: Option(
-      Struct({
-        [ApiParams.timestamp]: Option(str),
-      }),
-    ),
+    [ApiParams.user]: Struct({
+      [ApiParams.timestamp]: Option(str),
+      [ApiParams.requestHash]: Option(str),
+    }),
   }),
 });
 
@@ -112,6 +112,8 @@ export const encodeProcaptchaOutput = (
         },
         user: {
           timestamp: procaptchaOutput.signature.user?.timestamp || undefined,
+          requestHash:
+            procaptchaOutput.signature.user?.requestHash || undefined,
         },
       },
     }),

@@ -26,12 +26,16 @@ import {
   type CaptchaConfig,
   type CaptchaSolution,
   CaptchaStatus,
-  DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
   type DappUserSolutionResult,
+  DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
   type Hash,
   type PendingCaptchaRequest,
 } from "@prosopo/types";
-import type { Database, UserCommitmentRecord } from "@prosopo/types-database";
+import {
+  Database,
+  StoredStatusNames,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -240,7 +244,6 @@ export class ImgCaptchaManager {
       }
 
       // Only do stuff if the request is in the local DB
-      const userSignature = hexToU8a(userRequestHashSignature);
       // prevent this request hash from being used twice
       await this.db.updateDappUserPendingStatus(requestHash);
       const commit: UserCommitmentRecord = {
@@ -249,13 +252,11 @@ export class ImgCaptchaManager {
         dappAccount,
         providerAccount: this.pair.address,
         datasetId,
-        status: CaptchaStatus.pending,
-        userSignature: Array.from(userSignature),
-        requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
-        completedAt: 0, //temp
-        userChecked: true,
+        result: { status: CaptchaStatus.pending },
+        userSignature: userRequestHashSignature,
+        userSubmitted: true,
         serverChecked: false,
-        storedExternally: false,
+        storedStatus: StoredStatusNames.userSubmitted,
         requestedAtTimestamp: timestamp,
         ipAddress,
       };
@@ -271,6 +272,10 @@ export class ImgCaptchaManager {
         };
         await this.db.approveDappUserCommitment(commitmentId);
       } else {
+        await this.db.disapproveDappUserCommitment(
+          commitmentId,
+          "CAPTCHA.INVALID_SOLUTION",
+        );
         response = {
           captchas: captchaIds.map((id) => ({
             captchaId: id,
@@ -391,7 +396,7 @@ export class ImgCaptchaManager {
     );
     if (dappUserSolutions.length > 0) {
       for (const dappUserSolution of dappUserSolutions) {
-        if (dappUserSolution.status === CaptchaStatus.approved) {
+        if (dappUserSolution.result.status === CaptchaStatus.approved) {
           return dappUserSolution;
         }
       }

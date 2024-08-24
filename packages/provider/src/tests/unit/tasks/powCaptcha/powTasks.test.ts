@@ -15,8 +15,17 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoEnvError } from "@prosopo/common";
-import { ApiParams, POW_SEPARATOR, PoWChallengeId } from "@prosopo/types";
-import { Database, PoWCaptchaStored } from "@prosopo/types-database";
+import {
+  ApiParams,
+  CaptchaStatus,
+  POW_SEPARATOR,
+  PoWChallengeId,
+} from "@prosopo/types";
+import {
+  Database,
+  PoWCaptchaStored,
+  StoredStatusNames,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
@@ -106,9 +115,10 @@ describe("PowCaptchaManager", () => {
         dappAccount: pair.address,
         userAccount,
         requestedAtTimestamp,
-        userChecked: false,
+        result: { status: CaptchaStatus.pending },
+        userSubmitted: false,
         serverChecked: false,
-        storedExternally: false,
+        storedStatus: StoredStatusNames.notStored,
         ipAddress,
         providerSignature,
       };
@@ -180,7 +190,14 @@ describe("PowCaptchaManager", () => {
 
       const updatePowCaptchaRecordArgs: Parameters<
         typeof db.updatePowCaptchaRecord
-      > = [challenge, false, true, false, userSignature];
+      > = [
+        challenge,
+        { status: CaptchaStatus.approved },
+        false,
+        true,
+        StoredStatusNames.userSubmitted,
+        userSignature,
+      ];
 
       expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
         ...updatePowCaptchaRecordArgs,

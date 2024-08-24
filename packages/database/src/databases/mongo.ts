@@ -14,13 +14,15 @@
 import { isHex } from "@polkadot/util/is";
 import {
   AsyncFactory,
+  getLoggerDefault,
   type Logger,
   ProsopoDBError,
   ProsopoEnvError,
-  getLoggerDefault,
+  TranslationKey,
 } from "@prosopo/common";
 import {
   type Captcha,
+  CaptchaResult,
   type CaptchaSolution,
   CaptchaStates,
   CaptchaStatus,
@@ -48,6 +50,8 @@ import {
   ScheduledTaskSchema,
   type SolutionRecord,
   SolutionRecordSchema,
+  StoredStatus,
+  StoredStatusNames,
   type Tables,
   type UserCommitmentRecord,
   UserCommitmentRecordSchema,
@@ -58,7 +62,6 @@ import {
 } from "@prosopo/types-database";
 import { type DeleteResult, ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
-import { boolean, number, string } from "zod";
 
 mongoose.set("strictQuery", false);
 
@@ -510,8 +513,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    * @param providerSignature
    * @param ipAddress
    * @param serverChecked
-   * @param userChecked
-   * @param storedExternally
+   * @param userSubmitted
+   * @param storedStatus
    * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is added.
    */
@@ -522,8 +525,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     providerSignature: string,
     ipAddress: string,
     serverChecked: boolean = false,
-    userChecked: boolean = false,
-    storedExternally: boolean = false,
+    userSubmitted: boolean = false,
+    storedStatus: StoredStatus = StoredStatusNames.notStored,
     userSignature?: string,
   ): Promise<void> {
     const tables = this.getTables();
@@ -532,9 +535,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       challenge,
       ...components,
       ipAddress,
-      userChecked,
+      result: { status: CaptchaStatus.pending },
+      userSubmitted,
       serverChecked,
-      storedExternally,
+      storedStatus,
       difficulty,
       providerSignature,
       userSignature,
@@ -544,25 +548,25 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await tables.powCaptcha.create(powCaptchaRecord);
       this.logger.info("PowCaptcha record added successfully", {
         challenge,
-        userChecked,
+        userSubmitted,
         serverChecked,
-        storedExternally,
+        storedStatus,
       });
     } catch (error) {
       this.logger.error("Failed to add PowCaptcha record", {
         error,
         challenge,
-        userChecked,
+        userSubmitted,
         serverChecked,
-        storedExternally,
+        storedStatus,
       });
       throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
         context: {
           error,
           challenge,
-          userChecked,
+          userSubmitted,
           serverChecked,
-          storedExternally,
+          storedStatus,
         },
         logger: this.logger,
       });
@@ -610,24 +614,27 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /**
    * @description Updates a PoW Captcha record in the database.
    * @param {string} challenge The challenge string of the captcha to be updated.
+   * @param result
    * @param serverChecked
-   * @param userChecked
-   * @param storedExternally
+   * @param userSubmitted
+   * @param storedStatus
    * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is updated.
    */
   async updatePowCaptchaRecord(
     challenge: PoWChallengeId,
+    result: CaptchaResult,
     serverChecked: boolean = false,
-    userChecked: boolean = false,
-    storedExternally: boolean = false,
+    userSubmitted: boolean = false,
+    storedStatus: StoredStatusNames = StoredStatusNames.notStored,
     userSignature?: string,
   ): Promise<void> {
     const tables = this.getTables();
     const update = {
+      result,
       serverChecked,
-      userChecked,
-      storedExternally,
+      userSubmitted,
+      storedStatus,
       userSignature,
     };
     try {
@@ -1039,7 +1046,31 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await this.tables?.commitment
         ?.findOneAndUpdate(
           { id: commitmentId },
-          { $set: { status: CaptchaStatus.approved } },
+          { $set: { result: { status: CaptchaStatus.approved } } },
+          { upsert: false },
+        )
+        .lean();
+    } catch (err) {
+      throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
+        context: { error: err, commitmentId },
+      });
+    }
+  }
+
+  /**
+   * @description Disapprove a dapp user's solution
+   * @param {string} commitmentId
+   * @param reason
+   */
+  async disapproveDappUserCommitment(
+    commitmentId: string,
+    reason?: TranslationKey,
+  ): Promise<void> {
+    try {
+      await this.tables?.commitment
+        ?.findOneAndUpdate(
+          { id: commitmentId },
+          { $set: { result: { status: CaptchaStatus.disapproved, reason } } },
           { upsert: false },
         )
         .lean();

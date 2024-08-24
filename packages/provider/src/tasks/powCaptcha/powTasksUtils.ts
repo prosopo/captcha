@@ -31,19 +31,8 @@ export const checkPowSolution = (
   nonce: number,
   challenge: string,
   difficulty: number,
-): void => {
-  const solutionValid = validateSolution(nonce, challenge, difficulty);
-  if (!solutionValid) {
-    throw new ProsopoContractError("API.CAPTCHA_FAILED", {
-      context: {
-        ERROR: "Captcha solution is invalid",
-        failedFuncName: checkPowSolution.name,
-        nonce,
-        challenge,
-        difficulty,
-      },
-    });
-  }
+): boolean => {
+  return validateSolution(nonce, challenge, difficulty);
 };
 
 export const checkPowSignature = (
@@ -72,15 +61,6 @@ export const checkPowSignature = (
 export const checkRecentPowSolution = (
   challenge: string,
   timeout: number,
-): void => {
-  const recent = verifyRecency(challenge, timeout);
-  if (!recent) {
-    throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
-      context: {
-        ERROR: `Timestamp in which the Provider was selected must be within the last ${timeout / 1000} seconds`,
-        failedFuncName: checkRecentPowSolution.name,
-        challenge,
-      },
-    });
-  }
+): boolean => {
+  return verifyRecency(challenge, timeout);
 };

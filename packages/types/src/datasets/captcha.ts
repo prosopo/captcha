@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { u32 } from "@polkadot/types-codec/primitive";
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
 import {
   array,
@@ -24,6 +23,8 @@ import {
   type infer as zInfer,
   undefined as zUndefined,
 } from "zod";
+import { TranslationKey } from "@prosopo/common";
+import { RequestHashSignature } from "../procaptcha/index.js";
 
 export enum CaptchaTypes {
   SelectAll = "SelectAll",
@@ -42,9 +43,7 @@ export type Item = zInfer<typeof CaptchaItemSchema>;
 export type HashedItem = zInfer<typeof HashedCaptchaItemSchema>;
 export type LabelledItem = zInfer<typeof LabelledItemSchema>;
 export type Data = zInfer<typeof DataSchema>;
-export type LabelledData = zInfer<typeof LabelledDataSchema>;
 export type CaptchasContainer = zInfer<typeof CaptchasContainerSchema>;
-export type LabelsContainer = zInfer<typeof LabelsContainerSchema>;
 
 export interface Captchas {
   captchas: CaptchaWithoutId[];
@@ -65,13 +64,6 @@ export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
   // INCORRECT items are any missing from the solution and unlabelled arrays!
 }
 
-export type CaptchaSolutionToUpdate = {
-  captchaId: string;
-  captchaContentId: string;
-  salt: string;
-  solution: HashedSolution[];
-};
-
 export interface Captcha extends CaptchaWithoutId {
   captchaId: string;
   captchaContentId: string;
@@ -80,30 +72,28 @@ export interface Captcha extends CaptchaWithoutId {
   datasetContentId?: string;
 }
 
-//temp
+export interface CaptchaResult {
+  status: CaptchaStatus;
+  reason?: TranslationKey;
+}
+
 export enum CaptchaStatus {
   pending = "Pending",
   approved = "Approved",
   disapproved = "Disapproved",
 }
 
-//temp
 type Hash = string | number[];
 
-//temp
 export type Commit = {
   id: Hash;
   userAccount: string;
   datasetId: Hash;
-  status: CaptchaStatus;
   dappAccount: string;
   providerAccount: string;
-  requestedAt: number;
-  completedAt: number;
-  userSignature: Array<number>;
+  userSignature: string;
 };
 
-//temp
 export enum GovernanceStatus {
   active = "Active",
   inactive = "Inactive",

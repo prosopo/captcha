@@ -65,7 +65,6 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     captchas: CaptchaSolution[],
     requestHash: string,
     userAccount: string,
-    salt: string,
     timestamp: string,
     providerRequestHashSignature: string,
     userRequestHashSignature: string,

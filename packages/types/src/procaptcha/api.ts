@@ -32,10 +32,9 @@ export interface ProsopoCaptchaApiInterface {
   web2: boolean;
   getCaptchaChallenge(): Promise<CaptchaResponseBody>;
   submitCaptchaSolution(
-    signer: Signer,
+    userRequestHashSignature: string,
     requestHash: string,
     solutions: CaptchaSolution[],
-    salt: string,
     timestamp: string,
     providerRequestHashSignature: string,
   ): Promise<TCaptchaSubmitResult>;

@@ -100,7 +100,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
       }
 
       // A solution exists but is disapproved
-      if (solution.status === CaptchaStatus.disapproved) {
+      if (solution.result.status === CaptchaStatus.disapproved) {
         const disapprovedResponse: VerificationResponse = {
           [ApiParams.status]: req.t("API.USER_NOT_VERIFIED"),
           [ApiParams.verified]: false,
@@ -126,14 +126,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         }
       }
 
-      const isApproved = solution.status === CaptchaStatus.approved;
+      const isApproved = solution.result.status === CaptchaStatus.approved;
       const response: ImageVerificationResponse = {
         [ApiParams.status]: req.t(
           isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
         ),
         [ApiParams.verified]: isApproved,
         [ApiParams.commitmentId]: solution.id.toString(),
-        [ApiParams.blockNumber]: solution.requestedAt,
       };
       return res.json(response);
     } catch (err) {

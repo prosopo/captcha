@@ -35,7 +35,7 @@ import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
 
-const NO_IP_ADDRESS = "NO_IP_ADDRESS";
+const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

@@ -209,8 +209,6 @@ export interface VerificationResponse {
 
 export interface ImageVerificationResponse extends VerificationResponse {
   [ApiParams.commitmentId]?: Hash;
-  // The block at which the captcha was requested
-  [ApiParams.blockNumber]?: number;
 }
 
 export interface GetPowCaptchaResponse {

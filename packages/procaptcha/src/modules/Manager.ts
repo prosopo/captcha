@@ -43,6 +43,7 @@ import { at, hashToHex } from "@prosopo/util";
 import { sleep } from "../utils/utils.js";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
 import storage from "./storage.js";
+import { stringToHex } from "@polkadot/util/string";
 
 const defaultState = (): Partial<ProcaptchaState> => {
   return {
@@ -274,13 +275,27 @@ export function Manager(
         });
       }
 
+      if (!signer || !signer.signRaw) {
+        throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+          context: {
+            error:
+              "Signer is not defined, cannot sign message to prove account ownership",
+          },
+        });
+      }
+
+      const userRequestHashSignature = await signer.signRaw({
+        address: account.account.address,
+        data: stringToHex(challenge.requestHash),
+        type: "bytes",
+      });
+
       // send the commitment to the provider
       const submission: TCaptchaSubmitResult =
         await captchaApi.submitCaptchaSolution(
-          signer,
+          userRequestHashSignature.signature,
           challenge.requestHash,
           captchaSolution,
-          salt,
           challenge.timestamp,
           challenge.signature.provider.requestHash,
         );
@@ -319,6 +334,9 @@ export function Manager(
               [ApiParams.provider]: {
                 [ApiParams.requestHash]:
                   challenge.signature.provider.requestHash,
+              },
+              [ApiParams.user]: {
+                [ApiParams.requestHash]: userRequestHashSignature.signature,
               },
             },
           }),

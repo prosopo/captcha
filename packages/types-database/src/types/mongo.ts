@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
+import { Logger, TranslationKey } from "@prosopo/common";
 import {
   type Captcha,
+  CaptchaResult,
   type CaptchaSolution,
   CaptchaSolutionSchema,
   type CaptchaStates,
@@ -27,6 +28,8 @@ import {
   PoWCaptchaUser,
   PoWChallengeComponents,
   PoWChallengeId,
+  RequestHashSignature,
+  Timestamp,
 } from "@prosopo/types";
 import type { Hash } from "@prosopo/types";
 import type { PendingCaptchaRequest } from "@prosopo/types";
@@ -48,24 +51,41 @@ import {
   object,
   string,
   type infer as zInfer,
+  literal,
+  union,
 } from "zod";
 
-export interface UserCommitmentRecord
-  extends Omit<Commit, "userSignaturePart1" | "userSignaturePart2"> {
-  ipAddress: string;
-  userSignature: number[];
-  userChecked: boolean;
-  serverChecked: boolean;
-  storedExternally?: boolean;
-  requestedAtTimestamp: number;
+export enum StoredStatusNames {
+  notStored = "notStored",
+  userSubmitted = "userSubmitted",
+  serverChecked = "serverChecked",
+  stored = "stored",
 }
 
-export interface PoWCaptchaStored extends PoWCaptchaUser {
+export type StoredStatus =
+  | StoredStatusNames.notStored
+  | StoredStatusNames.userSubmitted
+  | StoredStatusNames.serverChecked
+  | StoredStatusNames.stored;
+
+export interface StoredCaptcha {
+  result: {
+    status: CaptchaStatus;
+    reason?: string;
+    error?: string;
+  };
+  requestedAtTimestamp: Timestamp;
   ipAddress: string;
-  userChecked: boolean;
+  userSubmitted: boolean;
   serverChecked: boolean;
-  storedExternally: boolean;
+  storedStatus: StoredStatus;
 }
+
+export interface UserCommitmentRecord extends Commit, StoredCaptcha {
+  userSignature: string;
+}
+
+export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
 
 export const UserCommitmentSchema = object({
   userAccount: string(),
@@ -73,14 +93,23 @@ export const UserCommitmentSchema = object({
   datasetId: string(),
   providerAccount: string(),
   id: string(),
-  status: nativeEnum(CaptchaStatus),
-  userSignature: array(number()),
+  result: object({
+    status: nativeEnum(CaptchaStatus),
+    reason: string().optional(),
+    error: string().optional(),
+  }),
+  userSignature: string(),
   completedAt: number(),
   requestedAt: number(),
   ipAddress: string(),
-  userChecked: boolean(),
+  userSubmitted: boolean(),
   serverChecked: boolean(),
-  storedExternally: boolean().optional(),
+  storedStatus: union([
+    literal(StoredStatusNames.notStored),
+    literal(StoredStatusNames.userSubmitted),
+    literal(StoredStatusNames.serverChecked),
+    literal(StoredStatusNames.stored),
+  ]),
   requestedAtTimestamp: number(),
 }) satisfies ZodType<UserCommitmentRecord>;
 
@@ -133,12 +162,17 @@ export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   dappAccount: { type: String, required: true },
   userAccount: { type: String, required: true },
   requestedAtTimestamp: { type: Number, required: true },
+  result: {
+    status: { type: String, enum: CaptchaStatus, required: true },
+    reason: { type: String, required: false },
+    error: { type: String, required: false },
+  },
   difficulty: { type: Number, required: true },
   ipAddress: { type: String, required: true },
   userSignature: { type: String, required: false },
-  userChecked: { type: Boolean, required: true },
+  userSubmitted: { type: Boolean, required: true },
   serverChecked: { type: Boolean, required: true },
-  storedExternally: { type: Boolean, required: true },
+  storedStatus: { type: String, enum: StoredStatusNames, required: true },
 });
 
 // Set an index on the captchaId field, ascending
@@ -150,13 +184,16 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   providerAccount: { type: String, required: true },
   datasetId: { type: String, required: true },
   id: { type: String, required: true },
-  status: { type: String, required: true },
-  requestedAt: { type: Number, required: true },
-  completedAt: { type: Number, required: true },
+  result: {
+    status: { type: String, enum: CaptchaStatus, required: true },
+    reason: { type: String, required: false },
+    error: { type: String, required: false },
+  },
   ipAddress: { type: String, required: true },
-  userSignature: { type: [Number], required: true },
+  userSignature: { type: String, required: true },
+  userSubmitted: { type: Boolean, required: true },
   serverChecked: { type: Boolean, required: true },
-  storedExternally: { type: Boolean, required: false },
+  storedStatus: { type: String, enum: StoredStatusNames, required: false },
   requestedAtTimestamp: { type: Number, required: true },
 });
 // Set an index on the commitment id field, descending
@@ -241,7 +278,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
   taskId: { type: String, required: true },
   processName: { type: String, enum: ScheduledTaskNames, required: true },
   datetime: { type: Date, required: true },
-  status: { type: String, enum: ScheduledTaskStatus, require: true },
   result: {
     type: new Schema<ScheduledTaskResult>(
       {
@@ -343,6 +379,11 @@ export interface Database {
 
   approveDappUserCommitment(commitmentId: string): Promise<void>;
 
+  disapproveDappUserCommitment(
+    commitmentId: string,
+    reason?: TranslationKey,
+  ): Promise<void>;
+
   removeProcessedDappUserSolutions(
     commitmentIds: Hash[],
   ): Promise<DeleteResult | undefined>;
@@ -395,8 +436,8 @@ export interface Database {
     providerSignature: string,
     ipAddress: string,
     serverChecked?: boolean,
-    userChecked?: boolean,
-    storedExternally?: boolean,
+    userSubmitted?: boolean,
+    storedStatus?: StoredStatus,
     userSignature?: string,
   ): Promise<void>;
 
@@ -406,9 +447,10 @@ export interface Database {
 
   updatePowCaptchaRecord(
     challenge: PoWChallengeId,
-    serverChecked?: boolean,
-    userChecked?: boolean,
-    storedExternally?: boolean,
+    result: CaptchaResult,
+    serverChecked: boolean,
+    userSubmitted: boolean,
+    storedStatus: StoredStatusNames,
     userSignature?: string,
   ): Promise<void>;
 }

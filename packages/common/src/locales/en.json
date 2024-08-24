@@ -120,7 +120,9 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
 		"INVALID_PROVIDER_URL": "Invalid provider url",
 		"NO_CAPTCHA": "No captcha found",
-		"INVALID_TOKEN": "Invalid token"
+		"INVALID_TOKEN": "Invalid token",
+		"IP_ADDRESS_MISMATCH": "IP address mismatch",
+		"INVALID_SOLUTION": "Invalid solution"
 	},
 	"API": {
 		"BODY_UNDEFINED": "Body must be defined in API POST call",
