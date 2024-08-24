@@ -11,22 +11,6 @@ services:
         tty: true
         depends_on:
             - database
-            - substrate
-        networks:
-            - internal
-            - external
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-    substrate:
-        image: prosopo/substrate-contracts-node:v0.35
-        ports:
-            - '9615:9615'
-            - '9944:9944'
-            - '9933:9933'
-            - '30333:30333'
         networks:
             - internal
             - external

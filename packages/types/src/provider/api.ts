@@ -99,7 +99,6 @@ export type FrontendProvider = Omit<Provider, "url"> & { url: string };
 export type RandomProvider = {
   providerAccount: string;
   provider: FrontendProvider;
-  blockNumber: number;
 };
 
 type RateLimitSchemaType = ZodObject<{

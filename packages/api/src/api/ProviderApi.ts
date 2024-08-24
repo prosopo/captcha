@@ -22,7 +22,6 @@ import {
   type GetPowCaptchaChallengeRequestBodyType,
   type GetPowCaptchaResponse,
   type ImageVerificationResponse,
-  type NetworkConfig,
   type PowCaptchaSolutionResponse,
   type ProcaptchaToken,
   type Provider,
@@ -37,15 +36,13 @@ import {
 import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi extends HttpClientBase implements ProviderApi {
-  private network: NetworkConfig;
   private account: string;
 
-  constructor(network: NetworkConfig, providerUrl: string, account: string) {
+  constructor(providerUrl: string, account: string) {
     const providerUrlWithProtocol = !providerUrl.startsWith("http")
       ? `https://${providerUrl}`
       : providerUrl;
     super(providerUrlWithProtocol);
-    this.network = network;
     this.account = account;
   }
 
@@ -53,11 +50,10 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     userAccount: string,
     randomProvider: RandomProvider,
   ): Promise<CaptchaResponseBody> {
-    const { provider, blockNumber } = randomProvider;
+    const { provider } = randomProvider;
     const dappAccount = this.account;
-    const url = `${ApiPaths.GetImageCaptchaChallenge}/${
-      provider.datasetId
-    }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, "")}`;
+    const url = `${ApiPaths.GetImageCaptchaChallenge}/${provider.datasetId
+      }/${userAccount}/${dappAccount}`;
     return this.fetch(url);
   }
 

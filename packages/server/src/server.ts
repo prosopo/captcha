@@ -20,59 +20,46 @@ import {
   type Logger,
   ProsopoApiError,
   ProsopoContractError,
-  ProsopoEnvError,
   getLogger,
 } from "@prosopo/common";
 import {
   type CaptchaTimeoutOutput,
-  ContractAbi,
-  type NetworkConfig,
-  NetworkNamesSchema,
   ProcaptchaOutputSchema,
   type ProcaptchaToken,
   type ProsopoServerConfigOutput,
 } from "@prosopo/types";
 import { decodeProcaptchaOutput } from "@prosopo/types";
-import { get } from "@prosopo/util";
 
 export class ProsopoServer {
   config: ProsopoServerConfigOutput;
-  prosopoContractAddress: string;
   dappAccount: string | undefined;
   defaultEnvironment: string;
-  contractName: string;
   logger: Logger;
   keyring: Keyring;
   pair: KeyringPair | undefined;
-  network: NetworkConfig;
 
   constructor(config: ProsopoServerConfigOutput, pair?: KeyringPair) {
     this.config = config;
     this.pair = pair;
     this.defaultEnvironment = this.config.defaultEnvironment;
-    const networkName = NetworkNamesSchema.parse(this.config.defaultNetwork);
-    this.network = get(this.config.networks, networkName);
-    this.prosopoContractAddress = this.network.contract.address;
     this.dappAccount = this.config.account.address;
-    this.contractName = this.network.contract.name;
     this.logger = getLogger(
       this.config.logLevel as unknown as LogLevel,
       "@prosopo/server",
     );
     this.keyring = new Keyring({
-      type: "sr25519", // TODO get this from the chain
+      type: "sr25519",
     });
   }
 
   getProviderApi(providerUrl: string): ProviderApi {
-    return new ProviderApi(this.network, providerUrl, this.dappAccount || "");
+    return new ProviderApi(providerUrl, this.dappAccount || "");
   }
 
   /**
    * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
    * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
    * @param token
-   * @param blockNumber
    * @param timeouts
    * @param providerUrl
    * @param timestamp
@@ -80,15 +67,13 @@ export class ProsopoServer {
    */
   public async verifyProvider(
     token: string,
-    blockNumber: number,
     timeouts: CaptchaTimeoutOutput,
     providerUrl: string,
     timestamp: number,
     challenge?: string,
   ) {
     this.logger.info("Verifying with provider.");
-    const blockNumberString = blockNumber.toString();
-    const dappUserSignature = this.pair?.sign(blockNumberString);
+    const dappUserSignature = this.pair?.sign(timestamp.toString());
     if (!dappUserSignature) {
       throw new ProsopoContractError("CAPTCHA.INVALID_BLOCK_NO", {
         context: { error: "Block number not found" },
@@ -138,13 +123,12 @@ export class ProsopoServer {
 
     const payload = decodeProcaptchaOutput(token);
 
-    const { providerUrl, blockNumber, challenge, timestamp } =
+    const { providerUrl, challenge, timestamp } =
       ProcaptchaOutputSchema.parse(payload);
 
     if (providerUrl) {
       return await this.verifyProvider(
         token,
-        blockNumber,
         this.config.timeouts,
         providerUrl,
         Number(timestamp),

@@ -21,8 +21,7 @@ dotenv.config();
 
 async function main() {
   const config = defaultConfig();
-  const network = config.networks[config.defaultNetwork];
-  const pair = await getPairAsync(network, "//Alice");
+  const pair = await getPairAsync("//Alice");
   const env = new ProviderEnvironment(defaultConfig(), pair);
   await env.isReady();
   const tasks = new Tasks(env);

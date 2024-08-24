@@ -26,16 +26,15 @@ const log = getLogger(LogLevel.enum.info, "CLI");
 async function main() {
   const envPath = loadEnv();
 
-  // quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-  const config: ProsopoConfigOutput = getConfig(
-    undefined,
-    undefined,
-    undefined,
-    {
-      solved: { count: 2 },
-      unsolved: { count: 0 },
-    },
-  );
+	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
+	const config: ProsopoConfigOutput = getConfig(
+		undefined,
+		undefined,
+		{
+			solved: { count: 2 },
+			unsolved: { count: 0 },
+		},
+	);
 
   if (config.devOnlyWatchEvents) {
     log.warn(
@@ -47,11 +46,10 @@ async function main() {
     );
   }
 
-  const pair = await getPairAsync(
-    config.networks[config.defaultNetwork],
-    config.account.secret,
-    config.account.address,
-  );
+	const pair = await getPairAsync(
+		config.account.secret,
+		config.account.address,
+	);
 
   log.info(`Pair address: ${pair.address}`);
 
