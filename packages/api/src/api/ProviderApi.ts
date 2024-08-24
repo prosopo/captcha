@@ -30,6 +30,7 @@ import {
   type ServerPowCaptchaVerifyRequestBodyType,
   type StoredEvents,
   SubmitPowCaptchaSolutionBody,
+  TGetImageCaptchaChallengePathAndParams,
   type VerificationResponse,
   type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
@@ -52,8 +53,9 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
   ): Promise<CaptchaResponseBody> {
     const { provider } = randomProvider;
     const dappAccount = this.account;
-    const url = `${ApiPaths.GetImageCaptchaChallenge}/${provider.datasetId
-      }/${userAccount}/${dappAccount}`;
+    const url: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/${
+      provider.datasetId
+    }/${userAccount}/${dappAccount}`;
     return this.fetch(url);
   }
 

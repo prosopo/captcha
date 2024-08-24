@@ -75,8 +75,8 @@ export class ProsopoServer {
     this.logger.info("Verifying with provider.");
     const dappUserSignature = this.pair?.sign(timestamp.toString());
     if (!dappUserSignature) {
-      throw new ProsopoContractError("CAPTCHA.INVALID_BLOCK_NO", {
-        context: { error: "Block number not found" },
+      throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
+        context: { error: "Timestamp not found" },
       });
     }
     const signatureHex = u8aToHex(dappUserSignature);

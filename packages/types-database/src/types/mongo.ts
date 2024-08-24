@@ -75,6 +75,7 @@ export interface StoredCaptcha {
     error?: string;
   };
   requestedAtTimestamp: Timestamp;
+  deadlineTimestamp?: Timestamp;
   ipAddress: string;
   userSubmitted: boolean;
   serverChecked: boolean;

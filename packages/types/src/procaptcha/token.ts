@@ -16,12 +16,6 @@ import { Option, Struct, str, u32, u64 } from "scale-ts";
 import { bigint, number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
-export const TimestampSignatureSchema = object({
-  [ApiParams.timestamp]: string(),
-});
-
-export type TimestampSignature = zInfer<typeof TimestampSignatureSchema>;
-
 export const RequestHashSignatureSchema = object({
   [ApiParams.requestHash]: string(),
 });
@@ -39,8 +33,6 @@ export const SignatureTypesSchema = object({
   [ApiParams.requestHash]: string().optional(),
   [ApiParams.timestamp]: string().optional(),
 });
-
-export type SignatureTypes = zInfer<typeof SignatureTypesSchema>;
 
 export const ProcaptchaOutputSchema = object({
   [ApiParams.commitmentId]: string().optional(),
