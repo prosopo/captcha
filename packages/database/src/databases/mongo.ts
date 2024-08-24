@@ -786,7 +786,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     requestHash: string,
     salt: string,
     deadlineTimestamp: number,
-    requestedAtBlock: number,
+    requestedAtTimestamp: number,
     ipAddress: string,
   ): Promise<void> {
     if (!isHex(requestHash)) {
@@ -803,7 +803,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       salt,
       requestHash,
       deadlineTimestamp,
-      requestedAtBlock,
+      requestedAtTimestamp,
       ipAddress,
     };
     await this.tables?.pending.updateOne(

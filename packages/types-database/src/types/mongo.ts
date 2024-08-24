@@ -99,8 +99,6 @@ export const UserCommitmentSchema = object({
     error: string().optional(),
   }),
   userSignature: string(),
-  completedAt: number(),
-  requestedAt: number(),
   ipAddress: string(),
   userSubmitted: boolean(),
   serverChecked: boolean(),
@@ -255,7 +253,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
   salt: { type: String, required: true },
   requestHash: { type: String, required: true },
   deadlineTimestamp: { type: Number, required: true }, // unix timestamp
-  requestedAtBlock: { type: Number, required: true },
+  requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
   ipAddress: { type: String, required: true },
 });
 // Set an index on the requestHash field, descending
@@ -338,7 +336,7 @@ export interface Database {
     requestHash: string,
     salt: string,
     deadlineTimestamp: number,
-    requestedAtBlock: number,
+    requestedAtTimestamp: number,
     ipAddress: string,
   ): Promise<void>;
 

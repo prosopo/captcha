@@ -28,6 +28,7 @@ import {
   type GetPowCaptchaResponse,
   type PowCaptchaSolutionResponse,
   SubmitPowCaptchaSolutionBody,
+  TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
@@ -53,45 +54,43 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
    * @param {string} userAccount - Dapp User AccountId
    * @return {Captcha} - The Captcha data
    */
-  router.get(
-    `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`,
-    async (req, res, next) => {
-      try {
-        const { datasetId, user } = CaptchaRequestBody.parse(req.params);
-        validateAddress(user, false, 42);
+  const GetImageCaptchaChallengePath: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`;
+  router.get(GetImageCaptchaChallengePath, async (req, res, next) => {
+    try {
+      const { datasetId, user } = CaptchaRequestBody.parse(req.params);
+      validateAddress(user, false, 42);
 
-        const taskData =
-          await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
-            datasetId,
-            user,
-            req.ip || NO_IP_ADDRESS,
-          );
-        const captchaResponse: CaptchaResponseBody = {
-          captchas: taskData.captchas.map((captcha: Captcha) => ({
-            ...captcha,
-            items: captcha.items.map((item) =>
-              parseCaptchaAssets(item, env.assetsResolver),
-            ),
-          })),
-          [ApiParams.requestHash]: taskData.requestHash,
-          [ApiParams.timestamp]: taskData.timestamp.toString(),
-          [ApiParams.signature]: {
-            [ApiParams.provider]: {
-              [ApiParams.requestHash]: taskData.signedRequestHash,
-            },
-          },
-        };
-        return res.json(captchaResponse);
-      } catch (err) {
-        tasks.logger.error(err);
-        return next(
-          new ProsopoApiError("API.BAD_REQUEST", {
-            context: { error: err, code: 400 },
-          }),
+      const taskData =
+        await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
+          datasetId,
+          user,
+          req.ip || NO_IP_ADDRESS,
         );
-      }
-    },
-  );
+      const captchaResponse: CaptchaResponseBody = {
+        captchas: taskData.captchas.map((captcha: Captcha) => ({
+          ...captcha,
+          items: captcha.items.map((item) =>
+            parseCaptchaAssets(item, env.assetsResolver),
+          ),
+        })),
+        [ApiParams.requestHash]: taskData.requestHash,
+        [ApiParams.timestamp]: taskData.timestamp.toString(),
+        [ApiParams.signature]: {
+          [ApiParams.provider]: {
+            [ApiParams.requestHash]: taskData.signedRequestHash,
+          },
+        },
+      };
+      return res.json(captchaResponse);
+    } catch (err) {
+      tasks.logger.error(err);
+      return next(
+        new ProsopoApiError("API.BAD_REQUEST", {
+          context: { error: err, code: 400 },
+        }),
+      );
+    }
+  });
 
   /**
    * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment

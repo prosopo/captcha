@@ -127,7 +127,6 @@ describe("PoW Integration Tests", () => {
         42,
       );
       const dappPair = await getPairAsync(
-        undefined,
         dummyDappAccount.seed,
         undefined,
         "sr25519",
@@ -254,12 +253,11 @@ describe("PoW Integration Tests", () => {
         },
       );
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
 
-      const data = response.statusText;
-      expect(data).toBe(
-        '"You answered one or more captchas incorrectly. Please try again"',
-      );
+      const data = (await response.json()) as PowCaptchaSolutionResponse;
+      expect(data).toHaveProperty("verified");
+      expect(data.verified).toBe(false);
     });
   });
 });

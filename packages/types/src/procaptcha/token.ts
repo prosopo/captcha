@@ -92,7 +92,6 @@ export type ProcaptchaToken = zInfer<typeof ProcaptchaTokenSpec>;
 export const encodeProcaptchaOutput = (
   procaptchaOutput: ProcaptchaOutput,
 ): ProcaptchaToken => {
-  console.log("encoding", procaptchaOutput);
   return u8aToHex(
     ProcaptchaTokenCodec.enc({
       [ApiParams.commitmentId]: undefined,

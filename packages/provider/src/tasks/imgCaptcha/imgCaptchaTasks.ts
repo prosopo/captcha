@@ -144,7 +144,7 @@ export class ImgCaptchaManager {
       requestHash,
       salt,
       deadlineTs,
-      currentBlockNumber,
+      currentTime,
       ipAddress,
     );
     return {

@@ -273,7 +273,20 @@ describe("PowCaptchaManager", () => {
       expect(result).toBe(true);
       expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
       expect(checkRecentPowSolution).toHaveBeenCalledWith(challenge, timeout);
-      expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, true);
+
+      const updatePowCaptchaRecordArgs: Parameters<
+        typeof db.updatePowCaptchaRecord
+      > = [
+        challenge,
+        { status: CaptchaStatus.approved },
+        true,
+        true,
+        StoredStatusNames.serverChecked,
+      ];
+
+      expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+        ...updatePowCaptchaRecordArgs,
+      );
     });
 
     it("should throw an error if challenge record is not found", async () => {

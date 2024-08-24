@@ -52,31 +52,19 @@ describe("Validation Functions", () => {
   });
 
   describe("checkPowSolution", () => {
-    it("should not throw an error for a valid solution", () => {
+    it("should return true for a valid solution", () => {
       const nonce = 377;
       const challenge =
         "6678154___aZZW9CeVFStJw3si91CXBqaEsGR1sk6h1bBEecJ4EBaSgsx___5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
       const difficulty = 4;
-      expect(() =>
-        checkPowSolution(nonce, challenge, difficulty),
-      ).not.toThrow();
+      expect(checkPowSolution(nonce, challenge, difficulty)).to.be.true;
     });
 
     it("should throw an error for an invalid solution", () => {
       const nonce = 0;
       const challenge = "testChallenge";
       const difficulty = 10;
-      expect(() => checkPowSolution(nonce, challenge, difficulty)).toThrow(
-        new ProsopoContractError("API.CAPTCHA_FAILED", {
-          context: {
-            ERROR: "Captcha solution is invalid",
-            failedFuncName: "checkPowSolution",
-            nonce,
-            challenge,
-            difficulty,
-          },
-        }),
-      );
+      expect(checkPowSolution(nonce, challenge, difficulty)).to.be.false;
     });
   });
 
@@ -115,32 +103,21 @@ describe("Validation Functions", () => {
   });
 
   describe("checkRecentPowSolution", () => {
-    it("should not throw an error for a recent solution", () => {
+    it("should return true for a recent solution", () => {
       const challenge = "testChallenge";
       const timeout = 1000;
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (verifyRecency as any).mockReturnValueOnce(true);
 
-      expect(() => checkRecentPowSolution(challenge, timeout)).not.toThrow();
+      expect(checkRecentPowSolution(challenge, timeout)).to.be.true;
     });
 
-    it("should throw an error for a non-recent solution", () => {
+    it("should return false for a non-recent solution", () => {
       const challenge = "testChallenge";
       const timeout = 1000;
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (verifyRecency as any).mockReturnValueOnce(false);
-
-      expect(() => checkRecentPowSolution(challenge, timeout)).toThrow(
-        new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
-          context: {
-            ERROR: `Timestamp in which the Provider was selected must be within the last ${
-              timeout / 1000
-            } seconds`,
-            failedFuncName: "checkRecentPowSolution",
-            challenge,
-          },
-        }),
-      );
+      expect(checkRecentPowSolution(challenge, timeout)).to.be.false;
     });
   });
 });
