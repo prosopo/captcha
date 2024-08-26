@@ -22,9 +22,9 @@ import {
   union,
   type infer as zInfer,
   undefined as zUndefined,
+  number as zNumber,
 } from "zod";
 import { TranslationKey } from "@prosopo/common";
-import { RequestHashSignature } from "../procaptcha/index.js";
 
 export enum CaptchaTypes {
   SelectAll = "SelectAll",
@@ -112,7 +112,8 @@ export enum DappPayee {
   any = "Any",
 }
 
-export type Timestamp = number;
+export const TimestampSchema = zNumber();
+export type Timestamp = zInfer<typeof TimestampSchema>;
 export type UserAccount = string;
 export type DappAccount = string;
 

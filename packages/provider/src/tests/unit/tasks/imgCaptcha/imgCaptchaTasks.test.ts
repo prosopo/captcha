@@ -320,6 +320,7 @@ describe("ImgCaptchaManager", () => {
       storedStatus: StoredStatusNames.notStored,
       requestedAtTimestamp: 0,
       ipAddress: "0.0.0.0",
+      lastUpdatedTimestamp: Date.now(),
     };
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
@@ -364,6 +365,7 @@ describe("ImgCaptchaManager", () => {
         storedStatus: StoredStatusNames.notStored,
         requestedAtTimestamp: 0,
         ipAddress: "0.0.0.0",
+        lastUpdatedTimestamp: Date.now(),
       },
     ];
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix

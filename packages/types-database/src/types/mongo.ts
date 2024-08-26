@@ -28,6 +28,7 @@ import {
   PoWChallengeComponents,
   PoWChallengeId,
   Timestamp,
+  TimestampSchema,
 } from "@prosopo/types";
 import type { Hash } from "@prosopo/types";
 import type { PendingCaptchaRequest } from "@prosopo/types";
@@ -37,7 +38,12 @@ import {
   ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import mongoose, { type Connection, type Model, Schema } from "mongoose";
+import mongoose, {
+  type Connection,
+  type Model,
+  ObjectId,
+  Schema,
+} from "mongoose";
 import {
   ZodType,
   any,
@@ -78,6 +84,7 @@ export interface StoredCaptcha {
   userSubmitted: boolean;
   serverChecked: boolean;
   storedStatus: StoredStatus;
+  lastUpdatedTimestamp?: Timestamp;
 }
 
 export interface UserCommitmentRecord extends Commit, StoredCaptcha {
@@ -110,6 +117,7 @@ export const UserCommitmentSchema = object({
     literal(StoredStatusNames.stored),
   ]),
   requestedAtTimestamp: number(),
+  lastUpdatedTimestamp: number().optional(),
 }) satisfies ZodType<UserCommitmentRecord>;
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -161,6 +169,7 @@ export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   dappAccount: { type: String, required: true },
   userAccount: { type: String, required: true },
   requestedAtTimestamp: { type: Number, required: true },
+  lastUpdatedTimestamp: { type: Number, required: false },
   result: {
     status: { type: String, enum: CaptchaStatus, required: true },
     reason: {
@@ -202,6 +211,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   serverChecked: { type: Boolean, required: true },
   storedStatus: { type: String, enum: StoredStatusNames, required: false },
   requestedAtTimestamp: { type: Number, required: true },
+  lastUpdatedTimestamp: { type: Number, required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -232,7 +242,8 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
   checked: boolean(),
   commitmentId: string(),
 });
-export type UserSolutionRecord = zInfer<typeof UserSolutionSchema>;
+export type UserSolutionRecord = mongoose.Document &
+  zInfer<typeof UserSolutionSchema>;
 export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
   {
     captchaId: { type: String, required: true },
@@ -269,9 +280,9 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
 PendingRecordSchema.index({ requestHash: -1 });
 
 export const ScheduledTaskSchema = object({
-  taskId: string(),
   processName: nativeEnum(ScheduledTaskNames),
-  datetime: date(),
+  datetime: TimestampSchema,
+  updated: TimestampSchema.optional(),
   status: nativeEnum(ScheduledTaskStatus),
   result: object({
     data: any().optional(),
@@ -279,12 +290,14 @@ export const ScheduledTaskSchema = object({
   }).optional(),
 });
 
-export type ScheduledTaskRecord = zInfer<typeof ScheduledTaskSchema>;
+export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
+
+export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
 export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
-  taskId: { type: String, required: true },
   processName: { type: String, enum: ScheduledTaskNames, required: true },
-  datetime: { type: Date, required: true },
+  datetime: { type: Number, required: true },
+  updated: { type: Number, required: false },
   result: {
     type: new Schema<ScheduledTaskResult>(
       {
@@ -427,13 +440,17 @@ export interface Database {
   ): Promise<ScheduledTaskRecord | undefined>;
 
   getScheduledTaskStatus(
-    taskId: string,
+    taskId: ObjectId,
     status: ScheduledTaskStatus,
   ): Promise<ScheduledTaskRecord | undefined>;
 
-  storeScheduledTaskStatus(
-    taskId: `0x${string}`,
+  createScheduledTaskStatus(
     task: ScheduledTaskNames,
+    status: ScheduledTaskStatus,
+  ): Promise<ObjectId>;
+
+  updateScheduledTaskStatus(
+    taskId: ObjectId,
     status: ScheduledTaskStatus,
     result?: ScheduledTaskResult,
   ): Promise<void>;

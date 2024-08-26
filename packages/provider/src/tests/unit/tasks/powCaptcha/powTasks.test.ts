@@ -125,6 +125,7 @@ describe("PowCaptchaManager", () => {
         storedStatus: StoredStatusNames.notStored,
         ipAddress,
         providerSignature,
+        lastUpdatedTimestamp: Date.now(),
       };
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (verifyRecency as any).mockImplementation(() => true);
