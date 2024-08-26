@@ -217,10 +217,6 @@ export class ImgCaptchaManager {
 
     const pendingRecord = await this.db.getDappUserPending(requestHash);
 
-    if (pendingRecord.ipAddress !== ipAddress) {
-      return response;
-    }
-
     const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
     const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
       requestHash,

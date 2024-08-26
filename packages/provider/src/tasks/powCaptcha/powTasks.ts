@@ -24,11 +24,8 @@ import {
 } from "@prosopo/types";
 import { Database, StoredStatusNames } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
-import {
-  checkPowSignature,
-  checkPowSolution,
-  checkRecentPowSolution,
-} from "./powTasksUtils.js";
+import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+import { verifyRecency } from "@prosopo/contract";
 
 const logger = getLoggerDefault();
 
@@ -109,7 +106,7 @@ export class PowCaptchaManager {
     );
 
     // Check recency before looking up the record to avoid unnecessary network connections
-    if (!checkRecentPowSolution(challenge, timeout)) {
+    if (!verifyRecency(challenge, timeout)) {
       await this.db.updatePowCaptchaRecord(
         challenge,
         {
@@ -133,24 +130,7 @@ export class PowCaptchaManager {
       return false;
     }
 
-    if (challengeRecord.ipAddress !== ipAddress) {
-      // something strange is going on. Require a new captcha
-      logger.debug("IP address does not match");
-      await this.db.updatePowCaptchaRecord(
-        challenge,
-        {
-          status: CaptchaStatus.disapproved,
-          reason: "CAPTCHA.IP_ADDRESS_MISMATCH",
-        },
-        false,
-        true,
-        StoredStatusNames.userSubmitted,
-        userTimestampSignature,
-      );
-      return false;
-    }
-
-    const correct = checkPowSolution(nonce, challenge, difficulty);
+    const correct = validateSolution(nonce, challenge, difficulty);
 
     let result: CaptchaResult = { status: CaptchaStatus.approved };
     if (!correct) {
@@ -210,15 +190,11 @@ export class PowCaptchaManager {
       });
     }
 
-    checkRecentPowSolution(challenge, timeout);
+    verifyRecency(challenge, timeout);
 
-    await this.db.updatePowCaptchaRecord(
+    await this.db.markDappUserPoWCommitmentsChecked([
       challengeRecord.challenge,
-      { status: CaptchaStatus.approved },
-      true,
-      true,
-      StoredStatusNames.serverChecked,
-    );
+    ]);
     return true;
   }
 }

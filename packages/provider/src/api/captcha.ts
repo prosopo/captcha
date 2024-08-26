@@ -67,7 +67,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
           req.ip || NO_IP_ADDRESS,
         );
       const captchaResponse: CaptchaResponseBody = {
-        captchas: taskData.captchas.map((captcha: Captcha) => ({
+        [ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
           ...captcha,
           items: captcha.items.map((item) =>
             parseCaptchaAssets(item, env.assetsResolver),

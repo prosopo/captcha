@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Logger, TranslationKey } from "@prosopo/common";
+import { Logger, TranslationKey, TranslationKeysSchema } from "@prosopo/common";
 import {
   type Captcha,
   CaptchaResult,
@@ -24,11 +24,9 @@ import {
   type DatasetBase,
   type DatasetWithIds,
   type Item,
-  type PoWCaptcha,
   PoWCaptchaUser,
   PoWChallengeComponents,
   PoWChallengeId,
-  RequestHashSignature,
   Timestamp,
 } from "@prosopo/types";
 import type { Hash } from "@prosopo/types";
@@ -41,7 +39,7 @@ import {
 import type { DeleteResult } from "mongodb";
 import mongoose, { type Connection, type Model, Schema } from "mongoose";
 import {
-  type ZodType,
+  ZodType,
   any,
   array,
   boolean,
@@ -71,7 +69,7 @@ export type StoredStatus =
 export interface StoredCaptcha {
   result: {
     status: CaptchaStatus;
-    reason?: string;
+    reason?: TranslationKey;
     error?: string;
   };
   requestedAtTimestamp: Timestamp;
@@ -88,17 +86,19 @@ export interface UserCommitmentRecord extends Commit, StoredCaptcha {
 
 export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
 
+const CaptchaResultSchema = object({
+  status: nativeEnum(CaptchaStatus),
+  reason: TranslationKeysSchema.optional(),
+  error: string().optional(),
+}) satisfies ZodType<CaptchaResult>;
+
 export const UserCommitmentSchema = object({
   userAccount: string(),
   dappAccount: string(),
   datasetId: string(),
   providerAccount: string(),
   id: string(),
-  result: object({
-    status: nativeEnum(CaptchaStatus),
-    reason: string().optional(),
-    error: string().optional(),
-  }),
+  result: CaptchaResultSchema,
   userSignature: string(),
   ipAddress: string(),
   userSubmitted: boolean(),
@@ -163,7 +163,11 @@ export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   requestedAtTimestamp: { type: Number, required: true },
   result: {
     status: { type: String, enum: CaptchaStatus, required: true },
-    reason: { type: String, required: false },
+    reason: {
+      type: String,
+      enum: TranslationKeysSchema.options,
+      required: false,
+    },
     error: { type: String, required: false },
   },
   difficulty: { type: Number, required: true },
@@ -185,7 +189,11 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   id: { type: String, required: true },
   result: {
     status: { type: String, enum: CaptchaStatus, required: true },
-    reason: { type: String, required: false },
+    reason: {
+      type: String,
+      enum: TranslationKeysSchema.options,
+      required: false,
+    },
     error: { type: String, required: false },
   },
   ipAddress: { type: String, required: true },
@@ -404,6 +412,8 @@ export interface Database {
   markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
   getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]>;
+
+  markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 
   markDappUserPoWCommitmentsStored(challengeIds: string[]): Promise<void>;
 

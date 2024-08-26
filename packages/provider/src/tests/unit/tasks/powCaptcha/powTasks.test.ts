@@ -30,9 +30,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
   checkPowSignature,
-  checkPowSolution,
-  checkRecentPowSolution,
+  validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { verifyRecency } from "@prosopo/contract";
 
 vi.mock("@polkadot/util-crypto", () => ({
   signatureVerify: vi.fn(),
@@ -44,9 +44,9 @@ vi.mock("@polkadot/util", () => ({
 }));
 
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
-  checkRecentPowSolution: vi.fn(),
+  verifyRecency: vi.fn(),
   checkPowSignature: vi.fn(),
-  checkPowSolution: vi.fn(),
+  validateSolution: vi.fn(),
 }));
 
 describe("PowCaptchaManager", () => {
@@ -123,11 +123,11 @@ describe("PowCaptchaManager", () => {
         providerSignature,
       };
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkRecentPowSolution as any).mockImplementation(() => true);
+      (verifyRecency as any).mockImplementation(() => true);
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (checkPowSignature as any).mockImplementation(() => true);
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkPowSolution as any).mockImplementation(() => true);
+      (validateSolution as any).mockImplementation(() => true);
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
         challengeRecord,
@@ -154,13 +154,12 @@ describe("PowCaptchaManager", () => {
       expect(result).toBe(true);
 
       // Will cause build to fail if args change
-      const checkRecentPowSolutionArgs: Parameters<
-        typeof checkRecentPowSolution
-      > = [challenge, timeout];
+      const verifyRecencyArgs: Parameters<typeof verifyRecency> = [
+        challenge,
+        timeout,
+      ];
 
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(
-        ...checkRecentPowSolutionArgs,
-      );
+      expect(verifyRecency).toHaveBeenCalledWith(...verifyRecencyArgs);
 
       const checKPowSignatureArgs1: Parameters<typeof checkPowSignature> = [
         requestedAtTimestamp.toString(),
@@ -180,13 +179,13 @@ describe("PowCaptchaManager", () => {
 
       expect(checkPowSignature).toHaveBeenCalledWith(...checKPowSignatureArgs2);
 
-      const checkPowSolutionArgs: Parameters<typeof checkPowSolution> = [
+      const validateSolutionArgs: Parameters<typeof validateSolution> = [
         nonce,
         challenge,
         difficulty,
       ];
 
-      expect(checkPowSolution).toHaveBeenCalledWith(...checkPowSolutionArgs);
+      expect(validateSolution).toHaveBeenCalledWith(...validateSolutionArgs);
 
       const updatePowCaptchaRecordArgs: Parameters<
         typeof db.updatePowCaptchaRecord
@@ -213,7 +212,7 @@ describe("PowCaptchaManager", () => {
       const timestampSignature = "testTimestampSignature";
       const ipAddress = "ipAddress";
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkRecentPowSolution as any).mockImplementation(() => {
+      (verifyRecency as any).mockImplementation(() => {
         throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
           context: {
             failedFuncName: "verifyPowCaptchaSolution",
@@ -239,7 +238,7 @@ describe("PowCaptchaManager", () => {
         }),
       );
 
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(challenge, timeout);
+      expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
     });
   });
 
@@ -262,7 +261,7 @@ describe("PowCaptchaManager", () => {
         challengeRecord,
       );
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkRecentPowSolution as any).mockImplementation(() => true);
+      (verifyRecency as any).mockImplementation(() => true);
 
       const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
         dappAccount,
@@ -272,7 +271,7 @@ describe("PowCaptchaManager", () => {
 
       expect(result).toBe(true);
       expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(challenge, timeout);
+      expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 
       const updatePowCaptchaRecordArgs: Parameters<
         typeof db.updatePowCaptchaRecord

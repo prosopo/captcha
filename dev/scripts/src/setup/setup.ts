@@ -128,9 +128,9 @@ export async function setup(force: boolean) {
       throw new ProsopoEnvError("DEVELOPER.PROSOPO_SITE_KEY_MISSING");
     }
 
-		const config = defaultConfig();
-		const providerSecret = config.account.secret;
-		const pair = await getPairAsync(providerSecret);
+    const config = defaultConfig();
+    const providerSecret = config.account.secret;
+    const pair = await getPairAsync(providerSecret);
 
     const env = new ProviderEnvironment(defaultConfig(), pair);
     await env.isReady();
@@ -141,23 +141,7 @@ export async function setup(force: boolean) {
 
     defaultProvider.pair = await getPairAsync(providerSecret);
 
-    // If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
-    // If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
-    // If a DAPP_SECRET is present, we want the PROSOPO_SITE_KEY account to register itself.
-    // Otherwise, a test account like //Eve is used to register the PROSOPO_SITE_KEY account.
     defaultDapp.pair = await getPairAsync(defaultDapp.secret);
-    let dappAddressToRegister = defaultDapp.pair.address;
-    if (
-      process.env.PROSOPO_SITE_KEY &&
-      isAddress(process.env.PROSOPO_SITE_KEY)
-    ) {
-      dappAddressToRegister = process.env.PROSOPO_SITE_KEY;
-      if (process.env.PROSOPO_SITE_PRIVATE_KEY) {
-        defaultDapp.secret = process.env.PROSOPO_SITE_PRIVATE_KEY;
-        defaultDapp.pair = await getPairAsync(defaultDapp.secret);
-        dappAddressToRegister = defaultDapp.pair.address;
-      }
-    }
 
     await setupProvider(env, defaultProvider);
 

@@ -18,8 +18,6 @@ import { verifyRecency } from "@prosopo/contract";
 import { describe, expect, it, vi } from "vitest";
 import {
   checkPowSignature,
-  checkPowSolution,
-  checkRecentPowSolution,
   validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
@@ -57,14 +55,14 @@ describe("Validation Functions", () => {
       const challenge =
         "6678154___aZZW9CeVFStJw3si91CXBqaEsGR1sk6h1bBEecJ4EBaSgsx___5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
       const difficulty = 4;
-      expect(checkPowSolution(nonce, challenge, difficulty)).to.be.true;
+      expect(validateSolution(nonce, challenge, difficulty)).to.be.true;
     });
 
     it("should throw an error for an invalid solution", () => {
       const nonce = 0;
       const challenge = "testChallenge";
       const difficulty = 10;
-      expect(checkPowSolution(nonce, challenge, difficulty)).to.be.false;
+      expect(validateSolution(nonce, challenge, difficulty)).to.be.false;
     });
   });
 
@@ -99,25 +97,6 @@ describe("Validation Functions", () => {
           },
         }),
       );
-    });
-  });
-
-  describe("checkRecentPowSolution", () => {
-    it("should return true for a recent solution", () => {
-      const challenge = "testChallenge";
-      const timeout = 1000;
-      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (verifyRecency as any).mockReturnValueOnce(true);
-
-      expect(checkRecentPowSolution(challenge, timeout)).to.be.true;
-    });
-
-    it("should return false for a non-recent solution", () => {
-      const challenge = "testChallenge";
-      const timeout = 1000;
-      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (verifyRecency as any).mockReturnValueOnce(false);
-      expect(checkRecentPowSolution(challenge, timeout)).to.be.false;
     });
   });
 });

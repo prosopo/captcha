@@ -70,8 +70,8 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     const body: CaptchaSolutionBodyType = {
       [ApiParams.user]: userAccount,
       [ApiParams.dapp]: this.account,
-      captchas,
-      requestHash,
+      [ApiParams.captchas]: captchas,
+      [ApiParams.requestHash]: requestHash,
       [ApiParams.timestamp]: timestamp,
       [ApiParams.signature]: {
         [ApiParams.user]: {

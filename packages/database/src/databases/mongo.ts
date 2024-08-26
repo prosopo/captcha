@@ -698,7 +698,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
     const docs = await this.tables?.commitment
-      .find({ serverChecked: true })
+      .find({ [StoredStatusNames.serverChecked]: true })
       .lean();
     return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
   }
@@ -709,7 +709,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]> {
     const docs = await this.tables?.commitment
       .find({
-        $or: [{ stored: false }, { stored: { $exists: false } }],
+        $or: [
+          { [StoredStatusNames.stored]: false },
+          { [StoredStatusNames.stored]: { $exists: false } },
+        ],
       })
       .lean();
     return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : [];
@@ -720,17 +723,17 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
     await this.tables?.commitment.updateMany(
       { id: { $in: commitmentIds } },
-      { $set: { stored: true } },
+      { $set: { [StoredStatusNames.stored]: true } },
       { upsert: false },
     );
   }
 
-  /** @description Mark a list of captcha commits as stored
+  /** @description Mark a list of captcha commits as checked
    */
   async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
     await this.tables?.commitment.updateMany(
       { id: { $in: commitmentIds } },
-      { $set: { serverChecked: true } },
+      { $set: { [StoredStatusNames.serverChecked]: true } },
       { upsert: false },
     );
   }
@@ -740,7 +743,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]> {
     const docs = await this.tables?.powCaptcha
       .find<PoWCaptchaStored[]>({
-        $or: [{ stored: false }, { stored: { $exists: false } }],
+        $or: [
+          { [StoredStatusNames.stored]: false },
+          { [StoredStatusNames.stored]: { $exists: false } },
+        ],
       })
       .lean<PoWCaptchaStored[]>();
     return docs || [];
@@ -751,7 +757,17 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
     await this.tables?.powCaptcha.updateMany(
       { challenge: { $in: challenges } },
-      { $set: { stored: true } },
+      { $set: { [StoredStatusNames.stored]: true } },
+      { upsert: false },
+    );
+  }
+
+  /** @description Mark a list of PoW captcha commits as checked by the server
+   */
+  async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
+    await this.tables?.powCaptcha.updateMany(
+      { challenge: { $in: challenges } },
+      { $set: { [StoredStatusNames.serverChecked]: true } },
       { upsert: false },
     );
   }
@@ -854,7 +870,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       { requestHash: requestHash },
       {
         $set: {
-          pending: false,
+          [CaptchaStatus.pending]: false,
         },
       },
       { upsert: true },
@@ -1043,10 +1059,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async approveDappUserCommitment(commitmentId: string): Promise<void> {
     try {
+      const result: CaptchaResult = { status: CaptchaStatus.approved };
       await this.tables?.commitment
         ?.findOneAndUpdate(
           { id: commitmentId },
-          { $set: { result: { status: CaptchaStatus.approved } } },
+          { $set: { result } },
           { upsert: false },
         )
         .lean();

@@ -27,14 +27,6 @@ export const validateSolution = (
     .join("")
     .startsWith("0".repeat(difficulty));
 
-export const checkPowSolution = (
-  nonce: number,
-  challenge: string,
-  difficulty: number,
-): boolean => {
-  return validateSolution(nonce, challenge, difficulty);
-};
-
 export const checkPowSignature = (
   challenge: string,
   signature: string,
@@ -56,11 +48,4 @@ export const checkPowSignature = (
       },
     });
   }
-};
-
-export const checkRecentPowSolution = (
-  challenge: string,
-  timeout: number,
-): boolean => {
-  return verifyRecency(challenge, timeout);
 };

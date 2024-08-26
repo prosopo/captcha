@@ -19,7 +19,6 @@ import {
   ProsopoDatasetError,
   ProsopoEnvError,
   ProsopoError,
-  trimProviderUrl,
 } from "@prosopo/common";
 import { loadBalancer } from "@prosopo/load-balancer";
 import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
