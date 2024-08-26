@@ -710,8 +710,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     const docs = await this.tables?.commitment
       .find({
         $or: [
-          { [StoredStatusNames.stored]: false },
-          { [StoredStatusNames.stored]: { $exists: false } },
+          { storedStatus: { $ne: [StoredStatusNames.stored] } },
+          { storedStatus: { $exists: false } },
         ],
       })
       .lean();
@@ -723,7 +723,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
     await this.tables?.commitment.updateMany(
       { id: { $in: commitmentIds } },
-      { $set: { [StoredStatusNames.stored]: true } },
+      { $set: { storedStatus: [StoredStatusNames.stored] } },
       { upsert: false },
     );
   }
@@ -744,8 +744,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     const docs = await this.tables?.powCaptcha
       .find<PoWCaptchaStored[]>({
         $or: [
-          { [StoredStatusNames.stored]: false },
-          { [StoredStatusNames.stored]: { $exists: false } },
+          { storedStatus: { $ne: [StoredStatusNames.stored] } },
+          { storedStatus: { $exists: false } },
         ],
       })
       .lean<PoWCaptchaStored[]>();
@@ -757,7 +757,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
     await this.tables?.powCaptcha.updateMany(
       { challenge: { $in: challenges } },
-      { $set: { [StoredStatusNames.stored]: true } },
+      { $set: { storedStatus: [StoredStatusNames.stored] } },
       { upsert: false },
     );
   }
