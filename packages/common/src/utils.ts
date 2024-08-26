@@ -35,7 +35,7 @@ type Node =
 
 function getLeafFieldPath(obj: Node): string[] {
   if (typeof obj === "string") {
-    return [obj];
+    return [];
   }
 
   return Object.keys(obj).reduce((arr, key) => {

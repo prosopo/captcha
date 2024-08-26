@@ -298,6 +298,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
   processName: { type: String, enum: ScheduledTaskNames, required: true },
   datetime: { type: Number, required: true },
   updated: { type: Number, required: false },
+  status: { type: String, enum: ScheduledTaskStatus, required: true },
   result: {
     type: new Schema<ScheduledTaskResult>(
       {
@@ -306,7 +307,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
       },
       { _id: false },
     ),
-
     required: false,
   },
 });
