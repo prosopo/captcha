@@ -84,18 +84,6 @@ export const Manager = (
     return ProcaptchaConfigSchema.parse(config);
   };
 
-  const getNetwork = (config: ProcaptchaClientConfigOutput) => {
-    const network = config.networks[config.defaultNetwork];
-    if (!network) {
-      throw new ProsopoEnvError("DEVELOPER.NETWORK_NOT_FOUND", {
-        context: {
-          error: `No network found for environment ${config.defaultEnvironment}`,
-        },
-      });
-    }
-    return network;
-  };
-
   const getAccount = () => {
     if (!state.account) {
       throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
@@ -188,7 +176,6 @@ export const Manager = (
     const providerUrl = getRandomProviderResponse.provider.url;
 
     const providerApi = new ProviderApi(
-      getNetwork(getConfig()),
       providerUrl,
       getDappAccount(),
     );
@@ -239,7 +226,6 @@ export const Manager = (
           [ApiParams.user]: getAccount().account.account.address,
           [ApiParams.dapp]: getDappAccount(),
           [ApiParams.challenge]: challenge.challenge,
-          [ApiParams.blockNumber]: getRandomProviderResponse.blockNumber,
           [ApiParams.nonce]: solution,
           [ApiParams.timestamp]: challenge.timestamp,
           [ApiParams.signature]: {
@@ -276,7 +262,6 @@ export const Manager = (
         datasetId: randomProvderObj.datasetId,
         datasetIdContent: randomProvderObj.datasetIdContent,
       },
-      blockNumber: 0,
     };
   };
 

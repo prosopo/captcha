@@ -22,7 +22,6 @@ import {
   type GetPowCaptchaChallengeRequestBodyType,
   type GetPowCaptchaResponse,
   type ImageVerificationResponse,
-  type NetworkConfig,
   type PowCaptchaSolutionResponse,
   type ProcaptchaToken,
   type Provider,
@@ -31,21 +30,20 @@ import {
   type ServerPowCaptchaVerifyRequestBodyType,
   type StoredEvents,
   SubmitPowCaptchaSolutionBody,
+  TGetImageCaptchaChallengePathAndParams,
   type VerificationResponse,
   type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi extends HttpClientBase implements ProviderApi {
-  private network: NetworkConfig;
   private account: string;
 
-  constructor(network: NetworkConfig, providerUrl: string, account: string) {
+  constructor(providerUrl: string, account: string) {
     const providerUrlWithProtocol = !providerUrl.startsWith("http")
       ? `https://${providerUrl}`
       : providerUrl;
     super(providerUrlWithProtocol);
-    this.network = network;
     this.account = account;
   }
 
@@ -53,11 +51,11 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     userAccount: string,
     randomProvider: RandomProvider,
   ): Promise<CaptchaResponseBody> {
-    const { provider, blockNumber } = randomProvider;
+    const { provider } = randomProvider;
     const dappAccount = this.account;
-    const url = `${ApiPaths.GetImageCaptchaChallenge}/${
+    const url: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/${
       provider.datasetId
-    }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, "")}`;
+    }/${userAccount}/${dappAccount}`;
     return this.fetch(url);
   }
 
@@ -65,39 +63,36 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
     captchas: CaptchaSolution[],
     requestHash: string,
     userAccount: string,
-    salt: string,
     timestamp: string,
-    providerTimestampSignature: string,
+    providerRequestHashSignature: string,
     userRequestHashSignature: string,
   ): Promise<CaptchaSolutionResponse> {
-    const captchaSolutionBody: CaptchaSolutionBodyType =
-      CaptchaSolutionBody.parse({
-        captchas,
-        requestHash,
-        [ApiParams.user]: userAccount,
-        [ApiParams.dapp]: this.account,
-        salt,
-        [ApiParams.timestamp]: timestamp,
-        [ApiParams.signature]: {
-          [ApiParams.user]: {
-            [ApiParams.requestHash]: userRequestHashSignature,
-          },
-          [ApiParams.provider]: {
-            [ApiParams.timestamp]: providerTimestampSignature,
-          },
+    const body: CaptchaSolutionBodyType = {
+      [ApiParams.user]: userAccount,
+      [ApiParams.dapp]: this.account,
+      [ApiParams.captchas]: captchas,
+      [ApiParams.requestHash]: requestHash,
+      [ApiParams.timestamp]: timestamp,
+      [ApiParams.signature]: {
+        [ApiParams.user]: {
+          [ApiParams.requestHash]: userRequestHashSignature,
         },
-      });
-    return this.post(ApiPaths.SubmitImageCaptchaSolution, captchaSolutionBody);
+        [ApiParams.provider]: {
+          [ApiParams.requestHash]: providerRequestHashSignature,
+        },
+      },
+    };
+    return this.post(ApiPaths.SubmitImageCaptchaSolution, body);
   }
 
   public verifyDappUser(
     token: ProcaptchaToken,
-    dappUserSignature: string,
+    signature: string,
     maxVerifiedTime?: number,
   ): Promise<ImageVerificationResponse> {
     const payload: VerifySolutionBodyTypeInput = {
       [ApiParams.token]: token,
-      [ApiParams.dappUserSignature]: dappUserSignature,
+      [ApiParams.dappSignature]: signature,
     };
     if (maxVerifiedTime) {
       payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
@@ -113,7 +108,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
   ): Promise<ImageVerificationResponse> {
     const payload: VerifySolutionBodyTypeInput = {
       [ApiParams.token]: token,
-      [ApiParams.dappUserSignature]: dappUserSignature,
+      [ApiParams.dappSignature]: dappUserSignature,
       ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
     };
 

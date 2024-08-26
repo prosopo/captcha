@@ -23,35 +23,28 @@ import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
-  type NetworkConfig,
   NetworkPairTypeSchema,
   type PolkadotSecretJSON,
 } from "@prosopo/types";
 
 export async function getPairAsync(
-  networkConfig?: NetworkConfig,
   secret?: string | KeyringPair$Json | PolkadotSecretJSON,
   account?: string | Uint8Array,
   pairType?: KeypairType,
   ss58Format?: number,
 ): Promise<KeyringPair> {
   await cryptoWaitReady();
-  return getPair(networkConfig, secret, account, pairType, ss58Format);
+  return getPair(secret, account, pairType, ss58Format);
 }
 
 export function getPair(
-  networkConfig?: NetworkConfig,
   secret?: string | KeyringPair$Json | PolkadotSecretJSON,
   account?: string | Uint8Array,
   pairType?: KeypairType,
   ss58Format?: number,
 ): KeyringPair {
-  if (networkConfig) {
-    pairType = networkConfig.pairType;
-    ss58Format = networkConfig.ss58Format;
-  } else if (!pairType || !ss58Format) {
-    throw new ProsopoEnvError("GENERAL.NO_PAIR_TYPE_OR_SS58_FORMAT");
-  }
+  pairType = pairType || "sr25519";
+  ss58Format = ss58Format || 42;
   const keyring = new Keyring({ type: pairType, ss58Format });
   if (!secret && account) {
     return keyring.addFromAddress(account);
@@ -91,7 +84,6 @@ export function getReadOnlyPair(
 ): KeyringPair {
   // 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM is the all zero address
   return getPair(
-    undefined,
     undefined,
     userAccount || getZeroAddress(api).toHex(),
     NetworkPairTypeSchema.parse("sr25519"),

@@ -35,7 +35,12 @@ import {
   PoWChallengeId,
   PowChallengeIdSchema,
 } from "../datasets/index.js";
-import { ProcaptchaTokenSpec } from "../procaptcha/index.js";
+import {
+  ChallengeSignature,
+  ProcaptchaTokenSpec,
+  RequestHashSignature,
+  RequestHashSignatureSchema,
+} from "../procaptcha/index.js";
 
 export enum ApiPaths {
   GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
@@ -49,6 +54,11 @@ export enum ApiPaths {
   GetProviderDetails = "/v1/prosopo/provider/details",
   SubmitUserEvents = "/v1/prosopo/provider/events",
 }
+
+export type TGetImageCaptchaChallengePathAndParams =
+  `${ApiPaths.GetImageCaptchaChallenge}/${string}/${string}/${string}`;
+export type TGetImageCaptchaChallengeURL =
+  `${string}${TGetImageCaptchaChallengePathAndParams}`;
 
 export enum AdminApiPaths {
   BatchCommit = "/v1/prosopo/provider/admin/batch",
@@ -94,7 +104,6 @@ export type FrontendProvider = Omit<Provider, "url"> & { url: string };
 export type RandomProvider = {
   providerAccount: string;
   provider: FrontendProvider;
-  blockNumber: number;
 };
 
 type RateLimitSchemaType = ZodObject<{
@@ -144,7 +153,6 @@ export const CaptchaRequestBody = object({
   [ApiParams.user]: string(),
   [ApiParams.dapp]: string(),
   [ApiParams.datasetId]: string(),
-  [ApiParams.blockNumber]: string(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -154,9 +162,7 @@ export type CaptchaResponseBody = {
   [ApiParams.requestHash]: string;
   [ApiParams.timestamp]: string;
   [ApiParams.signature]: {
-    [ApiParams.provider]: {
-      [ApiParams.timestamp]: string;
-    };
+    [ApiParams.provider]: RequestHashSignature;
   };
 };
 
@@ -167,12 +173,8 @@ export const CaptchaSolutionBody = object({
   [ApiParams.requestHash]: string(),
   [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
-    [ApiParams.user]: object({
-      [ApiParams.requestHash]: string(),
-    }),
-    [ApiParams.provider]: object({
-      [ApiParams.timestamp]: string(),
-    }),
+    [ApiParams.user]: RequestHashSignatureSchema,
+    [ApiParams.provider]: RequestHashSignatureSchema,
   }),
 });
 
@@ -180,7 +182,7 @@ export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
 
 export const VerifySolutionBody = object({
   [ApiParams.token]: ProcaptchaTokenSpec,
-  [ApiParams.dappUserSignature]: string(),
+  [ApiParams.dappSignature]: string(),
   [ApiParams.maxVerifiedTime]: number()
     .optional()
     .default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
@@ -195,16 +197,12 @@ export interface PendingCaptchaRequest {
   salt: string;
   [ApiParams.requestHash]: string;
   deadlineTimestamp: number; // unix timestamp
-  requestedAtBlock: number; // expected block number
+  requestedAtTimestamp: number; // unix timestamp
+  ipAddress: string;
 }
 
 export interface ProviderRegistered {
   status: "Registered" | "Unregistered";
-}
-
-export interface ProviderDetails {
-  provider: Provider;
-  dbConnectionOk: boolean;
 }
 
 export interface VerificationResponse {
@@ -214,8 +212,6 @@ export interface VerificationResponse {
 
 export interface ImageVerificationResponse extends VerificationResponse {
   [ApiParams.commitmentId]?: Hash;
-  // The block at which the captcha was requested
-  [ApiParams.blockNumber]?: number;
 }
 
 export interface GetPowCaptchaResponse {
@@ -223,10 +219,7 @@ export interface GetPowCaptchaResponse {
   [ApiParams.difficulty]: number;
   [ApiParams.timestamp]: string;
   [ApiParams.signature]: {
-    [ApiParams.provider]: {
-      [ApiParams.timestamp]: string;
-      [ApiParams.challenge]: string;
-    };
+    [ApiParams.provider]: ChallengeSignature;
   };
 }
 
@@ -238,7 +231,7 @@ export interface PowCaptchaSolutionResponse {
  * Request body for the server to verify a PoW captcha solution
  * @param {string} token - The Procaptcha token
  * @param {string} dappUserSignature - The signature proving ownership of the site key
- * @param {number} verifiedTimeout - The maximum time in milliseconds since the Provider was selected at `blockNumber`
+ * @param {number} verifiedTimeout - The maximum time in milliseconds since the captcha was requested
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
   [ApiParams.token]: ProcaptchaTokenSpec,

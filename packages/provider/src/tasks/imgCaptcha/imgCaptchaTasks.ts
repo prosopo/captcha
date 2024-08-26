@@ -26,12 +26,16 @@ import {
   type CaptchaConfig,
   type CaptchaSolution,
   CaptchaStatus,
-  DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
   type DappUserSolutionResult,
+  DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
   type Hash,
   type PendingCaptchaRequest,
 } from "@prosopo/types";
-import type { Database, UserCommitmentRecord } from "@prosopo/types-database";
+import {
+  Database,
+  StoredStatusNames,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -77,11 +81,12 @@ export class ImgCaptchaManager {
   async getRandomCaptchasAndRequestHash(
     datasetId: string,
     userAccount: string,
+    ipAddress: string,
   ): Promise<{
     captchas: Captcha[];
     requestHash: string;
     timestamp: number;
-    signedTimestamp: string;
+    signedRequestHash: string;
   }> {
     const dataset = await this.db.getDatasetDetails(datasetId);
     if (!dataset) {
@@ -124,8 +129,8 @@ export class ImgCaptchaManager {
     );
 
     const currentTime = Date.now();
-    const signedTimestamp = u8aToHex(
-      this.pair.sign(stringToHex(currentTime.toString())),
+    const signedRequestHash = u8aToHex(
+      this.pair.sign(stringToHex(requestHash)),
     );
 
     const timeLimit = captchas
@@ -139,13 +144,14 @@ export class ImgCaptchaManager {
       requestHash,
       salt,
       deadlineTs,
-      currentBlockNumber,
+      currentTime,
+      ipAddress,
     );
     return {
       captchas,
       requestHash,
       timestamp: currentTime,
-      signedTimestamp,
+      signedRequestHash,
     };
   }
 
@@ -155,9 +161,10 @@ export class ImgCaptchaManager {
    * @param {string} dappAccount
    * @param {string} requestHash
    * @param {JSON} captchas
-   * @param {string} requestHashSignature
+   * @param {string} userRequestHashSignature
    * @param timestamp
-   * @param timestampSignature
+   * @param providerRequestHashSignature
+   * @param ipAddress
    * @return {Promise<DappUserSolutionResult>} result containing the contract event
    */
   async dappUserSolution(
@@ -165,39 +172,40 @@ export class ImgCaptchaManager {
     dappAccount: string,
     requestHash: string,
     captchas: CaptchaSolution[],
-    requestHashSignature: string, // the signature to indicate ownership of account
+    userRequestHashSignature: string, // the signature to indicate ownership of account
     timestamp: number,
-    timestampSignature: string,
+    providerRequestHashSignature: string,
+    ipAddress: string,
   ): Promise<DappUserSolutionResult> {
     // check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
     const verification = signatureVerify(
       stringToHex(requestHash),
-      requestHashSignature,
+      userRequestHashSignature,
       userAccount,
     );
     if (!verification.isValid) {
       // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-      this.logger.info("Invalid requestHash signature");
+      this.logger.info("Invalid user requestHash signature");
       throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
         context: { failedFuncName: this.dappUserSolution.name, userAccount },
       });
     }
 
     // check that the timestamp signature is valid and signed by the provider
-    const timestampSigVerify = signatureVerify(
-      stringToHex(timestamp.toString()),
-      timestampSignature,
+    const providerRequestHashSignatureVerify = signatureVerify(
+      stringToHex(requestHash.toString()),
+      providerRequestHashSignature,
       this.pair.address,
     );
 
-    if (!timestampSigVerify.isValid) {
-      this.logger.info("Invalid timestamp signature");
+    if (!providerRequestHashSignatureVerify.isValid) {
+      this.logger.info("Invalid provider requestHash signature");
       // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
       throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
         context: {
           failedFuncName: this.dappUserSolution.name,
           userAccount,
-          error: "timestamp signature is invalid",
+          error: "requestHash signature is invalid",
         },
       });
     }
@@ -208,6 +216,7 @@ export class ImgCaptchaManager {
     };
 
     const pendingRecord = await this.db.getDappUserPending(requestHash);
+
     const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
     const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
       requestHash,
@@ -215,7 +224,6 @@ export class ImgCaptchaManager {
       userAccount,
       unverifiedCaptchaIds,
     );
-    console.log("Pending request", pendingRequest);
     if (pendingRequest) {
       const { storedCaptchas, receivedCaptchas, captchaIds } =
         await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
@@ -232,7 +240,6 @@ export class ImgCaptchaManager {
       }
 
       // Only do stuff if the request is in the local DB
-      const userSignature = hexToU8a(requestHashSignature);
       // prevent this request hash from being used twice
       await this.db.updateDappUserPendingStatus(requestHash);
       const commit: UserCommitmentRecord = {
@@ -241,18 +248,15 @@ export class ImgCaptchaManager {
         dappAccount,
         providerAccount: this.pair.address,
         datasetId,
-        status: CaptchaStatus.pending,
-        userSignature: Array.from(userSignature),
-        requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
-        completedAt: 0, //temp
-        checked: false,
-        stored: false,
+        result: { status: CaptchaStatus.pending },
+        userSignature: userRequestHashSignature,
+        userSubmitted: true,
+        serverChecked: false,
+        storedStatus: StoredStatusNames.userSubmitted,
         requestedAtTimestamp: timestamp,
+        ipAddress,
       };
       await this.db.storeDappUserSolution(receivedCaptchas, commit);
-
-      console.log(receivedCaptchas);
-      console.log(storedCaptchas);
 
       if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
         response = {
@@ -264,6 +268,10 @@ export class ImgCaptchaManager {
         };
         await this.db.approveDappUserCommitment(commitmentId);
       } else {
+        await this.db.disapproveDappUserCommitment(
+          commitmentId,
+          "CAPTCHA.INVALID_SOLUTION",
+        );
         response = {
           captchas: captchaIds.map((id) => ({
             captchaId: id,
@@ -376,12 +384,15 @@ export class ImgCaptchaManager {
   /* Check if dapp user has verified solution in cache */
   async getDappUserCommitmentByAccount(
     userAccount: string,
+    dappAccount: string,
   ): Promise<UserCommitmentRecord | undefined> {
-    const dappUserSolutions =
-      await this.db.getDappUserCommitmentByAccount(userAccount);
+    const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
+      userAccount,
+      dappAccount,
+    );
     if (dappUserSolutions.length > 0) {
       for (const dappUserSolution of dappUserSolutions) {
-        if (dappUserSolution.status === CaptchaStatus.approved) {
+        if (dappUserSolution.result.status === CaptchaStatus.approved) {
           return dappUserSolution;
         }
       }

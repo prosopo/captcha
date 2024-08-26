@@ -1,6 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProviderEnvironment } from "@prosopo/env";
-import type { ProsopoConfigOutput } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +11,13 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { ProviderEnvironment } from "@prosopo/env";
+import { ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
 import { Tasks } from "../tasks/tasks.js";
+import { checkIfTaskIsRunning } from "../util.js";
 
 export async function storeCaptchasExternally(
   pair: KeyringPair,
@@ -35,10 +37,21 @@ export async function storeCaptchasExternally(
     : defaultSchedule;
 
   const job = new CronJob(cronSchedule, async () => {
-    env.logger.log("storeCommitmentsExternal task....");
-    await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
-      env.logger.error(err);
-    });
+    const taskRunning = await checkIfTaskIsRunning(
+      ScheduledTaskNames.StoreCommitmentsExternal,
+      env.getDb(),
+    );
+    env.logger.info(
+      `${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
+    );
+    if (!taskRunning) {
+      env.logger.info(
+        `${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
+      );
+      await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
+        env.logger.error(err);
+      });
+    }
   });
 
   job.start();

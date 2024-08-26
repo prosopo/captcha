@@ -31,7 +31,6 @@ import type { TCaptchaSubmitResult } from "@prosopo/types";
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
   userAccount: string;
-  contract: string;
   provider: RandomProvider;
   providerApi: ProviderApi;
   dappAccount: string;
@@ -39,14 +38,12 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 
   constructor(
     userAccount: string,
-    contract: string,
     provider: RandomProvider,
     providerApi: ProviderApi,
     web2: boolean,
     dappAccount: string,
   ) {
     this.userAccount = userAccount;
-    this.contract = contract;
     this.provider = provider;
     this.providerApi = providerApi;
     this._web2 = web2;
@@ -83,12 +80,11 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
   }
 
   public async submitCaptchaSolution(
-    signer: Signer,
+    userRequestHashSignature: string,
     requestHash: string,
     solutions: CaptchaSolution[],
-    salt: string,
     timestamp: string,
-    providerTimestampSignature: string,
+    providerRequestHashSignature: string,
   ): Promise<TCaptchaSubmitResult> {
     const tree = new CaptchaMerkleTree();
 
@@ -108,35 +104,15 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 
     const tx: ContractSubmittableResult | undefined = undefined;
 
-    let userRequestHashSignature: string | undefined = undefined;
-
-    if (!signer || !signer.signRaw) {
-      throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
-        context: {
-          error:
-            "Signer is not defined, cannot sign message to prove account ownership",
-        },
-      });
-    }
-
     let result: CaptchaSolutionResponse;
-
-    // sign the request hash to prove account ownership
-    const signed = await signer.signRaw({
-      address: this.userAccount,
-      data: stringToHex(requestHash),
-      type: "bytes",
-    });
-    userRequestHashSignature = signed.signature;
 
     try {
       result = await this.providerApi.submitCaptchaSolution(
         solutions,
         requestHash,
         this.userAccount,
-        salt,
         timestamp,
-        providerTimestampSignature,
+        providerRequestHashSignature,
         userRequestHashSignature,
       );
     } catch (error) {

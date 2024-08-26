@@ -111,7 +111,6 @@ export class ExtensionWeb2 extends Extension {
 		const type: KeypairType = "sr25519";
 		const keyring = new Keyring({
 			type,
-			ss58Format: config.networks[config.defaultNetwork].ss58Format,
 		});
 		const keypair = keyring.addFromMnemonic(mnemonic);
 		const address = keypair.address;
@@ -122,15 +121,4 @@ export class ExtensionWeb2 extends Extension {
 		};
 	}
 
-	getNetwork = (config: ProcaptchaClientConfigOutput) => {
-		const network = config.networks[config.defaultNetwork];
-		if (!network) {
-			throw new ProsopoEnvError("DEVELOPER.NETWORK_NOT_FOUND", {
-				context: {
-					error: `No network found for environment ${config.defaultEnvironment}`,
-				},
-			});
-		}
-		return network;
-	};
 }

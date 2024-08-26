@@ -23,7 +23,6 @@ const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
 	},
 	web2: process.env.PROSOPO_WEB2 !== "false",
 	defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
-	defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK,
 	dappName: "client-example",
 	serverUrl: getServerUrl(),
 });

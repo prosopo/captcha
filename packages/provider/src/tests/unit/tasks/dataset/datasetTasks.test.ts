@@ -52,8 +52,9 @@ describe("DatasetManager", () => {
     } as ProsopoConfigOutput;
 
     logger = {
-      info: vi.fn(),
-      error: vi.fn(),
+      info: vi.fn().mockImplementation(console.info),
+      debug: vi.fn().mockImplementation(console.debug),
+      error: vi.fn().mockImplementation(console.error),
     } as unknown as Logger;
 
     captchaConfig = {
@@ -67,6 +68,9 @@ describe("DatasetManager", () => {
       markDappUserCommitmentsStored: vi.fn(),
       markDappUserPoWCommitmentsStored: vi.fn(),
       getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
+      createScheduledTaskStatus: vi.fn(),
+      updateScheduledTaskStatus: vi.fn(),
+      getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
     } as unknown as Database;
 
     datasetManager = new DatasetManager(config, logger, captchaConfig, db);
@@ -139,6 +143,12 @@ describe("DatasetManager", () => {
     (db.getUnstoredDappUserCommitments as any).mockResolvedValue(
       mockCommitments,
     );
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.createScheduledTaskStatus as any).mockResolvedValue({});
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.updateScheduledTaskStatus as any).mockResolvedValue({});
+
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
       mockPoWCommitments,
