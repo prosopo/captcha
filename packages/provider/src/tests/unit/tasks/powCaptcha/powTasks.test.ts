@@ -43,8 +43,11 @@ vi.mock("@polkadot/util", () => ({
   stringToHex: vi.fn(),
 }));
 
-vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
+vi.mock("@prosopo/contract", () => ({
   verifyRecency: vi.fn(),
+}));
+
+vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
   checkPowSignature: vi.fn(),
   validateSolution: vi.fn(),
 }));
@@ -59,6 +62,7 @@ describe("PowCaptchaManager", () => {
       storePowCaptchaRecord: vi.fn(),
       getPowCaptchaRecordByChallenge: vi.fn(),
       updatePowCaptchaRecord: vi.fn(),
+      markDappUserPoWCommitmentsChecked: vi.fn(),
     } as unknown as Database;
 
     pair = {
@@ -133,7 +137,9 @@ describe("PowCaptchaManager", () => {
         challengeRecord,
       );
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (db.updatePowCaptchaRecord as any).mockResolvedValue(true);
+      (db.updatePowCaptchaRecord as any).mockResolvedValue(true); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
 
       const verifyPowCaptchaSolutionArgs: Parameters<
         typeof powCaptchaManager.verifyPowCaptchaSolution
@@ -273,18 +279,12 @@ describe("PowCaptchaManager", () => {
       expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
       expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 
-      const updatePowCaptchaRecordArgs: Parameters<
-        typeof db.updatePowCaptchaRecord
-      > = [
-        challenge,
-        { status: CaptchaStatus.approved },
-        true,
-        true,
-        StoredStatusNames.serverChecked,
-      ];
+      const markDappUserPoWCommitmentsCheckedArgs: Parameters<
+        typeof db.markDappUserPoWCommitmentsChecked
+      > = [[challenge]];
 
-      expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
-        ...updatePowCaptchaRecordArgs,
+      expect(db.markDappUserPoWCommitmentsChecked).toHaveBeenCalledWith(
+        ...markDappUserPoWCommitmentsCheckedArgs,
       );
     });
 
