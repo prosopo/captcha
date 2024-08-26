@@ -1,4 +1,4 @@
-import { H, G } from "./index-CIsOlT1M.js";
+import { H, G } from "./index-BFuOnKeR.js";
 export {
   H as default,
   G as render
