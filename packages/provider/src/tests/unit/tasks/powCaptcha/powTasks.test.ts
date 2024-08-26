@@ -15,15 +15,24 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoEnvError } from "@prosopo/common";
-import { ApiParams, POW_SEPARATOR, PoWChallengeId } from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import {
+  ApiParams,
+  CaptchaStatus,
+  POW_SEPARATOR,
+  PoWChallengeId,
+} from "@prosopo/types";
+import {
+  Database,
+  PoWCaptchaStored,
+  StoredStatusNames,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
   checkPowSignature,
-  checkPowSolution,
-  checkRecentPowSolution,
+  validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { verifyRecency } from "@prosopo/contract";
 
 vi.mock("@polkadot/util-crypto", () => ({
   signatureVerify: vi.fn(),
@@ -34,10 +43,13 @@ vi.mock("@polkadot/util", () => ({
   stringToHex: vi.fn(),
 }));
 
+vi.mock("@prosopo/contract", () => ({
+  verifyRecency: vi.fn(),
+}));
+
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
-  checkRecentPowSolution: vi.fn(),
   checkPowSignature: vi.fn(),
-  checkPowSolution: vi.fn(),
+  validateSolution: vi.fn(),
 }));
 
 describe("PowCaptchaManager", () => {
@@ -50,6 +62,7 @@ describe("PowCaptchaManager", () => {
       storePowCaptchaRecord: vi.fn(),
       getPowCaptchaRecordByChallenge: vi.fn(),
       updatePowCaptchaRecord: vi.fn(),
+      markDappUserPoWCommitmentsChecked: vi.fn(),
     } as unknown as Database;
 
     pair = {
@@ -84,37 +97,61 @@ describe("PowCaptchaManager", () => {
 
       expect(result.challenge.match(challengeRegExp)).toBeTruthy();
       expect(result.difficulty).toEqual(4);
-      expect(result.signature).toEqual("hexSignedChallenge");
+      expect(result.providerSignature).toEqual("hexSignedChallenge");
       expect(pair.sign).toHaveBeenCalledWith(stringToHex(result.challenge));
     });
   });
 
   describe("verifyPowCaptchaSolution", () => {
     it("should verify a valid PoW captcha solution", async () => {
-      const timestamp = 123456789;
+      const requestedAtTimestamp = 123456789;
       const userAccount = "testUserAccount";
-      const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+      const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
       const difficulty = 4;
-      const signature = "testSignature";
-      const timestampSignature = "testTimestampSignature";
+      const providerSignature = "testSignature";
+      const userSignature = "testTimestampSignature";
       const nonce = 12345;
       const timeout = 1000;
+      const ipAddress = "ipAddress";
+      const challengeRecord: PoWCaptchaStored = {
+        challenge,
+        difficulty,
+        dappAccount: pair.address,
+        userAccount,
+        requestedAtTimestamp,
+        result: { status: CaptchaStatus.pending },
+        userSubmitted: false,
+        serverChecked: false,
+        storedStatus: StoredStatusNames.notStored,
+        ipAddress,
+        providerSignature,
+        lastUpdatedTimestamp: Date.now(),
+      };
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkRecentPowSolution as any).mockImplementation(() => true);
+      (verifyRecency as any).mockImplementation(() => true);
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (checkPowSignature as any).mockImplementation(() => true);
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkPowSolution as any).mockImplementation(() => true);
+      (validateSolution as any).mockImplementation(() => true);
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+        challengeRecord,
+      );
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (db.updatePowCaptchaRecord as any).mockResolvedValue(true); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
 
       const verifyPowCaptchaSolutionArgs: Parameters<
         typeof powCaptchaManager.verifyPowCaptchaSolution
       > = [
         challenge,
         difficulty,
-        signature,
+        providerSignature,
         nonce,
         timeout,
-        timestampSignature,
+        userSignature,
+        ipAddress,
       ];
 
       const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -124,17 +161,16 @@ describe("PowCaptchaManager", () => {
       expect(result).toBe(true);
 
       // Will cause build to fail if args change
-      const checkRecentPowSolutionArgs: Parameters<
-        typeof checkRecentPowSolution
-      > = [challenge, timeout];
+      const verifyRecencyArgs: Parameters<typeof verifyRecency> = [
+        challenge,
+        timeout,
+      ];
 
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(
-        ...checkRecentPowSolutionArgs,
-      );
+      expect(verifyRecency).toHaveBeenCalledWith(...verifyRecencyArgs);
 
       const checKPowSignatureArgs1: Parameters<typeof checkPowSignature> = [
-        timestamp.toString(),
-        timestampSignature,
+        requestedAtTimestamp.toString(),
+        userSignature,
         userAccount,
         ApiParams.timestamp,
       ];
@@ -143,39 +179,34 @@ describe("PowCaptchaManager", () => {
 
       const checKPowSignatureArgs2: Parameters<typeof checkPowSignature> = [
         challenge,
-        signature,
+        providerSignature,
         pair.address,
         ApiParams.challenge,
       ];
 
       expect(checkPowSignature).toHaveBeenCalledWith(...checKPowSignatureArgs2);
 
-      const checkPowSolutionArgs: Parameters<typeof checkPowSolution> = [
+      const validateSolutionArgs: Parameters<typeof validateSolution> = [
         nonce,
         challenge,
         difficulty,
       ];
 
-      expect(checkPowSolution).toHaveBeenCalledWith(...checkPowSolutionArgs);
+      expect(validateSolution).toHaveBeenCalledWith(...validateSolutionArgs);
 
-      const storePowCaptchaRecordArgs: Parameters<
-        typeof db.storePowCaptchaRecord
+      const updatePowCaptchaRecordArgs: Parameters<
+        typeof db.updatePowCaptchaRecord
       > = [
         challenge,
-        {
-          requestedAtTimestamp: timestamp,
-          userAccount,
-          dappAccount: pair.address,
-        },
+        { status: CaptchaStatus.approved },
         false,
-        false,
-        difficulty,
-        signature,
-        timestampSignature,
+        true,
+        StoredStatusNames.userSubmitted,
+        userSignature,
       ];
 
-      expect(db.storePowCaptchaRecord).toHaveBeenCalledWith(
-        ...storePowCaptchaRecordArgs,
+      expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+        ...updatePowCaptchaRecordArgs,
       );
     });
 
@@ -186,8 +217,9 @@ describe("PowCaptchaManager", () => {
       const nonce = 12345;
       const timeout = 1000;
       const timestampSignature = "testTimestampSignature";
+      const ipAddress = "ipAddress";
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkRecentPowSolution as any).mockImplementation(() => {
+      (verifyRecency as any).mockImplementation(() => {
         throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
           context: {
             failedFuncName: "verifyPowCaptchaSolution",
@@ -203,6 +235,7 @@ describe("PowCaptchaManager", () => {
           nonce,
           timeout,
           timestampSignature,
+          ipAddress,
         ),
       ).rejects.toThrow(
         new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
@@ -212,7 +245,7 @@ describe("PowCaptchaManager", () => {
         }),
       );
 
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(challenge, timeout);
+      expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
     });
   });
 
@@ -233,8 +266,9 @@ describe("PowCaptchaManager", () => {
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
         challengeRecord,
-      ); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (checkRecentPowSolution as any).mockImplementation(() => true);
+      );
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (verifyRecency as any).mockImplementation(() => true);
 
       const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
         dappAccount,
@@ -244,8 +278,15 @@ describe("PowCaptchaManager", () => {
 
       expect(result).toBe(true);
       expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
-      expect(checkRecentPowSolution).toHaveBeenCalledWith(challenge, timeout);
-      expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, true);
+      expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
+
+      const markDappUserPoWCommitmentsCheckedArgs: Parameters<
+        typeof db.markDappUserPoWCommitmentsChecked
+      > = [[challenge]];
+
+      expect(db.markDappUserPoWCommitmentsChecked).toHaveBeenCalledWith(
+        ...markDappUserPoWCommitmentsCheckedArgs,
+      );
     });
 
     it("should throw an error if challenge record is not found", async () => {

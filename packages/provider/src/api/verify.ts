@@ -58,8 +58,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
   ) {
     const parsed = VerifySolutionBody.parse(req.body);
     try {
-      const { dappUserSignature, token } = parsed;
-      const { user, dapp, blockNumber, commitmentId } =
+      const { dappSignature, token } = parsed;
+      const { user, dapp, timestamp, commitmentId } =
         decodeProcaptchaOutput(token);
 
       // Verify using the appropriate pair based on isDapp flag
@@ -68,11 +68,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         : env.keyring.addFromAddress(user);
 
       // Will throw an error if the signature is invalid
-      verifySignature(dappUserSignature, blockNumber.toString(), keyPair);
+      verifySignature(dappSignature, timestamp.toString(), keyPair);
 
       const solution = await (commitmentId
         ? tasks.imgCaptchaManager.getDappUserCommitmentById(commitmentId)
-        : tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user));
+        : tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user, dapp));
 
       // No solution exists
       if (!solution) {
@@ -84,15 +84,23 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         return res.json(noSolutionResponse);
       }
 
-      // Mark solution as checked
       if (isDapp) {
-        await tasks.imgCaptchaManager.db.markDappUserCommitmentsChecked([
-          solution.id,
-        ]);
+        if (solution.serverChecked) {
+          const alreadyCheckedResponse: VerificationResponse = {
+            [ApiParams.status]: req.t("API.USER_ALREADY_VERIFIED"),
+            [ApiParams.verified]: false,
+          };
+          return res.json(alreadyCheckedResponse);
+        } else {
+          // Mark solution as checked
+          await tasks.imgCaptchaManager.db.markDappUserCommitmentsChecked([
+            solution.id,
+          ]);
+        }
       }
 
       // A solution exists but is disapproved
-      if (solution.status === CaptchaStatus.disapproved) {
+      if (solution.result.status === CaptchaStatus.disapproved) {
         const disapprovedResponse: VerificationResponse = {
           [ApiParams.status]: req.t("API.USER_NOT_VERIFIED"),
           [ApiParams.verified]: false,
@@ -118,14 +126,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
         }
       }
 
-      const isApproved = solution.status === CaptchaStatus.approved;
+      const isApproved = solution.result.status === CaptchaStatus.approved;
       const response: ImageVerificationResponse = {
         [ApiParams.status]: req.t(
           isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
         ),
         [ApiParams.verified]: isApproved,
         [ApiParams.commitmentId]: solution.id.toString(),
-        [ApiParams.blockNumber]: solution.requestedAt,
       };
       return res.json(response);
     } catch (err) {
@@ -167,7 +174,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
    *
    * @param {string} user - Dapp User AccountId
    * @param {string} dapp - Dapp Contract AccountId
-   * @param {string} blockNumber - The block number at which the captcha was requested
    * @param {string} dappUserSignature - The signature for dapp user
    * @param {string} commitmentId - The captcha solution to look up
    * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
@@ -198,7 +204,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
     try {
       const { token, dappSignature, verifiedTimeout } =
         ServerPowCaptchaVerifyRequestBody.parse(req.body);
-      const { dapp, blockNumber, challenge } = decodeProcaptchaOutput(token);
+      const { dapp, timestamp, challenge } = decodeProcaptchaOutput(token);
 
       if (!challenge) {
         const unverifiedResponse: VerificationResponse = {
@@ -212,7 +218,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
       const dappPair = env.keyring.addFromAddress(dapp);
 
       // Will throw an error if the signature is invalid
-      verifySignature(dappSignature, blockNumber.toString(), dappPair);
+      verifySignature(dappSignature, timestamp.toString(), dappPair);
 
       const approved =
         await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(

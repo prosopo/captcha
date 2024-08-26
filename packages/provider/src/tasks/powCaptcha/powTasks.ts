@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { u8aToHex } from "@polkadot/util";
-import { stringToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
+import { stringToHex, u8aToHex } from "@polkadot/util";
+import { getLoggerDefault, ProsopoEnvError } from "@prosopo/common";
 import {
   ApiParams,
+  CaptchaResult,
+  CaptchaStatus,
   POW_SEPARATOR,
   type PoWCaptcha,
   PoWChallengeId,
 } from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import { Database, StoredStatusNames } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
-import {
-  checkPowSignature,
-  checkPowSolution,
-  checkRecentPowSolution,
-} from "./powTasksUtils.js";
+import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+import { verifyRecency } from "@prosopo/contract";
+
+const logger = getLoggerDefault();
 
 export class PowCaptchaManager {
   pair: KeyringPair;
@@ -53,20 +53,16 @@ export class PowCaptchaManager {
     origin: string,
   ): Promise<PoWCaptcha> {
     const difficulty = 4;
-    const timestamp = Date.now();
+    const requestedAtTimestamp = Date.now();
 
     // Use blockhash, userAccount and dappAccount for string for challenge
-    const challenge: PoWChallengeId = `${timestamp}___${userAccount}___${dappAccount}`;
+    const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}`;
     const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
-    const timestampSignature = u8aToHex(
-      this.pair.sign(stringToHex(timestamp.toString())),
-    );
     return {
       challenge,
       difficulty,
-      signature: challengeSignature,
-      requestedAtTimestamp: timestamp,
-      userSignature: timestampSignature,
+      providerSignature: challengeSignature,
+      requestedAtTimestamp,
     };
   }
 
@@ -75,57 +71,84 @@ export class PowCaptchaManager {
    *
    * @param {string} challenge - the starting string for the PoW challenge
    * @param {string} difficulty - how many leading zeroes the solution must have
-   * @param {string} signature - proof that the Provider provided the challenge
+   * @param {string} providerChallengeSignature - proof that the Provider provided the challenge
    * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
    * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-   * @param timestampSignature
+   * @param {string} userTimestampSignature
+   * @param ipAddress
    */
   async verifyPowCaptchaSolution(
     challenge: PoWChallengeId,
     difficulty: number,
-    signature: string,
+    providerChallengeSignature: string,
     nonce: number,
     timeout: number,
-    timestampSignature: string,
+    userTimestampSignature: string,
+    ipAddress: string,
   ): Promise<boolean> {
-    const challengeRecord =
-      await this.db.getPowCaptchaRecordByChallenge(challenge);
-
-    if (challengeRecord) {
-      // this challenge has already been submitted
-      return false;
-    }
-
-    checkRecentPowSolution(challenge, timeout);
-    const challengeSplit = challenge.split(this.POW_SEPARATOR);
-    const timestamp = parseInt(at(challengeSplit, 0));
-    const userAccount = at(challengeSplit, 1);
-    const dappAccount = at(challengeSplit, 2);
-
-    checkPowSignature(
-      timestamp.toString(),
-      timestampSignature,
-      userAccount,
-      ApiParams.timestamp,
-    );
+    // Check signatures before doing DB reads to avoid unnecessary network connections
     checkPowSignature(
       challenge,
-      signature,
+      providerChallengeSignature,
       this.pair.address,
       ApiParams.challenge,
     );
-    checkPowSolution(nonce, challenge, difficulty);
 
-    await this.db.storePowCaptchaRecord(
-      challenge,
-      { requestedAtTimestamp: timestamp, userAccount, dappAccount },
-      false,
-      false,
-      difficulty,
-      signature,
-      timestampSignature,
+    const challengeSplit = challenge.split(this.POW_SEPARATOR);
+    const timestamp = parseInt(at(challengeSplit, 0));
+    const userAccount = at(challengeSplit, 1);
+
+    checkPowSignature(
+      timestamp.toString(),
+      userTimestampSignature,
+      userAccount,
+      ApiParams.timestamp,
     );
-    return true;
+
+    // Check recency before looking up the record to avoid unnecessary network connections
+    if (!verifyRecency(challenge, timeout)) {
+      await this.db.updatePowCaptchaRecord(
+        challenge,
+        {
+          status: CaptchaStatus.disapproved,
+          reason: "CAPTCHA.INVALID_TIMESTAMP",
+        },
+        false,
+        true,
+        StoredStatusNames.userSubmitted,
+        userTimestampSignature,
+      );
+      return false;
+    }
+
+    const challengeRecord =
+      await this.db.getPowCaptchaRecordByChallenge(challenge);
+
+    if (!challengeRecord) {
+      logger.debug("No record of this challenge");
+      // no record of this challenge
+      return false;
+    }
+
+    const correct = validateSolution(nonce, challenge, difficulty);
+
+    let result: CaptchaResult = { status: CaptchaStatus.approved };
+    if (!correct) {
+      result = {
+        status: CaptchaStatus.disapproved,
+        reason: "CAPTCHA.INVALID_SOLUTION",
+      };
+    }
+
+    await this.db.updatePowCaptchaRecord(
+      challenge,
+      result,
+      false,
+      true,
+      StoredStatusNames.userSubmitted,
+      userTimestampSignature,
+    );
+    return correct;
   }
 
   /**
@@ -153,7 +176,7 @@ export class PowCaptchaManager {
       });
     }
 
-    if (challengeRecord.checked) return false;
+    if (challengeRecord.serverChecked) return false;
 
     const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -167,9 +190,11 @@ export class PowCaptchaManager {
       });
     }
 
-    checkRecentPowSolution(challenge, timeout);
+    verifyRecency(challenge, timeout);
 
-    await this.db.updatePowCaptchaRecord(challengeRecord.challenge, true);
+    await this.db.markDappUserPoWCommitmentsChecked([
+      challengeRecord.challenge,
+    ]);
     return true;
   }
 }

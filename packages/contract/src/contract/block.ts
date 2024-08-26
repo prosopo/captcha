@@ -37,10 +37,7 @@ export const getCurrentBlockNumber = async (
  * @param challenge
  * @param maxVerifiedTime
  */
-export const verifyRecency = async (
-  challenge: string,
-  maxVerifiedTime: number,
-) => {
+export const verifyRecency = (challenge: string, maxVerifiedTime: number) => {
   // Get the timestamp from the challenge
   const timestamp = challenge.split("___")[0];
 

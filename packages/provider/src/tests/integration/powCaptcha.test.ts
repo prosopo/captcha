@@ -25,7 +25,10 @@ import {
 } from "@prosopo/types";
 import fetch from "node-fetch";
 import { describe, expect, it } from "vitest";
-import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
+import {
+  dummyDappAccount,
+  dummyUserAccount,
+} from "./mocks/solvedTestCaptchas.js";
 
 // Define the endpoint path and base URL
 const baseUrl = "http://localhost:9229";
@@ -118,13 +121,18 @@ describe("PoW Integration Tests", () => {
   describe("SubmitPowCaptchaSolution", () => {
     it("should verify a correctly completed PoW captcha as true", async () => {
       const userPair = await getPairAsync(
-        undefined,
         dummyUserAccount.seed,
         undefined,
         "sr25519",
         42,
       );
-      const dappAccount = "dappAddress";
+      const dappPair = await getPairAsync(
+        dummyDappAccount.seed,
+        undefined,
+        "sr25519",
+        42,
+      );
+      const dappAccount = dappPair.address;
       const origin = "http://localhost";
       const requestBody: GetPowCaptchaChallengeRequestBodyType = {
         user: userPair.address,
@@ -150,7 +158,6 @@ describe("PoW Integration Tests", () => {
       const nonce = solvePoW(challenge, difficulty);
 
       const verifiedTimeout = 120000;
-      const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
       const submitBody: SubmitPowCaptchaSolutionBodyType = {
         challenge,
         difficulty,
@@ -165,7 +172,7 @@ describe("PoW Integration Tests", () => {
         nonce,
         verifiedTimeout,
         user: userPair.address,
-        dapp,
+        dapp: dappAccount,
       };
       const response = await fetch(
         `${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
@@ -173,6 +180,7 @@ describe("PoW Integration Tests", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Origin: origin,
           },
           body: JSON.stringify(submitBody),
         },
@@ -188,7 +196,6 @@ describe("PoW Integration Tests", () => {
 
     it("should return false for incorrectly completed PoW captcha", async () => {
       const userPair = await getPairAsync(
-        undefined,
         dummyUserAccount.seed,
         undefined,
         "sr25519",
@@ -246,12 +253,11 @@ describe("PoW Integration Tests", () => {
         },
       );
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
 
-      const data = response.statusText;
-      expect(data).toBe(
-        '"You answered one or more captchas incorrectly. Please try again"',
-      );
+      const data = (await response.json()) as PowCaptchaSolutionResponse;
+      expect(data).toHaveProperty("verified");
+      expect(data.verified).toBe(false);
     });
   });
 });

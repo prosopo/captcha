@@ -21,7 +21,6 @@ export const PublicProsopoServer = async (
 ) => {
 	// if site key is '' then it will burn address
 	const pair = await getPairAsync(
-		config.networks[config.defaultNetwork],
 		undefined,
 		config.account.address,
 	);

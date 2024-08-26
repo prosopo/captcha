@@ -75,21 +75,6 @@ export default async function (
         process.env.PROSOPO_DEFAULT_ENVIRONMENT,
       ),
     }),
-    ...(process.env.PROSOPO_DEFAULT_NETWORK && {
-      "process.env.PROSOPO_DEFAULT_NETWORK": JSON.stringify(
-        process.env.PROSOPO_DEFAULT_NETWORK,
-      ),
-    }),
-    ...(process.env.PROSOPO_SUBSTRATE_ENDPOINT && {
-      "process.env.PROSOPO_SUBSTRATE_ENDPOINT": JSON.stringify(
-        process.env.PROSOPO_SUBSTRATE_ENDPOINT,
-      ),
-    }),
-    ...(process.env.PROSOPO_CONTRACT_ADDRESS && {
-      "process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-        process.env.PROSOPO_CONTRACT_ADDRESS,
-      ),
-    }),
   };
 
   logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);

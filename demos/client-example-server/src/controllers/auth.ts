@@ -87,7 +87,6 @@ const signup = async (
     });
     const payload = SubscribeBodySpec.parse(req.body);
     const pair = await getPairAsync(
-      config.networks[config.defaultNetwork],
       config.account.secret,
     );
     const prosopoServer = new ProsopoServer(config, pair);
@@ -154,7 +153,6 @@ const login = async (
 ) => {
   const User = mongoose.model<UserInterface>("User");
   const pair = await getPairAsync(
-    config.networks[config.defaultNetwork],
     config.account.secret,
   );
   const prosopoServer = new ProsopoServer(config, pair);

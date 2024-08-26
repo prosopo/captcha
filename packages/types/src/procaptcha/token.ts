@@ -16,22 +16,35 @@ import { Option, Struct, str, u32, u64 } from "scale-ts";
 import { bigint, number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
 
+export const RequestHashSignatureSchema = object({
+  [ApiParams.requestHash]: string(),
+});
+
+export type RequestHashSignature = zInfer<typeof RequestHashSignatureSchema>;
+
+export const ChallengeSignatureSchema = object({
+  [ApiParams.challenge]: string(),
+});
+
+export type ChallengeSignature = zInfer<typeof ChallengeSignatureSchema>;
+
+export const SignatureTypesSchema = object({
+  [ApiParams.challenge]: string().optional(),
+  [ApiParams.requestHash]: string().optional(),
+  [ApiParams.timestamp]: string().optional(),
+});
+
 export const ProcaptchaOutputSchema = object({
   [ApiParams.commitmentId]: string().optional(),
   [ApiParams.providerUrl]: string().optional(),
   [ApiParams.dapp]: string(),
   [ApiParams.user]: string(),
-  [ApiParams.blockNumber]: number(),
   [ApiParams.challenge]: string().optional(),
   [ApiParams.nonce]: number().optional(),
   [ApiParams.timestamp]: string(),
   [ApiParams.signature]: object({
-    [ApiParams.provider]: object({
-      [ApiParams.timestamp]: string(),
-    }),
-    [ApiParams.user]: object({
-      [ApiParams.timestamp]: string(),
-    }).optional(),
+    [ApiParams.provider]: SignatureTypesSchema,
+    [ApiParams.user]: SignatureTypesSchema,
   }),
 });
 
@@ -50,19 +63,18 @@ export const ProcaptchaTokenCodec = Struct({
   [ApiParams.providerUrl]: Option(str),
   [ApiParams.dapp]: str,
   [ApiParams.user]: str,
-  [ApiParams.blockNumber]: u32,
   [ApiParams.challenge]: Option(str),
   [ApiParams.nonce]: Option(u32),
   [ApiParams.timestamp]: str,
   [ApiParams.signature]: Struct({
     [ApiParams.provider]: Struct({
-      [ApiParams.timestamp]: str,
+      [ApiParams.challenge]: Option(str),
+      [ApiParams.requestHash]: Option(str),
     }),
-    [ApiParams.user]: Option(
-      Struct({
-        [ApiParams.timestamp]: str,
-      }),
-    ),
+    [ApiParams.user]: Struct({
+      [ApiParams.timestamp]: Option(str),
+      [ApiParams.requestHash]: Option(str),
+    }),
   }),
 });
 
@@ -72,7 +84,6 @@ export type ProcaptchaToken = zInfer<typeof ProcaptchaTokenSpec>;
 export const encodeProcaptchaOutput = (
   procaptchaOutput: ProcaptchaOutput,
 ): ProcaptchaToken => {
-  console.log("encoding", procaptchaOutput);
   return u8aToHex(
     ProcaptchaTokenCodec.enc({
       [ApiParams.commitmentId]: undefined,
@@ -82,9 +93,16 @@ export const encodeProcaptchaOutput = (
       // override any optional fields by spreading the procaptchaOutput
       ...procaptchaOutput,
       signature: {
-        ...procaptchaOutput.signature,
+        provider: {
+          challenge:
+            procaptchaOutput.signature.provider?.challenge || undefined,
+          requestHash:
+            procaptchaOutput.signature.provider?.requestHash || undefined,
+        },
         user: {
-          timestamp: procaptchaOutput.signature.user?.timestamp || "",
+          timestamp: procaptchaOutput.signature.user?.timestamp || undefined,
+          requestHash:
+            procaptchaOutput.signature.user?.requestHash || undefined,
         },
       },
     }),

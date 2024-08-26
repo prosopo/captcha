@@ -25,18 +25,16 @@ import type { TCaptchaSubmitResult } from "./client.js";
 
 export interface ProsopoCaptchaApiInterface {
   userAccount: string;
-  contract: IProsopoCaptchaContract | string;
   provider: RandomProvider;
   providerApi: ProviderApiInterface;
   dappAccount: string;
   web2: boolean;
   getCaptchaChallenge(): Promise<CaptchaResponseBody>;
   submitCaptchaSolution(
-    signer: Signer,
+    userRequestHashSignature: string,
     requestHash: string,
     solutions: CaptchaSolution[],
-    salt: string,
     timestamp: string,
-    providerTimestampSignature: string,
+    providerRequestHashSignature: string,
   ): Promise<TCaptchaSubmitResult>;
 }
