@@ -107,6 +107,9 @@ export class DatasetManager {
 
       // filter to only get records that have been updated since the last task
       if (lastTask) {
+        this.logger.info(
+          `Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
+        );
         commitments = commitments.filter(
           (commitment) =>
             lastTask.updated &&

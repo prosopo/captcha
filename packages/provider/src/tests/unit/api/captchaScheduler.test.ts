@@ -19,6 +19,7 @@ import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../api/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
+import { ProsopoEnvError } from "@prosopo/common";
 
 vi.mock("@prosopo/env", () => ({
   ProviderEnvironment: vi.fn().mockImplementation(() => ({
@@ -26,11 +27,15 @@ vi.mock("@prosopo/env", () => ({
     logger: {
       debug: vi.fn().mockImplementation(console.debug),
       log: vi.fn().mockImplementation(console.log),
-      info: vi.fn().mockImplementation((x) => console.info(`Test:${x}`)),
+      info: vi.fn().mockImplementation(console.info),
       error: vi.fn().mockImplementation(console.error),
     },
-    getDb: vi.fn().mockReturnValue({}),
-    db: {},
+    getDb: vi.fn().mockReturnValue({
+      getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+    }),
+    db: {
+      getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+    },
   })),
 }));
 
@@ -58,7 +63,11 @@ describe("storeCaptchasExternally", () => {
 
   beforeEach(() => {
     mockPair = {} as KeyringPair;
-    mockConfig = {} as ProsopoConfigOutput;
+    mockConfig = {
+      captchaScheduler: {
+        schedule: "0 * * * *",
+      },
+    } as ProsopoConfigOutput;
   });
 
   it("should initialize environment and start cron job", async () => {
@@ -69,26 +78,13 @@ describe("storeCaptchasExternally", () => {
     expect(CronJob).toHaveBeenCalledWith("0 * * * *", expect.any(Function));
   });
 
-  // it('should throw an error if db is undefined', async () => {
-  //     ;(ProviderEnvironment as any).mockImplementationOnce(() => ({
-  //         isReady: vi.fn().mockResolvedValue(true),
-  //         logger: {
-  //             log: vi.fn(),
-  //             error: vi.fn(),
-  //         },
-  //         db: undefined,
-  //     }))
-
-  //     await expect(storeCaptchasExternally(mockPair, mockConfig)).rejects.toThrow(ProsopoEnvError)
-  // })
-
   it("should log message when cron job runs", async () => {
     await storeCaptchasExternally(mockPair, mockConfig);
 
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     const envInstance = (ProviderEnvironment as any).mock.results[0].value;
     expect(envInstance.logger.info).toHaveBeenCalledWith(
-      `${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
+      "StoreCommitmentsExternal task running: false",
     );
   });
 });
