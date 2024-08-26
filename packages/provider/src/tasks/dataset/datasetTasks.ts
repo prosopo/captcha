@@ -115,13 +115,15 @@ export class DatasetManager {
             lastTask.updated &&
             lastTask.updated &&
             commitment.lastUpdatedTimestamp &&
-            commitment.lastUpdatedTimestamp > lastTask.updated,
+            commitment.lastUpdatedTimestamp > lastTask.updated &&
+            !lastTask.result?.data.commitments.includes(commitment.id),
         );
         powRecords = powRecords.filter(
           (commitment) =>
             lastTask.updated &&
             commitment.lastUpdatedTimestamp &&
-            commitment.lastUpdatedTimestamp > lastTask.updated,
+            commitment.lastUpdatedTimestamp > lastTask.updated &&
+            !lastTask.result?.data.powRecords.includes(commitment.challenge),
         );
       }
 
