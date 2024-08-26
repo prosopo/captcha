@@ -1,5 +1,5 @@
-import { I, H } from "./index-C0r-sMU3.js";
+import { H, G } from "./index-CIsOlT1M.js";
 export {
-  I as default,
-  H as render
+  H as default,
+  G as render
 };
