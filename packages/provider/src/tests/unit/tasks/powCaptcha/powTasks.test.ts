@@ -122,7 +122,6 @@ describe("PowCaptchaManager", () => {
         result: { status: CaptchaStatus.pending },
         userSubmitted: false,
         serverChecked: false,
-        storedStatus: StoredStatusNames.notStored,
         ipAddress,
         providerSignature,
         lastUpdatedTimestamp: Date.now(),
@@ -201,7 +200,6 @@ describe("PowCaptchaManager", () => {
         { status: CaptchaStatus.approved },
         false,
         true,
-        StoredStatusNames.userSubmitted,
         userSignature,
       ];
 

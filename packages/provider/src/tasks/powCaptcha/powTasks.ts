@@ -105,7 +105,15 @@ export class PowCaptchaManager {
       ApiParams.timestamp,
     );
 
-    // Check recency before looking up the record to avoid unnecessary network connections
+    const challengeRecord =
+      await this.db.getPowCaptchaRecordByChallenge(challenge);
+
+    if (!challengeRecord) {
+      logger.debug("No record of this challenge");
+      // no record of this challenge
+      return false;
+    }
+
     if (!verifyRecency(challenge, timeout)) {
       await this.db.updatePowCaptchaRecord(
         challenge,
@@ -115,18 +123,8 @@ export class PowCaptchaManager {
         },
         false,
         true,
-        StoredStatusNames.userSubmitted,
         userTimestampSignature,
       );
-      return false;
-    }
-
-    const challengeRecord =
-      await this.db.getPowCaptchaRecordByChallenge(challenge);
-
-    if (!challengeRecord) {
-      logger.debug("No record of this challenge");
-      // no record of this challenge
       return false;
     }
 
@@ -145,7 +143,6 @@ export class PowCaptchaManager {
       result,
       false,
       true,
-      StoredStatusNames.userSubmitted,
       userTimestampSignature,
     );
     return correct;

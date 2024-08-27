@@ -90,14 +90,14 @@ export class DatasetManager {
       return;
     }
 
-    const taskID = await this.db.createScheduledTaskStatus(
-      ScheduledTaskNames.StoreCommitmentsExternal,
-      ScheduledTaskStatus.Running,
-    );
-
     const lastTask = await this.db.getLastScheduledTaskStatus(
       ScheduledTaskNames.StoreCommitmentsExternal,
       ScheduledTaskStatus.Completed,
+    );
+
+    const taskID = await this.db.createScheduledTaskStatus(
+      ScheduledTaskNames.StoreCommitmentsExternal,
+      ScheduledTaskStatus.Running,
     );
 
     try {
@@ -110,48 +110,66 @@ export class DatasetManager {
         this.logger.info(
           `Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
         );
+        this.logger.info("Last task ran at ", new Date(lastTask.updated || 0));
         commitments = commitments.filter(
           (commitment) =>
             lastTask.updated &&
+            commitment.lastUpdatedTimestamp &&
+            (commitment.lastUpdatedTimestamp > lastTask.updated ||
+              !commitment.lastUpdatedTimestamp),
+        );
+        this.logger.info(
+          "PoW Records to store: ",
+          powRecords.map((pr) => ({
+            challenge: pr.challenge,
+            lastUpdatedTimestamp: new Date(pr.lastUpdatedTimestamp || 0),
+          })),
+        );
+        powRecords = powRecords.filter((commitment) => {
+          return (
             lastTask.updated &&
             commitment.lastUpdatedTimestamp &&
-            commitment.lastUpdatedTimestamp > lastTask.updated &&
-            !lastTask.result?.data.commitments.includes(commitment.id),
-        );
-        powRecords = powRecords.filter(
-          (commitment) =>
-            lastTask.updated &&
-            commitment.lastUpdatedTimestamp &&
-            commitment.lastUpdatedTimestamp > lastTask.updated &&
-            !lastTask.result?.data.powRecords.includes(commitment.challenge),
-        );
+            // either the update stamp is more recent than the last time this task ran or there is no update stamp,
+            // so it is a new record
+            (commitment.lastUpdatedTimestamp > lastTask.updated ||
+              !commitment.lastUpdatedTimestamp)
+          );
+        });
       }
 
-      this.logger.info(`Storing ${commitments.length} commitments externally`);
+      if (commitments.length || powRecords.length) {
+        this.logger.info(
+          `Storing ${commitments.length} commitments externally`,
+        );
 
-      this.logger.info(
-        `Storing ${powRecords.length} pow challenges externally`,
-      );
+        this.logger.info(
+          `Storing ${powRecords.length} pow challenges externally`,
+        );
 
-      await saveCaptchas(commitments, powRecords, this.config.mongoCaptchaUri);
+        await saveCaptchas(
+          commitments,
+          powRecords,
+          this.config.mongoCaptchaUri,
+        );
 
-      await this.db.markDappUserCommitmentsStored(
-        commitments.map((commitment) => commitment.id),
-      );
-      await this.db.markDappUserPoWCommitmentsStored(
-        powRecords.map((powRecords) => powRecords.challenge),
-      );
+        await this.db.markDappUserCommitmentsStored(
+          commitments.map((commitment) => commitment.id),
+        );
+        await this.db.markDappUserPoWCommitmentsStored(
+          powRecords.map((powRecords) => powRecords.challenge),
+        );
 
-      await this.db.updateScheduledTaskStatus(
-        taskID,
-        ScheduledTaskStatus.Completed,
-        {
-          data: {
-            commitments: commitments.map((c) => c.id),
-            powRecords: powRecords.map((pr) => pr.challenge),
+        await this.db.updateScheduledTaskStatus(
+          taskID,
+          ScheduledTaskStatus.Completed,
+          {
+            data: {
+              commitments: commitments.map((c) => c.id),
+              powRecords: powRecords.map((pr) => pr.challenge),
+            },
           },
-        },
-      );
+        );
+      }
     } catch (e: any) {
       this.logger.error(e);
       await this.db.updateScheduledTaskStatus(
