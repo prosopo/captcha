@@ -31,15 +31,15 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@prosopo/common": "2.0.1",
-    "@prosopo/types": "2.0.1",
+    "@prosopo/common": "2.0.2",
+    "@prosopo/types": "2.0.2",
     "mongoose": "^8.5.1",
     "zod": "^3.22.3"
   },
   "devDependencies": {
     "tslib": "2.6.2",
     "typescript": "5.1.6",
-    "@prosopo/config": "2.0.1"
+    "@prosopo/config": "2.0.2"
   },
   "sideEffects": false
 }

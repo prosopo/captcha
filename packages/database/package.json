@@ -31,10 +31,10 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@prosopo/common": "2.0.1",
-    "@prosopo/config": "2.0.1",
-    "@prosopo/types": "2.0.1",
-    "@prosopo/types-database": "2.0.1",
+    "@prosopo/common": "2.0.2",
+    "@prosopo/config": "2.0.2",
+    "@prosopo/types": "2.0.2",
+    "@prosopo/types-database": "2.0.2",
     "mongodb-memory-server": "^9.4.0",
     "mongoose": "^8.5.1"
   },
