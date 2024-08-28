@@ -542,7 +542,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       result: { status: CaptchaStatus.pending },
       userSubmitted,
       serverChecked,
-      storedStatus,
       difficulty,
       providerSignature,
       userSignature,
@@ -631,25 +630,24 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     result: CaptchaResult,
     serverChecked: boolean = false,
     userSubmitted: boolean = false,
-    storedStatus: StoredStatusNames = StoredStatusNames.notStored,
     userSignature?: string,
   ): Promise<void> {
     const tables = this.getTables();
+    const timestamp = Date.now();
     const update: Pick<
       PoWCaptchaStored,
       | "result"
       | "serverChecked"
       | "userSubmitted"
-      | "storedStatus"
+      | "storedAtTimestamp"
       | "userSignature"
       | "lastUpdatedTimestamp"
     > = {
       result,
       serverChecked,
       userSubmitted,
-      storedStatus,
       userSignature,
-      lastUpdatedTimestamp: Date.now(),
+      lastUpdatedTimestamp: timestamp,
     };
     try {
       const updateResult = await tables.powCaptcha.updateOne(
@@ -737,12 +735,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /** @description Mark a list of captcha commits as stored
    */
   async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
-    const updateDoc: Pick<
-      StoredCaptcha,
-      "storedStatus" | "lastUpdatedTimestamp"
-    > = {
-      storedStatus: StoredStatusNames.stored,
-      lastUpdatedTimestamp: Date.now(),
+    const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
+      storedAtTimestamp: Date.now(),
     };
     await this.tables?.commitment.updateMany(
       { id: { $in: commitmentIds } },
@@ -786,12 +780,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /** @description Mark a list of PoW captcha commits as stored
    */
   async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
-    const updateDoc: Pick<
-      StoredCaptcha,
-      "storedStatus" | "lastUpdatedTimestamp"
-    > = {
-      storedStatus: StoredStatusNames.stored,
-      lastUpdatedTimestamp: Date.now(),
+    const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
+      storedAtTimestamp: Date.now(),
     };
 
     await this.tables?.powCaptcha.updateMany(

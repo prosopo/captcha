@@ -252,7 +252,6 @@ export class ImgCaptchaManager {
         userSignature: userRequestHashSignature,
         userSubmitted: true,
         serverChecked: false,
-        storedStatus: StoredStatusNames.userSubmitted,
         requestedAtTimestamp: timestamp,
         ipAddress,
       };

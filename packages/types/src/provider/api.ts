@@ -57,8 +57,15 @@ export enum ApiPaths {
 
 export type TGetImageCaptchaChallengePathAndParams =
   `${ApiPaths.GetImageCaptchaChallenge}/${string}/${string}/${string}`;
+
 export type TGetImageCaptchaChallengeURL =
   `${string}${TGetImageCaptchaChallengePathAndParams}`;
+
+export type TGetPowCaptchaChallengeURL =
+  `${string}${ApiPaths.GetPowCaptchaChallenge}`;
+
+export type TSubmitPowCaptchaSolutionURL =
+  `${string}${ApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
   BatchCommit = "/v1/prosopo/provider/admin/batch",

@@ -16,6 +16,7 @@ import { getLoggerDefault } from "@prosopo/common";
 import {
   PowCaptchaRecord,
   PowCaptchaRecordSchema,
+  PoWCaptchaStored,
   type UserCommitmentRecord,
   UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
@@ -28,7 +29,7 @@ let StoredPoWCaptcha: mongoose.Model<PowCaptchaRecord>;
 
 export const saveCaptchas = async (
   imageCaptchaEvents: UserCommitmentRecord[],
-  powCaptchaEvents: PoWCaptchaUser[],
+  powCaptchaEvents: PoWCaptchaStored[],
   atlasUri: string,
 ) => {
   const connection = mongoose.createConnection(atlasUri, {
@@ -51,12 +52,28 @@ export const saveCaptchas = async (
       .on("error", reject);
   });
   if (imageCaptchaEvents.length) {
-    await StoredImageCaptcha.insertMany(imageCaptchaEvents);
-    logger.info("Mongo Saved Image Events");
+    const result = await StoredImageCaptcha.bulkWrite(
+      imageCaptchaEvents.map((doc) => ({
+        updateOne: {
+          filter: { id: doc.id },
+          update: { $set: doc },
+          upsert: true,
+        },
+      })),
+    );
+    logger.info("Mongo Saved Image Events", result);
   }
   if (powCaptchaEvents.length) {
-    await StoredPoWCaptcha.insertMany(powCaptchaEvents);
-    logger.info("Mongo Saved PoW Events");
+    const result = await StoredPoWCaptcha.bulkWrite(
+      powCaptchaEvents.map((doc) => ({
+        updateOne: {
+          filter: { challenge: doc.challenge },
+          update: { $set: doc },
+          upsert: true,
+        },
+      })),
+    );
+    logger.info("Mongo Saved PoW Events", result);
   }
 
   await connection.close();

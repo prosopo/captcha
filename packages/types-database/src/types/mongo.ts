@@ -83,7 +83,7 @@ export interface StoredCaptcha {
   ipAddress: string;
   userSubmitted: boolean;
   serverChecked: boolean;
-  storedStatus: StoredStatus;
+  storedAtTimestamp?: Timestamp;
   lastUpdatedTimestamp?: Timestamp;
 }
 
@@ -110,14 +110,9 @@ export const UserCommitmentSchema = object({
   ipAddress: string(),
   userSubmitted: boolean(),
   serverChecked: boolean(),
-  storedStatus: union([
-    literal(StoredStatusNames.notStored),
-    literal(StoredStatusNames.userSubmitted),
-    literal(StoredStatusNames.serverChecked),
-    literal(StoredStatusNames.stored),
-  ]),
-  requestedAtTimestamp: number(),
-  lastUpdatedTimestamp: number().optional(),
+  storedAtTimestamp: TimestampSchema.optional(),
+  requestedAtTimestamp: TimestampSchema,
+  lastUpdatedTimestamp: TimestampSchema.optional(),
 }) satisfies ZodType<UserCommitmentRecord>;
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -184,7 +179,7 @@ export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   userSignature: { type: String, required: false },
   userSubmitted: { type: Boolean, required: true },
   serverChecked: { type: Boolean, required: true },
-  storedStatus: { type: String, enum: StoredStatusNames, required: true },
+  storedAtTimestamp: { type: Number, required: false },
 });
 
 // Set an index on the captchaId field, ascending
@@ -209,7 +204,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   userSignature: { type: String, required: true },
   userSubmitted: { type: Boolean, required: true },
   serverChecked: { type: Boolean, required: true },
-  storedStatus: { type: String, enum: StoredStatusNames, required: false },
+  storedAtTimestamp: { type: Number, required: false },
   requestedAtTimestamp: { type: Number, required: true },
   lastUpdatedTimestamp: { type: Number, required: false },
 });
@@ -463,7 +458,6 @@ export interface Database {
     ipAddress: string,
     serverChecked?: boolean,
     userSubmitted?: boolean,
-    storedStatus?: StoredStatus,
     userSignature?: string,
   ): Promise<void>;
 
@@ -476,7 +470,6 @@ export interface Database {
     result: CaptchaResult,
     serverChecked: boolean,
     userSubmitted: boolean,
-    storedStatus: StoredStatusNames,
     userSignature?: string,
   ): Promise<void>;
 }

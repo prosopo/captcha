@@ -14,18 +14,18 @@
 
 import { signatureVerify } from "@polkadot/util-crypto";
 import { ProsopoContractError } from "@prosopo/common";
-import { verifyRecency } from "@prosopo/contract";
 import { describe, expect, it, vi } from "vitest";
 import {
   checkPowSignature,
   validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { verifyRecency } from "@prosopo/util";
 
 vi.mock("@polkadot/util-crypto", () => ({
   signatureVerify: vi.fn(),
 }));
 
-vi.mock("@prosopo/contract", () => ({
+vi.mock("@prosopo/util", () => ({
   verifyRecency: vi.fn(),
 }));
 
