@@ -40,7 +40,7 @@ vi.mock("@polkadot/util", () => ({
 }));
 
 vi.mock("@prosopo/util", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = (await importOriginal()) as Record<string, any>;
   return {
     ...actual,
     verifyRecency: vi.fn(),
