@@ -84,9 +84,6 @@ jobs:
                     git add .
                     git commit -m "Bump version to ${{ github.event.inputs.version }}"
 
-                    # set the branch to track the remote branch
-                    git branch --set-upstream-to=origin/$BRANCH_NAME $BRANCH_NAME
-
                     # push version changes
                     git push --set-upstream origin $BRANCH_NAME
 
