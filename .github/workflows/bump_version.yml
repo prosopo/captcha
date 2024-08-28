@@ -82,7 +82,7 @@ jobs:
                     git commit -m "Bump version to ${{ github.event.inputs.version }}"
 
                     # push version changes
-                    git push --set-upstream origin bump-version-${{ github.event.inputs.version }}
+                    git push --set-upstream origin release/${{ github.event.inputs.version }}
 
                     # create a PR for the release
                     gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill
