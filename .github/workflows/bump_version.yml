@@ -86,6 +86,8 @@ jobs:
 
                     # push version changes
                     git push --set-upstream origin $BRANCH_NAME
+                  
+                    git fetch origin main
 
                     # create a PR for the release
                     gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill
