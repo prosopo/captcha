@@ -1,42 +1,42 @@
 {
-	"name": "@prosopo/api",
-	"version": "2.0.1",
-	"description": "Wrapper for the provider API",
-	"main": "dist/index.js",
-	"type": "module",
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
-	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
-	},
-	"author": "PROSOPO LIMITED <info@prosopo.io>",
-	"license": "Apache-2.0",
-	"bugs": {
-		"url": "https://github.com/prosopo/captcha/issues"
-	},
-	"homepage": "https://github.com/prosopo/captcha#readme",
-	"dependencies": {
-		"@prosopo/types": "2.0.1"
-	},
-	"devDependencies": {
-		"@prosopo/config": "2.0.1",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6"
-	},
-	"sideEffects": false
+  "name": "@prosopo/api",
+  "version": "2.0.2",
+  "description": "Wrapper for the provider API",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "scripts": {
+    "test": "echo \"No test specified\"",
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "build:cjs": "npx vite --config vite.cjs.config.ts build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo/captcha.git"
+  },
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/prosopo/captcha/issues"
+  },
+  "homepage": "https://github.com/prosopo/captcha#readme",
+  "dependencies": {
+    "@prosopo/types": "2.0.1"
+  },
+  "devDependencies": {
+    "@prosopo/config": "2.0.1",
+    "tslib": "2.6.2",
+    "typescript": "5.1.6"
+  },
+  "sideEffects": false
 }
