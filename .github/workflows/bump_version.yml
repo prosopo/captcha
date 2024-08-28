@@ -64,9 +64,12 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                  
+                    # set the branch name
+                    BRANCH_NAME="release/${{ github.event.inputs.version }}"
 
                     # make a new branch for the version changes
-                    git switch -c release/${{ github.event.inputs.version }}
+                    git switch -c $BRANCH_NAME
 
                     # find all package.json files, recursively
                     pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
@@ -82,7 +85,9 @@ jobs:
                     git commit -m "Bump version to ${{ github.event.inputs.version }}"
 
                     # push version changes
-                    git push --set-upstream origin release/${{ github.event.inputs.version }}
+                    git push --set-upstream origin $BRANCH_NAME
+                  
+                    git fetch origin main
 
                     # create a PR for the release
                     gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill
