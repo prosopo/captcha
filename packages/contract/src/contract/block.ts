@@ -31,21 +31,3 @@ export const getCurrentBlockNumber = async (
 ): Promise<number> => {
   return (await api.rpc.chain.getBlock()).block.header.number.toNumber();
 };
-
-/**
- * Verify the time since the blockNumber is equal to or less than the maxVerifiedTime.
- * @param challenge
- * @param maxVerifiedTime
- */
-export const verifyRecency = (challenge: string, maxVerifiedTime: number) => {
-  // Get the timestamp from the challenge
-  const timestamp = challenge.split("___")[0];
-
-  if (!timestamp) {
-    throw new Error("Invalid challenge");
-  }
-
-  const currentTimestamp = Date.now();
-  const challengeTimestamp = Number.parseInt(timestamp, 10);
-  return currentTimestamp - challengeTimestamp <= maxVerifiedTime;
-};

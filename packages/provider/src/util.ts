@@ -2,7 +2,6 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoContractError } from "@prosopo/common";
-import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +15,8 @@ import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 

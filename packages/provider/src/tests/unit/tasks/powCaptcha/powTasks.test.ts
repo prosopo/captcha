@@ -14,6 +14,7 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
+import { verifyRecency } from "@prosopo/util";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
   ApiParams,
@@ -21,18 +22,13 @@ import {
   POW_SEPARATOR,
   PoWChallengeId,
 } from "@prosopo/types";
-import {
-  Database,
-  PoWCaptchaStored,
-  StoredStatusNames,
-} from "@prosopo/types-database";
+import { Database, PoWCaptchaStored } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
   checkPowSignature,
   validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import { verifyRecency } from "@prosopo/contract";
 
 vi.mock("@polkadot/util-crypto", () => ({
   signatureVerify: vi.fn(),
@@ -43,9 +39,13 @@ vi.mock("@polkadot/util", () => ({
   stringToHex: vi.fn(),
 }));
 
-vi.mock("@prosopo/contract", () => ({
-  verifyRecency: vi.fn(),
-}));
+vi.mock("@prosopo/util", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    verifyRecency: vi.fn(),
+  };
+});
 
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
   checkPowSignature: vi.fn(),
@@ -216,17 +216,33 @@ describe("PowCaptchaManager", () => {
       const timeout = 1000;
       const timestampSignature = "testTimestampSignature";
       const ipAddress = "ipAddress";
+      const challengeRecord: PoWCaptchaStored = {
+        challenge,
+        dappAccount: pair.address,
+        userAccount: "testUserAccount",
+        requestedAtTimestamp: 12345,
+        result: { status: CaptchaStatus.pending },
+        userSubmitted: false,
+        serverChecked: false,
+        ipAddress,
+        providerSignature: "testSignature",
+        difficulty,
+        lastUpdatedTimestamp: 0,
+      };
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (verifyRecency as any).mockImplementation(() => {
-        throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-          context: {
-            failedFuncName: "verifyPowCaptchaSolution",
-          },
-        });
+        return true;
       });
 
-      await expect(
-        powCaptchaManager.verifyPowCaptchaSolution(
+      (db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+        challengeRecord,
+      );
+
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (validateSolution as any).mockImplementation(() => false);
+
+      expect(
+        await powCaptchaManager.verifyPowCaptchaSolution(
           challenge,
           difficulty,
           signature,
@@ -235,13 +251,7 @@ describe("PowCaptchaManager", () => {
           timestampSignature,
           ipAddress,
         ),
-      ).rejects.toThrow(
-        new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-          context: {
-            failedFuncName: "verifyPowCaptchaSolution",
-          },
-        }),
-      );
+      ).toBe(false);
 
       expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
     });

@@ -23,9 +23,8 @@ import {
   PoWChallengeId,
 } from "@prosopo/types";
 import { Database, StoredStatusNames } from "@prosopo/types-database";
-import { at } from "@prosopo/util";
+import { at, verifyRecency } from "@prosopo/util";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
-import { verifyRecency } from "@prosopo/contract";
 
 const logger = getLoggerDefault();
 
