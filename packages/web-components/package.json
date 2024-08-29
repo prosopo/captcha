@@ -1,44 +1,44 @@
 {
-	"name": "@prosopo/web-components",
-	"version": "2.0.1",
-	"description": "Non business logic utilities for web applications",
-	"main": "dist/index.js",
-	"type": "module",
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
-	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/types.git"
-	},
-	"author": "Prosopo Limited",
-	"license": "Apache-2.0",
-	"bugs": {
-		"url": "https://github.com/prosopo/captcha/issues"
-	},
-	"homepage": "https://github.com/prosopo/captcha#readme",
-	"dependencies": {
-		"@emotion/react": "^11.11.1",
-		"@emotion/styled": "^11.11.0",
-		"react": "^18.3.1"
-	},
-	"devDependencies": {
-		"tslib": "2.6.2",
-		"typescript": "5.1.6",
-		"@prosopo/config": "2.0.1"
-	},
-	"sideEffects": false
+  "name": "@prosopo/web-components",
+  "version": "2.0.2",
+  "description": "Non business logic utilities for web applications",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "scripts": {
+    "test": "echo \"No test specified\"",
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "build:cjs": "npx vite --config vite.cjs.config.ts build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/prosopo/types.git"
+  },
+  "author": "Prosopo Limited",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/prosopo/captcha/issues"
+  },
+  "homepage": "https://github.com/prosopo/captcha#readme",
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "tslib": "2.6.2",
+    "typescript": "5.1.6",
+    "@prosopo/config": "2.0.2"
+  },
+  "sideEffects": false
 }
