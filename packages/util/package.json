@@ -1,60 +1,60 @@
 {
-	"name": "@prosopo/util",
-	"version": "2.0.1",
-	"author": "PROSOPO LIMITED <info@prosopo.io>",
-	"license": "Apache-2.0",
-	"private": false,
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"cli": "node ./dist/js/cli.js",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
-	},
-	"main": "./dist/index.js",
-	"type": "module",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		},
-		"./lodash": {
-			"types": "./dist/lodash.d.ts",
-			"import": "./dist/lodash.js",
-			"require": "./dist/cjs/lodash.cjs",
-			"default": "./dist/lodash.js"
-		}
-	},
-	"types": "./dist/index.d.ts",
-	"dependencies": {
-		"@noble/hashes": "^1.3.3",
-		"@prosopo/config": "2.0.1",
-		"dotenv": "^16.0.1",
-		"lodash": "^4.17.21",
-		"seedrandom": "^3.0.5"
-	},
-	"devDependencies": {
-		"@types/lodash": "^4.14.198",
-		"@types/seedrandom": "^3.0.5",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6",
-		"vitest": "^1.3.1"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
-	},
-	"bugs": {
-		"url": "https://github.com/prosopo/captcha/issues"
-	},
-	"homepage": "https://github.com/prosopo/captcha#readme",
-	"publishConfig": {
-		"registry": "https://registry.npmjs.org"
-	},
-	"description": "Utility package to house all code that is not specific to prosopo. E.g. random number generation, string manipulation, etc.",
-	"sideEffects": false
+  "name": "@prosopo/util",
+  "version": "2.0.2",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "private": false,
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "build:cjs": "npx vite --config vite.cjs.config.ts build",
+    "cli": "node ./dist/js/cli.js",
+    "test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+  },
+  "main": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.cjs"
+    },
+    "./lodash": {
+      "types": "./dist/lodash.d.ts",
+      "import": "./dist/lodash.js",
+      "require": "./dist/cjs/lodash.cjs",
+      "default": "./dist/lodash.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@noble/hashes": "^1.3.3",
+    "@prosopo/config": "2.0.2",
+    "dotenv": "^16.0.1",
+    "lodash": "^4.17.21",
+    "seedrandom": "^3.0.5"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.198",
+    "@types/seedrandom": "^3.0.5",
+    "tslib": "2.6.2",
+    "typescript": "5.1.6",
+    "vitest": "^1.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo/captcha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo/captcha/issues"
+  },
+  "homepage": "https://github.com/prosopo/captcha#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "description": "Utility package to house all code that is not specific to prosopo. E.g. random number generation, string manipulation, etc.",
+  "sideEffects": false
 }
