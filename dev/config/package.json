@@ -75,7 +75,7 @@
     "vite-bundle-visualizer": "^1.0.1",
     "vite-plugin-no-bundle": "^3.0.0",
     "vite-tsconfig-paths": "^4.3.1",
-    "webpack": "^5.91.0",
+    "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4"
   },
