@@ -1,72 +1,72 @@
 {
-	"name": "@prosopo/datasets",
-	"version": "2.0.1",
-	"author": "PROSOPO LIMITED <info@prosopo.io>",
-	"license": "Apache-2.0",
-	"private": false,
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"cli": "node ./dist/cli.js"
-	},
-	"main": "./dist/index.js",
-	"type": "module",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		},
-		"./captcha": {
-			"types": "./dist/captcha/index.d.ts",
-			"import": "./dist/captcha/index.js",
-			"require": "./dist/cjs/captcha/index.cjs",
-			"default": "./dist/captcha/index.js"
-		}
-	},
-	"typesVersions": {
-		"*": {
-			"types": [
-				"dist/types"
-			],
-			"captcha": [
-				"dist/captcha"
-			]
-		}
-	},
-	"dependencies": {
-		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "2.0.1",
-		"@prosopo/types": "2.0.1",
-		"@prosopo/util": "2.0.1",
-		"vitest": "^1.3.1"
-	},
-	"devDependencies": {
-		"@prosopo/config": "2.0.1",
-		"dotenv": "^16.0.1",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
-	},
-	"bugs": {
-		"url": "https://github.com/prosopo/captcha/issues"
-	},
-	"homepage": "https://github.com/prosopo/captcha#readme",
-	"publishConfig": {
-		"registry": "https://registry.npmjs.org"
-	},
-	"description": "Datasets for use with providers",
-	"directories": {
-		"test": "tests"
-	},
-	"sideEffects": false
+  "name": "@prosopo/datasets",
+  "version": "2.0.2",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "private": false,
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "build:cjs": "npx vite --config vite.cjs.config.ts build",
+    "test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+    "cli": "node ./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.cjs"
+    },
+    "./captcha": {
+      "types": "./dist/captcha/index.d.ts",
+      "import": "./dist/captcha/index.js",
+      "require": "./dist/cjs/captcha/index.cjs",
+      "default": "./dist/captcha/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/types"
+      ],
+      "captcha": [
+        "dist/captcha"
+      ]
+    }
+  },
+  "dependencies": {
+    "@polkadot/util": "12.6.2",
+    "@prosopo/common": "2.0.2",
+    "@prosopo/types": "2.0.2",
+    "@prosopo/util": "2.0.2",
+    "vitest": "^1.3.1"
+  },
+  "devDependencies": {
+    "@prosopo/config": "2.0.2",
+    "dotenv": "^16.0.1",
+    "tslib": "2.6.2",
+    "typescript": "5.1.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo/captcha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo/captcha/issues"
+  },
+  "homepage": "https://github.com/prosopo/captcha#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "description": "Datasets for use with providers",
+  "directories": {
+    "test": "tests"
+  },
+  "sideEffects": false
 }

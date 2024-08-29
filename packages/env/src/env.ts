@@ -19,7 +19,6 @@ import { Databases } from "@prosopo/database";
 import type {
 	AssetsResolver,
 	EnvironmentTypes,
-	NetworkNames,
 } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
@@ -29,10 +28,7 @@ import { get } from "@prosopo/util";
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
 	db: Database | undefined;
-	contractAddress: string;
 	defaultEnvironment: EnvironmentTypes;
-	defaultNetwork: NetworkNames;
-	contractName: string;
 	logger: Logger;
 	assetsResolver: AssetsResolver | undefined;
 	keyring: Keyring;
@@ -41,40 +37,19 @@ export class Environment implements ProsopoEnvironment {
 	constructor(config: ProsopoBasicConfigOutput, pair?: KeyringPair) {
 		this.config = config;
 		this.defaultEnvironment = this.config.defaultEnvironment;
-		this.defaultNetwork = this.config.defaultNetwork;
 		this.pair = pair;
 		this.logger = getLogger(this.config.logLevel, "ProsopoEnvironment");
-		if (
-			this.config.defaultNetwork &&
-			Object.prototype.hasOwnProperty.call(
-				this.config.networks,
-				this.config.defaultNetwork,
-			) &&
-			this.config.networks &&
-			this.config.networks[this.defaultNetwork]
-		) {
-			const network = this.config.networks[this.defaultNetwork];
-			this.contractAddress = network?.contract.address;
-			this.contractName = network?.contract.name;
 
-			this.keyring = new Keyring({
-				type: "sr25519", // TODO get this from the chain
-			});
-			if (this.pair) this.keyring.addPair(this.pair);
-			if (this.config.database) {
-				this.importDatabase().catch((err) => {
-					throw new ProsopoEnvError("DATABASE.DATABASE_IMPORT_FAILED", {
-						context: { error: err },
-						logger: this.logger,
-					});
+		this.keyring = new Keyring({
+			type: "sr25519",
+		});
+		if (this.pair) this.keyring.addPair(this.pair);
+		if (this.config.database) {
+			this.importDatabase().catch((err) => {
+				throw new ProsopoEnvError("DATABASE.DATABASE_IMPORT_FAILED", {
+					context: { error: err },
+					logger: this.logger,
 				});
-			}
-		} else {
-			throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
-				context: {
-					constructor: this.constructor.name,
-					environment: this.config.defaultEnvironment,
-				},
 			});
 		}
 	}

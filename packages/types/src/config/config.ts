@@ -21,12 +21,10 @@ import { record, string, enum as zEnum } from "zod";
 import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
-import networks from "../networks/index.js";
 import {
   ApiPathRateLimits,
   ProviderDefaultRateLimits,
 } from "../provider/index.js";
-import { NetworkNamesSchema, ProsopoNetworkSchema } from "./network.js";
 import {
   DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
   DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -84,7 +82,6 @@ export const ProsopoBaseConfigSchema = object({
   defaultEnvironment: EnvironmentTypesSchema.default(
     EnvironmentTypesSchema.Values.production,
   ),
-  defaultNetwork: NetworkNamesSchema.default(NetworkNamesSchema.Values.astar),
   // The account with which to query the contract.merge sign transactions
   account: object({
     address: string().optional(),
@@ -111,13 +108,10 @@ export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>;
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
   object({
-    networks: ProsopoNetworkSchema.default(networks),
     database: DatabaseConfigSchema.optional(),
     devOnlyWatchEvents: boolean().optional(),
   }),
 );
-export type ProsopoNetworksSchemaInput = input<typeof ProsopoNetworkSchema>;
-export type ProsopoNetworksSchemaOutput = output<typeof ProsopoNetworkSchema>;
 
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>;
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>;
