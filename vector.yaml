@@ -1,0 +1,25 @@
+sources:
+  in:
+    type: "stdin"
+
+sinks:
+  zinc:
+    type: "http"
+    inputs: ["in"]
+    uri: "https://api.openobserve.ai/api/dev_organization_29569_u24VnjrjN7XrP35/default/_json"
+    method: "post"
+    auth:
+      strategy: "basic"
+      user: "dev@prosopo.io"
+      password: "k365092mo418uCUwp7tL"
+    compression: "gzip"
+    encoding:
+      codec: "json"
+      timestamp_format: "rfc3339"
+    healthcheck:
+      enabled: false
+  out:
+    inputs: ["in"]
+    type: "console"
+    encoding:
+      codec: "text"
