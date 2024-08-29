@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, stringToHex, u8aToHex } from "@polkadot/util";
-import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
+import { u8aToHex } from "@polkadot/util";
+import { randomAsHex } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
-  compareCaptchaSolutions,
   computePendingRequestHash,
   parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
@@ -26,7 +25,11 @@ import {
   CaptchaStatus,
   type PendingCaptchaRequest,
 } from "@prosopo/types";
-import type { Database, UserCommitmentRecord } from "@prosopo/types-database";
+import {
+  Database,
+  StoredStatusNames,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
@@ -148,32 +151,35 @@ describe("ImgCaptchaManager", () => {
       const datasetId = "datasetId";
       const userAccount = "userAccount";
       const dataset = { datasetId, captchas: [] };
-
+      const ipAddress = "0.0.0.0";
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (randomAsHex as any).mockReturnValue("randomSalt"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (computePendingRequestHash as any).mockReturnValue("computedHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (pair.sign as any).mockReturnValue("signedTimestamp"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (u8aToHex as any).mockReturnValue("hexSignedTime"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (pair.sign as any).mockReturnValue("hexSignedRequestHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+      (u8aToHex as any).mockReturnValue("hexSignedRequestHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (shuffleArray as any).mockReturnValue([]);
 
       const result = await imgCaptchaManager.getRandomCaptchasAndRequestHash(
         datasetId,
         userAccount,
+        ipAddress,
       );
 
       expect(result).toEqual({
         captchas: [],
         requestHash: "computedHash",
         timestamp: expect.any(Number),
-        signedTimestamp: "hexSignedTime",
+        signedRequestHash: "hexSignedRequestHash",
       });
     });
 
     it("should throw an error if dataset details are not found", async () => {
       const datasetId = "datasetId";
       const userAccount = "userAccount";
+      const ipAddress = "0.0.0.0";
+
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getDatasetDetails as any).mockResolvedValue(null);
 
@@ -181,6 +187,7 @@ describe("ImgCaptchaManager", () => {
         imgCaptchaManager.getRandomCaptchasAndRequestHash(
           datasetId,
           userAccount,
+          ipAddress,
         ),
       ).rejects.toThrow(
         new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {
@@ -303,17 +310,16 @@ describe("ImgCaptchaManager", () => {
     const dappUserCommitment: UserCommitmentRecord = {
       id: "commitmentId",
       userAccount: "userAccount",
-      dappContract: "dappContract",
+      dappAccount: "dappAccount",
       providerAccount: "providerAccount",
       datasetId: "datasetId",
-      status: CaptchaStatus.approved,
-      userSignature: [],
-      requestedAt: 0,
-      completedAt: 0,
-      processed: false,
-      batched: false,
-      stored: false,
+      result: { status: CaptchaStatus.approved },
+      userSignature: "",
+      userSubmitted: true,
+      serverChecked: false,
       requestedAtTimestamp: 0,
+      ipAddress: "0.0.0.0",
+      lastUpdatedTimestamp: Date.now(),
     };
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
@@ -343,21 +349,21 @@ describe("ImgCaptchaManager", () => {
 
   it("should get dapp user commitment by account", async () => {
     const userAccount = "userAccount";
+    const dappAccount = "dappAccount";
     const dappUserCommitments: UserCommitmentRecord[] = [
       {
         id: "commitmentId",
-        userAccount: "userAccount",
-        dappContract: "dappContract",
+        userAccount,
+        dappAccount,
         providerAccount: "providerAccount",
         datasetId: "datasetId",
-        status: CaptchaStatus.approved,
-        userSignature: [],
-        requestedAt: 0,
-        completedAt: 0,
-        processed: false,
-        batched: false,
-        stored: false,
+        result: { status: CaptchaStatus.approved },
+        userSignature: "",
+        userSubmitted: true,
+        serverChecked: false,
         requestedAtTimestamp: 0,
+        ipAddress: "0.0.0.0",
+        lastUpdatedTimestamp: Date.now(),
       },
     ];
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -365,22 +371,27 @@ describe("ImgCaptchaManager", () => {
       dappUserCommitments,
     );
 
-    const result =
-      await imgCaptchaManager.getDappUserCommitmentByAccount(userAccount);
+    const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
+      userAccount,
+      dappAccount,
+    );
 
     expect(result).toEqual(dappUserCommitments[0]);
   });
 
   it("should return undefined if no approved dapp user commitment is found by account", async () => {
     const userAccount = "userAccount";
+    const dappAccount = "dappAccount";
     const dappUserCommitments: UserCommitmentRecord[] = [];
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getDappUserCommitmentByAccount as any).mockResolvedValue(
       dappUserCommitments,
     );
 
-    const result =
-      await imgCaptchaManager.getDappUserCommitmentByAccount(userAccount);
+    const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
+      userAccount,
+      dappAccount,
+    );
 
     expect(result).toBeUndefined();
   });

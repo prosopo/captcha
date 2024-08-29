@@ -1,9 +1,3 @@
-import { blake2b } from "@noble/hashes/blake2b";
-import { u8aToHex } from "@polkadot/util";
-import { randomAsHex } from "@polkadot/util-crypto";
-import { ProsopoEnvError } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
-import { ProsopoServer } from "@prosopo/server";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +11,13 @@ import { ProsopoServer } from "@prosopo/server";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { blake2b } from "@noble/hashes/blake2b";
+import { u8aToHex } from "@polkadot/util";
+import { randomAsHex } from "@polkadot/util-crypto";
+import { ProsopoEnvError } from "@prosopo/common";
+import { getPairAsync } from "@prosopo/contract";
+import { ProsopoServer } from "@prosopo/server";
 import {
   ApiParams,
   type ProcaptchaToken,
@@ -86,7 +87,6 @@ const signup = async (
     });
     const payload = SubscribeBodySpec.parse(req.body);
     const pair = await getPairAsync(
-      config.networks[config.defaultNetwork],
       config.account.secret,
     );
     const prosopoServer = new ProsopoServer(config, pair);
@@ -153,7 +153,6 @@ const login = async (
 ) => {
   const User = mongoose.model<UserInterface>("User");
   const pair = await getPairAsync(
-    config.networks[config.defaultNetwork],
     config.account.secret,
   );
   const prosopoServer = new ProsopoServer(config, pair);

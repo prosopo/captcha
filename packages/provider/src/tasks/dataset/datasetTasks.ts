@@ -14,14 +14,15 @@ import { saveCaptchaEvent, saveCaptchas } from "@prosopo/database";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { parseCaptchaDataset } from "@prosopo/datasets";
-import type {
+import {
   CaptchaConfig,
   DatasetRaw,
-  PowCaptcha,
   ProsopoConfigOutput,
+  ScheduledTaskNames,
+  ScheduledTaskStatus,
   StoredEvents,
 } from "@prosopo/types";
-import type { Database, UserCommitmentRecord } from "@prosopo/types-database";
+import type { Database } from "@prosopo/types-database";
 import { providerValidateDataset } from "./datasetTasksUtils.js";
 
 export class DatasetManager {
@@ -80,7 +81,7 @@ export class DatasetManager {
   }
 
   /**
-   * @description Store commitments externally in the database, clear them from local cache
+   * @description Store commitments externally in the database
    * @returns
    */
   async storeCommitmentsExternal(): Promise<void> {
@@ -89,18 +90,93 @@ export class DatasetManager {
       return;
     }
 
-    const commitments = await this.db.getUnstoredDappUserCommitments();
-    this.logger.info(`Storing ${commitments.length} commitments externally`);
-
-    const powRecords = await this.db.getUnstoredDappUserPoWCommitments();
-    this.logger.info(`Storing ${powRecords.length} pow challenges externally`);
-
-    await saveCaptchas(commitments, powRecords, this.config.mongoCaptchaUri);
-    await this.db.markDappUserCommitmentsStored(
-      commitments.map((commitment) => commitment.id),
+    const lastTask = await this.db.getLastScheduledTaskStatus(
+      ScheduledTaskNames.StoreCommitmentsExternal,
+      ScheduledTaskStatus.Completed,
     );
-    await this.db.markDappUserPoWCommitmentsStored(
-      powRecords.map((powRecords) => powRecords.challenge),
+
+    const taskID = await this.db.createScheduledTaskStatus(
+      ScheduledTaskNames.StoreCommitmentsExternal,
+      ScheduledTaskStatus.Running,
     );
+
+    try {
+      let commitments = await this.db.getUnstoredDappUserCommitments();
+
+      let powRecords = await this.db.getUnstoredDappUserPoWCommitments();
+
+      // filter to only get records that have been updated since the last task
+      if (lastTask) {
+        this.logger.info(
+          `Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
+        );
+        this.logger.info("Last task ran at ", new Date(lastTask.updated || 0));
+        commitments = commitments.filter(
+          (commitment) =>
+            lastTask.updated &&
+            commitment.lastUpdatedTimestamp &&
+            (commitment.lastUpdatedTimestamp > lastTask.updated ||
+              !commitment.lastUpdatedTimestamp),
+        );
+        this.logger.info(
+          "PoW Records to store: ",
+          powRecords.map((pr) => ({
+            challenge: pr.challenge,
+            lastUpdatedTimestamp: new Date(pr.lastUpdatedTimestamp || 0),
+          })),
+        );
+        powRecords = powRecords.filter((commitment) => {
+          return (
+            lastTask.updated &&
+            commitment.lastUpdatedTimestamp &&
+            // either the update stamp is more recent than the last time this task ran or there is no update stamp,
+            // so it is a new record
+            (commitment.lastUpdatedTimestamp > lastTask.updated ||
+              !commitment.lastUpdatedTimestamp)
+          );
+        });
+      }
+
+      if (commitments.length || powRecords.length) {
+        this.logger.info(
+          `Storing ${commitments.length} commitments externally`,
+        );
+
+        this.logger.info(
+          `Storing ${powRecords.length} pow challenges externally`,
+        );
+
+        await saveCaptchas(
+          commitments,
+          powRecords,
+          this.config.mongoCaptchaUri,
+        );
+
+        await this.db.markDappUserCommitmentsStored(
+          commitments.map((commitment) => commitment.id),
+        );
+        await this.db.markDappUserPoWCommitmentsStored(
+          powRecords.map((powRecords) => powRecords.challenge),
+        );
+
+        await this.db.updateScheduledTaskStatus(
+          taskID,
+          ScheduledTaskStatus.Completed,
+          {
+            data: {
+              commitments: commitments.map((c) => c.id),
+              powRecords: powRecords.map((pr) => pr.challenge),
+            },
+          },
+        );
+      }
+    } catch (e: any) {
+      this.logger.error(e);
+      await this.db.updateScheduledTaskStatus(
+        taskID,
+        ScheduledTaskStatus.Failed,
+        { error: e.toString() },
+      );
+    }
   }
 }

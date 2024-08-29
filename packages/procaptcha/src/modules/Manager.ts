@@ -19,7 +19,6 @@ import {
   ProsopoDatasetError,
   ProsopoEnvError,
   ProsopoError,
-  trimProviderUrl,
 } from "@prosopo/common";
 import { loadBalancer } from "@prosopo/load-balancer";
 import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -43,6 +42,7 @@ import { at, hashToHex } from "@prosopo/util";
 import { sleep } from "../utils/utils.js";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
 import storage from "./storage.js";
+import { stringToHex } from "@polkadot/util/string";
 
 const defaultState = (): Partial<ProcaptchaState> => {
   return {
@@ -57,18 +57,6 @@ const defaultState = (): Partial<ProcaptchaState> => {
     account: undefined,
     // don't handle timeout here, this should be handled by the state management
   };
-};
-
-const getNetwork = (config: ProcaptchaClientConfigOutput) => {
-  const network = config.networks[config.defaultNetwork];
-  if (!network) {
-    throw new ProsopoEnvError("DEVELOPER.NETWORK_NOT_FOUND", {
-      context: {
-        error: `No network found for environment ${config.defaultEnvironment}`,
-      },
-    });
-  }
-  return network;
 };
 
 const getRandomActiveProvider = (
@@ -93,7 +81,6 @@ const getRandomActiveProvider = (
       datasetId: randomProvderObj.datasetId,
       datasetIdContent: randomProvderObj.datasetIdContent,
     },
-    blockNumber: 0,
   };
 };
 
@@ -174,19 +161,16 @@ export function Manager(
       await sleep(100);
 
       const account = await loadAccount();
-      const contract = getNetwork(config).contract.address;
 
       // get a random provider
       const getRandomProviderResponse = getRandomActiveProvider(getConfig());
 
-      const blockNumber = getRandomProviderResponse.blockNumber;
       const providerUrl = getRandomProviderResponse.provider.url;
       // get the provider api inst
       const providerApi = await loadProviderApi(providerUrl);
 
       const captchaApi = new ProsopoCaptchaApi(
         account.account.address,
-        contract,
         getRandomProviderResponse,
         providerApi,
         config.web2,
@@ -220,7 +204,6 @@ export function Manager(
         challenge,
         showModal: true,
         timeout,
-        blockNumber,
       });
     });
   };
@@ -256,7 +239,6 @@ export function Manager(
       );
 
       const account = getAccount();
-      const blockNumber = getBlockNumber();
       const signer = getExtension(account).signer;
 
       const first = at(challenge.captchas, 0);
@@ -274,15 +256,29 @@ export function Manager(
         });
       }
 
+      if (!signer || !signer.signRaw) {
+        throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+          context: {
+            error:
+              "Signer is not defined, cannot sign message to prove account ownership",
+          },
+        });
+      }
+
+      const userRequestHashSignature = await signer.signRaw({
+        address: account.account.address,
+        data: stringToHex(challenge.requestHash),
+        type: "bytes",
+      });
+
       // send the commitment to the provider
       const submission: TCaptchaSubmitResult =
         await captchaApi.submitCaptchaSolution(
-          signer,
+          userRequestHashSignature.signature,
           challenge.requestHash,
           captchaSolution,
-          salt,
           challenge.timestamp,
-          challenge.signature.provider.timestamp,
+          challenge.signature.provider.requestHash,
         );
 
       // mark as is human if solution has been approved
@@ -305,7 +301,6 @@ export function Manager(
         storage.setProcaptchaStorage({
           ...storage.getProcaptchaStorage(),
           providerUrl,
-          blockNumber,
         });
         events.onHuman(
           encodeProcaptchaOutput({
@@ -313,11 +308,14 @@ export function Manager(
             [ApiParams.user]: account.account.address,
             [ApiParams.dapp]: getDappAccount(),
             [ApiParams.commitmentId]: hashToHex(submission[1]),
-            [ApiParams.blockNumber]: blockNumber,
             [ApiParams.timestamp]: challenge.timestamp,
             [ApiParams.signature]: {
               [ApiParams.provider]: {
-                [ApiParams.timestamp]: challenge.signature.provider.timestamp,
+                [ApiParams.requestHash]:
+                  challenge.signature.provider.requestHash,
+              },
+              [ApiParams.user]: {
+                [ApiParams.requestHash]: userRequestHashSignature.signature,
               },
             },
           }),
@@ -388,11 +386,10 @@ export function Manager(
 
   const loadProviderApi = async (providerUrl: string) => {
     const config = getConfig();
-    const network = getNetwork(config);
     if (!config.account.address) {
       throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
     }
-    return new ProviderApi(network, providerUrl, config.account.address);
+    return new ProviderApi(providerUrl, config.account.address);
   };
 
   const clearTimeout = () => {
@@ -460,11 +457,6 @@ export function Manager(
 
     const dappAccount: string = state.dappAccount;
     return dappAccount;
-  };
-
-  const getBlockNumber = () => {
-    const blockNumber: number = state.blockNumber || 0;
-    return blockNumber;
   };
 
   const getExtension = (possiblyAccount?: Account) => {

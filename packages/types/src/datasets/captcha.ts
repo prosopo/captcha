@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { u32 } from "@polkadot/types-codec/primitive";
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
 import {
   array,
@@ -23,7 +22,9 @@ import {
   union,
   type infer as zInfer,
   undefined as zUndefined,
+  number as zNumber,
 } from "zod";
+import { TranslationKey } from "@prosopo/common";
 
 export enum CaptchaTypes {
   SelectAll = "SelectAll",
@@ -42,9 +43,7 @@ export type Item = zInfer<typeof CaptchaItemSchema>;
 export type HashedItem = zInfer<typeof HashedCaptchaItemSchema>;
 export type LabelledItem = zInfer<typeof LabelledItemSchema>;
 export type Data = zInfer<typeof DataSchema>;
-export type LabelledData = zInfer<typeof LabelledDataSchema>;
 export type CaptchasContainer = zInfer<typeof CaptchasContainerSchema>;
-export type LabelsContainer = zInfer<typeof LabelsContainerSchema>;
 
 export interface Captchas {
   captchas: CaptchaWithoutId[];
@@ -65,13 +64,6 @@ export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
   // INCORRECT items are any missing from the solution and unlabelled arrays!
 }
 
-export type CaptchaSolutionToUpdate = {
-  captchaId: string;
-  captchaContentId: string;
-  salt: string;
-  solution: HashedSolution[];
-};
-
 export interface Captcha extends CaptchaWithoutId {
   captchaId: string;
   captchaContentId: string;
@@ -80,30 +72,28 @@ export interface Captcha extends CaptchaWithoutId {
   datasetContentId?: string;
 }
 
-//temp
+export interface CaptchaResult {
+  status: CaptchaStatus;
+  reason?: TranslationKey;
+}
+
 export enum CaptchaStatus {
   pending = "Pending",
   approved = "Approved",
   disapproved = "Disapproved",
 }
 
-//temp
 type Hash = string | number[];
 
-//temp
 export type Commit = {
   id: Hash;
   userAccount: string;
   datasetId: Hash;
-  status: CaptchaStatus;
-  dappContract: string;
+  dappAccount: string;
   providerAccount: string;
-  requestedAt: number;
-  completedAt: number;
-  userSignature: Array<number>;
+  userSignature: string;
 };
 
-//temp
 export enum GovernanceStatus {
   active = "Active",
   inactive = "Inactive",
@@ -122,7 +112,8 @@ export enum DappPayee {
   any = "Any",
 }
 
-export type Timestamp = number;
+export const TimestampSchema = zNumber();
+export type Timestamp = zInfer<typeof TimestampSchema>;
 export type UserAccount = string;
 export type DappAccount = string;
 
@@ -141,15 +132,6 @@ export const PowChallengeIdSchema = custom<PoWChallengeId>((val: any) => {
   }
 });
 
-export interface PowCaptcha {
-  challenge: PoWChallengeId;
-  timestamp: Timestamp;
-  userAccount: UserAccount;
-  dappAccount: DappAccount;
-  checked: boolean;
-  stored: boolean
-}
-
 export interface CaptchaSolution {
   captchaId: string;
   captchaContentId: string;
@@ -158,7 +140,7 @@ export interface CaptchaSolution {
 }
 
 export type PoWChallengeComponents = {
-  timestamp: Timestamp;
+  requestedAtTimestamp: Timestamp;
   userAccount: UserAccount;
   dappAccount: DappAccount;
 };
@@ -166,9 +148,14 @@ export type PoWChallengeComponents = {
 export interface PoWCaptcha {
   challenge: PoWChallengeId;
   difficulty: number;
-  signature: string;
-  timestamp: number;
-  timestampSignature: string;
+  providerSignature: string;
+  requestedAtTimestamp: number;
+  userSignature?: string;
+}
+
+export interface PoWCaptchaUser extends PoWCaptcha {
+  userAccount: UserAccount;
+  dappAccount: DappAccount;
 }
 
 export type CaptchaConfig = {
@@ -184,11 +171,6 @@ export type CaptchaSolutionConfig = {
   requiredNumberOfSolutions: number;
   solutionWinningPercentage: number;
   captchaBlockRecency: number;
-};
-
-export type LastCorrectCaptchaSchema = {
-  beforeMs: u32;
-  dappId: AccountId;
 };
 
 export const CaptchaSchema = object({

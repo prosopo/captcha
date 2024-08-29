@@ -1,61 +1,61 @@
 {
-	"name": "@prosopo/procaptcha-bundle",
-	"version": "2.0.1",
-	"author": "PROSOPO LIMITED <info@prosopo.io>",
-	"license": "Apache-2.0",
-	"main": "./dist/index.js",
-	"type": "module",
-	"sideEffects": false,
-	"engines": {
-		"node": ">=20",
-		"npm": ">=9"
-	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
-	"types": "./dist/index.d.ts",
-	"source": "./src/index.tsx",
-	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
-		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode $NODE_ENV"
-	},
-	"browserslist": [
-		"> 0.5%, last 2 versions, not dead"
-	],
-	"dependencies": {
-		"@prosopo/procaptcha-frictionless": "2.0.1",
-		"@prosopo/procaptcha-pow": "2.0.1",
-		"@prosopo/procaptcha-react": "2.0.1",
-		"@prosopo/types": "2.0.1",
-		"@prosopo/util": "2.0.1",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
-	},
-	"bugs": {
-		"url": "https://github.com/prosopo/captcha/issues"
-	},
-	"homepage": "https://github.com/prosopo/captcha#readme",
-	"description": "",
-	"publishConfig": {
-		"registry": "https://registry.npmjs.org"
-	},
-	"devDependencies": {
-		"@prosopo/config": "2.0.1",
-		"@prosopo/cli": "2.0.1",
-		"tslib": "2.6.2",
-		"vite": "^5.1.7",
-		"typescript": "^5.1.6"
-	}
+  "name": "@prosopo/procaptcha-bundle",
+  "version": "2.0.2",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "main": "./dist/index.js",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20",
+    "npm": ">=9"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "source": "./src/index.tsx",
+  "scripts": {
+    "test": "echo \"No test specified\"",
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "build:cjs": "npx vite --config vite.cjs.config.ts build",
+    "start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
+    "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
+    "bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode $NODE_ENV"
+  },
+  "browserslist": [
+    "> 0.5%, last 2 versions, not dead"
+  ],
+  "dependencies": {
+    "@prosopo/procaptcha-frictionless": "2.0.2",
+    "@prosopo/procaptcha-pow": "2.0.2",
+    "@prosopo/procaptcha-react": "2.0.2",
+    "@prosopo/types": "2.0.2",
+    "@prosopo/util": "2.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo/captcha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo/captcha/issues"
+  },
+  "homepage": "https://github.com/prosopo/captcha#readme",
+  "description": "",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "devDependencies": {
+    "@prosopo/config": "2.0.2",
+    "@prosopo/cli": "2.0.2",
+    "tslib": "2.6.2",
+    "vite": "^5.1.7",
+    "typescript": "^5.1.6"
+  }
 }

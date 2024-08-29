@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
+import { Logger, TranslationKey, TranslationKeysSchema } from "@prosopo/common";
 import {
   type Captcha,
+  CaptchaResult,
   type CaptchaSolution,
   CaptchaSolutionSchema,
   type CaptchaStates,
@@ -23,9 +24,11 @@ import {
   type DatasetBase,
   type DatasetWithIds,
   type Item,
-  type PowCaptcha,
+  PoWCaptchaUser,
   PoWChallengeComponents,
   PoWChallengeId,
+  Timestamp,
+  TimestampSchema,
 } from "@prosopo/types";
 import type { Hash } from "@prosopo/types";
 import type { PendingCaptchaRequest } from "@prosopo/types";
@@ -35,9 +38,14 @@ import {
   ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import { type Connection, type Model, Schema } from "mongoose";
+import mongoose, {
+  type Connection,
+  type Model,
+  ObjectId,
+  Schema,
+} from "mongoose";
 import {
-  type ZodType,
+  ZodType,
   any,
   array,
   boolean,
@@ -47,31 +55,64 @@ import {
   object,
   string,
   type infer as zInfer,
+  literal,
+  union,
 } from "zod";
 
-export interface UserCommitmentRecord
-  extends Omit<Commit, "userSignaturePart1" | "userSignaturePart2"> {
-  userSignature: number[];
-  processed: boolean;
-  batched: boolean;
-  stored?: boolean;
-  requestedAtTimestamp: number;
+export enum StoredStatusNames {
+  notStored = "notStored",
+  userSubmitted = "userSubmitted",
+  serverChecked = "serverChecked",
+  stored = "stored",
 }
+
+export type StoredStatus =
+  | StoredStatusNames.notStored
+  | StoredStatusNames.userSubmitted
+  | StoredStatusNames.serverChecked
+  | StoredStatusNames.stored;
+
+export interface StoredCaptcha {
+  result: {
+    status: CaptchaStatus;
+    reason?: TranslationKey;
+    error?: string;
+  };
+  requestedAtTimestamp: Timestamp;
+  deadlineTimestamp?: Timestamp;
+  ipAddress: string;
+  userSubmitted: boolean;
+  serverChecked: boolean;
+  storedAtTimestamp?: Timestamp;
+  lastUpdatedTimestamp?: Timestamp;
+}
+
+export interface UserCommitmentRecord extends Commit, StoredCaptcha {
+  userSignature: string;
+}
+
+export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
+
+const CaptchaResultSchema = object({
+  status: nativeEnum(CaptchaStatus),
+  reason: TranslationKeysSchema.optional(),
+  error: string().optional(),
+}) satisfies ZodType<CaptchaResult>;
 
 export const UserCommitmentSchema = object({
   userAccount: string(),
-  dappContract: string(),
+  dappAccount: string(),
   datasetId: string(),
   providerAccount: string(),
   id: string(),
-  status: nativeEnum(CaptchaStatus),
-  userSignature: array(number()),
-  completedAt: number(),
-  requestedAt: number(),
-  processed: boolean(),
-  batched: boolean(),
-  stored: boolean().optional(),
-  requestedAtTimestamp: number(),
+  result: CaptchaResultSchema,
+  userSignature: string(),
+  ipAddress: string(),
+  userSubmitted: boolean(),
+  serverChecked: boolean(),
+  storedAtTimestamp: TimestampSchema.optional(),
+  requestedAtTimestamp: TimestampSchema,
+  lastUpdatedTimestamp: TimestampSchema.optional(),
 }) satisfies ZodType<UserCommitmentRecord>;
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -81,7 +122,7 @@ export interface SolutionRecord extends CaptchaSolution {
 
 export interface Tables {
   captcha: typeof Model<Captcha>;
-  powCaptcha: typeof Model<PowCaptcha>;
+  powCaptcha: typeof Model<PoWCaptchaStored>;
   dataset: typeof Model<DatasetWithIds>;
   solution: typeof Model<SolutionRecord>;
   usersolution: typeof Model<UserSolutionRecord>;
@@ -116,13 +157,29 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
 
-export const PowCaptchaRecordSchema = new Schema<PowCaptcha>({
+export type PowCaptchaRecord = mongoose.Document & PoWCaptchaStored;
+
+export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
   challenge: { type: String, required: true },
   dappAccount: { type: String, required: true },
   userAccount: { type: String, required: true },
-  timestamp: { type: Number, required: true },
-  checked: { type: Boolean, required: true },
-  stored: { type: Boolean, required: true },
+  requestedAtTimestamp: { type: Number, required: true },
+  lastUpdatedTimestamp: { type: Number, required: false },
+  result: {
+    status: { type: String, enum: CaptchaStatus, required: true },
+    reason: {
+      type: String,
+      enum: TranslationKeysSchema.options,
+      required: false,
+    },
+    error: { type: String, required: false },
+  },
+  difficulty: { type: Number, required: true },
+  ipAddress: { type: String, required: true },
+  userSignature: { type: String, required: false },
+  userSubmitted: { type: Boolean, required: true },
+  serverChecked: { type: Boolean, required: true },
+  storedAtTimestamp: { type: Number, required: false },
 });
 
 // Set an index on the captchaId field, ascending
@@ -130,18 +187,26 @@ PowCaptchaRecordSchema.index({ captchaId: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
   userAccount: { type: String, required: true },
-  dappContract: { type: String, required: true },
+  dappAccount: { type: String, required: true },
   providerAccount: { type: String, required: true },
   datasetId: { type: String, required: true },
   id: { type: String, required: true },
-  status: { type: String, required: true },
-  requestedAt: { type: Number, required: true },
-  completedAt: { type: Number, required: true },
-  userSignature: { type: [Number], required: true },
-  processed: { type: Boolean, required: true },
-  batched: { type: Boolean, required: true },
-  stored: { type: Boolean, required: false },
+  result: {
+    status: { type: String, enum: CaptchaStatus, required: true },
+    reason: {
+      type: String,
+      enum: TranslationKeysSchema.options,
+      required: false,
+    },
+    error: { type: String, required: false },
+  },
+  ipAddress: { type: String, required: true },
+  userSignature: { type: String, required: true },
+  userSubmitted: { type: Boolean, required: true },
+  serverChecked: { type: Boolean, required: true },
+  storedAtTimestamp: { type: Number, required: false },
   requestedAtTimestamp: { type: Number, required: true },
+  lastUpdatedTimestamp: { type: Number, required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -169,9 +234,11 @@ SolutionRecordSchema.index({ captchaId: 1 });
 
 export const UserSolutionSchema = CaptchaSolutionSchema.extend({
   processed: boolean(),
+  checked: boolean(),
   commitmentId: string(),
 });
-export type UserSolutionRecord = zInfer<typeof UserSolutionSchema>;
+export type UserSolutionRecord = mongoose.Document &
+  zInfer<typeof UserSolutionSchema>;
 export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
   {
     captchaId: { type: String, required: true },
@@ -179,6 +246,7 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
     salt: { type: String, required: true },
     solution: [{ type: String, required: true }],
     processed: { type: Boolean, required: true },
+    checked: { type: Boolean, required: true },
     commitmentId: { type: String, required: true },
   },
   { _id: false },
@@ -200,15 +268,16 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
   salt: { type: String, required: true },
   requestHash: { type: String, required: true },
   deadlineTimestamp: { type: Number, required: true }, // unix timestamp
-  requestedAtBlock: { type: Number, required: true },
+  requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
+  ipAddress: { type: String, required: true },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
 
 export const ScheduledTaskSchema = object({
-  taskId: string(),
   processName: nativeEnum(ScheduledTaskNames),
-  datetime: date(),
+  datetime: TimestampSchema,
+  updated: TimestampSchema.optional(),
   status: nativeEnum(ScheduledTaskStatus),
   result: object({
     data: any().optional(),
@@ -216,13 +285,15 @@ export const ScheduledTaskSchema = object({
   }).optional(),
 });
 
-export type ScheduledTaskRecord = zInfer<typeof ScheduledTaskSchema>;
+export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
+
+export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
 export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
-  taskId: { type: String, required: true },
   processName: { type: String, enum: ScheduledTaskNames, required: true },
-  datetime: { type: Date, required: true },
-  status: { type: String, enum: ScheduledTaskStatus, require: true },
+  datetime: { type: Number, required: true },
+  updated: { type: Number, required: false },
+  status: { type: String, enum: ScheduledTaskStatus, required: true },
   result: {
     type: new Schema<ScheduledTaskResult>(
       {
@@ -231,7 +302,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
       },
       { _id: false },
     ),
-
     required: false,
   },
 });
@@ -283,7 +353,8 @@ export interface Database {
     requestHash: string,
     salt: string,
     deadlineTimestamp: number,
-    requestedAtBlock: number,
+    requestedAtTimestamp: number,
+    ipAddress: string,
   ): Promise<void>;
 
   getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;
@@ -317,10 +388,16 @@ export interface Database {
   ): Promise<UserCommitmentRecord | undefined>;
 
   getDappUserCommitmentByAccount(
-    accountId: string,
+    userAccount: string,
+    dappAccount: string,
   ): Promise<UserCommitmentRecord[]>;
 
   approveDappUserCommitment(commitmentId: string): Promise<void>;
+
+  disapproveDappUserCommitment(
+    commitmentId: string,
+    reason?: TranslationKey,
+  ): Promise<void>;
 
   removeProcessedDappUserSolutions(
     commitmentIds: Hash[],
@@ -334,25 +411,23 @@ export interface Database {
 
   getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
-  getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+  getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
   getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
   markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
-  getUnstoredDappUserPoWCommitments(): Promise<PowCaptcha[]>;
+  markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+
+  getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]>;
+
+  markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 
   markDappUserPoWCommitmentsStored(challengeIds: string[]): Promise<void>;
-
-  getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
   flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
 
   flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
-
-  flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
-
-  getLastBatchCommitTime(): Promise<Date>;
 
   getLastScheduledTaskStatus(
     task: ScheduledTaskNames,
@@ -360,13 +435,17 @@ export interface Database {
   ): Promise<ScheduledTaskRecord | undefined>;
 
   getScheduledTaskStatus(
-    taskId: string,
+    taskId: ObjectId,
     status: ScheduledTaskStatus,
   ): Promise<ScheduledTaskRecord | undefined>;
 
-  storeScheduledTaskStatus(
-    taskId: `0x${string}`,
+  createScheduledTaskStatus(
     task: ScheduledTaskNames,
+    status: ScheduledTaskStatus,
+  ): Promise<ObjectId>;
+
+  updateScheduledTaskStatus(
+    taskId: ObjectId,
     status: ScheduledTaskStatus,
     result?: ScheduledTaskResult,
   ): Promise<void>;
@@ -374,10 +453,23 @@ export interface Database {
   storePowCaptchaRecord(
     challenge: PoWChallengeId,
     components: PoWChallengeComponents,
-    checked: boolean,
+    difficulty: number,
+    providerSignature: string,
+    ipAddress: string,
+    serverChecked?: boolean,
+    userSubmitted?: boolean,
+    userSignature?: string,
   ): Promise<void>;
 
-  getPowCaptchaRecordByChallenge(challenge: string): Promise<PowCaptcha | null>;
+  getPowCaptchaRecordByChallenge(
+    challenge: string,
+  ): Promise<PoWCaptchaStored | null>;
 
-  updatePowCaptchaRecord(challenge: string, checked: boolean): Promise<void>;
+  updatePowCaptchaRecord(
+    challenge: PoWChallengeId,
+    result: CaptchaResult,
+    serverChecked: boolean,
+    userSubmitted: boolean,
+    userSignature?: string,
+  ): Promise<void>;
 }

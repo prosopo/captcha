@@ -17,13 +17,11 @@ import {
   type BatchCommitConfigSchema,
   DatabaseTypes,
   EnvironmentTypesSchema,
-  NetworkNamesSchema,
   type ProsopoCaptchaCountConfigSchemaInput,
   type ProsopoCaptchaSolutionConfigSchema,
   type ProsopoConfigInput,
   type ProsopoConfigOutput,
   ProsopoConfigSchema,
-  type ProsopoNetworksSchemaInput,
 } from "@prosopo/types";
 import { getRateLimitConfig } from "./RateLimiter.js";
 import { getAddress, getPassword, getSecret } from "./process.env.js";
@@ -43,7 +41,6 @@ function getMongoURI(): string {
 }
 
 export default function getConfig(
-  networksConfig?: ProsopoNetworksSchemaInput,
   captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
   batchCommitConfig?: typeof BatchCommitConfigSchema,
   captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
@@ -54,9 +51,6 @@ export default function getConfig(
     defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
       ? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
       : EnvironmentTypesSchema.enum.development,
-    defaultNetwork: process.env.PROSOPO_DEFAULT_NETWORK
-      ? NetworkNamesSchema.parse(process.env.PROSOPO_DEFAULT_NETWORK)
-      : NetworkNamesSchema.enum.development,
     account: {
       address: getAddress(who),
       password: getPassword(who),
@@ -88,7 +82,6 @@ export default function getConfig(
         ? Number.parseInt(process.env.PROSOPO_API_PORT)
         : 9229,
     },
-    networks: networksConfig,
     captchaSolutions: captchaSolutionsConfig,
     batchCommit: batchCommitConfig,
     captchas: captchaServeConfig,

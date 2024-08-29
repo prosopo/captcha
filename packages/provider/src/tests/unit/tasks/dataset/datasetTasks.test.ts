@@ -1,13 +1,3 @@
-import type { Logger } from "@prosopo/common";
-import { saveCaptchaEvent, saveCaptchas } from "@prosopo/database";
-import { parseCaptchaDataset } from "@prosopo/datasets";
-import type {
-  CaptchaConfig,
-  DatasetRaw,
-  ProsopoConfigOutput,
-  StoredEvents,
-} from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +11,24 @@ import type { Database } from "@prosopo/types-database";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Logger } from "@prosopo/common";
+import { saveCaptchaEvent, saveCaptchas } from "@prosopo/database";
+import { parseCaptchaDataset } from "@prosopo/datasets";
+import {
+  CaptchaConfig,
+  DatasetRaw,
+  ProsopoConfigOutput,
+  ScheduledTaskNames,
+  ScheduledTaskStatus,
+  StoredEvents,
+} from "@prosopo/types";
+import type {
+  Database,
+  PoWCaptchaStored,
+  ScheduledTaskRecord,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DatasetManager } from "../../../../tasks/dataset/datasetTasks.js";
 
@@ -52,8 +60,9 @@ describe("DatasetManager", () => {
     } as ProsopoConfigOutput;
 
     logger = {
-      info: vi.fn(),
-      error: vi.fn(),
+      info: vi.fn().mockImplementation(console.info),
+      debug: vi.fn().mockImplementation(console.debug),
+      error: vi.fn().mockImplementation(console.error),
     } as unknown as Logger;
 
     captchaConfig = {
@@ -67,6 +76,9 @@ describe("DatasetManager", () => {
       markDappUserCommitmentsStored: vi.fn(),
       markDappUserPoWCommitmentsStored: vi.fn(),
       getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
+      createScheduledTaskStatus: vi.fn(),
+      updateScheduledTaskStatus: vi.fn(),
+      getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
     } as unknown as Database;
 
     datasetManager = new DatasetManager(config, logger, captchaConfig, db);
@@ -133,12 +145,26 @@ describe("DatasetManager", () => {
   });
 
   it("should store commitments externally if mongoCaptchaUri is set", async () => {
-    const mockCommitments = [{ id: "commitment1" }];
-    const mockPoWCommitments = [{ challenge: "challengeId" }];
+    const mockCommitments: Pick<UserCommitmentRecord, "id">[] = [
+      { id: "commitment1" },
+    ];
+    const mockPoWCommitments: Pick<PoWCaptchaStored, "challenge">[] = [
+      {
+        challenge: "1234567___userAccount___dappAccount",
+      },
+    ];
+
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getUnstoredDappUserCommitments as any).mockResolvedValue(
       mockCommitments,
     );
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.createScheduledTaskStatus as any).mockResolvedValue({});
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.updateScheduledTaskStatus as any).mockResolvedValue({});
+
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
       mockPoWCommitments,
@@ -158,6 +184,81 @@ describe("DatasetManager", () => {
     );
     expect(db.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
       mockPoWCommitments.map((c) => c.challenge),
+    );
+  });
+
+  it("should not store commitments externally if they have been stored", async () => {
+    const mockCommitments: Pick<
+      UserCommitmentRecord,
+      "id" | "lastUpdatedTimestamp"
+    >[] = [{ id: "commitment1", lastUpdatedTimestamp: 1 }];
+    const mockPoWCommitments: Pick<
+      PoWCaptchaStored,
+      "challenge" | "lastUpdatedTimestamp"
+    >[] = [
+      {
+        challenge: "1234567___userAccount___dappAccount",
+        lastUpdatedTimestamp: 3,
+      },
+    ];
+    const mockLastScheduledTask: Pick<ScheduledTaskRecord, "updated"> = {
+      updated: 2,
+    };
+    const mockNewScheduledTask: Pick<
+      ScheduledTaskRecord,
+      "updated" | "processName" | "_id"
+    > = {
+      _id: "testID",
+      updated: 4,
+      processName: ScheduledTaskNames.StoreCommitmentsExternal,
+    };
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.getUnstoredDappUserCommitments as any).mockResolvedValue(
+      mockCommitments,
+    );
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
+      mockPoWCommitments,
+    );
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.getLastScheduledTaskStatus as any).mockResolvedValue(
+      mockLastScheduledTask,
+    );
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.createScheduledTaskStatus as any).mockResolvedValue(
+      mockNewScheduledTask._id,
+    );
+
+    // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+    (db.updateScheduledTaskStatus as any).mockResolvedValue({});
+
+    await datasetManager.storeCommitmentsExternal();
+
+    expect(db.getUnstoredDappUserCommitments).toHaveBeenCalled();
+    expect(db.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
+    expect(saveCaptchas).toHaveBeenCalledWith(
+      [],
+      mockPoWCommitments,
+      config.mongoCaptchaUri,
+    );
+    expect(db.markDappUserCommitmentsStored).toHaveBeenCalledWith([]);
+    expect(db.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
+      mockPoWCommitments.map((c) => c.challenge),
+    );
+
+    expect(db.updateScheduledTaskStatus).toHaveBeenCalledWith(
+      mockNewScheduledTask._id,
+      ScheduledTaskStatus.Completed,
+      {
+        data: {
+          commitments: [],
+          powRecords: mockPoWCommitments.map((c) => c.challenge),
+        },
+      },
     );
   });
 });
