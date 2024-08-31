@@ -1,5 +1,5 @@
-import { H, G } from "./index-BFuOnKeR.js";
+import { I as a, H as d } from "./index-DU1XrpZS.js";
 export {
-  H as default,
-  G as render
+  a as default,
+  d as render
 };
