@@ -16,6 +16,13 @@ import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
 
 export default function () {
+	const testTypeEnv = process.env.TEST_TYPE || ''
+	const testTypes = testTypeEnv.trim().split(",")
+	if(testTypes.length === 0) {
+		testTypes.push('') // empty string will include all test types
+	}
+	const testTypeGlob = `@(${testTypes.map(t => t ? `.${t.trim()}` : '').join('|')})`
+	console.log(`Filtering tests by type: ${testTypeGlob}`)
 	return defineConfig({
 		build: {
 			minify: false,
@@ -31,7 +38,7 @@ export default function () {
 		test: {
 			//root: getRootDir(),
 			reporters: ["basic"],
-			include: ["src/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
+			include: [`src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`],
 			watch: false,
 			watchExclude: ["**/node_modules/**", "**/dist/**"],
 			logHeapUsage: true,
