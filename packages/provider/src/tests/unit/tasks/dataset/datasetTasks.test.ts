@@ -27,7 +27,7 @@ import type {
   Database,
   PoWCaptchaStored,
   ScheduledTaskRecord,
-  UserCommitmentRecord,
+  UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DatasetManager } from "../../../../tasks/dataset/datasetTasks.js";
@@ -145,7 +145,7 @@ describe("DatasetManager", () => {
   });
 
   it("should store commitments externally if mongoCaptchaUri is set", async () => {
-    const mockCommitments: Pick<UserCommitmentRecord, "id">[] = [
+    const mockCommitments: Pick<UserCommitment, "id">[] = [
       { id: "commitment1" },
     ];
     const mockPoWCommitments: Pick<PoWCaptchaStored, "challenge">[] = [
@@ -189,7 +189,7 @@ describe("DatasetManager", () => {
 
   it("should not store commitments externally if they have been stored", async () => {
     const mockCommitments: Pick<
-      UserCommitmentRecord,
+      UserCommitment,
       "id" | "lastUpdatedTimestamp"
     >[] = [{ id: "commitment1", lastUpdatedTimestamp: 1 }];
     const mockPoWCommitments: Pick<
