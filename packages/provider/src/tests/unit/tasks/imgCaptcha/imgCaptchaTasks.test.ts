@@ -28,7 +28,7 @@ import {
 import {
   Database,
   StoredStatusNames,
-  UserCommitmentRecord,
+  UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
@@ -307,7 +307,7 @@ describe("ImgCaptchaManager", () => {
 
   it("should get dapp user commitment by ID", async () => {
     const commitmentId = "commitmentId";
-    const dappUserCommitment: UserCommitmentRecord = {
+    const dappUserCommitment: UserCommitment = {
       id: "commitmentId",
       userAccount: "userAccount",
       dappAccount: "dappAccount",
@@ -350,7 +350,7 @@ describe("ImgCaptchaManager", () => {
   it("should get dapp user commitment by account", async () => {
     const userAccount = "userAccount";
     const dappAccount = "dappAccount";
-    const dappUserCommitments: UserCommitmentRecord[] = [
+    const dappUserCommitments: UserCommitment[] = [
       {
         id: "commitmentId",
         userAccount,
@@ -382,7 +382,7 @@ describe("ImgCaptchaManager", () => {
   it("should return undefined if no approved dapp user commitment is found by account", async () => {
     const userAccount = "userAccount";
     const dappAccount = "dappAccount";
-    const dappUserCommitments: UserCommitmentRecord[] = [];
+    const dappUserCommitments: UserCommitment[] = [];
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
     (db.getDappUserCommitmentByAccount as any).mockResolvedValue(
       dappUserCommitments,

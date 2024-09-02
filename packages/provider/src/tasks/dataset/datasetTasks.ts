@@ -110,7 +110,13 @@ export class DatasetManager {
         this.logger.info(
           `Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
         );
-        this.logger.info("Last task ran at ", new Date(lastTask.updated || 0));
+        this.logger.info(
+          "Last task ran at ",
+          new Date(lastTask.updated || 0),
+          "Task ID",
+          taskID,
+        );
+
         commitments = commitments.filter(
           (commitment) =>
             lastTask.updated &&
@@ -118,13 +124,7 @@ export class DatasetManager {
             (commitment.lastUpdatedTimestamp > lastTask.updated ||
               !commitment.lastUpdatedTimestamp),
         );
-        this.logger.info(
-          "PoW Records to store: ",
-          powRecords.map((pr) => ({
-            challenge: pr.challenge,
-            lastUpdatedTimestamp: new Date(pr.lastUpdatedTimestamp || 0),
-          })),
-        );
+
         powRecords = powRecords.filter((commitment) => {
           return (
             lastTask.updated &&

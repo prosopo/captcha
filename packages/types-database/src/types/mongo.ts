@@ -49,14 +49,10 @@ import {
   any,
   array,
   boolean,
-  date,
   nativeEnum,
-  number,
   object,
   string,
   type infer as zInfer,
-  literal,
-  union,
 } from "zod";
 
 export enum StoredStatusNames {
@@ -87,7 +83,7 @@ export interface StoredCaptcha {
   lastUpdatedTimestamp?: Timestamp;
 }
 
-export interface UserCommitmentRecord extends Commit, StoredCaptcha {
+export interface UserCommitment extends Commit, StoredCaptcha {
   userSignature: string;
 }
 
@@ -113,7 +109,7 @@ export const UserCommitmentSchema = object({
   storedAtTimestamp: TimestampSchema.optional(),
   requestedAtTimestamp: TimestampSchema,
   lastUpdatedTimestamp: TimestampSchema.optional(),
-}) satisfies ZodType<UserCommitmentRecord>;
+}) satisfies ZodType<UserCommitment>;
 
 export interface SolutionRecord extends CaptchaSolution {
   datasetId: string;
@@ -122,7 +118,7 @@ export interface SolutionRecord extends CaptchaSolution {
 
 export interface Tables {
   captcha: typeof Model<Captcha>;
-  powCaptcha: typeof Model<PoWCaptchaStored>;
+  powCaptcha: typeof Model<PoWCaptchaRecord>;
   dataset: typeof Model<DatasetWithIds>;
   solution: typeof Model<SolutionRecord>;
   usersolution: typeof Model<UserSolutionRecord>;
@@ -157,9 +153,11 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
 
-export type PowCaptchaRecord = mongoose.Document & PoWCaptchaStored;
+export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
-export const PowCaptchaRecordSchema = new Schema<PowCaptchaRecord>({
+export type UserCommitmentRecord = mongoose.Document & UserCommitment;
+
+export const PowCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
   challenge: { type: String, required: true },
   dappAccount: { type: String, required: true },
   userAccount: { type: String, required: true },
@@ -345,7 +343,7 @@ export interface Database {
 
   storeDappUserSolution(
     captchas: CaptchaSolution[],
-    commit: UserCommitmentRecord,
+    commit: UserCommitment,
   ): Promise<void>;
 
   storeDappUserPending(
@@ -385,7 +383,7 @@ export interface Database {
 
   getDappUserCommitmentById(
     commitmentId: string,
-  ): Promise<UserCommitmentRecord | undefined>;
+  ): Promise<UserCommitment | undefined>;
 
   getDappUserCommitmentByAccount(
     userAccount: string,
@@ -419,7 +417,7 @@ export interface Database {
 
   markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
-  getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]>;
+  getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]>;
 
   markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 
@@ -463,7 +461,7 @@ export interface Database {
 
   getPowCaptchaRecordByChallenge(
     challenge: string,
-  ): Promise<PoWCaptchaStored | null>;
+  ): Promise<PoWCaptchaRecord | null>;
 
   updatePowCaptchaRecord(
     challenge: PoWChallengeId,
