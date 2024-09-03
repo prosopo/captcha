@@ -1,5 +1,8 @@
 import { MongoClient } from "mongodb";
-import { PoWCaptchaStored, UserCommitment } from "@prosopo/types-database";
+import {
+  PoWCaptchaStored,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { CaptchaStatus } from "@prosopo/types";
 import { loadEnv } from "@prosopo/dotenv";
@@ -116,7 +119,7 @@ const migrateUserCommitments = async () => {
 
     const userSignatureHex = Buffer.from(userSignature).toString("hex");
 
-    const record: UserCommitment = {
+    const record: UserCommitmentRecord = {
       id,
       dappAccount: dappContract,
       datasetId,
