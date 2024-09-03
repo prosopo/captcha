@@ -1,5 +1,3 @@
-import type { Logger } from "@prosopo/common";
-import { saveCaptchaEvent, saveCaptchas } from "@prosopo/database";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +22,8 @@ import {
 } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
 import { providerValidateDataset } from "./datasetTasksUtils.js";
+import type { Logger } from "@prosopo/common";
+import { saveCaptchaEvent, saveCaptchas } from "@prosopo/database";
 
 export class DatasetManager {
   config: ProsopoConfigOutput;
@@ -158,18 +158,17 @@ export class DatasetManager {
         await this.db.markDappUserPoWCommitmentsStored(
           powRecords.map((powRecords) => powRecords.challenge),
         );
-
-        await this.db.updateScheduledTaskStatus(
-          taskID,
-          ScheduledTaskStatus.Completed,
-          {
-            data: {
-              commitments: commitments.map((c) => c.id),
-              powRecords: powRecords.map((pr) => pr.challenge),
-            },
-          },
-        );
       }
+      await this.db.updateScheduledTaskStatus(
+        taskID,
+        ScheduledTaskStatus.Completed,
+        {
+          data: {
+            commitments: commitments.map((c) => c.id),
+            powRecords: powRecords.map((pr) => pr.challenge),
+          },
+        },
+      );
     } catch (e: any) {
       this.logger.error(e);
       await this.db.updateScheduledTaskStatus(
