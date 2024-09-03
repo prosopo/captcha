@@ -67,6 +67,12 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:2019/metrics"] # ping the caddy admin api
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
     watchtower:
         image: containrrr/watchtower
         volumes:
