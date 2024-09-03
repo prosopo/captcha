@@ -1,6 +1,8 @@
 services:
     provider:
         image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"
         restart: unless-stopped
         pull_policy: always
         build:
@@ -23,6 +25,8 @@ services:
                 max-file: '1'
     database:
         image: ${MONGO_IMAGE:-mongo:5.0.4}
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"
         restart: unless-stopped
         volumes:
             - /data/db:/data/db
@@ -39,6 +43,8 @@ services:
                 max-file: '1'
     caddy:
         image: caddy:2
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"
         restart: unless-stopped
         ports:
             - '80:80'
@@ -59,7 +65,7 @@ services:
         image: containrrr/watchtower
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: docker-provider-1 --interval 30 --cleanup --remove-volumes --log-format JSON
+        command: docker-provider-1 --interval 30 --cleanup --remove-volumes --log-format JSON --label-enable
 networks:
     internal:
         name: internal
