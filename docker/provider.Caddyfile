@@ -16,9 +16,6 @@ pronode3.prosopo.io {
 	# Set this path to your site's directory.
 	reverse_proxy provider:9229
 
-	# Enable the static file server.
-	file_server
-
 	# logs
 	log {
 		output file /var/log/caddy/pronode3.prosopo.io-access.log
