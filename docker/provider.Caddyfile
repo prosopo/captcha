@@ -1,23 +1,19 @@
 {
-	# auto_https off # if running locally with no https, turn off https
-	# http_port 4445 # set the http port if running locally with no sudo
-	auto_https disable_redirects # auto https for the domains
-	admin :{$ADMIN_API_PORT} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
+	http_port {$HTTP_PORT}
+	auto_https {$AUTO_HTTPS}
+	admin {$ADMIN_API} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 }
 
-# http://localhost:4444 { # uncomment if running locally with no https
-pronode3.prosopo.io { # the domain 
+{$DOMAIN} {
 
 	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
-	reverse_proxy /metrics localhost:2020 {
-		
-    }
+	reverse_proxy /metrics {$ADMIN_API}
 
 	# reverse proxy to the provider container
 	reverse_proxy provider:9229
 
 	# logs. Note this is not limited, truncated or rotated whatsoever, so it grows over time!
 	log {
-		output file /var/log/caddy/pronode3.prosopo.io-access.log
+		output file /var/log/caddy/{$DOMAIN}.log
 	}
 }
