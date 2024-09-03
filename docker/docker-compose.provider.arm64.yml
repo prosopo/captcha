@@ -2,8 +2,8 @@ services:
     provider:
         image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"
-        restart: unless-stopped
+            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         build:
             context: ..
@@ -26,8 +26,8 @@ services:
     database:
         image: mongodb-raspberrypi4-unofficial-r6.0.10
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"
-        restart: unless-stopped
+            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
         ports:
@@ -44,8 +44,8 @@ services:
     caddy:
         image: caddy:2
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"
-        restart: unless-stopped
+            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
             - '443:443'
