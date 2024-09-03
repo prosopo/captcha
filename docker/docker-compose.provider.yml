@@ -23,6 +23,12 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"] # ping the status api
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
     database:
         image: ${MONGO_IMAGE:-mongo:5.0.4} # use MONGO_IMAGE=mongodb-raspberrypi4-unofficial-r6.0.10 in env for arm64
         labels:
