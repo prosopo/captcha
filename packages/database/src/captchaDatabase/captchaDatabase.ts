@@ -14,10 +14,11 @@
 
 import { getLoggerDefault } from "@prosopo/common";
 import {
-  PowCaptchaRecord,
+  PoWCaptchaRecord,
   PowCaptchaRecordSchema,
   PoWCaptchaStored,
-  type UserCommitmentRecord,
+  UserCommitmentRecord,
+  type UserCommitment,
   UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import mongoose from "mongoose";
@@ -25,11 +26,11 @@ import { PoWCaptchaUser } from "@prosopo/types";
 const logger = getLoggerDefault();
 
 let StoredImageCaptcha: mongoose.Model<UserCommitmentRecord>;
-let StoredPoWCaptcha: mongoose.Model<PowCaptchaRecord>;
+let StoredPoWCaptcha: mongoose.Model<PoWCaptchaRecord>;
 
 export const saveCaptchas = async (
   imageCaptchaEvents: UserCommitmentRecord[],
-  powCaptchaEvents: PoWCaptchaStored[],
+  powCaptchaEvents: PoWCaptchaRecord[],
   atlasUri: string,
 ) => {
   const connection = mongoose.createConnection(atlasUri, {
@@ -43,7 +44,7 @@ export const saveCaptchas = async (
           "StoredImageCaptcha",
           UserCommitmentRecordSchema,
         );
-        StoredPoWCaptcha = connection.model<PowCaptchaRecord>(
+        StoredPoWCaptcha = connection.model<PoWCaptchaRecord>(
           "StoredPoWCaptcha",
           PowCaptchaRecordSchema,
         );
@@ -53,25 +54,33 @@ export const saveCaptchas = async (
   });
   if (imageCaptchaEvents.length) {
     const result = await StoredImageCaptcha.bulkWrite(
-      imageCaptchaEvents.map((doc) => ({
-        updateOne: {
-          filter: { id: doc.id },
-          update: { $set: doc },
-          upsert: true,
-        },
-      })),
+      imageCaptchaEvents.map((doc) => {
+        // remove the _id field to avoid problems when upserting
+        const { _id, ...safeDoc } = doc;
+        return {
+          updateOne: {
+            filter: { id: safeDoc.id },
+            update: { $set: safeDoc },
+            upsert: true,
+          },
+        };
+      }),
     );
     logger.info("Mongo Saved Image Events", result);
   }
   if (powCaptchaEvents.length) {
     const result = await StoredPoWCaptcha.bulkWrite(
-      powCaptchaEvents.map((doc) => ({
-        updateOne: {
-          filter: { challenge: doc.challenge },
-          update: { $set: doc },
-          upsert: true,
-        },
-      })),
+      powCaptchaEvents.map((doc) => {
+        // remove the _id field to avoid problems when upserting
+        const { _id, ...safeDoc } = doc;
+        return {
+          updateOne: {
+            filter: { challenge: safeDoc.challenge },
+            update: { $set: safeDoc },
+            upsert: true,
+          },
+        };
+      }),
     );
     logger.info("Mongo Saved PoW Events", result);
   }
