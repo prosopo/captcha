@@ -59,7 +59,7 @@ services:
         image: containrrr/watchtower
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: docker-provider-1 --interval 30 --cleanup
+        command: docker-provider-1 --interval 30 --cleanup --remove-volumes
 networks:
     internal:
         name: internal
