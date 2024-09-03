@@ -30,8 +30,8 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@prosopo/common": "2.0.2",
-    "@prosopo/types": "2.0.2"
+    "@prosopo/common": "2.0.3",
+    "@prosopo/types": "2.0.3"
   },
   "devDependencies": {
     "tslib": "2.6.2",

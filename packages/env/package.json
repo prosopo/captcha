@@ -26,19 +26,19 @@
     "@polkadot/rpc-provider": "10.13.1",
     "@polkadot/util": "12.6.2",
     "@polkadot/util-crypto": "12.6.2",
-    "@prosopo/common": "2.0.2",
-    "@prosopo/contract": "2.0.2",
-    "@prosopo/database": "2.0.2",
-    "@prosopo/types": "2.0.2",
-    "@prosopo/types-database": "2.0.2",
-    "@prosopo/types-env": "2.0.2",
-    "@prosopo/util": "2.0.2"
+    "@prosopo/common": "2.0.3",
+    "@prosopo/contract": "2.0.3",
+    "@prosopo/database": "2.0.3",
+    "@prosopo/types": "2.0.3",
+    "@prosopo/types-database": "2.0.3",
+    "@prosopo/types-env": "2.0.3",
+    "@prosopo/util": "2.0.3"
   },
   "overrides": {
     "@polkadot/keyring": "12.6.2"
   },
   "devDependencies": {
-    "@prosopo/config": "2.0.2",
+    "@prosopo/config": "2.0.3",
     "tslib": "2.6.2",
     "typescript": "5.1.6"
   },

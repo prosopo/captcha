@@ -24,6 +24,6 @@
     "npm": ">=9"
   },
   "dependencies": {
-    "@prosopo/util": "2.0.2"
+    "@prosopo/util": "2.0.3"
   }
 }
