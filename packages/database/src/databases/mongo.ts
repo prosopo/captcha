@@ -1222,6 +1222,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await this.tables?.scheduler
         ?.findOne(lookup)
         .sort({ datetime: -1 })
+        .limit(1)
         .lean();
     return cursor ? cursor : undefined;
   }
