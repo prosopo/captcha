@@ -43,8 +43,9 @@ import {
   type Database,
   DatasetRecordSchema,
   PendingRecordSchema,
+  PoWCaptchaRecord,
   PowCaptchaRecordSchema,
-  type PoWCaptchaStored,
+  PoWCaptchaStored,
   ScheduledTask,
   type ScheduledTaskRecord,
   ScheduledTaskRecordSchema,
@@ -55,7 +56,8 @@ import {
   StoredStatus,
   StoredStatusNames,
   type Tables,
-  type UserCommitmentRecord,
+  type UserCommitment,
+  UserCommitmentRecord,
   UserCommitmentRecordSchema,
   UserCommitmentSchema,
   type UserSolutionRecord,
@@ -299,17 +301,17 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async getDataset(datasetId: string): Promise<DatasetWithIds> {
     const datasetDoc: DatasetWithIds | null | undefined =
-      await this.tables?.dataset.findOne({ datasetId: datasetId }).lean();
+      await this.tables?.dataset.findOne({ datasetId: datasetId }).lean<DatasetWithIds>();
 
     if (datasetDoc) {
       const { datasetContentId, format, contentTree, solutionTree } =
         datasetDoc;
 
       const captchas: Captcha[] =
-        (await this.tables?.captcha.find({ datasetId }).lean()) || [];
+        (await this.tables?.captcha.find({ datasetId }).lean<Captcha[]>()) || [];
 
       const solutions: SolutionRecord[] =
-        (await this.tables?.solution.find({ datasetId }).lean()) || [];
+        (await this.tables?.solution.find({ datasetId }).lean<SolutionRecord[]>()) || [];
 
       const solutionsKeyed: {
         [key: string]: SolutionRecord;
@@ -455,7 +457,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
     const doc: DatasetBase | undefined | null = await this.tables?.dataset
       .findOne({ datasetId })
-      .lean();
+      .lean<DatasetBase>();
 
     if (doc) {
       return doc;
@@ -474,7 +476,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async storeDappUserSolution(
     captchas: CaptchaSolution[],
-    commit: UserCommitmentRecord,
+    commit: UserCommitment,
   ): Promise<void> {
     const commitmentRecord = UserCommitmentSchema.parse({
       ...commit,
@@ -580,11 +582,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /**
    * @description Retrieves a PoW Captcha record by its challenge string.
    * @param {string} challenge The challenge string to search for.
-   * @returns {Promise<PoWCaptchaStored | null>} A promise that resolves with the found record or null if not found.
+   * @returns {Promise<PoWCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
    */
   async getPowCaptchaRecordByChallenge(
     challenge: string,
-  ): Promise<PoWCaptchaStored | null> {
+  ): Promise<PoWCaptchaRecord | null> {
     if (!this.tables) {
       throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
         context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
@@ -593,8 +595,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     try {
-      const record: PoWCaptchaStored | null | undefined =
-        await this.tables.powCaptcha.findOne({ challenge }).lean();
+      const record: PoWCaptchaRecord | null | undefined =
+        await this.tables.powCaptcha.findOne({ challenge }).lean<PoWCaptchaRecord>();
       if (record) {
         this.logger.info("PowCaptcha record retrieved successfully", {
           challenge,
@@ -635,7 +637,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     const tables = this.getTables();
     const timestamp = Date.now();
     const update: Pick<
-      PoWCaptchaStored,
+      PoWCaptchaRecord,
       | "result"
       | "serverChecked"
       | "userSubmitted"
@@ -765,15 +767,15 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
   /** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
    */
-  async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaStored[]> {
+  async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]> {
     const docs = await this.tables?.powCaptcha
-      .find<PoWCaptchaStored[]>({
+      .find<PoWCaptchaRecord[]>({
         $or: [
           { storedStatus: { $ne: StoredStatusNames.stored } },
           { storedStatus: { $exists: false } },
         ],
       })
-      .lean<PoWCaptchaStored[]>();
+      .lean<PoWCaptchaRecord[]>();
     return docs || [];
   }
 
@@ -880,7 +882,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     const doc: PendingCaptchaRequest | null | undefined =
-      await this.tables?.pending.findOne({ requestHash: requestHash }).lean();
+      await this.tables?.pending.findOne({ requestHash: requestHash }).lean<PendingCaptchaRequest>();
 
     if (doc) {
       return doc;
@@ -1086,7 +1088,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await this.tables?.commitment
         // sort by most recent first to avoid old solutions being used in development
         ?.find({ userAccount, dappAccount }, { _id: 0 }, { sort: { _id: -1 } })
-        .lean();
+        .lean<UserCommitmentRecord[]>();
 
     return docs ? (docs as UserCommitmentRecord[]) : [];
   }
@@ -1198,7 +1200,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     const cursor: ScheduledTaskRecord | undefined | null =
       await this.tables?.scheduler
         ?.findOne({ taskId: taskId, status: status })
-        .lean();
+        .lean<ScheduledTaskRecord>();
     return cursor ? cursor : undefined;
   }
 
@@ -1220,7 +1222,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await this.tables?.scheduler
         ?.findOne(lookup)
         .sort({ datetime: -1 })
-        .lean();
+        .limit(1)
+        .lean<ScheduledTaskRecord>();
     return cursor ? cursor : undefined;
   }
 

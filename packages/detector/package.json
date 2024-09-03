@@ -1,13 +1,13 @@
 {
   "name": "@prosopo/detector",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "main": "src/index.js",
   "engines": {
     "node": ">=20",
     "npm": ">=9"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "test": "echo \"No test specified\"",
     "build": "tsc --build --verbose",
     "clean": "tsc --build --clean"
   },

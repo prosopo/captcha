@@ -34,7 +34,7 @@ import {
 import {
   Database,
   StoredStatusNames,
-  UserCommitmentRecord,
+  UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { shuffleArray } from "../../util.js";
@@ -242,7 +242,7 @@ export class ImgCaptchaManager {
       // Only do stuff if the request is in the local DB
       // prevent this request hash from being used twice
       await this.db.updateDappUserPendingStatus(requestHash);
-      const commit: UserCommitmentRecord = {
+      const commit: UserCommitment = {
         id: commitmentId,
         userAccount: userAccount,
         dappAccount,
@@ -366,7 +366,7 @@ export class ImgCaptchaManager {
    */
   async getDappUserCommitmentById(
     commitmentId: string,
-  ): Promise<UserCommitmentRecord> {
+  ): Promise<UserCommitment> {
     const dappUserSolution =
       await this.db.getDappUserCommitmentById(commitmentId);
     if (!dappUserSolution) {
@@ -384,7 +384,7 @@ export class ImgCaptchaManager {
   async getDappUserCommitmentByAccount(
     userAccount: string,
     dappAccount: string,
-  ): Promise<UserCommitmentRecord | undefined> {
+  ): Promise<UserCommitment | undefined> {
     const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
       userAccount,
       dappAccount,
