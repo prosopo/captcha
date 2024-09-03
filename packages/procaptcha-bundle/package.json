@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha-bundle",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -31,11 +31,11 @@
     "> 0.5%, last 2 versions, not dead"
   ],
   "dependencies": {
-    "@prosopo/procaptcha-frictionless": "2.0.2",
-    "@prosopo/procaptcha-pow": "2.0.2",
-    "@prosopo/procaptcha-react": "2.0.2",
-    "@prosopo/types": "2.0.2",
-    "@prosopo/util": "2.0.2",
+    "@prosopo/procaptcha-frictionless": "2.0.3",
+    "@prosopo/procaptcha-pow": "2.0.3",
+    "@prosopo/procaptcha-react": "2.0.3",
+    "@prosopo/types": "2.0.3",
+    "@prosopo/util": "2.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -52,8 +52,8 @@
     "registry": "https://registry.npmjs.org"
   },
   "devDependencies": {
-    "@prosopo/config": "2.0.2",
-    "@prosopo/cli": "2.0.2",
+    "@prosopo/config": "2.0.3",
+    "@prosopo/cli": "2.0.3",
     "tslib": "2.6.2",
     "vite": "^5.1.7",
     "typescript": "^5.1.6"

@@ -301,17 +301,17 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async getDataset(datasetId: string): Promise<DatasetWithIds> {
     const datasetDoc: DatasetWithIds | null | undefined =
-      await this.tables?.dataset.findOne({ datasetId: datasetId }).lean();
+      await this.tables?.dataset.findOne({ datasetId: datasetId }).lean<DatasetWithIds>();
 
     if (datasetDoc) {
       const { datasetContentId, format, contentTree, solutionTree } =
         datasetDoc;
 
       const captchas: Captcha[] =
-        (await this.tables?.captcha.find({ datasetId }).lean()) || [];
+        (await this.tables?.captcha.find({ datasetId }).lean<Captcha[]>()) || [];
 
       const solutions: SolutionRecord[] =
-        (await this.tables?.solution.find({ datasetId }).lean()) || [];
+        (await this.tables?.solution.find({ datasetId }).lean<SolutionRecord[]>()) || [];
 
       const solutionsKeyed: {
         [key: string]: SolutionRecord;
@@ -457,7 +457,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
     const doc: DatasetBase | undefined | null = await this.tables?.dataset
       .findOne({ datasetId })
-      .lean();
+      .lean<DatasetBase>();
 
     if (doc) {
       return doc;
@@ -596,7 +596,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
     try {
       const record: PoWCaptchaRecord | null | undefined =
-        await this.tables.powCaptcha.findOne({ challenge }).lean();
+        await this.tables.powCaptcha.findOne({ challenge }).lean<PoWCaptchaRecord>();
       if (record) {
         this.logger.info("PowCaptcha record retrieved successfully", {
           challenge,
@@ -882,7 +882,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     const doc: PendingCaptchaRequest | null | undefined =
-      await this.tables?.pending.findOne({ requestHash: requestHash }).lean();
+      await this.tables?.pending.findOne({ requestHash: requestHash }).lean<PendingCaptchaRequest>();
 
     if (doc) {
       return doc;
@@ -1065,10 +1065,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async getDappUserCommitmentById(
     commitmentId: string,
-  ): Promise<UserCommitment | undefined> {
+  ): Promise<UserCommitmentRecord | undefined> {
     const commitmentCursor = this.tables?.commitment
       ?.findOne({ id: commitmentId })
-      .lean<UserCommitment>();
+      .lean<UserCommitmentRecord>();
 
     const doc = await commitmentCursor;
 
@@ -1088,7 +1088,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       await this.tables?.commitment
         // sort by most recent first to avoid old solutions being used in development
         ?.find({ userAccount, dappAccount }, { _id: 0 }, { sort: { _id: -1 } })
-        .lean();
+        .lean<UserCommitmentRecord[]>();
 
     return docs ? (docs as UserCommitmentRecord[]) : [];
   }
@@ -1200,7 +1200,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     const cursor: ScheduledTaskRecord | undefined | null =
       await this.tables?.scheduler
         ?.findOne({ taskId: taskId, status: status })
-        .lean();
+        .lean<ScheduledTaskRecord>();
     return cursor ? cursor : undefined;
   }
 
@@ -1223,7 +1223,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         ?.findOne(lookup)
         .sort({ datetime: -1 })
         .limit(1)
-        .lean();
+        .lean<ScheduledTaskRecord>();
     return cursor ? cursor : undefined;
   }
 

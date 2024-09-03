@@ -1,5 +1,8 @@
 import { MongoClient } from "mongodb";
-import { PoWCaptchaStored, UserCommitment } from "@prosopo/types-database";
+import {
+  PoWCaptchaStored, UserCommitment,
+  UserCommitmentRecord,
+} from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { CaptchaStatus } from "@prosopo/types";
 import { loadEnv } from "@prosopo/dotenv";
