@@ -1,26 +1,23 @@
-# The Caddyfile is an easy way to configure your Caddy web server.
-#
-# Unless the file starts with a global options block, the first
-# uncommented line is always the address of your site.
-#
-# To use your own domain name (with automatic HTTPS), first make
-# sure your domain's A/AAAA DNS records are properly pointed to
-# this machine's public IP, then replace ":80" below with your
-# domain name.
 {
-	auto_https disable_redirects
-	debug
+	# auto_https off # if running locally with no https, turn off https
+	# http_port 4445 # set the http port if running locally with no sudo
+	auto_https disable_redirects # auto https for the domains
+	admin :{$ADMIN_API_PORT} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 }
 
-pronode3.prosopo.io {
-	# Set this path to your site's directory.
+# http://localhost:4444 { # uncomment if running locally with no https
+pronode3.prosopo.io { # the domain 
+
+	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
+	reverse_proxy /metrics localhost:2020 {
+		
+    }
+
+	# reverse proxy to the provider container
 	reverse_proxy provider:9229
 
-	# logs
+	# logs. Note this is not limited, truncated or rotated whatsoever, so it grows over time!
 	log {
 		output file /var/log/caddy/pronode3.prosopo.io-access.log
 	}
 }
-
-# Refer to the Caddy docs for more information:
-# https://caddyserver.com/docs/caddyfile
