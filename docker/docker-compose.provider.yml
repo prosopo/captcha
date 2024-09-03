@@ -65,7 +65,7 @@ services:
         image: containrrr/watchtower
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: docker-provider-1 --interval 30 --cleanup --remove-volumes --log-format JSON --label-enable
+        command: docker-provider-1 --interval 30 --cleanup --remove-volumes --log-format JSON --label-enable -e WATCHTOWER_NOTIFICATIONS=slack -e WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL="${SLACK_HOOK_DEVOPS}"
 networks:
     internal:
         name: internal
