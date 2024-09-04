@@ -123,15 +123,19 @@ export function Manager(
     return ProcaptchaConfigSchema.parse(config);
   };
 
-  const fallable = async (fn: () => Promise<void>) => {
+  const fallable = async (fn: () => Promise<void>, retryCount: number, retryMax: number) => {
     try {
       await fn();
     } catch (err) {
+      retryCount++;
       console.error(err);
       // dispatch relevant error event
       dispatchErrorEvent(err);
       // hit an error, disallow user's claim to be human
-      updateState({ isHuman: false, showModal: false, loading: false });
+      resetState()
+      // trigger a retry to attempt a new provider until it passes
+      start()
+      console.log("\n----\nran start\n---\n")
     }
   };
 
