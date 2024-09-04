@@ -1,58 +1,59 @@
 {
-  "name": "@prosopo/cli",
-  "version": "2.0.3",
-  "description": "CLI for Prosopo Provider",
-  "main": "dist/index.js",
-  "type": "module",
-  "engines": {
-    "node": ">=20",
-    "npm": ">=9"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/cjs/index.cjs"
-    }
-  },
-  "scripts": {
-    "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose",
-    "build:cjs": "npx vite --config vite.cjs.config.ts build",
-    "bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
-    "test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-    "cli": "node ./dist/cli.js",
-    "start": "node ./dist/cli.js --api"
-  },
-  "dependencies": {
-    "@polkadot/keyring": "12.6.2",
-    "@polkadot/util": "12.6.2",
-    "@polkadot/util-crypto": "12.6.2",
-    "@prosopo/common": "2.0.3",
-    "@prosopo/contract": "2.0.3",
-    "@prosopo/dotenv": "2.0.3",
-    "@prosopo/env": "2.0.3",
-    "@prosopo/provider": "2.0.3",
-    "@prosopo/types": "2.0.3",
-    "@prosopo/util": "2.0.3",
-    "cors": "^2.8.5",
-    "cron-parser": "^4.9.0",
-    "dotenv": "^16.0.1",
-    "express-rate-limit": "^7.3.1",
-    "yargs": "^17.7.2",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@prosopo/config": "2.0.3",
-    "@types/cors": "^2.8.14",
-    "@types/yargs": "^17.0.32",
-    "es-main": "^1.2.0",
-    "express": "^4.18.2",
-    "tslib": "2.6.2",
-    "typescript": "5.1.6",
-    "vite": "^5.1.7",
-    "vitest": "^1.3.1"
-  },
-  "author": "Prosopo",
-  "license": "Apache-2.0",
-  "sideEffects": false
+	"name": "@prosopo/cli",
+	"version": "2.0.3",
+	"description": "CLI for Prosopo Provider",
+	"main": "dist/index.js",
+	"type": "module",
+	"engines": {
+		"node": ">=20",
+		"npm": ">=9"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"clean": "tsc --build --clean",
+		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"cli": "node ./dist/cli.js",
+		"start": "node ./dist/cli.js --api",
+		"start:dev": "node ./dist/cliDev.js --api"
+	},
+	"dependencies": {
+		"@polkadot/keyring": "12.6.2",
+		"@polkadot/util": "12.6.2",
+		"@polkadot/util-crypto": "12.6.2",
+		"@prosopo/common": "2.0.3",
+		"@prosopo/contract": "2.0.3",
+		"@prosopo/dotenv": "2.0.3",
+		"@prosopo/env": "2.0.3",
+		"@prosopo/provider": "2.0.3",
+		"@prosopo/types": "2.0.3",
+		"@prosopo/util": "2.0.3",
+		"cors": "^2.8.5",
+		"cron-parser": "^4.9.0",
+		"dotenv": "^16.0.1",
+		"express-rate-limit": "^7.3.1",
+		"yargs": "^17.7.2",
+		"zod": "^3.22.4"
+	},
+	"devDependencies": {
+		"@prosopo/config": "2.0.3",
+		"@types/cors": "^2.8.14",
+		"@types/yargs": "^17.0.32",
+		"es-main": "^1.2.0",
+		"express": "^4.18.2",
+		"tslib": "2.6.2",
+		"typescript": "5.1.6",
+		"vite": "^5.1.7",
+		"vitest": "^1.3.1"
+	},
+	"author": "Prosopo",
+	"license": "Apache-2.0",
+	"sideEffects": false
 }
