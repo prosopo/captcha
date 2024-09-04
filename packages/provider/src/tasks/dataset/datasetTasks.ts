@@ -169,6 +169,7 @@ export class DatasetManager {
 					},
 				},
 			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		} catch (e: any) {
 			this.logger.error(e);
 			await this.db.updateScheduledTaskStatus(

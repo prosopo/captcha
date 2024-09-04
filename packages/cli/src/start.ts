@@ -30,7 +30,11 @@ import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
-function startApi(env: ProviderEnvironment, admin = false, port?: number): Server {
+function startApi(
+	env: ProviderEnvironment,
+	admin = false,
+	port?: number,
+): Server {
 	env.logger.info("Starting Prosopo API");
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
@@ -61,7 +65,11 @@ function startApi(env: ProviderEnvironment, admin = false, port?: number): Serve
 	});
 }
 
-export async function start(env?: ProviderEnvironment, admin?: boolean, port?: number) {
+export async function start(
+	env?: ProviderEnvironment,
+	admin?: boolean,
+	port?: number,
+) {
 	if (!env) {
 		loadEnv();
 
@@ -91,6 +99,6 @@ export async function start(env?: ProviderEnvironment, admin?: boolean, port?: n
 }
 
 export async function startTwo(env?: ProviderEnvironment, admin?: boolean) {
-  start(env, admin, 9238);
-  return await start(env, admin);
+	start(env, admin, 9238);
+	return await start(env, admin);
 }

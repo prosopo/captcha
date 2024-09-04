@@ -148,189 +148,197 @@ export function Manager(
 	 */
 	const start = async () => {
 		events.onOpen();
-		await fallable(async () => {
-			if (state.loading) {
-				return;
-			}
-			if (state.isHuman) {
-				return;
-			}
-			await cryptoWaitReady();
+		await fallable(
+			async () => {
+				if (state.loading) {
+					return;
+				}
+				if (state.isHuman) {
+					return;
+				}
+				await cryptoWaitReady();
 
-			resetState();
-			// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
-			updateState({ loading: true });
+				resetState();
+				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+				updateState({ loading: true });
 
-			// snapshot the config into the state
-			const config = getConfig();
-			updateState({ dappAccount: config.account.address });
+				// snapshot the config into the state
+				const config = getConfig();
+				updateState({ dappAccount: config.account.address });
 
-			// allow UI to catch up with the loading state
-			await sleep(100);
+				// allow UI to catch up with the loading state
+				await sleep(100);
 
-			const account = await loadAccount();
+				const account = await loadAccount();
 
-			// get a random provider
-			const getRandomProviderResponse = getRandomActiveProvider(getConfig());
+				// get a random provider
+				const getRandomProviderResponse = getRandomActiveProvider(getConfig());
 
-			const providerUrl = getRandomProviderResponse.provider.url;
-			// get the provider api inst
-			const providerApi = await loadProviderApi(providerUrl);
+				const providerUrl = getRandomProviderResponse.provider.url;
+				// get the provider api inst
+				const providerApi = await loadProviderApi(providerUrl);
 
-			const captchaApi = new ProsopoCaptchaApi(
-				account.account.address,
-				getRandomProviderResponse,
-				providerApi,
-				config.web2,
-				config.account.address || "",
-			);
-			updateState({ captchaApi });
+				const captchaApi = new ProsopoCaptchaApi(
+					account.account.address,
+					getRandomProviderResponse,
+					providerApi,
+					config.web2,
+					config.account.address || "",
+				);
+				updateState({ captchaApi });
 
-			const challenge = await captchaApi.getCaptchaChallenge();
+				const challenge = await captchaApi.getCaptchaChallenge();
 
-			if (challenge.captchas.length <= 0) {
-				throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
-			}
+				if (challenge.captchas.length <= 0) {
+					throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
+				}
 
-			// setup timeout, taking the timeout from the individual captcha or the global default
-			const timeMillis: number = challenge.captchas
-				.map(
-					(captcha) =>
-						captcha.timeLimitMs || config.captchas.image.challengeTimeout,
-				)
-				.reduce((a: number, b: number) => a + b);
-			const timeout = setTimeout(() => {
-				events.onChallengeExpired();
-				// expired, disallow user's claim to be human
-				updateState({ isHuman: false, showModal: false, loading: false });
-			}, timeMillis);
+				// setup timeout, taking the timeout from the individual captcha or the global default
+				const timeMillis: number = challenge.captchas
+					.map(
+						(captcha) =>
+							captcha.timeLimitMs || config.captchas.image.challengeTimeout,
+					)
+					.reduce((a: number, b: number) => a + b);
+				const timeout = setTimeout(() => {
+					events.onChallengeExpired();
+					// expired, disallow user's claim to be human
+					updateState({ isHuman: false, showModal: false, loading: false });
+				}, timeMillis);
 
-			// update state with new challenge
-			updateState({
-				index: 0,
-				solutions: challenge.captchas.map(() => []),
-				challenge,
-				showModal: true,
-				timeout,
-			});
-		}, 0, 5);
+				// update state with new challenge
+				updateState({
+					index: 0,
+					solutions: challenge.captchas.map(() => []),
+					challenge,
+					showModal: true,
+					timeout,
+				});
+			},
+			0,
+			5,
+		);
 	};
 
 	const submit = async () => {
-		await fallable(async () => {
-			// disable the time limit, user has submitted their solution in time
-			clearTimeout();
+		await fallable(
+			async () => {
+				// disable the time limit, user has submitted their solution in time
+				clearTimeout();
 
-			if (!state.challenge) {
-				throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
-					context: { error: "Cannot submit, no Captcha found in state" },
-				});
-			}
+				if (!state.challenge) {
+					throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+						context: { error: "Cannot submit, no Captcha found in state" },
+					});
+				}
 
-			// hide the modal, no further input required from user
-			updateState({ showModal: false });
+				// hide the modal, no further input required from user
+				updateState({ showModal: false });
 
-			const challenge: CaptchaResponseBody = state.challenge;
-			const salt = randomAsHex();
+				const challenge: CaptchaResponseBody = state.challenge;
+				const salt = randomAsHex();
 
-			// append solution to each captcha in the challenge
-			const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
-				(captcha, index) => {
-					const solution = at(state.solutions, index);
-					return {
-						captchaId: captcha.captchaId,
-						captchaContentId: captcha.captchaContentId,
-						salt,
-						solution,
-					};
-				},
-			);
-
-			const account = getAccount();
-			const signer = getExtension(account).signer;
-
-			const first = at(challenge.captchas, 0);
-			if (!first.datasetId) {
-				throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_ID", {
-					context: { error: "No datasetId set for challenge" },
-				});
-			}
-
-			const captchaApi = state.captchaApi;
-
-			if (!captchaApi) {
-				throw new ProsopoError("CAPTCHA.INVALID_TOKEN", {
-					context: { error: "No Captcha API found in state" },
-				});
-			}
-
-			if (!signer || !signer.signRaw) {
-				throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
-					context: {
-						error:
-							"Signer is not defined, cannot sign message to prove account ownership",
+				// append solution to each captcha in the challenge
+				const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
+					(captcha, index) => {
+						const solution = at(state.solutions, index);
+						return {
+							captchaId: captcha.captchaId,
+							captchaContentId: captcha.captchaContentId,
+							salt,
+							solution,
+						};
 					},
-				});
-			}
-
-			const userRequestHashSignature = await signer.signRaw({
-				address: account.account.address,
-				data: stringToHex(challenge.requestHash),
-				type: "bytes",
-			});
-
-			// send the commitment to the provider
-			const submission: TCaptchaSubmitResult =
-				await captchaApi.submitCaptchaSolution(
-					userRequestHashSignature.signature,
-					challenge.requestHash,
-					captchaSolution,
-					challenge.timestamp,
-					challenge.signature.provider.requestHash,
 				);
 
-			// mark as is human if solution has been approved
-			const isHuman = submission[0].verified;
+				const account = getAccount();
+				const signer = getExtension(account).signer;
 
-			if (!isHuman) {
-				// user failed the captcha for some reason according to the provider
-				events.onFailed();
-			}
+				const first = at(challenge.captchas, 0);
+				if (!first.datasetId) {
+					throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_ID", {
+						context: { error: "No datasetId set for challenge" },
+					});
+				}
 
-			// update the state with the result of the submission
-			updateState({
-				submission,
-				isHuman,
-				loading: false,
-			});
-			if (state.isHuman) {
-				const providerUrl = captchaApi.provider.provider.url;
-				// cache this provider for future use
-				storage.setProcaptchaStorage({
-					...storage.getProcaptchaStorage(),
-					providerUrl,
-				});
-				events.onHuman(
-					encodeProcaptchaOutput({
-						[ApiParams.providerUrl]: providerUrl,
-						[ApiParams.user]: account.account.address,
-						[ApiParams.dapp]: getDappAccount(),
-						[ApiParams.commitmentId]: hashToHex(submission[1]),
-						[ApiParams.timestamp]: challenge.timestamp,
-						[ApiParams.signature]: {
-							[ApiParams.provider]: {
-								[ApiParams.requestHash]:
-									challenge.signature.provider.requestHash,
-							},
-							[ApiParams.user]: {
-								[ApiParams.requestHash]: userRequestHashSignature.signature,
-							},
+				const captchaApi = state.captchaApi;
+
+				if (!captchaApi) {
+					throw new ProsopoError("CAPTCHA.INVALID_TOKEN", {
+						context: { error: "No Captcha API found in state" },
+					});
+				}
+
+				if (!signer || !signer.signRaw) {
+					throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+						context: {
+							error:
+								"Signer is not defined, cannot sign message to prove account ownership",
 						},
-					}),
-				);
-				setValidChallengeTimeout();
-			}
-		}, 0 , 5);
+					});
+				}
+
+				const userRequestHashSignature = await signer.signRaw({
+					address: account.account.address,
+					data: stringToHex(challenge.requestHash),
+					type: "bytes",
+				});
+
+				// send the commitment to the provider
+				const submission: TCaptchaSubmitResult =
+					await captchaApi.submitCaptchaSolution(
+						userRequestHashSignature.signature,
+						challenge.requestHash,
+						captchaSolution,
+						challenge.timestamp,
+						challenge.signature.provider.requestHash,
+					);
+
+				// mark as is human if solution has been approved
+				const isHuman = submission[0].verified;
+
+				if (!isHuman) {
+					// user failed the captcha for some reason according to the provider
+					events.onFailed();
+				}
+
+				// update the state with the result of the submission
+				updateState({
+					submission,
+					isHuman,
+					loading: false,
+				});
+				if (state.isHuman) {
+					const providerUrl = captchaApi.provider.provider.url;
+					// cache this provider for future use
+					storage.setProcaptchaStorage({
+						...storage.getProcaptchaStorage(),
+						providerUrl,
+					});
+					events.onHuman(
+						encodeProcaptchaOutput({
+							[ApiParams.providerUrl]: providerUrl,
+							[ApiParams.user]: account.account.address,
+							[ApiParams.dapp]: getDappAccount(),
+							[ApiParams.commitmentId]: hashToHex(submission[1]),
+							[ApiParams.timestamp]: challenge.timestamp,
+							[ApiParams.signature]: {
+								[ApiParams.provider]: {
+									[ApiParams.requestHash]:
+										challenge.signature.provider.requestHash,
+								},
+								[ApiParams.user]: {
+									[ApiParams.requestHash]: userRequestHashSignature.signature,
+								},
+							},
+						}),
+					);
+					setValidChallengeTimeout();
+				}
+			},
+			0,
+			5,
+		);
 	};
 
 	const cancel = async () => {

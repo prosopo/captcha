@@ -122,6 +122,7 @@ export const POW_SEPARATOR = "___";
 export type PoWChallengeId =
 	`${Timestamp}${typeof POW_SEPARATOR}${UserAccount}${typeof POW_SEPARATOR}${DappAccount}`;
 
+// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 export const PowChallengeIdSchema = custom<PoWChallengeId>((val: any) => {
 	const valSplit = val.split(POW_SEPARATOR);
 	try {

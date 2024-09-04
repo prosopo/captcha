@@ -58,6 +58,7 @@ describe("DatasetManager", () => {
 	let captchaConfig: CaptchaConfig;
 	let db: Database;
 	let datasetManager: DatasetManager;
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	const collections: Record<string, any> = {};
 
 	beforeEach(() => {
@@ -111,6 +112,7 @@ describe("DatasetManager", () => {
 			),
 			updateScheduledTaskStatus: vi.fn(
 				(
+					// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 					taskID: any,
 					status: ScheduledTaskStatus,
 					result?: ScheduledTaskResult,
@@ -123,13 +125,17 @@ describe("DatasetManager", () => {
 				},
 			),
 			getLastScheduledTaskStatus: vi.fn(
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 				(taskID: any, status: ScheduledTaskStatus) => {
-					return Object.keys(collections.schedulers.records)
-						.map((key: any) => collections.schedulers.records[key])
-						.find(
-							(task: ScheduledTaskRecord) =>
-								task.processName === taskID && task.status === status,
-						);
+					return (
+						Object.keys(collections.schedulers.records)
+							// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+							.map((key: any) => collections.schedulers.records[key])
+							.find(
+								(task: ScheduledTaskRecord) =>
+									task.processName === taskID && task.status === status,
+							)
+					);
 				},
 			),
 		} as unknown as Database;
@@ -320,6 +326,7 @@ describe("DatasetManager", () => {
 		);
 
 		expect(db.updateScheduledTaskStatus).toHaveBeenCalledWith(
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			Number.parseInt(mockLastScheduledTask._id as any) + 1,
 			ScheduledTaskStatus.Completed,
 			{
@@ -362,6 +369,7 @@ describe("DatasetManager", () => {
 		expect(saveCaptchas).not.toHaveBeenCalled();
 
 		expect(db.updateScheduledTaskStatus).toHaveBeenCalledWith(
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			Number.parseInt(mockLastScheduledTask._id as any) + 1,
 			ScheduledTaskStatus.Completed,
 			{
