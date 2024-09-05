@@ -9,8 +9,16 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     auto_merge:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
         runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
         steps:
@@ -53,12 +61,6 @@ jobs:
                     echo "******************************"
 
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: ".nvmrc"
-
-            - name: Install
-              run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - name: Enable auto-merge on PR
               env:

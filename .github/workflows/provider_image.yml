@@ -15,8 +15,16 @@ env:
     CARGO_TERM_COLOR: always
     GH_TOKEN: ${{ github.token }}
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     check:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
         runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
         steps:
@@ -80,11 +88,6 @@ jobs:
                   key: some-unused-cache-key
                   restore-keys: |
                       project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
-
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
 

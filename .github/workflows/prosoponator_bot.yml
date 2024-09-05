@@ -4,8 +4,16 @@ name: prosoponator_bot
 
 on: issue_comment
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     comment:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
         # This job only runs for pull request comments
         if: ${{ github.event.issue.pull_request }} && github.event.pull_request.draft == false
         runs-on: ubuntu-latest
@@ -49,11 +57,6 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v3
-
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - name: Run
               env:

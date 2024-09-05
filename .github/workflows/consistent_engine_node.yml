@@ -19,6 +19,10 @@ env:
     ENVIRONMENT: development
     GH_TOKEN: ${{ github.token }}
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     check:
         runs-on: ubuntu-latest

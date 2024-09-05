@@ -16,8 +16,16 @@ env:
   GH_TOKEN: ${{ github.token }}
   NODE_ENV: test
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
   check:
+    container: 
+        image: prosopo/ci:latest
+        options: >
+            --volume ${{ github.workspace }}:/repo
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -59,7 +67,22 @@ jobs:
           echo "inputs:" "$INPUTS_CONTEXT"
           echo "******************************"
 
+      - run: docker ps
+      - run: docker ps
+      - run: docker network list
+      - run: docker ps
+      - run: docker network create pronet
+
       - uses: actions/checkout@v3
+
+
+      - name: Start the docker images
+        run: |
+          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker container ls
+          sleep 10s
+          docker inspect docker-database-1
+          docker network list
 
       - run: mkdir -p protocol/cargo-cache
       - run: mkdir -p protocol/target
@@ -82,11 +105,6 @@ jobs:
           restore-keys: |
             project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-      - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
       - run: npm ci
 
       # build all packages in workspace
@@ -107,12 +125,6 @@ jobs:
             cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
             NODE_ENV="production" npm run -w @prosopo/procaptcha-bundle bundle
-
-      - name: Start the docker images
-        run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d
-          docker container ls
-          sleep 10s
 
 
       - name: Setup env

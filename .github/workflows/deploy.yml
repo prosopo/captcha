@@ -7,8 +7,16 @@ on:
         branches: [main, staging]
     workflow_dispatch:
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     deploy:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
@@ -112,11 +120,6 @@ jobs:
                     echo "cannot deploy from branch ${{ github.ref }}"
                     exit 1
                 fi
-
-            - uses: actions/setup-node@v3
-              with:
-                  node-version-file: '.nvmrc'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
 

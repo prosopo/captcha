@@ -1,0 +1,86 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL [ "/bin/bash", "-e", "-c" ]
+
+VOLUME /repo
+WORKDIR /repo
+
+# Set rustup and cargo home dirs
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    # Configure pipx to install applications globally
+    PIPX_BIN_DIR=/usr/local/bin \
+    PIPX_HOME=/usr/local/pipx \
+    NVM_DIR=/usr/local/nvm \
+    PROFILE=/dev/null \
+    NODE_VERSION=20.16.0 \
+    TOOLCHAIN_VERSION=1.78.0
+
+# The version of cargo-contract to install
+ARG CARGO_CONTRACT_VERSION=4.1.1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl wget gnupg debian-keyring debian-archive-keyring apt-transport-https ca-certificates \
+    # caddy
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
+    # gh cli
+    && mkdir -p -m 755 /etc/apt/keyrings \
+    && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    # docker
+    && install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    # install deps
+    && apt-get update \
+    && apt-get install -y --no-install-recommends curl git pipx npm python3.10 python3-pip python3.10-venv shellcheck yamllint caddy gh docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin unzip gcc g++ pkg-config libssl-dev openssl jq libicu-dev \
+    # Create the necessary directories
+    && mkdir -p $RUSTUP_HOME $CARGO_HOME $PIPX_HOME $NVM_DIR \
+    # Install nvm
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash \
+    # Install node
+    && source ${NVM_DIR}/nvm.sh && nvm install --default ${NODE_VERSION} \
+    # Install Rust
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${TOOLCHAIN_VERSION} --profile minimal \
+    && pipx install ansible-core \
+    && ansible-galaxy collection install community.docker --force \
+    && pipx install ruff \
+    && echo "export PS1='\w \$ '" >> /etc/bash.bashrc \
+    # update path
+    # && export PATH=$PATH:$CARGO_HOME/bin:$RUSTUP_HOME \
+    # # Install wasm32-unknown-unknown target
+    # && apt-get update && apt-get install -y --no-install-recommends gcc g++ pkg-config openssl libssl-dev \
+    # && rustup target add wasm32-unknown-unknown \
+    # # Install clippy and rustfmt
+    # && rustup component add rust-src \
+    # && rustup component add clippy \
+    # && rustup component add rustfmt \
+    # # Install cargo-contract deps
+    # && cargo install cargo-dylint dylint-link \
+    # # Install cargo-contract
+    # && cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract \
+    # aws cli
+    && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && bash ./aws/install \
+    && rm awscliv2.zip \
+    && rm -rf aws \
+    # cleanup
+    && rm -rf ${CARGO_HOME}/registry/* ${CARGO_HOME}/git/* \
+    && apt-get autoremove \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Add cargo to the PATH
+# Add node to the PATH
+ENV PATH="$CARGO_HOME/bin:$RUSTUP_HOME:$NVM_DIR/versions/node/v${NODE_VERSION}/bin:$PATH"
+
+# Set the entrypoint
+ENTRYPOINT ["bash", "-e"]

@@ -15,8 +15,16 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
 
+defaults:
+    run:
+        shell: bash
+        
 jobs:
     bump_version:
+        container: 
+            image: prosopo/ci:latest
+            options: >
+                --volume ${{ github.workspace }}:/repo
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
