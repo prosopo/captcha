@@ -13,22 +13,13 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import {
-	CaptchaDatabase,
-	ClientDatabase,
-	MongoDatabase,
-	ProviderDatabase,
-} from "@prosopo/database";
+import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import {
-	type ClientRecord,
-	ICaptchaDatabase,
-	type IProviderDatabase,
-} from "@prosopo/types-database";
+import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;

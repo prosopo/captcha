@@ -74,7 +74,6 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 				{ account: 1, settings: 1 },
 			)
 			.lean<ClientRecord[]>();
-
 		await this.close();
 		return newClientRecords;
 	}
