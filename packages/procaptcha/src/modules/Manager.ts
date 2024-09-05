@@ -22,7 +22,12 @@ import {
 	ProsopoError,
 } from "@prosopo/common";
 import { loadBalancer } from "@prosopo/load-balancer";
-import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
+import {
+	buildUpdateState,
+	getDefaultEvents,
+	getRandomActiveProvider,
+	providerRetry,
+} from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -35,7 +40,6 @@ import {
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	type RandomProvider,
-	type StoredEvents,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
@@ -59,31 +63,6 @@ const defaultState = (): Partial<ProcaptchaState> => {
 	};
 };
 
-const getRandomActiveProvider = (
-	config: ProcaptchaClientConfigOutput,
-): RandomProvider => {
-	const randomIntBetween = (min: number, max: number) =>
-		Math.floor(Math.random() * (max - min + 1) + min);
-
-	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
-	//  to ensure that the random selection was completed within a certain timeframe
-
-	const PROVIDERS = loadBalancer(config.defaultEnvironment);
-
-	const randomProvderObj = at(
-		PROVIDERS,
-		randomIntBetween(0, PROVIDERS.length - 1),
-	);
-	return {
-		providerAccount: randomProvderObj.address,
-		provider: {
-			url: randomProvderObj.url,
-			datasetId: randomProvderObj.datasetId,
-			datasetIdContent: randomProvderObj.datasetIdContent,
-		},
-	};
-};
-
 /**
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
@@ -94,11 +73,6 @@ export function Manager(
 	callbacks: ProcaptchaCallbacks,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
-
-	const dispatchErrorEvent = (err: unknown) => {
-		const error = err instanceof Error ? err : new Error(String(err));
-		events.onError(error);
-	};
 
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
@@ -123,32 +97,12 @@ export function Manager(
 		return ProcaptchaConfigSchema.parse(config);
 	};
 
-	const fallable = async (
-		fn: () => Promise<void>,
-		retryCount: number,
-		retryMax: number,
-	) => {
-		try {
-			await fn();
-		} catch (err) {
-			retryCount++;
-			console.error(err);
-			// dispatch relevant error event
-			dispatchErrorEvent(err);
-			// hit an error, disallow user's claim to be human
-			resetState();
-			// trigger a retry to attempt a new provider until it passes
-			start();
-			console.log("\n----\nran start\n---\n");
-		}
-	};
-
 	/**
 	 * Called on start of user verification. This is when the user ticks the box to claim they are human.
 	 */
 	const start = async () => {
 		events.onOpen();
-		await fallable(
+		await providerRetry(
 			async () => {
 				if (state.loading) {
 					return;
@@ -215,13 +169,15 @@ export function Manager(
 					timeout,
 				});
 			},
+			start,
+			resetState,
 			0,
 			5,
 		);
 	};
 
 	const submit = async () => {
-		await fallable(
+		await providerRetry(
 			async () => {
 				// disable the time limit, user has submitted their solution in time
 				clearTimeout();
@@ -336,6 +292,8 @@ export function Manager(
 					setValidChallengeTimeout();
 				}
 			},
+			start,
+			resetState,
 			0,
 			5,
 		);

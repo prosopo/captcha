@@ -27,6 +27,8 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/common": "2.0.3",
+		"@prosopo/load-balancer": "2.0.3",
+		"@prosopo/util": "2.0.3",
 		"@prosopo/types": "2.0.3"
 	},
 	"devDependencies": {
