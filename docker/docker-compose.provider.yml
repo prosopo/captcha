@@ -1,20 +1,33 @@
 services:
+    provider-dev:
+        profiles:
+            - development-x86_64
+        build:
+            context: ..
+            dockerfile: ./docker/images/provider.dockerfile
+        env_file:
+            - ../dev/scripts/.env.development
+        ports:
+            - '9229:9229'
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
     provider:
         profiles:
             - production-arm64
             - production-x86_64
             - staging-arm64
             - staging-x86_64
-            - development-arm64
-            - development-x86_64
         image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
-        build:
-            context: ..
-            dockerfile: ./docker/images/provider.dockerfile
         env_file:
             - ../.env.${NODE_ENV}
         ports:
