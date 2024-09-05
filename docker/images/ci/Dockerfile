@@ -50,6 +50,7 @@ RUN apt-get update \
     # Install Rust
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${TOOLCHAIN_VERSION} --profile minimal \
     && pipx install ansible-core \
+    && ansible-galaxy collection install community.docker --force \
     && pipx install ruff \
     && echo "export PS1='\w \$ '" >> /etc/bash.bashrc \
     # update path
