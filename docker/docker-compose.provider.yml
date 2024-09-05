@@ -115,6 +115,8 @@ services:
             - staging-x86_64
             - staging-arm64
         image: caddy:2
+        env_file:
+            - ../.env.${NODE_ENV}
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
