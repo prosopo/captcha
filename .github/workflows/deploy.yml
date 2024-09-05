@@ -168,7 +168,7 @@ jobs:
             - name: Deploy staging js bundle
               if: ${{ steps.env.outputs.staging }}
               env:
-                GH_TOKEN: ${{ github.token }}
+                  GH_TOKEN: ${{ github.token }}
               run: |
 
                   # stop on errors, print commands, fail on pipe fails
