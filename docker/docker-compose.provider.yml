@@ -23,7 +23,7 @@ services:
             - production-x86_64
             - staging-arm64
             - staging-x86_64
-        image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+        image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
