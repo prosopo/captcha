@@ -30,9 +30,9 @@ export async function storeCaptchasExternally(
 
   // Set the cron schedule to run on user configured schedule or every hour
   const defaultSchedule = "0 * * * *";
-  const cronSchedule = config.captchaScheduler
-    ? config.captchaScheduler.schedule
-      ? config.captchaScheduler.schedule
+  const cronSchedule = config.scheduledTasks?.captchaScheduler
+    ? config.scheduledTasks.captchaScheduler.schedule
+      ? config.scheduledTasks.captchaScheduler.schedule
       : defaultSchedule
     : defaultSchedule;
 
@@ -48,7 +48,7 @@ export async function storeCaptchasExternally(
       env.logger.info(
         `${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
       );
-      await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
+      await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
         env.logger.error(err);
       });
     }

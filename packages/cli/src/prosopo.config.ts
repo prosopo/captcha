@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogLevel, getLogger } from "@prosopo/common";
+import { getLogLevel } from "@prosopo/common";
 import {
-  type BatchCommitConfigSchema,
   DatabaseTypes,
   EnvironmentTypesSchema,
   type ProsopoCaptchaCountConfigSchemaInput,
@@ -25,8 +24,6 @@ import {
 } from "@prosopo/types";
 import { getRateLimitConfig } from "./RateLimiter.js";
 import { getAddress, getPassword, getSecret } from "./process.env.js";
-
-const logger = getLogger(LogLevel.enum.info, "Config");
 
 function getMongoURI(): string {
   const protocol = process.env.PROSOPO_DATABASE_PROTOCOL || "mongodb";
@@ -42,7 +39,6 @@ function getMongoURI(): string {
 
 export default function getConfig(
   captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
-  batchCommitConfig?: typeof BatchCommitConfigSchema,
   captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
   who = "PROVIDER",
 ): ProsopoConfigOutput {
@@ -58,22 +54,22 @@ export default function getConfig(
     },
     database: {
       development: {
-        type: DatabaseTypes.enum.mongo,
+        type: DatabaseTypes.enum.provider,
         endpoint: getMongoURI(),
-        dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo",
-        authSource: "admin",
+        dbname: process.env.PROSOPO_DATABASE_NAME,
+        authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
       },
       staging: {
-        type: DatabaseTypes.enum.mongo,
+        type: DatabaseTypes.enum.provider,
         endpoint: getMongoURI(),
-        dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo",
-        authSource: "admin",
+        dbname: process.env.PROSOPO_DATABASE_NAME,
+        authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
       },
       production: {
-        type: DatabaseTypes.enum.mongo,
+        type: DatabaseTypes.enum.provider,
         endpoint: getMongoURI(),
-        dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo",
-        authSource: "admin",
+        dbname: process.env.PROSOPO_DATABASE_NAME,
+        authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
       },
     },
     server: {
@@ -83,17 +79,22 @@ export default function getConfig(
         : 9229,
     },
     captchaSolutions: captchaSolutionsConfig,
-    batchCommit: batchCommitConfig,
     captchas: captchaServeConfig,
     devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === "true",
     mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
     mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",
+    mongoClientUri: process.env.PROSOPO_MONGO_CLIENT_URI || "",
     rateLimits: getRateLimitConfig(),
     proxyCount: process.env.PROSOPO_PROXY_COUNT
       ? Number.parseInt(process.env.PROSOPO_PROXY_COUNT)
       : 0,
-    captchaScheduler: {
-      schedule: process.env.CAPTCHA_STORAGE_SCHEDULE,
+    scheduledTasks: {
+      captchaScheduler: {
+        schedule: process.env.CAPTCHA_STORAGE_SCHEDULE,
+      },
+      clientListScheduler: {
+        schedule: process.env.CLIENT_LIST_SCHEDULE,
+      },
     },
   } as ProsopoConfigInput);
 }

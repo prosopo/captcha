@@ -13,8 +13,6 @@
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
 import {
-  AsyncFactory,
-  getLoggerDefault,
   type Logger,
   ProsopoDBError,
   ProsopoEnvError,
@@ -22,25 +20,28 @@ import {
 } from "@prosopo/common";
 import {
   type Captcha,
-  CaptchaResult,
-  type CaptchaSolution,
-  CaptchaStates,
-  CaptchaStatus,
-  type DatasetBase,
-  type DatasetWithIds,
-  type DatasetWithIdsAndTree,
+  DatasetWithIdsAndTree,
   DatasetWithIdsAndTreeSchema,
-  type Hash,
-  type PendingCaptchaRequest,
+  DatasetWithIds,
+  CaptchaStates,
+  PendingCaptchaRequest,
+  Hash,
+  CaptchaStatus,
+  ScheduledTaskNames,
+  ScheduledTaskStatus,
+  DatasetBase,
+  CaptchaSolution,
   PoWChallengeComponents,
   PoWChallengeId,
-  ScheduledTaskNames,
-  type ScheduledTaskResult,
-  ScheduledTaskStatus,
+  CaptchaResult,
+  ScheduledTaskResult,
+  Dataset,
 } from "@prosopo/types";
 import {
   CaptchaRecordSchema,
-  type Database,
+  ClientRecord,
+  ClientRecordSchema,
+  type IDatabase,
   DatasetRecordSchema,
   PendingRecordSchema,
   PoWCaptchaRecord,
@@ -62,54 +63,101 @@ import {
   UserCommitmentSchema,
   type UserSolutionRecord,
   UserSolutionRecordSchema,
+  IUserDataSlim,
 } from "@prosopo/types-database";
-import { type DeleteResult, ServerApiVersion } from "mongodb";
-import mongoose, { type Connection, ObjectId } from "mongoose";
+import { type DeleteResult } from "mongodb";
+import { ObjectId } from "mongoose";
+import { MongoDatabase } from "../base/mongo.js";
 
-mongoose.set("strictQuery", false);
+enum TableNames {
+  captcha = "captcha",
+  dataset = "dataset",
+  solution = "solution",
+  commitment = "commitment",
+  usersolution = "usersolution",
+  pending = "pending",
+  scheduler = "scheduler",
+  powcaptcha = "powcaptcha",
+  client = "client",
+}
 
-// mongodb://username:password@127.0.0.1:27017
-const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
+const PROVIDER_TABLES = [
+  {
+    collectionName: TableNames.captcha,
+    modelName: "Captcha",
+    schema: CaptchaRecordSchema,
+  },
+  {
+    collectionName: TableNames.powcaptcha,
+    modelName: "PowCaptcha",
+    schema: PowCaptchaRecordSchema,
+  },
+  {
+    collectionName: TableNames.dataset,
+    modelName: "Dataset",
+    schema: DatasetRecordSchema,
+  },
+  {
+    collectionName: TableNames.solution,
+    modelName: "Solution",
+    schema: SolutionRecordSchema,
+  },
+  {
+    collectionName: TableNames.commitment,
+    modelName: "UserCommitment",
+    schema: UserCommitmentRecordSchema,
+  },
+  {
+    collectionName: TableNames.usersolution,
+    modelName: "UserSolution",
+    schema: UserSolutionRecordSchema,
+  },
+  {
+    collectionName: TableNames.pending,
+    modelName: "Pending",
+    schema: PendingRecordSchema,
+  },
+  {
+    collectionName: TableNames.scheduler,
+    modelName: "Scheduler",
+    schema: ScheduledTaskRecordSchema,
+  },
+  {
+    collectionName: TableNames.client,
+    modelName: "Client",
+    schema: ClientRecordSchema,
+  },
+];
 
-/**
- * Returns the Database object through which Providers can put and get captchas
- * @param {string} url          The database endpoint
- * @param {string} dbname       The database name
- * @return {ProsopoDatabase}    Database layer
- */
-export class ProsopoDatabase extends AsyncFactory implements Database {
-  url: string;
-  tables?: Tables;
-  dbname: string;
-  connection?: Connection;
-  logger: Logger;
+export class ProviderDatabase extends MongoDatabase implements IDatabase {
+  tables = {} as Tables<TableNames>;
 
-  constructor() {
-    super();
-    this.url = "";
-    this.dbname = "";
-    this.logger = getLoggerDefault();
-  }
-
-  public async init(
+  constructor(
     url: string,
-    dbname: string,
-    logger: Logger,
+    dbname?: string,
     authSource?: string,
+    logger?: Logger,
   ) {
-    const baseEndpoint = url || DEFAULT_ENDPOINT;
-    const parsedUrl = new URL(baseEndpoint);
-    parsedUrl.pathname = dbname;
-    if (authSource) {
-      parsedUrl.searchParams.set("authSource", authSource);
-    }
-    this.url = parsedUrl.toString();
-    this.dbname = dbname;
-    this.logger = logger;
-    return this;
+    super(url, dbname, authSource, logger);
+    this.tables = {} as Tables<TableNames>;
   }
 
-  getTables(): Tables {
+  override async connect(): Promise<void> {
+    await super.connect();
+    this.loadTables();
+  }
+
+  loadTables() {
+    const tables = {} as Tables<TableNames>;
+    PROVIDER_TABLES.map(({ collectionName, modelName, schema }) => {
+      if (this.connection) {
+        tables[collectionName] = this.connection.model(modelName, schema);
+      }
+    });
+    this.tables = tables;
+  }
+
+  getTables(): Tables<TableNames> {
     if (!this.tables) {
       throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
         context: { failedFuncName: this.getTables.name },
@@ -119,97 +167,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     return this.tables;
   }
 
-  getConnection(): mongoose.Connection {
-    if (!this.connection) {
-      throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
-        context: { failedFuncName: this.getConnection.name },
-        logger: this.logger,
-      });
-    }
-    return this.connection;
-  }
-
-  /**
-   * @description Connect to the database and set the various tables
-   */
-  async connect(): Promise<void> {
-    this.logger.info(
-      `Mongo url: ${this.url.replace(/\w+:\w+/, "<Credentials>")}`,
-    );
-
-    this.connection = await new Promise((resolve, reject) => {
-      const connection = mongoose.createConnection(this.url, {
-        dbName: this.dbname,
-        serverApi: ServerApiVersion.v1,
-      });
-
-      connection.on("open", () => {
-        this.logger.info(`Database connection to ${this.url} opened`);
-        resolve(connection);
-      });
-
-      connection.on("error", (err) => {
-        this.logger.error(`Database error: ${err}`);
-        reject(err);
-      });
-
-      connection.on("connected", () => {
-        this.logger.info(`Database connected to ${this.url}`);
-        resolve(connection);
-      });
-
-      connection.on("disconnected", () => {
-        this.logger.info(`Database disconnected from ${this.url}`);
-      });
-
-      connection.on("reconnected", () => {
-        this.logger.info(`Database reconnected to ${this.url}`);
-        resolve(connection);
-      });
-
-      connection.on("reconnectFailed", () => {
-        this.logger.error(`Database reconnect failed to ${this.url}`);
-      });
-
-      connection.on("close", () => {
-        this.logger.info(`Database connection to ${this.url} closed`);
-      });
-
-      connection.on("fullsetup", () => {
-        this.logger.info(`Database connection to ${this.url} is fully setup`);
-        resolve(connection);
-      });
-    });
-
-    this.tables = {
-      captcha: this.connection.model("Captcha", CaptchaRecordSchema),
-      powCaptcha: this.connection.model("PowCaptcha", PowCaptchaRecordSchema),
-      dataset: this.connection.model("Dataset", DatasetRecordSchema),
-      solution: this.connection.model("Solution", SolutionRecordSchema),
-      commitment: this.connection.model(
-        "UserCommitment",
-        UserCommitmentRecordSchema,
-      ),
-      usersolution: this.connection.model(
-        "UserSolution",
-        UserSolutionRecordSchema,
-      ),
-      pending: this.connection.model("Pending", PendingRecordSchema),
-      scheduler: this.connection.model("Scheduler", ScheduledTaskRecordSchema),
-    };
-  }
-
-  /** Close connection to the database */
-  async close(): Promise<void> {
-    this.logger.debug(`Closing connection to ${this.url}`);
-    await this.connection?.close();
-  }
-
   /**
    * @description Load a dataset to the database
    * @param {Dataset}  dataset
    */
-  async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
+  async storeDataset(dataset: Dataset | DatasetWithIdsAndTree): Promise<void> {
     try {
       this.logger.debug("Storing dataset in database");
       const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
@@ -221,7 +183,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         solutionTree: parsedDataset.solutionTree,
       };
 
-      await this.tables?.dataset.updateOne(
+      await this.tables.dataset?.updateOne(
         { datasetId: parsedDataset.datasetId },
         { $set: datasetDoc },
         { upsert: true },
@@ -301,17 +263,22 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    */
   async getDataset(datasetId: string): Promise<DatasetWithIds> {
     const datasetDoc: DatasetWithIds | null | undefined =
-      await this.tables?.dataset.findOne({ datasetId: datasetId }).lean<DatasetWithIds>();
+      await this.tables?.dataset
+        .findOne({ datasetId: datasetId })
+        .lean<DatasetWithIds>();
 
     if (datasetDoc) {
       const { datasetContentId, format, contentTree, solutionTree } =
         datasetDoc;
 
       const captchas: Captcha[] =
-        (await this.tables?.captcha.find({ datasetId }).lean<Captcha[]>()) || [];
+        (await this.tables?.captcha.find({ datasetId }).lean<Captcha[]>()) ||
+        [];
 
       const solutions: SolutionRecord[] =
-        (await this.tables?.solution.find({ datasetId }).lean<SolutionRecord[]>()) || [];
+        (await this.tables?.solution
+          .find({ datasetId })
+          .lean<SolutionRecord[]>()) || [];
 
       const solutionsKeyed: {
         [key: string]: SolutionRecord;
@@ -551,7 +518,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     };
 
     try {
-      await tables.powCaptcha.create(powCaptchaRecord);
+      await tables.powcaptcha.create(powCaptchaRecord);
       this.logger.info("PowCaptcha record added successfully", {
         challenge,
         userSubmitted,
@@ -596,7 +563,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
     try {
       const record: PoWCaptchaRecord | null | undefined =
-        await this.tables.powCaptcha.findOne({ challenge }).lean<PoWCaptchaRecord>();
+        await this.tables.powcaptcha
+          .findOne({ challenge })
+          .lean<PoWCaptchaRecord>();
       if (record) {
         this.logger.info("PowCaptcha record retrieved successfully", {
           challenge,
@@ -623,7 +592,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
    * @param result
    * @param serverChecked
    * @param userSubmitted
-   * @param storedStatus
    * @param userSignature
    * @returns {Promise<void>} A promise that resolves when the record is updated.
    */
@@ -652,7 +620,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       lastUpdatedTimestamp: timestamp,
     };
     try {
-      const updateResult = await tables.powCaptcha.updateOne(
+      const updateResult = await tables.powcaptcha.updateOne(
         { challenge },
         {
           $set: update,
@@ -768,7 +736,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   /** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
    */
   async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]> {
-    const docs = await this.tables?.powCaptcha
+    const docs = await this.tables?.powcaptcha
       .find<PoWCaptchaRecord[]>({
         $or: [
           { storedStatus: { $ne: StoredStatusNames.stored } },
@@ -786,7 +754,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       storedAtTimestamp: Date.now(),
     };
 
-    await this.tables?.powCaptcha.updateMany(
+    await this.tables?.powcaptcha.updateMany(
       { challenge: { $in: challenges } },
       { $set: updateDoc },
       { upsert: false },
@@ -803,7 +771,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       [StoredStatusNames.serverChecked]: true,
       lastUpdatedTimestamp: Date.now(),
     };
-    await this.tables?.powCaptcha.updateMany(
+    await this.tables?.powcaptcha.updateMany(
       { challenge: { $in: challenges } },
       {
         $set: updateDoc,
@@ -817,7 +785,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async removeProcessedDappUserSolutions(
     commitmentIds: string[],
   ): Promise<DeleteResult | undefined> {
-    return await this.tables?.usersolution.deleteMany({
+    return this.tables?.usersolution.deleteMany({
       processed: true,
       commitmentId: { $in: commitmentIds },
     });
@@ -828,7 +796,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
   async removeProcessedDappUserCommitments(
     commitmentIds: string[],
   ): Promise<DeleteResult | undefined> {
-    return await this.tables?.commitment.deleteMany({
+    return this.tables?.commitment.deleteMany({
       processed: true,
       id: { $in: commitmentIds },
     });
@@ -882,7 +850,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     const doc: PendingCaptchaRequest | null | undefined =
-      await this.tables?.pending.findOne({ requestHash: requestHash }).lean<PendingCaptchaRequest>();
+      await this.tables?.pending
+        .findOne({ requestHash: requestHash })
+        .lean<PendingCaptchaRequest>();
 
     if (doc) {
       return doc;
@@ -1264,5 +1234,27 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         upsert: false,
       },
     );
+  }
+
+  /**
+   * @description Update the client records
+   */
+  async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
+    const ops = clientRecords.map((record) => {
+      const clientRecord: IUserDataSlim = {
+        account: record.account,
+        settings: record.settings,
+      };
+      return {
+        updateOne: {
+          filter: { account: record.account },
+          update: {
+            $set: clientRecord,
+          },
+          upsert: true,
+        },
+      };
+    });
+    await this.tables?.client.bulkWrite(ops);
   }
 }
