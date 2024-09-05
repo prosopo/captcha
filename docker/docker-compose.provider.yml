@@ -166,7 +166,6 @@ services:
             - ../.env.${NODE_ENV}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: --health-check
         logging:
             driver: 'json-file'
             options:
