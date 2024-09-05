@@ -14,104 +14,104 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
-  type ICaptchaDatabase,
-  type PoWCaptchaRecord,
-  PoWCaptchaRecordSchema,
-  type Tables,
-  type UserCommitmentRecord,
-  UserCommitmentRecordSchema,
+	type ICaptchaDatabase,
+	type PoWCaptchaRecord,
+	PoWCaptchaRecordSchema,
+	type Tables,
+	type UserCommitmentRecord,
+	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import { MongoDatabase } from "../base/index.js";
 const logger = getLoggerDefault();
 
 enum TableNames {
-  commitment = "commitment",
-  powcaptcha = "powcaptcha",
+	commitment = "commitment",
+	powcaptcha = "powcaptcha",
 }
 
 const CAPTCHA_TABLES = [
-  {
-    collectionName: TableNames.powcaptcha,
-    modelName: "PowCaptcha",
-    schema: PoWCaptchaRecordSchema,
-  },
-  {
-    collectionName: TableNames.commitment,
-    modelName: "UserCommitment",
-    schema: UserCommitmentRecordSchema,
-  },
+	{
+		collectionName: TableNames.powcaptcha,
+		modelName: "PowCaptcha",
+		schema: PoWCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.commitment,
+		modelName: "UserCommitment",
+		schema: UserCommitmentRecordSchema,
+	},
 ];
 
 export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
-  tables: Tables<TableNames>;
+	tables: Tables<TableNames>;
 
-  constructor(
-    url: string,
-    dbname?: string,
-    authSource?: string,
-    logger?: Logger,
-  ) {
-    super(url, dbname, authSource, logger);
-    this.tables = {} as Tables<TableNames>;
-  }
+	constructor(
+		url: string,
+		dbname?: string,
+		authSource?: string,
+		logger?: Logger,
+	) {
+		super(url, dbname, authSource, logger);
+		this.tables = {} as Tables<TableNames>;
+	}
 
-  override async connect(): Promise<void> {
-    await super.connect();
-    CAPTCHA_TABLES.map(({ collectionName, modelName, schema }) => {
-      if (this.connection) {
-        this.tables[collectionName] = this.connection.model(modelName, schema);
-      }
-    });
-  }
+	override async connect(): Promise<void> {
+		await super.connect();
+		CAPTCHA_TABLES.map(({ collectionName, modelName, schema }) => {
+			if (this.connection) {
+				this.tables[collectionName] = this.connection.model(modelName, schema);
+			}
+		});
+	}
 
-  getTables(): Tables<TableNames> {
-    if (!this.tables) {
-      throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
-        context: { failedFuncName: this.getTables.name },
-        logger: this.logger,
-      });
-    }
-    return this.tables;
-  }
+	getTables(): Tables<TableNames> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+				context: { failedFuncName: this.getTables.name },
+				logger: this.logger,
+			});
+		}
+		return this.tables;
+	}
 
-  async saveCaptchas(
-    imageCaptchaEvents: UserCommitmentRecord[],
-    powCaptchaEvents: PoWCaptchaRecord[],
-  ) {
-    await this.connect();
-    if (imageCaptchaEvents.length) {
-      const result = await this.tables.commitment.bulkWrite(
-        imageCaptchaEvents.map((doc) => {
-          // remove the _id field to avoid problems when upserting
-          const { _id, ...safeDoc } = doc;
-          return {
-            updateOne: {
-              filter: { id: safeDoc.id },
-              update: { $set: safeDoc },
-              upsert: true,
-            },
-          };
-        }),
-      );
-      logger.info("Mongo Saved Image Events", result);
-    }
-    if (powCaptchaEvents.length) {
-      const result = await this.tables.powcaptcha.bulkWrite(
-        powCaptchaEvents.map((doc) => {
-          // remove the _id field to avoid problems when upserting
-          const { _id, ...safeDoc } = doc;
-          return {
-            updateOne: {
-              filter: { challenge: safeDoc.challenge },
-              update: { $set: safeDoc },
-              upsert: true,
-            },
-          };
-        }),
-      );
-      logger.info("Mongo Saved PoW Events", result);
-    }
+	async saveCaptchas(
+		imageCaptchaEvents: UserCommitmentRecord[],
+		powCaptchaEvents: PoWCaptchaRecord[],
+	) {
+		await this.connect();
+		if (imageCaptchaEvents.length) {
+			const result = await this.tables.commitment.bulkWrite(
+				imageCaptchaEvents.map((doc) => {
+					// remove the _id field to avoid problems when upserting
+					const { _id, ...safeDoc } = doc;
+					return {
+						updateOne: {
+							filter: { id: safeDoc.id },
+							update: { $set: safeDoc },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Image Events", result);
+		}
+		if (powCaptchaEvents.length) {
+			const result = await this.tables.powcaptcha.bulkWrite(
+				powCaptchaEvents.map((doc) => {
+					// remove the _id field to avoid problems when upserting
+					const { _id, ...safeDoc } = doc;
+					return {
+						updateOne: {
+							filter: { challenge: safeDoc.challenge },
+							update: { $set: safeDoc },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved PoW Events", result);
+		}
 
-    await this.close();
-  }
+		await this.close();
+	}
 }
