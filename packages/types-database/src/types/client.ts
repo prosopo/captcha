@@ -12,45 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Timestamp } from "@prosopo/types";
+import type { IUserData, Timestamp } from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";
-
-export enum Tier {
-	Free = "free",
-	Professional = "professional",
-	Enterprise = "enterprise",
-}
-
-export const TierMonthlyLimits = {
-	[Tier.Free]: {
-		verificationRequests: 100000,
-	},
-	[Tier.Professional]: {
-		verificationRequests: 1000000,
-	},
-	[Tier.Enterprise]: {
-		verificationRequests: "Unlimited",
-	},
-};
-
-export interface IUserData {
-	email: string;
-	name: string;
-	account: string;
-	url: string;
-	mnemonic: string;
-	createdAt: Timestamp;
-	activated: boolean;
-	tier?: Tier;
-	settings?: IUserSettings;
-	updatedAtTimestamp: Timestamp;
-}
-
-export interface IUserSettings {
-	botThreshold: number;
-	domains: string[];
-}
+import type { IDatabase } from "./mongo.js";
+import type { ClientRecord, Tables } from "./provider.js";
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
@@ -78,9 +44,6 @@ export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
 export enum TableNames {
 	emails = "emails",
 }
-
-import type { IDatabase } from "./mongo.js";
-import type { ClientRecord, Tables } from "./provider.js";
 
 export interface IClientDatabase extends IDatabase {
 	getTables(): Tables<TableNames>;
