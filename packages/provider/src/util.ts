@@ -21,25 +21,25 @@ import type { Database } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 
 export function encodeStringAddress(address: string) {
-  try {
-    return encodeAddress(
-      isHex(address) ? hexToU8a(address) : decodeAddress(address),
-    );
-  } catch (err) {
-    throw new ProsopoContractError("CONTRACT.INVALID_ADDRESS", {
-      context: { address },
-    });
-  }
+	try {
+		return encodeAddress(
+			isHex(address) ? hexToU8a(address) : decodeAddress(address),
+		);
+	} catch (err) {
+		throw new ProsopoContractError("CONTRACT.INVALID_ADDRESS", {
+			context: { address },
+		});
+	}
 }
 
 export function shuffleArray<T>(array: T[]): T[] {
-  for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
-    const randIndex = Math.floor(Math.random() * (arrayIndex + 1));
-    const tmp = at(array, randIndex);
-    array[randIndex] = at(array, arrayIndex);
-    array[arrayIndex] = tmp;
-  }
-  return array;
+	for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
+		const randIndex = Math.floor(Math.random() * (arrayIndex + 1));
+		const tmp = at(array, randIndex);
+		array[randIndex] = at(array, arrayIndex);
+		array[arrayIndex] = tmp;
+	}
+	return array;
 }
 
 /**
@@ -49,19 +49,19 @@ export function shuffleArray<T>(array: T[]): T[] {
  * Otherwise, the scheduled task is not running, return false.
  */
 export async function checkIfTaskIsRunning(
-  taskName: ScheduledTaskNames,
-  db: Database,
+	taskName: ScheduledTaskNames,
+	db: Database,
 ): Promise<boolean> {
-  const runningTask = await db.getLastScheduledTaskStatus(
-    taskName,
-    ScheduledTaskStatus.Running,
-  );
-  if (runningTask) {
-    const completedTask = await db.getScheduledTaskStatus(
-      runningTask.id,
-      ScheduledTaskStatus.Completed,
-    );
-    return !completedTask;
-  }
-  return false;
+	const runningTask = await db.getLastScheduledTaskStatus(
+		taskName,
+		ScheduledTaskStatus.Running,
+	);
+	if (runningTask) {
+		const completedTask = await db.getScheduledTaskStatus(
+			runningTask.id,
+			ScheduledTaskStatus.Completed,
+		);
+		return !completedTask;
+	}
+	return false;
 }

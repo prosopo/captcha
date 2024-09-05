@@ -15,7 +15,7 @@
 // Top Level
 
 export const getRootDir = () =>
-  new URL("../../..", import.meta.url).pathname.slice(0, -1);
+	new URL("../../..", import.meta.url).pathname.slice(0, -1);
 
 export const getCacheDir = () => `${getRootDir()}/.cache`;
 
@@ -40,10 +40,10 @@ export const getScriptsPkgDir = () => `${getDevDir()}/scripts`;
 export const getClientExampleDir = () => `${getDemosDir()}/client-example`;
 
 export const getClientExampleServerDir = () =>
-  `${getDemosDir()}/client-example-server`;
+	`${getDemosDir()}/client-example-server`;
 
 export const getClientBundleExampleDir = () =>
-  `${getDemosDir()}/client-bundle-example`;
+	`${getDemosDir()}/client-bundle-example`;
 
 export const getDappExampleDir = () => `${getDemosDir()}/dapp-example`;
 
@@ -74,19 +74,19 @@ export const getFileServerPkgDir = () => `${getPackagesDir()}/file-server`;
 export const getProcaptchaPkgDir = () => `${getPackagesDir()}/procaptcha`;
 
 export const getProcaptchaBundlePkgDir = () =>
-  `${getPackagesDir()}/procaptcha-bundle`;
+	`${getPackagesDir()}/procaptcha-bundle`;
 
 export const getProcaptchaCommonPkgDir = () =>
-  `${getPackagesDir()}/procaptcha-common`;
+	`${getPackagesDir()}/procaptcha-common`;
 
 export const getProcaptchaFrictionlessPkgDir = () =>
-  `${getPackagesDir()}/procaptcha-frictionless`;
+	`${getPackagesDir()}/procaptcha-frictionless`;
 
 export const getProcaptchaPoWPkgDir = () =>
-  `${getPackagesDir()}/procaptcha-pow`;
+	`${getPackagesDir()}/procaptcha-pow`;
 
 export const getProcaptchaReactPkgDir = () =>
-  `${getPackagesDir()}/procaptcha-react`;
+	`${getPackagesDir()}/procaptcha-react`;
 
 export const getProviderPkgDir = () => `${getPackagesDir()}/provider`;
 
@@ -97,11 +97,11 @@ export const getTxPkgDir = () => `${getPackagesDir()}/tx`;
 export const getTypesPkgDir = () => `${getPackagesDir()}/types`;
 
 export const getTypesDatabasePkgDir = () =>
-  `${getPackagesDir()}/types-database`;
+	`${getPackagesDir()}/types-database`;
 
 export const getTypesEnvPkgDir = () => `${getPackagesDir()}/types-env`;
 
 export const getUtilPkgDir = () => `${getPackagesDir()}/util`;
 
 export const getWebComponentsPkgDir = () =>
-  `${getPackagesDir()}/web-components`;
+	`${getPackagesDir()}/web-components`;
