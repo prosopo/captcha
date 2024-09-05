@@ -14,44 +14,44 @@
 
 // A navbar component that lets the user navigate between routes `/` and `/frictionless`
 
+import { AppBar, CssBaseline, Toolbar } from "@mui/material";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { AppBar, CssBaseline, Toolbar } from "@mui/material";
 
 const linkStyle = {
-  margin: "8px",
-  color: "white",
-  textDecoration: "none",
+	margin: "8px",
+	color: "white",
+	textDecoration: "none",
 };
 
 export default function NavBar() {
-  const location = useLocation();
-  const frictionlessLinkStyle = { ...linkStyle };
-  const imageCaptchaLinkStyle = { ...linkStyle };
+	const location = useLocation();
+	const frictionlessLinkStyle = { ...linkStyle };
+	const imageCaptchaLinkStyle = { ...linkStyle };
 
-  // if the current route is `/frictionless`, the link to `/frictionless` should be styled differently
-  if (location.pathname === "/frictionless") {
-    frictionlessLinkStyle["textDecoration"] = "underline";
-  }
-  // if the current route is `/`, the link to `/` should be styled differently
-  if (location.pathname === "/") {
-    imageCaptchaLinkStyle["textDecoration"] = "underline";
-  }
+	// if the current route is `/frictionless`, the link to `/frictionless` should be styled differently
+	if (location.pathname === "/frictionless") {
+		frictionlessLinkStyle.textDecoration = "underline";
+	}
+	// if the current route is `/`, the link to `/` should be styled differently
+	if (location.pathname === "/") {
+		imageCaptchaLinkStyle.textDecoration = "underline";
+	}
 
-  return (
-    <AppBar sx={{ display: "flex", margin: "0 auto" }}>
-      <CssBaseline />
-      <Toolbar>
-        <div>
-          <Link to="/" style={imageCaptchaLinkStyle}>
-            Image Captcha
-          </Link>
+	return (
+		<AppBar sx={{ display: "flex", margin: "0 auto" }}>
+			<CssBaseline />
+			<Toolbar>
+				<div>
+					<Link to="/" style={imageCaptchaLinkStyle}>
+						Image Captcha
+					</Link>
 
-          <Link to="/frictionless" style={frictionlessLinkStyle}>
-            Frictionless Captcha
-          </Link>
-        </div>
-      </Toolbar>
-    </AppBar>
-  );
+					<Link to="/frictionless" style={frictionlessLinkStyle}>
+						Frictionless Captcha
+					</Link>
+				</div>
+			</Toolbar>
+		</AppBar>
+	);
 }

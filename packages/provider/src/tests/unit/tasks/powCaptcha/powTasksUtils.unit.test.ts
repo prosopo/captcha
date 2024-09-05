@@ -14,89 +14,89 @@
 
 import { signatureVerify } from "@polkadot/util-crypto";
 import { ProsopoContractError } from "@prosopo/common";
+import { verifyRecency } from "@prosopo/util";
 import { describe, expect, it, vi } from "vitest";
 import {
-  checkPowSignature,
-  validateSolution,
+	checkPowSignature,
+	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import { verifyRecency } from "@prosopo/util";
 
 vi.mock("@polkadot/util-crypto", () => ({
-  signatureVerify: vi.fn(),
+	signatureVerify: vi.fn(),
 }));
 
 vi.mock("@prosopo/util", () => ({
-  verifyRecency: vi.fn(),
+	verifyRecency: vi.fn(),
 }));
 
 describe("Validation Functions", () => {
-  describe("validateSolution", () => {
-    it("should return true for a valid solution", () => {
-      const nonce = 377;
-      const challenge =
-        "6678154___aZZW9CeVFStJw3si91CXBqaEsGR1sk6h1bBEecJ4EBaSgsx___5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-      const difficulty = 4;
-      const validSolution = validateSolution(nonce, challenge, difficulty);
-      expect(validSolution).toBe(true);
-    });
+	describe("validateSolution", () => {
+		it("should return true for a valid solution", () => {
+			const nonce = 377;
+			const challenge =
+				"6678154___aZZW9CeVFStJw3si91CXBqaEsGR1sk6h1bBEecJ4EBaSgsx___5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+			const difficulty = 4;
+			const validSolution = validateSolution(nonce, challenge, difficulty);
+			expect(validSolution).toBe(true);
+		});
 
-    it("should return false for an invalid solution", () => {
-      const nonce = 0;
-      const challenge = "testChallenge";
-      const difficulty = 10;
-      const validSolution = validateSolution(nonce, challenge, difficulty);
-      expect(validSolution).toBe(false);
-    });
-  });
+		it("should return false for an invalid solution", () => {
+			const nonce = 0;
+			const challenge = "testChallenge";
+			const difficulty = 10;
+			const validSolution = validateSolution(nonce, challenge, difficulty);
+			expect(validSolution).toBe(false);
+		});
+	});
 
-  describe("checkPowSolution", () => {
-    it("should return true for a valid solution", () => {
-      const nonce = 377;
-      const challenge =
-        "6678154___aZZW9CeVFStJw3si91CXBqaEsGR1sk6h1bBEecJ4EBaSgsx___5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-      const difficulty = 4;
-      expect(validateSolution(nonce, challenge, difficulty)).to.be.true;
-    });
+	describe("checkPowSolution", () => {
+		it("should return true for a valid solution", () => {
+			const nonce = 377;
+			const challenge =
+				"6678154___aZZW9CeVFStJw3si91CXBqaEsGR1sk6h1bBEecJ4EBaSgsx___5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+			const difficulty = 4;
+			expect(validateSolution(nonce, challenge, difficulty)).to.be.true;
+		});
 
-    it("should throw an error for an invalid solution", () => {
-      const nonce = 0;
-      const challenge = "testChallenge";
-      const difficulty = 10;
-      expect(validateSolution(nonce, challenge, difficulty)).to.be.false;
-    });
-  });
+		it("should throw an error for an invalid solution", () => {
+			const nonce = 0;
+			const challenge = "testChallenge";
+			const difficulty = 10;
+			expect(validateSolution(nonce, challenge, difficulty)).to.be.false;
+		});
+	});
 
-  describe("checkPowSignature", () => {
-    it("should not throw an error for a valid signature", () => {
-      const challenge = "testChallenge";
-      const signature = "testSignature";
-      const providerAddress = "testAddress";
-      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (signatureVerify as any).mockReturnValueOnce({ isValid: true });
+	describe("checkPowSignature", () => {
+		it("should not throw an error for a valid signature", () => {
+			const challenge = "testChallenge";
+			const signature = "testSignature";
+			const providerAddress = "testAddress";
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(signatureVerify as any).mockReturnValueOnce({ isValid: true });
 
-      expect(() =>
-        checkPowSignature(challenge, signature, providerAddress),
-      ).not.toThrow();
-    });
+			expect(() =>
+				checkPowSignature(challenge, signature, providerAddress),
+			).not.toThrow();
+		});
 
-    it("should throw an error for an invalid signature", () => {
-      const challenge = "testChallenge";
-      const signature = "testSignature";
-      const providerAddress = "testAddress";
-      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-      (signatureVerify as any).mockReturnValueOnce({ isValid: false });
+		it("should throw an error for an invalid signature", () => {
+			const challenge = "testChallenge";
+			const signature = "testSignature";
+			const providerAddress = "testAddress";
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(signatureVerify as any).mockReturnValueOnce({ isValid: false });
 
-      expect(() =>
-        checkPowSignature(challenge, signature, providerAddress),
-      ).toThrow(
-        new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
-          context: {
-            ERROR: "Provider signature is invalid for this message",
-            failedFuncName: "checkPowSignature",
-            signature,
-          },
-        }),
-      );
-    });
-  });
+			expect(() =>
+				checkPowSignature(challenge, signature, providerAddress),
+			).toThrow(
+				new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
+					context: {
+						ERROR: "Provider signature is invalid for this message",
+						failedFuncName: "checkPowSignature",
+						signature,
+					},
+				}),
+			);
+		});
+	});
 });
