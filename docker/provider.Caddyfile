@@ -6,6 +6,12 @@
 
 {$DOMAIN} {
 
+	basicauth /metrics {
+		# this has to be the username<space><bcrypted password>
+		# to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
+		{$METRICS_USER} {$METRICS_PASSWORD}
+	}
+
 	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
 	reverse_proxy /metrics {$ADMIN_API}
 
