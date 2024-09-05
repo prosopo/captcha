@@ -11,10 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-	literal,
-	union,
-} from "zod";
+import { literal, union } from "zod";
 
 export const NetworkPairTypeSchema = union([
 	literal("sr25519"),

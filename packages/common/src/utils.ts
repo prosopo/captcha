@@ -1,5 +1,6 @@
 import { hexToString } from "@polkadot/util/hex";
 import type { TFunction } from "i18next";
+import { z } from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,64 +16,63 @@ import type { TFunction } from "i18next";
 // limitations under the License.
 import { ProsopoError } from "./error.js";
 import translationEn from "./locales/en.json" assert { type: "json" };
-import { z } from "zod";
 
 export function isClientSide(): boolean {
-  return !!(
-    typeof window !== "undefined" &&
-    window.document &&
-    window.document.createElement
-  );
+	return !!(
+		typeof window !== "undefined" &&
+		window.document &&
+		window.document.createElement
+	);
 }
 
 export type TFunctionParams = Parameters<TFunction>;
 
 type Node =
-  | {
-      [key: string]: Node | string;
-    }
-  | string;
+	| {
+			[key: string]: Node | string;
+	  }
+	| string;
 
 function getLeafFieldPath(obj: Node): string[] {
-  if (typeof obj === "string") {
-    return [];
-  }
+	if (typeof obj === "string") {
+		return [];
+	}
 
-  return Object.keys(obj).reduce((arr, key) => {
-    const value = obj[key];
-    if (value === undefined) {
-      throw new ProsopoError("DEVELOPER.KEY_ERROR", {
-        context: { error: `Undefined value for key ${key}` },
-      });
-    }
-    const children = getLeafFieldPath(value);
+	return Object.keys(obj).reduce((arr, key) => {
+		const value = obj[key];
+		if (value === undefined) {
+			throw new ProsopoError("DEVELOPER.KEY_ERROR", {
+				context: { error: `Undefined value for key ${key}` },
+			});
+		}
+		const children = getLeafFieldPath(value);
 
-    return arr.concat(
-      children.map((child) => {
-        return `${key}.${child}`;
-      }),
-    );
-  }, [] as string[]);
+		return arr.concat(
+			children.map((child) => {
+				return `${key}.${child}`;
+			}),
+		);
+	}, [] as string[]);
 }
 
 export const TranslationKeysSchema = z.enum(
-  getLeafFieldPath(translationEn) as [string, ...string[]],
+	getLeafFieldPath(translationEn) as [string, ...string[]],
 );
 
 export type TranslationKey = z.infer<typeof TranslationKeysSchema>;
 
 const TranslationFileSchema = z.record(
-  TranslationKeysSchema,
-  z.record(TranslationKeysSchema, z.string()),
+	TranslationKeysSchema,
+	z.record(TranslationKeysSchema, z.string()),
 );
 
 // String utils
 
 export function reverseHexString(str: string): `0x${string}` {
-  return `0x${
-    str
-      .match(/.{1,2}/g)
-      ?.reverse()
-      .join("") || ""
-  }`;
+	return `0x${
+		str
+			.match(/.{1,2}/g)
+			?.reverse()
+			.join("") || ""
+	}`;
 }

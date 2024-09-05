@@ -4,14 +4,14 @@
  * @param maxVerifiedTime
  */
 export const verifyRecency = (challenge: string, maxVerifiedTime: number) => {
-  // Get the timestamp from the challenge
-  const timestamp = challenge.split("___")[0];
+	// Get the timestamp from the challenge
+	const timestamp = challenge.split("___")[0];
 
-  if (!timestamp) {
-    return false;
-  }
+	if (!timestamp) {
+		return false;
+	}
 
-  const currentTimestamp = Date.now();
-  const challengeTimestamp = Number.parseInt(timestamp, 10);
-  return currentTimestamp - challengeTimestamp <= maxVerifiedTime;
+	const currentTimestamp = Date.now();
+	const challengeTimestamp = Number.parseInt(timestamp, 10);
+	return currentTimestamp - challengeTimestamp <= maxVerifiedTime;
 };

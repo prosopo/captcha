@@ -16,17 +16,17 @@ import { useMemo } from "react";
 import { darkTheme, lightTheme } from "./theme.js";
 
 export interface LoadingSpinnerComponentProps {
-  themeColor: "light" | "dark";
+	themeColor: "light" | "dark";
 }
 
 export const LoadingSpinner = ({
-  themeColor,
+	themeColor,
 }: LoadingSpinnerComponentProps) => {
-  const theme = useMemo(
-    () => (themeColor === "light" ? lightTheme : darkTheme),
-    [themeColor],
-  );
-  const StyledDiv = styled.div`
+	const theme = useMemo(
+		() => (themeColor === "light" ? lightTheme : darkTheme),
+		[themeColor],
+	);
+	const StyledDiv = styled.div`
     margin-top: 0;
     margin-left: 15px;
     margin-right: 15px;
@@ -48,7 +48,7 @@ export const LoadingSpinner = ({
       }
     }
   `;
-  return <StyledDiv />;
+	return <StyledDiv />;
 };
 
 export default LoadingSpinner;

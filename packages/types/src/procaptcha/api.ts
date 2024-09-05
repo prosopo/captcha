@@ -16,25 +16,25 @@ import type { ProviderApiInterface } from "../api/index.js";
 import type { IProsopoCaptchaContract } from "../contract/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
 import type {
-  CaptchaResponseBody,
-  GetPowCaptchaResponse,
-  PowCaptchaSolutionResponse,
-  RandomProvider,
+	CaptchaResponseBody,
+	GetPowCaptchaResponse,
+	PowCaptchaSolutionResponse,
+	RandomProvider,
 } from "../provider/index.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 
 export interface ProsopoCaptchaApiInterface {
-  userAccount: string;
-  provider: RandomProvider;
-  providerApi: ProviderApiInterface;
-  dappAccount: string;
-  web2: boolean;
-  getCaptchaChallenge(): Promise<CaptchaResponseBody>;
-  submitCaptchaSolution(
-    userRequestHashSignature: string,
-    requestHash: string,
-    solutions: CaptchaSolution[],
-    timestamp: string,
-    providerRequestHashSignature: string,
-  ): Promise<TCaptchaSubmitResult>;
+	userAccount: string;
+	provider: RandomProvider;
+	providerApi: ProviderApiInterface;
+	dappAccount: string;
+	web2: boolean;
+	getCaptchaChallenge(): Promise<CaptchaResponseBody>;
+	submitCaptchaSolution(
+		userRequestHashSignature: string,
+		requestHash: string,
+		solutions: CaptchaSolution[],
+		timestamp: string,
+		providerRequestHashSignature: string,
+	): Promise<TCaptchaSubmitResult>;
 }
