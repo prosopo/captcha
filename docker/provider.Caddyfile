@@ -1,3 +1,4 @@
+# usage: `caddy run --config ./docker/provider.Caddyfile --envfile docker/env.development`
 {
 	http_port {$HTTP_PORT}
 	auto_https {$AUTO_HTTPS}
