@@ -40,7 +40,7 @@ RUN apt-get update \
     tee /etc/apt/sources.list.d/docker.list > /dev/null \
     # install deps
     && apt-get update \
-    && apt-get install -y --no-install-recommends curl git pipx npm python3.8 python3-pip python3.8-venv shellcheck yamllint caddy gh docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin unzip \
+    && apt-get install -y --no-install-recommends curl git pipx npm python3.10 python3-pip python3.10-venv shellcheck yamllint caddy gh docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin unzip gcc g++ pkg-config libssl-dev openssl jq libicu-dev \
     # Create the necessary directories
     && mkdir -p $RUSTUP_HOME $CARGO_HOME $PIPX_HOME $NVM_DIR \
     # Install nvm
