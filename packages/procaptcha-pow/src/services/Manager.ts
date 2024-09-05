@@ -143,6 +143,7 @@ export const Manager = (
 				updateState({
 					loading: true,
 				});
+				updateState({attemptCount: state.attemptCount + 1});
 
 				const config = getConfig();
 
@@ -175,7 +176,9 @@ export const Manager = (
 				}
 
 				// get a random provider
-				const getRandomProviderResponse = await getRandomActiveProvider(getConfig());
+				const getRandomProviderResponse = await getRandomActiveProvider(
+					getConfig(),
+				);
 
 				const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -245,8 +248,8 @@ export const Manager = (
 			},
 			start,
 			resetState,
-			0,
-			5,
+			state.attemptCount,
+			10,
 		);
 	};
 

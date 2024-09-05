@@ -18,29 +18,33 @@ export type HardcodedProvider = {
 	address: string;
 	url: string;
 	datasetId: string;
-}; 
+};
 
 type hostedProviders = Record<string, HardcodedProvider>;
 
-const convertHostedProvider = (provider: hostedProviders): HardcodedProvider[] => {
+const convertHostedProvider = (
+	provider: hostedProviders,
+): HardcodedProvider[] => {
 	return Object.values(provider);
-}
+};
 
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
 ): Promise<HardcodedProvider[]> => {
 	if (environment === "production") {
 		const providers: hostedProviders = await fetch(
-			"https://provider-list.prosopo.io/",  {
-    method: "GET",
-    mode: "cors" // This is implied by default in cross-origin requests
-  }
+			"https://provider-list.prosopo.io/",
+			{
+				method: "GET",
+				mode: "cors",
+			},
 		).then((res) => res.json());
 		return convertHostedProvider(providers);
 	}
 	if (environment === "staging") {
 		const providers: hostedProviders = await fetch(
 			"https://provider-list.prosopo.io/staging.json",
+			{ method: "GET", mode: "cors" },
 		).then((res) => res.json());
 		return convertHostedProvider(providers);
 	}
@@ -60,7 +64,7 @@ export const loadBalancer = async (
 			},
 			{
 				address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
-				url: "http://localhost:99999", // invalid port - this is a fake provider!
+				url: "http://localhost:9999", // invalid port - this is a fake provider!
 				datasetId:
 					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
 			},

@@ -16,7 +16,7 @@ export const getRandomActiveProvider = async (
 
 	const PROVIDERS = await loadBalancer(config.defaultEnvironment);
 
-  console.log(PROVIDERS)
+	console.log(PROVIDERS);
 
 	const randomProvderObj = at(
 		PROVIDERS,
@@ -26,30 +26,29 @@ export const getRandomActiveProvider = async (
 		providerAccount: randomProvderObj.address,
 		provider: {
 			url: randomProvderObj.url,
-      datasetId: randomProvderObj.datasetId,
+			datasetId: randomProvderObj.datasetId,
 		},
 	};
 };
 
 export const providerRetry = async (
 	currentFn: () => Promise<void>,
-	retryFn: () => Promise<void>,
+	retryFn: ( ) => Promise<void>,
 	stateReset: () => void,
-	retryCount: number,
+	attemptCount: number,
 	retryMax: number,
 ) => {
 	try {
 		await currentFn();
 	} catch (err) {
-		if (retryCount >= retryMax) {
-			throw new Error("Max retries reached");
+		if (attemptCount >= retryMax) {
+			return stateReset();
 		}
-		retryCount++;
+		console.log(`Retry count: ${attemptCount}`);
 		console.error(err);
-    throw new Error("Retry failed");
 		// hit an error, disallow user's claim to be human
 		stateReset();
 		// trigger a retry to attempt a new provider until it passes
-		providerRetry(retryFn, retryFn, stateReset, retryCount, retryMax);
+		await retryFn();
 	}
 };

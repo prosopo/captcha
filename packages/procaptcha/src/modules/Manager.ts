@@ -115,6 +115,7 @@ export function Manager(
 				resetState();
 				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
 				updateState({ loading: true });
+				updateState({ attemptCount: state.attemptCount ? state.attemptCount + 1 : 1 });
 
 				// snapshot the config into the state
 				const config = getConfig();
@@ -173,8 +174,8 @@ export function Manager(
 			},
 			start,
 			resetState,
-			0,
-			5,
+			state.attemptCount,
+			10,
 		);
 	};
 
@@ -296,8 +297,8 @@ export function Manager(
 			},
 			start,
 			resetState,
-			0,
-			5,
+			state.attemptCount,
+			10,
 		);
 	};
 

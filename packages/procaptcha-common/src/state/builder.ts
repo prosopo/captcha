@@ -78,6 +78,7 @@ export const useProcaptcha = (
 	const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] =
 		useRefAsState<NodeJS.Timeout | undefined>(useRef, undefined);
 	const [sendData, setSendData] = useState(false);
+	const [attemptCount, setAttemptCount] = useState(0);
 	return [
 		// the state
 		{
@@ -94,6 +95,7 @@ export const useProcaptcha = (
 			timeout,
 			successfullChallengeTimeout,
 			sendData,
+			attemptCount,
 		},
 		// and method to update the state
 		(nextState: Partial<ProcaptchaState>) => {
@@ -118,6 +120,7 @@ export const useProcaptcha = (
 			if (nextState.successfullChallengeTimeout !== undefined)
 				setSuccessfullChallengeTimeout(nextState.timeout);
 			if (nextState.sendData !== undefined) setSendData(nextState.sendData);
+			if (nextState.attemptCount !== undefined) setAttemptCount(nextState.attemptCount);
 		},
 	];
 };
