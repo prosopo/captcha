@@ -13,69 +13,69 @@
 // limitations under the License.
 
 import { type Logger, ProsopoDBError } from "@prosopo/common";
+import type { Timestamp } from "@prosopo/types";
 import {
-  ClientRecord,
-  IClientDatabase,
-  TableNames,
-  type Tables,
-  UserDataSchema,
+	type ClientRecord,
+	type IClientDatabase,
+	TableNames,
+	type Tables,
+	UserDataSchema,
 } from "@prosopo/types-database";
 import { MongoDatabase } from "../base/index.js";
-import { Timestamp } from "@prosopo/types";
 
 const CLIENT_TABLES = [
-  {
-    collectionName: TableNames.emails,
-    modelName: "Email",
-    schema: UserDataSchema,
-  },
+	{
+		collectionName: TableNames.emails,
+		modelName: "Email",
+		schema: UserDataSchema,
+	},
 ];
 
 export class ClientDatabase extends MongoDatabase implements IClientDatabase {
-  tables: Tables<TableNames>;
+	tables: Tables<TableNames>;
 
-  constructor(
-    url: string,
-    dbname?: string,
-    authSource?: string,
-    logger?: Logger,
-  ) {
-    super(url, dbname, authSource, logger);
-    this.tables = {} as Tables<TableNames>;
-  }
+	constructor(
+		url: string,
+		dbname?: string,
+		authSource?: string,
+		logger?: Logger,
+	) {
+		super(url, dbname, authSource, logger);
+		this.tables = {} as Tables<TableNames>;
+	}
 
-  override async connect(): Promise<void> {
-    await super.connect();
-    CLIENT_TABLES.map(({ collectionName, modelName, schema }) => {
-      if (this.connection) {
-        this.tables[collectionName] = this.connection.model(modelName, schema);
-      }
-    });
-  }
+	override async connect(): Promise<void> {
+		await super.connect();
+		CLIENT_TABLES.map(({ collectionName, modelName, schema }) => {
+			if (this.connection) {
+				this.tables[collectionName] = this.connection.model(modelName, schema);
+			}
+		});
+	}
 
-  getTables(): Tables<TableNames> {
-    if (!this.tables) {
-      throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
-        context: { failedFuncName: this.getTables.name },
-        logger: this.logger,
-      });
-    }
-    return this.tables;
-  }
+	getTables(): Tables<TableNames> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+				context: { failedFuncName: this.getTables.name },
+				logger: this.logger,
+			});
+		}
+		return this.tables;
+	}
 
-  async getUpdatedClients(
-    updatedAtTimestamp: Timestamp,
-  ): Promise<ClientRecord[]> {
-    await this.connect();
-    // get remote client records that have been updated since the last task
-    const newClientRecords = await this.tables.emails
-      .find<ClientRecord>(
-        { updatedAtTimestamp: { $gt: updatedAtTimestamp } },
-        { account: 1, settings: 1 },
-      )
-      .lean<ClientRecord[]>();
+	async getUpdatedClients(
+		updatedAtTimestamp: Timestamp,
+	): Promise<ClientRecord[]> {
+		await this.connect();
+		// get remote client records that have been updated since the last task
+		const newClientRecords = await this.tables.emails
+			.find<ClientRecord>(
+				{ updatedAtTimestamp: { $gt: updatedAtTimestamp } },
+				{ account: 1, settings: 1 },
+			)
+			.lean<ClientRecord[]>();
 
-    await this.close();
-    return newClientRecords;
-  }
+		await this.close();
+		return newClientRecords;
+	}
 }

@@ -12,76 +12,77 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import mongoose, { Schema } from "mongoose";
-import { Timestamp } from "@prosopo/types";
+import type { Timestamp } from "@prosopo/types";
+import type mongoose from "mongoose";
+import { Schema } from "mongoose";
 
 export enum Tier {
-  Free = "free",
-  Professional = "professional",
-  Enterprise = "enterprise",
+	Free = "free",
+	Professional = "professional",
+	Enterprise = "enterprise",
 }
 
 export const TierMonthlyLimits = {
-  [Tier.Free]: {
-    verificationRequests: 100000,
-  },
-  [Tier.Professional]: {
-    verificationRequests: 1000000,
-  },
-  [Tier.Enterprise]: {
-    verificationRequests: "Unlimited",
-  },
+	[Tier.Free]: {
+		verificationRequests: 100000,
+	},
+	[Tier.Professional]: {
+		verificationRequests: 1000000,
+	},
+	[Tier.Enterprise]: {
+		verificationRequests: "Unlimited",
+	},
 };
 
 export interface IUserData {
-  email: string;
-  name: string;
-  account: string;
-  url: string;
-  mnemonic: string;
-  createdAt: Timestamp;
-  activated: boolean;
-  tier?: Tier;
-  settings?: IUserSettings;
-  updatedAtTimestamp: Timestamp;
+	email: string;
+	name: string;
+	account: string;
+	url: string;
+	mnemonic: string;
+	createdAt: Timestamp;
+	activated: boolean;
+	tier?: Tier;
+	settings?: IUserSettings;
+	updatedAtTimestamp: Timestamp;
 }
 
 export interface IUserSettings {
-  botThreshold: number;
-  domains: string[];
+	botThreshold: number;
+	domains: string[];
 }
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const UserSettingsSchema = new Schema({
-  botThreshold: Number,
-  domains: [String],
+	botThreshold: Number,
+	domains: [String],
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
-  email: String,
-  name: String,
-  account: String,
-  url: String,
-  mnemonic: String,
-  createdAt: Number,
-  activated: Boolean,
-  tier: String,
-  settings: {
-    type: UserSettingsSchema,
-    required: false,
-  },
-  updatedAtTimestamp: Number,
+	email: String,
+	name: String,
+	account: String,
+	url: String,
+	mnemonic: String,
+	createdAt: Number,
+	activated: Boolean,
+	tier: String,
+	settings: {
+		type: UserSettingsSchema,
+		required: false,
+	},
+	updatedAtTimestamp: Number,
 });
 
 export enum TableNames {
-  emails = "emails",
+	emails = "emails",
 }
 
-import { IDatabase } from "./mongo.js";
-import { ClientRecord, Tables } from "./provider.js";
+import type { IDatabase } from "./mongo.js";
+import type { ClientRecord, Tables } from "./provider.js";
 
 export interface IClientDatabase extends IDatabase {
-  getTables(): Tables<TableNames>;
-  getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<ClientRecord[]>;
+	getTables(): Tables<TableNames>;
+	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<ClientRecord[]>;
 }

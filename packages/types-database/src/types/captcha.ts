@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { IDatabase } from "./mongo.js";
-import { PoWCaptchaRecord, UserCommitmentRecord } from "./provider.js";
+import type { IDatabase } from "./mongo.js";
+import type { PoWCaptchaRecord, UserCommitmentRecord } from "./provider.js";
 
 export interface ICaptchaDatabase extends IDatabase {
-  saveCaptchas(
-    imageCaptchaEvents: UserCommitmentRecord[],
-    powCaptchaEvents: PoWCaptchaRecord[],
-  ): Promise<void>;
+	saveCaptchas(
+		imageCaptchaEvents: UserCommitmentRecord[],
+		powCaptchaEvents: PoWCaptchaRecord[],
+	): Promise<void>;
 }

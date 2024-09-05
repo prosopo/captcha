@@ -19,14 +19,14 @@ import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 
 export interface ProsopoEnvironment {
-  config: ProsopoBasicConfigOutput;
-  db: IProviderDatabase | undefined;
-  defaultEnvironment: EnvironmentTypes;
-  logger: Logger;
-  assetsResolver: AssetsResolver | undefined;
-  keyring: Keyring;
-  pair: KeyringPair | undefined;
-  getDb(): IProviderDatabase;
-  isReady(): Promise<void>;
-  importDatabase(): Promise<void>;
+	config: ProsopoBasicConfigOutput;
+	db: IProviderDatabase | undefined;
+	defaultEnvironment: EnvironmentTypes;
+	logger: Logger;
+	assetsResolver: AssetsResolver | undefined;
+	keyring: Keyring;
+	pair: KeyringPair | undefined;
+	getDb(): IProviderDatabase;
+	isReady(): Promise<void>;
+	importDatabase(): Promise<void>;
 }
