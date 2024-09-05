@@ -40,7 +40,7 @@ RUN apt-get update \
     tee /etc/apt/sources.list.d/docker.list > /dev/null \
     # install deps
     && apt-get update \
-    && apt-get install -y --no-install-recommends curl git pipx npm python3.8 python3-pip python3.8-venv shellcheck yamllint caddy gh docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
+    && apt-get install -y --no-install-recommends curl git pipx npm python3.8 python3-pip python3.8-venv shellcheck yamllint caddy gh docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin unzip \
     # Create the necessary directories
     && mkdir -p $RUSTUP_HOME $CARGO_HOME $PIPX_HOME $NVM_DIR \
     # Install nvm
@@ -65,6 +65,12 @@ RUN apt-get update \
     # && cargo install cargo-dylint dylint-link \
     # # Install cargo-contract
     # && cargo install --force --locked --version ${CARGO_CONTRACT_VERSION} cargo-contract \
+    # aws cli
+    && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && bash ./aws/install \
+    && rm awscliv2.zip \
+    && rm -rf aws \
     # cleanup
     && rm -rf ${CARGO_HOME}/registry/* ${CARGO_HOME}/git/* \
     && apt-get autoremove \
