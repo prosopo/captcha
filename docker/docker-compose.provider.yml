@@ -159,6 +159,8 @@ services:
             - staging-x86_64
             - staging-arm64
         image: containrrr/watchtower
+        env_file:
+            - ../.env.${NODE_ENV}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         command: docker-provider-1 --interval 30 --cleanup --remove-volumes --log-format JSON --label-enable
