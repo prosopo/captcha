@@ -22,7 +22,7 @@ import {
   POW_SEPARATOR,
   PoWChallengeId,
 } from "@prosopo/types";
-import { Database, PoWCaptchaStored } from "@prosopo/types-database";
+import { PoWCaptchaStored, IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
@@ -53,7 +53,7 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 }));
 
 describe("PowCaptchaManager", () => {
-  let db: Database;
+  let db: IProviderDatabase;
   let pair: KeyringPair;
   let powCaptchaManager: PowCaptchaManager;
 
@@ -63,7 +63,7 @@ describe("PowCaptchaManager", () => {
       getPowCaptchaRecordByChallenge: vi.fn(),
       updatePowCaptchaRecord: vi.fn(),
       markDappUserPoWCommitmentsChecked: vi.fn(),
-    } as unknown as Database;
+    } as unknown as IProviderDatabase;
 
     pair = {
       sign: vi.fn(),

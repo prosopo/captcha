@@ -21,6 +21,7 @@ import {
   prosopoRouter,
   prosopoVerifyRouter,
   storeCaptchasExternally,
+  getClientList,
 } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
 import cors from "cors";
@@ -63,30 +64,33 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
 
 export async function start(env?: ProviderEnvironment, admin?: boolean) {
   if (!env) {
+    console.log("Env undefined");
     loadEnv();
 
     // Fail to start api if db is not defined
     getDB();
 
     const secret = getSecret();
-    const config = getConfig(undefined, undefined, {
+    const config = getConfig(undefined, {
       solved: { count: 2 },
       unsolved: { count: 0 },
     });
 
-    const pair = await getPairAsync(
-      secret,
-      "",
-    );
+    const pair = await getPairAsync(secret);
     env = new ProviderEnvironment(config, pair);
+  } else {
+    env.logger.debug("Env already defined");
   }
 
   await env.isReady();
 
-  // Start the scheduled job
+  // Start the scheduled jobs
   if (env.pair) {
     storeCaptchasExternally(env.pair, env.config).catch((err) => {
       console.error("Failed to start scheduler:", err);
+    });
+    getClientList(env.pair, env.config).catch((err) => {
+      console.error("Failed to get client list:", err);
     });
   }
 

@@ -17,9 +17,8 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { storeCaptchasExternally } from "../../../api/captchaScheduler.js";
+import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
-import { ProsopoEnvError } from "@prosopo/common";
 
 vi.mock("@prosopo/env", () => ({
   ProviderEnvironment: vi.fn().mockImplementation(() => ({
@@ -41,7 +40,7 @@ vi.mock("@prosopo/env", () => ({
 
 vi.mock("../../../tasks/tasks.js", () => ({
   Tasks: vi.fn().mockImplementation(() => ({
-    datasetManager: {
+    clientTaskManager: {
       storeCommitmentsExternal: vi.fn().mockResolvedValue(undefined),
     },
   })),
@@ -64,8 +63,10 @@ describe("storeCaptchasExternally", () => {
   beforeEach(() => {
     mockPair = {} as KeyringPair;
     mockConfig = {
-      captchaScheduler: {
-        schedule: "0 * * * *",
+      scheduledTasks: {
+        captchaScheduler: {
+          schedule: "0 * * * *",
+        },
       },
     } as ProsopoConfigOutput;
   });
