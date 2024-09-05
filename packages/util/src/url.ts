@@ -19,18 +19,12 @@ export const getURLProtocol = (url: URL) => {
 };
 
 export const validateDomain = (domain: string): boolean => {
-  // make sure last character is a letter or number
-  if (!domain.match(/[a-zA-Z0-9]$/)) {
-    return false;
-  }
-
-  // make first character is a letter or number
-  if (!domain.match(/^[a-zA-Z0-9]/)) {
-    return false;
-  }
-
-  // make sure domain contains a dot surrounded by letters or numbers
-  if (!domain.match(/[a-zA-Z0-9]\.[a-zA-Z0-9]/)) {
+  // https://stackoverflow.com/a/57129472/1178971
+  if (
+    !domain.match(
+      /^(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})$/,
+    )
+  ) {
     return false;
   }
 
