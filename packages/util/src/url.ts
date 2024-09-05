@@ -12,8 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export const getURLProtocol = (url: URL) => {
-	if (url.hostname.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-		return "http";
-	}
-	return "https";
+  if (url.hostname.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
+    return "http";
+  }
+  return "https";
+};
+
+export const validateDomain = (domain: string): boolean => {
+  // make sure last character is a letter or number
+  if (!domain.match(/[a-zA-Z0-9]$/)) {
+    return false;
+  }
+
+  // make first character is a letter or number
+  if (!domain.match(/^[a-zA-Z0-9]/)) {
+    return false;
+  }
+
+  // make sure domain contains a dot surrounded by letters or numbers
+  if (!domain.match(/[a-zA-Z0-9]\.[a-zA-Z0-9]/)) {
+    return false;
+  }
+
+  try {
+    new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+  } catch (e) {
+    return false;
+  }
+
+  return true;
 };
