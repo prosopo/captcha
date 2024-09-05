@@ -1,5 +1,12 @@
 services:
     provider:
+        profiles:
+            - production-arm64
+            - production-x86_64
+            - staging-arm64
+            - staging-x86_64
+            - development-arm64
+            - development-x86_64
         image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
@@ -29,8 +36,57 @@ services:
             retries: 3
             start_period: 30s
             timeout: 10s
-    database:
-        image: ${MONGO_IMAGE:-mongo:5.0.4} # use MONGO_IMAGE=mongodb-raspberrypi4-unofficial-r6.0.10 in env for arm64
+    database-dev:
+        profiles:
+            - development-x86_64
+        image: mongo:5.0.4
+        # volumes:
+        #   - ./db:/data/db
+        ports:
+            - '27017:27017'
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=root
+            - MONGO_INITDB_DATABASE=prosopo
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+    database-arm64:
+        profiles:
+            - production-arm64
+            - staging-arm64
+        image: mongodb-raspberrypi4-unofficial-r6.0.10
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - /data/db:/data/db
+        ports:
+            - '27017:27017'
+        env_file:
+            - ../.env.${NODE_ENV}
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"] # ping the mongo server
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    database-x86_64:
+        profiles:
+            - production-x86_64
+            - staging-x86_64
+        image: mongo:5.0.4
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
@@ -54,6 +110,11 @@ services:
             start_period: 30s
             timeout: 10s
     caddy:
+        profiles:
+            - production-x86_64
+            - production-arm64
+            - staging-x86_64
+            - staging-arm64
         image: caddy:2
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
@@ -80,6 +141,11 @@ services:
             start_period: 30s
             timeout: 10s
     watchtower:
+        profiles:
+            - production-x86_64
+            - production-arm64
+            - staging-x86_64
+            - staging-arm64
         image: containrrr/watchtower
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
