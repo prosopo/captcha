@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export enum ScheduledTaskNames {
-  BatchCommitment = "BatchCommitment",
-  CalculateSolution = "CalculateSolution",
-  StoreCommitmentsExternal = "StoreCommitmentsExternal",
-  GetClientList = "GetClientList",
+	BatchCommitment = "BatchCommitment",
+	CalculateSolution = "CalculateSolution",
+	StoreCommitmentsExternal = "StoreCommitmentsExternal",
+	GetClientList = "GetClientList",
 }
 
 export enum ScheduledTaskStatus {
-  Pending = "Pending",
-  Running = "Running",
-  Completed = "Completed",
-  Failed = "Failed",
+	Pending = "Pending",
+	Running = "Running",
+	Completed = "Completed",
+	Failed = "Failed",
 }
 
 export interface ScheduledTaskResult {
-  error?: string;
-  // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-  data?: Record<string, any>;
+	error?: string;
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	data?: Record<string, any>;
 }

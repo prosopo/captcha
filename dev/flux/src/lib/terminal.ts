@@ -12,66 +12,66 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from "@prosopo/common";
+import { loadEnv } from "@prosopo/dotenv";
 import { io } from "socket.io-client";
 import { main as authMain, verifyLogin } from "./auth.js";
 import { getSocketURL } from "./url.js";
-import { loadEnv } from "@prosopo/dotenv";
 
 loadEnv();
 const logger = getLogger(LogLevel.enum.info, "flux.lib.terminal");
 
 export async function main(
-  publicKey: string,
-  privateKey: Uint8Array,
-  appName: string,
-  ip?: string,
+	publicKey: string,
+	privateKey: Uint8Array,
+	appName: string,
+	ip?: string,
 ) {
-  let running = true;
-  try {
-    // Get auth details
-    const { nodeAPIURL, nodeLoginPhrase, nodeSignature } = await authMain(
-      publicKey,
-      privateKey,
-      appName,
-      ip,
-    );
+	let running = true;
+	try {
+		// Get auth details
+		const { nodeAPIURL, nodeLoginPhrase, nodeSignature } = await authMain(
+			publicKey,
+			privateKey,
+			appName,
+			ip,
+		);
 
-    // Login to the node
-    await verifyLogin(publicKey, nodeSignature, nodeLoginPhrase, nodeAPIURL);
+		// Login to the node
+		await verifyLogin(publicKey, nodeSignature, nodeLoginPhrase, nodeAPIURL);
 
-    const selectedIp = nodeAPIURL.toString();
-    const url = selectedIp.split(":")[0];
-    if (!url) throw new Error("No url");
-    const socketUrl = getSocketURL(nodeAPIURL);
+		const selectedIp = nodeAPIURL.toString();
+		const url = selectedIp.split(":")[0];
+		if (!url) throw new Error("No url");
+		const socketUrl = getSocketURL(nodeAPIURL);
 
-    const socket = io(socketUrl.href);
-    socket.on("connect", () => {
-      logger.info("connected");
-      logger.info(socket.id);
-    });
-    socket.on("message", (message) => {
-      socket.emit("message", {
-        message,
-        id: socket.id,
-      });
-    });
-    socket.on("connect_error", (err) => {
-      logger.info(`connect_error due to ${err.message}`);
-      console.error(err);
-    });
-    socket.on("disconnect", () => {
-      logger.info("disconnected");
-      running = false;
-    });
-    socket.on("error", (e) => {
-      logger.info("error", e);
-      running = false;
-    });
-    while (running) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-  } catch (e) {
-    console.error(e);
-    running = false;
-  }
+		const socket = io(socketUrl.href);
+		socket.on("connect", () => {
+			logger.info("connected");
+			logger.info(socket.id);
+		});
+		socket.on("message", (message) => {
+			socket.emit("message", {
+				message,
+				id: socket.id,
+			});
+		});
+		socket.on("connect_error", (err) => {
+			logger.info(`connect_error due to ${err.message}`);
+			console.error(err);
+		});
+		socket.on("disconnect", () => {
+			logger.info("disconnected");
+			running = false;
+		});
+		socket.on("error", (e) => {
+			logger.info("error", e);
+			running = false;
+		});
+		while (running) {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+		}
+	} catch (e) {
+		console.error(e);
+		running = false;
+	}
 }

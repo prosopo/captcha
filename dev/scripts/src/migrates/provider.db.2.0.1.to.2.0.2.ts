@@ -1,3 +1,11 @@
+import { loadEnv } from "@prosopo/dotenv";
+import { CaptchaStatus } from "@prosopo/types";
+import {
+	type PoWCaptchaStored,
+	type UserCommitment,
+	UserCommitmentRecord,
+} from "@prosopo/types-database";
+import { at } from "@prosopo/util";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +20,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { MongoClient } from "mongodb";
-import {
-  PoWCaptchaStored, UserCommitment,
-  UserCommitmentRecord,
-} from "@prosopo/types-database";
-import { at } from "@prosopo/util";
-import { CaptchaStatus } from "@prosopo/types";
-import { loadEnv } from "@prosopo/dotenv";
 
 loadEnv();
 
 const MONGO_URL =
-  process.env.MONGO_URL ||
-  "mongodb://root:root@localhost:27017/migrate?authSource=admin";
+	process.env.MONGO_URL ||
+	"mongodb://root:root@localhost:27017/migrate?authSource=admin";
 
 const MIGRATE_FROM_DB = process.env.MIGRATE_FROM_DB || "migrate";
 const MIGRATE_TO_DB = process.env.MIGRATE_TO_DB || "migrated";
@@ -98,81 +99,81 @@ They need to made to look like this:
 
 const rococoDate = { 5359899: new Date("2024-05-23 16:15:22Z") };
 
-const rococoBlock = parseInt(at(Object.keys(rococoDate), 0));
+const rococoBlock = Number.parseInt(at(Object.keys(rococoDate), 0));
 
 const rococoTime = at(Object.values(rococoDate), 0).getTime();
 
 const migrateUserCommitments = async () => {
-  const collection = client.db(MIGRATE_FROM_DB).collection("usercommitments");
-  console.log(`${await collection.count()} documents in collection`);
+	const collection = client.db(MIGRATE_FROM_DB).collection("usercommitments");
+	console.log(`${await collection.count()} documents in collection`);
 
-  const userCommitments = await collection.find().toArray();
+	const userCommitments = await collection.find().toArray();
 
-  console.log("Found user commitments: ", userCommitments.length);
+	console.log("Found user commitments: ", userCommitments.length);
 
-  const newCollection = client.db(MIGRATE_TO_DB).collection("usercommitments");
+	const newCollection = client.db(MIGRATE_TO_DB).collection("usercommitments");
 
-  const results = [];
-  for (const commitment of userCommitments) {
-    const {
-      _id,
-      id,
-      dappContract,
-      datasetId,
-      providerAccount,
-      requestedAt,
-      status,
-      userAccount,
-      userSignature,
-    } = commitment;
+	const results = [];
+	for (const commitment of userCommitments) {
+		const {
+			_id,
+			id,
+			dappContract,
+			datasetId,
+			providerAccount,
+			requestedAt,
+			status,
+			userAccount,
+			userSignature,
+		} = commitment;
 
-    const secondsDiff = (rococoBlock - requestedAt) * 6;
+		const secondsDiff = (rococoBlock - requestedAt) * 6;
 
-    const requestedAtTimestamp = new Date(rococoTime - secondsDiff).getTime();
+		const requestedAtTimestamp = new Date(rococoTime - secondsDiff).getTime();
 
-    const userSignatureHex = Buffer.from(userSignature).toString("hex");
+		const userSignatureHex = Buffer.from(userSignature).toString("hex");
 
-    const record: UserCommitment = {
-      id,
-      dappAccount: dappContract,
-      datasetId,
-      ipAddress: "NO_IP_ADDRESS",
-      lastUpdatedTimestamp: requestedAtTimestamp,
-      providerAccount,
-      requestedAtTimestamp,
-      result: { status },
-      serverChecked: false,
-      userAccount,
-      userSignature: userSignatureHex,
-      userSubmitted: true,
-    };
+		const record: UserCommitment = {
+			id,
+			dappAccount: dappContract,
+			datasetId,
+			ipAddress: "NO_IP_ADDRESS",
+			lastUpdatedTimestamp: requestedAtTimestamp,
+			providerAccount,
+			requestedAtTimestamp,
+			result: { status },
+			serverChecked: false,
+			userAccount,
+			userSignature: userSignatureHex,
+			userSubmitted: true,
+		};
 
-    console.log("updating record: ", id);
-    results.push(
-      await newCollection.updateOne(
-        { _id },
-        {
-          $set: record,
-        },
-      ),
-    );
-  }
-  await newCollection.updateMany(
-    {},
-    {
-      $unset: {
-        status: 1,
-        completedAt: 1,
-        requestedAt: 1,
-        processed: 1,
-        batched: 1,
-        dappContract: 1,
-        storedAtTimestamp: 1,
-      },
-    },
-  );
+		console.log("updating record: ", id);
+		results.push(
+			await newCollection.updateOne(
+				{ _id },
+				{
+					$set: record,
+				},
+			),
+		);
+	}
+	await newCollection.updateMany(
+		{},
+		{
+			$unset: {
+				status: 1,
+				completedAt: 1,
+				requestedAt: 1,
+				processed: 1,
+				batched: 1,
+				dappContract: 1,
+				storedAtTimestamp: 1,
+			},
+		},
+	);
 
-  return results;
+	return results;
 };
 
 /*
@@ -218,79 +219,79 @@ const migrateUserCommitments = async () => {
  */
 
 const migratePowCaptchas = async () => {
-  const collection = client.db(MIGRATE_FROM_DB).collection("powcaptchas");
-  const newCollection = client.db(MIGRATE_TO_DB).collection("powcaptchas");
+	const collection = client.db(MIGRATE_FROM_DB).collection("powcaptchas");
+	const newCollection = client.db(MIGRATE_TO_DB).collection("powcaptchas");
 
-  console.log(`${await collection.count()} documents in collection`);
+	console.log(`${await collection.count()} documents in collection`);
 
-  const powCaptchas = await collection.find().toArray();
+	const powCaptchas = await collection.find().toArray();
 
-  console.log("Found pow captchas: ", powCaptchas.length);
+	console.log("Found pow captchas: ", powCaptchas.length);
 
-  const results = [];
-  for (const captcha of powCaptchas) {
-    const { _id, challenge } = captcha;
+	const results = [];
+	for (const captcha of powCaptchas) {
+		const { _id, challenge } = captcha;
 
-    const [requestedAt, userAccount, dappAccount] = challenge.split("___");
+		const [requestedAt, userAccount, dappAccount] = challenge.split("___");
 
-    const secondsDiff = (parseInt(requestedAt) - requestedAt) * 6;
+		const secondsDiff = (Number.parseInt(requestedAt) - requestedAt) * 6;
 
-    const requestedAtTimestamp = new Date(rococoTime - secondsDiff).getTime();
+		const requestedAtTimestamp = new Date(rococoTime - secondsDiff).getTime();
 
-    const record: PoWCaptchaStored = {
-      challenge,
-      dappAccount,
-      userAccount,
-      requestedAtTimestamp,
-      lastUpdatedTimestamp: requestedAtTimestamp,
-      result: { status: CaptchaStatus.approved },
-      providerSignature: "NO_SIGNATURE_MIGRATED",
-      difficulty: 4,
-      ipAddress: "NO_IP_ADDRESS",
-      userSubmitted: true,
-      serverChecked: false,
-    };
+		const record: PoWCaptchaStored = {
+			challenge,
+			dappAccount,
+			userAccount,
+			requestedAtTimestamp,
+			lastUpdatedTimestamp: requestedAtTimestamp,
+			result: { status: CaptchaStatus.approved },
+			providerSignature: "NO_SIGNATURE_MIGRATED",
+			difficulty: 4,
+			ipAddress: "NO_IP_ADDRESS",
+			userSubmitted: true,
+			serverChecked: false,
+		};
 
-    console.log("updating record: ", _id);
-    results.push(
-      await newCollection.updateOne(
-        { _id },
-        {
-          $set: record,
-        },
-      ),
-    );
-  }
-  await newCollection.updateMany(
-    {},
-    {
-      $unset: {
-        checked: 1,
-        storedAtTimestamp: 1,
-      },
-    },
-  );
+		console.log("updating record: ", _id);
+		results.push(
+			await newCollection.updateOne(
+				{ _id },
+				{
+					$set: record,
+				},
+			),
+		);
+	}
+	await newCollection.updateMany(
+		{},
+		{
+			$unset: {
+				checked: 1,
+				storedAtTimestamp: 1,
+			},
+		},
+	);
 
-  return results;
+	return results;
 };
 
 const run = async () => {
-  const results = [];
-  results.push(await migrateUserCommitments());
+	const results = [];
+	results.push(await migrateUserCommitments());
 
-  results.push(await migratePowCaptchas());
+	results.push(await migratePowCaptchas());
 
-  return results;
+	return results;
 };
 
 run()
-  .then((result) => {
-    console.log(result);
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+	.then((result) => {
+		console.log(result);
+		process.exit(0);
+	})
+	.catch((err) => {
+		console.error(err);
+		process.exit(1);
+	});
 
 // get all pow captcha records from the `powcaptchas` collection

@@ -11,31 +11,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Logger, TranslationKey, TranslationKeysSchema } from "@prosopo/common";
+import {
+	type Logger,
+	TranslationKey,
+	TranslationKeysSchema,
+} from "@prosopo/common";
 import type { Hash } from "@prosopo/types";
 import type { PendingCaptchaRequest } from "@prosopo/types";
 import {
-  ScheduledTaskNames,
-  type ScheduledTaskResult,
-  ScheduledTaskStatus,
+	ScheduledTaskNames,
+	type ScheduledTaskResult,
+	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
 import mongoose, {
-  type Connection,
-  type Model,
-  ObjectId,
-  Schema,
+	type Connection,
+	type Model,
+	ObjectId,
+	Schema,
 } from "mongoose";
 
 export interface IDatabase {
-  url: string;
-  dbname: string;
-  connection?: Connection;
-  logger: Logger;
+	url: string;
+	dbname: string;
+	connection?: Connection;
+	logger: Logger;
 
-  getConnection(): Connection;
+	getConnection(): Connection;
 
-  connect(): Promise<void>;
+	connect(): Promise<void>;
 
-  close(): Promise<void>;
+	close(): Promise<void>;
 }

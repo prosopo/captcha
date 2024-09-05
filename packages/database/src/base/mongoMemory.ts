@@ -13,43 +13,43 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { MongoDatabase as MongoDatabase } from "./mongo.js";
+import { MongoDatabase } from "./mongo.js";
 
 export class MongoMemoryDatabase extends MongoDatabase {
-  protected override readonly _url: string;
-  private mongod: MongoMemoryServer | undefined;
-  private running = false;
+	protected override readonly _url: string;
+	private mongod: MongoMemoryServer | undefined;
+	private running = false;
 
-  constructor(
-    url: string,
-    dbname: string,
-    logger: Logger,
-    authSource?: string,
-  ) {
-    const mongod = new MongoMemoryServer();
-    const mongoMemoryURL = mongod.getUri();
-    super(mongoMemoryURL, dbname, authSource, logger);
-    this.mongod = mongod;
-    this._url = mongoMemoryURL;
-  }
+	constructor(
+		url: string,
+		dbname: string,
+		logger: Logger,
+		authSource?: string,
+	) {
+		const mongod = new MongoMemoryServer();
+		const mongoMemoryURL = mongod.getUri();
+		super(mongoMemoryURL, dbname, authSource, logger);
+		this.mongod = mongod;
+		this._url = mongoMemoryURL;
+	}
 
-  override connect(): Promise<void> {
-    if (!this.running) {
-      // start the mongo memory server if not already running
-      // this will error if already running
-      this.mongod?.start();
-      this.running = true;
-    } else {
-      // already running, do nothing
-    }
-    return super.connect();
-  }
+	override connect(): Promise<void> {
+		if (!this.running) {
+			// start the mongo memory server if not already running
+			// this will error if already running
+			this.mongod?.start();
+			this.running = true;
+		} else {
+			// already running, do nothing
+		}
+		return super.connect();
+	}
 
-  override async close(): Promise<void> {
-    await super.close();
-    // stop the mongo memory server
-    // this will not error if already stopped
-    await this.mongod?.stop();
-    this.running = false;
-  }
+	override async close(): Promise<void> {
+		await super.close();
+		// stop the mongo memory server
+		// this will not error if already stopped
+		await this.mongod?.stop();
+		this.running = false;
+	}
 }
