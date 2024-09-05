@@ -159,6 +159,7 @@ services:
             - staging-x86_64
             - staging-arm64
         image: containrrr/watchtower
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         env_file:
             - ../.env.${NODE_ENV}
         volumes:
