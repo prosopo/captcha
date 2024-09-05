@@ -5,16 +5,18 @@ import type {
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 
-export const getRandomActiveProvider = (
+export const getRandomActiveProvider = async (
 	config: ProcaptchaClientConfigOutput,
-): RandomProvider => {
+): Promise<RandomProvider> => {
 	const randomIntBetween = (min: number, max: number) =>
 		Math.floor(Math.random() * (max - min + 1) + min);
 
 	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
 	//  to ensure that the random selection was completed within a certain timeframe
 
-	const PROVIDERS = loadBalancer(config.defaultEnvironment);
+	const PROVIDERS = await loadBalancer(config.defaultEnvironment);
+
+  console.log(PROVIDERS)
 
 	const randomProvderObj = at(
 		PROVIDERS,
@@ -24,8 +26,7 @@ export const getRandomActiveProvider = (
 		providerAccount: randomProvderObj.address,
 		provider: {
 			url: randomProvderObj.url,
-			datasetId: randomProvderObj.datasetId,
-			datasetIdContent: randomProvderObj.datasetIdContent,
+      datasetId: randomProvderObj.datasetId,
 		},
 	};
 };
@@ -45,9 +46,10 @@ export const providerRetry = async (
 		}
 		retryCount++;
 		console.error(err);
+    throw new Error("Retry failed");
 		// hit an error, disallow user's claim to be human
 		stateReset();
 		// trigger a retry to attempt a new provider until it passes
-		retryFn();
+		providerRetry(retryFn, retryFn, stateReset, retryCount, retryMax);
 	}
 };

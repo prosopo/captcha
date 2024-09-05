@@ -175,7 +175,7 @@ export const Manager = (
 				}
 
 				// get a random provider
-				const getRandomProviderResponse = getRandomActiveProvider(getConfig());
+				const getRandomProviderResponse = await getRandomActiveProvider(getConfig());
 
 				const events = getDefaultEvents(onStateUpdate, state, callbacks);
 

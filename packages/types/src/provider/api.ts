@@ -103,10 +103,12 @@ export type Hash = string | number[];
 export type Provider = {
 	url: Array<number>;
 	datasetId: Hash;
-	datasetIdContent: Hash;
 };
 
-export type FrontendProvider = Omit<Provider, "url"> & { url: string };
+export type FrontendProvider = {
+	url: string;
+	datasetId: Hash;
+};
 
 export type RandomProvider = {
 	providerAccount: string;

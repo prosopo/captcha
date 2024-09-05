@@ -126,7 +126,9 @@ export function Manager(
 				const account = await loadAccount();
 
 				// get a random provider
-				const getRandomProviderResponse = getRandomActiveProvider(getConfig());
+				const getRandomProviderResponse = await getRandomActiveProvider(
+					getConfig(),
+				);
 
 				const providerUrl = getRandomProviderResponse.provider.url;
 				// get the provider api inst
