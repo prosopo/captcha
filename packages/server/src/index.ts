@@ -20,9 +20,6 @@ export const PublicProsopoServer = async (
 	config: ProsopoServerConfigOutput,
 ) => {
 	// if site key is '' then it will burn address
-	const pair = await getPairAsync(
-		undefined,
-		config.account.address,
-	);
+	const pair = await getPairAsync(undefined, config.account.address);
 	return new ProsopoServer(config, pair);
 };

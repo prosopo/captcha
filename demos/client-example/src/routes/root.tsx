@@ -16,9 +16,9 @@ import React from "react";
 import App from "../App.js";
 
 export default function Root() {
-  return (
-    <React.Fragment>
-      <App />
-    </React.Fragment>
-  );
+	return (
+		<React.Fragment>
+			<App />
+		</React.Fragment>
+	);
 }
