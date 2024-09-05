@@ -19,7 +19,6 @@ services:
             - ../.env.${NODE_ENV}
         ports:
             - '9229:9229'
-        tty: true
         depends_on:
             - database
         networks:
