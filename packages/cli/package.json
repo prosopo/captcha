@@ -22,7 +22,7 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/cli.js",
 		"start": "node ./dist/cli.js --api",
-		"start:dev": "node ./dist/cliDev.js --api"
+		"start:dev": "node ./dist/cli.js --api --dev"
 	},
 	"dependencies": {
 		"@polkadot/keyring": "12.6.2",

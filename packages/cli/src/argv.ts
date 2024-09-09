@@ -25,6 +25,7 @@ import {
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
 	api: boolean;
+	dev: boolean;
 	_: (string | number)[];
 	$0: string;
 };
@@ -38,6 +39,7 @@ export function processArgs(
 	return yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")
 		.option("api", { demand: false, default: false, type: "boolean" } as const)
+		.option("dev", { demand: false, default: false, type: "boolean" } as const)
 		.option("adminApi", {
 			demand: false,
 			default: false,
