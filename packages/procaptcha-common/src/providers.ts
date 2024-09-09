@@ -16,8 +16,6 @@ export const getRandomActiveProvider = async (
 
 	const PROVIDERS = await loadBalancer(config.defaultEnvironment);
 
-	console.log(PROVIDERS);
-
 	const randomProvderObj = at(
 		PROVIDERS,
 		randomIntBetween(0, PROVIDERS.length - 1),
@@ -44,7 +42,6 @@ export const providerRetry = async (
 		if (attemptCount >= retryMax) {
 			return stateReset();
 		}
-		console.log(`Retry count: ${attemptCount}`);
 		console.error(err);
 		// hit an error, disallow user's claim to be human
 		stateReset();
