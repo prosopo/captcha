@@ -1,0 +1,36 @@
+[sources.docker_logs]
+type = "docker_logs"
+include_labels = ["vector.caddy=true"]
+
+[transforms.trim]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$HOST"
+del(.ts)
+del(.user_id)
+del(.size)
+del(.message)
+del(.resp_headers)
+'''
+
+# print to console
+[sinks.console]
+type = "console"
+inputs = ["trim"]
+encoding.codec = "json"
+
+# send to openobserve
+[sinks.openobserve]
+type = "http"
+inputs = ["trim"]
+uri = "$URL_CADDY"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$USERNAME"
+auth.password = "$PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
