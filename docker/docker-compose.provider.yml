@@ -171,6 +171,34 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+    vector:
+        profiles:
+            - production-x86_64
+            - production-arm64
+            - staging-x86_64
+            - staging-arm64
+        image: timberio/vector:latest
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - ./provider.vector.toml:/etc/vector/vector.toml
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "vector", "validate", "/etc/vector/vector.toml"]
+            interval: 1d
+            timeout: 10s
+            retries: 1
+            start_period: 10s
 networks:
     internal:
         name: internal
