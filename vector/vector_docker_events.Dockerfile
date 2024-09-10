@@ -25,4 +25,4 @@ RUN apt-get update \
 # unpause – Indicates that the container has resumed running after being paused.
 # kill – Indicates that the container has been forcefully terminated.
 # oom – Indicates that the container was terminated due to running out of memory (Out-Of-Memory).
-ENTRYPOINT ["bash", "-c", "docker events --format json --filter label=vector.events=true --filter event=start --filter event=stop --filter event=restart --filter event=die --filter event=pause --filter event=unpause --filter event=kill --filter event=oom | /vector.sh"]
+ENTRYPOINT ["bash", "-c", "docker events --format json --filter label=vector.docker_events=true --filter event=start --filter event=stop --filter event=restart --filter event=die --filter event=pause --filter event=unpause --filter event=kill --filter event=oom | /main.sh"]
