@@ -1,0 +1,73 @@
+services:
+    a:
+        build:
+            context: .
+            dockerfile: ./abc.Dockerfile
+        env_file:
+            - vector.env
+        # depends_on:
+        #     - vector_provider
+        # labels:
+        #     - "vector.provider=true"
+        #     - "vector.docker_events=true"
+    # b:
+    #     build:
+    #         context: .
+    #         dockerfile: ./abc.Dockerfile
+    #     env_file:
+    #         - vector.env
+    #     # depends_on:
+    #     #     - vector_provider
+    #     labels:
+    #         - "vector.provider=true"
+    #         - "vector.docker_events=true"
+    # c:
+    #     build:
+    #         context: .
+    #         dockerfile: ./abc.Dockerfile
+    #     env_file:
+    #         - vector.env
+    #     # depends_on:
+    #     #     - vector_provider
+    #     labels:
+    #         - "vector.provider=true"
+    #         - "vector.docker_events=true"
+    # caddy:
+    #     image: caddy:2
+    #     labels:
+    #         - "vector.caddy=true"
+    #         - "vector.docker_events=true"
+    #     env_file:
+    #         - vector.env
+    #     depends_on:
+    #         - vector_caddy
+    #     ports:
+    #         - '4444:4444'
+    #         - '4445:4445'
+    #     volumes:
+    #         - ./caddy.Caddyfile:/etc/caddy/Caddyfile
+    # vector_docker_events:
+    #     image: prosopo/vector_docker_events:latest
+    #     env_file:
+    #         - vector.env
+    #     volumes:
+    #         - /var/run/docker.sock:/var/run/docker.sock
+    #         - ./docker_events.vector.toml:/etc/vector/vector.toml # vector config to log docker events
+    # vector_provider:
+    #     image: prosopo/vector:latest
+    #     depends_on:
+    #         - vector_docker_events
+    #     env_file:
+    #         - vector.env
+    #     volumes:
+    #         - /var/run/docker.sock:/var/run/docker.sock
+    #         - ./provider.vector.toml:/etc/vector/vector.toml # vector config to log console output from docker containers
+    # vector_caddy:
+    #     image: prosopo/vector:latest
+    #     depends_on:
+    #         - vector_docker_events
+    #     env_file:
+    #         - vector.env
+    #     volumes:
+    #         - /var/run/docker.sock:/var/run/docker.sock
+    #         - ./caddy.vector.toml:/etc/vector/vector.toml # vector config to log console output from caddy container
