@@ -7,8 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-VOLUME /config
-
 # script for substituting env vars into the vector config
 RUN cat <<EOF > /main.sh
 #! /bin/bash
@@ -22,7 +20,7 @@ envsubst < /etc/vector/vector.toml > /etc/vector/vector-filled.toml
 cat /etc/vector/vector-filled.toml
 
 # start vector
-# vector --config /etc/vector/vector-filled.toml
+vector --config /etc/vector/vector-filled.toml
 EOF
 
 RUN chmod +x /main.sh
