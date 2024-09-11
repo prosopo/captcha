@@ -34,6 +34,7 @@ import {
   type PendingCaptchaRequest,
   PoWChallengeComponents,
   PoWChallengeId,
+  RequestHeaders,
   ScheduledTaskNames,
   type ScheduledTaskResult,
   ScheduledTaskStatus,
@@ -530,6 +531,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     difficulty: number,
     providerSignature: string,
     ipAddress: string,
+    headers: RequestHeaders,
     serverChecked: boolean = false,
     userSubmitted: boolean = false,
     storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -541,6 +543,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       challenge,
       ...components,
       ipAddress,
+      headers,
       result: { status: CaptchaStatus.pending },
       userSubmitted,
       serverChecked,
@@ -844,6 +847,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     deadlineTimestamp: number,
     requestedAtTimestamp: number,
     ipAddress: string,
+    headers: RequestHeaders,
   ): Promise<void> {
     if (!isHex(requestHash)) {
       throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -861,6 +865,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
       deadlineTimestamp,
       requestedAtTimestamp,
       ipAddress,
+      headers,
     };
     await this.tables?.pending.updateOne(
       { requestHash: requestHash },

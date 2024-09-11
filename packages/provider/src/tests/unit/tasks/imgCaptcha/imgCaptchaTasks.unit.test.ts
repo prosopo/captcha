@@ -24,6 +24,7 @@ import {
   type CaptchaSolution,
   CaptchaStatus,
   type PendingCaptchaRequest,
+  RequestHeaders,
 } from "@prosopo/types";
 import {
   Database,
@@ -152,6 +153,7 @@ describe("ImgCaptchaManager", () => {
       const userAccount = "userAccount";
       const dataset = { datasetId, captchas: [] };
       const ipAddress = "0.0.0.0";
+      const headers: RequestHeaders = { 'a': '1', 'b': '2', 'c': '3' };
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -165,6 +167,7 @@ describe("ImgCaptchaManager", () => {
         datasetId,
         userAccount,
         ipAddress,
+        headers,
       );
 
       expect(result).toEqual({
@@ -179,6 +182,7 @@ describe("ImgCaptchaManager", () => {
       const datasetId = "datasetId";
       const userAccount = "userAccount";
       const ipAddress = "0.0.0.0";
+      const headers: RequestHeaders = { 'a': '1', 'b': '2', 'c': '3' };
 
       // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getDatasetDetails as any).mockResolvedValue(null);
@@ -188,6 +192,7 @@ describe("ImgCaptchaManager", () => {
           datasetId,
           userAccount,
           ipAddress,
+          headers,
         ),
       ).rejects.toThrow(
         new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {
@@ -319,6 +324,7 @@ describe("ImgCaptchaManager", () => {
       serverChecked: false,
       requestedAtTimestamp: 0,
       ipAddress: "0.0.0.0",
+      headers: { 'a': '1', 'b': '2', 'c': '3' },
       lastUpdatedTimestamp: Date.now(),
     };
     // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -363,6 +369,7 @@ describe("ImgCaptchaManager", () => {
         serverChecked: false,
         requestedAtTimestamp: 0,
         ipAddress: "0.0.0.0",
+        headers: { 'a': '1', 'b': '2', 'c': '3' },
         lastUpdatedTimestamp: Date.now(),
       },
     ];

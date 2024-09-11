@@ -30,7 +30,7 @@ import {
   Timestamp,
   TimestampSchema,
 } from "@prosopo/types";
-import type { Hash } from "@prosopo/types";
+import type { Hash, RequestHeaders } from "@prosopo/types";
 import type { PendingCaptchaRequest } from "@prosopo/types";
 import {
   ScheduledTaskNames,
@@ -77,6 +77,7 @@ export interface StoredCaptcha {
   requestedAtTimestamp: Timestamp;
   deadlineTimestamp?: Timestamp;
   ipAddress: string;
+  headers: RequestHeaders,
   userSubmitted: boolean;
   serverChecked: boolean;
   storedAtTimestamp?: Timestamp;
@@ -104,6 +105,7 @@ export const UserCommitmentSchema = object({
   result: CaptchaResultSchema,
   userSignature: string(),
   ipAddress: string(),
+  headers: object({}).catchall(string()),
   userSubmitted: boolean(),
   serverChecked: boolean(),
   storedAtTimestamp: TimestampSchema.optional(),
@@ -174,6 +176,7 @@ export const PowCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
   },
   difficulty: { type: Number, required: true },
   ipAddress: { type: String, required: true },
+  headers: { type: Object, required: true },
   userSignature: { type: String, required: false },
   userSubmitted: { type: Boolean, required: true },
   serverChecked: { type: Boolean, required: true },
@@ -199,6 +202,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     error: { type: String, required: false },
   },
   ipAddress: { type: String, required: true },
+  headers: { type: Object, required: true },
   userSignature: { type: String, required: true },
   userSubmitted: { type: Boolean, required: true },
   serverChecked: { type: Boolean, required: true },
@@ -268,6 +272,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
   deadlineTimestamp: { type: Number, required: true }, // unix timestamp
   requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
   ipAddress: { type: String, required: true },
+  headers: { type: Object, required: true },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -353,6 +358,7 @@ export interface Database {
     deadlineTimestamp: number,
     requestedAtTimestamp: number,
     ipAddress: string,
+    headers: RequestHeaders,
   ): Promise<void>;
 
   getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;
@@ -454,6 +460,7 @@ export interface Database {
     difficulty: number,
     providerSignature: string,
     ipAddress: string,
+    headers: RequestHeaders,
     serverChecked?: boolean,
     userSubmitted?: boolean,
     userSignature?: string,

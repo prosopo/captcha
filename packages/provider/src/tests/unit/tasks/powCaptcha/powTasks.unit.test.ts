@@ -21,6 +21,7 @@ import {
   CaptchaStatus,
   POW_SEPARATOR,
   PoWChallengeId,
+  RequestHeaders,
 } from "@prosopo/types";
 import { Database, PoWCaptchaStored } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -113,6 +114,7 @@ describe("PowCaptchaManager", () => {
       const nonce = 12345;
       const timeout = 1000;
       const ipAddress = "ipAddress";
+      const headers: RequestHeaders = { 'a': '1', 'b': '2', 'c': '3' };
       const challengeRecord: PoWCaptchaStored = {
         challenge,
         difficulty,
@@ -123,6 +125,7 @@ describe("PowCaptchaManager", () => {
         userSubmitted: false,
         serverChecked: false,
         ipAddress,
+        headers,
         providerSignature,
         lastUpdatedTimestamp: Date.now(),
       };
@@ -144,14 +147,15 @@ describe("PowCaptchaManager", () => {
       const verifyPowCaptchaSolutionArgs: Parameters<
         typeof powCaptchaManager.verifyPowCaptchaSolution
       > = [
-        challenge,
-        difficulty,
-        providerSignature,
-        nonce,
-        timeout,
-        userSignature,
-        ipAddress,
-      ];
+          challenge,
+          difficulty,
+          providerSignature,
+          nonce,
+          timeout,
+          userSignature,
+          ipAddress,
+          headers,
+        ];
 
       const result = await powCaptchaManager.verifyPowCaptchaSolution(
         ...verifyPowCaptchaSolutionArgs,
@@ -216,6 +220,7 @@ describe("PowCaptchaManager", () => {
       const timeout = 1000;
       const timestampSignature = "testTimestampSignature";
       const ipAddress = "ipAddress";
+      const headers: RequestHeaders = { 'a': '1', 'b': '2', 'c': '3' };
       const challengeRecord: PoWCaptchaStored = {
         challenge,
         dappAccount: pair.address,
@@ -225,6 +230,7 @@ describe("PowCaptchaManager", () => {
         userSubmitted: false,
         serverChecked: false,
         ipAddress,
+        headers,
         providerSignature: "testSignature",
         difficulty,
         lastUpdatedTimestamp: 0,
@@ -250,6 +256,7 @@ describe("PowCaptchaManager", () => {
           timeout,
           timestampSignature,
           ipAddress,
+          headers,
         ),
       ).toBe(false);
 
