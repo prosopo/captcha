@@ -16,17 +16,17 @@ import type { Logger } from "@prosopo/common";
 // limitations under the License.
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
-	db: Database | undefined;
+	db: IProviderDatabase | undefined;
 	defaultEnvironment: EnvironmentTypes;
 	logger: Logger;
 	assetsResolver: AssetsResolver | undefined;
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
-	getDb(): Database;
+	getDb(): IProviderDatabase;
 	isReady(): Promise<void>;
 	importDatabase(): Promise<void>;
 }

@@ -13,23 +13,24 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { ProsopoDatabase as MongoDatabase } from "./mongo.js";
+import { MongoDatabase } from "./mongo.js";
 
 export class MongoMemoryDatabase extends MongoDatabase {
+	protected override readonly _url: string;
 	private mongod: MongoMemoryServer | undefined;
 	private running = false;
 
-	override async init(
+	constructor(
 		url: string,
 		dbname: string,
 		logger: Logger,
 		authSource?: string,
-	): Promise<this> {
-		this.mongod = await MongoMemoryServer.create();
-		this.running = true;
-		const mongoMemoryURL = this.mongod.getUri();
-		await super.init(mongoMemoryURL, dbname, logger, authSource);
-		return this;
+	) {
+		const mongod = new MongoMemoryServer();
+		const mongoMemoryURL = mongod.getUri();
+		super(mongoMemoryURL, dbname, authSource, logger);
+		this.mongod = mongod;
+		this._url = mongoMemoryURL;
 	}
 
 	override connect(): Promise<void> {

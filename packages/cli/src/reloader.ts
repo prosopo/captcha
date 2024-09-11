@@ -32,6 +32,7 @@ export default class ReloadingAPI {
 	private _processedArgs: AwaitedProcessedArgs;
 	private api: Server | undefined;
 	private _restarting: boolean;
+	private _env: ProviderEnvironment | undefined;
 
 	constructor(
 		envPath: string,
@@ -46,13 +47,20 @@ export default class ReloadingAPI {
 		this._restarting = false;
 	}
 
-	public async start() {
+	get env() {
+		return this._env;
+	}
+
+	public async start(reloadEnv = false) {
 		log.info("Starting API");
 		this._envWatcher = await this._watchEnv();
 		loadEnv();
-		const env = new ProviderEnvironment(this._config, this._pair);
-		await env.isReady();
-		this.api = await start(env, !!this._processedArgs.adminApi);
+		if (!this._env && reloadEnv) {
+			const env = new ProviderEnvironment(this._config, this._pair);
+			await env.isReady();
+			this._env = env;
+		}
+		this.api = await start(this.env, !!this._processedArgs.adminApi);
 	}
 
 	public async startDev() {
@@ -80,7 +88,7 @@ export default class ReloadingAPI {
 				this._restarting = true;
 				await this.stop();
 				loadEnv();
-				await this.start();
+				await this.start(true);
 				this._restarting = false;
 			}
 		});
