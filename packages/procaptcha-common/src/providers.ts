@@ -40,6 +40,8 @@ export const providerRetry = async (
 		await currentFn();
 	} catch (err) {
 		if (attemptCount >= retryMax) {
+			console.error(err);
+			console.error(`Max retries (${attemptCount} of ${retryMax}) reached, aborting`);
 			return stateReset();
 		}
 		console.error(err);
