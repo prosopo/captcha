@@ -32,6 +32,7 @@ import {
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
@@ -88,6 +89,7 @@ export interface StoredCaptcha {
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
 	ipAddress: string;
+	headers: RequestHeaders;
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	storedAtTimestamp?: Timestamp;
@@ -115,6 +117,7 @@ export const UserCommitmentSchema = object({
 	result: CaptchaResultSchema,
 	userSignature: string(),
 	ipAddress: string(),
+	headers: object({}).catchall(string()),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
 	storedAtTimestamp: TimestampSchema.optional(),
@@ -128,7 +131,7 @@ export interface SolutionRecord extends CaptchaSolution {
 }
 
 export type Tables<E extends string | number | symbol> = {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	[key in E]: typeof Model<any>;
 };
 
@@ -180,6 +183,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
 		},
 		difficulty: { type: Number, required: true },
 		ipAddress: { type: String, required: true },
+		headers: { type: Object, required: true },
 		userSignature: { type: String, required: false },
 		userSubmitted: { type: Boolean, required: true },
 		serverChecked: { type: Boolean, required: true },
@@ -207,6 +211,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		error: { type: String, required: false },
 	},
 	ipAddress: { type: String, required: true },
+	headers: { type: Object, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
@@ -277,6 +282,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>(
 		deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 		requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
 		ipAddress: { type: String, required: true },
+		headers: { type: Object, required: true },
 	},
 	{ expireAfterSeconds: ONE_WEEK },
 );
@@ -319,7 +325,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 );
 
 export interface IProviderDatabase extends IDatabase {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
 
 	storeDataset(dataset: Dataset): Promise<void>;
@@ -356,6 +362,7 @@ export interface IProviderDatabase extends IDatabase {
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: string,
+		headers: RequestHeaders,
 	): Promise<void>;
 
 	getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;
@@ -457,6 +464,7 @@ export interface IProviderDatabase extends IDatabase {
 		difficulty: number,
 		providerSignature: string,
 		ipAddress: string,
+		headers: RequestHeaders,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,

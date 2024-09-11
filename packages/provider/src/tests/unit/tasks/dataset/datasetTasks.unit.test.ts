@@ -55,7 +55,7 @@ describe("DatasetManager", () => {
 	let captchaConfig: CaptchaConfig;
 	let providerDB: IProviderDatabase;
 	let datasetManager: DatasetManager;
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const collections: Record<string, any> = {};
 
 	beforeEach(() => {
@@ -109,7 +109,7 @@ describe("DatasetManager", () => {
 			),
 			updateScheduledTaskStatus: vi.fn(
 				(
-					// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+					// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 					taskID: any,
 					status: ScheduledTaskStatus,
 					result?: ScheduledTaskResult,
@@ -122,11 +122,11 @@ describe("DatasetManager", () => {
 				},
 			),
 			getLastScheduledTaskStatus: vi.fn(
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 				(taskID: any, status: ScheduledTaskStatus) => {
 					return (
 						Object.keys(collections.schedulers.records)
-							// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 							.map((key: any) => collections.schedulers.records[key])
 							.find(
 								(task: ScheduledTaskRecord) =>

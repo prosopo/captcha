@@ -30,6 +30,7 @@ import {
 	type DappUserSolutionResult,
 	type Hash,
 	type PendingCaptchaRequest,
+	type RequestHeaders,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -81,6 +82,7 @@ export class ImgCaptchaManager {
 		datasetId: string,
 		userAccount: string,
 		ipAddress: string,
+		headers: RequestHeaders,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -145,6 +147,7 @@ export class ImgCaptchaManager {
 			deadlineTs,
 			currentTime,
 			ipAddress,
+			headers,
 		);
 		return {
 			captchas,
@@ -175,6 +178,7 @@ export class ImgCaptchaManager {
 		timestamp: number,
 		providerRequestHashSignature: string,
 		ipAddress: string,
+		headers: RequestHeaders,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -253,6 +257,7 @@ export class ImgCaptchaManager {
 				serverChecked: false,
 				requestedAtTimestamp: timestamp,
 				ipAddress,
+				headers,
 			};
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
 
