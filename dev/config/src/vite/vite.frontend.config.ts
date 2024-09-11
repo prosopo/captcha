@@ -29,190 +29,190 @@ import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
 const logger = getLogger("Info", "vite.config.js");
 
 export default async function (
-  packageName: string,
-  bundleName: string,
-  dir: string,
-  entry: string,
-  command?: string,
-  mode?: string,
-  copyOptions?: ClosePluginOptions,
-  tsConfigPaths?: string[],
-  workspaceRoot?: string,
+	packageName: string,
+	bundleName: string,
+	dir: string,
+	entry: string,
+	command?: string,
+	mode?: string,
+	copyOptions?: ClosePluginOptions,
+	tsConfigPaths?: string[],
+	workspaceRoot?: string,
 ): Promise<UserConfig> {
-  logger.info(`Running at ${dir} in ${mode} mode`);
-  const isProduction = mode === "production";
-  // NODE_ENV must be wrapped in quotes.
-  // If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
-  // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
-  process.env.NODE_ENV = `${process.env.NODE_ENV || mode}`;
-  logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
+	logger.info(`Running at ${dir} in ${mode} mode`);
+	const isProduction = mode === "production";
+	// NODE_ENV must be wrapped in quotes.
+	// If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
+	// issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
+	process.env.NODE_ENV = `${process.env.NODE_ENV || mode}`;
+	logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
 
-  // Set the env vars that we want to be available in the browser
-  const define = {
-    // used to stop websockets package from breaking
-    "process.env.WS_NO_BUFFER_UTIL": JSON.stringify("true"),
-    "process.env.WS_NO_UTF_8_VALIDATE": JSON.stringify("true"),
-    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-    "process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
-      process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode,
-    ),
-    "process.env.PROSOPO_SERVER_URL": JSON.stringify(
-      process.env.PROSOPO_SERVER_URL,
-    ),
-    "process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
-      process.env._DEV_ONLY_WATCH_EVENTS,
-    ),
-    "process.env.PROSOPO_MONGO_EVENTS_URI": JSON.stringify(
-      process.env.PROSOPO_MONGO_EVENTS_URI,
-    ),
-    "process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(
-      process.env.PROSOPO_PACKAGE_VERSION,
-    ),
-    // only needed if bundling with a site key
-    "process.env.PROSOPO_SITE_KEY": JSON.stringify(
-      process.env.PROSOPO_SITE_KEY,
-    ),
-  };
+	// Set the env vars that we want to be available in the browser
+	const define = {
+		// used to stop websockets package from breaking
+		"process.env.WS_NO_BUFFER_UTIL": JSON.stringify("true"),
+		"process.env.WS_NO_UTF_8_VALIDATE": JSON.stringify("true"),
+		"process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+		"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
+			process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode,
+		),
+		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
+			process.env.PROSOPO_SERVER_URL,
+		),
+		"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
+			process.env._DEV_ONLY_WATCH_EVENTS,
+		),
+		"process.env.PROSOPO_MONGO_EVENTS_URI": JSON.stringify(
+			process.env.PROSOPO_MONGO_EVENTS_URI,
+		),
+		"process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(
+			process.env.PROSOPO_PACKAGE_VERSION,
+		),
+		// only needed if bundling with a site key
+		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY,
+		),
+	};
 
-  logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`);
+	logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`);
 
-  // Get all dependencies of the current package
-  const { dependencies: deps, optionalPeerDependencies } =
-    await getDependencies(packageName, isProduction);
+	// Get all dependencies of the current package
+	const { dependencies: deps, optionalPeerDependencies } =
+		await getDependencies(packageName, isProduction);
 
-  // Get rid of any dependencies we don't want to bundle
-  const { external, internal } = filterDependencies(deps, [
-    "pm2",
-    "nodejs-polars",
-    "aws",
-    "webpack",
-    "vite",
-  ]);
+	// Get rid of any dependencies we don't want to bundle
+	const { external, internal } = filterDependencies(deps, [
+		"pm2",
+		"nodejs-polars",
+		"aws",
+		"webpack",
+		"vite",
+	]);
 
-  // Add the node builtins (path, fs, os, etc.) to the external list
-  const allExternal = [
-    ...builtinModules,
-    ...builtinModules.map((m) => `node:${m}`),
-    ...external,
-    ...optionalPeerDependencies,
-  ];
-  logger.debug(
-    `Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
-  );
+	// Add the node builtins (path, fs, os, etc.) to the external list
+	const allExternal = [
+		...builtinModules,
+		...builtinModules.map((m) => `node:${m}`),
+		...external,
+		...optionalPeerDependencies,
+	];
+	logger.debug(
+		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
+	);
 
-  // Required to print RegExp in console (e.g. alias keys)
-  // biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
-  const proto = RegExp.prototype as any;
-  proto.toJSON = RegExp.prototype.toString;
+	// Required to print RegExp in console (e.g. alias keys)
+	// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+	const proto = RegExp.prototype as any;
+	proto.toJSON = RegExp.prototype.toString;
 
-  // drop console logs if in production mode
-  let drop: undefined | Drop[];
-  let pure: string[] = [];
-  if (isProduction) {
-    drop = ["debugger"];
-    pure = ["console.log", "console.warn", "console.info", "console.debug"];
-  }
+	// drop console logs if in production mode
+	let drop: undefined | Drop[];
+	let pure: string[] = [];
+	if (isProduction) {
+		drop = ["debugger"];
+		pure = ["console.log", "console.warn", "console.info", "console.debug"];
+	}
 
-  logger.info("Bundle name", bundleName);
-  return {
-    ssr: {
-      target: "webworker",
-    },
-    server: {
-      host: "127.0.0.1",
-    },
-    mode: mode || "development",
-    optimizeDeps: {
-      include: ["node_modules"],
-      force: true,
-    },
-    esbuild: {
-      platform: "browser",
-      target: [
-        "es2020",
-        "chrome60",
-        "edge18",
-        "firefox60",
-        "node12",
-        "safari11",
-      ],
-      drop,
-      pure,
-      legalComments: "none",
-    },
-    define,
+	logger.info("Bundle name", bundleName);
+	return {
+		ssr: {
+			target: "webworker",
+		},
+		server: {
+			host: "127.0.0.1",
+		},
+		mode: mode || "development",
+		optimizeDeps: {
+			include: ["node_modules"],
+			force: true,
+		},
+		esbuild: {
+			platform: "browser",
+			target: [
+				"es2020",
+				"chrome60",
+				"edge18",
+				"firefox60",
+				"node12",
+				"safari11",
+			],
+			drop,
+			pure,
+			legalComments: "none",
+		},
+		define,
 
-    build: {
-      outDir: path.resolve(dir, "dist/bundle"),
-      minify: isProduction,
-      ssr: false,
-      lib: {
-        entry: path.resolve(dir, entry),
-        name: bundleName,
-        fileName: `${bundleName}.bundle.js`,
-        formats: ["es"],
-      },
-      modulePreload: { polyfill: true },
-      commonjsOptions: {
-        exclude: ["mongodb/*"],
-        transformMixedEsModules: true,
-        strictRequires: "debug",
-      },
+		build: {
+			outDir: path.resolve(dir, "dist/bundle"),
+			minify: isProduction,
+			ssr: false,
+			lib: {
+				entry: path.resolve(dir, entry),
+				name: bundleName,
+				fileName: `${bundleName}.bundle.js`,
+				formats: ["es"],
+			},
+			modulePreload: { polyfill: true },
+			commonjsOptions: {
+				exclude: ["mongodb/*"],
+				transformMixedEsModules: true,
+				strictRequires: "debug",
+			},
 
-      rollupOptions: {
-        treeshake: {
-          annotations: false,
-          propertyReadSideEffects: false,
-          tryCatchDeoptimization: false,
-          moduleSideEffects: "no-external", //true,
-          preset: "smallest",
-          unknownGlobalSideEffects: false,
-        },
-        experimentalLogSideEffects: false,
-        external: allExternal,
-        watch: false,
+			rollupOptions: {
+				treeshake: {
+					annotations: false,
+					propertyReadSideEffects: false,
+					tryCatchDeoptimization: false,
+					moduleSideEffects: "no-external", //true,
+					preset: "smallest",
+					unknownGlobalSideEffects: false,
+				},
+				experimentalLogSideEffects: false,
+				external: allExternal,
+				watch: false,
 
-        output: {
-          dir: path.resolve(dir, "dist/bundle"),
-          entryFileNames: `${bundleName}.bundle.js`,
-        },
+				output: {
+					dir: path.resolve(dir, "dist/bundle"),
+					entryFileNames: `${bundleName}.bundle.js`,
+				},
 
-        plugins: [
-          css(),
-          wasm(),
-          // @ts-ignore
-          nodeResolve({
-            browser: true,
-            preferBuiltins: false,
-            rootDir: path.resolve(dir, "../../"),
-            dedupe: ["react", "react-dom"],
-            modulesOnly: true,
-          }),
-          visualizer({
-            open: true,
-            template: "treemap", //'list',
-            gzipSize: true,
-            brotliSize: true,
-          }),
-          // I think we can use this plugin to build all packages instead of relying on the tsc step that's
-          // currently a precursor in package.json. However, it fails for the following reason:
-          // https://github.com/rollup/plugins/issues/243
-          // @ts-ignore
-          typescript({
-            tsconfig: path.resolve("./tsconfig.json"),
-            compilerOptions: { rootDir: path.resolve("./src") },
-            outDir: path.resolve(dir, "dist/bundle"),
-          }),
-        ],
-      },
-    },
-    plugins: [
-      // Not sure if we need this plugin or not, it works without it
-      // @ts-ignore
-      viteReact(),
-      // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
-      // mode, in which case we don't want to close the bundler because it will close the server
-      command !== "serve" ? VitePluginCloseAndCopy(copyOptions) : undefined,
-    ],
-  };
+				plugins: [
+					css(),
+					wasm(),
+					// @ts-ignore
+					nodeResolve({
+						browser: true,
+						preferBuiltins: false,
+						rootDir: path.resolve(dir, "../../"),
+						dedupe: ["react", "react-dom"],
+						modulesOnly: true,
+					}),
+					visualizer({
+						open: true,
+						template: "treemap", //'list',
+						gzipSize: true,
+						brotliSize: true,
+					}),
+					// I think we can use this plugin to build all packages instead of relying on the tsc step that's
+					// currently a precursor in package.json. However, it fails for the following reason:
+					// https://github.com/rollup/plugins/issues/243
+					// @ts-ignore
+					typescript({
+						tsconfig: path.resolve("./tsconfig.json"),
+						compilerOptions: { rootDir: path.resolve("./src") },
+						outDir: path.resolve(dir, "dist/bundle"),
+					}),
+				],
+			},
+		},
+		plugins: [
+			// Not sure if we need this plugin or not, it works without it
+			// @ts-ignore
+			viteReact(),
+			// Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
+			// mode, in which case we don't want to close the bundler because it will close the server
+			command !== "serve" ? VitePluginCloseAndCopy(copyOptions) : undefined,
+		],
+	};
 }
