@@ -1,26 +1,30 @@
 # usage: `caddy run --config ./docker/provider.Caddyfile --envfile docker/env.development`
 {
-	http_port {$CADDY_HTTP_PORT}
-	auto_https {$CADDY_AUTO_HTTPS}
-	admin {$CADDY_ADMIN_API} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
+	http_port {$CADDY_HTTP_PORT:80}
+	auto_https {$CADDY_AUTO_HTTPS:disable_redirects}
+	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 }
 
 {$CADDY_DOMAIN} {
 
-	basicauth /metrics {
-		# this has to be the username<space><bcrypted password>
-		# to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
-		{$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
-	}
+	# basicauth /metrics {
+	# 	 # this has to be the username<space><bcrypted password>
+	# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
+	# 	 {$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
+	# }
 
 	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
-	reverse_proxy /metrics {$CADDY_ADMIN_API}
+	# reverse_proxy /metrics {$CADDY_ADMIN_API}
 
 	# reverse proxy to the provider container
-	reverse_proxy provider:9229
+	reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider}:{$CADDY_PROVIDER_PORT:9229}
 
 	# logs. Note this is not limited, truncated or rotated whatsoever, so it grows over time!
 	log {
 		output file /var/log/caddy/{$CADDY_DOMAIN}.log
+	}
+
+	log {
+		output stdout
 	}
 }
