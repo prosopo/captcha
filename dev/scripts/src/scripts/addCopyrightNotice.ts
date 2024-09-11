@@ -32,105 +32,106 @@ const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
 // limitations under the License.`;
 
 const searchPaths = [
-  "**/*.ts",
-  "**/*.tsx",
-  "**/*.rs",
-  "**/*.js",
-  "**/*.jsx",
-  "**/*.cjs",
-  "**/*.mjs",
-  "**/*.cts",
-  "**/*.mts",
+	"**/*.ts",
+	"**/*.tsx",
+	"**/*.rs",
+	"**/*.js",
+	"**/*.jsx",
+	"**/*.cjs",
+	"**/*.mjs",
+	"**/*.cts",
+	"**/*.mts",
 ];
 
 const currentPath = getRootDir();
 
 const files = fg
-  .sync(searchPaths, {
-    cwd: currentPath,
-    ignore: [
-      "**/node_modules/**",
-      "**/cargo-cache/**",
-      "**/dist/**",
-      "**/target/**",
-      "**/coverage/**",
-      "**/vite.cjs.config.ts.timestamp*",
-      "**/js_bundles_host_temp/**",
-      "**/client-bundle-example/src/assets/**",
-      "**/next-env.d.ts/**",
-    ],
-  })
-  .filter((file) => fs.lstatSync(file).isFile());
+	.sync(searchPaths, {
+		cwd: currentPath,
+		absolute: true,
+		ignore: [
+			"**/node_modules/**",
+			"**/cargo-cache/**",
+			"**/dist/**",
+			"**/target/**",
+			"**/coverage/**",
+			"**/vite.cjs.config.ts.timestamp*",
+			"**/js_bundles_host_temp/**",
+			"**/client-bundle-example/src/assets/**",
+			"**/next-env.d.ts/**",
+		],
+	})
+	.filter((file) => fs.lstatSync(file).isFile());
 
 if (process.argv[2] === "list") {
-  console.log(JSON.stringify(files, null, 4));
-  console.log("Found", files.length, "files");
+	console.log(JSON.stringify(files, null, 4));
+	console.log("Found", files.length, "files");
 }
 
 if (process.argv[2] === "check") {
-  for (const file of files) {
-    const fileContents = fs.readFileSync(file, "utf8");
-    if (fileContents.includes(header)) {
-      console.log("License present:", file);
-    } else {
-      throw new Error(`License not present: ${file}`);
-    }
-  }
+	for (const file of files) {
+		const fileContents = fs.readFileSync(file, "utf8");
+		if (fileContents.includes(header)) {
+			console.log("License present:", file);
+		} else {
+			throw new Error(`License not present: ${file}`);
+		}
+	}
 }
 
 if (process.argv[2] === "license") {
-  //for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
-  for (const file of files) {
-    //check if file is a file, not a directory
-    const fileContents = fs.readFileSync(file, "utf8");
-    const lines = fileContents.split("\n");
-    if (fileContents.indexOf("// Copyright") > -1) {
-      // get the line on which the license begins
-      let startingLine = 0;
-      while (!at(lines, startingLine).startsWith("//")) {
-        startingLine++;
-      }
+	//for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
+	for (const file of files) {
+		//check if file is a file, not a directory
+		const fileContents = fs.readFileSync(file, "utf8");
+		const lines = fileContents.split("\n");
+		if (fileContents.indexOf("// Copyright") > -1) {
+			// get the line on which the license begins
+			let startingLine = 0;
+			while (!at(lines, startingLine).startsWith("//")) {
+				startingLine++;
+			}
 
-      //remove the old license and replace with the new one
-      // find the line containing `// along with Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.` and take the lines array from there
-      let count = startingLine;
-      let line = at(lines, count);
-      let lineStartsWithSlashes = line.startsWith("//");
-      while (lineStartsWithSlashes) {
-        lineStartsWithSlashes = line.startsWith("//");
-        if (lineStartsWithSlashes) {
-          line = at(lines, ++count);
-        }
-      }
-      if (!line.startsWith("//")) {
-        count = count - 1;
-        line = at(lines, count);
-      }
-      if (
-        line.endsWith("If not, see <http://www.gnu.org/licenses/>.") ||
-        line.endsWith("// limitations under the License.")
-      ) {
-        let newFileContents = "";
-        if (startingLine > 0) {
-          newFileContents = `${lines.slice(0, startingLine).join("\n")}\n${header}\n${lines
-            .slice(count + 1)
-            .join("\n")}`;
-        } else {
-          newFileContents = `${header}\n${lines.slice(count + 1).join("\n")}`;
-        }
+			//remove the old license and replace with the new one
+			// find the line containing `// along with Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.` and take the lines array from there
+			let count = startingLine;
+			let line = at(lines, count);
+			let lineStartsWithSlashes = line.startsWith("//");
+			while (lineStartsWithSlashes) {
+				lineStartsWithSlashes = line.startsWith("//");
+				if (lineStartsWithSlashes) {
+					line = at(lines, ++count);
+				}
+			}
+			if (!line.startsWith("//")) {
+				count = count - 1;
+				line = at(lines, count);
+			}
+			if (
+				line.endsWith("If not, see <http://www.gnu.org/licenses/>.") ||
+				line.endsWith("// limitations under the License.")
+			) {
+				let newFileContents = "";
+				if (startingLine > 0) {
+					newFileContents = `${lines.slice(0, startingLine).join("\n")}\n${header}\n${lines
+						.slice(count + 1)
+						.join("\n")}`;
+				} else {
+					newFileContents = `${header}\n${lines.slice(count + 1).join("\n")}`;
+				}
 
-        if (newFileContents !== fileContents) {
-          //console.log(newFileContents)
-          fs.writeFileSync(file, newFileContents);
-          console.log("File Updated:", file);
-        }
-      }
-    } else {
-      // if it doesn't, add it
-      const newFileContents = `${header}\n${fileContents}`;
-      //console.log(newFileContents)
-      fs.writeFileSync(file, newFileContents);
-      console.log("File Updated:", file);
-    }
-  }
+				if (newFileContents !== fileContents) {
+					//console.log(newFileContents)
+					fs.writeFileSync(file, newFileContents);
+					console.log("File Updated:", file);
+				}
+			}
+		} else {
+			// if it doesn't, add it
+			const newFileContents = `${header}\n${fileContents}`;
+			//console.log(newFileContents)
+			fs.writeFileSync(file, newFileContents);
+			console.log("File Updated:", file);
+		}
+	}
 }
