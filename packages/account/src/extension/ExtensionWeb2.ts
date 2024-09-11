@@ -120,5 +120,4 @@ export class ExtensionWeb2 extends Extension {
 			keypair,
 		};
 	}
-
 }
