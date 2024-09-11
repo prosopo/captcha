@@ -21,7 +21,8 @@
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/cli.js",
-		"start": "node ./dist/cli.js --api"
+		"start": "node ./dist/cli.js --api",
+		"start:dev": "node ./dist/cli.js --api --dev"
 	},
 	"dependencies": {
 		"@polkadot/keyring": "12.6.2",
@@ -49,8 +50,8 @@
 		"express": "^4.18.2",
 		"tslib": "2.6.2",
 		"typescript": "5.1.6",
-		"vite": "^5.1.7",
-		"vitest": "^1.3.1"
+		"vite": "^5.4.4",
+		"vitest": "^2.0.5"
 	},
 	"author": "Prosopo",
 	"license": "Apache-2.0",

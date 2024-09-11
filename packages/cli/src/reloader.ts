@@ -19,7 +19,7 @@ import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { AwaitedProcessedArgs } from "./argv.js";
-import { start } from "./start.js";
+import { start, startDev } from "./start.js";
 
 const log = getLogger(LogLevel.enum.info, "CLI");
 
@@ -61,6 +61,15 @@ export default class ReloadingAPI {
 			this._env = env;
 		}
 		this.api = await start(this.env, !!this._processedArgs.adminApi);
+	}
+
+	public async startDev() {
+		log.info("Starting API");
+		this._envWatcher = await this._watchEnv();
+		loadEnv();
+		const env = new ProviderEnvironment(this._config, this._pair);
+		await env.isReady();
+		this.api = await startDev(env, !!this._processedArgs.adminApi);
 	}
 
 	public async stop() {

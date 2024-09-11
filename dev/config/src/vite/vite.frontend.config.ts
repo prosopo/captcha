@@ -1,17 +1,3 @@
-import { builtinModules } from "node:module";
-import path from "node:path";
-import { getLogger } from "@prosopo/common";
-import nodeResolve from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
-import { wasm } from "@rollup/plugin-wasm";
-import { default as viteReact } from "@vitejs/plugin-react";
-import type { Drop } from "esbuild";
-import css from "rollup-plugin-import-css";
-import { visualizer } from "rollup-plugin-visualizer";
-import type { UserConfig } from "vite";
-import viteTsconfigPaths from "vite-tsconfig-paths";
-import { filterDependencies, getDependencies } from "../dependencies.js";
-import { VitePluginCloseAndCopy } from "./index.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +11,20 @@ import { VitePluginCloseAndCopy } from "./index.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { builtinModules } from "node:module";
+import path from "node:path";
+import { getLogger } from "@prosopo/common";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import typescript from "@rollup/plugin-typescript";
+import { wasm } from "@rollup/plugin-wasm";
+import { default as viteReact } from "@vitejs/plugin-react";
+import type { Drop } from "esbuild";
+import css from "rollup-plugin-import-css";
+import { visualizer } from "rollup-plugin-visualizer";
+import type { UserConfig } from "vite";
+import { filterDependencies, getDependencies } from "../dependencies.js";
+import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
 const logger = getLogger("Info", "vite.config.js");
 
@@ -213,8 +213,6 @@ export default async function (
 			// Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
 			// mode, in which case we don't want to close the bundler because it will close the server
 			command !== "serve" ? VitePluginCloseAndCopy(copyOptions) : undefined,
-			// Means we can specify index.tsx instead of index.jsx in the index.html file
-			viteTsconfigPaths({ projects: tsConfigPaths }),
 		],
 	};
 }

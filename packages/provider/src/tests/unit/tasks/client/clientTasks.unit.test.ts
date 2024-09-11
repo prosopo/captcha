@@ -34,40 +34,48 @@ type TestScheduledTaskRecord = Pick<
 	"updated" | "_id" | "status" | "processName"
 >;
 
-vi.mock("@prosopo/database", async (importOriginal) => {
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const actual = (await importOriginal()) as Record<string, any>;
-
-	const mockLogger = {
-		info: vi.fn().mockImplementation(console.info),
-		debug: vi.fn().mockImplementation(console.debug),
-		error: vi.fn().mockImplementation(console.error),
-	};
-
-	class MockCaptchaDatabase {
+vi.mock(
+	"@prosopo/database",
+	async (
+		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			| Record<string, any>
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			| PromiseLike<Record<string, any>>,
+	) => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		logger: any;
+		const actual = (await importOriginal()) as Record<string, any>;
 
-		constructor() {
-			this.logger = mockLogger;
+		const mockLogger = {
+			info: vi.fn().mockImplementation(console.info),
+			debug: vi.fn().mockImplementation(console.debug),
+			error: vi.fn().mockImplementation(console.error),
+		};
+
+		class MockCaptchaDatabase {
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			logger: any;
+
+			constructor() {
+				this.logger = mockLogger;
+			}
+
+			connect() {
+				return vi.fn();
+			}
+
+			saveCaptchas() {
+				return vi.fn(() => {
+					console.log("mock of savecaptchas");
+				});
+			}
 		}
 
-		connect() {
-			return vi.fn();
-		}
-
-		saveCaptchas() {
-			return vi.fn(() => {
-				console.log("mock of savecaptchas");
-			});
-		}
-	}
-
-	return {
-		...actual,
-		CaptchaDatabase: MockCaptchaDatabase,
-	};
-});
+		return {
+			...actual,
+			CaptchaDatabase: MockCaptchaDatabase,
+		};
+	},
+);
 
 describe("ClientTaskManager", () => {
 	let config: ProsopoConfigOutput;
