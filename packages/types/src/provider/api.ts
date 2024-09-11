@@ -99,8 +99,8 @@ type RateLimit = {
 };
 
 export type RequestHeaders = {
-	[key: string]: string
-}
+	[key: string]: string;
+};
 
 export type Hash = string | number[];
 

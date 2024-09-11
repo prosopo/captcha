@@ -39,7 +39,7 @@ import { handleErrors } from "./errorHandler.js";
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 
 const flattenHeaders = (headers: {
-	[key: string]: string | string[] | undefined
+	[key: string]: string | string[] | undefined;
 }) => {
 	// for each key/value pair in headers, if the value is an array, join it with a comma, if the value is undefined, return an empty string
 	return Object.fromEntries(
@@ -48,7 +48,7 @@ const flattenHeaders = (headers: {
 			Array.isArray(value) ? value.join(",") : value || "",
 		]),
 	);
-}
+};
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
