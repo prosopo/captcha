@@ -143,7 +143,7 @@ export const Manager = (
 				updateState({
 					loading: true,
 				});
-				updateState({attemptCount: state.attemptCount + 1});
+				updateState({ attemptCount: state.attemptCount + 1 });
 
 				const config = getConfig();
 

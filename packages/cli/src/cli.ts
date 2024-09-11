@@ -59,8 +59,7 @@ async function main() {
 				.then(() => {
 					log.info("Reloading API started...");
 				});
-		}
-		else {
+		} else {
 			await new ReloadingAPI(envPath, config, pair, processedArgs)
 				.start()
 				.then(() => {

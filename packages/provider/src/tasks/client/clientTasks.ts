@@ -128,6 +128,7 @@ export class ClientTaskManager {
 					},
 				},
 			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		} catch (e: any) {
 			this.logger.error(e);
 			await this.providerDB.updateScheduledTaskStatus(
@@ -186,6 +187,7 @@ export class ClientTaskManager {
 					},
 				},
 			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		} catch (e: any) {
 			this.logger.error(e);
 			await this.providerDB.updateScheduledTaskStatus(

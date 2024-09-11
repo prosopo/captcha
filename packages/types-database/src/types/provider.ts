@@ -128,6 +128,7 @@ export interface SolutionRecord extends CaptchaSolution {
 }
 
 export type Tables<E extends string | number | symbol> = {
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	[key in E]: typeof Model<any>;
 };
 
@@ -318,6 +319,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 );
 
 export interface IProviderDatabase extends IDatabase {
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	tables: Tables<any>;
 
 	storeDataset(dataset: Dataset): Promise<void>;

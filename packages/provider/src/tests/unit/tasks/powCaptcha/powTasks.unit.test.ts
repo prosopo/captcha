@@ -43,6 +43,7 @@ vi.mock("@polkadot/util", () => ({
 }));
 
 vi.mock("@prosopo/util", async (importOriginal) => {
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	const actual = (await importOriginal()) as Record<string, any>;
 	return {
 		...actual,
@@ -237,6 +238,7 @@ describe("PowCaptchaManager", () => {
 				return true;
 			});
 
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);

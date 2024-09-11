@@ -31,7 +31,7 @@ export const getRandomActiveProvider = async (
 
 export const providerRetry = async (
 	currentFn: () => Promise<void>,
-	retryFn: ( ) => Promise<void>,
+	retryFn: () => Promise<void>,
 	stateReset: () => void,
 	attemptCount: number,
 	retryMax: number,
@@ -41,7 +41,9 @@ export const providerRetry = async (
 	} catch (err) {
 		if (attemptCount >= retryMax) {
 			console.error(err);
-			console.error(`Max retries (${attemptCount} of ${retryMax}) reached, aborting`);
+			console.error(
+				`Max retries (${attemptCount} of ${retryMax}) reached, aborting`,
+			);
 			return stateReset();
 		}
 		console.error(err);

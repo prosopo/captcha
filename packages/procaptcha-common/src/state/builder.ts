@@ -120,7 +120,8 @@ export const useProcaptcha = (
 			if (nextState.successfullChallengeTimeout !== undefined)
 				setSuccessfullChallengeTimeout(nextState.timeout);
 			if (nextState.sendData !== undefined) setSendData(nextState.sendData);
-			if (nextState.attemptCount !== undefined) setAttemptCount(nextState.attemptCount);
+			if (nextState.attemptCount !== undefined)
+				setAttemptCount(nextState.attemptCount);
 		},
 	];
 };
