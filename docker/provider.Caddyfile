@@ -17,7 +17,7 @@
 	reverse_proxy /metrics {$CADDY_ADMIN_API}
 
 	# reverse proxy to the provider container
-	reverse_proxy ${CADDY_PROVIDER_CONTAINER_NAME}:${CADDY_PROVIDER_PORT}
+	reverse_proxy ${CADDY_PROVIDER_CONTAINER_NAME:-provider}:${CADDY_PROVIDER_PORT:-9229}
 
 	# logs. Note this is not limited, truncated or rotated whatsoever, so it grows over time!
 	log {
