@@ -37,8 +37,9 @@ type TestScheduledTaskRecord = Pick<
 vi.mock(
 	"@prosopo/database",
 	async (
-		importOriginal: () =>
+		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			| Record<string, any>
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			| PromiseLike<Record<string, any>>,
 	) => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>

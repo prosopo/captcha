@@ -46,8 +46,9 @@ vi.mock("@polkadot/util", () => ({
 vi.mock(
 	"@prosopo/util",
 	async (
-		importOriginal: () =>
+		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			| Record<string, any>
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			| PromiseLike<Record<string, any>>,
 	) => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
