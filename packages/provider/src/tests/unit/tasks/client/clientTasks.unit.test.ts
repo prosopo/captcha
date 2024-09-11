@@ -152,7 +152,7 @@ describe("ClientTaskManager", () => {
 				},
 			),
 		} as unknown as IProviderDatabase;
-		
+
 		// captchaDB = {
 		//   saveCaptchas: vi.fn(() => {
 		//     console.log("hey im a mock of savecaptchas");
