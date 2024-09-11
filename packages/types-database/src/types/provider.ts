@@ -32,7 +32,7 @@ import {
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
-	RequestHeaders,
+	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
@@ -131,6 +131,7 @@ export interface SolutionRecord extends CaptchaSolution {
 }
 
 export type Tables<E extends string | number | symbol> = {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	[key in E]: typeof Model<any>;
 };
 
@@ -182,7 +183,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
 		},
 		difficulty: { type: Number, required: true },
 		ipAddress: { type: String, required: true },
-		headers: {type: Object, required: true},
+		headers: { type: Object, required: true },
 		userSignature: { type: String, required: false },
 		userSubmitted: { type: Boolean, required: true },
 		serverChecked: { type: Boolean, required: true },
@@ -210,7 +211,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		error: { type: String, required: false },
 	},
 	ipAddress: { type: String, required: true },
-	headers: {type: Object, required: true},
+	headers: { type: Object, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
@@ -324,6 +325,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 );
 
 export interface IProviderDatabase extends IDatabase {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
 
 	storeDataset(dataset: Dataset): Promise<void>;

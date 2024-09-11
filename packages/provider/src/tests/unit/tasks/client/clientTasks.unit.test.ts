@@ -35,6 +35,7 @@ type TestScheduledTaskRecord = Pick<
 >;
 
 vi.mock("@prosopo/database", async (importOriginal) => {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const actual = (await importOriginal()) as Record<string, any>;
 
 	const mockLogger = {
@@ -44,6 +45,7 @@ vi.mock("@prosopo/database", async (importOriginal) => {
 	};
 
 	class MockCaptchaDatabase {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		logger: any;
 
 		constructor() {
@@ -72,6 +74,7 @@ describe("ClientTaskManager", () => {
 	let logger: Logger;
 	let providerDB: IProviderDatabase;
 	let clientTaskManager: ClientTaskManager;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const collections: Record<string, any> = {};
 
 	beforeEach(() => {
@@ -122,6 +125,7 @@ describe("ClientTaskManager", () => {
 			),
 			updateScheduledTaskStatus: vi.fn(
 				(
+					// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 					taskID: any,
 					status: ScheduledTaskStatus,
 					result?: ScheduledTaskResult,
@@ -134,8 +138,10 @@ describe("ClientTaskManager", () => {
 				},
 			),
 			getLastScheduledTaskStatus: vi.fn(
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 				(taskID: any, status: ScheduledTaskStatus) => {
 					return Object.keys(collections.schedulers.records)
+						// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 						.map((key: any) => collections.schedulers.records[key])
 						.find(
 							(task: ScheduledTaskRecord) =>
@@ -144,7 +150,7 @@ describe("ClientTaskManager", () => {
 				},
 			),
 		} as unknown as IProviderDatabase;
-
+``
 		// captchaDB = {
 		//   saveCaptchas: vi.fn(() => {
 		//     console.log("hey im a mock of savecaptchas");
@@ -286,6 +292,7 @@ describe("ClientTaskManager", () => {
 		);
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			Number.parseInt(mockLastScheduledTask._id as any) + 1,
 			ScheduledTaskStatus.Completed,
 			{
@@ -329,6 +336,7 @@ describe("ClientTaskManager", () => {
 		expect(providerDB.markDappUserPoWCommitmentsStored).not.toHaveBeenCalled();
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			Number.parseInt(mockLastScheduledTask._id as any) + 1,
 			ScheduledTaskStatus.Completed,
 			{

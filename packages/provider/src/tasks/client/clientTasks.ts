@@ -128,7 +128,7 @@ export class ClientTaskManager {
 					},
 				},
 			);
-		} catch (e: any) {
+		} catch (e: unknown) {
 			this.logger.error(e);
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -186,7 +186,7 @@ export class ClientTaskManager {
 					},
 				},
 			);
-		} catch (e: any) {
+		} catch (e: unknown) {
 			this.logger.error(e);
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
