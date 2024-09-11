@@ -26,16 +26,16 @@ import {
   type CaptchaConfig,
   type CaptchaSolution,
   CaptchaStatus,
-  type DappUserSolutionResult,
   DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
+  type DappUserSolutionResult,
   type Hash,
   type PendingCaptchaRequest,
   RequestHeaders,
 } from "@prosopo/types";
 import {
-  Database,
+  type Database,
   StoredStatusNames,
-  UserCommitment,
+  type UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { shuffleArray } from "../../util.js";

@@ -14,16 +14,16 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { verifyRecency } from "@prosopo/util";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
   ApiParams,
   CaptchaStatus,
   POW_SEPARATOR,
-  PoWChallengeId,
+  type PoWChallengeId,
   RequestHeaders,
 } from "@prosopo/types";
-import { Database, PoWCaptchaStored } from "@prosopo/types-database";
+import type { Database, PoWCaptchaStored } from "@prosopo/types-database";
+import { verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
@@ -41,6 +41,7 @@ vi.mock("@polkadot/util", () => ({
 }));
 
 vi.mock("@prosopo/util", async (importOriginal) => {
+  // biome-ignore lint/suspicious/noExplicitAny: TODO fix
   const actual = (await importOriginal()) as Record<string, any>;
   return {
     ...actual,
@@ -200,12 +201,12 @@ describe("PowCaptchaManager", () => {
       const updatePowCaptchaRecordArgs: Parameters<
         typeof db.updatePowCaptchaRecord
       > = [
-        challenge,
-        { status: CaptchaStatus.approved },
-        false,
-        true,
-        userSignature,
-      ];
+          challenge,
+          { status: CaptchaStatus.approved },
+          false,
+          true,
+          userSignature,
+        ];
 
       expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
         ...updatePowCaptchaRecordArgs,
@@ -240,6 +241,7 @@ describe("PowCaptchaManager", () => {
         return true;
       });
 
+      // biome-ignore lint/suspicious/noExplicitAny: TODO fix
       (db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
         challengeRecord,
       );

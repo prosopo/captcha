@@ -16,10 +16,7 @@ import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { Databases } from "@prosopo/database";
-import type {
-	AssetsResolver,
-	EnvironmentTypes,
-} from "@prosopo/types";
+import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
 import type { ProsopoEnvironment } from "@prosopo/types-env";

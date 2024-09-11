@@ -13,17 +13,17 @@
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { getLoggerDefault, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
 import {
   ApiParams,
-  CaptchaResult,
+  type CaptchaResult,
   CaptchaStatus,
   POW_SEPARATOR,
   type PoWCaptcha,
-  PoWChallengeId,
+  type PoWChallengeId,
   RequestHeaders,
 } from "@prosopo/types";
-import { Database, StoredStatusNames } from "@prosopo/types-database";
+import { type Database, StoredStatusNames } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -85,7 +85,7 @@ export class PowCaptchaManager {
     timeout: number,
     userTimestampSignature: string,
     ipAddress: string,
-    headers: RequestHeaders
+    headers: RequestHeaders,
   ): Promise<boolean> {
     // Check signatures before doing DB reads to avoid unnecessary network connections
     checkPowSignature(
@@ -96,7 +96,7 @@ export class PowCaptchaManager {
     );
 
     const challengeSplit = challenge.split(this.POW_SEPARATOR);
-    const timestamp = parseInt(at(challengeSplit, 0));
+    const timestamp = Number.parseInt(at(challengeSplit, 0));
     const userAccount = at(challengeSplit, 1);
 
     checkPowSignature(

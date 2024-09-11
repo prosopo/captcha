@@ -27,9 +27,9 @@ import {
   RequestHeaders,
 } from "@prosopo/types";
 import {
-  Database,
+  type Database,
   StoredStatusNames,
-  UserCommitment,
+  type UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";

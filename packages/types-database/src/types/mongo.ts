@@ -11,10 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Logger, TranslationKey, TranslationKeysSchema } from "@prosopo/common";
+import {
+  type Logger,
+  type TranslationKey,
+  TranslationKeysSchema,
+} from "@prosopo/common";
 import {
   type Captcha,
-  CaptchaResult,
+  type CaptchaResult,
   type CaptchaSolution,
   CaptchaSolutionSchema,
   type CaptchaStates,
@@ -24,10 +28,10 @@ import {
   type DatasetBase,
   type DatasetWithIds,
   type Item,
-  PoWCaptchaUser,
-  PoWChallengeComponents,
-  PoWChallengeId,
-  Timestamp,
+  type PoWCaptchaUser,
+  type PoWChallengeComponents,
+  type PoWChallengeId,
+  type Timestamp,
   TimestampSchema,
 } from "@prosopo/types";
 import type { Hash, RequestHeaders } from "@prosopo/types";
@@ -38,14 +42,10 @@ import {
   ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import mongoose, {
-  type Connection,
-  type Model,
-  ObjectId,
-  Schema,
-} from "mongoose";
+import type mongoose from "mongoose";
+import { type Connection, type Model, type ObjectId, Schema } from "mongoose";
 import {
-  ZodType,
+  type ZodType,
   any,
   array,
   boolean,
@@ -77,7 +77,7 @@ export interface StoredCaptcha {
   requestedAtTimestamp: Timestamp;
   deadlineTimestamp?: Timestamp;
   ipAddress: string;
-  headers: RequestHeaders,
+  headers: RequestHeaders;
   userSubmitted: boolean;
   serverChecked: boolean;
   storedAtTimestamp?: Timestamp;
@@ -88,7 +88,7 @@ export interface UserCommitment extends Commit, StoredCaptcha {
   userSignature: string;
 }
 
-export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
+export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha { }
 
 const CaptchaResultSchema = object({
   status: nativeEnum(CaptchaStatus),

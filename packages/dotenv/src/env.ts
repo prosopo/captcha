@@ -21,27 +21,27 @@ import { findUpSync } from "find-up";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logger = getLogger(
-  process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
-  "env",
+	process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
+	"env",
 );
 
 export function getEnv() {
-  if (process.env.NODE_ENV) {
-    return process.env.NODE_ENV.replace(/\W/g, "");
-  }
-  return "development";
+	if (process.env.NODE_ENV) {
+		return process.env.NODE_ENV.replace(/\W/g, "");
+	}
+	return "development";
 }
 
 export function loadEnv(
-  rootDir?: string,
-  filename?: string,
-  filePath?: string,
+	rootDir?: string,
+	filename?: string,
+	filePath?: string,
 ): string {
-  const envPath = getEnvFile(path.resolve(rootDir || "."), filename, filePath);
-  const args = { path: envPath };
-  logger.info(`Loading env from ${envPath}`);
-  dotenv.config(args);
-  return envPath;
+	const envPath = getEnvFile(path.resolve(rootDir || "."), filename, filePath);
+	const args = { path: envPath };
+	logger.info(`Loading env from ${envPath}`);
+	dotenv.config(args);
+	return envPath;
 }
 
 /**
@@ -52,15 +52,15 @@ export function loadEnv(
  * @param filepath
  */
 export function getEnvFile(
-  rootDir?: string,
-  filename = ".env",
-  filepath = path.join(__dirname, "../.."),
+	rootDir?: string,
+	filename = ".env",
+	filepath = path.join(__dirname, "../.."),
 ) {
-  const env = getEnv();
-  const fileNameFull = `${filename}.${env}`;
+	const env = getEnv();
+	const fileNameFull = `${filename}.${env}`;
 
-  return (
-    findUpSync(fileNameFull, { type: "file" }) ||
-    path.join(rootDir || filepath, fileNameFull)
-  );
+	return (
+		findUpSync(fileNameFull, { type: "file" }) ||
+		path.join(rootDir || filepath, fileNameFull)
+	);
 }

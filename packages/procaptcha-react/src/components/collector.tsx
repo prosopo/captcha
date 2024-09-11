@@ -13,52 +13,52 @@
 // limitations under the License.
 import { startCollector } from "@prosopo/procaptcha";
 import type {
-  Account,
-  ProsopoKeyboardEvent,
-  ProsopoMouseEvent,
-  ProsopoTouchEvent,
-  StoredEvents,
+	Account,
+	ProsopoKeyboardEvent,
+	ProsopoMouseEvent,
+	ProsopoTouchEvent,
+	StoredEvents,
 } from "@prosopo/types";
 import { type MutableRefObject, useEffect, useRef, useState } from "react";
 
 type CollectorProps = {
-  onProcessData: (data: StoredEvents) => void;
-  sendData: boolean;
-  account: Account | undefined;
+	onProcessData: (data: StoredEvents) => void;
+	sendData: boolean;
+	account: Account | undefined;
 };
 
 const Collector = ({ onProcessData, sendData, account }: CollectorProps) => {
-  const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([]);
-  const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([]);
-  const [keyboardEvents, setStoredKeyboardEvents] = useState<
-    ProsopoKeyboardEvent[]
-  >([]);
+	const [mouseEvents, setStoredMouseEvents] = useState<ProsopoMouseEvent[]>([]);
+	const [touchEvents, setStoredTouchEvents] = useState<ProsopoTouchEvent[]>([]);
+	const [keyboardEvents, setStoredKeyboardEvents] = useState<
+		ProsopoKeyboardEvent[]
+	>([]);
 
-  const ref: MutableRefObject<HTMLDivElement | null> =
-    useRef<HTMLDivElement>(null);
+	const ref: MutableRefObject<HTMLDivElement | null> =
+		useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (ref?.current) {
-      startCollector(
-        setStoredMouseEvents,
-        setStoredTouchEvents,
-        setStoredKeyboardEvents,
-        ref.current,
-      );
-    }
-  }, []);
+	useEffect(() => {
+		if (ref?.current) {
+			startCollector(
+				setStoredMouseEvents,
+				setStoredTouchEvents,
+				setStoredKeyboardEvents,
+				ref.current,
+			);
+		}
+	}, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: TODO should depend on mouse/touch/kb events, but I think this will break things
-  useEffect(() => {
-    const userEvents = {
-      mouseEvents,
-      touchEvents,
-      keyboardEvents,
-    };
-    if (account) onProcessData(userEvents);
-  }, [onProcessData, account]);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO should depend on mouse/touch/kb events, but I think this will break things
+	useEffect(() => {
+		const userEvents = {
+			mouseEvents,
+			touchEvents,
+			keyboardEvents,
+		};
+		if (account) onProcessData(userEvents);
+	}, [onProcessData, account]);
 
-  return <div ref={ref} />;
+	return <div ref={ref} />;
 };
 
 export default Collector;
