@@ -133,7 +133,7 @@ export class ClientTaskManager {
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
-				{ error: e.toString() },
+				{ error: String(e) },
 			);
 		}
 	}
@@ -191,7 +191,7 @@ export class ClientTaskManager {
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
-				{ error: e.toString() },
+				{ error: String(e) },
 			);
 		}
 	}
