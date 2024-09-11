@@ -25,8 +25,8 @@ services:
             - staging-x86_64
         image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
             - ../.env.${NODE_ENV}
@@ -43,7 +43,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"] # ping the status api
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"]  # ping the status api
             interval: 30s
             retries: 3
             start_period: 30s
@@ -71,8 +71,8 @@ services:
             - staging-arm64
         image: mongodb-raspberrypi4-unofficial-r6.0.10
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
         ports:
@@ -87,7 +87,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"] # ping the mongo server
+            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
             interval: 30s
             retries: 3
             start_period: 30s
@@ -98,8 +98,8 @@ services:
             - staging-x86_64
         image: mongo:5.0.4
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
         ports:
@@ -114,7 +114,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"] # ping the mongo server
+            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
             interval: 30s
             retries: 3
             start_period: 30s
@@ -129,8 +129,8 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
             - '443:443'
@@ -147,7 +147,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:2019/metrics"] # ping the caddy admin api
+            test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
             interval: 30s
             retries: 3
             start_period: 30s
@@ -160,8 +160,8 @@ services:
             - staging-arm64
         image: containrrr/watchtower
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         env_file:
             - ../.env.${NODE_ENV}
         volumes:

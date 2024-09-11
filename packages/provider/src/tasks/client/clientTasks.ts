@@ -128,12 +128,12 @@ export class ClientTaskManager {
 					},
 				},
 			);
-		} catch (e: any) {
+		} catch (e: unknown) {
 			this.logger.error(e);
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
-				{ error: e.toString() },
+				{ error: String(e) },
 			);
 		}
 	}
@@ -186,12 +186,12 @@ export class ClientTaskManager {
 					},
 				},
 			);
-		} catch (e: any) {
+		} catch (e: unknown) {
 			this.logger.error(e);
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
-				{ error: e.toString() },
+				{ error: String(e) },
 			);
 		}
 	}
