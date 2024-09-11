@@ -6,7 +6,6 @@
 }
 
 {$CADDY_DOMAIN} {
-
 	# basicauth /metrics {
 	# 	 # this has to be the username<space><bcrypted password>
 	# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
