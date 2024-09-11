@@ -22,7 +22,7 @@ import {
 	type PoWCaptcha,
 	type PoWChallengeId,
 } from "@prosopo/types";
-import { type Database, StoredStatusNames } from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -30,10 +30,10 @@ const logger = getLoggerDefault();
 
 export class PowCaptchaManager {
 	pair: KeyringPair;
-	db: Database;
+	db: IProviderDatabase;
 	POW_SEPARATOR: string;
 
-	constructor(pair: KeyringPair, db: Database) {
+	constructor(pair: KeyringPair, db: IProviderDatabase) {
 		this.pair = pair;
 		this.db = db;
 		this.POW_SEPARATOR = POW_SEPARATOR;

@@ -1,7 +1,3 @@
-import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
-import { hexToU8a } from "@polkadot/util/hex";
-import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +11,12 @@ import { ProsopoContractError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
+import { hexToU8a } from "@polkadot/util/hex";
+import { isHex } from "@polkadot/util/is";
+import { ProsopoContractError } from "@prosopo/common";
 import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 
 export function encodeStringAddress(address: string) {
@@ -50,7 +49,7 @@ export function shuffleArray<T>(array: T[]): T[] {
  */
 export async function checkIfTaskIsRunning(
 	taskName: ScheduledTaskNames,
-	db: Database,
+	db: IProviderDatabase,
 ): Promise<boolean> {
 	const runningTask = await db.getLastScheduledTaskStatus(
 		taskName,
