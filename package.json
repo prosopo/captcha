@@ -88,7 +88,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
 		"@prosopo/flux": "2.0.3",
 		"esbuild": "^0.23.1"
@@ -119,6 +123,8 @@
 		"typedoc-plugin-mdn-links": "^3.1.16",
 		"typedoc-plugin-missing-exports": "^2.2.0",
 		"typedoc-plugin-zod": "^1.1.2",
+		"vite": "^5.4.4",
+		"vitest": "^2.0.5",
 		"typescript": "5.1.6"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
