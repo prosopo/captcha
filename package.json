@@ -39,8 +39,6 @@
 		"start:provider": "npm -w @prosopo/cli run start",
 		"start:server": "npm -w @prosopo/client-example-server run start",
 		"start:demo": "npm -w @prosopo/client-example run start",
-		"start:demo:pow": "npm -w @prosopo/client-pow-example run start",
-		"start:demo:frictionless": "npm -w @prosopo/client-frictionless-example run start",
 		"start:bundle": "npm -w @prosopo/client-bundle-example run start",
 		"start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
 		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
@@ -82,7 +80,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
 		"@prosopo/flux": "2.0.3"
 	},
