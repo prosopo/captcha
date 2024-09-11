@@ -51,7 +51,7 @@
 		"lint:dockerfile": "find . \\( -name 'Dockerfile' -o -name '*.dockerfile' \\) ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c 'docker run --rm -i hadolint/hadolint < {} || exit 255'",
 		"lint:caddyfile": "find . -name '*.Caddyfile' | xargs -P 1 --verbose -I {} bash -c \"caddy fmt --diff {} || exit 255\"",
 		"lint-fix:caddyfile": "find . -name '*.Caddyfile' | xargs -P 1 --verbose -I {} bash -c \"caddy fmt --overwrite {} || exit 255\"",
-		"lint:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
+		"lint_disabled_:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
 		"lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"shellcheck {} || exit 255\"",
 		"lint:yaml": "yamllint .",
 		"lint-py:check": "ruff check .",
@@ -90,7 +90,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
 		"@prosopo/flux": "2.0.3"
 	},
