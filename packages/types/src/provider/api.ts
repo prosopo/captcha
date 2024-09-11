@@ -98,6 +98,10 @@ type RateLimit = {
 	limit: number;
 };
 
+export type RequestHeaders = {
+	[key: string]: string;
+};
+
 export type Hash = string | number[];
 
 export type Provider = {
@@ -206,6 +210,7 @@ export interface PendingCaptchaRequest {
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: number; // unix timestamp
 	ipAddress: string;
+	headers: RequestHeaders;
 }
 
 export interface ProviderRegistered {
