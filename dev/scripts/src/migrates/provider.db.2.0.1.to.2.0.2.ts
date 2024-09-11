@@ -138,6 +138,7 @@ const migrateUserCommitments = async () => {
 			dappAccount: dappContract,
 			datasetId,
 			ipAddress: "NO_IP_ADDRESS",
+			headers: {},
 			lastUpdatedTimestamp: requestedAtTimestamp,
 			providerAccount,
 			requestedAtTimestamp,
@@ -248,6 +249,7 @@ const migratePowCaptchas = async () => {
 			providerSignature: "NO_SIGNATURE_MIGRATED",
 			difficulty: 4,
 			ipAddress: "NO_IP_ADDRESS",
+			headers: {},
 			userSubmitted: true,
 			serverChecked: false,
 		};

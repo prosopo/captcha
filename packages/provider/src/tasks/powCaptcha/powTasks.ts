@@ -21,6 +21,7 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
+	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
@@ -84,6 +85,7 @@ export class PowCaptchaManager {
 		timeout: number,
 		userTimestampSignature: string,
 		ipAddress: string,
+		headers: RequestHeaders,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(

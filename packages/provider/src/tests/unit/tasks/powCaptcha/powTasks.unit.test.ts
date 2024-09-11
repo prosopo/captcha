@@ -20,6 +20,7 @@ import {
 	CaptchaStatus,
 	POW_SEPARATOR,
 	type PoWChallengeId,
+	type RequestHeaders,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -43,6 +44,7 @@ vi.mock("@polkadot/util", () => ({
 }));
 
 vi.mock("@prosopo/util", async (importOriginal) => {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const actual = (await importOriginal()) as Record<string, any>;
 	return {
 		...actual,
@@ -116,6 +118,7 @@ describe("PowCaptchaManager", () => {
 			const nonce = 12345;
 			const timeout = 1000;
 			const ipAddress = "ipAddress";
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
 				difficulty,
@@ -126,6 +129,7 @@ describe("PowCaptchaManager", () => {
 				userSubmitted: false,
 				serverChecked: false,
 				ipAddress,
+				headers,
 				providerSignature,
 				lastUpdatedTimestamp: Date.now(),
 			};
@@ -154,6 +158,7 @@ describe("PowCaptchaManager", () => {
 				timeout,
 				userSignature,
 				ipAddress,
+				headers,
 			];
 
 			const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -219,6 +224,7 @@ describe("PowCaptchaManager", () => {
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
 			const ipAddress = "ipAddress";
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
 				dappAccount: pair.address,
@@ -228,6 +234,7 @@ describe("PowCaptchaManager", () => {
 				userSubmitted: false,
 				serverChecked: false,
 				ipAddress,
+				headers,
 				providerSignature: "testSignature",
 				difficulty,
 				lastUpdatedTimestamp: 0,
@@ -237,6 +244,7 @@ describe("PowCaptchaManager", () => {
 				return true;
 			});
 
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);
@@ -253,6 +261,7 @@ describe("PowCaptchaManager", () => {
 					timeout,
 					timestampSignature,
 					ipAddress,
+					headers,
 				),
 			).toBe(false);
 
