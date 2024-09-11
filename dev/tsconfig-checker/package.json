@@ -12,6 +12,7 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"@types/glob": "^8.1.0",
 		"@types/node": "^20.11.4",
 		"tslib": "2.6.2",
 		"tsx": "^4.7.0",

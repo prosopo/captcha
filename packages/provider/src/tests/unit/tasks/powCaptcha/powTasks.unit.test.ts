@@ -43,14 +43,22 @@ vi.mock("@polkadot/util", () => ({
 	stringToHex: vi.fn(),
 }));
 
-vi.mock("@prosopo/util", async (importOriginal) => {
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const actual = (await importOriginal()) as Record<string, any>;
-	return {
-		...actual,
-		verifyRecency: vi.fn(),
-	};
-});
+vi.mock(
+	"@prosopo/util",
+	async (
+		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			| Record<string, any>
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			| PromiseLike<Record<string, any>>,
+	) => {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const actual = (await importOriginal()) as Record<string, any>;
+		return {
+			...actual,
+			verifyRecency: vi.fn(),
+		};
+	},
+);
 
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),

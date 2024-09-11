@@ -26,7 +26,8 @@
 	"types": "./dist/index.d.ts",
 	"dependencies": {
 		"dotenv": "^16.0.1",
-		"find-up": "^7.0.0"
+		"find-up": "^7.0.0",
+		"unicorn-magic": "^0.1.0"
 	},
 	"devDependencies": {
 		"tslib": "2.6.2",

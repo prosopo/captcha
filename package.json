@@ -47,9 +47,16 @@
 		"lint:license": "npm run -w @prosopo/scripts license",
 		"lint-fix:license": "npm run -w @prosopo/scripts license:fix",
 		"lint:dockerfile": "find . \\( -name 'Dockerfile' -o -name '*.dockerfile' \\) ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c 'docker run --rm -i hadolint/hadolint < {} || exit 255'",
+		"lint:caddyfile": "find . -name '*.Caddyfile' | xargs -P 1 --verbose -I {} bash -c \"caddy fmt --diff {} || exit 255\"",
+		"lint-fix:caddyfile": "find . -name '*.Caddyfile' | xargs -P 1 --verbose -I {} bash -c \"caddy fmt --overwrite {} || exit 255\"",
 		"lint_disabled_:actions": "docker run --rm -v $(pwd):/repo --workdir /repo rhysd/actionlint:latest -color",
 		"lint:shell": "find . -name '*.sh' ! -path '*/node_modules/*' | xargs -P 1 --verbose -I {} bash -c \"shellcheck {} || exit 255\"",
-		"lint:yaml": "yamllint .",
+		"lint-py:check": "ruff check .",
+		"lint-py:format": "ruff format --check --diff .",
+		"lint:py": "run-s lint-py:*",
+		"lint-fix-py:check": "ruff check --fix --unsafe-fixes .",
+		"lint-fix-py:format": "ruff format .",
+		"lint-fix:py": "run-s lint-fix-py:*",
 		"lint:js": "biome check .",
 		"lint-fix:js": "npm run --silent lint:js -- --fix --unsafe",
 		"lint:html": "htmlhint '**/*.{html,svg}' --config htmlhint.json",
@@ -80,13 +87,10 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": [
-		"dev/*",
-		"packages/*",
-		"demos/*"
-	],
+	"workspaces": ["dev/*", "packages/*", "demos/*"],
 	"dependencies": {
-		"@prosopo/flux": "2.0.3"
+		"@prosopo/flux": "2.0.3",
+		"esbuild": "^0.23.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.8.3",
@@ -95,7 +99,6 @@
 		"@prosopo/cypress-shared": "^2.0.3",
 		"@taplo/cli": "^0.7.0",
 		"@types/node": "^20.2.5",
-		"@vitest/coverage-v8": "^1.3.1",
 		"babel-plugin-import": "^1.13.6",
 		"concurrently": "^8.2.2",
 		"cypress": "^13.12.0",
@@ -114,6 +117,8 @@
 		"typedoc-plugin-mdn-links": "^3.1.16",
 		"typedoc-plugin-missing-exports": "^2.2.0",
 		"typedoc-plugin-zod": "^1.1.2",
+		"vite": "^5.4.4",
+		"vitest": "^2.0.5",
 		"typescript": "5.1.6"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",

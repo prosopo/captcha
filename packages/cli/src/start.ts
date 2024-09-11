@@ -31,10 +31,14 @@ import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
-function startApi(env: ProviderEnvironment, admin = false): Server {
+function startApi(
+	env: ProviderEnvironment,
+	admin = false,
+	port?: number,
+): Server {
 	env.logger.info("Starting Prosopo API");
 	const apiApp = express();
-	const apiPort = env.config.server.port;
+	const apiPort = port || env.config.server.port;
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
 		"trust proxy",
@@ -62,7 +66,11 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
 	});
 }
 
-export async function start(env?: ProviderEnvironment, admin?: boolean) {
+export async function start(
+	env?: ProviderEnvironment,
+	admin?: boolean,
+	port?: number,
+) {
 	if (!env) {
 		loadEnv();
 
@@ -93,5 +101,10 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
 		});
 	}
 
-	return startApi(env, admin);
+	return startApi(env, admin, port);
+}
+
+export async function startDev(env?: ProviderEnvironment, admin?: boolean) {
+	start(env, admin, 9238);
+	return await start(env, admin);
 }
