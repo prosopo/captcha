@@ -1,29 +1,26 @@
-# The Caddyfile is an easy way to configure your Caddy web server.
-#
-# Unless the file starts with a global options block, the first
-# uncommented line is always the address of your site.
-#
-# To use your own domain name (with automatic HTTPS), first make
-# sure your domain's A/AAAA DNS records are properly pointed to
-# this machine's public IP, then replace ":80" below with your
-# domain name.
+# usage: `caddy run --config ./docker/provider.Caddyfile --envfile docker/env.development`
 {
-	auto_https disable_redirects
-	debug
+	http_port {$CADDY_HTTP_PORT}
+	auto_https {$CADDY_AUTO_HTTPS}
+	admin {$CADDY_ADMIN_API} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 }
 
-pronode3.prosopo.io {
-	# Set this path to your site's directory.
+{$CADDY_DOMAIN} {
+
+	basicauth /metrics {
+		# this has to be the username<space><bcrypted password>
+		# to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
+		{$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
+	}
+
+	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
+	reverse_proxy /metrics {$CADDY_ADMIN_API}
+
+	# reverse proxy to the provider container
 	reverse_proxy provider:9229
 
-	# Enable the static file server.
-	file_server
-
-	# logs
+	# logs. Note this is not limited, truncated or rotated whatsoever, so it grows over time!
 	log {
-		output file /var/log/caddy/pronode3.prosopo.io-access.log
+		output file /var/log/caddy/{$CADDY_DOMAIN}.log
 	}
 }
-
-# Refer to the Caddy docs for more information:
-# https://caddyserver.com/docs/caddyfile
