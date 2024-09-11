@@ -65,7 +65,6 @@ async function main() {
 
 //if main process
 if (isMain(import.meta.url, "provider")) {
-	console.log("We're in the main process...");
 	main()
 		.then(() => {
 			log.info("Running main process...");
