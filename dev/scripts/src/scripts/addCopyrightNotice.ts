@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import { getRootDir } from "@prosopo/config";
 import { at } from "@prosopo/util";
-import { GlobSync } from "glob";
+import { globSync } from "glob";
 
 const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
@@ -45,7 +45,7 @@ const searchPaths = [
 
 const currentPath = getRootDir();
 
-const files = new GlobSync(searchPaths.join("|"), {
+const files = globSync(searchPaths.join("|"), {
   cwd: currentPath,
   absolute: true,
   ignore: [
@@ -59,7 +59,7 @@ const files = new GlobSync(searchPaths.join("|"), {
     "**/client-bundle-example/src/assets/**",
     "**/next-env.d.ts/**",
   ],
-}).found.filter((file) => fs.lstatSync(file).isFile());
+}).filter((file) => fs.lstatSync(file).isFile());
 
 if (process.argv[2] === "list") {
   console.log(JSON.stringify(files, null, 4));
