@@ -11,46 +11,47 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
+
 export default defineConfig({
-	video: true,
-	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
-		default_page: "/",
-	},
-	e2e: {
-		setupNodeEvents(on, config) {
-			on(
-				"file:preprocessor",
-				vitePreprocessor({
-					watch: false,
-					esbuild: {
-						platform: "browser",
-					},
-					server: {
-						host: true,
-					},
-					build: {
-						ssr: false,
-						modulePreload: { polyfill: true },
-						mode: "development",
-					},
-					plugins: [
-						nodePolyfills({
-							// Whether to polyfill `node:` protocol imports.
-							protocolImports: true,
-						}),
-					],
-				}),
-			);
-		},
-	},
-	component: {
-		devServer: {
-			framework: "create-react-app",
-			bundler: "vite",
-		},
-	},
+  video: true,
+  headers: { "Accept-Encoding": "gzip, deflate" },
+  env: {
+    default_page: "/",
+  },
+  e2e: {
+    setupNodeEvents(on, config) {
+      on(
+        "file:preprocessor",
+        vitePreprocessor({
+          watch: false,
+          esbuild: {
+            platform: "browser",
+          },
+          server: {
+            host: true,
+          },
+          build: {
+            ssr: false,
+            modulePreload: { polyfill: true },
+            mode: "development",
+          },
+          plugins: [
+            nodePolyfills({
+              // Whether to polyfill `node:` protocol imports.
+              protocolImports: true,
+            }),
+          ],
+        }),
+      );
+    },
+  },
+  component: {
+    devServer: {
+      framework: "create-react-app",
+      bundler: "vite",
+    },
+  },
 });
