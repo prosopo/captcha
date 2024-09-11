@@ -16,6 +16,7 @@ import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import type { ProcaptchaToken } from "@prosopo/types";
 import config from "./config.js";
+import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 
 type CaptchProps = {
 	captchaType?: string;
@@ -45,11 +46,17 @@ export function Captcha(props: CaptchProps) {
 					callbacks={{ onError, onHuman, onExpired }}
 					aria-label="Frictionless captcha"
 				/>
+			) : props.captchaType === 'pow' ? (
+				<ProcaptchaPow
+					config={config}
+					callbacks={{ onError, onHuman, onExpired }}
+					aria-label="PoW captcha"
+				/>
 			) : (
 				<Procaptcha
 					config={config}
 					callbacks={{ onError, onHuman, onExpired }}
-					aria-label="Captcha"
+					aria-label="Image captcha"
 				/>
 			)}
 		</div>
