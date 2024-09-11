@@ -53,7 +53,7 @@ async function main() {
 
 	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
 	if (processedArgs.api) {
-		if (processedArgs.dev) {
+		if (process.env.NODE_ENV === "development") {
 			await new ReloadingAPI(envPath, config, pair, processedArgs)
 				.startDev()
 				.then(() => {
