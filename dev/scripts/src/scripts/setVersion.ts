@@ -1,7 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-import { parse, stringify } from "@iarna/toml";
-import { loadEnv } from "@prosopo/cli";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +11,13 @@ import { loadEnv } from "@prosopo/cli";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import path from "node:path";
+import { parse, stringify } from "@iarna/toml";
 import { getLogLevel, getLogger } from "@prosopo/common";
 import { getRootDir } from "@prosopo/config";
+import { loadEnv } from "@prosopo/dotenv";
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created

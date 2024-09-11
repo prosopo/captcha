@@ -16,7 +16,11 @@ import { LogLevel, getLogger } from "@prosopo/common";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { commandProviderSetDataset, commandVersion } from "./commands/index.js";
+import {
+	commandProviderSetDataset,
+	commandStoreCaptchasExternally,
+	commandVersion,
+} from "./commands/index.js";
 
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
@@ -40,6 +44,7 @@ export function processArgs(
 			type: "boolean",
 		} as const)
 		.command(commandProviderSetDataset(pair, config, { logger }))
+		.command(commandStoreCaptchasExternally(pair, config, { logger }))
 		.command(commandVersion(pair, config, { logger }))
 		.parse();
 }

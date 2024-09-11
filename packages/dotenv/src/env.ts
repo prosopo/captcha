@@ -1,5 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +11,12 @@ import { fileURLToPath } from "node:url";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { LogLevel, getLogger } from "@prosopo/common";
 import dotenv from "dotenv";
+import { findUpSync } from "find-up";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,11 +44,23 @@ export function loadEnv(
 	return envPath;
 }
 
+/**
+ * Get the path to the .env file. Search up directories until `.env.${env}` is found.
+ * If not found, look in the root directory, if specified, or 2 directories up from this file.
+ * @param rootDir
+ * @param filename
+ * @param filepath
+ */
 export function getEnvFile(
 	rootDir?: string,
 	filename = ".env",
 	filepath = path.join(__dirname, "../.."),
 ) {
 	const env = getEnv();
-	return path.join(rootDir || filepath, `${filename}.${env}`);
+	const fileNameFull = `${filename}.${env}`;
+
+	return (
+		findUpSync(fileNameFull, { type: "file" }) ||
+		path.join(rootDir || filepath, fileNameFull)
+	);
 }

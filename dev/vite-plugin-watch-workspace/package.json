@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vite-plugin-watch-workspace",
-	"version": "2.0.1",
+	"version": "2.0.3",
 	"description": "Vite plugin for watching and rebuilding external files",
 	"main": "./dist/index.js",
 	"type": "module",

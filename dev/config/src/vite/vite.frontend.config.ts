@@ -53,14 +53,8 @@ export default async function (
 		"process.env.WS_NO_BUFFER_UTIL": JSON.stringify("true"),
 		"process.env.WS_NO_UTF_8_VALIDATE": JSON.stringify("true"),
 		"process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-		"process.env.PROSOPO_SUBSTRATE_ENDPOINT": JSON.stringify(
-			process.env.PROSOPO_SUBSTRATE_ENDPOINT,
-		),
 		"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
 			process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode,
-		),
-		"process.env.PROSOPO_DEFAULT_NETWORK": JSON.stringify(
-			process.env.PROSOPO_DEFAULT_NETWORK,
 		),
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
 			process.env.PROSOPO_SERVER_URL,
@@ -70,9 +64,6 @@ export default async function (
 		),
 		"process.env.PROSOPO_MONGO_EVENTS_URI": JSON.stringify(
 			process.env.PROSOPO_MONGO_EVENTS_URI,
-		),
-		"process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-			process.env.PROSOPO_CONTRACT_ADDRESS,
 		),
 		"process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(
 			process.env.PROSOPO_PACKAGE_VERSION,
@@ -132,7 +123,7 @@ export default async function (
 		},
 		mode: mode || "development",
 		optimizeDeps: {
-			include: ["linked-dep", "esm-dep > cjs-dep", "node_modules"],
+			include: ["node_modules"],
 			force: true,
 		},
 		esbuild: {

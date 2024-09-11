@@ -14,10 +14,10 @@
 import process from "node:process";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { getPairAsync } from "@prosopo/contract";
+import { loadEnv } from "@prosopo/dotenv";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";
-import { loadEnv } from "./env.js";
 import getConfig from "./prosopo.config.js";
 import ReloadingAPI from "./reloader.js";
 
@@ -27,15 +27,10 @@ async function main() {
 	const envPath = loadEnv();
 
 	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-	const config: ProsopoConfigOutput = getConfig(
-		undefined,
-		undefined,
-		undefined,
-		{
-			solved: { count: 2 },
-			unsolved: { count: 0 },
-		},
-	);
+	const config: ProsopoConfigOutput = getConfig(undefined, undefined, {
+		solved: { count: 2 },
+		unsolved: { count: 0 },
+	});
 
 	if (config.devOnlyWatchEvents) {
 		log.warn(
@@ -48,14 +43,11 @@ async function main() {
 	}
 
 	const pair = await getPairAsync(
-		config.networks[config.defaultNetwork],
 		config.account.secret,
 		config.account.address,
 	);
 
 	log.info(`Pair address: ${pair.address}`);
-
-	log.info(`Contract address: ${process.env.PROSOPO_CONTRACT_ADDRESS}`);
 
 	const processedArgs = await processArgs(process.argv, pair, config);
 

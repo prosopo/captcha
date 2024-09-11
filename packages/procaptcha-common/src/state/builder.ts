@@ -75,10 +75,6 @@ export const useProcaptcha = (
 		useRef,
 		undefined,
 	);
-	const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(
-		useRef,
-		undefined,
-	);
 	const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] =
 		useRefAsState<NodeJS.Timeout | undefined>(useRef, undefined);
 	const [sendData, setSendData] = useState(false);
@@ -96,7 +92,6 @@ export const useProcaptcha = (
 			dappAccount,
 			submission,
 			timeout,
-			blockNumber,
 			successfullChallengeTimeout,
 			sendData,
 		},
@@ -122,8 +117,6 @@ export const useProcaptcha = (
 			if (nextState.timeout !== undefined) setTimeout(nextState.timeout);
 			if (nextState.successfullChallengeTimeout !== undefined)
 				setSuccessfullChallengeTimeout(nextState.timeout);
-			if (nextState.blockNumber !== undefined)
-				setBlockNumber(nextState.blockNumber);
 			if (nextState.sendData !== undefined) setSendData(nextState.sendData);
 		},
 	];

@@ -35,7 +35,6 @@ export const getConfigPkgDir = () => `${getDevDir()}/config`;
 
 export const getScriptsPkgDir = () => `${getDevDir()}/scripts`;
 
-
 // Demos
 
 export const getClientExampleDir = () => `${getDemosDir()}/client-example`;
@@ -65,6 +64,8 @@ export const getDatabasePkgDir = () => `${getPackagesDir()}/database`;
 export const getDatasetsPkgDir = () => `${getPackagesDir()}/datasets`;
 
 export const getDatasetsFsPkgDir = () => `${getPackagesDir()}/datasets-fs`;
+
+export const getDotEnvPkgDir = () => `${getPackagesDir()}/dotenv`;
 
 export const getEnvPkgDir = () => `${getPackagesDir()}/env`;
 

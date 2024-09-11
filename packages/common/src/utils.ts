@@ -1,5 +1,6 @@
 import { hexToString } from "@polkadot/util/hex";
 import type { TFunction } from "i18next";
+import { z } from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,14 +27,6 @@ export function isClientSide(): boolean {
 
 export type TFunctionParams = Parameters<TFunction>;
 
-// https://medium.com/xgeeks/typescript-utility-keyof-nested-object-fa3e457ef2b2
-// slightly modified since we only need string keys, number is there so IDE/Typescript doesn't complain
-type NestedKeyOf<ObjectType extends object> = {
-	[Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object
-		? `${Key}.${NestedKeyOf<ObjectType[Key]>}`
-		: `${Key}`;
-}[keyof ObjectType & (string | number)];
-
 type Node =
 	| {
 			[key: string]: Node | string;
@@ -42,7 +35,7 @@ type Node =
 
 function getLeafFieldPath(obj: Node): string[] {
 	if (typeof obj === "string") {
-		return [obj];
+		return [];
 	}
 
 	return Object.keys(obj).reduce((arr, key) => {
@@ -62,22 +55,18 @@ function getLeafFieldPath(obj: Node): string[] {
 	}, [] as string[]);
 }
 
-export type TranslationKey = NestedKeyOf<typeof translationEn>;
-export const translationKeys = getLeafFieldPath(
-	translationEn,
-) as TranslationKey[];
+export const TranslationKeysSchema = z.enum(
+	getLeafFieldPath(translationEn) as [string, ...string[]],
+);
+
+export type TranslationKey = z.infer<typeof TranslationKeysSchema>;
+
+const TranslationFileSchema = z.record(
+	TranslationKeysSchema,
+	z.record(TranslationKeysSchema, z.string()),
+);
 
 // String utils
-
-export const trimProviderUrl = (url: string) => {
-	return hexToString(url);
-};
-
-export function snakeToCamelCase(str: string): string {
-	return str.replace(/([-_][a-z])/g, (group) =>
-		group.toUpperCase().replace("-", "").replace("_", ""),
-	);
-}
 
 export function reverseHexString(str: string): `0x${string}` {
 	return `0x${

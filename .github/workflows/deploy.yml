@@ -168,7 +168,7 @@ jobs:
             - name: Deploy staging js bundle
               if: ${{ steps.env.outputs.staging }}
               env:
-                GH_TOKEN: ${{ github.token }}
+                  GH_TOKEN: ${{ github.token }}
               run: |
 
                   # stop on errors, print commands, fail on pipe fails
@@ -312,8 +312,8 @@ jobs:
                   if [[ "${{ steps.docker_js_server_release.outcome }}" == 'success' ]]; then
                     echo "Installing @prosopo/flux..."
                     npm i -g @prosopo/flux
-                    echo "Soft redeploying flux docker js_server: ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}"
-                    npx flux redeploy ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}
+                    echo "Hard redeploying flux docker js_server: ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }}"
+                    npx flux redeploy ${{ secrets[env.JS_SERVER_FLUX_APP_NAME] }} --hard
                   else
                     echo "Skipping flux redeploy."
                   fi

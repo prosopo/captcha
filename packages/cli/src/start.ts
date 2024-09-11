@@ -1,13 +1,3 @@
-import type { Server } from "node:net";
-import { i18nMiddleware } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
-import { ProviderEnvironment } from "@prosopo/env";
-import {
-	prosopoAdminRouter,
-	prosopoRouter,
-	prosopoVerifyRouter,
-	storeCaptchasExternally,
-} from "@prosopo/provider";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +11,22 @@ import {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Server } from "node:net";
+import { i18nMiddleware } from "@prosopo/common";
+import { getPairAsync } from "@prosopo/contract";
+import { loadEnv } from "@prosopo/dotenv";
+import { ProviderEnvironment } from "@prosopo/env";
+import {
+	prosopoAdminRouter,
+	prosopoRouter,
+	prosopoVerifyRouter,
+	storeCaptchasExternally,
+} from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { loadEnv } from "./env.js";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
@@ -68,16 +69,12 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
 		getDB();
 
 		const secret = getSecret();
-		const config = getConfig(undefined, undefined, undefined, {
+		const config = getConfig(undefined, undefined, {
 			solved: { count: 2 },
 			unsolved: { count: 0 },
 		});
 
-		const pair = await getPairAsync(
-			config.networks[config.defaultNetwork],
-			secret,
-			"",
-		);
+		const pair = await getPairAsync(secret, "");
 		env = new ProviderEnvironment(config, pair);
 	}
 

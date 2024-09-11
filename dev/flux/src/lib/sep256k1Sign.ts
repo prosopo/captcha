@@ -1,11 +1,3 @@
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { bnToU8a, hexToU8a, u8aConcat, u8aToHex } from "@polkadot/util";
-import {
-	base58Decode,
-	base64Encode,
-	cryptoWaitReady,
-	sha256AsU8a,
-} from "@polkadot/util-crypto";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +11,19 @@ import {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { secp256k1 } from "@noble/curves/secp256k1";
+import { bnToU8a, hexToU8a, u8aConcat, u8aToHex } from "@polkadot/util";
+import {
+	base58Decode,
+	base64Encode,
+	cryptoWaitReady,
+	sha256AsU8a,
+} from "@polkadot/util-crypto";
 import { BN_BE_256_OPTS } from "@polkadot/util-crypto/bn";
 import type { Keypair } from "@polkadot/util-crypto/types";
-import { loadEnv } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { loadEnv } from "@prosopo/dotenv";
 import { at } from "@prosopo/util";
 import { isMain } from "@prosopo/util";
 import varuint from "varuint-bitcoin";

@@ -14,6 +14,7 @@
 export enum ScheduledTaskNames {
 	BatchCommitment = "BatchCommitment",
 	CalculateSolution = "CalculateSolution",
+	StoreCommitmentsExternal = "StoreCommitmentsExternal",
 }
 
 export enum ScheduledTaskStatus {

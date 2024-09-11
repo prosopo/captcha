@@ -18,6 +18,11 @@ export const dummyUserAccount = {
 	seed: "infant pear sad kit mass marriage ill loyal cushion level typical survey",
 };
 
+export const dummyDappAccount = {
+	address: "5GUBK2pfdQ3qD994fd44MPJxMKMPVJ6tXNpiQRBPsxuzN3Se",
+	seed: "joke fury lava eight lonely tumble swap process drop juice during crisp",
+};
+
 export const datasetWithSolutionHashes = {
 	datasetId:
 		"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",

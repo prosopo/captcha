@@ -14,59 +14,58 @@
 import type { CaptchaSolution } from "../datasets/index.js";
 import type { StoredEvents } from "../procaptcha/index.js";
 import type {
-  CaptchaResponseBody,
-  CaptchaSolutionResponse,
-  GetPowCaptchaResponse,
-  ImageVerificationResponse,
-  PowCaptchaSolutionResponse,
-  Provider,
-  ProviderRegistered,
-  RandomProvider,
+	CaptchaResponseBody,
+	CaptchaSolutionResponse,
+	GetPowCaptchaResponse,
+	ImageVerificationResponse,
+	PowCaptchaSolutionResponse,
+	Provider,
+	ProviderRegistered,
+	RandomProvider,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
-  getCaptchaChallenge(
-    userAccount: string,
-    randomProvider: RandomProvider,
-  ): Promise<CaptchaResponseBody>;
-  submitCaptchaSolution(
-    captchas: CaptchaSolution[],
-    requestHash: string,
-    userAccount: string,
-    salt: string,
-    timestamp: string,
-    providerTimestampSignature: string,
-    signature?: string,
-  ): Promise<CaptchaSolutionResponse>;
-  verifyDappUser(
-    dapp: string,
-    userAccount: string,
-    blockNumber: number,
-    dappUserSignature: string,
-    commitmentId?: string,
-    maxVerifiedTime?: number,
-  ): Promise<ImageVerificationResponse>;
-  verifyUser(
-    dapp: string,
-    userAccount: string,
-    blockNumber: number,
-    dappUserSignature: string,
-    commitmentId?: string,
-    maxVerifiedTime?: number,
-  ): Promise<ImageVerificationResponse>;
-  getPowCaptchaChallenge(
-    userAccount: string,
-    dappAccount: string,
-  ): Promise<GetPowCaptchaResponse>;
-  submitPowCaptchaSolution(
-    challenge: GetPowCaptchaResponse,
-    userAccount: string,
-    dappAccount: string,
-    nonce: number,
-    userTimestampSignature: string,
-    timeout?: number,
-  ): Promise<PowCaptchaSolutionResponse>;
-  submitUserEvents(events: StoredEvents, string: string): Promise<unknown>;
-  getProviderStatus(): Promise<ProviderRegistered>;
-  getProviderDetails(): Promise<Provider>;
+	getCaptchaChallenge(
+		userAccount: string,
+		randomProvider: RandomProvider,
+	): Promise<CaptchaResponseBody>;
+	submitCaptchaSolution(
+		captchas: CaptchaSolution[],
+		requestHash: string,
+		userAccount: string,
+		timestamp: string,
+		providerRequestHashSignature: string,
+		userRequestHashSignature: string,
+	): Promise<CaptchaSolutionResponse>;
+	verifyDappUser(
+		dapp: string,
+		userAccount: string,
+		blockNumber: number,
+		dappUserSignature: string,
+		commitmentId?: string,
+		maxVerifiedTime?: number,
+	): Promise<ImageVerificationResponse>;
+	verifyUser(
+		dapp: string,
+		userAccount: string,
+		blockNumber: number,
+		dappUserSignature: string,
+		commitmentId?: string,
+		maxVerifiedTime?: number,
+	): Promise<ImageVerificationResponse>;
+	getPowCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+	): Promise<GetPowCaptchaResponse>;
+	submitPowCaptchaSolution(
+		challenge: GetPowCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		nonce: number,
+		userTimestampSignature: string,
+		timeout?: number,
+	): Promise<PowCaptchaSolutionResponse>;
+	submitUserEvents(events: StoredEvents, string: string): Promise<unknown>;
+	getProviderStatus(): Promise<ProviderRegistered>;
+	getProviderDetails(): Promise<Provider>;
 }

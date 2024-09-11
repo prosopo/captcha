@@ -2,7 +2,6 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoContractError } from "@prosopo/common";
-import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +15,8 @@ import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 
@@ -41,52 +42,11 @@ export function shuffleArray<T>(array: T[]): T[] {
 	return array;
 }
 
-type PromiseQueueRes<T> = {
-	data?: T;
-	error?: Error;
-}[];
-
 /**
- * Executes promises in order
- * @param array - array of promises
- * @returns PromiseQueueRes\<T\>
- */
-export async function promiseQueue<T>(
-	array: (() => Promise<T>)[],
-): Promise<PromiseQueueRes<T>> {
-	const ret: PromiseQueueRes<T> = [];
-
-	await [...array, () => Promise.resolve(undefined)].reduce(
-		(promise, curr, i) => {
-			return promise
-				.then((res) => {
-					// first iteration has no res (initial reduce result)
-					if (res) {
-						ret.push({ data: res });
-					}
-					// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-					return curr() as any;
-				})
-				.catch((err) => {
-					ret.push({ data: err });
-					return curr();
-				});
-		},
-		Promise.resolve<T | undefined>(undefined),
-	);
-
-	return ret;
-}
-
-export function parseBlockNumber(blockNumberString: string) {
-	return Number.parseInt(blockNumberString.replace(/,/g, ""));
-}
-
-/**
- * Check if there is a batch running.
- * If the batch task is running and not completed, return true.
- * If the batch task is running and completed, return false.
- * Otherwise, the batch task is not running, return false.
+ * Check if there is a scheduled task running.
+ * If the scheduled task is running and not completed, return true.
+ * If the scheduled task is running and completed, return false.
+ * Otherwise, the scheduled task is not running, return false.
  */
 export async function checkIfTaskIsRunning(
 	taskName: ScheduledTaskNames,
@@ -98,7 +58,7 @@ export async function checkIfTaskIsRunning(
 	);
 	if (runningTask) {
 		const completedTask = await db.getScheduledTaskStatus(
-			runningTask.taskId,
+			runningTask.id,
 			ScheduledTaskStatus.Completed,
 		);
 		return !completedTask;

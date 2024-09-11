@@ -17,136 +17,112 @@ import { stringToHex } from "@polkadot/util/string";
 import type { ProviderApi } from "@prosopo/api";
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import {
-  CaptchaMerkleTree,
-  computeCaptchaSolutionHash,
+	CaptchaMerkleTree,
+	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
 import type {
-  CaptchaResponseBody,
-  CaptchaSolution,
-  CaptchaSolutionResponse,
-  ProsopoCaptchaApiInterface,
-  RandomProvider,
+	CaptchaResponseBody,
+	CaptchaSolution,
+	CaptchaSolutionResponse,
+	ProsopoCaptchaApiInterface,
+	RandomProvider,
 } from "@prosopo/types";
 import type { TCaptchaSubmitResult } from "@prosopo/types";
 
 export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
-  userAccount: string;
-  contract: string;
-  provider: RandomProvider;
-  providerApi: ProviderApi;
-  dappAccount: string;
-  _web2: boolean;
+	userAccount: string;
+	provider: RandomProvider;
+	providerApi: ProviderApi;
+	dappAccount: string;
+	_web2: boolean;
 
-  constructor(
-    userAccount: string,
-    contract: string,
-    provider: RandomProvider,
-    providerApi: ProviderApi,
-    web2: boolean,
-    dappAccount: string,
-  ) {
-    this.userAccount = userAccount;
-    this.contract = contract;
-    this.provider = provider;
-    this.providerApi = providerApi;
-    this._web2 = web2;
-    this.dappAccount = dappAccount;
-  }
+	constructor(
+		userAccount: string,
+		provider: RandomProvider,
+		providerApi: ProviderApi,
+		web2: boolean,
+		dappAccount: string,
+	) {
+		this.userAccount = userAccount;
+		this.provider = provider;
+		this.providerApi = providerApi;
+		this._web2 = web2;
+		this.dappAccount = dappAccount;
+	}
 
-  get web2(): boolean {
-    return this._web2;
-  }
+	get web2(): boolean {
+		return this._web2;
+	}
 
-  public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
-    try {
-      const captchaChallenge = await this.providerApi.getCaptchaChallenge(
-        this.userAccount,
-        this.provider,
-      );
-      // convert https/http to match page
-      for (const captcha of captchaChallenge.captchas) {
-        for (const item of captcha.items) {
-          if (item.data) {
-            // drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
-            // https://stackoverflow.com/a/18320348/7215926
-            item.data = item.data.replace(/^http(s)*:\/\//, "//");
-          }
-        }
-      }
+	public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
+		try {
+			const captchaChallenge = await this.providerApi.getCaptchaChallenge(
+				this.userAccount,
+				this.provider,
+			);
+			// convert https/http to match page
+			for (const captcha of captchaChallenge.captchas) {
+				for (const item of captcha.items) {
+					if (item.data) {
+						// drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
+						// https://stackoverflow.com/a/18320348/7215926
+						item.data = item.data.replace(/^http(s)*:\/\//, "//");
+					}
+				}
+			}
 
-      return captchaChallenge;
-    } catch (error) {
-      throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-        context: { error },
-      });
-    }
-  }
+			return captchaChallenge;
+		} catch (error) {
+			throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
+				context: { error },
+			});
+		}
+	}
 
-  public async submitCaptchaSolution(
-    signer: Signer,
-    requestHash: string,
-    solutions: CaptchaSolution[],
-    salt: string,
-    timestamp: string,
-    providerTimestampSignature: string,
-  ): Promise<TCaptchaSubmitResult> {
-    const tree = new CaptchaMerkleTree();
+	public async submitCaptchaSolution(
+		userRequestHashSignature: string,
+		requestHash: string,
+		solutions: CaptchaSolution[],
+		timestamp: string,
+		providerRequestHashSignature: string,
+	): Promise<TCaptchaSubmitResult> {
+		const tree = new CaptchaMerkleTree();
 
-    const captchasHashed = solutions.map((captcha) =>
-      computeCaptchaSolutionHash(captcha),
-    );
+		const captchasHashed = solutions.map((captcha) =>
+			computeCaptchaSolutionHash(captcha),
+		);
 
-    tree.build(captchasHashed);
+		tree.build(captchasHashed);
 
-    if (!tree.root) {
-      throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-        context: { error: "Merkle tree root is undefined" },
-      });
-    }
+		if (!tree.root) {
+			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
+				context: { error: "Merkle tree root is undefined" },
+			});
+		}
 
-    const commitmentId = tree.root.hash;
+		const commitmentId = tree.root.hash;
 
-    const tx: ContractSubmittableResult | undefined = undefined;
+		const tx: ContractSubmittableResult | undefined = undefined;
 
-    let userRequestHashSignature: string | undefined = undefined;
+		let result: CaptchaSolutionResponse;
 
-    if (!signer || !signer.signRaw) {
-      throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
-        context: {
-          error:
-            "Signer is not defined, cannot sign message to prove account ownership",
-        },
-      });
-    }
+		try {
+			result = await this.providerApi.submitCaptchaSolution(
+				solutions,
+				requestHash,
+				this.userAccount,
+				timestamp,
+				providerRequestHashSignature,
+				userRequestHashSignature,
+			);
+		} catch (error) {
+			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
+				context: { error },
+			});
+		}
 
-    let result: CaptchaSolutionResponse;
-
-    // sign the request hash to prove account ownership
-    const signed = await signer.signRaw({
-      address: this.userAccount,
-      data: stringToHex(requestHash),
-      type: "bytes",
-    });
-    userRequestHashSignature = signed.signature;
-
-    try {
-      result = await this.providerApi.submitCaptchaSolution(
-        solutions,
-        requestHash,
-        this.userAccount,
-        salt,
-        timestamp,
-        providerTimestampSignature,
-        userRequestHashSignature,
-      );
-    } catch (error) {
-      throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-        context: { error },
-      });
-    }
-
-    return [result, commitmentId, tx];
-  }
+		return [result, commitmentId, tx];
+	}
 }
 
 export default ProsopoCaptchaApi;

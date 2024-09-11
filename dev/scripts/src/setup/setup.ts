@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +11,14 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import path from "node:path";
 import { BN } from "@polkadot/util";
 import { isAddress } from "@polkadot/util-crypto";
 import { defaultConfig, getSecret } from "@prosopo/cli";
-import { getEnvFile } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { generateMnemonic, getPairAsync } from "@prosopo/contract";
+import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
 	type IDappAccount,
@@ -129,8 +130,7 @@ export async function setup(force: boolean) {
 
 		const config = defaultConfig();
 		const providerSecret = config.account.secret;
-		const network = config.networks[config.defaultNetwork];
-		const pair = await getPairAsync(network, providerSecret);
+		const pair = await getPairAsync(providerSecret);
 
 		const env = new ProviderEnvironment(defaultConfig(), pair);
 		await env.isReady();
@@ -139,25 +139,9 @@ export async function setup(force: boolean) {
 
 		env.logger.info(`Registering provider... ${defaultProvider.address}`);
 
-		defaultProvider.pair = await getPairAsync(network, providerSecret);
+		defaultProvider.pair = await getPairAsync(providerSecret);
 
-		// If no PROSOPO_SITE_KEY is present, we will register a test account like //Eve.
-		// If a PROSOPO_SITE_KEY is present, we want to register it in the contract.
-		// If a DAPP_SECRET is present, we want the PROSOPO_SITE_KEY account to register itself.
-		// Otherwise, a test account like //Eve is used to register the PROSOPO_SITE_KEY account.
-		defaultDapp.pair = await getPairAsync(network, defaultDapp.secret);
-		let dappAddressToRegister = defaultDapp.pair.address;
-		if (
-			process.env.PROSOPO_SITE_KEY &&
-			isAddress(process.env.PROSOPO_SITE_KEY)
-		) {
-			dappAddressToRegister = process.env.PROSOPO_SITE_KEY;
-			if (process.env.PROSOPO_SITE_PRIVATE_KEY) {
-				defaultDapp.secret = process.env.PROSOPO_SITE_PRIVATE_KEY;
-				defaultDapp.pair = await getPairAsync(network, defaultDapp.secret);
-				dappAddressToRegister = defaultDapp.pair.address;
-			}
-		}
+		defaultDapp.pair = await getPairAsync(defaultDapp.secret);
 
 		await setupProvider(env, defaultProvider);
 

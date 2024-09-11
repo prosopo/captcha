@@ -1,4 +1,3 @@
-import { loadEnv } from "@prosopo/cli";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import { loadEnv } from "@prosopo/cli";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevel, getLogger } from "@prosopo/common";
+import { loadEnv } from "@prosopo/dotenv";
 import { io } from "socket.io-client";
 import { main as authMain, verifyLogin } from "./auth.js";
 import { getSocketURL } from "./url.js";

@@ -15,10 +15,10 @@ import fs from "node:fs";
 import type { Server } from "node:net";
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, getLogger } from "@prosopo/common";
+import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { AwaitedProcessedArgs } from "./argv.js";
-import { loadEnv } from "./env.js";
 import { start } from "./start.js";
 
 const log = getLogger(LogLevel.enum.info, "CLI");

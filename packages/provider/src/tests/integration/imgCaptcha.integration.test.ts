@@ -21,6 +21,7 @@ import {
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	type TGetImageCaptchaChallengeURL,
 } from "@prosopo/types";
 import fetch from "node-fetch";
 import { describe, expect, it } from "vitest";
@@ -57,33 +58,30 @@ describe("Image Captcha Integration Tests", () => {
 			const userAccount = "5EquBjgKx98VFyP9xVYeAUE2soNGBUbru7L9pXgdmSmrDrQp";
 			const dappAccount = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
 			const origin = "http://localhost";
+			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
 
-			const response = await fetch(
-				`${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}/0`,
-				{
-					method: "GET",
-					headers: {
-						"Content-Type": "application/json",
-						Origin: origin,
-					},
+			const response = await fetch(getImageCaptchaURL, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
 				},
-			);
+			});
 
 			expect(response.status).toBe(200);
 		});
 		it("should fail if datasetID is incorrect", async () => {
 			const userAccount = "5EquBjgKx98VFyP9xVYeAUE2soNGBUbru7L9pXgdmSmrDrQp";
 			const dappAccount = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
+			const datasetId = "thewrongdsetId";
+			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${datasetId}/${userAccount}/${dappAccount}`;
 
-			const response = await fetch(
-				`${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/"thewrongdsetId"/${userAccount}/${dappAccount}/0`,
-				{
-					method: "GET",
-					headers: {
-						"Content-Type": "application/json",
-					},
+			const response = await fetch(getImageCaptchaURL, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+			});
 
 			expect(response.status).toBe(400);
 		});
@@ -91,7 +89,6 @@ describe("Image Captcha Integration Tests", () => {
 	describe("SubmitImageCaptchaSolution", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
 			const pair = await getPairAsync(
-				undefined,
 				dummyUserAccount.seed,
 				undefined,
 				"sr25519",
@@ -101,17 +98,14 @@ describe("Image Captcha Integration Tests", () => {
 			const userAccount = dummyUserAccount.address;
 			const dappAccount = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
 			const origin = "http://localhost";
-
-			const response = await fetch(
-				`${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}/0`,
-				{
-					method: "GET",
-					headers: {
-						"Content-Type": "application/json",
-						Origin: origin,
-					},
+			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const response = await fetch(getImageCaptchaURL, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
 				},
-			);
+			});
 
 			expect(response.status).toBe(200);
 

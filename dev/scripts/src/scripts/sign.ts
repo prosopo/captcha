@@ -49,13 +49,7 @@ const main = async () => {
 	const type = argv.type as KeypairType;
 	const ss58Format = argv.ss58Format;
 
-	const keypair = await getPairAsync(
-		undefined,
-		mnemonic,
-		undefined,
-		type,
-		ss58Format,
-	);
+	const keypair = await getPairAsync(mnemonic, undefined, type, ss58Format);
 
 	const sig = keypair.sign(stringToU8a(message));
 	console.log(`hex sig: ${u8aToHex(sig)}`);

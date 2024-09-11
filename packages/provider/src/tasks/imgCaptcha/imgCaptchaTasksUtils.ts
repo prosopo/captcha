@@ -21,7 +21,7 @@ import type { CaptchaSolution } from "@prosopo/types";
 /**
  * Build merkle tree and get commitment from contract, returning the tree, commitment, and commitmentId
  * @param {CaptchaSolution[]} captchaSolutions
- * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
+ * @returns {Promise<{ tree: CaptchaMerkleTree, commitmentId: string }>}
  */
 export const buildTreeAndGetCommitmentId = (
 	captchaSolutions: CaptchaSolution[],

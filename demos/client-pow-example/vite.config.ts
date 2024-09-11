@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as path from "node:path";
-import { loadEnv } from "@prosopo/cli";
 import { getLogger } from "@prosopo/common";
 import { VitePluginCloseAndCopy } from "@prosopo/config";
+import { loadEnv } from "@prosopo/dotenv";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 const logger = getLogger("Info", "vite.config.js");
@@ -34,18 +34,12 @@ export default defineConfig(({ command, mode }) => {
 		"process.env.WS_NO_BUFFER_UTIL": JSON.stringify("true"),
 		"process.env.WS_NO_UTF_8_VALIDATE": JSON.stringify("true"),
 		"process.env.NODE_ENV": JSON.stringify(mode),
-		"process.env.PROSOPO_SUBSTRATE_ENDPOINT": JSON.stringify(
-			process.env.PROSOPO_SUBSTRATE_ENDPOINT,
-		),
 		"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
 			process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 		),
 		// only needed if bundling with a site key
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,
-		),
-		"process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-			process.env.PROSOPO_CONTRACT_ADDRESS,
 		),
 		"process.env.PROSOPO_WEB2": JSON.stringify(process.env.PROSOPO_WEB2),
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(

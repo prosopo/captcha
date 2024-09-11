@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as path from "node:path";
-import { loadEnv } from "@prosopo/cli";
 import { getLogger } from "@prosopo/common";
 import { VitePluginCloseAndCopy } from "@prosopo/config";
+import { loadEnv } from "@prosopo/dotenv";
 import { VitePluginWatchWorkspace } from "@prosopo/vite-plugin-watch-workspace";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";

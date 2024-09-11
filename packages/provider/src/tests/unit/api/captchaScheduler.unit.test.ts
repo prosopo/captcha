@@ -1,8 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProsopoEnvError } from "@prosopo/common";
-import { ProviderEnvironment } from "@prosopo/env";
-import type { ProsopoConfigOutput } from "@prosopo/types";
-import { CronJob } from "cron";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +11,12 @@ import { CronJob } from "cron";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { ProsopoEnvError } from "@prosopo/common";
+import { ProviderEnvironment } from "@prosopo/env";
+import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
+import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../api/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
@@ -24,10 +25,17 @@ vi.mock("@prosopo/env", () => ({
 	ProviderEnvironment: vi.fn().mockImplementation(() => ({
 		isReady: vi.fn().mockResolvedValue(true),
 		logger: {
-			log: vi.fn(),
-			error: vi.fn(),
+			debug: vi.fn().mockImplementation(console.debug),
+			log: vi.fn().mockImplementation(console.log),
+			info: vi.fn().mockImplementation(console.info),
+			error: vi.fn().mockImplementation(console.error),
 		},
-		db: {},
+		getDb: vi.fn().mockReturnValue({
+			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+		}),
+		db: {
+			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+		},
 	})),
 }));
 
@@ -45,13 +53,21 @@ vi.mock("cron", () => ({
 	})),
 }));
 
+vi.mock("../../../util.js", () => ({
+	checkIfTaskIsRunning: vi.fn().mockResolvedValue(false),
+}));
+
 describe("storeCaptchasExternally", () => {
 	let mockPair: KeyringPair;
 	let mockConfig: ProsopoConfigOutput;
 
 	beforeEach(() => {
 		mockPair = {} as KeyringPair;
-		mockConfig = {} as ProsopoConfigOutput;
+		mockConfig = {
+			captchaScheduler: {
+				schedule: "0 * * * *",
+			},
+		} as ProsopoConfigOutput;
 	});
 
 	it("should initialize environment and start cron job", async () => {
@@ -62,26 +78,13 @@ describe("storeCaptchasExternally", () => {
 		expect(CronJob).toHaveBeenCalledWith("0 * * * *", expect.any(Function));
 	});
 
-	// it('should throw an error if db is undefined', async () => {
-	//     ;(ProviderEnvironment as any).mockImplementationOnce(() => ({
-	//         isReady: vi.fn().mockResolvedValue(true),
-	//         logger: {
-	//             log: vi.fn(),
-	//             error: vi.fn(),
-	//         },
-	//         db: undefined,
-	//     }))
-
-	//     await expect(storeCaptchasExternally(mockPair, mockConfig)).rejects.toThrow(ProsopoEnvError)
-	// })
-
 	it("should log message when cron job runs", async () => {
 		await storeCaptchasExternally(mockPair, mockConfig);
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
-		expect(envInstance.logger.log).toHaveBeenCalledWith(
-			"storeCommitmentsExternal task....",
+		expect(envInstance.logger.info).toHaveBeenCalledWith(
+			"StoreCommitmentsExternal task running: false",
 		);
 	});
 });

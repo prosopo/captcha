@@ -14,21 +14,14 @@ import type { Logger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {
-	AssetsResolver,
-	EnvironmentTypes,
-	NetworkNames,
-} from "@prosopo/types";
+import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { Database } from "@prosopo/types-database";
 
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
 	db: Database | undefined;
-	contractAddress: string;
 	defaultEnvironment: EnvironmentTypes;
-	defaultNetwork: NetworkNames;
-	contractName: string;
 	logger: Logger;
 	assetsResolver: AssetsResolver | undefined;
 	keyring: Keyring;

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import * as path from "node:path";
-import { loadEnv } from "@prosopo/cli";
 import { ViteBackendConfig } from "@prosopo/config";
+import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "vite";
 import { version } from "./package.json";
 

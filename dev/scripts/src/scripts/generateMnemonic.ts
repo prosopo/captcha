@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadEnv } from "@prosopo/cli";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { generateMnemonic } from "@prosopo/contract";
+import { loadEnv } from "@prosopo/dotenv";
 import { updateEnvFile } from "../setup/index.js";
 
 loadEnv();

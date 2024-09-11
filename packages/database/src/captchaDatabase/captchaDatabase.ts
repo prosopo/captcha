@@ -1,4 +1,3 @@
-import { getLoggerDefault } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,50 +11,79 @@ import { getLoggerDefault } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { getLoggerDefault } from "@prosopo/common";
+import { PoWCaptchaUser } from "@prosopo/types";
 import {
-  PowCaptchaRecordSchema,
-  type UserCommitmentRecord,
-  UserCommitmentRecordSchema,
+	type PoWCaptchaRecord,
+	PoWCaptchaStored,
+	PowCaptchaRecordSchema,
+	type UserCommitment,
+	type UserCommitmentRecord,
+	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import mongoose from "mongoose";
-import { PowCaptcha } from "@prosopo/types";
 const logger = getLoggerDefault();
 
 let StoredImageCaptcha: mongoose.Model<UserCommitmentRecord>;
-let StoredPoWCaptcha: mongoose.Model<PowCaptcha>;
+let StoredPoWCaptcha: mongoose.Model<PoWCaptchaRecord>;
 
 export const saveCaptchas = async (
-  imageCaptchaEvents: UserCommitmentRecord[],
-  powCaptchaEvents: PowCaptcha[],
-  atlasUri: string,
+	imageCaptchaEvents: UserCommitmentRecord[],
+	powCaptchaEvents: PoWCaptchaRecord[],
+	atlasUri: string,
 ) => {
-  const connection = mongoose.createConnection(atlasUri, {
-    authSource: "admin",
-  });
-  await new Promise<void>((resolve, reject) => {
-    connection
-      .once("open", () => {
-        logger.info("Connected to MongoDB Atlas");
-        StoredImageCaptcha = connection.model<UserCommitmentRecord>(
-          "StoredImageCaptcha",
-          UserCommitmentRecordSchema,
-        );
-        StoredPoWCaptcha = connection.model<PowCaptcha>(
-          "StoredPoWCaptcha",
-          PowCaptchaRecordSchema,
-        );
-        resolve();
-      })
-      .on("error", reject);
-  });
-  if (imageCaptchaEvents.length) {
-    await StoredImageCaptcha.insertMany(imageCaptchaEvents);
-    logger.info("Mongo Saved Image Events");
-  }
-  if (powCaptchaEvents.length) {
-    await StoredPoWCaptcha.insertMany(powCaptchaEvents);
-    logger.info("Mongo Saved PoW Events");
-  }
+	const connection = mongoose.createConnection(atlasUri, {
+		authSource: "admin",
+	});
+	await new Promise<void>((resolve, reject) => {
+		connection
+			.once("open", () => {
+				logger.info("Connected to MongoDB Atlas");
+				StoredImageCaptcha = connection.model<UserCommitmentRecord>(
+					"StoredImageCaptcha",
+					UserCommitmentRecordSchema,
+				);
+				StoredPoWCaptcha = connection.model<PoWCaptchaRecord>(
+					"StoredPoWCaptcha",
+					PowCaptchaRecordSchema,
+				);
+				resolve();
+			})
+			.on("error", reject);
+	});
+	if (imageCaptchaEvents.length) {
+		const result = await StoredImageCaptcha.bulkWrite(
+			imageCaptchaEvents.map((doc) => {
+				// remove the _id field to avoid problems when upserting
+				const { _id, ...safeDoc } = doc;
+				return {
+					updateOne: {
+						filter: { id: safeDoc.id },
+						update: { $set: safeDoc },
+						upsert: true,
+					},
+				};
+			}),
+		);
+		logger.info("Mongo Saved Image Events", result);
+	}
+	if (powCaptchaEvents.length) {
+		const result = await StoredPoWCaptcha.bulkWrite(
+			powCaptchaEvents.map((doc) => {
+				// remove the _id field to avoid problems when upserting
+				const { _id, ...safeDoc } = doc;
+				return {
+					updateOne: {
+						filter: { challenge: safeDoc.challenge },
+						update: { $set: safeDoc },
+						upsert: true,
+					},
+				};
+			}),
+		);
+		logger.info("Mongo Saved PoW Events", result);
+	}
 
-  await connection.close();
+	await connection.close();
 };

@@ -1,11 +1,3 @@
-import type { Compact } from "@polkadot/types-codec/base";
-import type { u128 } from "@polkadot/types-codec/primitive";
-import { ProsopoEnvError } from "@prosopo/common";
-import { encodeStringAddress } from "@prosopo/provider";
-import { PayeeSchema } from "@prosopo/types";
-import { lodash } from "@prosopo/util/lodash";
-import parser from "cron-parser";
-import type { ArgumentsCamelCase } from "yargs";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +11,14 @@ import type { ArgumentsCamelCase } from "yargs";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as z from "zod";
+
+import type { Compact } from "@polkadot/types-codec/base";
+import type { u128 } from "@polkadot/types-codec/primitive";
+import { ProsopoEnvError } from "@prosopo/common";
+import { encodeStringAddress } from "@prosopo/provider";
+import parser from "cron-parser";
+
+import type { ArgumentsCamelCase } from "yargs";
 
 export const validateAddress = (
 	argv: ArgumentsCamelCase,
@@ -27,27 +26,6 @@ export const validateAddress = (
 	const address = encodeStringAddress(argv.address as string);
 
 	return { address };
-};
-
-export const validateContract = (argv: ArgumentsCamelCase) => {
-	const address = encodeStringAddress(argv.contract as string);
-
-	return { address };
-};
-
-export const validatePayee = (argv: ArgumentsCamelCase) => {
-	try {
-		if (!argv.payee) return;
-		const _ = lodash();
-		const payeeArg: string = _.capitalize(z.string().parse(argv.payee));
-		const payee = PayeeSchema.parse(payeeArg);
-
-		return { payee };
-	} catch (error) {
-		throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
-			context: { payee: [argv.payee], error },
-		});
-	}
 };
 
 export const validateValue = (argv: ArgumentsCamelCase) => {
@@ -58,16 +36,6 @@ export const validateValue = (argv: ArgumentsCamelCase) => {
 	}
 	const value: Compact<u128> = argv.value as unknown as Compact<u128>;
 	return { value };
-};
-
-export const validateFee = (argv: ArgumentsCamelCase) => {
-	if (typeof argv.fee !== "number") {
-		throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
-			context: { name: validateValue.name, fee: argv.fee },
-		});
-	}
-	const fee: Compact<u128> = argv.fee as unknown as Compact<u128>;
-	return { fee };
 };
 
 export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {

@@ -1,12 +1,3 @@
-import { builtinModules } from "node:module";
-import path from "node:path";
-import { getLogger } from "@prosopo/common";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import { wasm } from "@rollup/plugin-wasm";
-import type { Drop } from "esbuild";
-import css from "rollup-plugin-import-css";
-import type { UserConfig } from "vite";
-import { filterDependencies, getDependencies } from "../dependencies.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +11,16 @@ import { filterDependencies, getDependencies } from "../dependencies.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { builtinModules } from "node:module";
+import path from "node:path";
+import { getLogger } from "@prosopo/common";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import { wasm } from "@rollup/plugin-wasm";
+import type { Drop } from "esbuild";
+import css from "rollup-plugin-import-css";
+import type { UserConfig } from "vite";
+import { filterDependencies, getDependencies } from "../dependencies.js";
 import { default as ClosePlugin } from "./vite-plugin-close-and-copy.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
 
@@ -72,21 +73,6 @@ export default async function (
 		...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
 			"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
 				process.env.PROSOPO_DEFAULT_ENVIRONMENT,
-			),
-		}),
-		...(process.env.PROSOPO_DEFAULT_NETWORK && {
-			"process.env.PROSOPO_DEFAULT_NETWORK": JSON.stringify(
-				process.env.PROSOPO_DEFAULT_NETWORK,
-			),
-		}),
-		...(process.env.PROSOPO_SUBSTRATE_ENDPOINT && {
-			"process.env.PROSOPO_SUBSTRATE_ENDPOINT": JSON.stringify(
-				process.env.PROSOPO_SUBSTRATE_ENDPOINT,
-			),
-		}),
-		...(process.env.PROSOPO_CONTRACT_ADDRESS && {
-			"process.env.PROSOPO_CONTRACT_ADDRESS": JSON.stringify(
-				process.env.PROSOPO_CONTRACT_ADDRESS,
 			),
 		}),
 	};
