@@ -25,7 +25,7 @@
 	"dependencies": {
 		"debug": "^4.3.4",
 		"fast-glob": "^3.3.2",
-		"vite": "5.4.2"
+		"vite": "^5.4.3"
 	},
 	"devDependencies": {
 		"@types/debug": "^4.1.12",
