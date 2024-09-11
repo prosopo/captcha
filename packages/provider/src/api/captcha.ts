@@ -38,6 +38,18 @@ import { handleErrors } from "./errorHandler.js";
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 
+const flattenHeaders = (headers: {
+	[key: string]: string | string[] | undefined
+}) => {
+	// for each key/value pair in headers, if the value is an array, join it with a comma, if the value is undefined, return an empty string
+	return Object.fromEntries(
+		Object.entries(headers).map(([key, value]) => [
+			key,
+			Array.isArray(value) ? value.join(",") : value || "",
+		]),
+	);
+}
+
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -65,6 +77,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					datasetId,
 					user,
 					req.ip || NO_IP_ADDRESS,
+					flattenHeaders(req.headers),
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
@@ -124,6 +137,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
 					req.ip || NO_IP_ADDRESS,
+					flattenHeaders(req.headers),
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -177,6 +191,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				challenge.difficulty,
 				challenge.providerSignature,
 				req.ip || NO_IP_ADDRESS,
+				flattenHeaders(req.headers),
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
@@ -222,6 +237,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				verifiedTimeout,
 				signature.user.timestamp,
 				req.ip || NO_IP_ADDRESS,
+				flattenHeaders(req.headers),
 			);
 			const response: PowCaptchaSolutionResponse = { verified };
 			return res.json(response);
