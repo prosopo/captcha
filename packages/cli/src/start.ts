@@ -64,7 +64,6 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
 
 export async function start(env?: ProviderEnvironment, admin?: boolean) {
 	if (!env) {
-		console.log("Env undefined");
 		loadEnv();
 
 		// Fail to start api if db is not defined
