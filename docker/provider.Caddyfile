@@ -14,7 +14,7 @@
 	# }
 
 	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
-	reverse_proxy /metrics {$CADDY_ADMIN_API}
+	# reverse_proxy /metrics {$CADDY_ADMIN_API}
 
 	# reverse proxy to the provider container
 	reverse_proxy ${CADDY_PROVIDER_CONTAINER_NAME:-provider}:${CADDY_PROVIDER_PORT:-9229}
