@@ -252,27 +252,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	});
 
 	/**
-	 * Receives user events, store to database
-	 *
-	 * @param {StoredEvents}
-	 * @param {string} accountId - Dapp User id
-	 */
-	router.post(ApiPaths.SubmitUserEvents, async (req, res, next) => {
-		try {
-			const { events, accountId } = req.body;
-			await tasks.datasetManager.saveCaptchaEvent(events, accountId);
-			return res.json({ status: "success" });
-		} catch (err) {
-			tasks.logger.error(err);
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-				}),
-			);
-		}
-	});
-
-	/**
 	 * Gets public details of the provider
 	 */
 	router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {

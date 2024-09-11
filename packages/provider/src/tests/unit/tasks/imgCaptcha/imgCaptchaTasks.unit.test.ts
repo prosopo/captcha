@@ -26,10 +26,9 @@ import {
 	type PendingCaptchaRequest,
 	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type Database,
-	StoredStatusNames,
-	type UserCommitment,
+import type {
+	IProviderDatabase,
+	UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
@@ -57,7 +56,7 @@ vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 }));
 
 describe("ImgCaptchaManager", () => {
-	let db: Database;
+	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let logger: Logger; // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	let captchaConfig: any;
@@ -75,7 +74,7 @@ describe("ImgCaptchaManager", () => {
 			getCaptchaById: vi.fn(),
 			getDappUserCommitmentById: vi.fn(),
 			getDappUserCommitmentByAccount: vi.fn(),
-		} as unknown as Database;
+		} as unknown as IProviderDatabase;
 
 		pair = {
 			sign: vi.fn(),

@@ -22,7 +22,10 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { Database, PoWCaptchaStored } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaStored,
+} from "@prosopo/types-database";
 import { verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
@@ -41,7 +44,6 @@ vi.mock("@polkadot/util", () => ({
 }));
 
 vi.mock("@prosopo/util", async (importOriginal) => {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	const actual = (await importOriginal()) as Record<string, any>;
 	return {
 		...actual,
@@ -55,7 +57,7 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 }));
 
 describe("PowCaptchaManager", () => {
-	let db: Database;
+	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let powCaptchaManager: PowCaptchaManager;
 
@@ -65,7 +67,7 @@ describe("PowCaptchaManager", () => {
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecord: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
-		} as unknown as Database;
+		} as unknown as IProviderDatabase;
 
 		pair = {
 			sign: vi.fn(),
@@ -241,7 +243,6 @@ describe("PowCaptchaManager", () => {
 				return true;
 			});
 
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);

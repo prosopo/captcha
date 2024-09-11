@@ -13,14 +13,10 @@ import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-	type CaptchaConfig,
-	CaptchaSolutionConfig,
-	DatasetRaw,
-	type ProsopoConfigOutput,
-} from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import type { CaptchaConfig, ProsopoConfigOutput } from "@prosopo/types";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
@@ -29,7 +25,7 @@ import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
-	db: Database;
+	db: IProviderDatabase;
 	captchaConfig: CaptchaConfig;
 	logger: Logger;
 	config: ProsopoConfigOutput;
@@ -37,6 +33,7 @@ export class Tasks {
 	powCaptchaManager: PowCaptchaManager;
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
+	clientTaskManager: ClientTaskManager;
 
 	constructor(env: ProviderEnvironment) {
 		this.config = env.config;
@@ -62,6 +59,11 @@ export class Tasks {
 			this.pair,
 			this.logger,
 			this.captchaConfig,
+		);
+		this.clientTaskManager = new ClientTaskManager(
+			this.config,
+			this.logger,
+			this.db,
 		);
 	}
 }

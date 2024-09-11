@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, stringToHex, u8aToHex } from "@polkadot/util";
+import { stringToHex, u8aToHex } from "@polkadot/util";
 import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
@@ -32,23 +32,22 @@ import {
 	type PendingCaptchaRequest,
 	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type Database,
-	StoredStatusNames,
-	type UserCommitment,
+import type {
+	IProviderDatabase,
+	UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager {
-	db: Database;
+	db: IProviderDatabase;
 	pair: KeyringPair;
 	logger: Logger;
 	captchaConfig: CaptchaConfig;
 
 	constructor(
-		db: Database,
+		db: IProviderDatabase,
 		pair: KeyringPair,
 		logger: Logger,
 		captchaConfig: CaptchaConfig,

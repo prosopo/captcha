@@ -18,6 +18,7 @@ import { getPairAsync } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
+	getClientList,
 	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
@@ -69,21 +70,26 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
 		getDB();
 
 		const secret = getSecret();
-		const config = getConfig(undefined, undefined, {
+		const config = getConfig(undefined, {
 			solved: { count: 2 },
 			unsolved: { count: 0 },
 		});
 
-		const pair = await getPairAsync(secret, "");
+		const pair = await getPairAsync(secret);
 		env = new ProviderEnvironment(config, pair);
+	} else {
+		env.logger.debug("Env already defined");
 	}
 
 	await env.isReady();
 
-	// Start the scheduled job
+	// Start the scheduled jobs
 	if (env.pair) {
 		storeCaptchasExternally(env.pair, env.config).catch((err) => {
 			console.error("Failed to start scheduler:", err);
+		});
+		getClientList(env.pair, env.config).catch((err) => {
+			console.error("Failed to get client list:", err);
 		});
 	}
 
