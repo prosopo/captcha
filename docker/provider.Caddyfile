@@ -7,11 +7,11 @@
 
 {$CADDY_DOMAIN} {
 
-	basicauth /metrics {
-		# this has to be the username<space><bcrypted password>
-		# to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
-		{$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
-	}
+	# basicauth /metrics {
+	# 	 # this has to be the username<space><bcrypted password>
+	# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
+	# 	 {$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
+	# }
 
 	# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
 	reverse_proxy /metrics {$CADDY_ADMIN_API}
