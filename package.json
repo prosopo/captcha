@@ -37,7 +37,6 @@
 		"setup": "npm -w @prosopo/scripts run setup",
 		"setup:all": "npm run setup",
 		"start:provider": "npm -w @prosopo/cli run start",
-		"start:provider:dev": "npm -w @prosopo/cli run start:dev",
 		"start:server": "npm -w @prosopo/client-example-server run start",
 		"start:demo": "npm -w @prosopo/client-example run start",
 		"start:demo:pow": "npm -w @prosopo/client-pow-example run start",
@@ -91,7 +90,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"dependencies": {
 		"@prosopo/flux": "2.0.3"
 	},
