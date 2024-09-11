@@ -140,17 +140,19 @@ describe("ClientTaskManager", () => {
 			getLastScheduledTaskStatus: vi.fn(
 				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 				(taskID: any, status: ScheduledTaskStatus) => {
-					return Object.keys(collections.schedulers.records)
-						// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-						.map((key: any) => collections.schedulers.records[key])
-						.find(
-							(task: ScheduledTaskRecord) =>
-								task.processName === taskID && task.status === status,
-						);
+					return (
+						Object.keys(collections.schedulers.records)
+							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+							.map((key: any) => collections.schedulers.records[key])
+							.find(
+								(task: ScheduledTaskRecord) =>
+									task.processName === taskID && task.status === status,
+							)
+					);
 				},
 			),
 		} as unknown as IProviderDatabase;
-``
+		
 		// captchaDB = {
 		//   saveCaptchas: vi.fn(() => {
 		//     console.log("hey im a mock of savecaptchas");
