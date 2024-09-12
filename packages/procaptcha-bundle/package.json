@@ -37,8 +37,8 @@
 		"@prosopo/types": "2.0.3",
 		"@prosopo/util": "2.0.3",
 		"@prosopo/dotenv": "2.0.3",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
+		"react": "18.3.1",
+		"react-dom": "18.3.1"
 	},
 	"repository": {
 		"type": "git",
@@ -55,7 +55,7 @@
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
 		"tslib": "2.6.2",
-		"vite": "^5.4.4",
-		"typescript": "^5.1.6"
+		"vite": "5.4.4",
+		"typescript": "5.1.6"
 	}
 }

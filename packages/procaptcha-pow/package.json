@@ -28,8 +28,8 @@
 		"> 0.5%, last 2 versions, not dead"
 	],
 	"dependencies": {
-		"@emotion/react": "^11.11.1",
-		"@polkadot/util": "^13.0.2",
+		"@emotion/react": "11.11.1",
+		"@polkadot/util": "13.0.2",
 		"@prosopo/account": "2.0.3",
 		"@prosopo/api": "2.0.3",
 		"@prosopo/common": "2.0.3",
@@ -38,7 +38,7 @@
 		"@prosopo/types": "2.0.3",
 		"@prosopo/util": "2.0.3",
 		"@prosopo/web-components": "2.0.3",
-		"react": "^18.3.1"
+		"react": "18.3.1"
 	},
 	"overrides": {
 		"@polkadot/extension-inject": {

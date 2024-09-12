@@ -12,8 +12,8 @@
 		"clean": "echo 'nothing to clean'"
 	},
 	"dependencies": {
-		"@types/node": "^22.5.4",
-		"vite": "^5.4.4"
+		"@types/node": "22.5.4",
+		"vite": "5.4.4"
 	},
 	"version": "2.0.3",
 	"devDependencies": {

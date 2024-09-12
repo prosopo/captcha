@@ -31,9 +31,9 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@emotion/react": "^11.11.1",
-		"@emotion/styled": "^11.11.0",
-		"react": "^18.3.1"
+		"@emotion/react": "11.11.1",
+		"@emotion/styled": "11.11.0",
+		"react": "18.3.1"
 	},
 	"devDependencies": {
 		"tslib": "2.6.2",

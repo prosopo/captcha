@@ -33,9 +33,9 @@
 	"dependencies": {
 		"@prosopo/common": "2.0.3",
 		"@prosopo/types": "2.0.3",
-		"mongodb": "^6.8.1",
-		"mongoose": "^8.5.1",
-		"zod": "^3.22.3"
+		"mongodb": "6.8.1",
+		"mongoose": "8.5.1",
+		"zod": "3.22.3"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
