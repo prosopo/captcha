@@ -31,7 +31,6 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@polkadot/util": "^13.0.2",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/config": "2.0.3",
 		"@prosopo/types": "2.0.3",
