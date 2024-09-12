@@ -63,6 +63,8 @@ export function getEnvFile(
 
 	logger.info(`Searching for ${fileNameFull} in ${searchPath}`);
 
+	let levelCount = 0;
+
 	while (!fs.existsSync(path.join(searchPath, fileNameFull))) {
 		if (fs.existsSync(path.join(searchPath, "package.json"))) {
 			const pkgJson = JSON.parse(
@@ -76,6 +78,13 @@ export function getEnvFile(
 			}
 		}
 		searchPath = path.resolve(searchPath, "..");
+		levelCount += 1;
+		if (levelCount > 10) {
+			logger.error(
+				`Checked ${levelCount} directories above, stopping search for ${fileNameFull}.`,
+			);
+			break;
+		}
 	}
 
 	const foundPath = path.join(searchPath, fileNameFull);
