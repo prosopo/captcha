@@ -62,10 +62,14 @@ const solvePoW = (data: string, difficulty: number): number => {
 };
 
 const registerSiteKey = async (siteKey: string): Promise<void> => {
+	const username = process.env.PROSOPO_DATABASE_USERNAME || "root";
+	const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
+	const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
+	const port = process.env.PROSOPO_DATABASE_PORT || 27017;
 	const db = new ProviderDatabase(
-		"mongodb://root:root@localhost:27017",
-		"prosopo",
-		"admin",
+		`mongodb://${username}:${pw}@${host}:${port}`,
+		process.env.PROSOPO_DATABASE_NAME || "prosopo",
+		process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
 	);
 	await db.connect();
 	await db.updateClientRecords([
@@ -74,7 +78,7 @@ const registerSiteKey = async (siteKey: string): Promise<void> => {
 		} as ClientRecord,
 	]);
 	await db.connection?.close();
-}
+};
 
 // PoW Captcha Incorrect Solver - avoids slim chance of accidental correct solution
 const failPoW = (data: string, difficulty: number): number => {
@@ -97,7 +101,7 @@ const failPoW = (data: string, difficulty: number): number => {
 describe("PoW Integration Tests", () => {
 	describe("GetPowCaptchaChallenge", () => {
 		beforeAll(async () => {
-			await registerSiteKey(dappAccount)
+			await registerSiteKey(dappAccount);
 		});
 
 		it("should supply a PoW challenge to a Dapp User", async () => {
@@ -155,7 +159,7 @@ describe("PoW Integration Tests", () => {
 
 			const dappAccount = dappPair.address;
 
-			await registerSiteKey(dappAccount)
+			await registerSiteKey(dappAccount);
 
 			const origin = "http://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
@@ -253,7 +257,7 @@ describe("PoW Integration Tests", () => {
 			const verifiedTimeout = 120000;
 
 			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-			await registerSiteKey(dapp)
+			await registerSiteKey(dapp);
 			const body: SubmitPowCaptchaSolutionBodyType = {
 				challenge,
 				difficulty,
