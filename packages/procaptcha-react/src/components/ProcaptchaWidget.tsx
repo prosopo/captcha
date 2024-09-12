@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 /** @jsxImportSource @emotion/react */
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
@@ -32,10 +33,9 @@ import {
 	lightTheme,
 } from "@prosopo/web-components";
 import { Logo } from "@prosopo/web-components";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
-import Collector from "./collector.js";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const config = ProcaptchaConfigSchema.parse(props.config);
@@ -44,6 +44,19 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const manager = Manager(config, state, updateState, callbacks);
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
+
+	// set the error div
+	useEffect(() => {
+		const errorDiv = document.getElementById("error");
+		if (!errorDiv) return;
+
+		const error = state.error;
+		if (error) {
+			errorDiv.innerText = error;
+		} else {
+			errorDiv.innerText = "";
+		}
+	}, [state.error]);
 
 	return (
 		<div>
@@ -109,7 +122,8 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 										>
 											<div
 												style={{
-													display: !state.loading ? "flex" : "none",
+													display:
+														!state.loading && !state.error ? "flex" : "none",
 												}}
 											>
 												<Checkbox
@@ -118,6 +132,23 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 													checked={state.isHuman}
 													labelText="I am human"
 													aria-label="human checkbox"
+												/>
+											</div>
+											<div
+												style={{
+													display:
+														state.error && !state.loading ? "flex" : "none",
+													paddingLeft: "10px",
+												}}
+											>
+												<div
+													id="error"
+													style={{
+														color: "red",
+														fontSize: "14px",
+														marginTop: "5px",
+														marginBottom: "5px",
+													}}
 												/>
 											</div>
 											<div

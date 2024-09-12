@@ -127,6 +127,8 @@ describe("PowCaptchaManager", () => {
 			const timeout = 1000;
 			const ipAddress = "ipAddress";
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const score = 1;
+			const threshold = 0.8;
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
 				difficulty,
@@ -167,6 +169,8 @@ describe("PowCaptchaManager", () => {
 				userSignature,
 				ipAddress,
 				headers,
+				score,
+				threshold,
 			];
 
 			const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -233,6 +237,8 @@ describe("PowCaptchaManager", () => {
 			const timestampSignature = "testTimestampSignature";
 			const ipAddress = "ipAddress";
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const score = 1;
+			const threshold = 0.8;
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
 				dappAccount: pair.address,
@@ -270,6 +276,8 @@ describe("PowCaptchaManager", () => {
 					timestampSignature,
 					ipAddress,
 					headers,
+					score,
+					threshold,
 				),
 			).toBe(false);
 

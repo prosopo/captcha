@@ -483,4 +483,6 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
+
+	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 }

@@ -41,7 +41,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [state, _updateState] = useProcaptcha(useState, useRef);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
-	const manager = useRef(Manager(config, state, updateState, callbacks));
+	const manager = useRef(
+		Manager(config, state, updateState, callbacks, props.score || 0),
+	);
 	const captchaRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -61,6 +63,19 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			form.removeEventListener("submit", handleSubmit);
 		};
 	}, []);
+
+	// set the error div
+	useEffect(() => {
+		const errorDiv = document.getElementById("error");
+		if (!errorDiv) return;
+
+		const error = state.error;
+		if (error) {
+			errorDiv.innerText = error;
+		} else {
+			errorDiv.innerText = "";
+		}
+	}, [state.error]);
 
 	return (
 		<div ref={captchaRef}>
@@ -115,7 +130,13 @@ const Procaptcha = (props: ProcaptchaProps) => {
 													display: "flex",
 												}}
 											>
-												<div style={{ flex: 1 }}>
+												<div
+													style={{
+														flex: 1,
+														display:
+															!state.loading && !state.error ? "flex" : "none",
+													}}
+												>
 													{state.loading ? (
 														<LoadingSpinner
 															themeColor={themeColor}
@@ -130,6 +151,23 @@ const Procaptcha = (props: ProcaptchaProps) => {
 															aria-label="human checkbox"
 														/>
 													)}
+												</div>
+												<div
+													style={{
+														display:
+															state.error && !state.loading ? "flex" : "none",
+														paddingLeft: "10px",
+													}}
+												>
+													<div
+														id="error"
+														style={{
+															color: "red",
+															fontSize: "14px",
+															marginTop: "5px",
+															marginBottom: "5px",
+														}}
+													/>
 												</div>
 											</div>
 										</div>

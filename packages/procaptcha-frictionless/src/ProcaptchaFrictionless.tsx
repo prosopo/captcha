@@ -24,7 +24,8 @@ import { useEffect, useState } from "react";
 const customDetectBot: BotDetectionFunction = async () => {
 	return await isBot().then((result) => {
 		const bot = result.isBot;
-		return { bot };
+		const score = result.botScore;
+		return { bot, score };
 	});
 };
 
@@ -42,11 +43,19 @@ export const ProcaptchaFrictionless = ({
 			const result = await detectBot();
 			if (result.bot) {
 				setComponentToRender(
-					<Procaptcha config={config} callbacks={callbacks} />,
+					<Procaptcha
+						config={config}
+						callbacks={callbacks}
+						score={result.score}
+					/>,
 				);
 			} else {
 				setComponentToRender(
-					<ProcaptchaPow config={config} callbacks={callbacks} />,
+					<ProcaptchaPow
+						config={config}
+						callbacks={callbacks}
+						score={result.score}
+					/>,
 				);
 			}
 		};

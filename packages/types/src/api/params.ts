@@ -37,4 +37,6 @@ export enum ApiParams {
 	secret = "secret",
 	timestamp = "timestamp",
 	signature = "signature",
+	score = "score",
+	error = "error",
 }

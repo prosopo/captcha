@@ -20,6 +20,7 @@ import type { ProcaptchaCallbacks } from "./manager.js";
 export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
+	score?: number;
 	// optional set of callbacks for various captcha events
 	callbacks?: Partial<ProcaptchaCallbacks>;
 }
