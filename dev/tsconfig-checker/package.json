@@ -25,6 +25,8 @@
 		"npm": ">=9"
 	},
 	"dependencies": {
-		"@prosopo/util": "2.0.3"
+		"@prosopo/util": "2.0.3",
+		"glob": "^11.0.0",
+		"zod": "^3.23.8"
 	}
 }
