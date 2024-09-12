@@ -76,6 +76,9 @@ export class PowCaptchaManager {
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
+	 * @param headers
+	 * @param score
+	 * @param threshold
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -86,7 +89,23 @@ export class PowCaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: string,
 		headers: RequestHeaders,
+		score: number,
+		threshold: number,
 	): Promise<boolean> {
+		if (score < threshold) {
+			await this.db.updatePowCaptchaRecord(
+				challenge,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: "CAPTCHA.SCORE_BELOW_THRESHOLD",
+				},
+				false,
+				true,
+				userTimestampSignature,
+			);
+			return false;
+		}
+
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
 			challenge,

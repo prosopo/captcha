@@ -150,6 +150,7 @@ describe("Image Captcha Integration Tests", () => {
 					},
 					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
 				},
+				[ApiParams.score]: 1,
 				[ApiParams.timestamp]: data.timestamp,
 				[ApiParams.user]: userAccount,
 			};

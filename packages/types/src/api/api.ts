@@ -36,6 +36,7 @@ export interface ProviderApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
+		score: number,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		dapp: string,
@@ -63,6 +64,7 @@ export interface ProviderApiInterface {
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
+		score: number,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse>;
 	submitUserEvents(events: StoredEvents, string: string): Promise<unknown>;

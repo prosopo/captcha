@@ -177,6 +177,7 @@ export type CaptchaResponseBody = {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: RequestHashSignature;
 	};
+	[ApiParams.error]?: string;
 };
 
 export const CaptchaSolutionBody = object({
@@ -185,6 +186,7 @@ export const CaptchaSolutionBody = object({
 	[ApiParams.captchas]: array(CaptchaSolutionSchema),
 	[ApiParams.requestHash]: string(),
 	[ApiParams.timestamp]: string(),
+	[ApiParams.score]: number(),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: RequestHashSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
@@ -235,6 +237,7 @@ export interface GetPowCaptchaResponse {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: ChallengeSignature;
 	};
+	[ApiParams.error]?: string;
 }
 
 export interface PowCaptchaSolutionResponse {
@@ -282,6 +285,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.nonce]: number(),
+	[ApiParams.score]: number(),
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),

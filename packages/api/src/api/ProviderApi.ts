@@ -25,6 +25,7 @@ import {
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
 	type Provider,
+	type ProviderApiInterface,
 	type ProviderRegistered,
 	type RandomProvider,
 	type ServerPowCaptchaVerifyRequestBodyType,
@@ -36,7 +37,10 @@ import {
 } from "@prosopo/types";
 import HttpClientBase from "./HttpClientBase.js";
 
-export default class ProviderApi extends HttpClientBase implements ProviderApi {
+export default class ProviderApi
+	extends HttpClientBase
+	implements ProviderApiInterface
+{
 	private account: string;
 
 	constructor(providerUrl: string, account: string) {
@@ -66,6 +70,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
+		score: number,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -73,6 +78,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 			[ApiParams.captchas]: captchas,
 			[ApiParams.requestHash]: requestHash,
 			[ApiParams.timestamp]: timestamp,
+			[ApiParams.score]: score,
 			[ApiParams.signature]: {
 				[ApiParams.user]: {
 					[ApiParams.requestHash]: userRequestHashSignature,
@@ -132,6 +138,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
+		score: number,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
@@ -142,6 +149,7 @@ export default class ProviderApi extends HttpClientBase implements ProviderApi {
 			[ApiParams.dapp]: dappAccount.toString(),
 			[ApiParams.nonce]: nonce,
 			[ApiParams.verifiedTimeout]: timeout,
+			[ApiParams.score]: score,
 			[ApiParams.signature]: {
 				[ApiParams.provider]:
 					challenge[ApiParams.signature][ApiParams.provider],

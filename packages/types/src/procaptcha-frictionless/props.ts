@@ -13,7 +13,10 @@
 // limitations under the License.
 import type { ProcaptchaProps } from "../procaptcha/props.js";
 
-export type BotDetectionFunction = () => Promise<{ bot: boolean }>;
+export type BotDetectionFunction = () => Promise<{
+	bot: boolean;
+	score: number;
+}>;
 
 /**
  * The props for the Procaptcha Frictionless component.

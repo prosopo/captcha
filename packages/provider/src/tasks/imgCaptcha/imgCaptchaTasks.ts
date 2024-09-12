@@ -167,6 +167,9 @@ export class ImgCaptchaManager {
 	 * @param timestamp
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
+	 * @param headers
+	 * @param score
+	 * @param threshold
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -179,6 +182,8 @@ export class ImgCaptchaManager {
 		providerRequestHashSignature: string,
 		ipAddress: string,
 		headers: RequestHeaders,
+		score: number,
+		threshold: number,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -206,7 +211,7 @@ export class ImgCaptchaManager {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: {
-					failedFuncName: this.dappUserSolution.name,
+					scorefailedFuncName: this.dappUserSolution.name,
 					userAccount,
 					error: "requestHash signature is invalid",
 				},
@@ -228,11 +233,10 @@ export class ImgCaptchaManager {
 			unverifiedCaptchaIds,
 		);
 		if (pendingRequest) {
+			const scoreAboveThreshold = score > threshold;
+
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
-
-			const { tree, commitmentId } =
-				buildTreeAndGetCommitmentId(receivedCaptchas);
 
 			const datasetId = at(storedCaptchas, 0).datasetId;
 
@@ -242,9 +246,9 @@ export class ImgCaptchaManager {
 				});
 			}
 
-			// Only do stuff if the request is in the local DB
-			// prevent this request hash from being used twice
-			await this.db.updateDappUserPendingStatus(requestHash);
+			const { tree, commitmentId } =
+				buildTreeAndGetCommitmentId(receivedCaptchas);
+
 			const commit: UserCommitment = {
 				id: commitmentId,
 				userAccount: userAccount,
@@ -259,7 +263,27 @@ export class ImgCaptchaManager {
 				ipAddress,
 				headers,
 			};
+
+			// Only do stuff if the request is in the local DB
+			// prevent this request hash from being used twice
+			await this.db.updateDappUserPendingStatus(requestHash);
+
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
+
+			if (!scoreAboveThreshold) {
+				await this.db.disapproveDappUserCommitment(
+					commitmentId,
+					"CAPTCHA.SCORE_BELOW_THRESHOLD",
+				);
+				response = {
+					captchas: captchaIds.map((id) => ({
+						captchaId: id,
+						proof: [[]],
+					})),
+					verified: false,
+				};
+				return response;
+			}
 
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
 				response = {

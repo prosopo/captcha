@@ -44,6 +44,7 @@ import {
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	type IDatabase,
+	type IProviderDatabase,
 	type IUserDataSlim,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
@@ -130,7 +131,10 @@ const PROVIDER_TABLES = [
 	},
 ];
 
-export class ProviderDatabase extends MongoDatabase implements IDatabase {
+export class ProviderDatabase
+	extends MongoDatabase
+	implements IProviderDatabase
+{
 	tables = {} as Tables<TableNames>;
 
 	constructor(
@@ -1259,5 +1263,15 @@ export class ProviderDatabase extends MongoDatabase implements IDatabase {
 			};
 		});
 		await this.tables?.client.bulkWrite(ops);
+	}
+
+	/**
+	 * @description Get a client record
+	 */
+	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
+		const doc = await this.tables?.client
+			.findOne({ account })
+			.lean<ClientRecord>();
+		return doc ? doc : undefined;
 	}
 }

@@ -100,7 +100,8 @@
 		"SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
 		"TABLES_UNDEFINED": "Tables undefined",
 		"CONNECTION_UNDEFINED": "Connection undefined",
-		"COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
+		"COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed",
+		"SCORE_BELOW_THRESHOLD": "Score below threshold"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error parsing captcha",
@@ -137,7 +138,8 @@
 		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
 		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
 		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
-		"UNKNOWN": "Unknown API error"
+		"UNKNOWN": "Unknown API error",
+		"SITE_KEY_NOT_REGISTERED": "Site key not registered"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"
