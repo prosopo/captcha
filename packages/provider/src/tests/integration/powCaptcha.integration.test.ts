@@ -15,6 +15,7 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { u8aToHex } from "@polkadot/util/u8a";
 import { getPairAsync } from "@prosopo/contract";
+import { ProviderDatabase } from "@prosopo/database";
 import {
 	ApiParams,
 	ApiPaths,
@@ -23,8 +24,9 @@ import {
 	type PowCaptchaSolutionResponse,
 	type SubmitPowCaptchaSolutionBodyType,
 } from "@prosopo/types";
+import type { ClientRecord } from "@prosopo/types-database";
 import fetch from "node-fetch";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
 	dummyDappAccount,
 	dummyUserAccount,
@@ -33,6 +35,8 @@ import {
 // Define the endpoint path and base URL
 const baseUrl = "http://localhost:9229";
 const getPowCaptchaChallengePath = ApiPaths.GetPowCaptchaChallenge;
+const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
 const bufferToHex = (buffer: Uint8Array): string =>
 	Array.from(buffer)
@@ -57,6 +61,21 @@ const solvePoW = (data: string, difficulty: number): number => {
 	}
 };
 
+const registerSiteKey = async (siteKey: string): Promise<void> => {
+	const db = new ProviderDatabase(
+		"mongodb://root:root@localhost:27017",
+		"prosopo",
+		"admin",
+	);
+	await db.connect();
+	await db.updateClientRecords([
+		{
+			account: siteKey,
+		} as ClientRecord,
+	]);
+	await db.connection?.close();
+}
+
 // PoW Captcha Incorrect Solver - avoids slim chance of accidental correct solution
 const failPoW = (data: string, difficulty: number): number => {
 	let nonce = 0;
@@ -77,9 +96,11 @@ const failPoW = (data: string, difficulty: number): number => {
 
 describe("PoW Integration Tests", () => {
 	describe("GetPowCaptchaChallenge", () => {
+		beforeAll(async () => {
+			await registerSiteKey(dappAccount)
+		});
+
 		it("should supply a PoW challenge to a Dapp User", async () => {
-			const userAccount = "userAddress";
-			const dappAccount = "dappAddress";
 			const origin = "http://localhost";
 			const body: GetPowCaptchaChallengeRequestBodyType = {
 				user: userAccount,
@@ -88,6 +109,7 @@ describe("PoW Integration Tests", () => {
 			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
+					Connection: "close",
 					"Content-Type": "application/json",
 					Origin: origin,
 				},
@@ -104,12 +126,10 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return an error if origin header is not provided", async () => {
-			const userAccount = "userAddress";
-			const dappAccount = "dappAddress";
-
 			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
+					Connection: "close",
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
@@ -132,7 +152,11 @@ describe("PoW Integration Tests", () => {
 				"sr25519",
 				42,
 			);
+
 			const dappAccount = dappPair.address;
+
+			await registerSiteKey(dappAccount)
+
 			const origin = "http://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
 				user: userPair.address,
@@ -143,6 +167,7 @@ describe("PoW Integration Tests", () => {
 				{
 					method: "POST",
 					headers: {
+						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
 					},
@@ -180,6 +205,7 @@ describe("PoW Integration Tests", () => {
 				{
 					method: "POST",
 					headers: {
+						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
 					},
@@ -203,7 +229,6 @@ describe("PoW Integration Tests", () => {
 				42,
 			);
 			const userAccount = userPair.address;
-			const dappAccount = "dappAddress";
 			const origin = "http://localhost";
 
 			const captchaRes = await fetch(
@@ -211,6 +236,7 @@ describe("PoW Integration Tests", () => {
 				{
 					method: "POST",
 					headers: {
+						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
 					},
@@ -227,6 +253,7 @@ describe("PoW Integration Tests", () => {
 			const verifiedTimeout = 120000;
 
 			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+			await registerSiteKey(dapp)
 			const body: SubmitPowCaptchaSolutionBodyType = {
 				challenge,
 				difficulty,
@@ -249,6 +276,7 @@ describe("PoW Integration Tests", () => {
 				{
 					method: "POST",
 					headers: {
+						Connection: "close",
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify(body),
@@ -260,6 +288,74 @@ describe("PoW Integration Tests", () => {
 			const data = (await response.json()) as PowCaptchaSolutionResponse;
 			expect(data).toHaveProperty("verified");
 			expect(data.verified).toBe(false);
+		});
+
+		it("should return an error for an unregistered site key", async () => {
+			const userPair = await getPairAsync(
+				dummyUserAccount.seed,
+				undefined,
+				"sr25519",
+				42,
+			);
+			const userAccount = userPair.address;
+			const origin = "http://localhost";
+
+			const captchaRes = await fetch(
+				`${baseUrl}${getPowCaptchaChallengePath}`,
+				{
+					method: "POST",
+					headers: {
+						Connection: "close",
+						"Content-Type": "application/json",
+						Origin: origin,
+					},
+					body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+				},
+			);
+
+			const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+			const challenge = challengeBody.challenge;
+			const difficulty = challengeBody.difficulty;
+			const signature = challengeBody.signature;
+			const nonce = failPoW(challenge, difficulty);
+			const verifiedTimeout = 120000;
+
+			const dapp = "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y";
+			const body: SubmitPowCaptchaSolutionBodyType = {
+				challenge,
+				difficulty,
+				[ApiParams.signature]: {
+					[ApiParams.provider]: signature[ApiParams.provider],
+					[ApiParams.user]: {
+						[ApiParams.timestamp]: u8aToHex(
+							userPair.sign(challengeBody[ApiParams.timestamp].toString()),
+						),
+					},
+				},
+				nonce,
+				verifiedTimeout,
+				user: userPair.address,
+				dapp,
+				score: 1,
+			};
+			const response = await fetch(
+				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
+				{
+					method: "POST",
+					headers: {
+						Connection: "close",
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(body),
+				},
+			);
+
+			expect(response.status).toBe(200);
+
+			const data = (await response.json()) as PowCaptchaSolutionResponse;
+			expect(data).toHaveProperty("error");
+			expect(data.error).toBe("Site key not registered");
 		});
 	});
 });
