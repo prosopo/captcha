@@ -12,7 +12,7 @@
 		"clean": "echo 'nothing to clean'"
 	},
 	"dependencies": {
-		"dotenv": "^16.0.1",
+		"@types/node": "^22.5.4",
 		"vite": "^5.4.4"
 	},
 	"version": "2.0.3",
