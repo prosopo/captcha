@@ -25,7 +25,9 @@
 	},
 	"types": "./dist/index.d.ts",
 	"dependencies": {
-		"dotenv": "^16.0.1"
+		"dotenv": "^16.0.1",
+		"@prosopo/common": "2.0.3",
+		"@prosopo/config": "2.0.3"
 	},
 	"devDependencies": {
 		"tslib": "2.6.2",
