@@ -31,10 +31,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@polkadot/api": "10.13.1",
 		"@polkadot/keyring": "12.6.2",
-		"@polkadot/rpc-provider": "10.13.1",
-		"@prosopo/contract": "2.0.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/types": "2.0.3",
 		"@prosopo/types-database": "2.0.3"
