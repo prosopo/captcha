@@ -33,6 +33,7 @@
 	"sideEffects": false,
 	"dependencies": {
 		"@polkadot/keyring": "12.6.2",
+		"@polkadot/util": "^13.0.2",
 		"@prosopo/api": "2.0.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/contract": "2.0.3",
