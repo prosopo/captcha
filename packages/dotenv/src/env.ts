@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LogLevel, getLogger } from "@prosopo/common";
 import dotenv from "dotenv";
-import { findUpSync } from "find-up";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,8 +59,36 @@ export function getEnvFile(
 	const env = getEnv();
 	const fileNameFull = `${filename}.${env}`;
 
-	return (
-		findUpSync(fileNameFull, { type: "file" }) ||
-		path.join(rootDir || filepath, fileNameFull)
-	);
+	let searchPath = path.resolve(rootDir || ".");
+
+	logger.info(`Searching for ${fileNameFull} in ${searchPath}`);
+
+	let levelCount = 0;
+
+	while (!fs.existsSync(path.join(searchPath, fileNameFull))) {
+		if (fs.existsSync(path.join(searchPath, "package.json"))) {
+			const pkgJson = JSON.parse(
+				fs.readFileSync(path.join(searchPath, "package.json"), "utf8"),
+			);
+			if (pkgJson.name === "@prosopo/captcha-private") {
+				logger.info(
+					`Reached the workspace root package.json, stopping search for ${fileNameFull}.`,
+				);
+				break;
+			}
+		}
+		searchPath = path.resolve(searchPath, "..");
+		levelCount += 1;
+		if (levelCount > 10) {
+			logger.error(
+				`Checked ${levelCount} directories above, stopping search for ${fileNameFull}.`,
+			);
+			break;
+		}
+	}
+
+	const foundPath = path.join(searchPath, fileNameFull);
+	return fs.existsSync(foundPath)
+		? foundPath
+		: path.join(rootDir || filepath, fileNameFull);
 }
