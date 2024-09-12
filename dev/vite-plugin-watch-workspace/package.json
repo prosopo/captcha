@@ -23,7 +23,9 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
+		"@prosopo/config": "2.0.3",
 		"debug": "^4.3.4",
+		"esbuild": "^0.23.1",
 		"fast-glob": "^3.3.2",
 		"vite": "^5.4.4"
 	},
