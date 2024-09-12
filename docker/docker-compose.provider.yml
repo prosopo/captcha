@@ -32,8 +32,6 @@ services:
             - ../.env.${NODE_ENV}
         ports:
             - '9229:9229'
-        depends_on:
-            - database
         networks:
             - internal
             - external
