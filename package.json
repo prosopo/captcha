@@ -85,7 +85,8 @@
 		"deps:dupe": "npm run deps:ls | awk -F': ' 'NF {count[$1]++; lines[$1] = lines[$1] $0 \"\\n\"} END {for (pkg in count) if (count[pkg] > 1) printf \"%s\", lines[pkg]}' | sort",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npx npm-check-updates --deep",
-		"deps:update": "npm run deps:status -- -u"
+		"deps:update": "npm run deps:status -- -u",
+		"deps:interactive": "npm run deps:status -- --interactive --format group"
 	},
 	"private": true,
 	"engines": {
