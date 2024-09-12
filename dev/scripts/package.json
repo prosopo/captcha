@@ -24,7 +24,7 @@
 		"@iarna/toml": "2.2.5",
 		"@polkadot/api": "10.13.1",
 		"@polkadot/api-contract": "10.13.1",
-		"@polkadot/keyring": "13.0.2",
+		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/cli": "2.0.3",
@@ -39,11 +39,11 @@
 		"@prosopo/types-database": "2.0.3",
 		"@prosopo/types-env": "2.0.3",
 		"@prosopo/util": "2.0.3",
-		"dotenv": "16.0.3",
+		"dotenv": "16.0.1",
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
 		"mongodb": "6.8.1",
-		"yargs": "17.5.1"
+		"yargs": "17.7.2"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"

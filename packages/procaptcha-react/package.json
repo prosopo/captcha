@@ -28,7 +28,7 @@
 		"> 0.5%, last 2 versions, not dead"
 	],
 	"dependencies": {
-		"@emotion/react": "11.11.4",
+		"@emotion/react": "11.9.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/procaptcha": "2.0.3",
 		"@prosopo/procaptcha-common": "2.0.3",
