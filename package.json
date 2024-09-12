@@ -82,7 +82,8 @@
 		"postinstall": "npm run removePolkadotJSWarnings",
 		"docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME",
 		"deps:ls": "find -name 'package.json' ! -path '**/node_modules/**' | xargs -P 1 -I {} bash -c 'cat {} | jq .dependencies | head -n -1 | tail -n +2' | tr -d ',' | sort | uniq",
-		"deps:dupe": "npm run deps:ls | awk -F': ' 'NF {count[$1]++; lines[$1] = lines[$1] $0 \"\\n\"} END {for (pkg in count) if (count[pkg] > 1) printf \"%s\", lines[pkg]}' | sort"
+		"deps:dupe": "npm run deps:ls | awk -F': ' 'NF {count[$1]++; lines[$1] = lines[$1] $0 \"\\n\"} END {for (pkg in count) if (count[pkg] > 1) printf \"%s\", lines[pkg]}' | sort",
+		"audit:fix": "npm audit fix --force"
 	},
 	"private": true,
 	"engines": {
