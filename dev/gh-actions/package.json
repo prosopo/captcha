@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@octokit/graphql": "7.0.2",
-		"axios": "1.7.2"
+		"axios": "^1.7.7"
 	},
 	"main": "dist/index.js",
 	"type": "module",
