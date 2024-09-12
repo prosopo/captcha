@@ -31,13 +31,13 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@emotion/react": "11.9.3",
-		"@emotion/styled": "11.9.3",
+		"@emotion/react": "11.13.3",
+		"@emotion/styled": "11.13.0",
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"tslib": "2.6.2",
-		"typescript": "5.1.6",
+		"tslib": "2.7.0",
+		"typescript": "5.6.2",
 		"@prosopo/config": "2.0.3"
 	},
 	"sideEffects": false
