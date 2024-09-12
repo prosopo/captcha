@@ -233,7 +233,7 @@ export class ImgCaptchaManager {
 			unverifiedCaptchaIds,
 		);
 		if (pendingRequest) {
-			const scoreAboveThreshold = score > threshold;
+			const scoreBelowThreshold = score < threshold;
 
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
@@ -270,7 +270,7 @@ export class ImgCaptchaManager {
 
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
 
-			if (!scoreAboveThreshold) {
+			if (scoreBelowThreshold) {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.SCORE_BELOW_THRESHOLD",
