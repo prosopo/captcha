@@ -211,7 +211,6 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			);
 			const jsonRes = await solveThatCaptcha.json();
-			console.log(jsonRes);
 
 			const res = jsonRes as CaptchaSolutionResponse;
 			expect(res.status).toBe("You correctly answered the captchas");
