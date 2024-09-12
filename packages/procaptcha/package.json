@@ -57,10 +57,10 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
-		"dotenv": "16.0.1",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6",
-		"vitest": "2.0.5"
+		"dotenv": "16.4.5",
+		"tslib": "2.7.0",
+		"typescript": "5.6.2",
+		"vitest": "2.1.0"
 	},
 	"keywords": [],
 	"repository": {
