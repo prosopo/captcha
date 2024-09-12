@@ -242,6 +242,7 @@ export interface GetPowCaptchaResponse {
 
 export interface PowCaptchaSolutionResponse {
 	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: string;
 }
 
 /**
