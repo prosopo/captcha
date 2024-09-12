@@ -24,7 +24,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@polkadot/util": "13.0.2",
+		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"consola": "3.2.3",
 		"i18next": "21.9.2",
