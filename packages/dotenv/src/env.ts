@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LogLevel, getLogger } from "@prosopo/common";
 import dotenv from "dotenv";
-import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logger = getLogger(
-  process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
-  "env",
+	process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
+	"env",
 );
 
 export function getEnv() {
-  if (process.env.NODE_ENV) {
-    return process.env.NODE_ENV.replace(/\W/g, "");
-  }
-  return "development";
+	if (process.env.NODE_ENV) {
+		return process.env.NODE_ENV.replace(/\W/g, "");
+	}
+	return "development";
 }
 
 export function loadEnv(
-  rootDir?: string,
-  filename?: string,
-  filePath?: string,
+	rootDir?: string,
+	filename?: string,
+	filePath?: string,
 ): string {
-  const envPath = getEnvFile(path.resolve(rootDir || "."), filename, filePath);
-  const args = { path: envPath };
-  logger.info(`Loading env from ${envPath}`);
-  dotenv.config(args);
-  return envPath;
+	const envPath = getEnvFile(path.resolve(rootDir || "."), filename, filePath);
+	const args = { path: envPath };
+	logger.info(`Loading env from ${envPath}`);
+	dotenv.config(args);
+	return envPath;
 }
 
 /**
@@ -52,34 +52,34 @@ export function loadEnv(
  * @param filepath
  */
 export function getEnvFile(
-  rootDir?: string,
-  filename = ".env",
-  filepath = path.join(__dirname, "../.."),
+	rootDir?: string,
+	filename = ".env",
+	filepath = path.join(__dirname, "../.."),
 ) {
-  const env = getEnv();
-  const fileNameFull = `${filename}.${env}`;
+	const env = getEnv();
+	const fileNameFull = `${filename}.${env}`;
 
-  let searchPath = path.resolve(rootDir || ".");
+	let searchPath = path.resolve(rootDir || ".");
 
-  logger.info(`Searching for ${fileNameFull} in ${searchPath}`);
+	logger.info(`Searching for ${fileNameFull} in ${searchPath}`);
 
-  while (!fs.existsSync(path.join(searchPath, fileNameFull))) {
-    if (fs.existsSync(path.join(searchPath, "package.json"))) {
-      const pkgJson = JSON.parse(
-        fs.readFileSync(path.join(searchPath, "package.json"), "utf8"),
-      );
-      if (pkgJson.workspaces) {
-        logger.info(
-          `Found workspaces in package.json, stopping search for ${fileNameFull}.`,
-        );
-        break;
-      }
-    }
-    searchPath = path.resolve(searchPath, "..");
-  }
+	while (!fs.existsSync(path.join(searchPath, fileNameFull))) {
+		if (fs.existsSync(path.join(searchPath, "package.json"))) {
+			const pkgJson = JSON.parse(
+				fs.readFileSync(path.join(searchPath, "package.json"), "utf8"),
+			);
+			if (pkgJson.name === "@prosopo/captcha-private") {
+				logger.info(
+					`Reached the workspace root package.json, stopping search for ${fileNameFull}.`,
+				);
+				break;
+			}
+		}
+		searchPath = path.resolve(searchPath, "..");
+	}
 
-  const foundPath = path.join(searchPath, fileNameFull);
-  return fs.existsSync(foundPath)
-    ? foundPath
-    : path.join(rootDir || filepath, fileNameFull);
+	const foundPath = path.join(searchPath, fileNameFull);
+	return fs.existsSync(foundPath)
+		? foundPath
+		: path.join(rootDir || filepath, fileNameFull);
 }
