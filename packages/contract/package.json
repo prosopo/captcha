@@ -53,7 +53,7 @@
 		"@prosopo/types": "2.0.3",
 		"@prosopo/util": "2.0.3",
 		"@prosopo/tx": "2.0.3",
-		"rxjs": "^7.8.1"
+		"rxjs": "7.8.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",

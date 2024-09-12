@@ -21,10 +21,10 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@iarna/toml": "^2.2.5",
+		"@iarna/toml": "2.2.5",
 		"@polkadot/api": "10.13.1",
 		"@polkadot/api-contract": "10.13.1",
-		"@polkadot/keyring": "^13.0.2",
+		"@polkadot/keyring": "13.0.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/cli": "2.0.3",
@@ -39,19 +39,19 @@
 		"@prosopo/types-database": "2.0.3",
 		"@prosopo/types-env": "2.0.3",
 		"@prosopo/util": "2.0.3",
-		"dotenv": "^16.0.3",
-		"fast-glob": "^3.3.2",
-		"fs-extra": "^11.2.0",
-		"mongodb": "^6.8.1",
-		"yargs": "^17.5.1"
+		"dotenv": "16.0.3",
+		"fast-glob": "3.3.2",
+		"fs-extra": "11.2.0",
+		"mongodb": "6.8.1",
+		"yargs": "17.5.1"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"
 	},
 	"devDependencies": {
-		"@types/fs-extra": "^11.0.4",
+		"@types/fs-extra": "11.0.4",
 		"tslib": "2.6.2",
 		"typescript": "5.1.6",
-		"vitest": "^2.0.5"
+		"vitest": "2.0.5"
 	}
 }

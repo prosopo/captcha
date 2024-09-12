@@ -13,12 +13,12 @@
 	"license": "ISC",
 	"devDependencies": {
 		"tslib": "2.6.2",
-		"tsx": "^4.7.0",
+		"tsx": "4.7.0",
 		"typescript": "5.1.6"
 	},
 	"dependencies": {
-		"@octokit/graphql": "^7.0.2",
-		"axios": "^1.7.2"
+		"@octokit/graphql": "7.0.2",
+		"axios": "1.7.2"
 	},
 	"main": "dist/index.js",
 	"type": "module",

@@ -12,17 +12,17 @@
 		"@prosopo/util": "2.0.3"
 	},
 	"devDependencies": {
-		"@cypress/xpath": "^2.0.3",
-		"@types/node": "^20.3.1",
+		"@cypress/xpath": "2.0.3",
+		"@types/node": "20.3.1",
 		"@prosopo/types-database": "2.0.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/datasets": "2.0.3",
-		"cypress": "^13.4.0",
-		"cypress-vite": "^1.5.0",
+		"cypress": "13.4.0",
+		"cypress-vite": "1.5.0",
 		"tslib": "2.6.2",
 		"typescript": "5.1.6",
-		"vite": "^5.4.4",
-		"vite-plugin-node-polyfills": "^0.22.0"
+		"vite": "5.4.4",
+		"vite-plugin-node-polyfills": "0.22.0"
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
