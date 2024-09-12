@@ -87,31 +87,24 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
-	"dependencies": {
-		"@prosopo/flux": "2.0.3",
-		"esbuild": "^0.23.1"
-	},
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.8.3",
-		"@polkadot/x-textdecoder": "12.6.2",
-		"@polkadot/x-textencoder": "12.6.2",
-		"@prosopo/cypress-shared": "^2.0.3",
 		"@taplo/cli": "^0.7.0",
 		"@types/node": "^20.2.5",
-		"babel-plugin-import": "^1.13.6",
 		"concurrently": "^8.2.2",
 		"cypress": "^13.12.0",
 		"depcheck": "^1.4.7",
 		"htmlhint": "^1.1.4",
 		"markdownlint-cli": "^0.41.0",
-		"node-loader": "^2.0.0",
 		"node-stdlib-browser": "^1.2.0",
-		"nodemon": "^3.0.1",
 		"npm-check-updates": "^15.3.4",
 		"npm-run-all": "^4.1.5",
 		"rimraf": "^6.0.1",
-		"tsc-alias": "^1.8.6",
 		"tslib": "2.6.2",
 		"typedoc": "^0.25.13",
 		"typedoc-plugin-mdn-links": "^3.1.16",
