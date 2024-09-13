@@ -234,7 +234,7 @@ export class ImgCaptchaManager {
 		);
 		if (pendingRequest) {
 			const scoreBelowThreshold = score !== undefined && score < threshold;
-			console.log("scoreBelowThreshold", scoreBelowThreshold)
+			console.log("scoreBelowThreshold", scoreBelowThreshold);
 
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
