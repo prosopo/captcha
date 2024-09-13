@@ -27,7 +27,9 @@
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode $NODE_ENV"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/dotenv": "2.0.3",
 		"@prosopo/procaptcha-frictionless": "2.0.3",
@@ -52,9 +54,14 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
+		"@vitest/coverage-v8": "^2.0.5",
+		"concurrently": "^8.2.2",
+		"npm-run-all": "^4.1.5",
+		"rimraf": "^6.0.1",
 		"tslib": "2.6.2",
-		"typescript": "^5.1.6",
+		"typescript": "5.1.6",
 		"vite": "^5.4.4",
+		"vitest": "^2.0.5",
 		"webpack-cli": "^5.1.4"
 	}
 }
