@@ -133,11 +133,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
 												<div
 													style={{
 														flex: 1,
-														display:
-															!state.loading && !state.error ? "flex" : "none",
+														display: !state.loading ? "flex" : "none",
 													}}
 												>
-													{state.loading ? (
+													{state.loading && !state.error ? (
 														<LoadingSpinner
 															themeColor={themeColor}
 															aria-label="Loading spinner"
@@ -148,26 +147,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
 															onChange={manager.current.start}
 															themeColor={themeColor}
 															labelText={"I am human"}
+															error={state.error}
 															aria-label="human checkbox"
 														/>
 													)}
-												</div>
-												<div
-													style={{
-														display:
-															state.error && !state.loading ? "flex" : "none",
-														paddingLeft: "10px",
-													}}
-												>
-													<div
-														id="error"
-														style={{
-															color: "red",
-															fontSize: "14px",
-															marginTop: "5px",
-															marginBottom: "5px",
-														}}
-													/>
 												</div>
 											</div>
 										</div>
