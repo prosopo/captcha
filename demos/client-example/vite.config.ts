@@ -53,7 +53,9 @@ export default defineConfig(async ({ command, mode }) => {
 		"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
 			process.env._DEV_ONLY_WATCH_EVENTS,
 		),
-		"process.env.PROSOPO_DOCS_URL": JSON.stringify(process.env.PROSOPO_DOCS_URL),
+		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
+			process.env.PROSOPO_DOCS_URL,
+		),
 	};
 	logger.debug("define", JSON.stringify(define));
 	return {

@@ -89,10 +89,10 @@ export class PowCaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: string,
 		headers: RequestHeaders,
-		score: number,
 		threshold: number,
+		score?: number,
 	): Promise<boolean> {
-		if (score < threshold) {
+		if (score !== undefined && score < threshold) {
 			await this.db.updatePowCaptchaRecord(
 				challenge,
 				{

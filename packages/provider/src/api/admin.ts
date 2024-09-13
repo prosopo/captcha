@@ -11,24 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AdminApiPaths } from "@prosopo/types";
+import {
+	AdminApiPaths,
+	type ApiResponse,
+	VerifyPowCaptchaSolutionBody,
+} from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Router } from "express";
 import { Tasks } from "../index.js";
 import { authMiddleware } from "./authMiddleware.js";
-
-// Setting batch commit interval to 0 for API calls
-const apiBatchCommitConfig = {
-	interval: 0,
-	maxBatchExtrinsicPercentage: 59,
-};
 
 export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();
 	const tasks = new Tasks(env);
 
 	// Use the authMiddleware for all routes in this router
-	router.use(authMiddleware(tasks, env));
+	router.use(authMiddleware(env));
 
 	router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
 		try {
@@ -37,7 +35,21 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			console.info(`Dataset update complete: ${result}`);
 			res.status(200).send(result);
 		} catch (err) {
-			console.error(err);
+			tasks.logger.error(err);
+			res.status(500).send(err);
+		}
+	});
+
+	router.post(AdminApiPaths.SiteKeyRegister, async (req, res, next) => {
+		try {
+			const parsed = VerifyPowCaptchaSolutionBody.parse(req.body);
+			await tasks.clientTaskManager.registerSiteKey(parsed.siteKey);
+			const response: ApiResponse = {
+				status: "success",
+			};
+			res.json(response);
+		} catch (err) {
+			tasks.logger.error(err);
 			res.status(500).send(err);
 		}
 	});

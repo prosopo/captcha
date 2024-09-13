@@ -70,7 +70,7 @@ export function Manager(
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
-	score = 0,
+	score?: number,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 

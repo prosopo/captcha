@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
+import {
+	CaptchaDatabase,
+	ClientDatabase,
+	ProviderDatabase,
+} from "@prosopo/database";
 import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -194,5 +198,13 @@ export class ClientTaskManager {
 				{ error: String(e) },
 			);
 		}
+	}
+
+	async registerSiteKey(siteKey: string): Promise<void> {
+		await this.providerDB.updateClientRecords([
+			{
+				account: siteKey,
+			} as ClientRecord,
+		]);
 	}
 }

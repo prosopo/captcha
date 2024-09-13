@@ -42,7 +42,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
-		Manager(config, state, updateState, callbacks, props.score || 0),
+		Manager(config, state, updateState, callbacks, props.score),
 	);
 	const captchaRef = useRef<HTMLInputElement>(null);
 
@@ -63,19 +63,6 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			form.removeEventListener("submit", handleSubmit);
 		};
 	}, []);
-
-	// set the error div
-	useEffect(() => {
-		const errorDiv = document.getElementById("error");
-		if (!errorDiv) return;
-
-		const error = state.error;
-		if (error) {
-			errorDiv.innerText = error;
-		} else {
-			errorDiv.innerText = "";
-		}
-	}, [state.error]);
 
 	return (
 		<div ref={captchaRef}>
@@ -130,13 +117,8 @@ const Procaptcha = (props: ProcaptchaProps) => {
 													display: "flex",
 												}}
 											>
-												<div
-													style={{
-														flex: 1,
-														display: !state.loading ? "flex" : "none",
-													}}
-												>
-													{state.loading && !state.error ? (
+												<div style={{ flex: 1 }}>
+													{state.loading ? (
 														<LoadingSpinner
 															themeColor={themeColor}
 															aria-label="Loading spinner"

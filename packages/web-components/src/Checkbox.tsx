@@ -54,7 +54,9 @@ const baseStyle: CSSProperties = {
 
 const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const FAQ_LINK = process.env.PROSOPO_DOCS_URL ? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/` : "https://docs.prosopo.io/en/basics/faq/";
+const FAQ_LINK = process.env.PROSOPO_DOCS_URL
+	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
+	: "https://docs.prosopo.io/en/basics/faq/";
 
 const generateRandomId = () => {
 	return Array.from(
@@ -80,7 +82,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 	};
 	const [hover, setHover] = useState(false);
 
-
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
 		return {
@@ -94,6 +95,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
+	console.log(error);
 	return (
 		<span style={{ display: "inline-flex" }}>
 			<input
@@ -119,15 +121,19 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 						cursor: "pointer",
 						userSelect: "none",
 						top: "20px",
-						fontSize: "12px"
+						fontSize: "12px",
 					}}
 					htmlFor={id}
 				>
-					<a 					css={{
-						color: theme.palette.error.main }} href={FAQ_LINK}>{error}</a>
-
+					<a
+						css={{
+							color: theme.palette.error.main,
+						}}
+						href={FAQ_LINK}
+					>
+						{error}
+					</a>
 				</label>
-
 			) : (
 				<label
 					css={{
@@ -137,7 +143,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 						cursor: "pointer",
 						userSelect: "none",
 						top: "18px",
-
 					}}
 					htmlFor={id}
 				>

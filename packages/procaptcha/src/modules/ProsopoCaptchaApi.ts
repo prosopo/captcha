@@ -23,12 +23,12 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
-	type CaptchaSolutionResponse,
+	type CaptchaSolutionResponse, ProcaptchaApiInterface,
 	type RandomProvider,
 } from "@prosopo/types";
 import type { TCaptchaSubmitResult } from "@prosopo/types";
 
-export class ProsopoCaptchaApi {
+export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 	userAccount: string;
 	provider: RandomProvider;
 	providerApi: ProviderApi;
@@ -89,7 +89,7 @@ export class ProsopoCaptchaApi {
 		solutions: CaptchaSolution[],
 		timestamp: string,
 		providerRequestHashSignature: string,
-		score: number,
+		score?: number,
 	): Promise<TCaptchaSubmitResult> {
 		const tree = new CaptchaMerkleTree();
 
