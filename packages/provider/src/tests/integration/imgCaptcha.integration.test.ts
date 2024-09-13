@@ -13,7 +13,6 @@
 // limitations under the License.
 import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { getPairAsync } from "@prosopo/contract";
-import { ProviderDatabase } from "@prosopo/database";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import {
 	ApiParams,
@@ -22,13 +21,12 @@ import {
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
-	type PowCaptchaSolutionResponse,
 	type TGetImageCaptchaChallengeURL,
 } from "@prosopo/types";
-import type { ClientRecord } from "@prosopo/types-database";
 import fetch from "node-fetch";
 import { beforeAll, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
+import { registerSiteKey } from "./registerSitekey.js";
 
 const solutions = datasetWithSolutionHashes;
 const baseUrl = "http://localhost:9229";
@@ -57,25 +55,6 @@ const getSolvedCaptchas = (
 			solution: solvedCaptcha.solution,
 		};
 	});
-
-const registerSiteKey = async (siteKey: string): Promise<void> => {
-	const username = process.env.PROSOPO_DATABASE_USERNAME || "root";
-	const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
-	const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
-	const port = process.env.PROSOPO_DATABASE_PORT || 27017;
-	const db = new ProviderDatabase(
-		`mongodb://${username}:${pw}@${host}:${port}`,
-		process.env.PROSOPO_DATABASE_NAME || "prosopo",
-		process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
-	);
-	await db.connect();
-	await db.updateClientRecords([
-		{
-			account: siteKey,
-		} as ClientRecord,
-	]);
-	await db.connection?.close();
-};
 
 describe("Image Captcha Integration Tests", () => {
 	describe("GetImageCaptchaChallenge", () => {

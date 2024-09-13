@@ -78,6 +78,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					flatten(req.headers, ","),
 				);
 			const captchaResponse: CaptchaResponseBody = {
+				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 					...captcha,
 					items: captcha.items.map((item) =>
@@ -145,8 +146,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					parsed[ApiParams.signature].provider.requestHash,
 					req.ip || NO_IP_ADDRESS,
 					flatten(req.headers, ","),
-					parsed.score,
 					clientRecord.settings?.threshold || 0.8,
+					parsed.score,
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -220,12 +221,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
-				challenge: challenge.challenge,
-				difficulty: challenge.difficulty,
-				timestamp: challenge.requestedAtTimestamp.toString(),
-				signature: {
-					provider: {
-						challenge: challenge.providerSignature,
+				[ApiParams.status]: "ok",
+				[ApiParams.challenge]: challenge.challenge,
+				[ApiParams.difficulty]: challenge.difficulty,
+				[ApiParams.timestamp]: challenge.requestedAtTimestamp.toString(),
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: challenge.providerSignature,
 					},
 				},
 			};
@@ -280,10 +282,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				signature.user.timestamp,
 				req.ip || NO_IP_ADDRESS,
 				flatten(req.headers, ","),
-				score,
 				clientRecord.settings?.threshold || 0.8,
+				score,
 			);
-			const response: PowCaptchaSolutionResponse = { verified };
+			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);
 		} catch (err) {
 			tasks.logger.error(err);

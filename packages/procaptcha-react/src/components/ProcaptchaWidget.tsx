@@ -45,19 +45,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 
-	// set the error div
-	useEffect(() => {
-		const errorDiv = document.getElementById("error");
-		if (!errorDiv) return;
-
-		const error = state.error;
-		if (error) {
-			errorDiv.innerText = error;
-		} else {
-			errorDiv.innerText = "";
-		}
-	}, [state.error]);
-
 	return (
 		<div>
 			<div
@@ -130,25 +117,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 													themeColor={themeColor}
 													onChange={manager.start}
 													checked={state.isHuman}
-													labelText="I am human"
+													labelText={"I am human"}
+													error={state.error}
 													aria-label="human checkbox"
-												/>
-											</div>
-											<div
-												style={{
-													display:
-														state.error && !state.loading ? "flex" : "none",
-													paddingLeft: "10px",
-												}}
-											>
-												<div
-													id="error"
-													style={{
-														color: "red",
-														fontSize: "14px",
-														marginTop: "5px",
-														marginBottom: "5px",
-													}}
 												/>
 											</div>
 											<div

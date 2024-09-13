@@ -182,8 +182,8 @@ export class ImgCaptchaManager {
 		providerRequestHashSignature: string,
 		ipAddress: string,
 		headers: RequestHeaders,
-		score: number,
 		threshold: number,
+		score?: number,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -233,7 +233,8 @@ export class ImgCaptchaManager {
 			unverifiedCaptchaIds,
 		);
 		if (pendingRequest) {
-			const scoreBelowThreshold = score < threshold;
+			const scoreBelowThreshold = score !== undefined && score < threshold;
+			console.log("scoreBelowThreshold", scoreBelowThreshold)
 
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);

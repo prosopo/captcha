@@ -70,7 +70,7 @@ export default class ProviderApi
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
-		score: number,
+		score?: number,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -138,7 +138,7 @@ export default class ProviderApi
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
-		score: number,
+		score?: number,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({

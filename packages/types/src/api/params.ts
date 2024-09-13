@@ -39,4 +39,5 @@ export enum ApiParams {
 	signature = "signature",
 	score = "score",
 	error = "error",
+	siteKey = "siteKey",
 }
