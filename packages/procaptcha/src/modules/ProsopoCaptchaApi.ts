@@ -23,7 +23,8 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
-	type CaptchaSolutionResponse, ProcaptchaApiInterface,
+	type CaptchaSolutionResponse,
+	type ProcaptchaApiInterface,
 	type RandomProvider,
 } from "@prosopo/types";
 import type { TCaptchaSubmitResult } from "@prosopo/types";
