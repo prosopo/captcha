@@ -80,7 +80,10 @@
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
-		"docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME"
+		"docs": "npx typedoc --plugin typedoc-plugin-missing-exports --plugin typedoc-plugin-mdn-links --plugin typedoc-plugin-zod 2>&1 | grep -v \"Serialized project contained a reflection\" && echo 'docs.prosopo.io' >> docs/CNAME",
+		"sbom:spdx": "npm sbom --sbom-format spdx > sbom.spdx.json",
+		"sbom:cyclonedx": "npm sbom --sbom-format cyclonedx > sbom.cyclonedx.json",
+		"sbom": "run-s sbom:*"
 	},
 	"private": true,
 	"engines": {
