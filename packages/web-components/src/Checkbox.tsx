@@ -54,6 +54,8 @@ const baseStyle: CSSProperties = {
 
 const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+const FAQ_LINK = process.env.PROSOPO_DOCS_URL ? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/` : "https://docs.prosopo.io/en/basics/faq/";
+
 const generateRandomId = () => {
 	return Array.from(
 		{ length: 8 },
@@ -122,7 +124,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 					htmlFor={id}
 				>
 					<a 					css={{
-						color: theme.palette.error.main }} href={`https://docs.prosopo.io/en/basics/faq`}>{error}</a>
+						color: theme.palette.error.main }} href={FAQ_LINK}>{error}</a>
 
 				</label>
 
