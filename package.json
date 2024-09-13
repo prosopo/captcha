@@ -33,6 +33,8 @@
 		"ws:ls": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
 		"ws:about": "run a command for each workspace member, exiting immediately if any command fails. Don't forget the `--` !",
 		"ws": "f() { (set -e; npm run --silent ws:ls | while read -r line; do npm run -w $line $@; done); }; f",
+		"ws:pkg": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgjson -- {}",
+		"pkgjson": "f() { npx -w $1 node -e 'console.log(process.cwd())' | xargs -I {} printf '%s/package.json\n' {} ;}; f",
 		"cli": "npm -w @prosopo/cli run cli",
 		"setup": "npm -w @prosopo/scripts run setup",
 		"setup:all": "npm run setup",
