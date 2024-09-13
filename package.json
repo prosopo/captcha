@@ -87,7 +87,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.8.3",
 		"@taplo/cli": "^0.7.0",
@@ -102,6 +106,7 @@
 		"npm-check": "^6.0.1",
 		"rimraf": "^6.0.1",
 		"tslib": "2.6.2",
+		"tsx": "^4.7.0",
 		"typedoc": "^0.25.13",
 		"typedoc-plugin-mdn-links": "^3.1.16",
 		"typedoc-plugin-missing-exports": "^2.2.0",
