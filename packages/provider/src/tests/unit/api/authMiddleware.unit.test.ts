@@ -39,7 +39,7 @@ describe("authMiddleware", () => {
 		const mockReq = {
 			headers: {
 				signature: "0x1234",
-				timestamp: "1234",
+				timestamp: new Date().getTime(),
 			},
 		} as unknown as Request;
 
@@ -65,7 +65,7 @@ describe("authMiddleware", () => {
 		const mockReq = {
 			headers: {
 				signature: "0x1234",
-				timestamp: "1234",
+				timestamp: new Date().getTime(),
 			},
 		} as unknown as Request;
 
@@ -95,7 +95,7 @@ describe("authMiddleware", () => {
 		const mockReq = {
 			headers: {
 				signature: "0x1234",
-				timestamp: "1234",
+				timestamp: new Date().getTime(),
 			},
 		} as unknown as Request;
 
