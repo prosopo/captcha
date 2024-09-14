@@ -120,15 +120,15 @@ jobs:
 
             - name: Run the cypress tests on client-example
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider -- --adminApi" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
 
             - name: Run the cypress tests on client-bundle-example
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider -- --adminApi" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
 
             - name: Run the cypress tests on client-bundle-example explicit rendering
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider -- --adminApi" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others
 
             # after the test run completes store videos and any screenshots
             - uses: actions/upload-artifact@v4
