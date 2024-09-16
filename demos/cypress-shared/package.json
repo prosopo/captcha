@@ -13,7 +13,7 @@
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
-		"@types/node": "20.3.1",
+		"@types/node": "22.5.5",
 		"@prosopo/types-database": "2.0.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/datasets": "2.0.3",

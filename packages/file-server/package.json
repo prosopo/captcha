@@ -26,12 +26,12 @@
 		"dotenv": "16.4.5",
 		"express": "4.21.0",
 		"node-fetch": "3.3.2",
-		"sharp": "0.32.4"
+		"sharp": "0.33.5"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
 		"@types/express": "4.17.21",
-		"@types/node": "20.5.9",
+		"@types/node": "22.5.5",
 		"tslib": "2.7.0",
 		"typescript": "5.6.2"
 	},

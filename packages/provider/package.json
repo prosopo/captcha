@@ -38,14 +38,14 @@
 		"@prosopo/types-database": "2.0.3",
 		"@prosopo/types-env": "2.0.3",
 		"@prosopo/util": "2.0.3",
-		"cron": "2.1.0",
+		"cron": "3.1.7",
 		"express": "4.21.0",
 		"node-fetch": "3.3.2",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@types/node": "18.0.6",
-		"c8": "9.1.0",
+		"@types/node": "22.5.5",
+		"c8": "10.1.2",
 		"dotenv": "16.4.5",
 		"tslib": "2.7.0",
 		"typescript": "5.6.2",

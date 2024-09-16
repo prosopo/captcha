@@ -41,7 +41,7 @@
 		"@prosopo/procaptcha-common": "2.0.3",
 		"@prosopo/types": "2.0.3",
 		"@prosopo/util": "2.0.3",
-		"jsdom": "24.1.0"
+		"jsdom": "25.0.0"
 	},
 	"overrides": {
 		"@polkadot/extension-inject": {
