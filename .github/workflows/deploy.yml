@@ -190,15 +190,14 @@ jobs:
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: eu-west-1
 
-            - name: Deploy prod bundle to AWS S3
-              if: ${{ steps.env.outputs.production }}
+            - name: Deploy bundle to AWS S3
+              if: ${{ steps.env.outputs.production || steps.env.outputs.staging }}
               run: |
-                aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://staging-js.prosopo.io/ --recursive
-
-            - name: Deploy staging bundle to AWS S3
-              if: ${{ steps.env.outputs.staging }}
-              run: |
-                aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://staging-js.prosopo.io/ --recursive
+                if [ "${{ steps.env.outputs.production }}" = "true" ]; then
+                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://js.prosopo.io/ --recursive
+                elif [ "${{ steps.env.outputs.staging }}" = "true" ]; then
+                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://staging-js.prosopo.io/ --recursive
+                fi
 
             - name: Build docker js_server
               run: |
