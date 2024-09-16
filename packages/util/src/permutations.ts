@@ -46,7 +46,7 @@ export function* permutations(
 	let i = arr.length - 1;
 	while (true) {
 		yield [...arr];
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
 		arr[i]!++;
 		while (arr[i] === bins[i]) {
 			arr[i] = 0;
@@ -54,7 +54,7 @@ export function* permutations(
 			if (i < 0) {
 				return;
 			}
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
 			arr[i]!++;
 		}
 		i = arr.length - 1;
