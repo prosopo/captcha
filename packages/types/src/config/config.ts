@@ -142,7 +142,7 @@ export const ProsopoCaptchaSolutionConfigSchema = object({
 	captchaBlockRecency: number().positive().min(2),
 });
 
-const LanguageSchema = z.enum(["en", "es", "pt"]);
+export const LanguageSchema = z.enum(["en", "es", "pt"]);
 
 export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
@@ -151,7 +151,6 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 		solutionThreshold: number().positive().max(100).optional().default(80),
 		dappName: string().optional().default("ProsopoClientDapp"),
 		serverUrl: string().optional(),
-		language: LanguageSchema.optional().default("en"),
 	}),
 );
 
@@ -262,6 +261,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		accountCreator: AccountCreatorConfigSchema.optional(),
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+		language: LanguageSchema.optional().default("en"),
 	}),
 );
 
