@@ -26,12 +26,14 @@ import {
 	WIDGET_URL_TEXT,
 } from "./WidgetConstants.js";
 import { darkTheme, lightTheme } from "./theme.js";
+import { type ProcaptchaProps } from "@prosopo/types";
 
-type PlaceholderProps = { darkMode: "light" | "dark" | undefined };
-
-export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
-	const themeColor = props.darkMode === "light" ? "light" : "dark";
-	const theme = props.darkMode === "light" ? lightTheme : darkTheme;
+export const ProcaptchaPlaceholder = ({
+	config,
+	callbacks,
+}: ProcaptchaProps) => {
+	const themeColor = config.theme === "light" ? "light" : "dark";
+	const theme = config.theme === "light" ? lightTheme : darkTheme;
 	return (
 		<div>
 			<div

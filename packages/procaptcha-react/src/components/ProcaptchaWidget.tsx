@@ -1,3 +1,4 @@
+import { useTranslation } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,9 +36,9 @@ import { Logo } from "@prosopo/web-components";
 import { useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
-import Collector from "./collector.js";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
+	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
@@ -116,7 +117,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 													themeColor={themeColor}
 													onChange={manager.start}
 													checked={state.isHuman}
-													labelText="I am human"
+													labelText={t("WIDGET.I_AM_HUMAN")}
 													aria-label="human checkbox"
 												/>
 											</div>

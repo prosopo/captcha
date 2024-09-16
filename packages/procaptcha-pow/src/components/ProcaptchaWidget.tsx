@@ -1,3 +1,4 @@
+import { useTranslation } from "@prosopo/common";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import type { ProcaptchaProps } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
@@ -34,6 +35,7 @@ import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
 
 const Procaptcha = (props: ProcaptchaProps) => {
+	const { t } = useTranslation();
 	const config = props.config;
 	const themeColor = config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
@@ -126,7 +128,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 															checked={state.isHuman}
 															onChange={manager.current.start}
 															themeColor={themeColor}
-															labelText={"I am human"}
+															labelText={t("WIDGET.I_AM_HUMAN")}
 															aria-label="human checkbox"
 														/>
 													)}
