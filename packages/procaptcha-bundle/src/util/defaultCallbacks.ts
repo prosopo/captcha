@@ -19,6 +19,7 @@ import {
 import { getParentForm } from "./form.js";
 
 export const getWindowCallback = (callbackName: string) => {
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
 	const fn = (window as any)[callbackName.replace("window.", "")];
 	if (typeof fn !== "function") {
 		throw new Error(

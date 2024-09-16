@@ -25,7 +25,8 @@ describe("Config utility functions", () => {
 		global.document = dom.window.document;
 	});
 
-	afterEach(() => {
+    afterEach(() => {
+        // biome-ignore lint/suspicious/noExplicitAny: TODO fix any
 		(global as any).document = undefined;
 	});
 

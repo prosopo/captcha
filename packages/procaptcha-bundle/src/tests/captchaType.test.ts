@@ -50,10 +50,10 @@ describe("getCaptchaType", () => {
 	it("should work with all valid FeaturesEnum values", () => {
 		const element = document.createElement("div");
 
-		Object.values(FeaturesEnum).forEach((feature) => {
+		for (const feature of Object.values(FeaturesEnum)) {
 			element.setAttribute("data-captcha-type", feature);
 			const result = getCaptchaType([element]);
 			expect(result).toBe(feature);
-		});
+		}
 	});
 });
