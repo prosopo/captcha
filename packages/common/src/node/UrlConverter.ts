@@ -223,12 +223,14 @@ export class UrlConverter {
 				const shift = this.byteNBits - unusedBitsInSymbol;
 				const shiftedNum = remNum << shift;
 				// pack X bits from the symbol into the unused bits of the byte
-				bytes[byteIndex] |= shiftedNum;
+				// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
+				bytes[byteIndex]! |= shiftedNum;
 				// filled the unused bits in the byte
 				bitCount += unusedBitsInSymbol;
 			} else {
 				// can only fit part of the start of the number into the remainder of the byte
-				bytes[byteIndex] |= num >> shift;
+				// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
+				bytes[byteIndex]! |= num >> shift;
 				bitCount += unusedBitsInByte;
 			}
 		}
