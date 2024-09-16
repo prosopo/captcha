@@ -89,11 +89,7 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": [
-		"dev/*",
-		"packages/*",
-		"demos/*"
-	],
+	"workspaces": ["dev/*", "packages/*", "demos/*"],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
