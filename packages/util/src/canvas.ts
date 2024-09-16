@@ -16,7 +16,7 @@ import { at } from "./at.js";
 function x64Add(m: number[], n: number[]) {
 	m = [at(m, 0) >>> 16, at(m, 0) & 0xffff, at(m, 1) >>> 16, at(m, 1) & 0xffff];
 	n = [at(n, 0) >>> 16, at(n, 0) & 0xffff, at(n, 1) >>> 16, at(n, 1) & 0xffff];
-	const o: number[] = [0, 0, 0, 0];
+	const o = [0, 0, 0, 0] as [number, number, number, number];
 	o[3] += at(m, 3) + at(n, 3);
 	o[2] += at(o, 3) >>> 16;
 	o[3] &= 0xffff;
@@ -34,7 +34,7 @@ function x64Add(m: number[], n: number[]) {
 function x64Multiply(m: number[], n: number[]) {
 	m = [at(m, 0) >>> 16, at(m, 0) & 0xffff, at(m, 1) >>> 16, at(m, 1) & 0xffff];
 	n = [at(n, 0) >>> 16, at(n, 0) & 0xffff, at(n, 1) >>> 16, at(n, 1) & 0xffff];
-	const o: number[] = [0, 0, 0, 0];
+	const o = [0, 0, 0, 0] as [number, number, number, number];
 	o[3] += at(m, 3) * at(n, 3);
 	o[2] += at(o, 3) >>> 16;
 	o[3] &= 0xffff;
