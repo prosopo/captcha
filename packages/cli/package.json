@@ -37,20 +37,20 @@
 		"@prosopo/util": "2.0.3",
 		"cors": "2.8.5",
 		"cron-parser": "4.9.0",
-		"dotenv": "16.0.1",
-		"express-rate-limit": "7.3.1",
+		"dotenv": "16.4.5",
+		"express-rate-limit": "7.4.0",
 		"yargs": "17.7.2",
-		"zod": "3.22.4"
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
-		"@types/cors": "2.8.14",
-		"@types/yargs": "17.0.32",
-		"express": "4.18.2",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6",
-		"vite": "5.4.4",
-		"vitest": "2.0.5"
+		"@types/cors": "2.8.17",
+		"@types/yargs": "17.0.33",
+		"express": "4.21.0",
+		"tslib": "2.7.0",
+		"typescript": "5.6.2",
+		"vite": "5.4.5",
+		"vitest": "2.1.1"
 	},
 	"author": "Prosopo",
 	"license": "Apache-2.0",
