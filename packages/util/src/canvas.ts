@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at } from "@prosopo/util";
+import { at } from "./at.js";
 
 function x64Add(m: number[], n: number[]) {
 	m = [at(m, 0) >>> 16, at(m, 0) & 0xffff, at(m, 1) >>> 16, at(m, 1) & 0xffff];
