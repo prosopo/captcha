@@ -99,6 +99,7 @@ jobs:
       # check that the number of references in each tsconfig.json is equal to the number of references in the tsconfig.cjs.json for each package
       - name: Check for matching references in tsconfig.json and tsconfig.cjs.json
         run: |
+          rm -f mismatched_references.txt
           for file in $(find ./packages -name tsconfig.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
               if [ $(jq '.references | length' $file) -ne $(jq '.references | length' $(dirname $file)/tsconfig.cjs.json) ]; then
               echo "Mismatched number of references in $file and $(dirname $file)/tsconfig.cjs.json" >> mismatched_references.txt
