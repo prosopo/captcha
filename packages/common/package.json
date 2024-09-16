@@ -24,7 +24,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@polkadot/util": "13.0.2",
+		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"consola": "3.2.3",
 		"i18next": "21.9.2",
@@ -37,9 +37,15 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.0.3",
+		"@vitest/coverage-v8": "2.1.1",
+		"concurrently": "9.0.1",
 		"dotenv": "16.4.5",
+		"npm-run-all": "4.1.5",
+		"rimraf": "6.0.1",
 		"tslib": "2.7.0",
+		"tsx": "4.19.1",
 		"typescript": "5.6.2",
+		"vite": "5.4.5",
 		"vitest": "2.1.1"
 	},
 	"repository": {
