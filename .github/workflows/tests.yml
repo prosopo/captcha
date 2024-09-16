@@ -96,6 +96,16 @@ jobs:
               fi
           done
 
+      # check that the number of references in each tsconfig.json is equal to the number of references in the tsconfig.cjs.json for each package
+      - name: Check for matching references in tsconfig.json and tsconfig.cjs.json
+        run: |
+          for file in $(find ./packages -name tsconfig.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
+              if [ $(jq '.references | length' $file) -ne $(jq '.references | length' $(dirname $file)/tsconfig.cjs.json) ]; then
+              echo "Mismatched number of references in $file and $(dirname $file)/tsconfig.cjs.json"
+              exit 1
+              fi
+          done
+
       - uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
