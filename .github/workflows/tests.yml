@@ -101,10 +101,34 @@ jobs:
         run: |
           for file in $(find ./packages -name tsconfig.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
               if [ $(jq '.references | length' $file) -ne $(jq '.references | length' $(dirname $file)/tsconfig.cjs.json) ]; then
-              echo "Mismatched number of references in $file and $(dirname $file)/tsconfig.cjs.json"
-              exit 1
+              echo "Mismatched number of references in $file and $(dirname $file)/tsconfig.cjs.json" >> mismatched_references.txt
               fi
           done
+          if [ -f mismatched_references.txt ]; then
+              cat mismatched_references.txt
+              exit 1
+          fi
+
+      # check that each @prosopo package referenced in package.json is in the tsconfig.json for each package
+      - name: Check for matching references in package.json and tsconfig.json
+        run: |
+          for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
+              for package in $(jq -r '.dependencies | keys[]' $file); do
+              # if the package is not a @prosopo package, skip it
+              if ! echo $package | grep -q "^@prosopo"; then
+                  continue
+              fi
+          
+              if ! grep -q "\"$package\":" $(dirname $file)/tsconfig.json; then                  
+                  # store the results
+                  echo "Missing reference to $package in $(dirname $file)/tsconfig.json" >> missing_references.txt
+              fi
+              done
+          done
+          if [ -f missing_references.txt ]; then
+              cat missing_references.txt
+              exit 1
+          fi
 
       - uses: actions/setup-node@v3
         with:
