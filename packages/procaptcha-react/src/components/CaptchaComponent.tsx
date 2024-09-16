@@ -105,8 +105,8 @@ const CaptchaComponent = ({
 									{t("WIDGET.SELECT_ALL")}
 									{":"}
 									&nbsp;
-									<span style={{ textTransform: "capitalize" }}>
-										{`${at(challenge.captchas, index).target}`}
+									<span >
+										{`${t(at(challenge.captchas, index).target)} `}
 									</span>
 								</p>
 								<p

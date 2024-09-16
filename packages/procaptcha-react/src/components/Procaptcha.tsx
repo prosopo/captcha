@@ -24,7 +24,8 @@ const ProcaptchaWidget: LazyExoticComponent<
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 
 const Procaptcha = (props: ProcaptchaProps) => (
-	<Suspense fallback={<ProcaptchaPlaceholder config={props.config} />}>
+	<Suspense fallback={<ProcaptchaPlaceholder 				config={props.config}
+				callbacks={props.callbacks}/>}>
 		<ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
 	</Suspense>
 );

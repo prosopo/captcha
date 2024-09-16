@@ -62,6 +62,8 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		if (config.language) {
 			i18n.changeLanguage(config.language);
 			console.log(i18n);
+			console.log("cat")
+			console.log(t("cat"))
 		}
 
 		return () => {
