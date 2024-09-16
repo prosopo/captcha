@@ -16,6 +16,9 @@
 			"path": "../api/tsconfig.cjs.json"
 		},
 		{
+			"path": "../account/tsconfig.cjs.json"
+		},
+		{
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
