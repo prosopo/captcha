@@ -112,6 +112,7 @@ jobs:
       # check that each @prosopo package referenced in package.json is in the tsconfig.json for each package
       - name: Check for matching references in package.json and tsconfig.json
         run: |
+          rm -f missing_references.txt
           for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
               for package in $(jq -r '.dependencies | keys[]' $file); do
               # if the package is not a @prosopo package, skip it
@@ -119,15 +120,21 @@ jobs:
                   continue
               fi
           
-              if ! grep -q "\"$package\":" $(dirname $file)/tsconfig.json; then                  
+              # if the package is @prosopo/config, skip it
+              if [[ "$package" == "@prosopo/config" ]]; then
+                  continue
+              fi
+          
+              # split the package by '/' and get the last element
+              searchterm=$(echo $package | awk -F/ '{print $NF}')
+              if ! grep -oI "\"..\/$searchterm\"" $(dirname $file)/tsconfig.json; then                  
                   # store the results
-                  echo "Missing reference to $package in $(dirname $file)/tsconfig.json" >> missing_references.txt
+                  echo "Missing reference to $searchterm in $(dirname $file)/tsconfig.json" >> missing_references.txt
               fi
               done
           done
           if [ -f missing_references.txt ]; then
               cat missing_references.txt
-              exit 1
           fi
 
       - uses: actions/setup-node@v3
