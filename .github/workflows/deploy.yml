@@ -183,6 +183,22 @@ jobs:
                   # upload the bundle to the staging release
                   gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
 
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v2
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: eu-west-1
+
+            - name: Deploy bundle to AWS S3
+              if: ${{ steps.env.outputs.production || steps.env.outputs.staging }}
+              run: |
+                if [ "${{ steps.env.outputs.production }}" = "true" ]; then
+                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://js.prosopo.io/ --recursive
+                elif [ "${{ steps.env.outputs.staging }}" = "true" ]; then
+                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://staging-js.prosopo.io/ --recursive
+                fi
+
             - name: Build docker js_server
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
