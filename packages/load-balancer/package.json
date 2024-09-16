@@ -32,8 +32,8 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/common": "2.0.3",
-		"@prosopo/types": "2.0.3",
-		"@prosopo/config": "2.0.3"
+		"@prosopo/config": "2.0.3",
+		"@prosopo/types": "2.0.3"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",
@@ -41,6 +41,7 @@
 		"npm-run-all": "4.1.5",
 		"rimraf": "6.0.1",
 		"tslib": "2.7.0",
+		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "5.4.5",
 		"vitest": "2.1.1"
