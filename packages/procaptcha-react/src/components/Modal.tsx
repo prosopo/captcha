@@ -53,9 +53,9 @@ const ModalComponent = React.memo(
 		};
 
 		return (
-			<div className="modalOuter" style={ModalOuterDivCss}>
-				<div className="modalBackground" style={ModalBackgroundCSS} />
-				<div className="modalInner" style={ModalInnerDivCSS}>
+			<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
+				<div className="prosopo-modalBackground" style={ModalBackgroundCSS} />
+				<div className="prosopo-modalInner" style={ModalInnerDivCSS}>
 					{children}
 				</div>
 			</div>
