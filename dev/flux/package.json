@@ -24,9 +24,9 @@
 		"@noble/curves": "1.6.0",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/dotenv": "2.0.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/config": "2.0.3",
+		"@prosopo/dotenv": "2.0.3",
 		"@prosopo/util": "2.0.3",
 		"openpgp": "5.11.2",
 		"qs": "6.13.0",
@@ -39,8 +39,13 @@
 		"@polkadot/keyring": "12.6.2"
 	},
 	"devDependencies": {
-		"tslib": "2.7.0",
-		"typescript": "5.6.2",
-		"vitest": "2.1.1"
+		"@vitest/coverage-v8": "^2.1.1",
+		"concurrently": "^9.0.1",
+		"npm-run-all": "^4.1.5",
+		"rimraf": "^6.0.1",
+		"tslib": "^2.7.0",
+		"typescript": "^5.6.2",
+		"vite": "^5.4.5",
+		"vitest": "^2.1.1"
 	}
 }
