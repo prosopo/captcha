@@ -39,14 +39,15 @@
 		"@polkadot/types-codec": "10.13.1",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "2.0.3",
-		"scale-ts": "^1.6.0",
-		"zod": "^3.22.3"
+		"@prosopo/types": "2.0.3",
+		"scale-ts": "1.6.0",
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@types/node": "^18.0.6",
+		"@types/node": "22.5.5",
 		"@prosopo/config": "2.0.3",
-		"tslib": "2.6.2",
-		"typescript": "5.1.6"
+		"tslib": "2.7.0",
+		"typescript": "5.6.2"
 	},
 	"sideEffects": false
 }
