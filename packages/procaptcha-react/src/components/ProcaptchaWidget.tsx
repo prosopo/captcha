@@ -1,4 +1,3 @@
-import { i18n, useTranslation } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,8 @@ import { i18n, useTranslation } from "@prosopo/common";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
+
+import { i18n, useTranslation } from "@prosopo/common";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
