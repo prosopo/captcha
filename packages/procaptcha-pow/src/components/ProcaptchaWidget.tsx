@@ -1,4 +1,4 @@
-import { useTranslation } from "@prosopo/common";
+import { i18n, useTranslation } from "@prosopo/common";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import type { ProcaptchaProps } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
@@ -45,6 +45,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(Manager(config, state, updateState, callbacks));
 	const captchaRef = useRef<HTMLInputElement>(null);
+
+		if (config.language) {
+		i18n.changeLanguage(config.language);
+	}
 
 	useEffect(() => {
 		const element = captchaRef.current;

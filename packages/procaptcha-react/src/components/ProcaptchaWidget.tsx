@@ -1,4 +1,4 @@
-import { useTranslation } from "@prosopo/common";
+import { i18n, useTranslation } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,6 +46,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 
+			if (config.language) {
+		i18n.changeLanguage(config.language);
+			}
+	
 	return (
 		<div>
 			<div

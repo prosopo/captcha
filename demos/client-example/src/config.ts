@@ -25,6 +25,7 @@ const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
 	defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 	dappName: "client-example",
 	serverUrl: getServerUrl(),
+	language: "es",
 });
 
 export default config;
