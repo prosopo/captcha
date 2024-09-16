@@ -82,6 +82,20 @@ jobs:
           restore-keys: |
             project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
 
+      # check that each package.json contains a `build` and `build:cjs` script.
+      - name: Check for build and build:cjs scripts
+        run: |
+          for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
+              if ! grep -q '"build":' $file; then
+              echo "Missing 'build' script in $file"
+              exit 1
+              fi
+              if ! grep -q '"build:cjs":' $file; then
+              echo "Missing 'build:cjs' script in $file"
+              exit 1
+              fi
+          done
+
       - uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
