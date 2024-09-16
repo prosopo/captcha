@@ -76,6 +76,9 @@
 		"webpack": "5.94.0"
 	},
 	"devDependencies": {
+		"@babel/plugin-transform-class-properties": "^7.24.7",
+		"@babel/plugin-transform-object-rest-spread": "^7.24.7",
+		"@babel/preset-typescript": "^7.24.1",
 		"webpack-cli": "5.1.4",
 		"webpack-dev-server": "5.1.0",
 		"tslib": "2.7.0",
