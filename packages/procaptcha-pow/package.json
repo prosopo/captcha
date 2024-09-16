@@ -28,7 +28,6 @@
 		"> 0.5%, last 2 versions, not dead"
 	],
 	"dependencies": {
-		"@emotion/react": "11.13.3",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/account": "2.0.3",
 		"@prosopo/api": "2.0.3",
