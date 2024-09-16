@@ -1,3 +1,4 @@
+import type { ProcaptchaProps } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +27,6 @@ import {
 	WIDGET_URL_TEXT,
 } from "./WidgetConstants.js";
 import { darkTheme, lightTheme } from "./theme.js";
-import { type ProcaptchaProps } from "@prosopo/types";
 
 export const ProcaptchaPlaceholder = ({
 	config,

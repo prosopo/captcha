@@ -152,7 +152,6 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 		dappName: string().optional().default("ProsopoClientDapp"),
 		serverUrl: string().optional(),
 		language: LanguageSchema.optional().default("en"),
-
 	}),
 );
 
@@ -257,7 +256,6 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({

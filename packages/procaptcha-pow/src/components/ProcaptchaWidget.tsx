@@ -46,10 +46,6 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const manager = useRef(Manager(config, state, updateState, callbacks));
 	const captchaRef = useRef<HTMLInputElement>(null);
 
-		if (config.language) {
-		i18n.changeLanguage(config.language);
-	}
-
 	useEffect(() => {
 		const element = captchaRef.current;
 		if (!element) return;
@@ -63,10 +59,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 		form.addEventListener("submit", handleSubmit);
 
+		if (config.language) {
+			i18n.changeLanguage(config.language);
+			console.log(i18n);
+		}
+
 		return () => {
 			form.removeEventListener("submit", handleSubmit);
 		};
-	}, []);
+	}, [config.language]);
 
 	return (
 		<div ref={captchaRef}>

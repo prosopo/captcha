@@ -33,7 +33,7 @@ import {
 	lightTheme,
 } from "@prosopo/web-components";
 import { Logo } from "@prosopo/web-components";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
 
@@ -46,10 +46,14 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 
-			if (config.language) {
-		i18n.changeLanguage(config.language);
-			}
-	
+	useEffect(() => {
+		if (config.language) {
+			i18n.changeLanguage(config.language);
+		}
+
+		console.log(config.language);
+	}, [config.language]);
+
 	return (
 		<div>
 			<div

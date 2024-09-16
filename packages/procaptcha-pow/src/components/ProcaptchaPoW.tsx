@@ -25,7 +25,14 @@ const ProcaptchaWidget: LazyExoticComponent<
 > = lazy(async () => import("./ProcaptchaWidget.js"));
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
-	<Suspense fallback={<ProcaptchaPlaceholder config={props.config} callbacks={props.callbacks} />}>
+	<Suspense
+		fallback={
+			<ProcaptchaPlaceholder
+				config={props.config}
+				callbacks={props.callbacks}
+			/>
+		}
+	>
 		<ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
 	</Suspense>
 );

@@ -38,10 +38,6 @@ export const ProcaptchaFrictionless = ({
 		<ProcaptchaPlaceholder config={config} callbacks={callbacks} />,
 	);
 
-	if (config.language) {
-		i18n.changeLanguage(config.language);
-	}
-
 	useEffect(() => {
 		const detectAndSetComponent = async () => {
 			const result = await detectBot();
@@ -57,7 +53,11 @@ export const ProcaptchaFrictionless = ({
 		};
 
 		detectAndSetComponent();
-	}, [config, callbacks, detectBot]);
+
+		if (config.language) {
+			i18n.changeLanguage(config.language);
+		}
+	}, [config, callbacks, detectBot, config.language]);
 
 	return componentToRender;
 };
