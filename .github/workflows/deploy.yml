@@ -118,7 +118,7 @@ jobs:
                   node-version-file: '.nvmrc'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
-            - run: npm ci
+            - run: npm i
 
             # build from scratch to ensure nothing bought over from cache
 

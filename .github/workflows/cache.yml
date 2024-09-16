@@ -72,7 +72,7 @@ jobs:
                   node-version-file: '.nvmrc'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
-            - run: npm ci
+            - run: npm i
 
             # install cypress so we don't have to do that every time
             - run: npx cypress install

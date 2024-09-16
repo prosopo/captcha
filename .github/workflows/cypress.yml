@@ -87,7 +87,7 @@ jobs:
                   node-version-file: '.nvmrc'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
-            - run: npm ci
+            - run: npm i
 
             # build all packages in workspace
             - run: npm run build:all
