@@ -71,7 +71,7 @@
     "string-replace-loader": "^3.1.0",
     "terser-webpack-plugin": "^5.3.10",
     "tsconfig-paths": "^4.2.0",
-    "vite": "^5.1.7",
+    "vite": "^5.4.6",
     "vite-bundle-visualizer": "^1.0.1",
     "vite-plugin-no-bundle": "^3.0.0",
     "vite-tsconfig-paths": "^4.3.1",
