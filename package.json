@@ -79,7 +79,17 @@
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
-		"postinstall": "npm run removePolkadotJSWarnings"
+		"postinstall": "npm run removePolkadotJSWarnings",
+		"ws:pkg": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgjson -- {}",
+		"ws:dir": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgdir -- {}",
+		"pkgjson": "f() { npx -w $1 node -e 'console.log(process.cwd()+\"/package.json\")' ;}; f",
+		"pkgdir": "f() { npx -w $1 node -e 'console.log(process.cwd())' ;}; f",
+		"depcheck": "npm run --silent ws:pkg | xargs -P 1 --verbose -I {} bash -c 'cd $(dirname {}) && npx depcheck --ignores vite,vitest,@vitest/coverage-v8,rimraf,concurrently,npm-run-all,tslib,typescript,tsx || true; echo \"\"'",
+		"deps:ls": "npm run --silent ws:pkg | xargs -I {} bash -c 'cat {} | jq .dependencies | head -n -1 | tail -n +2' | tr -d ',' | sort | uniq",
+		"deps:dupe": "npm run deps:ls | awk -F': ' 'NF {count[$1]++; lines[$1] = lines[$1] $0 \"\\n\"} END {for (pkg in count) if (count[pkg] > 1) printf \"%s\", lines[pkg]}' | sort",
+		"audit:fix": "npm audit fix --force",
+		"deps:status": "npm-check-updates --deep",
+		"deps:upgrade": "npm-check-updates --deep --interactive --format group"
 	},
 	"private": true,
 	"engines": {
@@ -91,6 +101,7 @@
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.5.5",
+		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"depcheck": "1.4.7",
 		"htmlhint": "1.1.4",
@@ -98,9 +109,9 @@
 		"node-stdlib-browser": "1.2.1",
 		"npm-check-updates": "17.1.1",
 		"npm-run-all": "4.1.5",
-		"npm-check": "6.0.1",
 		"rimraf": "6.0.1",
 		"tslib": "2.7.0",
+		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "5.4.5",
 		"vitest": "2.1.1"
