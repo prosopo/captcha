@@ -1,6 +1,3 @@
-import { hexToString } from "@polkadot/util/hex";
-import type { TFunction } from "i18next";
-import { z } from "zod";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +11,13 @@ import { z } from "zod";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { TFunction } from "i18next";
+import { z } from "zod";
 import { ProsopoError } from "./error.js";
 import translationEn from "./locales/en.json" assert { type: "json" };
+import translationEs from "./locales/es.json" assert { type: "json" };
+import translationPt from "./locales/pt.json" assert { type: "json" };
 
 export function isClientSide(): boolean {
 	return !!(
