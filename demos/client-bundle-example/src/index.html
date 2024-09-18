@@ -3,7 +3,7 @@
     <head>
         <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
         <title>Procaptcha demo: Simple page</title>
-        <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
+        <script id="procaptchaScript" type="module" src="https://staging-js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
     </head>
     <body>
         <div class="mui-container">
@@ -26,6 +26,7 @@
                         class="procaptcha"
                         data-theme="light"
                         data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                        data-language="pt"
                     ></div>
                 </div>
                 <input type="submit" class="mui-btn mui-btn--raised" />
@@ -33,7 +34,7 @@
         </div>
         <script type="module">
             // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-            import { render } from './assets/procaptcha.bundle.js'
+            import { render } from 'https://staging-js.prosopo.io/js/procaptcha.bundle.js'
 
             // Define a callback function to be called when the CAPTCHA is verified
             function onCaptchaVerified(output) {
