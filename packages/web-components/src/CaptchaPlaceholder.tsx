@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
+
+import type { ProcaptchaProps } from "@prosopo/types";
 import { ContainerDiv, WidthBasedStylesDiv } from "./Containers.js";
 import { LoadingSpinner } from "./LoadingSpinner.js";
 import Logo from "./Logo.js";
@@ -27,11 +29,12 @@ import {
 } from "./WidgetConstants.js";
 import { darkTheme, lightTheme } from "./theme.js";
 
-type PlaceholderProps = { darkMode: "light" | "dark" | undefined };
-
-export const ProcaptchaPlaceholder = (props: PlaceholderProps) => {
-	const themeColor = props.darkMode === "light" ? "light" : "dark";
-	const theme = props.darkMode === "light" ? lightTheme : darkTheme;
+export const ProcaptchaPlaceholder = ({
+	config,
+	callbacks,
+}: ProcaptchaProps) => {
+	const themeColor = config.theme === "light" ? "light" : "dark";
+	const theme = config.theme === "light" ? lightTheme : darkTheme;
 	return (
 		<div>
 			<div
