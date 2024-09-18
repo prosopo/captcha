@@ -149,7 +149,7 @@ jobs:
                     git checkout js-bundle
                     
                     # Copy built bundle to js-bundle branch
-                    cp -r packages/procaptcha-bundle/dist/bundle/* .
+                    cp $(find packages/procaptcha-bundle/dist/bundle/* -maxdepth 0 -not -type d) .
                     
                     # set the author in git
                     git config user.name "prosoponator[bot]"
