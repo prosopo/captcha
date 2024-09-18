@@ -68,12 +68,12 @@ export function useWeightImpl(
 				.mul(blockTime)
 				.div(
 					convertWeight(
-								// @ts-ignore
+						// @ts-ignore
 						api.consts.system.blockWeights
-							// @ts-ignore
-							? api.consts.system.blockWeights.maxBlock
-							// @ts-ignore
-							: (api.consts.system.maximumBlockWeight as Weight),
+							? // @ts-ignore
+								api.consts.system.blockWeights.maxBlock
+							: // @ts-ignore
+								(api.consts.system.maximumBlockWeight as Weight),
 					).v1Weight,
 				)
 				.toNumber();
@@ -89,7 +89,6 @@ export function useWeightImpl(
 				proofSize: proofSize.div(scalingFactor),
 				refTime: megaRefTime.mul(BN_MILLION).div(scalingFactor),
 			});
-
 
 			executionTime = megaRefTime
 				.mul(BN_MILLION)
