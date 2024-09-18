@@ -11,16 +11,5 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import type { ProcaptchaClientConfigInput } from "../config/index.js";
-import type { ProcaptchaCallbacks } from "./manager.js";
-
-/**
- * The props for the Procaptcha component.
- */
-export interface ProcaptchaProps {
-	// the configuration for procaptcha
-	config: ProcaptchaClientConfigInput;
-	// optional set of callbacks for various captcha events
-	callbacks?: Partial<ProcaptchaCallbacks>;
-}
+export const getParentForm = (element: Element): HTMLFormElement | null =>
+	element.closest("form") as HTMLFormElement;

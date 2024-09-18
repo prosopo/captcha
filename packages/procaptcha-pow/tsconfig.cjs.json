@@ -29,6 +29,9 @@
 			"path": "../procaptcha/tsconfig.cjs.json"
 		},
 		{
+			"path": "../procaptcha-common/tsconfig.cjs.json"
+		},
+		{
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{

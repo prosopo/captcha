@@ -11,16 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import type { ProcaptchaClientConfigInput } from "../config/index.js";
-import type { ProcaptchaCallbacks } from "./manager.js";
+import { FeaturesEnum } from "@prosopo/types";
+import { at } from "@prosopo/util";
 
 /**
- * The props for the Procaptcha component.
+ * Determines the captcha type based on the element's data attribute
+ *
+ * @param {Element} elements - The DOM element(s) to check for captcha type
+ * @returns {FeaturesEnum}
  */
-export interface ProcaptchaProps {
-	// the configuration for procaptcha
-	config: ProcaptchaClientConfigInput;
-	// optional set of callbacks for various captcha events
-	callbacks?: Partial<ProcaptchaCallbacks>;
+export function getCaptchaType(elements: Element[]) {
+	const features = Object.values(FeaturesEnum);
+	const captchaType =
+		features.find(
+			(feature) =>
+				feature === at(elements, 0).getAttribute("data-captcha-type"),
+		) || ("frictionless" as FeaturesEnum);
+	return captchaType;
 }

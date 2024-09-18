@@ -194,9 +194,9 @@ jobs:
               if: ${{ steps.env.outputs.production || steps.env.outputs.staging }}
               run: |
                 if [ "${{ steps.env.outputs.production }}" = "true" ]; then
-                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://js.prosopo.io/ --recursive
+                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://js.prosopo.io/js/ --recursive
                 elif [ "${{ steps.env.outputs.staging }}" = "true" ]; then
-                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://staging-js.prosopo.io/ --recursive
+                  aws s3 cp packages/procaptcha-bundle/dist/bundle/ s3://staging-js.prosopo.io/js/ --recursive
                 fi
 
             - name: Build docker js_server
