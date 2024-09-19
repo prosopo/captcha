@@ -1,6 +1,6 @@
 # @prosopo/flux
 
-This package contains a Command Line Interface (CLI) for interacting with the Flux network.
+This package contains a Command Line Interface (CLI) for interacting with the Flux cloud network.
 
 ## CLI Usage
 
