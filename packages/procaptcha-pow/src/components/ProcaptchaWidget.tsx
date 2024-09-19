@@ -37,6 +37,7 @@ import { Manager } from "../services/Manager.js";
 const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = props.config;
+
 	const themeColor = config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 	const callbacks = props.callbacks || {};
