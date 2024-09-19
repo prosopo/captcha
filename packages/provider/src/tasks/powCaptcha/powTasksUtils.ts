@@ -19,34 +19,34 @@ import { ProsopoContractError } from "@prosopo/common";
 import { verifyRecency } from "@prosopo/util";
 
 export const validateSolution = (
-  nonce: number,
-  challenge: string,
-  difficulty: number,
+	nonce: number,
+	challenge: string,
+	difficulty: number,
 ): boolean =>
-  Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("")
-    .startsWith("0".repeat(difficulty));
+	Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
+		.map((byte) => byte.toString(16).padStart(2, "0"))
+		.join("")
+		.startsWith("0".repeat(difficulty));
 
 export const checkPowSignature = (
-  challenge: string,
-  signature: string,
-  address: string,
-  signatureType?: string,
+	challenge: string,
+	signature: string,
+	address: string,
+	signatureType?: string,
 ): void => {
-  const signatureVerification = signatureVerify(
-    stringToHex(challenge),
-    signature,
-    address,
-  );
-  if (!signatureVerification.isValid) {
-    throw new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
-      context: {
-        ERROR: `Signature is invalid for this message: ${signatureType}`,
-        failedFuncName: checkPowSignature.name,
-        signature,
-        signatureType,
-      },
-    });
-  }
+	const signatureVerification = signatureVerify(
+		stringToHex(challenge),
+		signature,
+		address,
+	);
+	if (!signatureVerification.isValid) {
+		throw new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
+			context: {
+				ERROR: `Signature is invalid for this message: ${signatureType}`,
+				failedFuncName: checkPowSignature.name,
+				signature,
+				signatureType,
+			},
+		});
+	}
 };

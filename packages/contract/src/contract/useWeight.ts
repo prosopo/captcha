@@ -68,9 +68,12 @@ export function useWeightImpl(
 				.mul(blockTime)
 				.div(
 					convertWeight(
+						// @ts-ignore
 						api.consts.system.blockWeights
-							? api.consts.system.blockWeights.maxBlock
-							: (api.consts.system.maximumBlockWeight as Weight),
+							? // @ts-ignore
+								api.consts.system.blockWeights.maxBlock
+							: // @ts-ignore
+								(api.consts.system.maximumBlockWeight as Weight),
 					).v1Weight,
 				)
 				.toNumber();
@@ -91,6 +94,7 @@ export function useWeightImpl(
 				.mul(BN_MILLION)
 				.mul(blockTime)
 				.div(
+					// @ts-ignore
 					api.consts.system.blockWeights
 						? // @ts-ignore
 							api.consts.system.blockWeights.perClass.normal.maxExtrinsic

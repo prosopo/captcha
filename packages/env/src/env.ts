@@ -15,19 +15,16 @@
 import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
-import { Databases } from "@prosopo/database";
-import type {
-	AssetsResolver,
-	EnvironmentTypes,
-} from "@prosopo/types";
+import { Databases, ProviderDatabase } from "@prosopo/database";
+import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
-import type { Database } from "@prosopo/types-database";
+import type { IDatabase } from "@prosopo/types-database";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
 import { get } from "@prosopo/util";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
-	db: Database | undefined;
+	db: ProviderDatabase | undefined;
 	defaultEnvironment: EnvironmentTypes;
 	logger: Logger;
 	assetsResolver: AssetsResolver | undefined;
@@ -44,14 +41,6 @@ export class Environment implements ProsopoEnvironment {
 			type: "sr25519",
 		});
 		if (this.pair) this.keyring.addPair(this.pair);
-		if (this.config.database) {
-			this.importDatabase().catch((err) => {
-				throw new ProsopoEnvError("DATABASE.DATABASE_IMPORT_FAILED", {
-					context: { error: err },
-					logger: this.logger,
-				});
-			});
-		}
 	}
 
 	async getSigner(): Promise<KeyringPair> {
@@ -72,7 +61,7 @@ export class Environment implements ProsopoEnvironment {
 		return this.pair;
 	}
 
-	getDb(): Database {
+	getDb(): ProviderDatabase {
 		if (this.db === undefined) {
 			throw new ProsopoEnvError(
 				new Error("db not setup! Please call isReady() first"),
@@ -109,8 +98,10 @@ export class Environment implements ProsopoEnvironment {
 			if (!this.db) {
 				await this.importDatabase();
 			}
-			if (this.db && this.db.connection?.readyState !== 1) {
-				this.logger.warn("Database connection is not ready, reconnecting...");
+			if (this.db && !this.db.connected) {
+				this.logger.warn(
+					`Database connection is not ready (state: ${this.db.connection?.readyState}), reconnecting...`,
+				);
 				await this.db.connect();
 				this.logger.info("Connected to db");
 			}
@@ -127,13 +118,13 @@ export class Environment implements ProsopoEnvironment {
 			if (this.config.database) {
 				const dbConfig = this.config.database[this.defaultEnvironment];
 				if (dbConfig) {
-					const ProsopoDatabase = get(Databases, dbConfig.type);
-					this.db = await ProsopoDatabase.create(
+					this.db = new ProviderDatabase(
 						dbConfig.endpoint,
 						dbConfig.dbname,
-						this.logger,
 						dbConfig.authSource,
+						this.logger,
 					);
+					await this.db.connect();
 				}
 			}
 		} catch (error) {

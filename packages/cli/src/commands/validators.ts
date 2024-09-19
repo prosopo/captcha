@@ -21,37 +21,37 @@ import parser from "cron-parser";
 import type { ArgumentsCamelCase } from "yargs";
 
 export const validateAddress = (
-  argv: ArgumentsCamelCase,
+	argv: ArgumentsCamelCase,
 ): { address: string } => {
-  const address = encodeStringAddress(argv.address as string);
+	const address = encodeStringAddress(argv.address as string);
 
-  return { address };
+	return { address };
 };
 
 export const validateValue = (argv: ArgumentsCamelCase) => {
-  if (typeof argv.value !== "number") {
-    throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
-      context: { value: [argv.value] },
-    });
-  }
-  const value: Compact<u128> = argv.value as unknown as Compact<u128>;
-  return { value };
+	if (typeof argv.value !== "number") {
+		throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
+			context: { value: [argv.value] },
+		});
+	}
+	const value: Compact<u128> = argv.value as unknown as Compact<u128>;
+	return { value };
 };
 
 export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
-  if (typeof argv.schedule === "string") {
-    const result = parser.parseString(argv.schedule as string);
+	if (typeof argv.schedule === "string") {
+		const result = parser.parseString(argv.schedule as string);
 
-    if (argv.schedule in result.errors) {
-      throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
-        context: {
-          payee: [argv.shedule],
-          failedFuncName: validateScheduleExpression.name,
-        },
-      });
-    }
+		if (argv.schedule in result.errors) {
+			throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
+				context: {
+					payee: [argv.shedule],
+					failedFuncName: validateScheduleExpression.name,
+				},
+			});
+		}
 
-    return { schedule: argv.schedule as string };
-  }
-  return { schedule: null };
+		return { schedule: argv.schedule as string };
+	}
+	return { schedule: null };
 };

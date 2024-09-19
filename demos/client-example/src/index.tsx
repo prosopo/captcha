@@ -16,6 +16,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import FrictionlessRoot from "./routes/frictionless.js";
+import PowRoot from "./routes/pow.js";
 import ImageCaptchaRoot from "./routes/root.js";
 
 const router = createBrowserRouter([
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
 	{
 		path: "/frictionless",
 		element: <FrictionlessRoot />,
+	},
+	{
+		path: "/pow",
+		element: <PowRoot />,
 	},
 ]);
 

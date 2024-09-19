@@ -26,6 +26,7 @@ const providers = {
 async function getContractInfoOf(contractAddress: string, provider: string) {
 	const wsProvider = new WsProvider(get(providers, provider).endpoint);
 	const api = await ApiPromise.create({ provider: wsProvider });
+	// @ts-ignore
 	return await api.query.contracts.contractInfoOf(contractAddress);
 }
 

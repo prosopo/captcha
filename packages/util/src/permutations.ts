@@ -46,14 +46,16 @@ export function* permutations(
 	let i = arr.length - 1;
 	while (true) {
 		yield [...arr];
-		arr[i]++;
+		// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
+		arr[i]!++;
 		while (arr[i] === bins[i]) {
 			arr[i] = 0;
 			i--;
 			if (i < 0) {
 				return;
 			}
-			arr[i]++;
+			// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
+			arr[i]!++;
 		}
 		i = arr.length - 1;
 	}

@@ -27,7 +27,7 @@ export const LogoWithoutText: React.FC<LogoWithoutTextProps> = ({
 	);
 	return (
 		<svg
-			className="logo"
+			className="prosopo-logo"
 			id="logo-without-text"
 			xmlns="http://www.w3.org/2000/svg"
 			viewBox="0 0 260 348"
