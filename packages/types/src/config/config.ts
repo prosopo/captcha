@@ -142,7 +142,7 @@ export const ProsopoCaptchaSolutionConfigSchema = object({
 	captchaBlockRecency: number().positive().min(2),
 });
 
-export const LanguageSchema = z.enum(["en", "es", "pt"]);
+export const LanguageSchema = z.enum(["en", "es", "pt", "pt-BR"]);
 
 export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
