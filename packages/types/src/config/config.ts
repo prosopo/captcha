@@ -142,7 +142,6 @@ export const ProsopoCaptchaSolutionConfigSchema = object({
 	captchaBlockRecency: number().positive().min(2),
 });
 
-
 export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
 		userAccountAddress: string().optional(),
@@ -254,8 +253,7 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-export const LanguageSchema = union([literal("en"), literal("pt"), literal("es")]);
-
+export const LanguageSchema = z.enum(["en", "pt", "es"]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({

@@ -23,7 +23,7 @@ import translationPt from "./locales/pt.json" assert { type: "json" };
 import { isClientSide } from "./utils.js";
 
 const commonOptions: InitOptions = {
-	debug: true,
+	debug: false,
 	fallbackLng: "en",
 	resources: {
 		en: {
@@ -42,10 +42,10 @@ const reactOptions: InitOptions = {
 	react: {
 		useSuspense: false,
 	},
-	      detection: {
-        order: ['navigator', 'htmlTag', 'path', 'subdomain'],
-        caches: ['localStorage', 'cookie'],
-      },
+	detection: {
+		order: ["navigator", "htmlTag", "path", "subdomain"],
+		caches: ["localStorage", "cookie"],
+	},
 };
 
 const nodeOptions: InitOptions = {};

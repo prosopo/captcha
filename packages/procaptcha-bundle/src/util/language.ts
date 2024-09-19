@@ -35,10 +35,11 @@ export const setLanguage = (
 	config: ProcaptchaClientConfigInput,
 ) => {
 	const languageAttribute =
-		renderOptions?.language || element.getAttribute("data-language")
-	
-		if (languageAttribute) {
-	config.language = validateLanguage(languageAttribute);}
+		renderOptions?.language || element.getAttribute("data-language");
+
+	if (languageAttribute) {
+		config.language = validateLanguage(languageAttribute);
+	}
 };
 
 const validateLanguage = (
