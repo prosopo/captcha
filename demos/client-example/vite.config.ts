@@ -15,6 +15,7 @@
 import * as path from "node:path";
 import { ViteFrontendConfig } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
+import { VitePluginWatchWorkspace } from "@prosopo/vite-plugin-watch-workspace";
 import { defineConfig } from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
@@ -72,6 +73,20 @@ export default defineConfig(async ({ command, mode }) => {
 				},
 			},
 		},
+		plugins: [
+			...(frontendConfig.plugins || []),
+			// Watches external files (workspace packages) and rebuilds them when they change
+			await VitePluginWatchWorkspace({
+				workspaceRoot: path.resolve("../.."),
+				currentPackage: `${path.resolve(".")}/**/*`,
+				format: "esm",
+				ignorePaths: [
+					`${path.resolve("../..")}/demos/*`,
+					`${path.resolve("../..")}/dev/*`,
+					"**/dist/**/*",
+				],
+			}),
+		],
 		server: {
 			port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230,
 		},
