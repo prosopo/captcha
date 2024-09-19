@@ -1,4 +1,3 @@
-
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +28,6 @@ const bundleName = "prosopo-client-example";
 const packageName = "@prosopo/client-example";
 const entry = path.resolve("./index.html");
 const workspaceRoot = path.resolve("../../..");
-
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => {
@@ -72,7 +70,7 @@ export default defineConfig(async ({ command, mode }) => {
 				output: {
 					dir: path.resolve("./dist"),
 				},
-			}
+			},
 		},
 		server: {
 			port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230,
