@@ -253,7 +253,7 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-export const LanguageSchema = z.enum(["en", "pt", "es"]);
+export const LanguageSchema = z.enum(["en", "es", "pt", "pt-BR"]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
