@@ -51,8 +51,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		if (config.language) {
 			i18n.changeLanguage(config.language);
 		}
-
-		console.log(config.language);
 	}, [config.language]);
 
 	return (
