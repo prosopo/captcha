@@ -18,16 +18,16 @@ import { BN } from "@polkadot/util/bn";
  * Get the current block time in milliseconds
  */
 export const getBlockTimeMs = (api: ApiPromise): number => {
-  const babe = api.consts.babe;
-  const blockTime = babe ? babe.expectedBlockTime : new BN(6000);
-  return blockTime.toNumber();
+	const babe = api.consts.babe;
+	const blockTime = babe ? babe.expectedBlockTime : new BN(6000);
+	return blockTime.toNumber();
 };
 
 /**
  * Get the current block number
  */
 export const getCurrentBlockNumber = async (
-  api: ApiPromise,
+	api: ApiPromise,
 ): Promise<number> => {
-  return (await api.rpc.chain.getBlock()).block.header.number.toNumber();
+	return (await api.rpc.chain.getBlock()).block.header.number.toNumber();
 };

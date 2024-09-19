@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import { getRootDir } from "@prosopo/config";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +11,11 @@ import { getRootDir } from "@prosopo/config";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import { getRootDir } from "@prosopo/config";
 import { at } from "@prosopo/util";
-import { glob } from "glob";
+import fg from "fast-glob";
 
 const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
@@ -44,7 +45,7 @@ const searchPaths = [
 
 const currentPath = getRootDir();
 
-const files = glob
+const files = fg
 	.sync(searchPaths, {
 		cwd: currentPath,
 		absolute: true,

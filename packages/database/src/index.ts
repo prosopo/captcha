@@ -11,6 +11,5 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+export * from "./base/index.js";
 export * from "./databases/index.js";
-export * from "./eventsDatabase/index.js";
-export * from "./captchaDatabase/index.js";

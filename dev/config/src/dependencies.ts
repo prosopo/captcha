@@ -1,9 +1,3 @@
-import child_process from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
-import util from "node:util";
-import { ProsopoEnvError, getLogger } from "@prosopo/common";
-import { at } from "@prosopo/util";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +11,13 @@ import { at } from "@prosopo/util";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Glob } from "glob";
+
+import child_process from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import util from "node:util";
+import { ProsopoEnvError, getLogger } from "@prosopo/common";
+import { at } from "@prosopo/util";
 import type { ProjectReference } from "typescript";
 
 const logger = getLogger("Info", "config.dependencies.js");
@@ -177,7 +177,9 @@ export async function getDependencies(
 	packageName?: string,
 	production?: boolean,
 ): Promise<{ dependencies: string[]; optionalPeerDependencies: string[] }> {
-	let cmd = production ? "npm ls -a --omit=dev" : "npm ls -a";
+	let cmd = production
+		? "npm ls -a --silent --omit=dev --package-lock-only"
+		: "npm ls --silent -a --package-lock-only";
 
 	if (packageName) {
 		const packageDir = await getPackageDir(packageName);
@@ -241,45 +243,4 @@ export function filterDependencies(
 		}
 	}
 	return { internal, external };
-}
-
-/** Takes an array of partial module directories, finds the full path, and returns an array containing the file paths
- * of the files contained within the matching module directories [ filePath, filePath, ... ]
- * @param startDir
- * @param includePatterns
- * @param excludePatterns
- * @returns
- * @example
- * const includePatterns = ['kusama.js', 'westend.js']
- * const excludePatterns = ['bytes.js']
- * const startDir = path.resolve(__dirname, '../../node_modules/@polkadot')
- * const files = getFilesInDirs(startDir, includePatterns, excludePatterns)
- * console.log(files)
- * // [ '/home/.../node_modules/@polkadot/types/interfaces/bytes/bytes.js',
- * // '/home/.../node_modules/@polkadot/types/interfaces/bytes/bytes.d.ts']
- * */
-export function getFilesInDirs(
-	startDir: string,
-	includePatterns: string[] = [],
-	excludePatterns: string[] = [],
-) {
-	const files: string[] = [];
-	logger.info(
-		`getFilesInDirs: ${startDir} excluding ${includePatterns} including ${excludePatterns}`,
-	);
-	const ignorePatterns = excludePatterns.map(
-		(pattern) => `${startDir}/**/${pattern}`,
-	);
-	for (const searchPattern of includePatterns) {
-		// get matching module directories
-		const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf(".") > -1 ? "" : "/*"}`;
-		const globResult = new Glob(globPattern, {
-			recursive: true,
-			ignore: ignorePatterns,
-		}).walkSync();
-		for (const filePath of globResult) {
-			files.push(filePath);
-		}
-	}
-	return files;
 }

@@ -17,3 +17,24 @@ export const getURLProtocol = (url: URL) => {
 	}
 	return "https";
 };
+
+export const validateDomain = (domain: string): boolean => {
+	if (domain.length > 253) return false;
+
+	// https://stackoverflow.com/a/57129472/1178971
+	if (
+		!domain.match(
+			/^(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})$/,
+		)
+	) {
+		return false;
+	}
+
+	try {
+		new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+	} catch (e) {
+		return false;
+	}
+
+	return true;
+};

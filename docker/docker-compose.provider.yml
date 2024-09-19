@@ -1,17 +1,14 @@
 services:
-    provider:
-        image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
-        pull_policy: always
+    provider-dev:
+        profiles:
+            - development-x86_64
         build:
             context: ..
             dockerfile: ./docker/images/provider.dockerfile
         env_file:
-            - ../.env.${NODE_ENV}
+            - ../dev/scripts/.env.development
         ports:
             - '9229:9229'
-        tty: true
-        depends_on:
-            - database
         networks:
             - internal
             - external
@@ -20,8 +17,60 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
-    database:
-        image: ${MONGO_IMAGE:-mongo:5.0.4}
+    provider:
+        profiles:
+            - production-arm64
+            - production-x86_64
+            - staging-arm64
+            - staging-x86_64
+        image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
+        env_file:
+            - ../.env.${NODE_ENV}
+        ports:
+            - '9229:9229'
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"]  # ping the status api
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    database-dev:
+        profiles:
+            - development-x86_64
+        image: mongo:5.0.4
+        # volumes:
+        #   - ./db:/data/db
+        ports:
+            - '27017:27017'
+        env_file:
+            - ../dev/scripts/.env.development
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+    database-arm64:
+        profiles:
+            - production-arm64
+            - staging-arm64
+        image: mongodb-raspberrypi4-unofficial-r6.0.10
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
         ports:
@@ -35,9 +84,51 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        healthcheck:
+            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    database-x86_64:
+        profiles:
+            - production-x86_64
+            - staging-x86_64
+        image: mongo:5.0.4
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - /data/db:/data/db
+        ports:
+            - '27017:27017'
+        env_file:
+            - ../.env.${NODE_ENV}
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
     caddy:
+        profiles:
+            - production-x86_64
+            - production-arm64
+            - staging-x86_64
+            - staging-arm64
         image: caddy:2
-        restart: unless-stopped
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
             - '443:443'
@@ -53,11 +144,31 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
     watchtower:
+        profiles:
+            - production-x86_64
+            - production-arm64
+            - staging-x86_64
+            - staging-arm64
         image: containrrr/watchtower
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        env_file:
+            - ../.env.${NODE_ENV}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: docker-provider-1 --interval 30
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
 networks:
     internal:
         name: internal

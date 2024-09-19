@@ -19,28 +19,30 @@ import { Tasks } from "@prosopo/provider";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 
 export default (
-  pair: KeyringPair,
-  config: ProsopoConfigOutput,
-  cmdArgs?: { logger?: Logger },
+	pair: KeyringPair,
+	config: ProsopoConfigOutput,
+	cmdArgs?: { logger?: Logger },
 ) => {
-  const logger =
-    cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.store_captchas");
+	const logger =
+		cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.store_captchas");
 
-  return {
-    command: "store_captchas",
-    describe: "Store captcha records externally for billing purposes",
-    handler: async () => {
-      try {
-        const env = new ProviderEnvironment(config, pair);
-        await env.isReady();
-        const tasks = new Tasks(env);
-        await tasks.datasetManager.storeCommitmentsExternal().catch((err) => {
-          env.logger.error(err);
-        });
-      } catch (err) {
-        logger.error(err);
-      }
-    },
-    middlewares: [],
-  };
+	return {
+		command: "store_captchas",
+		describe: "Store captcha records externally for billing purposes",
+		handler: async () => {
+			try {
+				const env = new ProviderEnvironment(config, pair);
+				await env.isReady();
+				const tasks = new Tasks(env);
+				await tasks.clientTaskManager
+					.storeCommitmentsExternal()
+					.catch((err) => {
+						env.logger.error(err);
+					});
+			} catch (err) {
+				logger.error(err);
+			}
+		},
+		middlewares: [],
+	};
 };

@@ -18,15 +18,22 @@ import type { ReactElement } from "react";
 
 //https://github.com/microsoft/TypeScript/issues/42873
 const ProcaptchaWidget: LazyExoticComponent<
-  // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-  (props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement
 > = lazy(async () => import("./ProcaptchaWidget.js"));
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 
 const Procaptcha = (props: ProcaptchaProps) => (
-  <Suspense fallback={<ProcaptchaPlaceholder darkMode={props.config.theme} />}>
-    <ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
-  </Suspense>
+	<Suspense
+		fallback={
+			<ProcaptchaPlaceholder
+				config={props.config}
+				callbacks={props.callbacks}
+			/>
+		}
+	>
+		<ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
+	</Suspense>
 );
 
 export default Procaptcha;

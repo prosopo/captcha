@@ -27,111 +27,111 @@ import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js"
 const logger = getLogger("Info", "vite.backend.config.js");
 
 export default async function (
-  packageName: string,
-  packageVersion: string,
-  bundleName: string,
-  packageDir: string,
-  entry: string,
-  command?: string,
-  mode?: string,
-  optionalBaseDir = "../..",
+	packageName: string,
+	packageVersion: string,
+	bundleName: string,
+	packageDir: string,
+	entry: string,
+	command?: string,
+	mode?: string,
+	optionalBaseDir = "../..",
 ): Promise<UserConfig> {
-  const isProduction = mode === "production";
+	const isProduction = mode === "production";
 
-  // Get all dependencies of the current package
-  const { dependencies: deps, optionalPeerDependencies } =
-    await getDependencies(packageName, true);
+	// Get all dependencies of the current package
+	const { dependencies: deps, optionalPeerDependencies } =
+		await getDependencies(packageName, true);
 
-  // Output directory is relative to directory of the package
-  const outDir = path.resolve(packageDir, "dist/bundle");
+	// Output directory is relative to directory of the package
+	const outDir = path.resolve(packageDir, "dist/bundle");
 
-  // Get rid of any dependencies we don't want to bundle
-  const { external, internal } = filterDependencies(deps, [
-    "aws",
-    "webpack",
-    "vite",
-    "biome",
-  ]);
+	// Get rid of any dependencies we don't want to bundle
+	const { external, internal } = filterDependencies(deps, [
+		"aws",
+		"webpack",
+		"vite",
+		"biome",
+	]);
 
-  // Add the node builtins (path, fs, os, etc.) to the external list
-  const allExternal = [
-    ...builtinModules,
-    ...builtinModules.map((m) => `node:${m}`),
-    ...external,
-    ...optionalPeerDependencies,
-  ];
+	// Add the node builtins (path, fs, os, etc.) to the external list
+	const allExternal = [
+		...builtinModules,
+		...builtinModules.map((m) => `node:${m}`),
+		...external,
+		...optionalPeerDependencies,
+	];
 
-  logger.info(
-    `Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
-  );
+	logger.info(
+		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
+	);
 
-  const define = {
-    "process.env.WS_NO_BUFFER_UTIL": "true",
-    "process.env.WS_NO_UTF_8_VALIDATE": "true",
-    "process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(packageVersion),
-    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || mode),
-    ...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
-      "process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
-        process.env.PROSOPO_DEFAULT_ENVIRONMENT,
-      ),
-    }),
-  };
+	const define = {
+		"process.env.WS_NO_BUFFER_UTIL": "true",
+		"process.env.WS_NO_UTF_8_VALIDATE": "true",
+		"process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(packageVersion),
+		"process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || mode),
+		...(process.env.PROSOPO_DEFAULT_ENVIRONMENT && {
+			"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
+				process.env.PROSOPO_DEFAULT_ENVIRONMENT,
+			),
+		}),
+	};
 
-  logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
+	logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
 
-  const entryAbsolute = path.resolve(packageDir, entry);
+	const entryAbsolute = path.resolve(packageDir, entry);
 
-  // drop console logs if in production mode
-  const drop: Drop[] | undefined =
-    mode === "production" ? ["console", "debugger"] : undefined;
+	// drop console logs if in production mode
+	const drop: Drop[] | undefined =
+		mode === "production" ? ["console", "debugger"] : undefined;
 
-  return {
-    ssr: {
-      noExternal: internal,
-      external: allExternal,
-    },
-    optimizeDeps: {
-      include: ["linked-dep", "node_modules"],
-      esbuildOptions: {
-        loader: {
-          ".node": "file",
-        },
-      },
-    },
-    esbuild: {
-      platform: "node",
-      target: "node18",
-      drop,
-      legalComments: "none",
-    },
-    define,
-    build: {
-      outDir,
-      minify: isProduction,
-      ssr: true,
-      target: "node18",
-      lib: {
-        entry: entryAbsolute,
-        name: bundleName,
-        fileName: `${bundleName}.[name].bundle.js`,
-        formats: ["es"],
-      },
-      modulePreload: { polyfill: false },
-      rollupOptions: {
-        treeshake: "smallest",
-        external: allExternal,
-        watch: false,
-        output: {
-          entryFileNames: `${bundleName}.[name].bundle.js`,
-        },
-        plugins: [css(), wasm(), nodeResolve()],
-      },
-    },
-    plugins: [
-      // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
-      VitePluginFixAbsoluteImports(),
-      // plugin to close the bundle after build if not in serve mode
-      command !== "serve" ? ClosePlugin() : undefined,
-    ],
-  };
+	return {
+		ssr: {
+			noExternal: internal,
+			external: allExternal,
+		},
+		optimizeDeps: {
+			include: ["linked-dep", "node_modules"],
+			esbuildOptions: {
+				loader: {
+					".node": "file",
+				},
+			},
+		},
+		esbuild: {
+			platform: "node",
+			target: "node18",
+			drop,
+			legalComments: "none",
+		},
+		define,
+		build: {
+			outDir,
+			minify: isProduction,
+			ssr: true,
+			target: "node18",
+			lib: {
+				entry: entryAbsolute,
+				name: bundleName,
+				fileName: `${bundleName}.[name].bundle.js`,
+				formats: ["es"],
+			},
+			modulePreload: { polyfill: false },
+			rollupOptions: {
+				treeshake: "smallest",
+				external: allExternal,
+				watch: false,
+				output: {
+					entryFileNames: `${bundleName}.[name].bundle.js`,
+				},
+				plugins: [css(), wasm(), nodeResolve()],
+			},
+		},
+		plugins: [
+			// plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
+			VitePluginFixAbsoluteImports(),
+			// plugin to close the bundle after build if not in serve mode
+			command !== "serve" ? ClosePlugin() : undefined,
+		],
+	};
 }

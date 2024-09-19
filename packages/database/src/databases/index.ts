@@ -12,9 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { DatabaseTypes } from "@prosopo/types";
-import { ProsopoDatabase as MongoDatabase } from "./mongo.js";
-import { MongoMemoryDatabase } from "./mongoMemory.js";
+import { MongoDatabase } from "../base/mongo.js";
+import { MongoMemoryDatabase } from "../base/mongoMemory.js";
+import { CaptchaDatabase } from "./captcha.js";
+import { ClientDatabase } from "./client.js";
+import { ProviderDatabase } from "./provider.js";
+export * from "./captcha.js";
+export * from "./client.js";
+export { ProviderDatabase } from "./provider.js";
 export const Databases = {
 	[DatabaseTypes.Values.mongo]: MongoDatabase,
+	[DatabaseTypes.Values.provider]: ProviderDatabase,
+	[DatabaseTypes.Values.client]: ClientDatabase,
+	[DatabaseTypes.Values.captcha]: CaptchaDatabase,
 	[DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
 };

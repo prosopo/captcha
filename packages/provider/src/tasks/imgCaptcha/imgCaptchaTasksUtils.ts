@@ -13,8 +13,8 @@
 // limitations under the License.
 import { ProsopoEnvError } from "@prosopo/common";
 import {
-  CaptchaMerkleTree,
-  computeCaptchaSolutionHash,
+	CaptchaMerkleTree,
+	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
 import type { CaptchaSolution } from "@prosopo/types";
 
@@ -24,26 +24,26 @@ import type { CaptchaSolution } from "@prosopo/types";
  * @returns {Promise<{ tree: CaptchaMerkleTree, commitmentId: string }>}
  */
 export const buildTreeAndGetCommitmentId = (
-  captchaSolutions: CaptchaSolution[],
+	captchaSolutions: CaptchaSolution[],
 ): { tree: CaptchaMerkleTree; commitmentId: string } => {
-  const tree = new CaptchaMerkleTree();
-  const solutionsHashed = captchaSolutions.map((captcha) =>
-    computeCaptchaSolutionHash(captcha),
-  );
-  tree.build(solutionsHashed);
+	const tree = new CaptchaMerkleTree();
+	const solutionsHashed = captchaSolutions.map((captcha) =>
+		computeCaptchaSolutionHash(captcha),
+	);
+	tree.build(solutionsHashed);
 
-  const commitmentId = tree.root?.hash;
-  if (!commitmentId) {
-    throw new ProsopoEnvError(
-      "CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST",
-      {
-        context: {
-          failedFuncName: buildTreeAndGetCommitmentId.name,
-          commitmentId: commitmentId,
-        },
-      },
-    );
-  }
+	const commitmentId = tree.root?.hash;
+	if (!commitmentId) {
+		throw new ProsopoEnvError(
+			"CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST",
+			{
+				context: {
+					failedFuncName: buildTreeAndGetCommitmentId.name,
+					commitmentId: commitmentId,
+				},
+			},
+		);
+	}
 
-  return { tree, commitmentId };
+	return { tree, commitmentId };
 };
