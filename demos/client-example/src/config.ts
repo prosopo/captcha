@@ -25,7 +25,7 @@ const config: ProsopoClientConfigOutput = ProcaptchaConfigSchema.parse({
 	defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 	dappName: "client-example",
 	serverUrl: getServerUrl(),
-	theme: "light"
+	theme: "light",
 });
 
 export default config;
