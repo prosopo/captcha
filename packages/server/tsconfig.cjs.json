@@ -16,6 +16,9 @@
 			"path": "../api/tsconfig.cjs.json"
 		},
 		{
+			"path": "../common/tsconfig.cjs.json"
+		},
+		{
 			"path": "../contract/tsconfig.cjs.json"
 		},
 		{

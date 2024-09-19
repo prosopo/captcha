@@ -253,12 +253,14 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
+export const LanguageSchema = z.enum(["en", "es", "pt", "pt-BR"]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
 		accountCreator: AccountCreatorConfigSchema.optional(),
-		theme: ThemeType.optional(),
+		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+		language: LanguageSchema.optional(),
 	}),
 );
 

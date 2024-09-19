@@ -11,6 +11,9 @@
 			"path": "../../dev/config"
 		},
 		{
+			"path": "../dotenv/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha/tsconfig.cjs.json"
 		},
 		{

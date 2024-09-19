@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
+
+import { i18n, useTranslation } from "@prosopo/common";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
@@ -32,18 +34,24 @@ import {
 	lightTheme,
 } from "@prosopo/web-components";
 import { Logo } from "@prosopo/web-components";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
-import Collector from "./collector.js";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
+	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const manager = Manager(config, state, updateState, callbacks);
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
+
+	useEffect(() => {
+		if (config.language) {
+			i18n.changeLanguage(config.language);
+		}
+	}, [config.language]);
 
 	return (
 		<div>
@@ -116,7 +124,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 													themeColor={themeColor}
 													onChange={manager.start}
 													checked={state.isHuman}
-													labelText="I am human"
+													labelText={t("WIDGET.I_AM_HUMAN")}
 													aria-label="human checkbox"
 												/>
 											</div>
