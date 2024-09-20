@@ -31,9 +31,9 @@ import {
 } from "../config/timeouts.js";
 import {
 	type Captcha,
-	CaptchaSolutionSchema,
+	CaptchaSolutionSchema, DappAccount, DatasetID,
 	type PoWChallengeId,
-	PowChallengeIdSchema,
+	PowChallengeIdSchema, UserAccount,
 } from "../datasets/index.js";
 import {
 	type ChallengeSignature,
@@ -56,7 +56,7 @@ export enum ApiPaths {
 }
 
 export type TGetImageCaptchaChallengePathAndParams =
-	`${ApiPaths.GetImageCaptchaChallenge}/${string}/${string}/${string}`;
+	`${ApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
 
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;

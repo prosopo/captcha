@@ -25,6 +25,7 @@ export const registerSiteKey = async (siteKey: string): Promise<void> => {
 		process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
 	);
 	await db.connect();
+	console.log("Registering site key", siteKey);
 	await db.updateClientRecords([
 		{
 			account: siteKey,
