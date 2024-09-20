@@ -1,0 +1,145 @@
+# release a version into the wild
+
+name: release
+
+on:
+    push:
+        branches: [main, staging]
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              env:
+                  GITHUB_CONTEXT: ${{ toJson(github) }}
+                  ENV_CONTEXT: ${{ toJson(env) }}
+                  VARS_CONTEXT: ${{ toJson(vars) }}
+                  JOB_CONTEXT: ${{ toJson(job) }}
+                  STEPS_CONTEXT: ${{ toJson(steps) }}
+                  RUNNER_CONTEXT: ${{ toJson(runner) }}
+                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
+                  NEEDS_CONTEXT: ${{ toJson(needs) }}
+                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
+              run: |
+                  echo "******************************"
+                  echo "github:" "$GITHUB_CONTEXT"
+                  echo "******************************"
+                  echo "env:" "$ENV_CONTEXT"
+                  echo "******************************"
+                  echo "vars:" "$VARS_CONTEXT"
+                  echo "******************************"
+                  echo "job:" "$JOB_CONTEXT"
+                  echo "******************************"
+                  echo "steps:" "$STEPS_CONTEXT"
+                  echo "******************************"
+                  echo "runner:" "$RUNNER_CONTEXT"
+                  echo "******************************"
+                  echo "secrets:" "$SECRETS_CONTEXT"
+                  echo "******************************"
+                  echo "strategy:" "$STRATEGY_CONTEXT"
+                  echo "******************************"
+                  echo "matrix:" "$MATRIX_CONTEXT"
+                  echo "******************************"
+                  echo "needs:" "$NEEDS_CONTEXT"
+                  echo "******************************"
+                  echo "inputs:" "$INPUTS_CONTEXT"
+                  echo "******************************"
+
+            - uses: actions/checkout@v3
+
+            - name: Detect env
+              id: env
+              run: |
+                
+                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                VERSION=$(jq -r '.version' < package.json)
+
+                # if version not detected, error
+                    if [[ -z "$VERSION" ]]; then
+                        echo "Failed to get version"
+                        exit 1
+                    fi
+                    # or if version null
+                    if [[ "$VERSION" == "null" ]]; then
+                        echo "Failed to get version"
+                        exit 1
+                    fi
+
+                echo "version=$VERSION"
+
+                # export the next version numbers
+                # shellcheck disable=SC2086
+                echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+                # if branch is main, then prod, else staging
+                if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+                    echo "production"
+                    # shellcheck disable=SC2086
+                    { 
+                        echo "env=production"; 
+                        echo "production=true"; 
+                        echo "docker_latest_tag=latest"; 
+                        echo "docker_version_tag=$VERSION";
+                        echo "gh_release_tag=v$VERSION"
+                    } >> $GITHUB_OUTPUT
+                elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+                    echo "staging"
+                    # shellcheck disable=SC2086
+                    { 
+                        echo "env=staging"; 
+                        echo "staging=true"; 
+                        echo "docker_latest_tag=staging"; 
+                        echo "docker_version_tag=staging";
+                        echo "gh_release_tag=staging"
+                    } >> $GITHUB_OUTPUT
+                else
+                    echo "cannot deploy from branch ${{ github.ref }}"
+                    exit 1
+                fi
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+
+            - run: npm ci
+
+            - run: npm run build:all
+            - run: npm run build:all:cjs
+            - run: npm run bundle:all
+
+            # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
+            - name: Github release
+              id: github_release
+              if: ${{ steps.env.outputs.production }} || ${{ steps.env.outputs.staging }}
+              continue-on-error: true  # we want to continue even if the release already exists
+              run: |
+                  gh release create --generate-notes "${{ steps.env.outputs.gh_release_tag }}"
+
+            # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
+            - name: Mark Github staging release as prerelease
+              id: github_release
+              if: ${{ steps.env.outputs.staging }}
+              continue-on-error: true  # we want to continue even if the release already exists
+              run: |
+                  gh release edit "${{ steps.env.outputs.gh_release_tag }}" --prerelease
+
+            - name: Upload procaptcha bundle to gh release
+              if: ${{ steps.env.outputs.production }}
+              run: |
+                  gh release upload "${{ steps.env.outputs.gh_release_tag }}"" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+
+            - name: Release fail notification
+              if: failure()
+              run: |
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-failed: Release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.env.outputs.env }} ${{ steps.env.outputs.gh_release_tag }}> failed.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+
+            - name: Release success notification
+              if: success()
+              run: |
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.env.outputs.env }} ${{ steps.env.outputs.gh_release_tag }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
