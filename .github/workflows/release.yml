@@ -132,7 +132,7 @@ jobs:
             - name: Upload procaptcha bundle to gh release
               if: ${{ steps.env.outputs.production }}
               run: |
-                  gh release upload "${{ steps.env.outputs.gh_release_tag }}"" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js"
+                  gh release upload "${{ steps.env.outputs.gh_release_tag }}"" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js" --clobber
 
             - name: Release fail notification
               if: failure()
