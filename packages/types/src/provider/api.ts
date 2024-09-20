@@ -31,9 +31,12 @@ import {
 } from "../config/timeouts.js";
 import {
 	type Captcha,
-	CaptchaSolutionSchema, DappAccount, DatasetID,
+	CaptchaSolutionSchema,
+	type DappAccount,
+	type DatasetID,
 	type PoWChallengeId,
-	PowChallengeIdSchema, UserAccount,
+	PowChallengeIdSchema,
+	type UserAccount,
 } from "../datasets/index.js";
 import {
 	type ChallengeSignature,

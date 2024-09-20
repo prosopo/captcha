@@ -145,7 +145,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
 					req.ip || NO_IP_ADDRESS,
-					flatten(req.headers, ",")
+					flatten(req.headers, ","),
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -252,14 +252,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
 		try {
-			const {
-				challenge,
-				difficulty,
-				signature,
-				nonce,
-				verifiedTimeout,
-				dapp,
-			} = SubmitPowCaptchaSolutionBody.parse(req.body);
+			const { challenge, difficulty, signature, nonce, verifiedTimeout, dapp } =
+				SubmitPowCaptchaSolutionBody.parse(req.body);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -278,7 +272,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				verifiedTimeout,
 				signature.user.timestamp,
 				req.ip || NO_IP_ADDRESS,
-				flatten(req.headers, ",")
+				flatten(req.headers, ","),
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);

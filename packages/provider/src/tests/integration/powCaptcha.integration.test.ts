@@ -318,7 +318,7 @@ describe("PoW Integration Tests", () => {
 				nonce,
 				verifiedTimeout,
 				user: userPair.address,
-				dapp
+				dapp,
 			};
 			const response = await fetch(
 				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,

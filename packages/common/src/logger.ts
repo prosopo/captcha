@@ -138,5 +138,7 @@ export class Loggable {
 }
 
 export const logError = (err: unknown, logger: Logger): void => {
-	logger.error(typeof err === 'object' && err ? 'stack' in err ? err.stack : err : err)
-}
+	logger.error(
+		typeof err === "object" && err ? ("stack" in err ? err.stack : err) : err,
+	);
+};
