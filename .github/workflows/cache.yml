@@ -59,10 +59,8 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            # make cache dirs
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
+            # make cache dirs, these must exist before doing cache stuff
+            - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
