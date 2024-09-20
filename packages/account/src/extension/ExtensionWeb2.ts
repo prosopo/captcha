@@ -36,9 +36,8 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair };
  */
 export class ExtensionWeb2 extends Extension {
 	public async getAccount(
-		config: ProcaptchaClientConfigOutput,
 	): Promise<Account> {
-		const account = await this.createAccount(config);
+		const account = await this.createAccount();
 		const extension: InjectedExtension = await this.createExtension(account);
 
 		return {
@@ -83,7 +82,6 @@ export class ExtensionWeb2 extends Extension {
 	}
 
 	private async createAccount(
-		config: ProcaptchaClientConfigOutput,
 	): Promise<AccountWithKeyPair> {
 		await cryptoWaitReady();
 		const params = {
