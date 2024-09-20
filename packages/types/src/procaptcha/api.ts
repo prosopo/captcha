@@ -29,7 +29,6 @@ export interface ProcaptchaApiInterface {
 		solutions: CaptchaSolution[],
 		timestamp: string,
 		providerRequestHashSignature: string,
-		score?: number,
 	): Promise<TCaptchaSubmitResult>;
 	getCaptchaChallenge(): Promise<CaptchaResponseBody>;
 }

@@ -182,7 +182,6 @@ describe("PoW Integration Tests", () => {
 				verifiedTimeout,
 				user: userPair.address,
 				dapp: dappAccount,
-				score: 1,
 			};
 			const response = await fetch(
 				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
@@ -253,7 +252,6 @@ describe("PoW Integration Tests", () => {
 				verifiedTimeout,
 				user: userPair.address,
 				dapp,
-				score: 1,
 			};
 			const response = await fetch(
 				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
@@ -320,8 +318,7 @@ describe("PoW Integration Tests", () => {
 				nonce,
 				verifiedTimeout,
 				user: userPair.address,
-				dapp,
-				score: 1,
+				dapp
 			};
 			const response = await fetch(
 				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,

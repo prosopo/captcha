@@ -13,7 +13,13 @@
 			"path": "../common"
 		},
 		{
+			"path": "../load-balancer"
+		},
+		{
 			"path": "../types"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }

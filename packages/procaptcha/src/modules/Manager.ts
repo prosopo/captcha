@@ -70,7 +70,6 @@ export function Manager(
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
-	score?: number,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -260,7 +259,6 @@ export function Manager(
 						captchaSolution,
 						challenge.timestamp,
 						challenge.signature.provider.requestHash,
-						score,
 					);
 
 				// mark as is human if solution has been approved
