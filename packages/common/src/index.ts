@@ -16,7 +16,6 @@ export * from "./react/index.js";
 export * from "./node/index.js";
 export * from "./utils.js";
 export type { TFunctionParams, TranslationKey } from "./utils.js";
-export * from "./custom.js";
 export * from "./error.js";
 export * from "./logger.js";
 export * from "./array.js";
