@@ -15,10 +15,16 @@
 			"path": "../detector"
 		},
 		{
-			"path": "../procaptcha-react"
+			"path": "../procaptcha"
 		},
 		{
 			"path": "../procaptcha-pow"
+		},
+		{
+			"path": "../procaptcha-react"
+		},
+		{
+			"path": "../types"
 		},
 		{
 			"path": "../web-components"

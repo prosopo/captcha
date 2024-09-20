@@ -10,5 +10,5 @@
 		"./src/**/*.d.ts",
 		"./src/**/*.tsx"
 	],
-	"references": []
+	"references": [{ "path": "../common/tsconfig.cjs.json" }]
 }

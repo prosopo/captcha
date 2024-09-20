@@ -1,4 +1,3 @@
-import i18n, { type InitOptions } from "i18next";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,15 @@ import i18n, { type InitOptions } from "i18next";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import i18n, { type InitOptions } from "i18next";
 import { default as LanguageDetector } from "i18next-browser-languagedetector";
 import Backend from "i18next-http-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { initReactI18next } from "react-i18next";
 import translationEn from "./locales/en.json" assert { type: "json" };
+import translationEs from "./locales/es.json" assert { type: "json" };
+import translationPt from "./locales/pt.json" assert { type: "json" };
 import { isClientSide } from "./utils.js";
 
 const commonOptions: InitOptions = {
@@ -26,12 +29,22 @@ const commonOptions: InitOptions = {
 		en: {
 			translation: translationEn,
 		},
+		es: {
+			translation: translationEs,
+		},
+		pt: {
+			translation: translationPt,
+		},
 	},
 };
 
 const reactOptions: InitOptions = {
 	react: {
 		useSuspense: false,
+	},
+	detection: {
+		order: ["navigator", "htmlTag", "path", "subdomain"],
+		caches: ["localStorage", "cookie"],
 	},
 };
 

@@ -13,11 +13,11 @@ import { getServerUrl } from "@prosopo/server";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+	ProcaptchaConfigSchema,
 	type ProsopoClientConfigOutput,
-	ProsopoClientConfigSchema,
 } from "@prosopo/types";
 
-const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
+const config: ProsopoClientConfigOutput = ProcaptchaConfigSchema.parse({
 	account: {
 		address: process.env.PROSOPO_SITE_KEY,
 	},
@@ -25,6 +25,7 @@ const config: ProsopoClientConfigOutput = ProsopoClientConfigSchema.parse({
 	defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 	dappName: "client-example",
 	serverUrl: getServerUrl(),
+	theme: "light",
 });
 
 export default config;
