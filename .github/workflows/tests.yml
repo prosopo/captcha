@@ -190,6 +190,6 @@ jobs:
       - name: Start services and run tests
         run: |
           npx concurrently \
-          "NODE_ENV=test npm run start:provider -- --adminApi" \
+          "NODE_ENV=test npm run start:provider:admin" \
           "sleep 10s && NODE_ENV=test npm run test" \
            --success "first" --kill-others
