@@ -83,6 +83,23 @@ jobs:
                     ~/.npm
                   key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
+            - name: Cleanup npm caches
+              if: always()
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                  # remove all but the latest cache, leaving only the cache we just saved
+                  set +e; gh extension install actions/gh-actions-cache; set -e
+                  echo "Fetching list of cache key"
+                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R "${{ github.repository }}" --key "npm-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
+                  echo caches to be removed:
+                  echo "${cacheKeys}"
+                  set +e
+                  for cacheKey in $cacheKeys
+                  do
+                      gh actions-cache delete "$cacheKey" -R "${{ github.repository }}" --confirm
+                  done
+
             - name: Save cypress cache
               uses: actions/cache/save@v3
               if: always()
@@ -91,21 +108,19 @@ jobs:
                     ~/.cache/Cypress
                   key: cypress-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-            # remove all but the latest cache, leaving only the cache we just saved
-            - name: Cleanup caches
+            - name: Cleanup cypress caches
               if: always()
-              env:
-                  REF: ${{ github.event.pull_request.head.ref || github.ref }}
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    set +e; gh extension install actions/gh-actions-cache; set -e
-                    echo "Fetching list of cache key"
-                    cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R "${{ github.repository }}" --key "project-cache-$REF-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
-                    echo caches to be removed:
-                    echo "${cacheKeys}"
-                    set +e
-                    for cacheKey in $cacheKeys
-                    do
-                        gh actions-cache delete "$cacheKey" -R "${{ github.repository }}" --confirm
-                    done
+                  # remove all but the latest cache, leaving only the cache we just saved
+                  set +e; gh extension install actions/gh-actions-cache; set -e
+                  echo "Fetching list of cache key"
+                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R "${{ github.repository }}" --key "cypress-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
+                  echo caches to be removed:
+                  echo "${cacheKeys}"
+                  set +e
+                  for cacheKey in $cacheKeys
+                  do
+                      gh actions-cache delete "$cacheKey" -R "${{ github.repository }}" --confirm
+                  done
