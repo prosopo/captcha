@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "2.0.3",
+	"version": "2.1.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -27,14 +27,16 @@
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV --debug",
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode $NODE_ENV"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
-		"@prosopo/dotenv": "2.0.3",
-		"@prosopo/procaptcha-frictionless": "2.0.3",
-		"@prosopo/procaptcha-pow": "2.0.3",
-		"@prosopo/procaptcha-react": "2.0.3",
-		"@prosopo/types": "2.0.3",
-		"@prosopo/util": "2.0.3",
+		"@prosopo/dotenv": "2.1.0",
+		"@prosopo/procaptcha-frictionless": "2.1.0",
+		"@prosopo/procaptcha-pow": "2.1.0",
+		"@prosopo/procaptcha-react": "2.1.0",
+		"@prosopo/types": "2.1.0",
+		"@prosopo/util": "2.1.0",
 		"react": "18.3.1",
 		"react-dom": "18.3.1"
 	},
@@ -51,7 +53,7 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.0.3",
+		"@prosopo/config": "2.1.0",
 		"@types/jsdom": "21.1.7",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
