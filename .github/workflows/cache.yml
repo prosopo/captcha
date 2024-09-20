@@ -81,7 +81,7 @@ jobs:
               with:
                   path: |
                     ~/.npm
-                  key: npm-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             - name: Save cypress cache
               uses: actions/cache/save@v3
@@ -89,7 +89,7 @@ jobs:
               with:
                   path: |
                     ~/.cache/Cypress
-                  key: npm-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: cypress-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             # remove all but the latest cache, leaving only the cache we just saved
             - name: Cleanup caches
