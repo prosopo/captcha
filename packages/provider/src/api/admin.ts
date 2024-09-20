@@ -20,6 +20,8 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Router } from "express";
 import { Tasks } from "../index.js";
 import { authMiddleware } from "./authMiddleware.js";
+import {logError, Logger} from "@prosopo/common";
+
 
 export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();
@@ -35,7 +37,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			console.info(`Dataset update complete: ${result}`);
 			res.status(200).send(result);
 		} catch (err) {
-			tasks.logger.error(err.stack || err);
+			logError(err,tasks.logger);
 			res.status(500).send("An internal server error occurred.");
 		}
 	});
@@ -49,7 +51,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			};
 			res.json(response);
 		} catch (err) {
-			tasks.logger.error(err.stack || err);
+			logError(err,tasks.logger);
 			res.status(500).send("An internal server error occurred.");
 		}
 	});
