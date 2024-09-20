@@ -67,7 +67,7 @@ services:
         profiles:
             - production-arm64
             - staging-arm64
-        image: prosopo/mongodb-rpi4:6.0.14
+        image: prosopo/mongodb-rpi4:6.0.14  # https://github.com/themattman/mongodb-raspberrypi-docker?tab=readme-ov-file
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
