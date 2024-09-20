@@ -63,6 +63,11 @@ export const TranslationKeysSchema = z.enum(
 
 export type TranslationKey = z.infer<typeof TranslationKeysSchema>;
 
+const TranslationFileSchema = z.record(
+	TranslationKeysSchema,
+	z.record(TranslationKeysSchema, z.string()),
+);
+
 // String utils
 
 export function reverseHexString(str: string): `0x${string}` {
