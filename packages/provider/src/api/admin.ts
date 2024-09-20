@@ -35,8 +35,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			console.info(`Dataset update complete: ${result}`);
 			res.status(200).send(result);
 		} catch (err) {
-			tasks.logger.error(err);
-			res.status(500).send(err);
+			tasks.logger.error(err.stack || err);
+			res.status(500).send("An internal server error occurred.");
 		}
 	});
 
@@ -49,8 +49,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			};
 			res.json(response);
 		} catch (err) {
-			tasks.logger.error(err);
-			res.status(500).send(err);
+			tasks.logger.error(err.stack || err);
+			res.status(500).send("An internal server error occurred.");
 		}
 	});
 
