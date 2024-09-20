@@ -232,6 +232,9 @@ export class ImgCaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
+			const { tree, commitmentId } =
+				buildTreeAndGetCommitmentId(receivedCaptchas);
+
 			const datasetId = at(storedCaptchas, 0).datasetId;
 
 			if (!datasetId) {
@@ -240,9 +243,9 @@ export class ImgCaptchaManager {
 				});
 			}
 
-			const { tree, commitmentId } =
-				buildTreeAndGetCommitmentId(receivedCaptchas);
-
+			// Only do stuff if the request is in the local DB
+			// prevent this request hash from being used twice
+			await this.db.updateDappUserPendingStatus(requestHash);
 			const commit: UserCommitment = {
 				id: commitmentId,
 				userAccount: userAccount,
@@ -257,11 +260,6 @@ export class ImgCaptchaManager {
 				ipAddress,
 				headers,
 			};
-
-			// Only do stuff if the request is in the local DB
-			// prevent this request hash from being used twice
-			await this.db.updateDappUserPendingStatus(requestHash);
-
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
 
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
