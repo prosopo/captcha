@@ -16,7 +16,7 @@ import { blake2b } from "@noble/hashes/blake2b";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
+import { getPairAsync } from "@prosopo/account";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,

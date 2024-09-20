@@ -13,7 +13,7 @@ import { stringToU8a, u8aToHex } from "@polkadot/util";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeypairType } from "@polkadot/util-crypto/types";
-import { getPairAsync } from "@prosopo/contract";
+import { getPairAsync } from "@prosopo/account";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 

@@ -16,9 +16,6 @@
 			"path": "../../dev/config"
 		},
 		{
-			"path": "../contract"
-		},
-		{
 			"path": "../database"
 		},
 		{
