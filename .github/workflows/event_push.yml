@@ -1,6 +1,6 @@
 # Send an event to other repos on push to main
 
-name: event_dev_push
+name: event_push
 
 on:
     push:
