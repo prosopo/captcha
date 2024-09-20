@@ -1,3 +1,4 @@
+import { Logger, logError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +21,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Router } from "express";
 import { Tasks } from "../index.js";
 import { authMiddleware } from "./authMiddleware.js";
-import {logError, Logger} from "@prosopo/common";
-
 
 export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();
@@ -37,7 +36,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			console.info(`Dataset update complete: ${result}`);
 			res.status(200).send(result);
 		} catch (err) {
-			logError(err,tasks.logger);
+			logError(err, tasks.logger);
 			res.status(500).send("An internal server error occurred.");
 		}
 	});
@@ -51,7 +50,7 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 			};
 			res.json(response);
 		} catch (err) {
-			logError(err,tasks.logger);
+			logError(err, tasks.logger);
 			res.status(500).send("An internal server error occurred.");
 		}
 	});

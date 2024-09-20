@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { ViteTestConfig } from "@prosopo/config";
-import { loadEnv } from "@prosopo/dotenv"
+import { loadEnv } from "@prosopo/dotenv";
 
-loadEnv()
+loadEnv();
 
 export default ViteTestConfig;

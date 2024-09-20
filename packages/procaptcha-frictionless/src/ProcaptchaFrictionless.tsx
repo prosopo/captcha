@@ -43,17 +43,11 @@ export const ProcaptchaFrictionless = ({
 			const result = await detectBot();
 			if (result.bot) {
 				setComponentToRender(
-					<Procaptcha
-						config={config}
-						callbacks={callbacks}
-					/>,
+					<Procaptcha config={config} callbacks={callbacks} />,
 				);
 			} else {
 				setComponentToRender(
-					<ProcaptchaPow
-						config={config}
-						callbacks={callbacks}
-					/>,
+					<ProcaptchaPow config={config} callbacks={callbacks} />,
 				);
 			}
 		};
