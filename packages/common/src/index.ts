@@ -20,5 +20,4 @@ export * from "./error.js";
 export * from "./logger.js";
 export * from "./array.js";
 export * from "./hash.js";
-export * from "./string.js";
 export * from "./node/UrlConverter.js";
