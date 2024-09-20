@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-mock",
-	"version": "2.0.3",
+	"version": "2.1.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -15,9 +15,9 @@
 		"build": "tsc --build --verbose"
 	},
 	"dependencies": {
-		"@prosopo/common": "2.0.3",
-		"@prosopo/provider": "2.0.3",
-		"@prosopo/types": "2.0.3",
+		"@prosopo/common": "2.1.0",
+		"@prosopo/provider": "2.1.0",
+		"@prosopo/types": "2.1.0",
 		"cors": "2.8.5",
 		"express": "4.21.0"
 	},
