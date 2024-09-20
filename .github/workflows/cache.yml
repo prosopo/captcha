@@ -75,10 +75,13 @@ jobs:
             # install cypress so we don't have to do that every time
             - run: npx cypress install
 
-            - run: ls -la ~/.cache/Cypress || true
-            - run: ls -la protocol/cargo-cache || true
-            - run: ls -la protocol/target/ink || true
-            - run: ls -la node_modules || true
+            - name: Save npm cache
+              uses: actions/cache/save@v3
+              if: always()
+              with:
+                  path: |
+                    ~/.npm
+                  key: npm-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             # save cache to main branch. Any branch can use this cache afterwards to speed up their build
             - name: Save cache
