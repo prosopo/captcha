@@ -83,17 +83,13 @@ jobs:
                     ~/.npm
                   key: npm-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
-            - name: Save cache
+            - name: Save cypress cache
               uses: actions/cache/save@v3
               if: always()
               with:
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      ~/.cache/Cypress
-                  key: project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                    ~/.cache/Cypress
+                  key: npm-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             # remove all but the latest cache, leaving only the cache we just saved
             - name: Cleanup caches
