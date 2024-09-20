@@ -4,7 +4,7 @@ name: event_push
 
 on:
     push:
-        branches: [main,staging,dev,release/*]
+        branches: [main, staging, dev, release/*]
     workflow_dispatch:
 
 concurrency:
