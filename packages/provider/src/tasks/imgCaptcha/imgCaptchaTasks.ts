@@ -168,8 +168,6 @@ export class ImgCaptchaManager {
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
 	 * @param headers
-	 * @param score
-	 * @param threshold
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -182,8 +180,6 @@ export class ImgCaptchaManager {
 		providerRequestHashSignature: string,
 		ipAddress: string,
 		headers: RequestHeaders,
-		threshold: number,
-		score?: number,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -211,7 +207,7 @@ export class ImgCaptchaManager {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: {
-					scorefailedFuncName: this.dappUserSolution.name,
+					failedFuncName: this.dappUserSolution.name,
 					userAccount,
 					error: "requestHash signature is invalid",
 				},
@@ -233,9 +229,6 @@ export class ImgCaptchaManager {
 			unverifiedCaptchaIds,
 		);
 		if (pendingRequest) {
-			const scoreBelowThreshold = score !== undefined && score < threshold;
-			console.log("scoreBelowThreshold", scoreBelowThreshold);
-
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
@@ -270,21 +263,6 @@ export class ImgCaptchaManager {
 			await this.db.updateDappUserPendingStatus(requestHash);
 
 			await this.db.storeDappUserSolution(receivedCaptchas, commit);
-
-			if (scoreBelowThreshold) {
-				await this.db.disapproveDappUserCommitment(
-					commitmentId,
-					"CAPTCHA.SCORE_BELOW_THRESHOLD",
-				);
-				response = {
-					captchas: captchaIds.map((id) => ({
-						captchaId: id,
-						proof: [[]],
-					})),
-					verified: false,
-				};
-				return response;
-			}
 
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
 				response = {

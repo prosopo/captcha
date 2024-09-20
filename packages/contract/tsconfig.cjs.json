@@ -18,6 +18,9 @@
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{
+			"path": "../tx/tsconfig.cjs.json"
+		},
+		{
 			"path": "../util/tsconfig.cjs.json"
 		}
 	]

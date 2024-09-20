@@ -13,6 +13,8 @@
 // limitations under the License.
 
 /** @jsxImportSource @emotion/react */
+
+import { i18n, useTranslation } from "@prosopo/common";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
@@ -38,12 +40,19 @@ import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
+	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const manager = Manager(config, state, updateState, callbacks);
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
+
+	useEffect(() => {
+		if (config.language) {
+			i18n.changeLanguage(config.language);
+		}
+	}, [config.language]);
 
 	return (
 		<div>
@@ -117,9 +126,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 													themeColor={themeColor}
 													onChange={manager.start}
 													checked={state.isHuman}
-													labelText={"I am human"}
-													error={state.error}
-													aria-label="human checkbox"
+													labelText={t("WIDGET.I_AM_HUMAN")}
+                                                    error={state.error}
+                                                    aria-label="human checkbox"
 												/>
 											</div>
 											<div

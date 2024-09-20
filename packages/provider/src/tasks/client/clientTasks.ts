@@ -16,7 +16,6 @@ import type { Logger } from "@prosopo/common";
 import {
 	CaptchaDatabase,
 	ClientDatabase,
-	ProviderDatabase,
 } from "@prosopo/database";
 import {
 	type ProsopoConfigOutput,

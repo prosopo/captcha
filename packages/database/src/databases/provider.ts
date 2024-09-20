@@ -43,7 +43,6 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
-	type IDatabase,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	PendingRecordSchema,

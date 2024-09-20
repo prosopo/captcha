@@ -95,7 +95,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
-	console.log(error);
 	return (
 		<span style={{ display: "inline-flex" }}>
 			<input

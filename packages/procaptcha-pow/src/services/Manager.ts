@@ -39,7 +39,6 @@ export const Manager = (
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
-	score?: number,
 ) => {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -225,7 +224,6 @@ export const Manager = (
 						getDappAccount(),
 						solution,
 						userTimestampSignature.signature.toString(),
-						score,
 						config.captchas.pow.verifiedTimeout,
 					);
 					if (verifiedSolution[ApiParams.verified]) {

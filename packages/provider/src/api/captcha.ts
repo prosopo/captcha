@@ -145,9 +145,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
 					req.ip || NO_IP_ADDRESS,
-					flatten(req.headers, ","),
-					clientRecord.settings?.threshold || 0.8,
-					parsed.score,
+					flatten(req.headers, ",")
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -260,7 +258,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				signature,
 				nonce,
 				verifiedTimeout,
-				score,
 				dapp,
 			} = SubmitPowCaptchaSolutionBody.parse(req.body);
 
@@ -281,9 +278,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				verifiedTimeout,
 				signature.user.timestamp,
 				req.ip || NO_IP_ADDRESS,
-				flatten(req.headers, ","),
-				clientRecord.settings?.threshold || 0.8,
-				score,
+				flatten(req.headers, ",")
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);

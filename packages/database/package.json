@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "2.0.3",
+	"version": "2.1.0",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"type": "module",
@@ -31,16 +31,24 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "2.0.3",
-		"@prosopo/config": "2.0.3",
-		"@prosopo/types": "2.0.3",
-		"@prosopo/types-database": "2.0.3",
-		"mongodb-memory-server": "^9.4.0",
-		"mongoose": "^8.5.1"
+		"@prosopo/common": "2.1.0",
+		"@prosopo/config": "2.1.0",
+		"@prosopo/types": "2.1.0",
+		"@prosopo/types-database": "2.1.0",
+		"mongodb": "6.9.0",
+		"mongodb-memory-server": "10.0.0",
+		"mongoose": "8.6.2"
 	},
 	"devDependencies": {
-		"tslib": "2.6.2",
-		"typescript": "5.1.6"
+		"@vitest/coverage-v8": "2.1.1",
+		"concurrently": "9.0.1",
+		"npm-run-all": "4.1.5",
+		"rimraf": "6.0.1",
+		"tslib": "2.7.0",
+		"tsx": "4.19.1",
+		"typescript": "5.6.2",
+		"vite": "5.4.6",
+		"vitest": "2.1.1"
 	},
 	"sideEffects": false
 }

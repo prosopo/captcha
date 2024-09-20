@@ -185,7 +185,6 @@ export const CaptchaSolutionBody = object({
 	[ApiParams.captchas]: array(CaptchaSolutionSchema),
 	[ApiParams.requestHash]: string(),
 	[ApiParams.timestamp]: string(),
-	[ApiParams.score]: number().optional(),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: RequestHashSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
@@ -288,7 +287,6 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.nonce]: number(),
-	[ApiParams.score]: number().optional(),
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
