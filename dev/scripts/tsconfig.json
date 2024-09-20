@@ -23,9 +23,6 @@
 			"path": "../config"
 		},
 		{
-			"path": "../../packages/contract"
-		},
-		{
 			"path": "../../packages/database"
 		},
 		{

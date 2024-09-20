@@ -30,7 +30,6 @@
 		"@prosopo/cli": "2.0.3",
 		"@prosopo/common": "2.0.3",
 		"@prosopo/config": "2.0.3",
-		"@prosopo/contract": "2.0.3",
 		"@prosopo/datasets": "2.0.3",
 		"@prosopo/dotenv": "2.0.3",
 		"@prosopo/env": "2.0.3",

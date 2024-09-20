@@ -11,14 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Signer } from "@polkadot/api/types";
+
 import type { ProviderApiInterface } from "../api/index.js";
-import type { IProsopoCaptchaContract } from "../contract/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
 import type {
 	CaptchaResponseBody,
-	GetPowCaptchaResponse,
-	PowCaptchaSolutionResponse,
 	RandomProvider,
 } from "../provider/index.js";
 import type { TCaptchaSubmitResult } from "./client.js";

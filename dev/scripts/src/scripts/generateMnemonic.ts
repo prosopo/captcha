@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/common";
-import { generateMnemonic } from "@prosopo/contract";
+import { generateMnemonic } from "@prosopo/account";
 import { loadEnv } from "@prosopo/dotenv";
 import { updateEnvFile } from "../setup/index.js";
 

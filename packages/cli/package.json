@@ -29,7 +29,6 @@
 		"@polkadot/types-codec": "10.13.1",
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/common": "2.0.3",
-		"@prosopo/contract": "2.0.3",
 		"@prosopo/dotenv": "2.0.3",
 		"@prosopo/env": "2.0.3",
 		"@prosopo/provider": "2.0.3",

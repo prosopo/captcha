@@ -14,7 +14,7 @@
 import { ProsopoServer } from "./server.js";
 export { ProsopoServer } from "./server.js";
 export { getServerConfig, getServerUrl } from "./config.js";
-import { getPairAsync } from "@prosopo/contract";
+import { getPairAsync } from "@prosopo/account";
 import type { ProsopoServerConfigOutput } from "@prosopo/types";
 export const PublicProsopoServer = async (
 	config: ProsopoServerConfigOutput,

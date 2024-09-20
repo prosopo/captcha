@@ -17,7 +17,7 @@ import { BN } from "@polkadot/util";
 import { isAddress } from "@polkadot/util-crypto";
 import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
-import { generateMnemonic, getPairAsync } from "@prosopo/contract";
+import { generateMnemonic, getPairAsync } from "@prosopo/account";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
