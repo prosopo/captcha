@@ -7,6 +7,12 @@ on:
         branches: [main, staging]
     workflow_dispatch:
 
+env:
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    CARGO_TERM_COLOR: always
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
 jobs:
     deploy:
         runs-on: ubuntu-latest
@@ -48,6 +54,23 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
+
+            - run: mkdir -p ~/.npm
+            - run: mkdir -p ~/.cache/Cypress
+
+            - name: Restore npm cache
+              uses: actions/cache/restore@v3
+              with:
+                  # must restore all cache dirs, and they must exist ahead of this!
+                  path: |
+                      ~/.npm
+                      ~/.cache/Cypress
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+                  key: some-unused-cache-key
+                  restore-keys: |
+                      npm-${{ runner.os }}-${{ runner.arch }}-
 
             # Add support for more platforms with QEMU (optional)
             # https://github.com/docker/setup-qemu-action
@@ -149,7 +172,7 @@ jobs:
                     git checkout js-bundle
                     
                     # Copy built bundle to js-bundle branch
-                    cp -r packages/procaptcha-bundle/dist/bundle/* .
+                    cp $(find packages/procaptcha-bundle/dist/bundle/* -maxdepth 0 -not -type d) .
                     
                     # set the author in git
                     git config user.name "prosoponator[bot]"
@@ -163,25 +186,6 @@ jobs:
                     
                     # Return to the original branch
                     git checkout ${{ github.ref }}
-
-
-            - name: Deploy staging js bundle
-              if: ${{ steps.env.outputs.staging }}
-              env:
-                  GH_TOKEN: ${{ github.token }}
-              run: |
-
-                  # stop on errors, print commands, fail on pipe fails
-                  set -euo pipefail
-
-                  # the tag for the release
-                  TAG=${{ steps.env.outputs.env }}-release
-
-                  # find the staging release, list the assets, then delete each asset. This stops any assets being carried over from one staging release to the next
-                  gh release view $TAG --json assets | jq '.assets[].name' | tr -d '"' | xargs -P 1 --verbose -I {} gh release delete-asset $TAG {} -y
-
-                  # upload the bundle to the staging release
-                  gh release upload $TAG packages/procaptcha-bundle/dist/bundle/*
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v2

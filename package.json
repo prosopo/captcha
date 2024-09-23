@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.0.3",
+	"version": "2.1.0",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -80,6 +80,9 @@
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
+		"sbom:spdx": "npm sbom --sbom-format spdx > sbom.spdx.json",
+		"sbom:cyclonedx": "npm sbom --sbom-format cyclonedx > sbom.cyclonedx.json",
+		"sbom": "run-s sbom:*",
 		"ws:pkg": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgjson -- {}",
 		"ws:dir": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgdir -- {}",
 		"pkgjson": "f() { npx -w $1 node -e 'console.log(process.cwd()+\"/package.json\")' ;}; f",

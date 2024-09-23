@@ -42,6 +42,10 @@ const reactOptions: InitOptions = {
 	react: {
 		useSuspense: false,
 	},
+	detection: {
+		order: ["navigator", "htmlTag", "path", "subdomain"],
+		caches: ["localStorage", "cookie"],
+	},
 };
 
 const nodeOptions: InitOptions = {};
