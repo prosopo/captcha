@@ -132,6 +132,7 @@ jobs:
 
             - run: npm ci
 
+            # check everything builds
             - run: npm run build:all
             - run: npm run build:all:cjs
             - run: npm run bundle:all
@@ -151,11 +152,6 @@ jobs:
               continue-on-error: true  # we want to continue even if the release already exists
               run: |
                   gh release edit "${{ steps.env.outputs.gh_release_tag }}" --prerelease
-
-            - name: Upload procaptcha bundle to gh release
-              if: ${{ steps.env.outputs.production }}
-              run: |
-                  gh release upload "${{ steps.env.outputs.gh_release_tag }}"" "./packages/procaptcha-bundle/dist/bundle/procaptcha.bundle.js" --clobber
 
             - name: Release fail notification
               if: failure()
