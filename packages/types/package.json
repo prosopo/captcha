@@ -39,6 +39,7 @@
 		"@polkadot/types-codec": "10.13.1",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "2.1.0",
+		"@prosopo/locale": "2.1.0",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8"
 	},

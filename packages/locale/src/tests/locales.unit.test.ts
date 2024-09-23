@@ -14,7 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { LanguageSchema } from "@prosopo/types";
+import { LanguageSchema } from "../index.js";
 import { describe, expect, test } from "vitest";
 
 describe("logging", () => {

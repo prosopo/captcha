@@ -11,17 +11,5 @@
 		"./src/**/*.tsx"
 	],
 	"references": [
-		{
-			"path": "../common/tsconfig.cjs.json"
-		},
-		{
-			"path": "../locale/tsconfig.cjs.json"
-		},
-		{
-			"path": "../types/tsconfig.cjs.json"
-		},
-		{
-			"path": "../util/tsconfig.cjs.json"
-		}
 	]
 }

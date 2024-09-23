@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
-import type { TranslationKey } from "@prosopo/common";
+import type { TranslationKey } from "@prosopo/locale";
 import {
 	array,
 	custom,

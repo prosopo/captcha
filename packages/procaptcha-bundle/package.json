@@ -30,6 +30,7 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/dotenv": "2.1.0",
+		"@prosopo/locale": "2.1.0",
 		"@prosopo/procaptcha-frictionless": "2.1.0",
 		"@prosopo/procaptcha-pow": "2.1.0",
 		"@prosopo/procaptcha-react": "2.1.0",
