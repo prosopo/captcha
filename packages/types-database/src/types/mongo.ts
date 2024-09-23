@@ -11,12 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-	type Logger,
+import type { Logger } from "@prosopo/common";
 
-} from "@prosopo/common";
-
-import {type Connection} from "mongoose";
+import type { Connection } from "mongoose";
 
 export interface IDatabase {
 	url: string;
