@@ -8,5 +8,7 @@
 	"references": [
 		{
 			"path": "../../dev/config"
-		},{ "path": "../common" }]
+		},
+		{ "path": "../common" }
+	]
 }
