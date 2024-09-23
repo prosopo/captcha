@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { LanguageSchema } from "@prosopo/locale";
 import type { ProcaptchaToken } from "@prosopo/types";
-import { LanguageSchema } from "@prosopo/locale";
 
 export enum FeaturesEnum {
 	Image = "image",

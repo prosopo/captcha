@@ -14,8 +14,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { LanguageSchema } from "../index.js";
 import { describe, expect, test } from "vitest";
+import { LanguageSchema } from "../index.js";
 
 describe("logging", () => {
 	test("Get all locale JSON files and ensure the keys are identical in each one", () => {

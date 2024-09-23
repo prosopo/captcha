@@ -98,7 +98,7 @@ jobs:
                       
             - name: Bump version
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                set -euo pipefail # stop on errors, print commands, fail on pipe fails
 
                 # set the author in git
                 git config user.name "prosoponator[bot]"
@@ -117,17 +117,31 @@ jobs:
                 pkgJsons=$(npm run --silent ws:pkg)
                 pkgNames=$(npm run --silent ws:ls)
                 for pkgJson in $pkgJsons; do
+                    echo "Bumping version in $pkgJson"
                     # for each package in the workspace, set the version number
-                    cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > $pkgJson
+                    cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > tmp
+                    mv tmp $pkgJson
                     for pkgName in $pkgNames; do
                         # for each package in the workspace, check whether it is in the dependencies of the current package
                         # if so, bump the version number in the dependencies
-                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"^${{ github.event.inputs.version }}\" else . end" > $pkgJson
+                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
+                        mv tmp $pkgJson
+                        cat $pkgJson | jq "if .devDependencies[\"$pkgName\"] then .devDependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
+                        mv tmp $pkgJson 
                     done
                 done
 
-                # update pkg lock
+                # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
+                envFiles=$(find . -name "*.env" -o -name "env" -o -name ".env" -o -name "env.*")
+                echo "Bumping version in env files: $envFiles"
+                for envFile in $envFiles; do
+                    sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
+                done
+
+                # the json may be poorly formatted now, so we need to fix it
                 npm i
+                npm run -w @prosopo/scripts build
+                npm run lint-fix
 
                 # commit the version changes
                 git add .

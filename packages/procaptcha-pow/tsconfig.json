@@ -22,6 +22,9 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../locale-browser"
+		},
+		{
 			"path": "../procaptcha"
 		},
 		{

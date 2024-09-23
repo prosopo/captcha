@@ -12,32 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { LanguageSchema, translations as resources } from "@prosopo/locale";
 import i18n, { type InitOptions } from "i18next";
 import { default as LanguageDetector } from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
-import {translations as resources, LanguageSchema} from "@prosopo/locale";
 
 const commonOptions: InitOptions = {
-    debug: false,
-    fallbackLng: LanguageSchema.enum.en,
-    resources
+	debug: false,
+	fallbackLng: LanguageSchema.enum.en,
+	resources,
 };
 
 const reactOptions: InitOptions = {
-    react: {
-        useSuspense: false,
-    },
-    detection: {
-        order: ["navigator", "htmlTag", "path", "subdomain"],
-        caches: ["localStorage", "cookie"],
-    },
+	react: {
+		useSuspense: false,
+	},
+	detection: {
+		order: ["navigator", "htmlTag", "path", "subdomain"],
+		caches: ["localStorage", "cookie"],
+	},
 };
 
-
-    i18n
-        .use(LanguageDetector)
-        .use(initReactI18next)
-        .init({ ...commonOptions, ...reactOptions });
-
+i18n
+	.use(LanguageDetector)
+	.use(initReactI18next)
+	.init({ ...commonOptions, ...reactOptions });
 
 export default i18n;
