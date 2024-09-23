@@ -111,10 +111,17 @@ jobs:
                     done
                 done
 
+                # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
+                envFiles=$(find . -name "*.env" -o -name "env" -o -name ".env" -o -name "env.*")
+                echo "Bumping version in env files: $envFiles"
+                for envFile in $envFiles; do
+                    sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
+                done
+
                 # the json may be poorly formatted now, so we need to fix it
                 npm i
                 npm run -w @prosopo/scripts build
-                npm run lint-fix:js
+                npm run lint-fix
 
                 # commit the version changes
                 git add .
