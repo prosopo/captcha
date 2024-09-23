@@ -34,6 +34,14 @@ const readFile = (filePath: string): File => {
 	}
 }
 
+const readFileWhy = (filePath: string, msg: string): File => {
+	try {
+		return readFile(filePath);
+	} catch(err) {
+		throw new Error(`Failed to read file ${filePath}: ${msg}`);
+	}
+}
+
 const findWs = (pkgJson: File): File => {
 	let filePath = pkgJson.path;
 	while(filePath !== '/package.json') {
@@ -97,7 +105,6 @@ const main = async (args: {
 
 	// if this package is the workspace, decend into the packages in the workspace
 	if(wsPkgJson.path === pkgJson.path) {
-		console.log(`${pkgJson.path} is a workspace`);
 		// get all the package.json files in the workspace
 		const wsPkgJsonPaths = getPkgJsonPaths(wsPkgJson);
 		// list all the pkgs in the workspace if the package belongs to a workspace
@@ -128,8 +135,7 @@ const main = async (args: {
 		// find all tsconfig files in the same dir as the package.json
 		const tsconfigPaths = fg.globSync(`${pkgDir}/tsconfig{,.cjs}.json`);
 		for(const tsconfigPath of tsconfigPaths) {
-			console.log()
-			// console.log('tsconfigPath', tsconfigPath)
+			console.log(`Checking ${tsconfigPath} against ${pkgJson.path}`);
 			// read the tsconfig json
 			const tsconfigJson = readFile(tsconfigPath);
 			// get the tsconfig references
@@ -139,7 +145,7 @@ const main = async (args: {
 				// get the dir for the package
 				const refPath = path.dirname(p);
 				// read the package.json in the dir
-				const pkgJson = readFile(`${pkgDir}/${refPath}/package.json`);
+				const pkgJson = readFileWhy(`${pkgDir}/${refPath}/package.json`, `specified in ${tsconfigPath}`);
 				return getPkgName(pkgJson);
 			})
 			// console.log('refPkgNames', refPkgNames)
@@ -150,18 +156,17 @@ const main = async (args: {
 			// e.g. a ref might be in the tsconfig but not in the pkg json
 			const missingDeps: string[] = deps.filter((d) => !refPkgNames.includes(d))
 			for(const missingRef of missingRefs) {
-				console.log(`${missingRef} ref in ${tsconfigPath} but not in ${pkgJson.path}`);
+				console.log(`${missingRef} ref not needed in ${tsconfigPath}`);
 			}
 			for(const missingDep of missingDeps) {
-				console.log(`${missingDep} dep in ${pkgJson.path} but not in ${tsconfigPath}`);
+				console.log(`${missingDep} ref missing from ${tsconfigPath}`);
 			}
 			if(missingRefs.length === 0 && missingDeps.length === 0) {
-				console.log(`Refs and deps in sync for ${tsconfigPath} and ${pkgJson.path}`);
+				// console.log(`Refs and deps in sync for ${tsconfigPath} and ${pkgJson.path}`);
 			} else {
 				throw new Error(`Refs and deps not in sync in ${tsconfigPath} and ${pkgJson.path}`);
 			}
 		}
-		console.log()
 	}
 	
 };
