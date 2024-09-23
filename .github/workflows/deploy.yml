@@ -7,6 +7,12 @@ on:
         branches: [main, staging]
     workflow_dispatch:
 
+env:
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    CARGO_TERM_COLOR: always
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
 jobs:
     deploy:
         runs-on: ubuntu-latest
