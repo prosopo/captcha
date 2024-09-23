@@ -15,6 +15,9 @@
 			"path": "../detector/tsconfig.cjs.json"
 		},
 		{
+			"path": "../locale-browser/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha/tsconfig.cjs.json"
 		},
 		{
