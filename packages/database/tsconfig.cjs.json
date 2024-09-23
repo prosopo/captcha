@@ -21,7 +21,7 @@
 			"path": "../types-database/tsconfig.cjs.json"
 		},
 		{
-			"path": "../util/tsconfig.cjs.json"
+			"path": "../../dev/config/tsconfig.cjs.json"
 		}
 	]
 }

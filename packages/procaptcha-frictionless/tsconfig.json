@@ -15,9 +15,6 @@
 			"path": "../detector"
 		},
 		{
-			"path": "../procaptcha"
-		},
-		{
 			"path": "../procaptcha-pow"
 		},
 		{

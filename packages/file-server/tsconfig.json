@@ -7,7 +7,7 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../../dev/config"
 		},
 		{
 			"path": "../util"

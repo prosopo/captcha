@@ -16,7 +16,7 @@
 			"path": "../types-database"
 		},
 		{
-			"path": "../util"
+			"path": "../../dev/config"
 		}
 	]
 }

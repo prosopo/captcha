@@ -8,16 +8,19 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../packages/api"
-		},
-		{
-			"path": "../../packages/cli"
+			"path": "../../packages/common"
 		},
 		{
 			"path": "../../packages/contract"
 		},
 		{
-			"path": "../../packages/procaptcha"
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/util"
+		},
+		{
+			"path": "../../dev/config"
 		},
 		{
 			"path": "../../packages/server"

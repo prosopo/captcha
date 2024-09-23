@@ -10,5 +10,8 @@
 		"./src/**/*.d.ts",
 		"./src/**/*.tsx"
 	],
-	"references": []
+	"references": [
+		{
+			"path": "../../dev/config"
+		}]
 }

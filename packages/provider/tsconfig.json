@@ -7,9 +7,6 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../api"
-		},
-		{
 			"path": "../common"
 		},
 		{
@@ -26,9 +23,6 @@
 		},
 		{
 			"path": "../env"
-		},
-		{
-			"path": "../tx"
 		},
 		{
 			"path": "../types"

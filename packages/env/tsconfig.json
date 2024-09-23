@@ -10,7 +10,7 @@
 			"path": "../common"
 		},
 		{
-			"path": "../contract"
+			"path": "../../dev/config"
 		},
 		{
 			"path": "../database"

@@ -19,7 +19,7 @@
 			"path": "../common"
 		},
 		{
-			"path": "../load-balancer"
+			"path": "../../dev/config"
 		},
 		{
 			"path": "../procaptcha"
