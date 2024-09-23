@@ -19,7 +19,7 @@ describe('Logger', () => {
   })
 
   it('should throw for invalid log level', () => {
-    expect(() => getLogger('invalid' as any, 'test')).toThrow()
+    expect(() => getLogger('invalid', 'test')).toThrow()
   })
 
   it('should return default logger', () => {
