@@ -14,7 +14,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { u8aToHex } from "@polkadot/util/u8a";
-import { getPairAsync } from "@prosopo/contract";
+import { getPairAsync } from "@prosopo/account";
 import {
 	ApiParams,
 	ApiPaths,

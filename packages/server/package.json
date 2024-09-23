@@ -36,7 +36,6 @@
 		"@polkadot/util": "12.6.2",
 		"@prosopo/api": "2.1.0",
 		"@prosopo/common": "2.1.0",
-		"@prosopo/contract": "2.1.0",
 		"@prosopo/types": "2.1.0"
 	},
 	"devDependencies": {

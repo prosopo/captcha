@@ -14,7 +14,7 @@
 
 import type { Server } from "node:net";
 import { i18nMiddleware } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
+import { getPairAsync } from "@prosopo/account";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {

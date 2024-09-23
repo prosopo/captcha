@@ -34,7 +34,7 @@ export async function getPairAsync(
 	return getPair(secret, account, pairType, ss58Format);
 }
 
-export function getPair(
+function getPair(
 	secret?: string | KeyringPair$Json | PolkadotSecretJSON,
 	account?: string | Uint8Array,
 	pairType?: KeypairType,
@@ -73,24 +73,4 @@ export function getPair(
 	} else {
 		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
 	}
-}
-
-export function getReadOnlyPair(
-	api: ApiPromise,
-	userAccount?: string,
-): KeyringPair {
-	// 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM is the all zero address
-	return getPair(
-		undefined,
-		userAccount || getZeroAddress(api).toHex(),
-		NetworkPairTypeSchema.parse("sr25519"),
-		api.registry.chainSS58,
-	);
-}
-
-export function getZeroAddress(api: ApiPromise): AccountId {
-	return api.registry.createType(
-		"AccountId",
-		new Uint8Array(new Array(32).fill(0)),
-	);
 }

@@ -57,8 +57,6 @@ export const getCliPkgDir = () => `${getPackagesDir()}/cli`;
 
 export const getCommonPkgDir = () => `${getPackagesDir()}/common`;
 
-export const getContractPkgDir = () => `${getPackagesDir()}/contract`;
-
 export const getDatabasePkgDir = () => `${getPackagesDir()}/database`;
 
 export const getDatasetsPkgDir = () => `${getPackagesDir()}/datasets`;

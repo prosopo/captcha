@@ -35,6 +35,7 @@
 		"@prosopo/config": "2.1.0",
 		"@prosopo/types": "2.1.0",
 		"@prosopo/types-database": "2.1.0",
+		"@polkadot/util": "12.6.2",
 		"mongodb": "6.9.0",
 		"mongodb-memory-server": "10.0.0",
 		"mongoose": "8.6.2"
