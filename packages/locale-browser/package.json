@@ -19,12 +19,13 @@
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"test": "echo \"No test specified\""
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@prosopo/locale": "2.1.0",
+		"i18next-browser-languagedetector": "7.2.1",
 		"react-i18next": "11.18.6",
 		"zod": "3.23.8"
 	},

@@ -1,3 +1,4 @@
+import type { TranslationKey } from "@prosopo/locale";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { DefaultNamespace, Namespace, TFuncReturn } from "react-i18next";
-import {TranslationKey} from "@prosopo/locale";
 
 declare module "i18next" {
 	interface TFunction<

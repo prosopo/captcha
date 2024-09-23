@@ -15,21 +15,19 @@
 import i18n, { type InitOptions } from "i18next";
 import Backend from "i18next-http-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
-import {translations as resources} from '../translations.js'
+import { translations as resources } from "../translations.js";
 
 const commonOptions: InitOptions = {
 	debug: false,
 	fallbackLng: "en",
-	resources
+	resources,
 };
 
 const nodeOptions: InitOptions = {};
-
 
 i18n
 	.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
 	.use(MiddlewareLanguageDetector)
 	.init({ ...commonOptions, ...nodeOptions });
-
 
 export default i18n;
