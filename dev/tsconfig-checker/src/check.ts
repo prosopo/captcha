@@ -12,123 +12,153 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import fs from "node:fs";
+import fs, { read } from "node:fs";
 import path from "node:path";
 import { at, get } from "@prosopo/util";
-import * as glob from "glob";
+import fg from "fast-glob";
 import z from "zod";
 
-const readPackageJson = (dir: string): JSON => {
-	const pkgJsonStr = fs.readFileSync(`${dir}/package.json`, "utf8");
-	const pkgJson = JSON.parse(pkgJsonStr);
-	return pkgJson;
-};
+// file consists of a path to the file or the content of the file if already read
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+type File = { path: string, content: any }
 
-const main = async () => {
-	const packageDir = get(process.env, "PKG_DIR");
-	const workspaceDir = get(process.env, "WORKSPACE_DIR");
-	const fix = process.env.FIX; // if fix is set, we'll fix the refs
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+const readJson = (filePath: string): any => {
+	return JSON.parse(fs.readFileSync(filePath, "utf8"))
+}
 
-	process.chdir(packageDir);
+const readFile = (filePath: string): File => {
+	return {
+		path: filePath,
+		content: readJson(filePath),
+	}
+}
 
-	// get the list of packages in the workspace
-	const workspacePkgJson = readPackageJson(workspaceDir);
-	const workspacePkgGlobPaths = z
-		.string()
-		.array()
-		.parse(get(workspacePkgJson, "workspaces"));
-	// console.log('workspacePkgGlobPaths', workspacePkgGlobPaths)
+const findWs = (pkgJson: File): File => {
+	let filePath = pkgJson.path;
+	while(filePath !== '/package.json') {
+		if (fs.existsSync(filePath)) {
+			const file = readFile(filePath);
+			if(file.content.workspaces) {
+				return file;
+			}
+		}
+		// go up a directory discovering package.json files until we find one
+		filePath = path.resolve(path.dirname(filePath), '..', 'package.json');
+	}
+	throw new Error(`Could not find workspace for ${pkgJson.path}`);
+}
+
+const getPkgJsonPaths = (wsPkgJson: File) => {
+	// get the workspace globs
+	const globs = z.string().array().catch([]).parse(wsPkgJson.content.workspaces).map(g => `${path.dirname(wsPkgJson.path)}/${g}/package.json`);
 	// glob the workspace paths
-	// i.e. packages/* => [packages/pkg1, packages/pkg2, ...]
-	const workspacePkgPaths = workspacePkgGlobPaths
-		.map((p) => glob.sync(`${workspaceDir}/${p}`))
-		.reduce((acc, val) => acc.concat(val), [])
-		.filter((p) => fs.lstatSync(p).isDirectory())
-		.filter((p) => fs.existsSync(`${p}/package.json`))
-		.map((p) => path.relative(".", p))
-		.map((p) => (p === "" ? "." : p));
-	// console.log('workspacePkgPaths', workspacePkgPaths)
-	const workspacePkgNames = workspacePkgPaths.map((p) =>
-		z.string().parse(get(readPackageJson(p), "name")),
-	);
+	// add package.json to the dirs and filter out any that don't exist (e.g. packages/* may match packages/some-dir but if some-dir doesn't have a package.json we don't want it)
+	const pkgJsons = globs.map((g) => fg.globSync(g)).reduce((acc, val) => acc.concat(val), []);
+	return pkgJsons;
+}
 
-	// read the pkg json
-	const pkgJson = readPackageJson(packageDir);
+const getDeps = (pkgJson: File) => {
+	const deps = Object.keys(z.record(z.string()).catch({}).parse(pkgJson.content.dependencies));
+	const devDeps = Object.keys(z.record(z.string()).catch({}).parse(pkgJson.content.devDependencies));
+	return [...new Set([...deps, ...devDeps])];
+}
 
-	// get the pkg json deps
-	const deps = z
-		.string()
-		.array()
-		.parse(Object.keys(get(pkgJson, "dependencies")));
-	// TODO should we include dev deps?
-	const devDeps = [] as string[]; // z.string().array().parse(Object.keys(get(pkgJson, 'devDependencies')))
-	const allDeps = deps.concat(devDeps);
-	// filter deps down to those present in the workspace
-	const workspaceDeps = allDeps.filter((d) => workspacePkgNames.includes(d));
-	const workspaceDepPaths = workspaceDeps.map((d) =>
-		at(workspacePkgPaths, workspacePkgNames.indexOf(d)),
-	);
-
-	console.log("workspaceDeps", workspaceDeps);
-	console.log("workspaceDepPaths", workspaceDepPaths);
-
-	// read the tsconfig json
-	const tsconfigJsonStr = fs.readFileSync(
-		`${packageDir}/tsconfig.json`,
-		"utf8",
-	);
-	const tsconfigJson = JSON.parse(tsconfigJsonStr);
-
-	// get the tsconfig references
-	const refs = ((tsconfigJson.references || []) as { path: string }[]).map(
-		(r) => r.path,
-	);
-	const relRefs = refs.map((r) => path.relative(packageDir, r));
-	console.log("tsconfig refs", refs);
-	// console.log('relRefs', relRefs)
-
-	const missing = [] as string[];
-	const missingPaths = [] as string[];
-	const present = [] as string[];
-	const presentPaths = [] as string[];
-	// go through all the deps, record missing and present
-	for (const dep of workspaceDeps) {
-		// reverse lookup the path
-		const index = workspacePkgNames.indexOf(dep);
-		if (index < 0) {
-			throw new Error(`Could not find package ${dep} in workspace`);
-		}
-		const pth = at(workspacePkgPaths, index);
-		if (!relRefs.includes(pth)) {
-			missing.push(dep);
-			missingPaths.push(pth);
-		} else {
-			present.push(dep);
-			presentPaths.push(pth);
+const getPkgJsonPath = (wsPkgJson: File, pkgName: string) => {
+	// get package dirs from the workspace
+	const pkgJsonPaths = getPkgJsonPaths(wsPkgJson);
+	// go through all the package dirs and match the package name to the one in the package.json
+	for(const pkgJsonPath of pkgJsonPaths) {
+		const pkgJson = readFile(pkgJsonPath);
+		const name = z.string().parse(pkgJson.content.name);
+		if(name === pkgName) {
+			return pkgJsonPath;
 		}
 	}
+	throw new Error(`Could not find package ${pkgName} in workspace ${wsPkgJson.content.name}`);
+}
 
-	console.log("present", present);
-	console.log("missing", missing);
+const getWsPkgNames = (wsPkgJsons: string[]) => {
+	const wsPkgNames = wsPkgJsons.map((p) => z.string().parse(readFile(p).content.name));
+	return wsPkgNames;
+}
 
-	if (missing.length > 0) {
-		if (!fix) throw new Error(`Missing packages: ${missing.join(", ")}`);
+const main = async (args: {
+	pkgJson: File;
+	wsPkgNames?: string[];
+}) => {
+	// pkgJsonPath points to the package.json file
+	const pkgJson = args.pkgJson;
+	console.log("processing", pkgJson.path);
+	const pkgDir = path.dirname(pkgJson.path);
+	
+	// if the workspace package json hasn't been passed in, try to find it
+	const wsPkgJson = findWs(pkgJson);
 
-		// new refs = old refs + missing dep paths
-		const newRefs = refs
-			.map((p) => {
-				return { path: p };
+	// if this package is the workspace, decend into the packages in the workspace
+	if(wsPkgJson.path === pkgJson.path) {
+		// get all the package.json files in the workspace
+		const wsPkgJsonPaths = getPkgJsonPaths(wsPkgJson);
+		// list all the pkgs in the workspace if the package belongs to a workspace
+		const wsPkgNames = getWsPkgNames(wsPkgJsonPaths);
+		// recurse into each package
+		for(const wsPkgJson of wsPkgJsonPaths) {
+			main({
+				pkgJson: readFile(wsPkgJson),
+				wsPkgNames,
+			});
+		}
+	} else {
+		// this pkg is a member of the workspace, check the deps/refs
+		// get the deps for this package
+		// filter deps to those in the workspace
+		let wsPkgNames = args.wsPkgNames;
+		if(!wsPkgNames) {
+			// get all the package.json files in the workspace
+			const wsPkgJsonPaths = getPkgJsonPaths(wsPkgJson);
+			// list all the pkgs in the workspace if the package belongs to a workspace
+			wsPkgNames = getWsPkgNames(wsPkgJsonPaths);
+		}
+		const deps = getDeps(pkgJson).filter(d => {
+			return wsPkgNames.includes(d);
+		});
+		console.log('deps', deps)
+	
+		// find all tsconfig files in the same dir as the package.json
+		const tsconfigPaths = fg.globSync(`${pkgDir}/tsconfig{,.cjs}.json`);
+		for(const tsconfigPath of tsconfigPaths) {
+			console.log('tsconfigPath', tsconfigPath)
+			// read the tsconfig json
+			const tsconfigJson = readJson(tsconfigPath);
+			// get the tsconfig references
+			const refs = z.array(z.record(z.string())).catch([]).parse(tsconfigJson.references);
+			// convert them to package names, e.g. ../common => @prosopo/common
+			const refPkgNames = refs.map((r) => get(r, "path")).map(p => {
+				const pkgJson = readFile(`${pkgDir}/${p}/package.json`);
+				return z.string().parse(pkgJson.content.name);
 			})
-			.concat(
-				missingPaths.map((p) => {
-					return { path: p };
-				}),
-			);
-		console.log("new tsconfig refs", newRefs);
-		tsconfigJson.references = newRefs;
-		const newTsconfigJsonStr = JSON.stringify(tsconfigJson, null, 4);
-		fs.writeFileSync(`${packageDir}/tsconfig.json`, newTsconfigJsonStr);
+			console.log('refPkgNames', refPkgNames)
+			// check all the refs are in the deps
+			for(const refPkgName of refPkgNames) {
+				if(!deps.includes(refPkgName)) {
+					throw new Error(`Reference ${refPkgName} not in deps`);
+				}
+			}
+			// check all the deps are in the refs
+			for(const dep of deps) {
+				if(!refPkgNames.includes(dep)) {
+					throw new Error(`Dep ${dep} not in refs`);
+				}
+			}
+		}
 	}
+	
 };
 
-main();
+process.argv = ['', '', '/home/geopro/bench/captcha5/packages/provider/package.json'];
+main({
+	pkgJson: {
+		path: at(process.argv, 2),
+		content: readJson(at(process.argv, 2)),
+	},
+});
