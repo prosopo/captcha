@@ -90,7 +90,6 @@ const main = async (args: {
 }) => {
 	// pkgJsonPath points to the package.json file
 	const pkgJson = args.pkgJson;
-	// console.log("pkgJson", pkgJson.path);
 	const pkgDir = path.dirname(pkgJson.path);
 	
 	// if the workspace package json hasn't been passed in, try to find it
@@ -98,13 +97,14 @@ const main = async (args: {
 
 	// if this package is the workspace, decend into the packages in the workspace
 	if(wsPkgJson.path === pkgJson.path) {
+		console.log(`${pkgJson.path} is a workspace`);
 		// get all the package.json files in the workspace
 		const wsPkgJsonPaths = getPkgJsonPaths(wsPkgJson);
 		// list all the pkgs in the workspace if the package belongs to a workspace
 		const wsPkgNames = getWsPkgNames(wsPkgJsonPaths);
 		// recurse into each package
 		for(const wsPkgJson of wsPkgJsonPaths) {
-			main({
+			await main({
 				pkgJson: readFile(wsPkgJson),
 				wsPkgNames,
 			});
@@ -166,7 +166,7 @@ const main = async (args: {
 	
 };
 
-process.argv = ['', '', '/home/geopro/bench/captcha5/packages/provider/package.json'];
+process.argv = ['', '', '/home/geopro/bench/captcha5/package.json'];
 main({
 	pkgJson: {
 		path: at(process.argv, 2),
