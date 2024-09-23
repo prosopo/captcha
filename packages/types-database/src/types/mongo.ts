@@ -13,23 +13,10 @@
 // limitations under the License.
 import {
 	type Logger,
-	TranslationKey,
-	TranslationKeysSchema,
+
 } from "@prosopo/common";
-import type { Hash } from "@prosopo/types";
-import type { PendingCaptchaRequest } from "@prosopo/types";
-import {
-	ScheduledTaskNames,
-	type ScheduledTaskResult,
-	ScheduledTaskStatus,
-} from "@prosopo/types";
-import type { DeleteResult } from "mongodb";
-import mongoose, {
-	type Connection,
-	type Model,
-	ObjectId,
-	Schema,
-} from "mongoose";
+
+import {type Connection} from "mongoose";
 
 export interface IDatabase {
 	url: string;

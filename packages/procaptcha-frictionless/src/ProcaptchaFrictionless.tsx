@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { i18n } from "@prosopo/common";
+import { i18n } from "@prosopo/locale-browser";
 import { isBot } from "@prosopo/detector";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
