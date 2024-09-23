@@ -7,7 +7,7 @@
 		"allowJs": true,
 		"jsxImportSource": "@emotion/react"
 	},
-	"include": ["src", "src/**/*.json", "../contract/src/accounts/getPair.ts"],
+	"include": ["src", "src/**/*.json"],
 
 	"references": [
 		{
