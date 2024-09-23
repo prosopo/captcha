@@ -14,10 +14,19 @@
 			"path": "../../packages/procaptcha-frictionless"
 		},
 		{
-			"path": "../../packages/cli"
+			"path": "../../packages/types"
 		},
 		{
-			"path": "../../packages/types"
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/procaptcha-pow"
+		},
+		{
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/server"
 		},
 		{
 			"path": "../../dev/config"

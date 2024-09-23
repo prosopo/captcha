@@ -20,7 +20,7 @@
 			"path": "../types"
 		},
 		{
-			"path": "../util"
+			"path": "../../dev/config"
 		}
 	]
 }

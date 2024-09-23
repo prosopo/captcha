@@ -5,5 +5,9 @@
 		"outDir": "./dist"
 	},
 	"include": ["src", "src/**/*.json"],
-	"references": []
+	"references": [
+		{
+			"path": "../../dev/config"
+		}
+	]
 }

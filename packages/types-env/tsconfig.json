@@ -10,16 +10,13 @@
 			"path": "../common"
 		},
 		{
-			"path": "../contract"
-		},
-		{
 			"path": "../types"
 		},
 		{
 			"path": "../types-database"
 		},
 		{
-			"path": "../util"
+			"path": "../../dev/config"
 		}
 	]
 }

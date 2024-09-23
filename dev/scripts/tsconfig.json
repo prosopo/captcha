@@ -8,10 +8,7 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../packages/account"
-		},
-		{
-			"path": "../../packages/api"
+			"path": "../../packages/util"
 		},
 		{
 			"path": "../../packages/cli"
@@ -20,19 +17,13 @@
 			"path": "../../packages/common"
 		},
 		{
-			"path": "../config"
+			"path": "../../dev/config"
 		},
 		{
 			"path": "../../packages/contract"
 		},
 		{
-			"path": "../../packages/database"
-		},
-		{
 			"path": "../../packages/datasets"
-		},
-		{
-			"path": "../../packages/datasets-fs"
 		},
 		{
 			"path": "../../packages/dotenv"
@@ -41,31 +32,7 @@
 			"path": "../../packages/env"
 		},
 		{
-			"path": "../../packages/file-server"
-		},
-		{
-			"path": "../../packages/load-balancer"
-		},
-		{
-			"path": "../../packages/procaptcha"
-		},
-		{
-			"path": "../../packages/procaptcha-bundle"
-		},
-		{
-			"path": "../../packages/procaptcha-common"
-		},
-		{
-			"path": "../../packages/procaptcha-react"
-		},
-		{
-			"path": "../../packages/procaptcha-pow"
-		},
-		{
 			"path": "../../packages/provider"
-		},
-		{
-			"path": "../../packages/server"
 		},
 		{
 			"path": "../../packages/types"
@@ -75,15 +42,6 @@
 		},
 		{
 			"path": "../../packages/types-env"
-		},
-		{
-			"path": "../../packages/tx"
-		},
-		{
-			"path": "../../packages/web-components"
-		},
-		{
-			"path": "../../demos/client-example-server"
 		}
 	]
 }

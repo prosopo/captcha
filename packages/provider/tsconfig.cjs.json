@@ -12,9 +12,6 @@
 	],
 	"references": [
 		{
-			"path": "../api"
-		},
-		{
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
@@ -31,9 +28,6 @@
 		},
 		{
 			"path": "../env/tsconfig.cjs.json"
-		},
-		{
-			"path": "../tx/tsconfig.cjs.json"
 		},
 		{
 			"path": "../types/tsconfig.cjs.json"

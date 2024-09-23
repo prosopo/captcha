@@ -6,5 +6,9 @@
 		"types": ["vite/client"]
 	},
 	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
-	"references": []
+	"references": [
+		{
+			"path": "../../dev/config"
+		}
+	]
 }

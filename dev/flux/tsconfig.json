@@ -11,6 +11,9 @@
 			"path": "../../packages/dotenv"
 		},
 		{
+			"path": "../../dev/config"
+		},
+		{
 			"path": "../../packages/common"
 		},
 		{
