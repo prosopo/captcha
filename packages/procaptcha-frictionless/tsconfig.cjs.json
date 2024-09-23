@@ -9,7 +9,7 @@
 	"include": ["src/index.tsx", "src/index.html"],
 	"references": [
 		{
-			"path": "../../dev/config"
+			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{
 			"path": "../detector/tsconfig.cjs.json"
