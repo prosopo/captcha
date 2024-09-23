@@ -22,7 +22,8 @@
 		"INVALID_SIGNATURE": "Assinatura inválida",
 		"NOT_IMPLEMENTED": "Não implementado",
 		"SITE_KEY_MISSING": "CHAVE DO SITE ausente",
-		"ACCOUNT_NOT_FOUND": "Conta não encontrada"
+		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
+		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido"
 	},
 	"CONTRACT": {
 		"INVALID_METHOD": "Método de contrato inválido",
@@ -85,7 +86,6 @@
 		"INVALID_SOLUTION_TYPE": "Tipo de solução inválido",
 		"INVALID_ITEM_HASH": "Hash do item inválido",
 		"DIFFERENT_DATASET_IDS": "Os IDs do conjunto de dados não correspondem",
-		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido",
 		"ID_MISMATCH": "Divergência no ID do captcha",
 		"MISSING_ITEM_HASH": "Hash do item ausente",
 		"INVALID_CAPTCHA_CHALLENGE": "Desafio de captcha inválido",
