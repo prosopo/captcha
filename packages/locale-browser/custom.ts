@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { DefaultNamespace, Namespace, TFuncReturn } from "react-i18next";
-import type { TranslationKey } from "./utils.js";
+import {TranslationKey} from "@prosopo/locale";
 
 declare module "i18next" {
 	interface TFunction<

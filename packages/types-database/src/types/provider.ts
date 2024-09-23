@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type TranslationKey, TranslationKeysSchema } from "@prosopo/common";
+import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -26,7 +26,6 @@ import {
 	type DatasetWithIds,
 	type Hash,
 	type IUserData,
-	IUserSettings,
 	type Item,
 	type PendingCaptchaRequest,
 	type PoWCaptchaUser,

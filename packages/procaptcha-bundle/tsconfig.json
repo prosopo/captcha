@@ -14,6 +14,9 @@
 			"path": "../dotenv"
 		},
 		{
+			"path": "../locale"
+		},
+		{
 			"path": "../procaptcha"
 		},
 		{

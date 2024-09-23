@@ -16,8 +16,10 @@ import {
 	type Logger,
 	ProsopoDBError,
 	ProsopoEnvError,
-	type TranslationKey,
 } from "@prosopo/common";
+import{
+	type TranslationKey,
+} from '@prosopo/locale';
 import {
 	type Captcha,
 	type CaptchaResult,
