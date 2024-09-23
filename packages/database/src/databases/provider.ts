@@ -17,8 +17,8 @@ import {
 	ProsopoDBError,
 	ProsopoEnvError,
 } from "@prosopo/common";
-import{
-	type TranslationKey,
+importtype {
+	TranslationKey,
 } from '@prosopo/locale';
 import {
 	type Captcha,
