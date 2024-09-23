@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { LanguageSchema } from "@prosopo/locale";
 import type { input } from "zod";
 import { literal } from "zod";
 import { number } from "zod";
@@ -253,7 +254,6 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-export const LanguageSchema = z.enum(["en", "es", "pt", "pt-BR"]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({

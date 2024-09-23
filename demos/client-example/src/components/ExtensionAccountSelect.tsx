@@ -14,7 +14,7 @@
 
 import { web3AccountsSubscribe, web3Enable } from "@polkadot/extension-dapp";
 import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useTranslation } from "@prosopo/common";
+import { useTranslation } from "@prosopo/locale-browser";
 import { useEffect, useState } from "react";
 
 export const ExtensionAccountSelect = ({

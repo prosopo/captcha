@@ -14,6 +14,9 @@
 			"path": "../dotenv/tsconfig.cjs.json"
 		},
 		{
+			"path": "../locale/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha/tsconfig.cjs.json"
 		},
 		{

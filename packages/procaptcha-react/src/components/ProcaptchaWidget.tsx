@@ -13,7 +13,7 @@
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
 
-import { i18n, useTranslation } from "@prosopo/common";
+import { i18n, useTranslation } from "@prosopo/locale-browser";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
