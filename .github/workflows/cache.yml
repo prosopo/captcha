@@ -61,10 +61,8 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            # make cache dirs
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
+            # make cache dirs, these must exist before doing cache stuff
+            - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
@@ -79,38 +77,28 @@ jobs:
             # install cypress so we don't have to do that every time
             - run: npx cypress install
 
-            - run: ls -la ~/.cache/Cypress || true
-            - run: ls -la protocol/cargo-cache || true
-            - run: ls -la protocol/target/ink || true
-            - run: ls -la node_modules || true
-
-            # save cache to main branch. Any branch can use this cache afterwards to speed up their build
-            - name: Save cache
+            - name: Save npm cache
               uses: actions/cache/save@v3
               if: always()
               with:
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
-                      ~/.cache/Cypress
-                  key: project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                    ~/.npm
+                    ~/.cache/Cypress
+                  key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-            # remove all but the latest cache, leaving only the cache we just saved
-            - name: Cleanup caches
+            - name: Cleanup npm caches
               if: always()
-              env:
-                  REF: ${{ github.event.pull_request.head.ref || github.ref }}
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    set +e; gh extension install actions/gh-actions-cache; set -e
-                    echo "Fetching list of cache key"
-                    cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R "${{ github.repository }}" --key "project-cache-$REF-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
-                    echo caches to be removed:
-                    echo "${cacheKeys}"
-                    set +e
-                    for cacheKey in $cacheKeys
-                    do
-                        gh actions-cache delete "$cacheKey" -R "${{ github.repository }}" --confirm
-                    done
+                  # remove all but the latest cache, leaving only the cache we just saved
+                  set +e; gh extension install actions/gh-actions-cache; set -e
+                  echo "Fetching list of cache key"
+                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R "${{ github.repository }}" --key "npm-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
+                  echo caches to be removed:
+                  echo "${cacheKeys}"
+                  set +e
+                  for cacheKey in $cacheKeys
+                  do
+                      gh actions-cache delete "$cacheKey" -R "${{ github.repository }}" --confirm
+                  done
