@@ -14,10 +14,9 @@
 import {
 	type LogLevel,
 	type Logger,
-	type TranslationKey,
 	getLoggerDefault,
-	i18n as i18next,
 } from "./index.js";
+import {TranslationKey, i18n as i18next} from "@prosopo/locale";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;

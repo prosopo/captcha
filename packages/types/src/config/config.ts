@@ -35,6 +35,7 @@ import {
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "./timeouts.js";
+import {LanguageSchema} from "@prosopo/locale";
 
 const LogLevel = zEnum([
 	"trace",
@@ -253,7 +254,7 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-export const LanguageSchema = z.enum(["en", "es", "pt", "pt-BR"]);
+
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({

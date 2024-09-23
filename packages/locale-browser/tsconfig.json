@@ -8,9 +8,6 @@
 	"references": [
 		{
 			"path": "../locale"
-		},
-		{
-			"path": "../util"
 		}
 	]
 }
