@@ -146,3 +146,4 @@ jobs:
                   path: ./demos/cypress-shared/cypress/videos
                   if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
+            - run: docker compose --file ./docker/docker-compose.test.yml down

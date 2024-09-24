@@ -61,8 +61,6 @@ jobs:
           echo "inputs:" "$INPUTS_CONTEXT"
           echo "******************************"
 
-      - run: docker rm -f $(docker ps -aq) || true
-        
       - uses: actions/checkout@v3
 
       - run: mkdir -p ~/.npm
@@ -249,4 +247,4 @@ jobs:
           "sleep 10s && NODE_ENV=test npm run test" \
            --success "first" --kill-others
 
-      - run: docker rm -f $(docker ps -aq) || true
+      - run: docker compose --file ./docker/docker-compose.test.yml down
