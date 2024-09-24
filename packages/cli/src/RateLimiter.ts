@@ -55,13 +55,13 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SUBMIT_USER_EVENTS_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_USER_EVENTS_LIMIT,
 		},
-		[AdminApiPaths.BatchCommit]: {
-			windowMs: process.env.PROSOPO_BATCH_COMMIT_WINDOW,
-			limit: process.env.PROSOPO_BATCH_COMMIT_LIMIT,
-		},
 		[AdminApiPaths.UpdateDataset]: {
 			windowMs: process.env.PROSOPO_UPDATE_DATASET_WINDOW,
 			limit: process.env.PROSOPO_UPDATE_DATASET_LIMIT,
+		},
+		[AdminApiPaths.SiteKeyRegister]: {
+			windowMs: process.env.PROSOPO_SITE_KEY_REGISTER_WINDOW,
+			limit: process.env.PROSOPO_SITE_KEY_REGISTER_LIMIT,
 		},
 		[AdminApiPaths.ProviderDeregister]: {
 			windowMs: process.env.PROSOPO_PROVIDER_DEREGISTER_WINDOW,

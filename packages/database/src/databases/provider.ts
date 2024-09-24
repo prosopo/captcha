@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
-import {
-	type Logger,
-	ProsopoDBError,
-	ProsopoEnvError,
-	type TranslationKey,
-} from "@prosopo/common";
+import { type Logger, ProsopoDBError, ProsopoEnvError } from "@prosopo/common";
+import type { TranslationKey } from "@prosopo/locale";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -43,7 +39,7 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
-	type IDatabase,
+	type IProviderDatabase,
 	type IUserDataSlim,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
@@ -130,7 +126,10 @@ const PROVIDER_TABLES = [
 	},
 ];
 
-export class ProviderDatabase extends MongoDatabase implements IDatabase {
+export class ProviderDatabase
+	extends MongoDatabase
+	implements IProviderDatabase
+{
 	tables = {} as Tables<TableNames>;
 
 	constructor(
@@ -1259,5 +1258,15 @@ export class ProviderDatabase extends MongoDatabase implements IDatabase {
 			};
 		});
 		await this.tables?.client.bulkWrite(ops);
+	}
+
+	/**
+	 * @description Get a client record
+	 */
+	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
+		const doc = await this.tables?.client
+			.findOne({ account })
+			.lean<ClientRecord>();
+		return doc ? doc : undefined;
 	}
 }

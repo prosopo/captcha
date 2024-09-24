@@ -16,6 +16,9 @@
 			"path": "../../dev/config"
 		},
 		{
+			"path": "../locale-browser"
+		},
+		{
 			"path": "../procaptcha"
 		},
 		{

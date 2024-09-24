@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
-import type { TranslationKey } from "@prosopo/common";
+import type { TranslationKey } from "@prosopo/locale";
 import {
 	array,
 	custom,
@@ -116,6 +116,7 @@ export const TimestampSchema = zNumber();
 export type Timestamp = zInfer<typeof TimestampSchema>;
 export type UserAccount = string;
 export type DappAccount = string;
+export type DatasetID = string;
 
 export const POW_SEPARATOR = "___";
 

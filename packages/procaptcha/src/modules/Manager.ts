@@ -39,7 +39,6 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
-	type RandomProvider,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
@@ -148,31 +147,38 @@ export function Manager(
 
 				const challenge = await captchaApi.getCaptchaChallenge();
 
-				if (challenge.captchas.length <= 0) {
-					throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
+				if (challenge.error) {
+					updateState({
+						loading: false,
+						error: challenge.error,
+					});
+				} else {
+					if (challenge.captchas.length <= 0) {
+						throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
+					}
+
+					// setup timeout, taking the timeout from the individual captcha or the global default
+					const timeMillis: number = challenge.captchas
+						.map(
+							(captcha) =>
+								captcha.timeLimitMs || config.captchas.image.challengeTimeout,
+						)
+						.reduce((a: number, b: number) => a + b);
+					const timeout = setTimeout(() => {
+						events.onChallengeExpired();
+						// expired, disallow user's claim to be human
+						updateState({ isHuman: false, showModal: false, loading: false });
+					}, timeMillis);
+
+					// update state with new challenge
+					updateState({
+						index: 0,
+						solutions: challenge.captchas.map(() => []),
+						challenge,
+						showModal: true,
+						timeout,
+					});
 				}
-
-				// setup timeout, taking the timeout from the individual captcha or the global default
-				const timeMillis: number = challenge.captchas
-					.map(
-						(captcha) =>
-							captcha.timeLimitMs || config.captchas.image.challengeTimeout,
-					)
-					.reduce((a: number, b: number) => a + b);
-				const timeout = setTimeout(() => {
-					events.onChallengeExpired();
-					// expired, disallow user's claim to be human
-					updateState({ isHuman: false, showModal: false, loading: false });
-				}, timeMillis);
-
-				// update state with new challenge
-				updateState({
-					index: 0,
-					solutions: challenge.captchas.map(() => []),
-					challenge,
-					showModal: true,
-					timeout,
-				});
 			},
 			start,
 			resetState,

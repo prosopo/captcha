@@ -1,6 +1,3 @@
-import { i18n, useTranslation } from "@prosopo/common";
-import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import type { ProcaptchaProps } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +11,10 @@ import type { ProcaptchaProps } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { i18n, useTranslation } from "@prosopo/locale-browser";
+import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
+import type { ProcaptchaProps } from "@prosopo/types";
 import {
 	Checkbox,
 	ContainerDiv,
@@ -133,6 +134,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 															onChange={manager.current.start}
 															themeColor={themeColor}
 															labelText={t("WIDGET.I_AM_HUMAN")}
+															error={state.error}
 															aria-label="human checkbox"
 														/>
 													)}

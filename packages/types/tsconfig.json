@@ -11,6 +11,12 @@
 		},
 		{
 			"path": "../../dev/config"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }
