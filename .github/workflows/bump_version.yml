@@ -77,7 +77,7 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - run: docker rm -f $(docker ps -aq)
+            - run: docker rm -f $(docker ps -aq) || true
 
             - uses: actions/checkout@v3
 
@@ -172,4 +172,4 @@ jobs:
                 # create a PR for the release
                 gh pr create --base ${{ github.event.inputs.dest }} --title "Release ${{ github.event.inputs.version }}" --fill
 
-            - run: docker rm -f $(docker ps -aq)
+            - run: docker rm -f $(docker ps -aq) || true
