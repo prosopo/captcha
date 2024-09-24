@@ -42,21 +42,6 @@ const readFileWhy = (filePath: string, msg: string): File => {
 	}
 };
 
-const findWs = (pkgJson: File): File => {
-	let filePath = pkgJson.path;
-	while (filePath !== "/package.json") {
-		if (fs.existsSync(filePath)) {
-			const file = readFile(filePath);
-			if (file.content.workspaces) {
-				return file;
-			}
-		}
-		// go up a directory discovering package.json files until we find one
-		filePath = path.resolve(path.dirname(filePath), "..", "package.json");
-	}
-	throw new Error(`Could not find workspace for ${pkgJson.path}`);
-};
-
 const getPkgJsonPaths = (wsPkgJson: File) => {
 	// get the workspace globs
 	const globs = z
@@ -118,86 +103,64 @@ const main = async (args: {
 	const pkgJson = args.pkgJson;
 	const pkgDir = path.dirname(pkgJson.path);
 
-	// if the workspace package json hasn't been passed in, try to find it
-	const wsPkgJson = findWs(pkgJson);
+	// check the pkg json is a workspace
+	if (pkgJson.content.workspaces === undefined) {
+		throw new Error(`${pkgJson.path} is not a workspace`);
+	}
 
-	// if this package is the workspace, decend into the packages in the workspace
-	if (wsPkgJson.path === pkgJson.path) {
-		// get all the package.json files in the workspace
-		const wsPkgJsonPaths = getPkgJsonPaths(wsPkgJson);
-		// list all the pkgs in the workspace if the package belongs to a workspace
-		const wsPkgNames = getWsPkgNames(wsPkgJsonPaths);
-		// recurse into each package
-		for (const wsPkgJson of wsPkgJsonPaths) {
-			await main({
-				pkgJson: readFile(wsPkgJson),
-				wsPkgNames,
-			});
-		}
-	} else {
-		// this pkg is a member of the workspace, check the deps/refs
-		// get the deps for this package
-		// filter deps to those in the workspace
-		let wsPkgNames = args.wsPkgNames;
-		if (!wsPkgNames) {
-			// get all the package.json files in the workspace
-			const wsPkgJsonPaths = getPkgJsonPaths(wsPkgJson);
-			// list all the pkgs in the workspace if the package belongs to a workspace
-			wsPkgNames = getWsPkgNames(wsPkgJsonPaths);
-		}
-		const deps = getDeps(pkgJson).filter((d) => {
-			return wsPkgNames.includes(d);
+	// list all the pkgs in the workspace
+	const wsPkgNames = getWsPkgNames(getPkgJsonPaths(pkgJson));
+
+	// get the deps for this package
+	// filter deps to those in the workspace
+	const deps = getDeps(pkgJson).filter((d) => {
+		return wsPkgNames.includes(d);
+	});
+	// console.log('deps', deps)
+
+	// find all tsconfig files in the same dir as the package.json
+	const tsconfigPaths = fg.globSync(`${pkgDir}/tsconfig{,.cjs}.json`);
+	for (const tsconfigPath of tsconfigPaths) {
+		console.log(`Checking ${tsconfigPath} against ${pkgJson.path}`);
+		// read the tsconfig json
+		const tsconfigJson = readFile(tsconfigPath);
+		// get the tsconfig references
+		const refs = getRefs(tsconfigJson);
+		// convert them to package names, e.g. ../common => @prosopo/common
+		const refPkgNames = refs.map((p) => {
+			// get the dir for the package
+			const refPath = path.dirname(p);
+			// read the package.json in the dir
+			const pkgJson = readFileWhy(
+				`${pkgDir}/${refPath}/package.json`,
+				`specified in ${tsconfigPath}`,
+			);
+			return getPkgName(pkgJson);
 		});
-		// console.log('deps', deps)
-
-		// find all tsconfig files in the same dir as the package.json
-		const tsconfigPaths = fg.globSync(`${pkgDir}/tsconfig{,.cjs}.json`);
-		for (const tsconfigPath of tsconfigPaths) {
-			console.log(`Checking ${tsconfigPath} against ${pkgJson.path}`);
-			// read the tsconfig json
-			const tsconfigJson = readFile(tsconfigPath);
-			// get the tsconfig references
-			const refs = getRefs(tsconfigJson);
-			// convert them to package names, e.g. ../common => @prosopo/common
-			const refPkgNames = refs.map((p) => {
-				// get the dir for the package
-				const refPath = path.dirname(p);
-				// read the package.json in the dir
-				const pkgJson = readFileWhy(
-					`${pkgDir}/${refPath}/package.json`,
-					`specified in ${tsconfigPath}`,
-				);
-				return getPkgName(pkgJson);
-			});
-			// console.log('refPkgNames', refPkgNames)
-			// check all the refs are in the deps
-			// e.g. a dep might be in the pkg json but not specified in the tsconfig
-			const missingRefs: string[] = refPkgNames.filter(
-				(r) => !deps.includes(r),
+		// console.log('refPkgNames', refPkgNames)
+		// check all the refs are in the deps
+		// e.g. a dep might be in the pkg json but not specified in the tsconfig
+		const missingRefs: string[] = refPkgNames.filter((r) => !deps.includes(r));
+		// check all the deps are in the refs
+		// e.g. a ref might be in the tsconfig but not in the pkg json
+		const missingDeps: string[] = deps.filter((d) => !refPkgNames.includes(d));
+		for (const missingRef of missingRefs) {
+			console.log(`${missingRef} ref not needed in ${tsconfigPath}`);
+		}
+		for (const missingDep of missingDeps) {
+			console.log(`${missingDep} ref missing from ${tsconfigPath}`);
+		}
+		if (missingRefs.length === 0 && missingDeps.length === 0) {
+			// console.log(`Refs and deps in sync for ${tsconfigPath} and ${pkgJson.path}`);
+		} else {
+			throw new Error(
+				`Refs and deps not in sync in ${tsconfigPath} and ${pkgJson.path}`,
 			);
-			// check all the deps are in the refs
-			// e.g. a ref might be in the tsconfig but not in the pkg json
-			const missingDeps: string[] = deps.filter(
-				(d) => !refPkgNames.includes(d),
-			);
-			for (const missingRef of missingRefs) {
-				console.log(`${missingRef} ref not needed in ${tsconfigPath}`);
-			}
-			for (const missingDep of missingDeps) {
-				console.log(`${missingDep} ref missing from ${tsconfigPath}`);
-			}
-			if (missingRefs.length === 0 && missingDeps.length === 0) {
-				// console.log(`Refs and deps in sync for ${tsconfigPath} and ${pkgJson.path}`);
-			} else {
-				throw new Error(
-					`Refs and deps not in sync in ${tsconfigPath} and ${pkgJson.path}`,
-				);
-			}
 		}
 	}
 };
 
-process.argv = ["", "", "/home/geopro/bench/captcha5/package.json"];
+// process.argv = ["", "", "/home/geopro/bench/captcha5/package.json"];
 main({
 	pkgJson: {
 		path: at(process.argv, 2),
