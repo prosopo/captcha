@@ -14,55 +14,71 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { at, get } from "@prosopo/util";
-import z from "zod";
-import fg from "fast-glob";
 import { env } from "node:process";
+import { at, get } from "@prosopo/util";
+import fg from "fast-glob";
+import z from "zod";
 
 const main = async (args: {
 	pkgJsonPath: string;
 }) => {
-	console.log('Checking', args.pkgJsonPath);
+	console.log("Checking", args.pkgJsonPath);
 	// read the pkg json file
 	const pkgJson = JSON.parse(fs.readFileSync(args.pkgJsonPath, "utf8"));
 	// only accept workspace pkg json
-	if(pkgJson.workspaces === undefined) {
+	if (pkgJson.workspaces === undefined) {
 		throw new Error(`${args.pkgJsonPath} is not a workspace`);
 	}
 
 	const version = z.string().parse(pkgJson.version);
 
 	// for each package in the workspace, check their version matches the workspace version
-	const globs = z.string().array().parse(pkgJson.workspaces).map(g => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`);
-	const pkgJsonPaths = fg.globSync(globs)
-	for(const pkgJsonPath of pkgJsonPaths) {
-		console.log('Checking', pkgJsonPath);
+	const globs = z
+		.string()
+		.array()
+		.parse(pkgJson.workspaces)
+		.map((g) => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`);
+	const pkgJsonPaths = fg.globSync(globs);
+	for (const pkgJsonPath of pkgJsonPaths) {
+		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const pkgVersion = z.string().parse(pkgJson.version);
-		if(pkgVersion !== version) {
-			throw new Error(`${pkgJsonPath} is on version ${pkgVersion}, should be ${version}`);
+		if (pkgVersion !== version) {
+			throw new Error(
+				`${pkgJsonPath} is on version ${pkgVersion}, should be ${version}`,
+			);
 		}
 	}
 
 	// glob for any env files
-	const envPaths = fg.globSync(['**/.env', '**/*.env', '**/env.*', '**/env'].map(g => `${path.dirname(args.pkgJsonPath)}/${g}`), { onlyFiles: true, ignore: ['**/node_modules/**', '**/.git/**'] })
-	for(const envPath of envPaths) {
-		console.log('Checking', envPath);
+	const envPaths = fg.globSync(
+		["**/.env", "**/*.env", "**/env.*", "**/env"].map(
+			(g) => `${path.dirname(args.pkgJsonPath)}/${g}`,
+		),
+		{
+			onlyFiles: true,
+			ignore: ["**/node_modules/**", "**/.git/**", "**.d.ts", "**.ts", "**.js"],
+		},
+	);
+	for (const envPath of envPaths) {
+		console.log("Checking", envPath);
 		const env = fs.readFileSync(envPath, "utf8");
 		// grep for the line PROSOPO_PACKAGE_VERSION=x.y.z
 		const match = env.match(/PROSOPO_PACKAGE_VERSION=(.*)/);
-		if(match !== null) {
+		if (match !== null) {
 			const envVersion = z.string().parse(match[1]);
-			if(envVersion !== version) {
-				throw new Error(`Version mismatch: ${envPath} has version ${envVersion} but workspace version is ${version}`);
+			if (envVersion !== version) {
+				throw new Error(
+					`Version mismatch: ${envPath} has version ${envVersion} but workspace version is ${version}`,
+				);
 			}
 		}
 	}
-}
+};
 
 main({
-	pkgJsonPath: z.string().parse(process.argv[2])
+	pkgJsonPath: z.string().parse(process.argv[2]),
 }).catch((err) => {
 	console.error(err);
 	process.exit(1);
-})
+});
