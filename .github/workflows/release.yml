@@ -157,3 +157,4 @@ jobs:
               if: success()
               run: |
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.env.outputs.env }} ${{ steps.env.outputs.gh_release_tag }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+

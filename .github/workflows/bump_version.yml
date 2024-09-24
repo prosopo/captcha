@@ -160,3 +160,4 @@ jobs:
 
                 # create a PR for the release
                 gh pr create --base ${{ github.event.inputs.dest }} --title "Release ${{ github.event.inputs.version }}" --fill
+
