@@ -164,7 +164,7 @@ jobs:
 
       - name: Start the docker images
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
           docker container ls
           sleep 10s
 
