@@ -12,6 +12,7 @@ import React from "react";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+<<<<<<<< HEAD:demos/client-example/src/routes/pow.tsx
 import App from "../App.js";
 
 export default function Root() {
@@ -20,4 +21,14 @@ export default function Root() {
 			<App captchaType={"pow"} />
 		</React.Fragment>
 	);
+========
+import type { IDatabase } from "./mongo.js";
+import type { PoWCaptchaRecord, UserCommitmentRecord } from "./provider.js";
+
+export interface ICaptchaDatabase extends IDatabase {
+	saveCaptchas(
+		imageCaptchaEvents: UserCommitmentRecord[],
+		powCaptchaEvents: PoWCaptchaRecord[],
+	): Promise<void>;
+>>>>>>>> main:packages/types-database/src/types/captcha.ts
 }

@@ -151,6 +151,15 @@ jobs:
                 # commit the version changes
                 git add .
                 git commit -m "Bump version to ${{ github.event.inputs.version }}"
+                
+                LAST_AUTHOR=$(git show | grep -PoI "Author: prosoponator" | cut -d " " -f 2)
+                if [[ $LAST_AUTHOR == "prosoponator" ]]; then
+                    echo "Last commit was by prosoponator, merging main into $INTERIM"
+                    git fetch origin main
+                    git merge -X ours origin/main
+                    git add .
+                    git commit -a -m "Merge main"
+                fi
 
                 # push version changes
                 git push --set-upstream origin $INTERIM
