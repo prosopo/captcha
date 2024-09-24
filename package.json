@@ -78,7 +78,7 @@
 		"lint-fix:toml": "npx taplo format",
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
-		"lint:refs": "npm run -w @prosopo/tsconfig-checker start -- ./package.json",
+		"lint:refs": "npm run -w @prosopo/tsconfig-checker start -- $(pwd)/package.json",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
 		"sbom:spdx": "npm sbom --sbom-format spdx > sbom.spdx.json",
