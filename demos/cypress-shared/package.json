@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cypress-shared",
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"private": true,
 	"type": "module",
 	"engines": {
@@ -8,14 +8,14 @@
 		"npm": ">=9"
 	},
 	"dependencies": {
-		"@prosopo/types": "2.1.0",
-		"@prosopo/util": "2.1.0"
+		"@prosopo/types": "2.1.1",
+		"@prosopo/util": "2.1.1"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
-		"@prosopo/common": "2.1.0",
-		"@prosopo/datasets": "2.1.0",
-		"@prosopo/types-database": "2.1.0",
+		"@prosopo/common": "2.1.1",
+		"@prosopo/datasets": "2.1.1",
+		"@prosopo/types-database": "2.1.1",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
