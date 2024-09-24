@@ -35,6 +35,10 @@ env:
     CARGO_TERM_COLOR: always
     NODE_OPTIONS: "--max-old-space-size=4096"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     bump_version:
         runs-on: ubuntu-latest
