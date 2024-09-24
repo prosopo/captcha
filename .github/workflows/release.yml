@@ -54,7 +54,7 @@ jobs:
                   echo "******************************"
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
-                  
+
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
@@ -71,7 +71,7 @@ jobs:
                   key: some-unused-cache-key
                   restore-keys: |
                       npm-${{ runner.os }}-${{ runner.arch }}-
-                      
+
             - uses: actions/checkout@v3
 
             - name: Detect env
@@ -139,7 +139,7 @@ jobs:
 
             # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Github release
-              id: github_release
+              id: github_release_create
               if: ${{ steps.env.outputs.production }} || ${{ steps.env.outputs.staging }}
               continue-on-error: true  # we want to continue even if the release already exists
               run: |
@@ -147,7 +147,7 @@ jobs:
 
             # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Mark Github staging release as prerelease
-              id: github_release
+              id: github_release_edit
               if: ${{ steps.env.outputs.staging }}
               continue-on-error: true  # we want to continue even if the release already exists
               run: |
