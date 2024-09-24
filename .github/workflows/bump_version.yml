@@ -83,7 +83,7 @@ jobs:
             - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore npm cache
-              if: ${{ github.runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
+              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
               uses: actions/cache/restore@v3
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
