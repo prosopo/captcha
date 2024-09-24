@@ -12,9 +12,11 @@ concurrency:
     cancel-in-progress: true
 
 env:
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
     CARGO_TERM_COLOR: always
-    GH_TOKEN: ${{ github.token }}
-    NODE_ENV: test
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    NODE_ENV: "test"
 
 jobs:
     check:
@@ -61,26 +63,22 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
+            - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
-            - name: Restore cache
+            - name: Restore npm cache
               uses: actions/cache/restore@v3
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
+                      ~/.npm
                       ~/.cache/Cypress
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
+                      npm-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -120,15 +118,15 @@ jobs:
 
             - name: Run the cypress tests on client-example
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
 
             - name: Run the cypress tests on client-bundle-example
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example" --success "first" --kill-others
 
             - name: Run the cypress tests on client-bundle-example explicit rendering
               run: |
-                  npx concurrently "npm run start:server" "npm run start:provider" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:explicit" --success "first" --kill-others
 
             # after the test run completes store videos and any screenshots
             - uses: actions/upload-artifact@v4

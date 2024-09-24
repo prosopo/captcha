@@ -28,9 +28,12 @@ on:
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
-    
+
 env:
     GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    CARGO_TERM_COLOR: always
+    NODE_OPTIONS: "--max-old-space-size=4096"
 
 jobs:
     bump_version:
@@ -76,9 +79,31 @@ jobs:
 
             - uses: actions/checkout@v3
 
+            - uses: actions/setup-node@v3
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+
+            - run: mkdir -p ~/.npm
+            - run: mkdir -p ~/.cache/Cypress
+
+            - name: Restore npm cache
+              uses: actions/cache/restore@v3
+              with:
+                  # must restore all cache dirs, and they must exist ahead of this!
+                  path: |
+                      ~/.npm
+                      ~/.cache/Cypress
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+                  key: some-unused-cache-key
+                  restore-keys: |
+                      npm-${{ runner.os }}-${{ runner.arch }}-
+
             - name: Bump version
               run: |
-                set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+                set -euo pipefail # stop on errors, print commands, fail on pipe fails
 
                 # set the author in git
                 git config user.name "prosoponator[bot]"
@@ -97,17 +122,31 @@ jobs:
                 pkgJsons=$(npm run --silent ws:pkg)
                 pkgNames=$(npm run --silent ws:ls)
                 for pkgJson in $pkgJsons; do
+                    echo "Bumping version in $pkgJson"
                     # for each package in the workspace, set the version number
-                    cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > $pkgJson
+                    cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > tmp
+                    mv tmp $pkgJson
                     for pkgName in $pkgNames; do
                         # for each package in the workspace, check whether it is in the dependencies of the current package
                         # if so, bump the version number in the dependencies
-                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"^${{ github.event.inputs.version }}\" else . end" > $pkgJson
+                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
+                        mv tmp $pkgJson
+                        cat $pkgJson | jq "if .devDependencies[\"$pkgName\"] then .devDependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
+                        mv tmp $pkgJson 
                     done
                 done
 
-                # update pkg lock
+                # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
+                envFiles=$(find . -iregex ".*\/\.?env\.[^js][^ts][^.d.ts]\w+" -not -path "./node_modules/**")
+                echo "Bumping version in env files: $envFiles"
+                for envFile in $envFiles; do
+                    sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
+                done
+
+                # the json may be poorly formatted now, so we need to fix it
                 npm i
+                npm run -w @prosopo/scripts build
+                npm run lint-fix
 
                 # commit the version changes
                 git add .

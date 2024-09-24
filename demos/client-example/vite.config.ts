@@ -57,6 +57,9 @@ export default defineConfig(async ({ command, mode }) => {
 			"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
 				process.env.PROSOPO_LOG_LEVEL || "Info",
 			),
+			"process.env.PROSOPO_DOCS_URL": JSON.stringify(
+				process.env.PROSOPO_DOCS_URL,
+			),
 		},
 		build: {
 			outDir: path.resolve("./dist"),

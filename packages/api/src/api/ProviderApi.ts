@@ -25,6 +25,7 @@ import {
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
 	type Provider,
+	type ProviderApiInterface,
 	type ProviderRegistered,
 	type RandomProvider,
 	type ServerPowCaptchaVerifyRequestBodyType,
@@ -36,7 +37,10 @@ import {
 } from "@prosopo/types";
 import HttpClientBase from "./HttpClientBase.js";
 
-export default class ProviderApi extends HttpClientBase implements ProviderApi {
+export default class ProviderApi
+	extends HttpClientBase
+	implements ProviderApiInterface
+{
 	private account: string;
 
 	constructor(providerUrl: string, account: string) {

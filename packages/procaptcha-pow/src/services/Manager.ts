@@ -191,59 +191,66 @@ export const Manager = (
 					getDappAccount(),
 				);
 
-				const solution = solvePoW(challenge.challenge, challenge.difficulty);
-
-				const user = await ext.getAccount(getConfig());
-
-				const signer = user.extension?.signer;
-
-				if (!signer || !signer.signRaw) {
-					throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
-						context: {
-							error:
-								"Signer is not defined, cannot sign message to prove account ownership",
-						},
-					});
-				}
-
-				const userTimestampSignature = await signer.signRaw({
-					address: userAccount,
-					data: stringToHex(challenge[ApiParams.timestamp].toString()),
-					type: "bytes",
-				});
-
-				const verifiedSolution = await providerApi.submitPowCaptchaSolution(
-					challenge,
-					getAccount().account.account.address,
-					getDappAccount(),
-					solution,
-					userTimestampSignature.signature.toString(),
-					config.captchas.pow.verifiedTimeout,
-				);
-				if (verifiedSolution[ApiParams.verified]) {
+				if (challenge.error) {
 					updateState({
-						isHuman: true,
+						error: challenge.error,
 						loading: false,
 					});
+				} else {
+					const solution = solvePoW(challenge.challenge, challenge.difficulty);
 
-					events.onHuman(
-						encodeProcaptchaOutput({
-							[ApiParams.providerUrl]: providerUrl,
-							[ApiParams.user]: getAccount().account.account.address,
-							[ApiParams.dapp]: getDappAccount(),
-							[ApiParams.challenge]: challenge.challenge,
-							[ApiParams.nonce]: solution,
-							[ApiParams.timestamp]: challenge.timestamp,
-							[ApiParams.signature]: {
-								[ApiParams.provider]: challenge.signature.provider,
-								[ApiParams.user]: {
-									[ApiParams.timestamp]:
-										userTimestampSignature.signature.toString(),
-								},
+					const user = await ext.getAccount(getConfig());
+
+					const signer = user.extension?.signer;
+
+					if (!signer || !signer.signRaw) {
+						throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+							context: {
+								error:
+									"Signer is not defined, cannot sign message to prove account ownership",
 							},
-						}),
+						});
+					}
+
+					const userTimestampSignature = await signer.signRaw({
+						address: userAccount,
+						data: stringToHex(challenge[ApiParams.timestamp].toString()),
+						type: "bytes",
+					});
+
+					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
+						challenge,
+						getAccount().account.account.address,
+						getDappAccount(),
+						solution,
+						userTimestampSignature.signature.toString(),
+						config.captchas.pow.verifiedTimeout,
 					);
-					setValidChallengeTimeout();
+					if (verifiedSolution[ApiParams.verified]) {
+						updateState({
+							isHuman: true,
+							loading: false,
+						});
+
+						events.onHuman(
+							encodeProcaptchaOutput({
+								[ApiParams.providerUrl]: providerUrl,
+								[ApiParams.user]: getAccount().account.account.address,
+								[ApiParams.dapp]: getDappAccount(),
+								[ApiParams.challenge]: challenge.challenge,
+								[ApiParams.nonce]: solution,
+								[ApiParams.timestamp]: challenge.timestamp,
+								[ApiParams.signature]: {
+									[ApiParams.provider]: challenge.signature.provider,
+									[ApiParams.user]: {
+										[ApiParams.timestamp]:
+											userTimestampSignature.signature.toString(),
+									},
+								},
+							}),
+						);
+						setValidChallengeTimeout();
+					}
 				}
 			},
 			start,

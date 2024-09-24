@@ -15,6 +15,12 @@
 			"path": "../detector"
 		},
 		{
+			"path": "../locale-browser"
+		},
+		{
+			"path": "../procaptcha"
+		},
+		{
 			"path": "../procaptcha-pow"
 		},
 		{
