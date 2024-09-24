@@ -1,4 +1,3 @@
-import React from "react";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import React from "react";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type HandleOptions, handle } from "i18next-http-middleware";
+import React from "react";
 
 import i18n from "./i18nBackend.js";
 
