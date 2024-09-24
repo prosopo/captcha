@@ -20,8 +20,8 @@ export function getCurrentFileDirectory(url: string) {
 	return new URL(url).pathname.split("/").slice(0, -1).join("/");
 }
 
-export const flatten = (obj: object, prefix = ""): Record<string, unknown> => {
-	const flattenedObj: Record<string, unknown> = {};
+export const flatten = (obj: object, prefix = ""): Record<string, string> => {
+	const flattenedObj: Record<string, string> = {};
 	for (const [key, value] of Object.entries(obj)) {
 		if (value instanceof Object) {
 			Object.assign(flattenedObj, flatten(value, `${prefix + key}.`));

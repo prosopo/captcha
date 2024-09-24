@@ -14,3 +14,4 @@
 export { default as commandProviderSetDataset } from "./providerSetDataset.js";
 export { default as commandStoreCaptchasExternally } from "./storeCaptchasExternally.js";
 export { default as commandVersion } from "./version.js";
+export { default as commandSiteKeyRegister } from "./siteKeyRegister.js";

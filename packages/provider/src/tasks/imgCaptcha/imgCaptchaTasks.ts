@@ -167,6 +167,7 @@ export class ImgCaptchaManager {
 	 * @param timestamp
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
+	 * @param headers
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(

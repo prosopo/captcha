@@ -18,17 +18,17 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import type { Tasks } from "../index.js";
 
-export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
+export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const { signature, blocknumber } = extractHeaders(req);
+			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.pair) {
 				throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
 			}
 
 			verifyEnvironmentKeyPair(env);
-			verifySignature(signature, blocknumber, env.pair);
+			verifySignature(signature, timestamp, env.pair);
 
 			next();
 		} catch (err) {
@@ -40,9 +40,9 @@ export const authMiddleware = (tasks: Tasks, env: ProviderEnvironment) => {
 
 const extractHeaders = (req: Request) => {
 	const signature = req.headers.signature as string;
-	const blocknumber = req.headers.blocknumber as string;
+	const timestamp = req.headers.timestamp as string;
 
-	if (!signature || !blocknumber) {
+	if (!signature || !timestamp) {
 		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
 			context: { error: "Missing signature or block number", code: 400 },
 		});
@@ -50,7 +50,7 @@ const extractHeaders = (req: Request) => {
 
 	if (
 		Array.isArray(signature) ||
-		Array.isArray(blocknumber) ||
+		Array.isArray(timestamp) ||
 		!isHex(signature)
 	) {
 		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
@@ -58,7 +58,16 @@ const extractHeaders = (req: Request) => {
 		});
 	}
 
-	return { signature, blocknumber };
+	// check if timestamp is from the last 5 minutes
+	const now = new Date().getTime();
+	const ts = Number.parseInt(timestamp, 10);
+	if (now - ts > 300000) {
+		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
+			context: { error: "Timestamp is too old", code: 400 },
+		});
+	}
+
+	return { signature, timestamp };
 };
 
 const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
@@ -69,12 +78,12 @@ const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
 
 export const verifySignature = (
 	signature: string,
-	blockNumber: string,
+	timestamp: string,
 	pair: KeyringPair,
 ) => {
 	const u8Sig = hexToU8a(signature);
 
-	if (!pair.verify(blockNumber, u8Sig, pair.publicKey)) {
+	if (!pair.verify(timestamp, u8Sig, pair.publicKey)) {
 		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
 			context: { error: "Signature verification failed", code: 401 },
 		});

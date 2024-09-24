@@ -11,25 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
-import type { Signer } from "@polkadot/api/types";
-import { stringToHex } from "@polkadot/util/string";
 import type { ProviderApi } from "@prosopo/api";
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import {
 	CaptchaMerkleTree,
 	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
-import type {
-	CaptchaResponseBody,
-	CaptchaSolution,
-	CaptchaSolutionResponse,
-	ProsopoCaptchaApiInterface,
-	RandomProvider,
+import {
+	ApiParams,
+	type CaptchaResponseBody,
+	type CaptchaSolution,
+	type CaptchaSolutionResponse,
+	type ProcaptchaApiInterface,
+	type RandomProvider,
 } from "@prosopo/types";
 import type { TCaptchaSubmitResult } from "@prosopo/types";
 
-export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
+export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 	userAccount: string;
 	provider: RandomProvider;
 	providerApi: ProviderApi;
@@ -60,6 +60,11 @@ export class ProsopoCaptchaApi implements ProsopoCaptchaApiInterface {
 				this.userAccount,
 				this.provider,
 			);
+
+			if (captchaChallenge[ApiParams.error]) {
+				return captchaChallenge;
+			}
+
 			// convert https/http to match page
 			for (const captcha of captchaChallenge.captchas) {
 				for (const item of captcha.items) {
