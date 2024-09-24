@@ -155,7 +155,8 @@ jobs:
                 LAST_AUTHOR=$(git show | grep -PoI "Author: prosoponator" | cut -d " " -f 2)
                 if [[ $LAST_AUTHOR == "prosoponator" ]]; then
                     echo "Last commit was by prosoponator, merging main into $INTERIM"
-                    git merge -X ours main
+                    git fetch origin main
+                    git merge -X ours origin/main
                     git add .
                     git commit -a -m "Merge main"
                 fi
