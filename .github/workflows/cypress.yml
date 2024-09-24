@@ -61,6 +61,8 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
+            - run: docker rm -f $(docker ps -aq)
+
             - uses: actions/checkout@v3
 
             - run: mkdir -p ~/.npm
@@ -145,3 +147,5 @@ jobs:
                   name: cypress-videos
                   path: ./demos/cypress-shared/cypress/videos
                   if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
+
+            - run: docker rm -f $(docker ps -aq)
