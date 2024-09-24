@@ -1,3 +1,4 @@
+import React from "react";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+<<<<<<<< HEAD:packages/locale/src/node/i18nMiddleware.ts
 import { type HandleOptions, handle } from "i18next-http-middleware";
 
 import i18n from "./i18nBackend.js";
@@ -21,3 +23,14 @@ function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
 }
 
 export default i18nMiddleware;
+========
+import App from "../App.js";
+
+export default function Root() {
+	return (
+		<React.Fragment>
+			<App captchaType={"pow"} />
+		</React.Fragment>
+	);
+}
+>>>>>>>> main:demos/client-example/src/routes/pow.tsx
