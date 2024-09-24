@@ -54,6 +54,7 @@
 		"docker:rust": "f() { if [ \"$CI\" = \"true\" ]; then FLAGS=''; else FLAGS='-it'; fi ; mkdir -p node_modules/cargo-cache && docker run --rm $FLAGS -u $(id -u):$(id -g) --cpu-quota=-1 -v $PWD:/src -v $PWD/node_modules/cargo-cache:/usr/local/cargo/registry prosopo/cargo-contract:4.1.1 \"export RUST_BACKTRACE=1; $@\" ;}; f",
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
+		"lint:version": "npm run -w @prosopo/version-checker start -- $(pwd)/package.json",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
 		"sbom:spdx": "npm sbom --sbom-format spdx > sbom.spdx.json",
