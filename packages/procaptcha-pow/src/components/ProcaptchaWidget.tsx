@@ -134,6 +134,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 															onChange={manager.current.start}
 															themeColor={themeColor}
 															labelText={t("WIDGET.I_AM_HUMAN")}
+															error={state.error}
 															aria-label="human checkbox"
 														/>
 													)}

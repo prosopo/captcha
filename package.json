@@ -37,6 +37,7 @@
 		"setup": "npm -w @prosopo/scripts run setup",
 		"setup:all": "npm run setup",
 		"start:provider": "npm -w @prosopo/cli run start",
+		"start:provider:admin": "npm -w @prosopo/cli run start:admin",
 		"start:server": "npm -w @prosopo/client-example-server run start",
 		"start:demo": "npm -w @prosopo/client-example run start",
 		"start:bundle": "npm -w @prosopo/client-bundle-example run start",

@@ -22,7 +22,8 @@
 		"INVALID_SIGNATURE": "Invalid signature",
 		"NOT_IMPLEMENTED": "Not implemented",
 		"SITE_KEY_MISSING": "SITE KEY missing",
-		"ACCOUNT_NOT_FOUND": "Account not found"
+		"ACCOUNT_NOT_FOUND": "Account not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CONTRACT": {
 		"INVALID_METHOD": "Invalid contract method",
@@ -103,7 +104,8 @@
 		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
 		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
 		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
-		"UNKNOWN": "Unknown API error"
+		"UNKNOWN": "Unknown API error",
+		"SITE_KEY_NOT_REGISTERED": "Site key not registered"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

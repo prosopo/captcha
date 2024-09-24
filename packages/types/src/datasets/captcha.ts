@@ -116,6 +116,7 @@ export const TimestampSchema = zNumber();
 export type Timestamp = zInfer<typeof TimestampSchema>;
 export type UserAccount = string;
 export type DappAccount = string;
+export type DatasetID = string;
 
 export const POW_SEPARATOR = "___";
 
