@@ -95,7 +95,7 @@ jobs:
                   key: some-unused-cache-key
                   restore-keys: |
                       npm-${{ runner.os }}-${{ runner.arch }}-
-                      
+
             - name: Bump version
               run: |
                 set -euo pipefail # stop on errors, print commands, fail on pipe fails
@@ -132,7 +132,7 @@ jobs:
                 done
 
                 # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
-                envFiles=$(find . -name "*.env" -o -name "env" -o -name ".env" -o -name "env.*")
+                envFiles=$(find . -name "*.env" -o -name "env" -o -name ".env" -o -name "env.*" -type f)
                 echo "Bumping version in env files: $envFiles"
                 for envFile in $envFiles; do
                     sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
