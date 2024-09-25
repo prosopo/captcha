@@ -70,6 +70,7 @@ jobs:
             - run: mkdir -p ~/.cache/Cypress
 
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
+            - run: npm cache clean --force
 
             - uses: actions/setup-node@v3
               with:
