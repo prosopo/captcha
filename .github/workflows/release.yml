@@ -13,6 +13,10 @@ env:
     CARGO_TERM_COLOR: always
     NODE_OPTIONS: "--max-old-space-size=4096"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     deploy:
         runs-on: ubuntu-latest
@@ -59,6 +63,7 @@ jobs:
             - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore npm cache
+              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
               uses: actions/cache/restore@v3
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
@@ -118,7 +123,8 @@ jobs:
                         echo "staging=true"; 
                         echo "docker_latest_tag=staging"; 
                         echo "docker_version_tag=staging";
-                        echo "gh_release_tag=staging"
+                        echo "gh_release_tag=staging-release"
+                        echo "gh_prelease=true"
                     } >> $GITHUB_OUTPUT
                 else
                     echo "cannot deploy from branch ${{ github.ref }}"
@@ -137,19 +143,13 @@ jobs:
             - run: npm run build:all:cjs
             - run: npm run bundle:all
 
-            # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
             - name: Github release
-              id: github_release_create
-              if: ${{ steps.env.outputs.production }} || ${{ steps.env.outputs.staging }}
-              continue-on-error: true  # we want to continue even if the release already exists
+              continue-on-error: true # don't fail the workflow if the release already exists
               run: |
                   gh release create --generate-notes "${{ steps.env.outputs.gh_release_tag }}"
 
-            # this will error if there's already a release for this version. This is by design, if you need to fix a release (e.g. because a deploy failed) then bump the version and try again
-            - name: Mark Github staging release as prerelease
-              id: github_release_edit
-              if: ${{ steps.env.outputs.staging }}
-              continue-on-error: true  # we want to continue even if the release already exists
+            - name: Mark Github release as prerelease
+              if: ${{ steps.env.outputs.gh_prerelease }}
               run: |
                   gh release edit "${{ steps.env.outputs.gh_release_tag }}" --prerelease
 
@@ -162,3 +162,4 @@ jobs:
               if: success()
               run: |
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\":\":check-passed: Release <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.env.outputs.env }} ${{ steps.env.outputs.gh_release_tag }}> succeeded.\"}"  ${{ secrets.SLACKBOT_DEVOPS }}
+

@@ -15,6 +15,10 @@ env:
     CARGO_TERM_COLOR: always
     NODE_OPTIONS: "--max-old-space-size=4096"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     build:
         runs-on: ubuntu-latest

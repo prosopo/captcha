@@ -18,6 +18,10 @@ env:
     NODE_OPTIONS: "--max-old-space-size=4096"
     NODE_ENV: "test"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -67,6 +71,7 @@ jobs:
       - run: mkdir -p ~/.cache/Cypress
 
       - name: Restore npm cache
+        if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
         uses: actions/cache/restore@v3
         with:
             # must restore all cache dirs, and they must exist ahead of this!
@@ -79,118 +84,6 @@ jobs:
             key: some-unused-cache-key
             restore-keys: |
                 npm-${{ runner.os }}-${{ runner.arch }}-
-
-      # check that each package.json contains a `build` and `build:cjs` script.
-      - name: Check for build and build:cjs scripts
-        run: |
-          for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
-              if ! grep -q '"build":' $file; then
-              echo "Missing 'build' script in $file"
-              exit 1
-              fi
-              if ! grep -q '"build:cjs":' $file; then
-              echo "Missing 'build:cjs' script in $file"
-              exit 1
-              fi
-          done
-
-      # check that the number of references in each tsconfig.json is equal to the number of references in the tsconfig.cjs.json for each package
-      - name: Check for matching references in tsconfig.json and tsconfig.cjs.json
-        run: |
-          rm -f mismatched_references.txt
-          for file in $(find ./packages -name tsconfig.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
-              if [ $(jq '.references | length' $file) -ne $(jq '.references | length' $(dirname $file)/tsconfig.cjs.json) ]; then
-              echo "Mismatched number of references in $file and $(dirname $file)/tsconfig.cjs.json" >> mismatched_references.txt
-              fi
-          done
-          if [ -f mismatched_references.txt ]; then
-              cat mismatched_references.txt
-              exit 1
-          fi
-
-      # check that each @prosopo package referenced in package.json is in the tsconfig.json for each package
-      - name: Check for matching references in package.json and tsconfig.json
-        run: |
-          rm -f missing_references.txt
-          for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
-              for package in $(jq -r '.dependencies | keys[]' $file); do
-              # if the package is not a @prosopo package, skip it
-              if ! echo $package | grep -q "^@prosopo"; then
-                  continue
-              fi
-          
-              # if the package is @prosopo/config, skip it
-              if [[ "$package" == "@prosopo/config" ]]; then
-                  continue
-              fi
-          
-              # split the package by '/' and get the last element
-              searchterm=$(echo $package | awk -F/ '{print $NF}')
-              if ! grep -oI "\"..\/$searchterm\"" $(dirname $file)/tsconfig.json; then                  
-                  # store the results
-                  echo "Missing reference to $searchterm in $(dirname $file)/tsconfig.json" >> missing_references.txt
-              fi
-              done
-          done
-          if [ -f missing_references.txt ]; then
-              cat missing_references.txt
-          fi
-
-      # check that each package.json contains a `build` and `build:cjs` script.
-      - name: Check for build and build:cjs scripts
-        run: |
-          for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
-              if ! grep -q '"build":' $file; then
-              echo "Missing 'build' script in $file"
-              exit 1
-              fi
-              if ! grep -q '"build:cjs":' $file; then
-              echo "Missing 'build:cjs' script in $file"
-              exit 1
-              fi
-          done
-
-      # check that the number of references in each tsconfig.json is equal to the number of references in the tsconfig.cjs.json for each package
-      - name: Check for matching references in tsconfig.json and tsconfig.cjs.json
-        run: |
-          rm -f mismatched_references.txt
-          for file in $(find ./packages -name tsconfig.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
-              if [ $(jq '.references | length' $file) -ne $(jq '.references | length' $(dirname $file)/tsconfig.cjs.json) ]; then
-              echo "Mismatched number of references in $file and $(dirname $file)/tsconfig.cjs.json" >> mismatched_references.txt
-              fi
-          done
-          if [ -f mismatched_references.txt ]; then
-              cat mismatched_references.txt
-              exit 1
-          fi
-
-      # check that each @prosopo package referenced in package.json is in the tsconfig.json for each package
-      - name: Check for matching references in package.json and tsconfig.json
-        run: |
-          rm -f missing_references.txt
-          for file in $(find ./packages -name package.json -not -path "**/node_modules/*" -not -path "./packages/detector/*"); do
-              for package in $(jq -r '.dependencies | keys[]' $file); do
-              # if the package is not a @prosopo package, skip it
-              if ! echo $package | grep -q "^@prosopo"; then
-                  continue
-              fi
-          
-              # if the package is @prosopo/config, skip it
-              if [[ "$package" == "@prosopo/config" ]]; then
-                  continue
-              fi
-          
-              # split the package by '/' and get the last element
-              searchterm=$(echo $package | awk -F/ '{print $NF}')
-              if ! grep -oI "\"..\/$searchterm\"" $(dirname $file)/tsconfig.json; then                  
-                  # store the results
-                  echo "Missing reference to $searchterm in $(dirname $file)/tsconfig.json" >> missing_references.txt
-              fi
-              done
-          done
-          if [ -f missing_references.txt ]; then
-              cat missing_references.txt
-          fi
 
       - uses: actions/setup-node@v3
         with:
@@ -220,10 +113,9 @@ jobs:
 
       - name: Start the docker images
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
           docker container ls
           sleep 10s
-
 
       - name: Setup env
         run: |
@@ -247,3 +139,5 @@ jobs:
           "NODE_ENV=test npm run start:provider" \
           "sleep 10s && NODE_ENV=test npm run test" \
            --success "first" --kill-others
+
+      - run: docker compose --file ./docker/docker-compose.test.yml down

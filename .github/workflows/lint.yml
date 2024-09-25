@@ -17,14 +17,13 @@ env:
     CARGO_TERM_COLOR: always
     NODE_OPTIONS: "--max-old-space-size=4096"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     check:
-        name: check
         runs-on: ubuntu-latest
-        container: 
-            image: prosopo/ci:latest
-            options: >
-                --volume ${{ github.workspace }}:/repo
         if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
@@ -71,6 +70,7 @@ jobs:
             - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore npm cache
+              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
               uses: actions/cache/restore@v3
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
@@ -94,3 +94,4 @@ jobs:
             - run: npm run -w @prosopo/scripts build
 
             - run: npm run lint
+
