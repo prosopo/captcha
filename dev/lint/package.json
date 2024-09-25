@@ -14,7 +14,8 @@
 		"scripts": "node dist/scripts.js",
 		"version": "node dist/version.js",
 		"license": "node dist/license.js check",
-		"license:fix": "node dist/license.js license"
+		"license:fix": "node dist/license.js license",
+		"build:cjs": "echo 'no cjs build'"
 	},
 	"author": "",
 	"license": "ISC",
