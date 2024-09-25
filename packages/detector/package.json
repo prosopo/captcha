@@ -9,6 +9,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
 		"clean": "tsc --build --clean"
 	},
 	"devDependencies": {
