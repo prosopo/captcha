@@ -15,5 +15,9 @@ import path from "node:path";
 import { ViteCommonJSConfig } from "@prosopo/config";
 
 export default function () {
-	return ViteCommonJSConfig("detector", path.resolve("./tsconfig.cjs.json"), "src/index.js");
+	return ViteCommonJSConfig(
+		"detector",
+		path.resolve("./tsconfig.cjs.json"),
+		"src/index.js",
+	);
 }
