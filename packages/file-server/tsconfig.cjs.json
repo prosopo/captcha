@@ -12,9 +12,6 @@
 	],
 	"references": [
 		{
-			"path": "../common/tsconfig.cjs.json"
-		},
-		{
 			"path": "../util/tsconfig.cjs.json"
 		}
 	]

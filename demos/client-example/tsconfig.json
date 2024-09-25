@@ -17,13 +17,19 @@
 			"path": "../../packages/procaptcha-frictionless"
 		},
 		{
-			"path": "../../packages/cli"
-		},
-		{
 			"path": "../../packages/types"
 		},
 		{
-			"path": "../../dev/config"
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/procaptcha-pow"
+		},
+		{
+			"path": "../../packages/server"
+		},
+		{
+			"path": "../../packages/dotenv"
 		},
 		{
 			"path": "../../dev/vite-plugin-watch-workspace"

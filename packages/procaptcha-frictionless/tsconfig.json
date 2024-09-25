@@ -9,16 +9,10 @@
 	"include": ["src", "src/**/*.json", "src/index.html"],
 	"references": [
 		{
-			"path": "../../dev/config"
-		},
-		{
 			"path": "../detector"
 		},
 		{
 			"path": "../locale-browser"
-		},
-		{
-			"path": "../procaptcha"
 		},
 		{
 			"path": "../procaptcha-pow"

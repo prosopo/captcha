@@ -7,16 +7,13 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../api"
-		},
-		{
 			"path": "../common"
 		},
 		{
-			"path": "../../dev/config"
+			"path": "../contract"
 		},
 		{
-			"path": "../contract"
+			"path": "../../dev/config"
 		},
 		{
 			"path": "../database"
@@ -26,9 +23,6 @@
 		},
 		{
 			"path": "../env"
-		},
-		{
-			"path": "../tx"
 		},
 		{
 			"path": "../types"
