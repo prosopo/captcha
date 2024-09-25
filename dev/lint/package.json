@@ -1,5 +1,5 @@
 {
-	"name": "@prosopo/version-checker",
+	"name": "@prosopo/lint",
 	"version": "2.1.1",
 	"description": "",
 	"private": true,
@@ -7,7 +7,12 @@
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"start": "npx tsx src/check.ts"
+		"engines": "npx tsx src/engines.ts",
+		"refs": "npx tsx src/refs.ts",
+		"nvmrc": "npx tsx src/nvmrc.ts",
+		"workflowNames": "npx tsx src/workflowNames.ts",
+		"scripts": "npx tsx src/scripts.ts",
+		"version": "npx tsx src/version.ts"
 	},
 	"author": "",
 	"license": "ISC",
