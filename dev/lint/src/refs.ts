@@ -114,26 +114,24 @@ const main = async (args: {
 	const globs = [
 		pkgJsonPath, // include the workspace package.json
 		...z
-		.string()
-		.array()
-		.parse(pkgJson.content.workspaces)
-		.map((g) => `${path.dirname(pkgJsonPath)}/${g}/package.json`)
-	]
+			.string()
+			.array()
+			.parse(pkgJson.content.workspaces)
+			.map((g) => `${path.dirname(pkgJsonPath)}/${g}/package.json`),
+	];
 	const pths = fg.globSync(globs);
-	let ok = true
-	for(const pth of pths) {
+	let ok = true;
+	for (const pth of pths) {
 		const result = await check({
 			pkgJson: readFile(pth),
 			wsPkgNames,
-		})
-		ok = ok && result
+		});
+		ok = ok && result;
 	}
-	if(!ok) {
-		throw new Error(
-			"Refs and deps not in sync"
-		);
+	if (!ok) {
+		throw new Error("Refs and deps not in sync");
 	}
-}
+};
 
 const check = async (args: {
 	pkgJson: File;
@@ -144,12 +142,14 @@ const check = async (args: {
 	const pkgDir = path.dirname(pkgJson.path);
 	// get the deps for this package
 	// filter deps to those in the workspace
-	const deps = getDeps(pkgJson).filter((d) => {
-		return wsPkgNames.includes(d);
-	}).filter(d => {
-		// ignore @prosopo/config pkg bc circular dep
-		return d !== '@prosopo/config';
-	});
+	const deps = getDeps(pkgJson)
+		.filter((d) => {
+			return wsPkgNames.includes(d);
+		})
+		.filter((d) => {
+			// ignore @prosopo/config pkg bc circular dep
+			return d !== "@prosopo/config";
+		});
 	// console.log('deps', deps)
 
 	let ok = true;
@@ -185,12 +185,12 @@ const check = async (args: {
 		for (const missingDep of missingDeps) {
 			console.log(`${missingDep} ref missing from ${tsconfigPath}`);
 		}
-		ok = ok && missingRefs.length === 0 && missingDeps.length === 0
+		ok = ok && missingRefs.length === 0 && missingDeps.length === 0;
 	}
-	if(!ok) {
-		console.log()
+	if (!ok) {
+		console.log();
 	}
-	return ok
+	return ok;
 };
 
 main({
