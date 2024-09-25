@@ -11,6 +11,7 @@
 		"refs": "npx tsx src/refs.ts",
 		"nvmrc": "npx tsx src/nvmrc.ts",
 		"workflowNames": "npx tsx src/workflowNames.ts",
+		"scripts": "npx tsx src/scripts.ts",
 		"version": "npx tsx src/version.ts"
 	},
 	"author": "",
