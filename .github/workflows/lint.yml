@@ -91,7 +91,7 @@ jobs:
 
             - run: npm ci
 
-            - run: npm run -w @prosopo/scripts build
+            - run: npm run -w @prosopo/lint build
 
             - run: npm run lint
 
