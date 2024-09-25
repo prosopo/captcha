@@ -59,7 +59,7 @@
 		"lint:refs": "npm run -w @prosopo/lint refs -- $(pwd)/package.json",
 		"lint:workflowNames": "npm run -w @prosopo/lint workflowNames -- $(pwd)",
 		"lint:nvmrc": "npm run -w @prosopo/lint nvmrc -- $(pwd)",
-		"lint:scripts": "npm run -w @prosopo/lint scripts -- $(pwd)",
+		"lint:scripts": "npm run -w @prosopo/lint scripts -- $(pwd)/package.json",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
 		"sbom:spdx": "npm sbom --sbom-format spdx > sbom.spdx.json",
