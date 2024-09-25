@@ -31,7 +31,9 @@ const main = async (args: {
 	}
 
 	// for each package in the workspace, check their version matches the workspace version
-	const globs = [`${path.dirname(args.pkgJsonPath)}/package.json`, ...z
+	const globs = [
+		// `${path.dirname(args.pkgJsonPath)}/package.json`, // include the workspace package.json
+		...z
 		.string()
 		.array()
 		.parse(pkgJson.workspaces)
