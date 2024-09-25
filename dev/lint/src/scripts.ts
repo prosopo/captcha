@@ -44,19 +44,10 @@ const main = async (args: {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const scripts = z.record(z.string()).parse(pkgJson.scripts);
-		const targets = ["build", "test", "clean"];
+		const targets = ["build", "test", "clean", "build:cjs"];
 		for (const target of targets) {
 			if (!scripts[target]) {
 				throw new Error(`${pkgJsonPath} is missing script ${target}`);
-			}
-			//if tsconfig.cjs.json exists, and if build:cjs is not defined, throw an error
-			if (
-				fs.existsSync(
-					path.join(path.dirname(pkgJsonPath), "tsconfig.cjs.json"),
-				) &&
-				!scripts["build:cjs"]
-			) {
-				throw new Error(`${pkgJsonPath} is missing script build:cjs`);
 			}
 		}
 	}

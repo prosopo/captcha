@@ -57,6 +57,7 @@
 		"test": "echo \"No test specified\"",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config vite.config.ts --port 9230 --host --force",
 		"build": "tsc --build --verbose",
+		"build:cjs": "echo 'no cjs build'",
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config vite.config.ts --outDir dist --emptyOutDir",
 		"clean": "tsc --build --clean"
 	},
