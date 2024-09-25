@@ -145,8 +145,9 @@ jobs:
 
             - name: Purge gh prerelease
               if: ${{ steps.env.outputs.gh_prerelease }}
+              continue-on-error: true # don't fail the workflow if the release doesn't exist
               run: |
-                  gh release delete "${{ steps.env.outputs.gh_release_tag }}" --yes --cleanup-tag || true
+                  gh release delete "${{ steps.env.outputs.gh_release_tag }}" --yes --cleanup-tag
 
             - name: Github release
               continue-on-error: true # don't fail the workflow if the release already exists
