@@ -33,6 +33,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"build": "tsc --build --verbose",
+		"build:cjs": "echo 'no cjs build'",
 		"clean": "tsc --build --clean",
 		"cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
 		"cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",

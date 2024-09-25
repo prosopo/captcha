@@ -14,6 +14,7 @@
 		"start": "node ./dist/app.js",
 		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
 		"build": "tsc --build --verbose",
+		"build:cjs": "echo 'no cjs build'",
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
 		"clean": "tsc --build --clean"
 	},
