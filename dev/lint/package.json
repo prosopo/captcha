@@ -7,7 +7,6 @@
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
 		"engines": "npx tsx src/engines.ts",
 		"refs": "npx tsx src/refs.ts",
 		"nvmrc": "npx tsx src/nvmrc.ts",
