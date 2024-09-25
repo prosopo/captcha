@@ -35,6 +35,10 @@ env:
     CARGO_TERM_COLOR: always
     NODE_OPTIONS: "--max-old-space-size=4096"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     bump_version:
         runs-on: ubuntu-latest
@@ -88,6 +92,7 @@ jobs:
             - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore npm cache
+              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
               uses: actions/cache/restore@v3
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
@@ -160,3 +165,4 @@ jobs:
 
                 # create a PR for the release
                 gh pr create --base ${{ github.event.inputs.dest }} --title "Release ${{ github.event.inputs.version }}" --fill
+
