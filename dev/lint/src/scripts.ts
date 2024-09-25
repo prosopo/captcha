@@ -44,7 +44,7 @@ const main = async (args: {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const scripts = z.record(z.string()).parse(pkgJson.scripts);
-		const targets = ["build", "test", "clean", "build:cjs"];
+		const targets = ["build", "test", "clean"];
 		for (const target of targets) {
 			if (!scripts[target]) {
 				throw new Error(`${pkgJsonPath} is missing script ${target}`);
