@@ -162,19 +162,21 @@ const check = async (args: {
 		// get the tsconfig references
 		const refs = getRefs(tsconfigJson);
 		// convert them to package names, e.g. ../common => @prosopo/common
-		const refPkgNames = refs.map((p) => {
-			// get the dir for the package
-			const refPath = path.dirname(p);
-			// read the package.json in the dir
-			const pkgJson = readFileWhy(
-				`${pkgDir}/${refPath}/package.json`,
-				`specified in ${tsconfigPath}`,
-			);
-			return getPkgName(pkgJson);
-		}).filter((p) => {
-			// ignore @prosopo/config pkg bc circular dep
-			return p !== "@prosopo/config"
-		});
+		const refPkgNames = refs
+			.map((p) => {
+				// get the dir for the package
+				const refPath = path.dirname(p);
+				// read the package.json in the dir
+				const pkgJson = readFileWhy(
+					`${pkgDir}/${refPath}/package.json`,
+					`specified in ${tsconfigPath}`,
+				);
+				return getPkgName(pkgJson);
+			})
+			.filter((p) => {
+				// ignore @prosopo/config pkg bc circular dep
+				return p !== "@prosopo/config";
+			});
 		// console.log('refPkgNames', refPkgNames)
 		// check all the refs are in the deps
 		// e.g. a dep might be in the pkg json but not specified in the tsconfig
