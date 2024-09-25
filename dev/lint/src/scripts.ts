@@ -34,23 +34,23 @@ const main = async (args: {
 	const globs = [
 		// `${path.dirname(args.pkgJsonPath)}/package.json`, // include the workspace package.json
 		...z
-		.string()
-		.array()
-		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`)];
+			.string()
+			.array()
+			.parse(pkgJson.workspaces)
+			.map((g) => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`),
+	];
 	const pkgJsonPaths = fg.globSync(globs);
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const scripts = z.record(z.string()).parse(pkgJson.scripts);
-		const targets = ['build', 'test', 'clean', 'build:cjs']
+		const targets = ["build", "test", "clean", "build:cjs"];
 		for (const target of targets) {
 			if (!scripts[target]) {
 				throw new Error(`${pkgJsonPath} is missing script ${target}`);
 			}
 		}
 	}
-
 };
 
 main({

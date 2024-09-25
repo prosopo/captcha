@@ -33,7 +33,7 @@ const main = async (args: {
 	const enginesSchema = z.object({
 		node: z.string(),
 		npm: z.string(),
-	})
+	});
 	const engines = enginesSchema.parse(pkgJson.engines);
 
 	// for each package in the workspace, check their version matches the workspace version
@@ -58,7 +58,6 @@ const main = async (args: {
 			);
 		}
 	}
-
 };
 
 main({

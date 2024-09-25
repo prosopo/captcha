@@ -24,30 +24,29 @@ const main = async (args: {
 }) => {
 	console.log("Scanning", args.root);
 
-	let target = ''
+	let target = "";
 	// find all .nvmrc files
 	const pths = fg.globSync([`${args.root}/**/.nvmrc`], {
 		ignore: ["**/node_modules/**", "**/.git/**"],
 	});
 	for (const pth of pths) {
 		const nvmrc = fs.readFileSync(pth, "utf8");
-		if(!nvmrc) {
+		if (!nvmrc) {
 			throw new Error(`Empty nvmrc file: ${pth}`);
 		}
 		console.log(`${pth}: ${nvmrc}`);
-		if(!target) {
+		if (!target) {
 			// first nvmrc file discovered
 			// set the target version
 			target = nvmrc;
 		} else {
 			// subsequent nvmrc files
 			// check they match the target version
-			if(nvmrc !== target) {
+			if (nvmrc !== target) {
 				throw new Error(`Mismatched nvmrc file: ${pth}`);
 			}
 		}
 	}
-
 };
 
 main({

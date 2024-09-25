@@ -32,20 +32,19 @@ const main = async (args: {
 		const workflow = fs.readFileSync(pth, "utf8");
 		// find the first line with '- name: ' and extract the name
 		const names = workflow.match(/name: (.*)/);
-		if(!names || names[1] === undefined) {
+		if (!names || names[1] === undefined) {
 			throw new Error(`No name found in workflow file: ${pth}`);
 		}
-		const target = path.basename(pth, '.yml').trim();
+		const target = path.basename(pth, ".yml").trim();
 		// name should match the filename
 		const name = names[1].trim();
-		if(name !== target) {
-			for(let i = 0; i < name.length; i++) {
+		if (name !== target) {
+			for (let i = 0; i < name.length; i++) {
 				console.log(`${name.charCodeAt(i)}`);
 			}
 			throw new Error(`${pth} has name ${name}, should be ${target}`);
 		}
 	}
-
 };
 
 main({
