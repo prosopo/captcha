@@ -81,9 +81,9 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               with:
                   node-version-file: '.nvmrc'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
@@ -93,7 +93,7 @@ jobs:
 
             - name: Restore npm cache
               if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
-              uses: actions/cache/restore@v3
+              uses: actions/cache/restore@v4
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
