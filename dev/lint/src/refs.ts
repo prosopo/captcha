@@ -96,12 +96,11 @@ const getPkgName = (pkgJson: File) => {
 };
 
 const main = async (args: {
-	pkgJson: File;
-	wsPkgNames?: string[];
+	pkgJsonPath: string;
 }) => {
 	// pkgJsonPath points to the package.json file
-	const pkgJson = args.pkgJson;
-	const pkgDir = path.dirname(pkgJson.path);
+	const pkgJsonPath = args.pkgJsonPath;
+	const pkgJson = readFile(pkgJsonPath);
 
 	// check the pkg json is a workspace
 	if (pkgJson.content.workspaces === undefined) {
@@ -111,13 +110,49 @@ const main = async (args: {
 	// list all the pkgs in the workspace
 	const wsPkgNames = getWsPkgNames(getPkgJsonPaths(pkgJson));
 
+	// for each package in the workspace, check their version matches the workspace version
+	const globs = [
+		pkgJsonPath, // include the workspace package.json
+		...z
+			.string()
+			.array()
+			.parse(pkgJson.content.workspaces)
+			.map((g) => `${path.dirname(pkgJsonPath)}/${g}/package.json`),
+	];
+	const pths = fg.globSync(globs);
+	let ok = true;
+	for (const pth of pths) {
+		const result = await check({
+			pkgJson: readFile(pth),
+			wsPkgNames,
+		});
+		ok = ok && result;
+	}
+	if (!ok) {
+		throw new Error("Refs and deps not in sync");
+	}
+};
+
+const check = async (args: {
+	pkgJson: File;
+	wsPkgNames: string[];
+}) => {
+	const pkgJson = args.pkgJson;
+	const wsPkgNames = args.wsPkgNames;
+	const pkgDir = path.dirname(pkgJson.path);
 	// get the deps for this package
 	// filter deps to those in the workspace
-	const deps = getDeps(pkgJson).filter((d) => {
-		return wsPkgNames.includes(d);
-	});
+	const deps = getDeps(pkgJson)
+		.filter((d) => {
+			return wsPkgNames.includes(d);
+		})
+		.filter((d) => {
+			// ignore @prosopo/config pkg bc circular dep
+			return d !== "@prosopo/config";
+		});
 	// console.log('deps', deps)
 
+	let ok = true;
 	// find all tsconfig files in the same dir as the package.json
 	const tsconfigPaths = fg.globSync(`${pkgDir}/tsconfig{,.cjs}.json`);
 	for (const tsconfigPath of tsconfigPaths) {
@@ -127,16 +162,21 @@ const main = async (args: {
 		// get the tsconfig references
 		const refs = getRefs(tsconfigJson);
 		// convert them to package names, e.g. ../common => @prosopo/common
-		const refPkgNames = refs.map((p) => {
-			// get the dir for the package
-			const refPath = path.dirname(p);
-			// read the package.json in the dir
-			const pkgJson = readFileWhy(
-				`${pkgDir}/${refPath}/package.json`,
-				`specified in ${tsconfigPath}`,
-			);
-			return getPkgName(pkgJson);
-		});
+		const refPkgNames = refs
+			.map((p) => {
+				// get the dir for the package
+				const refPath = path.dirname(p);
+				// read the package.json in the dir
+				const pkgJson = readFileWhy(
+					`${pkgDir}/${refPath}/package.json`,
+					`specified in ${tsconfigPath}`,
+				);
+				return getPkgName(pkgJson);
+			})
+			.filter((p) => {
+				// ignore @prosopo/config pkg bc circular dep
+				return p !== "@prosopo/config";
+			});
 		// console.log('refPkgNames', refPkgNames)
 		// check all the refs are in the deps
 		// e.g. a dep might be in the pkg json but not specified in the tsconfig
@@ -150,20 +190,14 @@ const main = async (args: {
 		for (const missingDep of missingDeps) {
 			console.log(`${missingDep} ref missing from ${tsconfigPath}`);
 		}
-		if (missingRefs.length === 0 && missingDeps.length === 0) {
-			// console.log(`Refs and deps in sync for ${tsconfigPath} and ${pkgJson.path}`);
-		} else {
-			throw new Error(
-				`Refs and deps not in sync in ${tsconfigPath} and ${pkgJson.path}`,
-			);
-		}
+		ok = ok && missingRefs.length === 0 && missingDeps.length === 0;
 	}
+	if (!ok) {
+		console.log();
+	}
+	return ok;
 };
 
-// process.argv = ["", "", "/home/geopro/bench/captcha5/package.json"];
 main({
-	pkgJson: {
-		path: at(process.argv, 2),
-		content: readJson(at(process.argv, 2)),
-	},
+	pkgJsonPath: z.string().parse(process.argv[2]),
 });

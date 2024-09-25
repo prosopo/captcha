@@ -7,9 +7,6 @@
 	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
 	"references": [
 		{
-			"path": "../../dev/config"
-		},
-		{
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
@@ -32,6 +29,9 @@
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../dev/config/tsconfig.cjs.json"
 		}
 	]
 }

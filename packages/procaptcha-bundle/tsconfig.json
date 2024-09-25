@@ -8,16 +8,10 @@
 	"include": ["src", "src/**/*.json", "src/index.html"],
 	"references": [
 		{
-			"path": "../../dev/config"
-		},
-		{
 			"path": "../dotenv"
 		},
 		{
 			"path": "../locale"
-		},
-		{
-			"path": "../procaptcha"
 		},
 		{
 			"path": "../procaptcha-frictionless"
