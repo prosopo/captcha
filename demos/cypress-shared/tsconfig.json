@@ -14,6 +14,15 @@
 		},
 		{
 			"path": "../../packages/util"
+		},
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/datasets"
+		},
+		{
+			"path": "../../packages/types-database"
 		}
 	]
 }

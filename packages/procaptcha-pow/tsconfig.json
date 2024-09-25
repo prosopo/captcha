@@ -19,9 +19,6 @@
 			"path": "../common"
 		},
 		{
-			"path": "../load-balancer"
-		},
-		{
 			"path": "../locale-browser"
 		},
 		{

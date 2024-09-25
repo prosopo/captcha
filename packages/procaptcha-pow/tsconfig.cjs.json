@@ -23,9 +23,6 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../load-balancer/tsconfig.cjs.json"
-		},
-		{
 			"path": "../locale-browser/tsconfig.cjs.json"
 		},
 		{

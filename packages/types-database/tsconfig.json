@@ -10,13 +10,7 @@
 			"path": "../common"
 		},
 		{
-			"path": "../locale"
-		},
-		{
 			"path": "../types"
-		},
-		{
-			"path": "../util"
 		}
 	]
 }
