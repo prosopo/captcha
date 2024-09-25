@@ -171,6 +171,9 @@ const check = async (args: {
 				`specified in ${tsconfigPath}`,
 			);
 			return getPkgName(pkgJson);
+		}).filter((p) => {
+			// ignore @prosopo/config pkg bc circular dep
+			return p !== "@prosopo/config"
 		});
 		// console.log('refPkgNames', refPkgNames)
 		// check all the refs are in the deps
