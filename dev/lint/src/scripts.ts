@@ -50,7 +50,12 @@ const main = async (args: {
 				throw new Error(`${pkgJsonPath} is missing script ${target}`);
 			}
 			//if tsconfig.cjs.json exists, and if build:cjs is not defined, throw an error
-			if( fs.existsSync(path.join(path.dirname(pkgJsonPath), "tsconfig.cjs.json")) && !scripts["build:cjs"]){
+			if (
+				fs.existsSync(
+					path.join(path.dirname(pkgJsonPath), "tsconfig.cjs.json"),
+				) &&
+				!scripts["build:cjs"]
+			) {
 				throw new Error(`${pkgJsonPath} is missing script build:cjs`);
 			}
 		}
