@@ -6,6 +6,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
+		"build:cjs": "echo 'no cjs build'",
 		"build": "tsc --build --verbose",
 		"start": "npx tsx src/index.ts"
 	},
