@@ -6,10 +6,16 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
 		"clean": "tsc --build --clean"
 	},
 	"devDependencies": {
