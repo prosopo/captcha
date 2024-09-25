@@ -18,6 +18,10 @@ env:
     NODE_OPTIONS: "--max-old-space-size=4096"
     NODE_ENV: "test"
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     check:
         runs-on: ubuntu-latest
