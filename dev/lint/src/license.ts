@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { getRootDir } from "@prosopo/config";
 import { at } from "@prosopo/util";
 import fg from "fast-glob";
+import { z } from "zod";
 
 const header = `// Copyright 2021-2024 Prosopo (UK) Ltd.
 //
@@ -43,7 +43,8 @@ const searchPaths = [
 	"**/*.mts",
 ];
 
-const currentPath = getRootDir();
+const cmd = z.string().parse(process.argv[2]);
+const currentPath = z.string().parse(process.argv[3]);
 
 const files = fg
 	.sync(searchPaths, {
@@ -63,12 +64,10 @@ const files = fg
 	})
 	.filter((file) => fs.lstatSync(file).isFile());
 
-if (process.argv[2] === "list") {
+if (cmd === "list") {
 	console.log(JSON.stringify(files, null, 4));
 	console.log("Found", files.length, "files");
-}
-
-if (process.argv[2] === "check") {
+} else if (cmd === "check") {
 	for (const file of files) {
 		const fileContents = fs.readFileSync(file, "utf8");
 		if (fileContents.includes(header)) {
@@ -77,9 +76,7 @@ if (process.argv[2] === "check") {
 			throw new Error(`License not present: ${file}`);
 		}
 	}
-}
-
-if (process.argv[2] === "license") {
+} else if (cmd === "license") {
 	//for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
 	for (const file of files) {
 		//check if file is a file, not a directory

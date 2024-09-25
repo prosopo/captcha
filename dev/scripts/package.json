@@ -14,9 +14,7 @@
 		"build": "tsc --build --verbose",
 		"deploy": "node dist/deploy/protocol.js",
 		"cli": "node dist/cli/index.js",
-		"setup": "node dist/cli/index.js setup",
-		"license": "tsx src/scripts/addCopyrightNotice.ts check",
-		"license:fix": "tsx src/scripts/addCopyrightNotice.ts license"
+		"setup": "node dist/cli/index.js setup"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
