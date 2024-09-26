@@ -8,13 +8,10 @@
 	"include": ["src/index.tsx", "src/index.html"],
 	"references": [
 		{
-			"path": "../../dev/config"
-		},
-		{
 			"path": "../dotenv/tsconfig.cjs.json"
 		},
 		{
-			"path": "../procaptcha/tsconfig.cjs.json"
+			"path": "../locale/tsconfig.cjs.json"
 		},
 		{
 			"path": "../procaptcha-frictionless/tsconfig.cjs.json"

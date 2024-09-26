@@ -22,9 +22,6 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../contract/tsconfig.cjs.json"
-		},
-		{
 			"path": "../datasets/tsconfig.cjs.json"
 		},
 		{

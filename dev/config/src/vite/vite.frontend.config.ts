@@ -68,6 +68,9 @@ export default async function (
 		"process.env.PROSOPO_PACKAGE_VERSION": JSON.stringify(
 			process.env.PROSOPO_PACKAGE_VERSION,
 		),
+		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
+			process.env.PROSOPO_DOCS_URL,
+		),
 		// only needed if bundling with a site key
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,

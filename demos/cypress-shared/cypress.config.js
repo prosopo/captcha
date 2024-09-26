@@ -1,5 +1,3 @@
-import { defineConfig } from "cypress";
-import vitePreprocessor from "cypress-vite";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +11,19 @@ import vitePreprocessor from "cypress-vite";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { loadEnv } from "@prosopo/dotenv";
+import { defineConfig } from "cypress";
+import vitePreprocessor from "cypress-vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+
+loadEnv();
 
 export default defineConfig({
 	video: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
+		...process.env,
 		default_page: "/",
 	},
 	e2e: {

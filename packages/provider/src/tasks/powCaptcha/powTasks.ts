@@ -76,6 +76,7 @@ export class PowCaptchaManager {
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
+	 * @param headers
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,

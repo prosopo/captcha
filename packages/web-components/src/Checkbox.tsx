@@ -26,6 +26,7 @@ interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	checked: boolean;
 	onChange: () => void;
 	labelText: string;
+	error?: string;
 }
 
 const checkboxBefore = css`{
@@ -53,6 +54,10 @@ const baseStyle: CSSProperties = {
 
 const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+const FAQ_LINK = process.env.PROSOPO_DOCS_URL
+	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
+	: "https://docs.prosopo.io/en/basics/faq/";
+
 const generateRandomId = () => {
 	return Array.from(
 		{ length: 8 },
@@ -65,6 +70,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 	onChange,
 	checked,
 	labelText,
+	error,
 }: CheckboxProps) => {
 	const theme = useMemo(
 		() => (themeColor === "light" ? lightTheme : darkTheme),
@@ -105,19 +111,43 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 				checked={checked}
 				style={checkboxStyle}
 			/>
-			<label
-				css={{
-					color: theme.palette.background.contrastText,
-					position: "relative",
-					display: "flex",
-					cursor: "pointer",
-					userSelect: "none",
-					top: "18px",
-				}}
-				htmlFor={id}
-			>
-				{labelText}
-			</label>
+			{error ? (
+				<label
+					css={{
+						color: theme.palette.error.main,
+						position: "relative",
+						display: "flex",
+						cursor: "pointer",
+						userSelect: "none",
+						top: "20px",
+						fontSize: "12px",
+					}}
+					htmlFor={id}
+				>
+					<a
+						css={{
+							color: theme.palette.error.main,
+						}}
+						href={FAQ_LINK}
+					>
+						{error}
+					</a>
+				</label>
+			) : (
+				<label
+					css={{
+						color: theme.palette.background.contrastText,
+						position: "relative",
+						display: "flex",
+						cursor: "pointer",
+						userSelect: "none",
+						top: "18px",
+					}}
+					htmlFor={id}
+				>
+					{labelText}
+				</label>
+			)}
 		</span>
 	);
 };

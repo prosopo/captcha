@@ -39,7 +39,7 @@ describe("authMiddleware", () => {
 		const mockReq = {
 			headers: {
 				signature: "0x1234",
-				blocknumber: "1234",
+				timestamp: new Date().getTime(),
 			},
 		} as unknown as Request;
 
@@ -54,7 +54,7 @@ describe("authMiddleware", () => {
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
 		vi.mocked(mockPair.verify).mockReturnValue(true);
 
-		const middleware = authMiddleware(mockTasks, mockEnv);
+		const middleware = authMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
 		expect(mockNext).toHaveBeenCalled();
@@ -65,7 +65,7 @@ describe("authMiddleware", () => {
 		const mockReq = {
 			headers: {
 				signature: "0x1234",
-				blocknumber: "1234",
+				timestamp: new Date().getTime(),
 			},
 		} as unknown as Request;
 
@@ -80,7 +80,7 @@ describe("authMiddleware", () => {
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
 		vi.mocked(mockPair.verify).mockReturnValue(false);
 
-		const middleware = authMiddleware(mockTasks, mockEnv);
+		const middleware = authMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
 		expect(mockNext).not.toHaveBeenCalled();
@@ -95,7 +95,7 @@ describe("authMiddleware", () => {
 		const mockReq = {
 			headers: {
 				signature: "0x1234",
-				blocknumber: "1234",
+				timestamp: new Date().getTime(),
 			},
 		} as unknown as Request;
 
@@ -110,7 +110,7 @@ describe("authMiddleware", () => {
 			pair: null,
 		} as unknown as ProviderEnvironment;
 
-		const middleware = authMiddleware(mockTasks, invalidEnv);
+		const middleware = authMiddleware(invalidEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
 		expect(mockNext).not.toHaveBeenCalled();
