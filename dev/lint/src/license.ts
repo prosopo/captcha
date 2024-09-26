@@ -60,6 +60,7 @@ const files = fg
 			"**/js_bundles_host_temp/**",
 			"**/client-bundle-example/src/assets/**",
 			"**/next-env.d.ts/**",
+			"**/packages/docs/**",
 		],
 	})
 	.filter((file) => fs.lstatSync(file).isFile());
