@@ -19,9 +19,6 @@
 		},
 		{
 			"path": "../types-database/tsconfig.cjs.json"
-		},
-		{
-			"path": "../util/tsconfig.cjs.json"
 		}
 	]
 }

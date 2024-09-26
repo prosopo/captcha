@@ -1,14 +1,21 @@
 {
 	"name": "@prosopo/detector",
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"main": "src/index.js",
 	"engines": {
 		"node": ">=20",
 		"npm": ">=9"
 	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
 		"clean": "tsc --build --clean"
 	},
 	"devDependencies": {

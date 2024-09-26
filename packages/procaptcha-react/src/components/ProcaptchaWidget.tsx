@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 /** @jsxImportSource @emotion/react */
 
-import { i18n, useTranslation } from "@prosopo/common";
+import { i18n, useTranslation } from "@prosopo/locale-browser";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
@@ -117,7 +118,8 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 										>
 											<div
 												style={{
-													display: !state.loading ? "flex" : "none",
+													display:
+														!state.loading && !state.error ? "flex" : "none",
 												}}
 											>
 												<Checkbox
@@ -125,6 +127,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 													onChange={manager.start}
 													checked={state.isHuman}
 													labelText={t("WIDGET.I_AM_HUMAN")}
+													error={state.error}
 													aria-label="human checkbox"
 												/>
 											</div>

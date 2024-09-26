@@ -32,8 +32,11 @@ import {
 import {
 	type Captcha,
 	CaptchaSolutionSchema,
+	type DappAccount,
+	type DatasetID,
 	type PoWChallengeId,
 	PowChallengeIdSchema,
+	type UserAccount,
 } from "../datasets/index.js";
 import {
 	type ChallengeSignature,
@@ -56,7 +59,7 @@ export enum ApiPaths {
 }
 
 export type TGetImageCaptchaChallengePathAndParams =
-	`${ApiPaths.GetImageCaptchaChallenge}/${string}/${string}/${string}`;
+	`${ApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
 
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;
@@ -68,10 +71,10 @@ export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
-	BatchCommit = "/v1/prosopo/provider/admin/batch",
 	UpdateDataset = "/v1/prosopo/provider/admin/dataset",
 	ProviderDeregister = "/v1/prosopo/provider/admin/deregister",
 	ProviderUpdate = "/v1/prosopo/provider/admin/update",
+	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -87,8 +90,8 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
-	[AdminApiPaths.BatchCommit]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
 	[AdminApiPaths.ProviderUpdate]: { windowMs: 60000, limit: 5 },
 };
@@ -153,9 +156,9 @@ export interface DappUserSolutionResult {
 	[ApiParams.verified]: boolean;
 }
 
-export interface CaptchaSolutionResponse extends DappUserSolutionResult {
-	[ApiParams.status]: string;
-}
+export interface CaptchaSolutionResponse
+	extends ApiResponse,
+		DappUserSolutionResult {}
 
 export interface CaptchaIdAndProof {
 	captchaId: string;
@@ -170,14 +173,14 @@ export const CaptchaRequestBody = object({
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
 
-export type CaptchaResponseBody = {
+export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.captchas]: Captcha[];
 	[ApiParams.requestHash]: string;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {
 		[ApiParams.provider]: RequestHashSignature;
 	};
-};
+}
 
 export const CaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
@@ -219,8 +222,12 @@ export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
 
-export interface VerificationResponse {
+export interface ApiResponse {
 	[ApiParams.status]: string;
+	[ApiParams.error]?: string;
+}
+
+export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 }
 
@@ -228,7 +235,7 @@ export interface ImageVerificationResponse extends VerificationResponse {
 	[ApiParams.commitmentId]?: Hash;
 }
 
-export interface GetPowCaptchaResponse {
+export interface GetPowCaptchaResponse extends ApiResponse {
 	[ApiParams.challenge]: PoWChallengeId;
 	[ApiParams.difficulty]: number;
 	[ApiParams.timestamp]: string;
@@ -237,8 +244,9 @@ export interface GetPowCaptchaResponse {
 	};
 }
 
-export interface PowCaptchaSolutionResponse {
+export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: string;
 }
 
 /**
@@ -290,3 +298,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 export type SubmitPowCaptchaSolutionBodyType = zInfer<
 	typeof SubmitPowCaptchaSolutionBody
 >;
+
+export const VerifyPowCaptchaSolutionBody = object({
+	[ApiParams.siteKey]: string(),
+});

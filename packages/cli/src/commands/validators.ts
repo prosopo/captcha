@@ -28,6 +28,14 @@ export const validateAddress = (
 	return { address };
 };
 
+export const validateSiteKey = (
+	argv: ArgumentsCamelCase,
+): { sitekey: string } => {
+	const sitekey = encodeStringAddress(argv.sitekey as string);
+
+	return { sitekey };
+};
+
 export const validateValue = (argv: ArgumentsCamelCase) => {
 	if (typeof argv.value !== "number") {
 		throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {

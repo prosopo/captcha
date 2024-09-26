@@ -105,3 +105,8 @@ export const getUtilPkgDir = () => `${getPackagesDir()}/util`;
 
 export const getWebComponentsPkgDir = () =>
 	`${getPackagesDir()}/web-components`;
+
+export const getLocalePkgDir = () => `${getPackagesDir()}/locale`;
+
+export const getLocaleBrowserPkgDir = () =>
+	`${getPackagesDir()}/locale-browser`;

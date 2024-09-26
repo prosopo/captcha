@@ -8,9 +8,6 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../dev/config"
-		},
-		{
 			"path": "../common"
 		},
 		{
@@ -23,6 +20,9 @@
 			"path": "../env"
 		},
 		{
+			"path": "../locale"
+		},
+		{
 			"path": "../provider"
 		},
 		{
@@ -30,6 +30,9 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../../dev/config"
 		}
 	]
 }

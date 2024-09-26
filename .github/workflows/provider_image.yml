@@ -12,8 +12,14 @@ concurrency:
     cancel-in-progress: true
 
 env:
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
     CARGO_TERM_COLOR: always
-    GH_TOKEN: ${{ github.token }}
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
+defaults:
+    run:
+        shell: bash
 
 jobs:
     check:
@@ -60,26 +66,23 @@ jobs:
 
             - uses: actions/checkout@v3
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
+            - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
-            - name: Restore cache
+            - name: Restore npm cache
+              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
               uses: actions/cache/restore@v3
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
+                      ~/.npm
                       ~/.cache/Cypress
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
+                      npm-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/setup-node@v3
               with:
@@ -100,6 +103,8 @@ jobs:
 
                     cp ./dev/scripts/env.production ./packages/cli/.env.production
                     cp ./dev/scripts/env.production ./.env.production
+                    # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
+                    echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
                     NODE_ENV="production" npm run -w @prosopo/cli bundle
 
             # Add support for more platforms with QEMU (optional)
@@ -211,3 +216,4 @@ jobs:
                   cat provider-mock.log
                   RESPONSE=$(curl --location 'http://localhost:9229/v1/prosopo/provider/image/dapp/verify' --header 'Content-Type: application/json' --data '{"token": "0x0000c03543346872666a7739446a585a547a56334d777a727241723950314d4a685372765747577169316553757955706e684dc03547727776614546357a58623236467a397263517044575335374374455248704e6568584350634e6f48474b75745159010000000000", "dappUserSignature":"0x8656e1566313c6b707c41cdf333789b138509c1202a245f42d7d6652878c54030a8d660e04580bb565d5738c6578f5e69a066ecf8847856da3ba83dfd5701a8f"}' | jq --raw-output '.status')
                   if [ "$RESPONSE" = "User verified" ]; then exit 0; else exit 1; fi
+

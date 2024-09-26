@@ -38,6 +38,10 @@ export const lightTheme = {
 			default: "#fff",
 			contrastText: "#000",
 		},
+		error: {
+			main: "#f44336",
+		},
+
 		grey,
 	},
 	spacing: {
@@ -56,6 +60,9 @@ export const darkTheme = {
 		background: {
 			default: "#303030",
 			contrastText: "#fff",
+		},
+		error: {
+			main: "#f44336",
 		},
 		grey,
 	},

@@ -1,11 +1,12 @@
 {
 	"name": "@prosopo/prosoponator-bot",
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"description": "",
 	"private": true,
 	"scripts": {
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
+		"build:cjs": "echo 'no cjs build'",
 		"start": "npx tsx src/index.ts",
 		"test": "echo 'No test specified'"
 	},

@@ -195,4 +195,12 @@ export class ClientTaskManager {
 			);
 		}
 	}
+
+	async registerSiteKey(siteKey: string): Promise<void> {
+		await this.providerDB.updateClientRecords([
+			{
+				account: siteKey,
+			} as ClientRecord,
+		]);
+	}
 }
