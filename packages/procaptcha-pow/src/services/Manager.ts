@@ -59,14 +59,14 @@ export const Manager = (
 
 	const clearTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.timeout);
+		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
 	};
 
 	const clearSuccessfulChallengeTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.successfullChallengeTimeout);
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
 		// then clear the timeout from the state
 		updateState({ successfullChallengeTimeout: undefined });
 	};
@@ -151,9 +151,9 @@ export const Manager = (
 				const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
 
 				// use the passed in account (could be web3) or create a new account
-				const userAccount =
-					config.userAccountAddress ||
-					(await ext.getAccount(config)).account.address;
+				const user = await ext.getAccount(config)
+				const userAccount = user.account.address
+
 
 				// set the account created or injected by the extension
 				updateState({
@@ -198,8 +198,6 @@ export const Manager = (
 					});
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);
-
-					const user = await ext.getAccount(getConfig());
 
 					const signer = user.extension?.signer;
 
