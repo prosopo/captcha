@@ -151,9 +151,8 @@ export const Manager = (
 				const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
 
 				// use the passed in account (could be web3) or create a new account
-				const user = await ext.getAccount(config)
-				const userAccount = user.account.address
-
+				const user = await ext.getAccount(config);
+				const userAccount = user.account.address;
 
 				// set the account created or injected by the extension
 				updateState({
