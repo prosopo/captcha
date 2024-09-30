@@ -25,7 +25,7 @@ describe("logging", () => {
 		const sectionKeysObj: { [key: string]: Set<string> } = {};
 		const innerKeysObj: { [key: string]: { [key: string]: Set<string> } } = {};
 		for (const locale of locales) {
-			console.log("Checking locale: ", locale)
+			console.log("Checking locale: ", locale);
 			const localeData = fs.readFileSync(
 				path.resolve(`./src/locales/${locale}.json`),
 				"utf8",

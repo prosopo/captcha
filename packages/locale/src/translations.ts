@@ -19,7 +19,7 @@ import translationsIt from "./locales/it.json" assert { type: "json" };
 import translationsPtBR from "./locales/pt-BR.json" assert { type: "json" };
 import translationsPt from "./locales/pt.json" assert { type: "json" };
 
-export const LanguageSchema = z.enum(["en", "es", "fr","it", "pt", "pt-BR"]);
+export const LanguageSchema = z.enum(["en", "es", "fr", "it", "pt", "pt-BR"]);
 
 export const translations = {
 	[LanguageSchema.enum.en]: { translation: translationsEn },
