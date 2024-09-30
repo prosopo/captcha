@@ -44,7 +44,7 @@ export const ExtensionAccountSelect = ({
 		// react select box
 		<select
 			id="select-account"
-			onChange={(e) => {
+			onChange={(e: unknown) => {
 				const value = e.target.value;
 				const account = accounts.find((a) => a.address === value) || null;
 				if (account) {
