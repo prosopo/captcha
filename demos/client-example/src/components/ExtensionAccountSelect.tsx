@@ -45,7 +45,7 @@ export const ExtensionAccountSelect = ({
 	const account: InjectedAccountWithMeta | null =
 		accounts.find((a) => a.address === value) || null;
 
-	const selectAccount = (e) => {
+	const selectAccount = (e: unknown) => {
 		const value = e.target.value;
 		console.log("account option clicked");
 		const account = accounts.find((a) => a.address === value) || null;
