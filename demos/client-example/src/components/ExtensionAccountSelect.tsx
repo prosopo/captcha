@@ -31,7 +31,6 @@ export const ExtensionAccountSelect = ({
 	const [selectedAccount, setSelectedAccount] = useState<
 		InjectedAccountWithMeta | ""
 	>("");
-	const selectInputRef = useRef();
 
 	useEffect(() => {
 		const prom = web3Enable(dappName).then(() => {
@@ -42,10 +41,8 @@ export const ExtensionAccountSelect = ({
 		};
 	}, [dappName]);
 
-	const account: InjectedAccountWithMeta | null =
-		accounts.find((a) => a.address === value) || null;
-
-	const selectAccount = (e) => {
+	const selectAccount = (e: unknown) => {
+		// @ts-ignore
 		const value = e.target.value;
 		console.log("account option clicked");
 		const account = accounts.find((a) => a.address === value) || null;
