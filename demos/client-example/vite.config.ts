@@ -43,24 +43,25 @@ export default defineConfig(async ({ command, mode }) => {
 		undefined,
 		workspaceRoot,
 	);
-
+	const define = {
+		...frontendConfig.define,
+		"process.env.PROSOPO_WEB2": JSON.stringify(
+			process.env.PROSOPO_WEB2 || "true",
+		),
+		"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
+			process.env.PROSOPO_LOG_LEVEL || "Info",
+		),
+		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
+			process.env.PROSOPO_DOCS_URL,
+		),
+	};
+	console.log("defined vars", define);
 	return {
 		...frontendConfig,
 		watch: false,
 		mode: "development",
 		bundle: true,
-		define: {
-			...frontendConfig.define,
-			"process.env.PROSOPO_WEB2": JSON.stringify(
-				process.env.PROSOPO_WEB2 || "true",
-			),
-			"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
-				process.env.PROSOPO_LOG_LEVEL || "Info",
-			),
-			"process.env.PROSOPO_DOCS_URL": JSON.stringify(
-				process.env.PROSOPO_DOCS_URL,
-			),
-		},
+		define,
 		build: {
 			outDir: path.resolve("./dist"),
 			modulePreload: { polyfill: true },

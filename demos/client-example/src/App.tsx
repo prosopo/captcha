@@ -56,6 +56,8 @@ function App(props: AppProps) {
 
 	console.log(config);
 
+	config.userAccountAddress = account;
+
 	const label = isLogin ? "Login" : "Sign up";
 	const urlPath = isLogin ? "login" : "signup";
 
