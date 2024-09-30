@@ -70,7 +70,13 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		// get remote client records that have been updated since the last task
 		const newClientRecords = await this.tables.emails
 			.find<ClientRecord>(
-				{ updatedAtTimestamp: { $gt: updatedAtTimestamp }, activated: true },
+				{
+					$or: [
+						{ updatedAtTimestamp: { $gt: updatedAtTimestamp } },
+						{ updatedAtTimestamp: { $exists: false } },
+					],
+					activated: true,
+				},
 				{ account: 1, settings: 1 },
 			)
 			.lean<ClientRecord[]>();
