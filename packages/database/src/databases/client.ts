@@ -73,7 +73,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 				{
 					$or: [
 						{ updatedAtTimestamp: { $gt: updatedAtTimestamp } },
-						{ $updatedAtTimestamp: { $exists: false } },
+						{ updatedAtTimestamp: { $exists: false } },
 					],
 					activated: true,
 				},
