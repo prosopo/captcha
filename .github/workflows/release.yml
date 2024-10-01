@@ -140,6 +140,9 @@ jobs:
             - run: npm run bundle:all
 
             - name: Github release
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              if: ${{ steps.env.outputs.production || steps.env.outputs.staging }}
               continue-on-error: true # don't fail the workflow if the release already exists
               run: |
                   gh release create --generate-notes "${{ steps.env.outputs.gh_release_tag }}"

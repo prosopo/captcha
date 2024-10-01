@@ -12,30 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LanguageSchema, translations as resources } from "@prosopo/locale";
-import i18n, { type InitOptions } from "i18next";
+// @ts-nocheck
+
+import { LanguageSchema } from "@prosopo/locale";
+import i18n from "i18next";
 import { default as LanguageDetector } from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
-
-const commonOptions: InitOptions = {
-	debug: false,
-	fallbackLng: LanguageSchema.enum.en,
-	resources,
-};
-
-const reactOptions: InitOptions = {
-	react: {
-		useSuspense: false,
-	},
-	detection: {
-		order: ["navigator", "htmlTag", "path", "subdomain"],
-		caches: ["localStorage", "cookie"],
-	},
-};
+import ChainedBackend from "i18next-chained-backend";
+import HttpBackend from "i18next-http-backend";
+import resourcesToBackend from 'i18next-resources-to-backend';
 
 i18n
-	.use(LanguageDetector)
+	.use(ChainedBackend)
 	.use(initReactI18next)
-	.init({ ...commonOptions, ...reactOptions });
+	.use(LanguageDetector)
+	// @ts-ignore
+	.init({
+		// @ts-ignore
+		lng: LanguageSchema.enum.en, // default language
+		fallbackLng: LanguageSchema.enum.en,
+		defaultNS: 'translation', // default namespace, if you don't want to specify it in JS files every time.
+		interpolation: {
+			escapeValue: false,
+		},
+		react: {
+			useSuspense: false,
+		},
+		detection: {
+			order: ["navigator", "htmlTag", "path", "subdomain"],
+			caches: ["localStorage", "cookie"],
+		},
+		// @ts-ignore
+		backend: {
+			// @ts-ignore
+			backends: [
+				//HttpBackend, // if you need to check translation files from server
+				resourcesToBackend((language, namespace) => import(`./${language}.json`)),
+			],
+			// the most important part that allows you to lazy-load translations
+			// @ts-ignore
+			backendOptions: [{
+				loadPath: './{{lng}}.json'
+			}]
+		}
+	}, undefined);
 
 export default i18n;

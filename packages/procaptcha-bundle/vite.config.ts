@@ -14,9 +14,9 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { ViteFrontendConfig } from "@prosopo/config";
-import { loadEnv } from "@prosopo/dotenv";
-import { defineConfig } from "vite";
+import {ViteFrontendConfig} from "@prosopo/config";
+import {loadEnv} from "@prosopo/dotenv";
+import {defineConfig} from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
@@ -46,6 +46,16 @@ for (const packageName of packages) {
 	// Add the tsconfig for each package to tsConfigPaths
 	tsConfigPaths.push(path.resolve(`../${packageName}/tsconfig.json`));
 }
+console.log(`${workspaceRoot}/packages/locale/src/locales/.*.json`)
+
+const copyOptionsLocale = {
+	srcDir: `${workspaceRoot}/packages/locale/src/locales`,
+	destDir: [
+		`${workspaceRoot}/packages/procaptcha-bundle/dist/bundle`,
+		...copyTo
+	],
+}
+
 // Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
 	const frontendConfig = await ViteFrontendConfig(
@@ -59,7 +69,48 @@ export default defineConfig(async ({ command, mode }) => {
 		tsConfigPaths,
 		workspaceRoot,
 	);
+	const {output} = frontendConfig.build?.rollupOptions;
 	return {
 		...frontendConfig,
-	};
+		build:{
+			...frontendConfig.build,
+			rollupOptions: {
+				...frontendConfig.build?.rollupOptions,
+				output: {
+					...output,
+					// manualChunks(id) {
+					// 	if (id.includes('json'))
+					// 		return id.split('/').reverse()[0].split('.')[0];
+					// },
+				}
+			}
+		},
+		resolve: {
+			...frontendConfig.resolve,
+			alias: [
+				{find:/@prosopo\/locale\/locales\/.*\.json"/ , replacement: "./"},
+			]
+
+		},
+		//assetsInclude: [new RegExp(`${workspaceRoot}/packages/locale/src/locales/.*.json`)],
+		plugins: [
+			{
+				name: "copy-locale-files",
+				async writeBundle() {
+					if (copyOptionsLocale) {
+						for (const destDir of copyOptionsLocale.destDir) {
+							for (const file of fs.readdirSync(copyOptionsLocale.srcDir)) {
+								fs.copyFileSync(
+									path.join(copyOptionsLocale.srcDir, file),
+									path.join(destDir, file),
+								);
+							}
+						}
+					}
+				},
+			},
+			...frontendConfig.plugins,
+
+		],
+	}
 });

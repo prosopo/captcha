@@ -12,6 +12,12 @@
 		".": {
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./locales/de": {
+			"import": "./dist/locales/de.json"
+		},
+		"./locales/en": {
+			"import": "./dist/locales/de.json"
 		}
 	},
 	"types": "./dist/index.d.ts",

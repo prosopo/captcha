@@ -12,15 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// @ts-nocheck
+
 import i18n, { type InitOptions } from "i18next";
 import Backend from "i18next-http-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
-import { translations as resources } from "../translations.js";
+import HttpBackend from "i18next-http-backend";
+import resourcesToBackend from "i18next-resources-to-backend";
+import path from "node:path";
+import {LanguageSchema} from "../translations.js";
 
-const commonOptions: InitOptions = {
+const commonOptions = {
 	debug: false,
-	fallbackLng: "en",
-	resources,
+	fallbackLng: LanguageSchema.enum.en,
+	backend: {
+		// @ts-ignore
+		backends: [
+			HttpBackend, // if you need to check translation files from server
+			resourcesToBackend((language, namespace) => import(path.resolve(`./${language}`))),
+		],
+		// the most important part that allows you to lazy-load translations
+		// @ts-ignore
+		backendOptions: [{
+			loadPath: './{{lng}}.json'
+		}]
+	}
 };
 
 const nodeOptions: InitOptions = {};
@@ -28,6 +44,6 @@ const nodeOptions: InitOptions = {};
 i18n
 	.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
 	.use(MiddlewareLanguageDetector)
-	.init({ ...commonOptions, ...nodeOptions });
+	.init({ ...commonOptions, ...nodeOptions }, undefined);
 
 export default i18n;
