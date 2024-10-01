@@ -162,6 +162,7 @@ const CaptchaComponent = ({
 								display: "grid",
 								gridAutoFlow: "column",
 								gridTemplateColumns: "repeat(3, minmax(0, 1fr)",
+								width: "100%"
 							}}
 						>
 							<div style={{ justifySelf: "left" }}>
