@@ -48,6 +48,10 @@ export const lightTheme = {
 		unit: DEFAULT_SPACING,
 		half: Math.floor(DEFAULT_SPACING / 2),
 	},
+	font: {
+		fontFamily: 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+		color: "#000",
+	}
 };
 
 export const darkTheme = {
@@ -70,4 +74,8 @@ export const darkTheme = {
 		unit: DEFAULT_SPACING,
 		half: Math.floor(DEFAULT_SPACING / 2),
 	},
+	font: {
+		fontFamily: 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+		color: "#fff",
+	}
 };

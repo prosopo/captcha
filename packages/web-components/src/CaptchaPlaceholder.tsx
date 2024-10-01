@@ -42,6 +42,7 @@ export const ProcaptchaPlaceholder = ({
 					maxWidth: WIDGET_MAX_WIDTH,
 					maxHeight: "100%",
 					overflowX: "auto",
+					...theme.font,
 				}}
 			>
 				<ContainerDiv>

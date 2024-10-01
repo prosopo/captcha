@@ -76,6 +76,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					maxWidth: WIDGET_MAX_WIDTH,
 					maxHeight: "100%",
 					overflowX: "auto",
+					...theme.font,
 				}}
 			>
 				<ContainerDiv>
