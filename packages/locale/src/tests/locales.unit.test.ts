@@ -15,17 +15,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
-import { LanguageSchema } from "../index.js";
+import { Languages } from "../index.js";
 
 describe("logging", () => {
+	test("Make sure the number of files present in the locales folder is the same size as the Languages array", () => {
+		const locales = fs.readdirSync(path.resolve("./src/locales"));
+		expect(locales.length).to.equal(Languages.length);
+	});
+
 	test("Get all locale JSON files and ensure the keys are identical in each one", () => {
-		const locales = LanguageSchema.options.values();
+		const locales = Languages;
 		const sectionKeys = new Set<string>();
 		console.log("Local test running at ", path.resolve("."));
 		const sectionKeysObj: { [key: string]: Set<string> } = {};
 		const innerKeysObj: { [key: string]: { [key: string]: Set<string> } } = {};
 		for (const locale of locales) {
-			console.log("Checking locale: ", locale);
 			const localeData = fs.readFileSync(
 				path.resolve(`./src/locales/${locale}.json`),
 				"utf8",
@@ -36,31 +40,37 @@ describe("logging", () => {
 			}
 			sectionKeysObj[locale] = new Set(localeKeys);
 			for (const sectionKey of localeKeys) {
+				const innerKeys = JSON.parse(localeData)[sectionKey];
+				if (typeof innerKeys !== "object") {
+					continue;
+				}
+
 				if (!innerKeysObj[locale]) {
 					innerKeysObj[locale] = {};
 				}
+
 				// @ts-ignore
 				if (!innerKeysObj[locale][sectionKey]) {
 					// @ts-ignore
 					innerKeysObj[locale][sectionKey] = new Set();
 				}
 
-				const innerKeys = Object.keys(JSON.parse(localeData)[sectionKey]);
-				for (const innerKey of innerKeys) {
+				for (const innerKey of Object.keys(innerKeys)) {
 					// @ts-ignore
 					innerKeysObj[locale][sectionKey].add(innerKey);
 				}
 			}
 		}
 
-		for (const locale of locales) {
-			expect(sectionKeysObj[locale]).to.equal(sectionKeys);
+		for (const locale of Array.from(locales)) {
+			console.log("Checking", locale);
+			expect(sectionKeysObj[locale]).to.deep.equal(sectionKeysObj.en);
 			// @ts-ignore
-			for (const sectionKey of sectionKeysObj[locale]) {
+			for (const sectionKey of Object.keys(innerKeysObj[locale])) {
 				// @ts-ignore
-				expect(innerKeysObj[locale][sectionKey]).to.equal(
+				expect(innerKeysObj[locale][sectionKey]).to.deep.equal(
 					// @ts-ignore
-					innerKeysObj[locales.en][sectionKey],
+					innerKeysObj.en[sectionKey],
 				);
 			}
 		}
