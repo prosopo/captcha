@@ -247,6 +247,12 @@ export const Manager = (
 							}),
 						);
 						setValidChallengeTimeout();
+					} else {
+						updateState({
+							isHuman: false,
+							loading: false,
+						});
+						events.onFailed();
 					}
 				}
 			},
