@@ -327,7 +327,7 @@ export function Manager(
 		// trigger the onClose event
 		events.onClose();
 		// start the captcha process again
-		start();
+		await start();
 	};
 
 	/**
@@ -390,7 +390,7 @@ export function Manager(
 
 	const clearTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.timeout);
+		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
 	};
