@@ -73,6 +73,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 							onCancel={manager.cancel}
 							onClick={manager.select}
 							onNext={manager.nextRound}
+							onReload={manager.reload}
 							themeColor={config.theme ?? "light"}
 						/>
 					) : (

@@ -319,6 +319,17 @@ export function Manager(
 		events.onClose();
 	};
 
+	const reload = async () => {
+		// disable the time limit
+		clearTimeout();
+		// abandon the captcha process
+		resetState();
+		// trigger the onClose event
+		events.onClose();
+		// start the captcha process again
+		start();
+	};
+
 	/**
 	 * (De)Select an image from the solution for the current round. If the hash is already in the solutions list, it will be removed (deselected) and if not it will be added (selected).
 	 * @param hash the hash of the image
@@ -461,5 +472,6 @@ export function Manager(
 		submit,
 		select,
 		nextRound,
+		reload,
 	};
 }

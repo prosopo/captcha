@@ -14,7 +14,7 @@
 import { useTranslation } from "@prosopo/locale-browser";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { darkTheme, lightTheme } from "@prosopo/web-components";
+import { ReloadButton, darkTheme, lightTheme } from "@prosopo/web-components";
 import { Suspense, useMemo } from "react";
 import addDataAttr from "../util/index.js";
 import Button from "./Button.js";
@@ -28,6 +28,7 @@ export interface CaptchaComponentProps {
 	onCancel: () => void;
 	onClick: (hash: string) => void;
 	onNext: () => void;
+	onReload: () => void;
 	themeColor: "light" | "dark";
 }
 
@@ -39,6 +40,7 @@ const CaptchaComponent = ({
 	onCancel,
 	onClick,
 	onNext,
+	onReload,
 	themeColor,
 }: CaptchaComponentProps) => {
 	const { t } = useTranslation();
@@ -155,31 +157,46 @@ const CaptchaComponent = ({
 							lineHeight: 1.75,
 						}}
 					>
-						<Button
-							themeColor={themeColor}
-							buttonType="cancel"
-							onClick={onCancel}
-							text={t("WIDGET.CANCEL")}
-							aria-label={t("WIDGET.CANCEL")}
-						/>
-						<Button
-							themeColor={themeColor}
-							buttonType="next"
-							text={
-								index < challenge.captchas.length - 1
-									? t("WIDGET.NEXT")
-									: t("WIDGET.SUBMIT")
-							}
-							onClick={
-								index < challenge.captchas.length - 1 ? onNext : onSubmit
-							}
-							aria-label={
-								index < challenge.captchas.length - 1
-									? t("WIDGET.NEXT")
-									: t("WIDGET.SUBMIT")
-							}
-							data-cy="button-next"
-						/>
+						<div
+							style={{
+								display: "grid",
+								gridAutoFlow: "column",
+								gridTemplateColumns: "repeat(3, minmax(0, 1fr)",
+							}}
+						>
+							<div style={{ justifySelf: "left" }}>
+								<Button
+									themeColor={themeColor}
+									buttonType="cancel"
+									onClick={onCancel}
+									text={t("WIDGET.CANCEL")}
+									aria-label={t("WIDGET.CANCEL")}
+								/>
+							</div>
+							<div style={{ justifySelf: "center" }}>
+								<ReloadButton themeColor={themeColor} onReload={onReload} />
+							</div>
+							<div style={{ justifySelf: "right" }}>
+								<Button
+									themeColor={themeColor}
+									buttonType="next"
+									text={
+										index < challenge.captchas.length - 1
+											? t("WIDGET.NEXT")
+											: t("WIDGET.SUBMIT")
+									}
+									onClick={
+										index < challenge.captchas.length - 1 ? onNext : onSubmit
+									}
+									aria-label={
+										index < challenge.captchas.length - 1
+											? t("WIDGET.NEXT")
+											: t("WIDGET.SUBMIT")
+									}
+									data-cy="button-next"
+								/>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
