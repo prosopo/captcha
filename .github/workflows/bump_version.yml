@@ -151,6 +151,7 @@ jobs:
                 # the json may be poorly formatted now, so we need to fix it
                 npm i
                 npm run -w @prosopo/scripts build
+                npm run -w @prosopo/lint build
                 npm run lint-fix
 
                 # commit the version changes
