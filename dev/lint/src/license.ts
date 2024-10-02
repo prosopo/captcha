@@ -61,6 +61,7 @@ const files = fg
 			"**/client-bundle-example/src/assets/**",
 			"**/next-env.d.ts/**",
 			"**/packages/docs/**",
+			"**/cloudflareBundle.js",
 		],
 	})
 	.filter((file) => fs.lstatSync(file).isFile());
