@@ -132,14 +132,14 @@ jobs:
                 while IFS= read -r pkgJson; do
                     echo "Bumping version in $pkgJson"
                     # for each package in the workspace, set the version number
-                    cat $pkgJson | jq ".version = \"2.1.2\"" > tmp
+                    cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > tmp
                     mv tmp $pkgJson
                     while IFS= read -r pkgName; do
                         # for each package in the workspace, check whether it is in the dependencies of the current package
                         # if so, bump the version number in the dependencies
-                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"2.1.2\" else . end" > tmp
+                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
                         mv tmp $pkgJson
-                        cat $pkgJson | jq "if .devDependencies[\"$pkgName\"] then .devDependencies[\"$pkgName\"] = \"2.1.2\" else . end" > tmp
+                        cat $pkgJson | jq "if .devDependencies[\"$pkgName\"] then .devDependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
                         mv tmp $pkgJson 
                     done <<< "$pkgNames"
                 done <<< "$pkgJsons"
