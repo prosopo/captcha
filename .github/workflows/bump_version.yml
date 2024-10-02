@@ -124,10 +124,8 @@ jobs:
                 # make a new branch for the version changes
                 git switch -c $INTERIM
 
-                pkgJsons=$(find "$(cd .; pwd)" -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**" | xargs -I "{}"  echo {} | sed s/\"//g)
+                pkgJsons=$(find "$(cd .; ${{ github.workspace }})" -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**" | xargs -I "{}"  echo {} | sed s/\"//g)
                 echo $pkgJsons
-                echo $pwd
-                echo $(ls -la)
                 echo ${{ github.workspace }}
                 pkgNames=$(echo $pkgJsons | xargs -I "{}" -exec jq '.name' {} | xargs -I "{}"  echo {} | sed s/\"//g)
                 while IFS= read -r pkgJson; do
