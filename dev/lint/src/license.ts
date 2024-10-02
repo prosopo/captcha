@@ -45,12 +45,14 @@ const searchPaths = [
 
 const cmd = z.string().parse(process.argv[2]);
 const currentPath = z.string().parse(process.argv[3]);
+const ignore = z.string().parse(process.argv[4]).split(",");
 
 const files = fg
 	.sync(searchPaths, {
 		cwd: currentPath,
 		absolute: true,
 		ignore: [
+			...ignore,
 			"**/node_modules/**",
 			"**/cargo-cache/**",
 			"**/dist/**",
