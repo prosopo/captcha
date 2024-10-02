@@ -86,7 +86,6 @@
 		"INVALID_SOLUTION_TYPE": "Invalid solution type",
 		"INVALID_ITEM_HASH": "Invalid item hash",
 		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
-		"INVALID_TIMESTAMP": "Invalid timestamp",
 		"ID_MISMATCH": "captcha id mismatch",
 		"MISSING_ITEM_HASH": "missing item hash",
 		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
