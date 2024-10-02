@@ -1,4 +1,5 @@
 {
+	"name": "@prosopo/provider-container",
 	"type": "module",
 	"engines": {
 		"node": ">=20",
