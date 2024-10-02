@@ -127,7 +127,7 @@ jobs:
                 pkgJsons=$(find "${{ github.workspace }}" -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**" | xargs -I "{}"  echo {} | sed s/\"//g)
                 echo $pkgJsons
                 # get the package "name" out of each pkgJson
-                pkgNames=$(echo $pkgJsons | xargs -I "{}" cat {} | jq -r ".name")
+                pkgNames=$(echo $pkgJsons | xargs -I "{}" cat "{}" | jq -r ".name")
                 echo $pkgNames
                 while IFS= read -r pkgJson; do
                     echo "Bumping version in $pkgJson"
