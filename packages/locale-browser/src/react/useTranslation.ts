@@ -13,16 +13,17 @@
 // limitations under the License.
 import {
 	type UseTranslationOptions,
+	type UseTranslationResponse,
 	useTranslation as useTranslationDefault,
 } from "react-i18next";
 import i18n from "../i18n.js";
 
-function useTranslation(options?: UseTranslationOptions<"translation">) {
-	// @ts-ignore
-	return useTranslationDefault<"translation">("translation", {
-		i18n,
-		...options,
-	});
+function useTranslation(
+	options?: UseTranslationOptions<"translation">,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
+): UseTranslationResponse<"translation", any> & { t: typeof i18n.t } {
+	// @ts-ignore not sure how to fix this
+	return useTranslationDefault("translation", { i18n, ...options });
 }
 
 export default useTranslation;
