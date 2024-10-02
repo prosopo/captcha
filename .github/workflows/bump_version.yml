@@ -124,8 +124,8 @@ jobs:
                 # make a new branch for the version changes
                 git switch -c $INTERIM
 
-                pkgJsons=$(npm run --silent ws:pkg)
-                pkgNames=$(npm run --silent ws:ls)
+                pkgJsons=$(find -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**")
+                pkgNames=$(find -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**" -exec jq '.name' {} \;)
                 for pkgJson in $pkgJsons; do
                     echo "Bumping version in $pkgJson"
                     # for each package in the workspace, set the version number
