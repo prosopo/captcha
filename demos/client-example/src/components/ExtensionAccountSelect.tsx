@@ -15,7 +15,7 @@
 import { web3AccountsSubscribe, web3Enable } from "@polkadot/extension-dapp";
 import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { useTranslation } from "@prosopo/locale-browser";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const ExtensionAccountSelect = ({
 	value,
@@ -28,6 +28,10 @@ export const ExtensionAccountSelect = ({
 }) => {
 	const { t } = useTranslation();
 	const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
+	const [selectedAccount, setSelectedAccount] = useState<
+		InjectedAccountWithMeta | ""
+	>("");
+
 	useEffect(() => {
 		const prom = web3Enable(dappName).then(() => {
 			return web3AccountsSubscribe(setAccounts);
@@ -37,32 +41,40 @@ export const ExtensionAccountSelect = ({
 		};
 	}, [dappName]);
 
-	const account: InjectedAccountWithMeta | null =
-		accounts.find((a) => a.address === value) || null;
+	const selectAccount = (e: unknown) => {
+		// @ts-ignore
+		const value = e.target.value;
+		console.log("account option clicked");
+		const account = accounts.find((a) => a.address === value) || null;
+		if (account) {
+			console.log("Selected account:", value);
+			onChange(account.address);
+			setSelectedAccount(account);
+		} else {
+			console.log("Deselected account");
+			onChange("");
+			setSelectedAccount("");
+		}
+	};
 
 	return (
 		// react select box
-		<select
-			id="select-account"
-			onChange={(e) => {
-				const value = e.target.value;
-				const account = accounts.find((a) => a.address === value) || null;
-				if (account) {
-					console.log("Selected account:", value);
-					onChange(account.address);
-				} else {
-					console.log("Deselected account");
-					onChange("");
-				}
-			}}
-			value={accounts.length > 0 && account ? account.address : undefined}
-			style={{ width: "550px", borderRadius: "4px", padding: "16.5px 14px" }}
-		>
-			{accounts.map(({ address, meta: { name } }) => (
-				<option key={address} value={address}>
-					{name}
+		<div>
+			<select
+				id="select-account"
+				onChange={selectAccount}
+				value={selectedAccount ? selectedAccount.address : ""}
+				style={{ width: "550px", borderRadius: "4px", padding: "16.5px 14px" }}
+			>
+				{accounts.map(({ address, meta: { name } }) => (
+					<option key={address} value={address} onClick={selectAccount}>
+						{name}
+					</option>
+				))}
+				<option value="" onClick={selectAccount}>
+					- None -
 				</option>
-			))}
-		</select>
+			</select>
+		</div>
 	);
 };
