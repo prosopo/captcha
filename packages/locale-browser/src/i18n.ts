@@ -18,14 +18,14 @@ import { default as LanguageDetector } from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
 const commonOptions: InitOptions = {
-	debug: false,
+	debug: process.env.NODE_ENV === "development",
 	fallbackLng: LanguageSchema.enum.en,
 	resources,
 };
 
 const reactOptions: InitOptions = {
 	react: {
-		useSuspense: false,
+		useSuspense: true,
 	},
 	detection: {
 		order: ["navigator", "htmlTag", "path", "subdomain"],
@@ -38,4 +38,4 @@ i18n
 	.use(initReactI18next)
 	.init({ ...commonOptions, ...reactOptions });
 
-export default i18n;
+export default i18n as typeof i18n;
