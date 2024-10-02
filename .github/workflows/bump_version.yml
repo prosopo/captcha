@@ -145,7 +145,7 @@ jobs:
                 done <<< "$pkgJsons"
 
                 # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
-                envFiles=$(find . -iregex ".*\/\.?env\.[^js][^ts][^.d.ts]\w+" -not -path "./node_modules/**")
+                envFiles=$(find . -iregex ".*\/\.?env\.\w+" -not -iname "*\.js" -not -iname "*\.ts" -not -path "./node_modules/**")
                 echo "Bumping version in env files: $envFiles"
                 for envFile in $envFiles; do
                     sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
