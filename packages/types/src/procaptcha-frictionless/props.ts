@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-	ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
 } from "../config/config.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
