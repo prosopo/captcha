@@ -25,6 +25,7 @@ import {
 import {
 	type Account,
 	ApiParams,
+	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
@@ -39,6 +40,7 @@ export const Manager = (
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
+	frictionlessState?: FrictionlessState,
 ) => {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -174,10 +176,16 @@ export const Manager = (
 					});
 				}
 
-				// get a random provider
-				const getRandomProviderResponse = await getRandomActiveProvider(
-					getConfig(),
-				);
+				let getRandomProviderResponse = undefined;
+
+				if (frictionlessState?.provider) {
+					getRandomProviderResponse = frictionlessState.provider;
+				} else {
+					// get a random provider
+					getRandomProviderResponse = await getRandomActiveProvider(
+						getConfig(),
+					);
+				}
 
 				const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -188,6 +196,7 @@ export const Manager = (
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
+					frictionlessState?.sessionId,
 				);
 
 				if (challenge.error) {

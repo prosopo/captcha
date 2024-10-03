@@ -11,9 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+	ProcaptchaClientConfigInput,
+	type ProcaptchaClientConfigOutput,
+} from "../config/config.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
+import type { GetFrictionlessCaptchaResponse } from "../provider/api.js";
 
-export type BotDetectionFunction = () => Promise<{ bot: boolean }>;
+export type BotDetectionFunction = (
+	config: ProcaptchaClientConfigOutput,
+) => Promise<GetFrictionlessCaptchaResponse>;
 
 /**
  * The props for the Procaptcha Frictionless component.

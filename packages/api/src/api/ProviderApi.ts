@@ -19,6 +19,7 @@ import {
 	CaptchaSolutionBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type ImageVerificationResponse,
@@ -122,10 +123,12 @@ export default class ProviderApi
 	public getPowCaptchaChallenge(
 		user: string,
 		dapp: string,
+		sessionId?: string,
 	): Promise<GetPowCaptchaResponse> {
 		const body: GetPowCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 		return this.post(ApiPaths.GetPowCaptchaChallenge, body);
 	}
@@ -155,6 +158,13 @@ export default class ProviderApi
 			},
 		});
 		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
+	}
+
+	public getFrictionlessCaptcha(token: {
+		token: string;
+	}): Promise<GetFrictionlessCaptchaResponse> {
+		const body = token;
+		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
 	}
 
 	public submitUserEvents(events: StoredEvents, string: string) {

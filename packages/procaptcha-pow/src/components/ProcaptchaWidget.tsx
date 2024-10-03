@@ -36,6 +36,7 @@ import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
 
 const Procaptcha = (props: ProcaptchaProps) => {
+	// Set up Session ID and Provider if they exist
 	const { t } = useTranslation();
 	const config = props.config;
 	const themeColor = config.theme === "light" ? "light" : "dark";
@@ -44,7 +45,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [state, _updateState] = useProcaptcha(useState, useRef);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
-	const manager = useRef(Manager(config, state, updateState, callbacks));
+	const manager = useRef(
+		Manager(config, state, updateState, callbacks, props.frictionlessState),
+	);
 	const captchaRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {

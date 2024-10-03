@@ -48,6 +48,7 @@ import {
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
+	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/captcha/frictionless",
 	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
@@ -244,6 +245,11 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+export interface GetFrictionlessCaptchaResponse extends ApiResponse {
+	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.sessionId]?: string;
+}
+
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.error]?: string;
@@ -266,6 +272,7 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
@@ -298,6 +305,10 @@ export const SubmitPowCaptchaSolutionBody = object({
 export type SubmitPowCaptchaSolutionBodyType = zInfer<
 	typeof SubmitPowCaptchaSolutionBody
 >;
+
+export const GetFrictionlessCaptchaChallengeRequestBody = object({
+	[ApiParams.token]: string(),
+});
 
 export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: string(),

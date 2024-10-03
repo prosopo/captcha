@@ -24,6 +24,7 @@ import {
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
+	GetFrictionlessCaptchaChallengeRequestBody,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
@@ -33,6 +34,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
 
@@ -173,7 +175,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		try {
-			const { user, dapp } = GetPowCaptchaChallengeRequestBody.parse(req.body);
+			// TODO: Get the client config allowed captcha types
+			// TODO: add optional nonce to the requests
+			// TODO: Refuse request if either captcha type is not allowed or nonce not present
+			const { user, dapp, sessionId } = GetPowCaptchaChallengeRequestBody.parse(req.body);
+
+			if (sessionId) {
+				// Check it's in state
+				// Remove from db
+				// Continue captcha flow
+				console.log("Session ID provided", sessionId);
+			}
+			else if (true) {
+				// Check if direct pow is allowed
+				console.log("Direct pow is allowed");
+			} else {
+				// Throw an error
+			}
 
 			validateAddress(user, false, 42);
 			validateAddress(dapp, false, 42);
@@ -285,6 +303,37 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			);
 		}
 	});
+
+	/**
+	 * Gets a frictionless captcha challenge
+	 */
+	router.post(
+		ApiPaths.GetFrictionlessCaptchaChallenge,
+		async (req, res, next) => {
+			try {
+				const { token } = GetFrictionlessCaptchaChallengeRequestBody.parse(
+					req.body,
+				);
+				const botScore = await getBotScore(token);
+
+				// TODO: Get this from the client config
+				if (botScore > 0.5) {
+					// TODO: Return an image captcha challenge
+				} else {
+					// TODO: Return a pow challenge
+					// TODO: Create a valid captcha nonce and store
+					// TODO: return the nonce to the client
+				}
+			} catch (err) {
+				tasks.logger.error(err);
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: err },
+					}),
+				);
+			}
+		},
+	);
 
 	/**
 	 * Gets public details of the provider
