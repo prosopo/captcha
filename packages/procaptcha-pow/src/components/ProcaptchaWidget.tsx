@@ -40,6 +40,8 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = props.config;
 	const themeColor = config.theme === "light" ? "light" : "dark";
+	const frictionlessState = props.frictionlessState;
+	console.log("frictionlessState", frictionlessState);
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);

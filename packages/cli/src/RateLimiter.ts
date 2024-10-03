@@ -71,5 +71,9 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_PROVIDER_UPDATE_WINDOW,
 			limit: process.env.PROSOPO_PROVIDER_UPDATE_LIMIT,
 		},
+		[ApiPaths.GetFrictionlessCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
+		},
 	};
 };

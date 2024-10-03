@@ -323,6 +323,16 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 	{ expireAfterSeconds: ONE_WEEK },
 );
 
+export interface SessionRecord {
+  sessionId: string;
+  createdAt: Date;
+}
+
+export const SessionRecordSchema = new Schema<SessionRecord>({
+  sessionId: { type: String, required: true, unique: true },
+  createdAt: { type: Date, required: true },
+});
+
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
@@ -484,4 +494,8 @@ export interface IProviderDatabase extends IDatabase {
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
+
+	storeSessionRecord(sessionRecord: SessionRecord): Promise<void>;
+
+	checkAndRemoveSession(sessionId: string): Promise<SessionRecord | undefined>;
 }

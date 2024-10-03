@@ -160,10 +160,11 @@ export default class ProviderApi
 		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
 	}
 
-	public getFrictionlessCaptcha(token: {
-		token: string;
-	}): Promise<GetFrictionlessCaptchaResponse> {
-		const body = token;
+	public getFrictionlessCaptcha(token: string, dapp: string): Promise<GetFrictionlessCaptchaResponse> {
+		const body = {
+			[ApiParams.token]: token,
+			[ApiParams.dapp]: dapp,
+		};
 		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
 	}
 

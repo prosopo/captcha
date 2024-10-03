@@ -1,4 +1,4 @@
-import { getBotScore as getBotScoreFromPayload } from "./decodePayload.js";
+import getBotScoreFromPayload from "./decodePayload.js";
 
 export const getBotScore = async (payload: string) => {
 	try {

@@ -49,4 +49,5 @@ export interface IUserData {
 export interface IUserSettings {
 	threshold: number;
 	domains: string[];
+	captchaType?: "image" | "pow" | "frictionless";
 }

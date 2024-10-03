@@ -19,6 +19,7 @@ import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type BotDetectionFunction,
+	FrictionlessState,
 	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
@@ -42,9 +43,17 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
-	const captcha = await providerApi.getFrictionlessCaptcha(botScore);
+	if (!config.account.address) {
+		throw new Error("Hugh resolve this error!");
+	}
 
-	return captcha;
+	const captcha = await providerApi.getFrictionlessCaptcha(botScore.token, config.account.address);
+
+	console.log("captcha", captcha);
+
+
+
+	return {captchaType: captcha.captchaType, sessionId: captcha.sessionId, provider: provider, status: captcha.status};
 };
 
 export const ProcaptchaFrictionless = ({
@@ -68,8 +77,12 @@ export const ProcaptchaFrictionless = ({
 						<Procaptcha config={config} callbacks={callbacks} />,
 					);
 				} else {
+					const frictionlessState: FrictionlessState = {
+						provider: result.provider,
+						sessionId: result.sessionId,
+					};
 					setComponentToRender(
-						<ProcaptchaPow config={config} callbacks={callbacks} />,
+						<ProcaptchaPow config={config} callbacks={callbacks} frictionlessState={frictionlessState} />,
 					);
 				}
 			} catch (error) {

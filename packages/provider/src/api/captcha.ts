@@ -25,6 +25,7 @@ import {
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
 	GetFrictionlessCaptchaChallengeRequestBody,
+	GetFrictionlessCaptchaResponse,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
@@ -37,6 +38,8 @@ import express, { type Router } from "express";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
+import { SessionRecord } from "@prosopo/types-database";
+import { v4 as uuidv4 } from 'uuid';
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 
@@ -175,22 +178,30 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		try {
-			// TODO: Get the client config allowed captcha types
-			// TODO: add optional nonce to the requests
-			// TODO: Refuse request if either captcha type is not allowed or nonce not present
 			const { user, dapp, sessionId } = GetPowCaptchaChallengeRequestBody.parse(req.body);
+			const clientSettings = await tasks.db.getClientRecord(dapp);
 
 			if (sessionId) {
-				// Check it's in state
-				// Remove from db
-				// Continue captcha flow
 				console.log("Session ID provided", sessionId);
+				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
+				if (!sessionRecord) {
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: { error: "Session ID not found", code: 400 },
+						}),
+					);
+				}
+				
 			}
-			else if (true) {
-				// Check if direct pow is allowed
+			else if (clientSettings?.settings?.captchaType === "pow") {
 				console.log("Direct pow is allowed");
 			} else {
 				// Throw an error
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { error: "No captcha type set", code: 400 },
+					}),
+				);
 			}
 
 			validateAddress(user, false, 42);
@@ -304,27 +315,57 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		}
 	});
 
-	/**
+		/**
 	 * Gets a frictionless captcha challenge
 	 */
 	router.post(
 		ApiPaths.GetFrictionlessCaptchaChallenge,
 		async (req, res, next) => {
 			try {
-				const { token } = GetFrictionlessCaptchaChallengeRequestBody.parse(
+				console.log("Received frictionless captcha challenge request");
+				const { token, dapp } = GetFrictionlessCaptchaChallengeRequestBody.parse(
 					req.body,
 				);
-				const botScore = await getBotScore(token);
+				console.log(`Parsed request body. Token: ${token}, Dapp: ${dapp}`);
 
-				// TODO: Get this from the client config
-				if (botScore > 0.5) {
-					// TODO: Return an image captcha challenge
+				const botScore = await getBotScore(token);
+				console.log(`Bot score calculated: ${botScore}`);
+
+				const clientConfig = await tasks.db.getClientRecord(dapp);
+				console.log(`Retrieved client config for dapp: ${dapp}`, clientConfig);
+
+				const botThreshold = clientConfig?.settings?.threshold || 0.5;
+				console.log(`Bot threshold set to: ${botThreshold}`);
+
+				if (botScore > botThreshold) {
+					console.log("Bot score exceeds threshold. Returning image captcha.");
+					const response: GetFrictionlessCaptchaResponse = {
+						[ApiParams.captchaType]: "image",
+						[ApiParams.status]: "ok",
+					};
+					console.log("Image captcha response:", response);
+					return res.json(response);
 				} else {
-					// TODO: Return a pow challenge
-					// TODO: Create a valid captcha nonce and store
-					// TODO: return the nonce to the client
+					console.log("Bot score below threshold. Proceeding with PoW captcha.");
+					const sessionRecord: SessionRecord = {
+						sessionId: uuidv4(),
+						createdAt: new Date(),
+					};
+					console.log("Created session record:", sessionRecord);
+
+					await tasks.db.storeSessionRecord(sessionRecord);
+					console.log("Stored session record in database");
+
+					const response: GetFrictionlessCaptchaResponse = {
+						[ApiParams.captchaType]: "pow",
+						[ApiParams.sessionId]: sessionRecord.sessionId,
+						[ApiParams.status]: "ok",
+					};
+					console.log("PoW captcha response:", response);
+					return res.json(response);
 				}
 			} catch (err) {
+				console.error("Error in frictionless captcha challenge:", err);
 				tasks.logger.error(err);
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {

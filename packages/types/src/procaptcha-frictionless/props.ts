@@ -15,11 +15,15 @@ import {
 	type ProcaptchaClientConfigOutput,
 } from "../config/config.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
-import type { GetFrictionlessCaptchaResponse } from "../provider/api.js";
+import type { GetFrictionlessCaptchaResponse, RandomProvider } from "../provider/api.js";
+
+type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
+	provider: RandomProvider;
+};
 
 export type BotDetectionFunction = (
 	config: ProcaptchaClientConfigOutput,
-) => Promise<GetFrictionlessCaptchaResponse>;
+) => Promise<BotDetectionFunctionResult>;
 
 /**
  * The props for the Procaptcha Frictionless component.

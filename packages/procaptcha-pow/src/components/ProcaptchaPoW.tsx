@@ -33,6 +33,6 @@ export const ProcaptchaPow = (props: ProcaptchaProps) => (
 			/>
 		}
 	>
-		<ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
+		<ProcaptchaWidget config={props.config} callbacks={props.callbacks} frictionlessState={props.frictionlessState} />
 	</Suspense>
 );
