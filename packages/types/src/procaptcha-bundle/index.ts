@@ -34,5 +34,6 @@ export interface ProcaptchaRenderOptions {
 	"open-callback"?: string | (() => void);
 	"close-callback"?: string | (() => void);
 	"error-callback"?: string | (() => void);
+	"failed-callback"?: string | (() => void);
 	language?: typeof LanguageSchema;
 }

@@ -49,6 +49,9 @@ export const getDefaultCallbacks = (element: Element) => ({
 	onOpen: () => {
 		console.log("Challenge opened");
 	},
+	onFailed: () => {
+		console.log("Challenge failed");
+	},
 });
 
 export function setUserCallbacks(
@@ -60,6 +63,7 @@ export function setUserCallbacks(
 		onError: (error: Error) => void;
 		onClose: () => void;
 		onOpen: () => void;
+		onFailed: () => void;
 	},
 	element: Element,
 ) {
@@ -170,6 +174,19 @@ export function setUserCallbacks(
 					: element.getAttribute("data-open-callback");
 			if (onOpenCallbackName)
 				callbacks.onOpen = getWindowCallback(onOpenCallbackName);
+		}
+	}
+
+	if (renderOptions?.["failed-callback"]) {
+		if (typeof renderOptions["failed-callback"] === "function") {
+			callbacks.onOpen = renderOptions["failed-callback"];
+		} else {
+			const onFailedCallbackName =
+				typeof renderOptions?.["failed-callback"] === "string"
+					? renderOptions?.["failed-callback"]
+					: element.getAttribute("data-failed-callback");
+			if (onFailedCallbackName)
+				callbacks.onFailed = getWindowCallback(onFailedCallbackName);
 		}
 	}
 }
