@@ -84,6 +84,7 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
 	[ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ApiPaths.GetFrictionlessCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },

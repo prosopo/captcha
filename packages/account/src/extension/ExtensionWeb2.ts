@@ -22,12 +22,12 @@ import { entropyToMnemonic } from "@polkadot/util-crypto/mnemonic/bip39";
 import type { KeypairType } from "@polkadot/util-crypto/types";
 import { stringToU8a } from "@polkadot/util/string";
 import { u8aToHex } from "@polkadot/util/u8a";
-import { ProsopoEnvError, hexHash } from "@prosopo/common";
-import { getFingerprint } from "@prosopo/detector";
+import { hexHash } from "@prosopo/common";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { picassoCanvas } from "@prosopo/util";
 import { version } from "@prosopo/util";
 import { Extension } from "./Extension.js";
+import { getFingerprint } from "@prosopo/fingerprint";
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair };
 
