@@ -14,7 +14,6 @@
 
 import { ProviderApi } from "@prosopo/api";
 import detect from "@prosopo/detector";
-import { i18n } from "@prosopo/locale-browser";
 import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
@@ -82,10 +81,6 @@ export const ProcaptchaFrictionless = ({
 		};
 
 		detectAndSetComponent();
-
-		if (config.language) {
-			i18n.changeLanguage(config.language);
-		}
 	}, [config, callbacks, detectBot, config.language]);
 
 	return componentToRender;
