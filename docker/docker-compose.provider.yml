@@ -113,7 +113,7 @@ services:
             - ../.env.${NODE_ENV}
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
-            - "vector.provider=true" # enable logging as a provider
+            - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
