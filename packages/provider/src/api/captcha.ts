@@ -179,7 +179,21 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		try {
 			const { user, dapp, sessionId } = GetPowCaptchaChallengeRequestBody.parse(req.body);
+			console.log("\n ----- \n user", user, "\n ----- \n");
+			console.log("\n ----- \n dapp", dapp, "\n ----- \n");
+			console.log("\n ----- \n sessionId", sessionId, "\n ----- \n");
 			const clientSettings = await tasks.db.getClientRecord(dapp);
+
+			const clientRecord = await tasks.db.getClientRecord(dapp);
+
+			if (!clientRecord) {
+				return res.json({
+					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
+					code: 200,
+				});
+			}
+
+			console.log("\n ----- \n clientSettings", clientSettings, "\n ----- \n");
 
 			if (sessionId) {
 				console.log("Session ID provided", sessionId);
@@ -207,14 +221,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			validateAddress(user, false, 42);
 			validateAddress(dapp, false, 42);
 
-			const clientRecord = await tasks.db.getClientRecord(dapp);
 
-			if (!clientRecord) {
-				return res.json({
-					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
-					code: 200,
-				});
-			}
 
 			// TODO do something with domains
 
@@ -228,11 +235,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			console.log("\n ----- \n clientSettings", clientSettings?.settings?.powDifficulty, "\n ----- \n");
+
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
 				dapp,
 				origin,
+				clientSettings?.settings?.powDifficulty,
 			);
+
+			console.log("\n ----- \n challenge", challenge, "\n ----- \n");
 
 			await tasks.db.storePowCaptchaRecord(
 				challenge.challenge,
@@ -334,7 +346,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				console.log(`Retrieved client config for dapp: ${dapp}`, clientConfig);
 
-				const botThreshold = clientConfig?.settings?.threshold || 0.5;
+				const botThreshold = clientConfig?.settings?.frictionlessThreshold || 0.5;
 				console.log(`Bot threshold set to: ${botThreshold}`);
 
 				if (botScore > botThreshold) {
