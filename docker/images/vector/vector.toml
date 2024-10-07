@@ -142,7 +142,8 @@ inputs = ["mongo"]
 source = '''
 .=parse_json!(string!(.message))
 .host="$OO_HOST"
-# TODO del more
+del(.t)
+del(.id)
 '''
 
 # send to openobserve
