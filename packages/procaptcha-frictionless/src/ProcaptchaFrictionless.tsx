@@ -52,8 +52,6 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
-	console.log("captcha", captcha);
-
 	return {
 		captchaType: captcha.captchaType,
 		sessionId: captcha.sessionId,

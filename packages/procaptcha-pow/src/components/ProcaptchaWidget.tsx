@@ -36,12 +36,10 @@ import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
 
 const Procaptcha = (props: ProcaptchaProps) => {
-	// Set up Session ID and Provider if they exist
 	const { t } = useTranslation();
 	const config = props.config;
 	const themeColor = config.theme === "light" ? "light" : "dark";
-	const frictionlessState = props.frictionlessState;
-	console.log("frictionlessState", frictionlessState);
+	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
