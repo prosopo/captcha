@@ -47,7 +47,7 @@ services:
     database-dev:
         profiles:
             - development
-        image: mongo:5.0.4
+        image: mongo:7.0.14
         # volumes:
         #   - ./db:/data/db
         ports:
@@ -71,7 +71,7 @@ services:
         profiles:
             - production
             - staging
-        image: mongo:5.0.4
+        image: mongo:7.0.14
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
