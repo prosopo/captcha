@@ -14,13 +14,11 @@
 
 import path from "node:path";
 import { BN } from "@polkadot/util";
-import { isAddress } from "@polkadot/util-crypto";
 import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import { registerSiteKey } from "@prosopo/provider/dist/tests/integration/registerSitekey.js";
 import {
 	type IDappAccount,
 	type IProviderAccount,
@@ -29,6 +27,7 @@ import {
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
 import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
+import { registerSiteKey } from "./dapp.js";
 import { setupProvider } from "./provider.js";
 
 const logger = getLogger(LogLevel.enum.info, "setup");
@@ -148,7 +147,7 @@ export async function setup(force: boolean) {
 
 		env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`);
 
-		await registerSiteKey(defaultDapp.pair.address);
+		await registerSiteKey(env, defaultDapp.pair.address);
 
 		if (!hasProviderAccount) {
 			await updateEnvFile({

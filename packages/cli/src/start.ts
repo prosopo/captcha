@@ -24,7 +24,7 @@ import {
 	prosopoVerifyRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import { authMiddleware } from "@prosopo/provider/dist/api/authMiddleware.js";
+import { authMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
 import cors from "cors";
 import express from "express";
