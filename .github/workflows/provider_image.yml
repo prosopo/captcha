@@ -106,7 +106,13 @@ jobs:
                     # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
                     echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
                     NODE_ENV="production" npm run -w @prosopo/cli bundle
-                    
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            # We cannot create the images in a single step because the output of buildx is not compatible with
+            # `docker load`. https://stackoverflow.com/a/72952846/1178971
+
             # create the provider image for AMD64
             - name: Build the Provider Container
               id: build_docker_provider_amd64
