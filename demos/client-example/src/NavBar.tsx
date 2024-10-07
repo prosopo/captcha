@@ -27,11 +27,16 @@ const linkStyle = {
 export default function NavBar() {
 	const location = useLocation();
 	const frictionlessLinkStyle = { ...linkStyle };
+	const powLinkStyle = { ...linkStyle };
 	const imageCaptchaLinkStyle = { ...linkStyle };
 
 	// if the current route is `/frictionless`, the link to `/frictionless` should be styled differently
 	if (location.pathname === "/frictionless") {
 		frictionlessLinkStyle.textDecoration = "underline";
+	}
+	// if the current route is `/pow`, the link to `/pow` should be styled differently
+	if (location.pathname === "/pow") {
+		powLinkStyle.textDecoration = "underline";
 	}
 	// if the current route is `/`, the link to `/` should be styled differently
 	if (location.pathname === "/") {
@@ -46,7 +51,9 @@ export default function NavBar() {
 					<Link to="/" style={imageCaptchaLinkStyle}>
 						Image Captcha
 					</Link>
-
+					<Link to="/pow" style={powLinkStyle}>
+						PoW Captcha
+					</Link>
 					<Link to="/frictionless" style={frictionlessLinkStyle}>
 						Frictionless Captcha
 					</Link>

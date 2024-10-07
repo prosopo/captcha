@@ -24,11 +24,11 @@ import {
 	type CaptchaSolution,
 	CaptchaStatus,
 	type PendingCaptchaRequest,
+	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type Database,
-	StoredStatusNames,
-	type UserCommitment,
+import type {
+	IProviderDatabase,
+	UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
@@ -56,7 +56,7 @@ vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 }));
 
 describe("ImgCaptchaManager", () => {
-	let db: Database;
+	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let logger: Logger; // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	let captchaConfig: any;
@@ -74,7 +74,7 @@ describe("ImgCaptchaManager", () => {
 			getCaptchaById: vi.fn(),
 			getDappUserCommitmentById: vi.fn(),
 			getDappUserCommitmentByAccount: vi.fn(),
-		} as unknown as Database;
+		} as unknown as IProviderDatabase;
 
 		pair = {
 			sign: vi.fn(),
@@ -152,6 +152,7 @@ describe("ImgCaptchaManager", () => {
 			const userAccount = "userAccount";
 			const dataset = { datasetId, captchas: [] };
 			const ipAddress = "0.0.0.0";
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -165,6 +166,7 @@ describe("ImgCaptchaManager", () => {
 				datasetId,
 				userAccount,
 				ipAddress,
+				headers,
 			);
 
 			expect(result).toEqual({
@@ -179,6 +181,7 @@ describe("ImgCaptchaManager", () => {
 			const datasetId = "datasetId";
 			const userAccount = "userAccount";
 			const ipAddress = "0.0.0.0";
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getDatasetDetails as any).mockResolvedValue(null);
@@ -188,6 +191,7 @@ describe("ImgCaptchaManager", () => {
 					datasetId,
 					userAccount,
 					ipAddress,
+					headers,
 				),
 			).rejects.toThrow(
 				new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {
@@ -319,6 +323,7 @@ describe("ImgCaptchaManager", () => {
 			serverChecked: false,
 			requestedAtTimestamp: 0,
 			ipAddress: "0.0.0.0",
+			headers: { a: "1", b: "2", c: "3" },
 			lastUpdatedTimestamp: Date.now(),
 		};
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -363,6 +368,7 @@ describe("ImgCaptchaManager", () => {
 				serverChecked: false,
 				requestedAtTimestamp: 0,
 				ipAddress: "0.0.0.0",
+				headers: { a: "1", b: "2", c: "3" },
 				lastUpdatedTimestamp: Date.now(),
 			},
 		];

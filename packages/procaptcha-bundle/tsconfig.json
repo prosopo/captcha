@@ -8,19 +8,22 @@
 	"include": ["src", "src/**/*.json", "src/index.html"],
 	"references": [
 		{
-			"path": "../../dev/config"
+			"path": "../dotenv"
 		},
 		{
-			"path": "../procaptcha"
+			"path": "../locale"
 		},
 		{
-			"path": "../procaptcha-react"
+			"path": "../procaptcha-frictionless"
 		},
 		{
 			"path": "../procaptcha-pow"
 		},
 		{
-			"path": "../procaptcha-frictionless"
+			"path": "../procaptcha-react"
+		},
+		{
+			"path": "../types"
 		},
 		{
 			"path": "../util"

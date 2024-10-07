@@ -13,6 +13,7 @@
 // limitations under the License.
 import { FormControl } from "@mui/material";
 import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
+import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import type { ProcaptchaToken } from "@prosopo/types";
 import config from "./config.js";
@@ -45,11 +46,17 @@ export function Captcha(props: CaptchProps) {
 					callbacks={{ onError, onHuman, onExpired }}
 					aria-label="Frictionless captcha"
 				/>
+			) : props.captchaType === "pow" ? (
+				<ProcaptchaPow
+					config={config}
+					callbacks={{ onError, onHuman, onExpired }}
+					aria-label="PoW captcha"
+				/>
 			) : (
 				<Procaptcha
 					config={config}
 					callbacks={{ onError, onHuman, onExpired }}
-					aria-label="Captcha"
+					aria-label="Image captcha"
 				/>
 			)}
 		</div>

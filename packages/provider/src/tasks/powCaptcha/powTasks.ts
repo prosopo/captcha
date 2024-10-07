@@ -21,8 +21,9 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
+	type RequestHeaders,
 } from "@prosopo/types";
-import { type Database, StoredStatusNames } from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -30,10 +31,10 @@ const logger = getLoggerDefault();
 
 export class PowCaptchaManager {
 	pair: KeyringPair;
-	db: Database;
+	db: IProviderDatabase;
 	POW_SEPARATOR: string;
 
-	constructor(pair: KeyringPair, db: Database) {
+	constructor(pair: KeyringPair, db: IProviderDatabase) {
 		this.pair = pair;
 		this.db = db;
 		this.POW_SEPARATOR = POW_SEPARATOR;
@@ -75,6 +76,7 @@ export class PowCaptchaManager {
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
+	 * @param headers
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -84,6 +86,7 @@ export class PowCaptchaManager {
 		timeout: number,
 		userTimestampSignature: string,
 		ipAddress: string,
+		headers: RequestHeaders,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(

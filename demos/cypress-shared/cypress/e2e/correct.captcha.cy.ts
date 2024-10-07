@@ -13,12 +13,32 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import "@cypress/xpath";
+import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
+import { getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import type { Captcha } from "@prosopo/types";
+import { AdminApiPaths, type Captcha } from "@prosopo/types";
 import { checkboxClass } from "../support/commands.js";
 
 describe("Captchas", () => {
+	before(async () => {
+		const timestamp = new Date().getTime();
+		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const signature = u8aToHex(pair.sign(timestamp.toString()));
+		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		await fetch(adminSiteKeyURL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				signature: signature,
+				timestamp: timestamp.toString(),
+			},
+			body: JSON.stringify({
+				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+			}),
+		});
+	});
+
 	beforeEach(() => {
 		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
 			captchaContentId: captcha.captchaContentId,

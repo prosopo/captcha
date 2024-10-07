@@ -22,7 +22,12 @@ import {
 	ProsopoError,
 } from "@prosopo/common";
 import { loadBalancer } from "@prosopo/load-balancer";
-import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
+import {
+	buildUpdateState,
+	getDefaultEvents,
+	getRandomActiveProvider,
+	providerRetry,
+} from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -34,8 +39,6 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
-	type RandomProvider,
-	type StoredEvents,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
@@ -59,31 +62,6 @@ const defaultState = (): Partial<ProcaptchaState> => {
 	};
 };
 
-const getRandomActiveProvider = (
-	config: ProcaptchaClientConfigOutput,
-): RandomProvider => {
-	const randomIntBetween = (min: number, max: number) =>
-		Math.floor(Math.random() * (max - min + 1) + min);
-
-	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
-	//  to ensure that the random selection was completed within a certain timeframe
-
-	const PROVIDERS = loadBalancer(config.defaultEnvironment);
-
-	const randomProvderObj = at(
-		PROVIDERS,
-		randomIntBetween(0, PROVIDERS.length - 1),
-	);
-	return {
-		providerAccount: randomProvderObj.address,
-		provider: {
-			url: randomProvderObj.url,
-			datasetId: randomProvderObj.datasetId,
-			datasetIdContent: randomProvderObj.datasetIdContent,
-		},
-	};
-};
-
 /**
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
@@ -94,11 +72,6 @@ export function Manager(
 	callbacks: ProcaptchaCallbacks,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
-
-	const dispatchErrorEvent = (err: unknown) => {
-		const error = err instanceof Error ? err : new Error(String(err));
-		events.onError(error);
-	};
 
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
@@ -123,206 +96,218 @@ export function Manager(
 		return ProcaptchaConfigSchema.parse(config);
 	};
 
-	const fallable = async (fn: () => Promise<void>) => {
-		try {
-			await fn();
-		} catch (err) {
-			console.error(err);
-			// dispatch relevant error event
-			dispatchErrorEvent(err);
-			// hit an error, disallow user's claim to be human
-			updateState({ isHuman: false, showModal: false, loading: false });
-		}
-	};
-
 	/**
 	 * Called on start of user verification. This is when the user ticks the box to claim they are human.
 	 */
 	const start = async () => {
 		events.onOpen();
-		await fallable(async () => {
-			if (state.loading) {
-				return;
-			}
-			if (state.isHuman) {
-				return;
-			}
-			await cryptoWaitReady();
+		await providerRetry(
+			async () => {
+				if (state.loading) {
+					return;
+				}
+				if (state.isHuman) {
+					return;
+				}
+				await cryptoWaitReady();
 
-			resetState();
-			// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
-			updateState({ loading: true });
+				resetState();
+				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+				updateState({ loading: true });
+				updateState({
+					attemptCount: state.attemptCount ? state.attemptCount + 1 : 1,
+				});
 
-			// snapshot the config into the state
-			const config = getConfig();
-			updateState({ dappAccount: config.account.address });
+				// snapshot the config into the state
+				const config = getConfig();
+				updateState({ dappAccount: config.account.address });
 
-			// allow UI to catch up with the loading state
-			await sleep(100);
+				// allow UI to catch up with the loading state
+				await sleep(100);
 
-			const account = await loadAccount();
+				const account = await loadAccount();
 
-			// get a random provider
-			const getRandomProviderResponse = getRandomActiveProvider(getConfig());
+				// get a random provider
+				const getRandomProviderResponse = await getRandomActiveProvider(
+					getConfig(),
+				);
 
-			const providerUrl = getRandomProviderResponse.provider.url;
-			// get the provider api inst
-			const providerApi = await loadProviderApi(providerUrl);
+				const providerUrl = getRandomProviderResponse.provider.url;
+				// get the provider api inst
+				const providerApi = await loadProviderApi(providerUrl);
 
-			const captchaApi = new ProsopoCaptchaApi(
-				account.account.address,
-				getRandomProviderResponse,
-				providerApi,
-				config.web2,
-				config.account.address || "",
-			);
-			updateState({ captchaApi });
+				const captchaApi = new ProsopoCaptchaApi(
+					account.account.address,
+					getRandomProviderResponse,
+					providerApi,
+					config.web2,
+					config.account.address || "",
+				);
+				updateState({ captchaApi });
 
-			const challenge = await captchaApi.getCaptchaChallenge();
+				const challenge = await captchaApi.getCaptchaChallenge();
 
-			if (challenge.captchas.length <= 0) {
-				throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
-			}
+				if (challenge.error) {
+					updateState({
+						loading: false,
+						error: challenge.error,
+					});
+				} else {
+					if (challenge.captchas.length <= 0) {
+						throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
+					}
 
-			// setup timeout, taking the timeout from the individual captcha or the global default
-			const timeMillis: number = challenge.captchas
-				.map(
-					(captcha) =>
-						captcha.timeLimitMs || config.captchas.image.challengeTimeout,
-				)
-				.reduce((a: number, b: number) => a + b);
-			const timeout = setTimeout(() => {
-				events.onChallengeExpired();
-				// expired, disallow user's claim to be human
-				updateState({ isHuman: false, showModal: false, loading: false });
-			}, timeMillis);
+					// setup timeout, taking the timeout from the individual captcha or the global default
+					const timeMillis: number = challenge.captchas
+						.map(
+							(captcha) =>
+								captcha.timeLimitMs || config.captchas.image.challengeTimeout,
+						)
+						.reduce((a: number, b: number) => a + b);
+					const timeout = setTimeout(() => {
+						events.onChallengeExpired();
+						// expired, disallow user's claim to be human
+						updateState({ isHuman: false, showModal: false, loading: false });
+					}, timeMillis);
 
-			// update state with new challenge
-			updateState({
-				index: 0,
-				solutions: challenge.captchas.map(() => []),
-				challenge,
-				showModal: true,
-				timeout,
-			});
-		});
+					// update state with new challenge
+					updateState({
+						index: 0,
+						solutions: challenge.captchas.map(() => []),
+						challenge,
+						showModal: true,
+						timeout,
+					});
+				}
+			},
+			start,
+			resetState,
+			state.attemptCount,
+			10,
+		);
 	};
 
 	const submit = async () => {
-		await fallable(async () => {
-			// disable the time limit, user has submitted their solution in time
-			clearTimeout();
+		await providerRetry(
+			async () => {
+				// disable the time limit, user has submitted their solution in time
+				clearTimeout();
 
-			if (!state.challenge) {
-				throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
-					context: { error: "Cannot submit, no Captcha found in state" },
-				});
-			}
+				if (!state.challenge) {
+					throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+						context: { error: "Cannot submit, no Captcha found in state" },
+					});
+				}
 
-			// hide the modal, no further input required from user
-			updateState({ showModal: false });
+				// hide the modal, no further input required from user
+				updateState({ showModal: false });
 
-			const challenge: CaptchaResponseBody = state.challenge;
-			const salt = randomAsHex();
+				const challenge: CaptchaResponseBody = state.challenge;
+				const salt = randomAsHex();
 
-			// append solution to each captcha in the challenge
-			const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
-				(captcha, index) => {
-					const solution = at(state.solutions, index);
-					return {
-						captchaId: captcha.captchaId,
-						captchaContentId: captcha.captchaContentId,
-						salt,
-						solution,
-					};
-				},
-			);
-
-			const account = getAccount();
-			const signer = getExtension(account).signer;
-
-			const first = at(challenge.captchas, 0);
-			if (!first.datasetId) {
-				throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_ID", {
-					context: { error: "No datasetId set for challenge" },
-				});
-			}
-
-			const captchaApi = state.captchaApi;
-
-			if (!captchaApi) {
-				throw new ProsopoError("CAPTCHA.INVALID_TOKEN", {
-					context: { error: "No Captcha API found in state" },
-				});
-			}
-
-			if (!signer || !signer.signRaw) {
-				throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
-					context: {
-						error:
-							"Signer is not defined, cannot sign message to prove account ownership",
+				// append solution to each captcha in the challenge
+				const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
+					(captcha, index) => {
+						const solution = at(state.solutions, index);
+						return {
+							captchaId: captcha.captchaId,
+							captchaContentId: captcha.captchaContentId,
+							salt,
+							solution,
+						};
 					},
-				});
-			}
-
-			const userRequestHashSignature = await signer.signRaw({
-				address: account.account.address,
-				data: stringToHex(challenge.requestHash),
-				type: "bytes",
-			});
-
-			// send the commitment to the provider
-			const submission: TCaptchaSubmitResult =
-				await captchaApi.submitCaptchaSolution(
-					userRequestHashSignature.signature,
-					challenge.requestHash,
-					captchaSolution,
-					challenge.timestamp,
-					challenge.signature.provider.requestHash,
 				);
 
-			// mark as is human if solution has been approved
-			const isHuman = submission[0].verified;
+				const account = getAccount();
+				const signer = getExtension(account).signer;
 
-			if (!isHuman) {
-				// user failed the captcha for some reason according to the provider
-				events.onFailed();
-			}
+				const first = at(challenge.captchas, 0);
+				if (!first.datasetId) {
+					throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_ID", {
+						context: { error: "No datasetId set for challenge" },
+					});
+				}
 
-			// update the state with the result of the submission
-			updateState({
-				submission,
-				isHuman,
-				loading: false,
-			});
-			if (state.isHuman) {
-				const providerUrl = captchaApi.provider.provider.url;
-				// cache this provider for future use
-				storage.setProcaptchaStorage({
-					...storage.getProcaptchaStorage(),
-					providerUrl,
-				});
-				events.onHuman(
-					encodeProcaptchaOutput({
-						[ApiParams.providerUrl]: providerUrl,
-						[ApiParams.user]: account.account.address,
-						[ApiParams.dapp]: getDappAccount(),
-						[ApiParams.commitmentId]: hashToHex(submission[1]),
-						[ApiParams.timestamp]: challenge.timestamp,
-						[ApiParams.signature]: {
-							[ApiParams.provider]: {
-								[ApiParams.requestHash]:
-									challenge.signature.provider.requestHash,
-							},
-							[ApiParams.user]: {
-								[ApiParams.requestHash]: userRequestHashSignature.signature,
-							},
+				const captchaApi = state.captchaApi;
+
+				if (!captchaApi) {
+					throw new ProsopoError("CAPTCHA.INVALID_TOKEN", {
+						context: { error: "No Captcha API found in state" },
+					});
+				}
+
+				if (!signer || !signer.signRaw) {
+					throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+						context: {
+							error:
+								"Signer is not defined, cannot sign message to prove account ownership",
 						},
-					}),
-				);
-				setValidChallengeTimeout();
-			}
-		});
+					});
+				}
+
+				const userRequestHashSignature = await signer.signRaw({
+					address: account.account.address,
+					data: stringToHex(challenge.requestHash),
+					type: "bytes",
+				});
+
+				// send the commitment to the provider
+				const submission: TCaptchaSubmitResult =
+					await captchaApi.submitCaptchaSolution(
+						userRequestHashSignature.signature,
+						challenge.requestHash,
+						captchaSolution,
+						challenge.timestamp,
+						challenge.signature.provider.requestHash,
+					);
+
+				// mark as is human if solution has been approved
+				const isHuman = submission[0].verified;
+
+				if (!isHuman) {
+					// user failed the captcha for some reason according to the provider
+					events.onFailed();
+				}
+
+				// update the state with the result of the submission
+				updateState({
+					submission,
+					isHuman,
+					loading: false,
+				});
+				if (state.isHuman) {
+					const providerUrl = captchaApi.provider.provider.url;
+					// cache this provider for future use
+					storage.setProcaptchaStorage({
+						...storage.getProcaptchaStorage(),
+						providerUrl,
+					});
+					events.onHuman(
+						encodeProcaptchaOutput({
+							[ApiParams.providerUrl]: providerUrl,
+							[ApiParams.user]: account.account.address,
+							[ApiParams.dapp]: getDappAccount(),
+							[ApiParams.commitmentId]: hashToHex(submission[1]),
+							[ApiParams.timestamp]: challenge.timestamp,
+							[ApiParams.signature]: {
+								[ApiParams.provider]: {
+									[ApiParams.requestHash]:
+										challenge.signature.provider.requestHash,
+								},
+								[ApiParams.user]: {
+									[ApiParams.requestHash]: userRequestHashSignature.signature,
+								},
+							},
+						}),
+					);
+					setValidChallengeTimeout();
+				}
+			},
+			start,
+			resetState,
+			state.attemptCount,
+			10,
+		);
 	};
 
 	const cancel = async () => {

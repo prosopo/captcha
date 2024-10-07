@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { LanguageSchema } from "@prosopo/locale";
 import type { input } from "zod";
 import { literal } from "zod";
 import { number } from "zod";
@@ -46,7 +47,13 @@ const LogLevel = zEnum([
 	"log",
 ]);
 
-export const DatabaseTypes = zEnum(["mongo", "mongoMemory"]);
+export const DatabaseTypes = zEnum([
+	"mongo",
+	"mongoMemory",
+	"provider",
+	"client",
+	"captcha",
+]);
 
 export const EnvironmentTypesSchema = zEnum([
 	"development",
@@ -61,18 +68,10 @@ export const DatabaseConfigSchema = record(
 	object({
 		type: string(),
 		endpoint: string(),
-		dbname: string(),
-		authSource: string(),
+		dbname: string().default("prosopo"),
+		authSource: string().default("admin"),
 	}),
 );
-
-export const BatchCommitConfigSchema = object({
-	interval: number().positive().optional().default(300),
-	maxBatchExtrinsicPercentage: number().positive().optional().default(59),
-});
-
-export type BatchCommitConfigInput = input<typeof BatchCommitConfigSchema>;
-export type BatchCommitConfigOutput = output<typeof BatchCommitConfigSchema>;
 
 export type DatabaseConfigInput = input<typeof DatabaseConfigSchema>;
 export type DatabaseConfigOutput = output<typeof DatabaseConfigSchema>;
@@ -259,8 +258,9 @@ const ThemeType = union([literal("light"), literal("dark")]);
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
 		accountCreator: AccountCreatorConfigSchema.optional(),
-		theme: ThemeType.optional(),
+		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+		language: LanguageSchema.optional(),
 	}),
 );
 
@@ -280,16 +280,18 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			solutionWinningPercentage: 80,
 			captchaBlockRecency: 10,
 		}),
-		batchCommit: BatchCommitConfigSchema.optional().default({
-			interval: 300,
-			maxBatchExtrinsicPercentage: 59,
-		}),
-		captchaScheduler: object({
-			schedule: string().optional(),
+		scheduledTasks: object({
+			captchaScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
+			clientListScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
 		}).optional(),
 		server: ProsopoImageServerConfigSchema,
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
+		mongoClientUri: string().optional(),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
 	}),

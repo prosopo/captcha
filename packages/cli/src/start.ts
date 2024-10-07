@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import type { Server } from "node:net";
-import { i18nMiddleware } from "@prosopo/common";
 import { getPairAsync } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
+import { i18nMiddleware } from "@prosopo/locale";
 import {
+	getClientList,
 	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
@@ -30,10 +31,14 @@ import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
-function startApi(env: ProviderEnvironment, admin = false): Server {
+function startApi(
+	env: ProviderEnvironment,
+	admin = false,
+	port?: number,
+): Server {
 	env.logger.info("Starting Prosopo API");
 	const apiApp = express();
-	const apiPort = env.config.server.port;
+	const apiPort = port || env.config.server.port;
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
 		"trust proxy",
@@ -61,7 +66,11 @@ function startApi(env: ProviderEnvironment, admin = false): Server {
 	});
 }
 
-export async function start(env?: ProviderEnvironment, admin?: boolean) {
+export async function start(
+	env?: ProviderEnvironment,
+	admin?: boolean,
+	port?: number,
+) {
 	if (!env) {
 		loadEnv();
 
@@ -69,23 +78,33 @@ export async function start(env?: ProviderEnvironment, admin?: boolean) {
 		getDB();
 
 		const secret = getSecret();
-		const config = getConfig(undefined, undefined, {
+		const config = getConfig(undefined, {
 			solved: { count: 2 },
 			unsolved: { count: 0 },
 		});
 
-		const pair = await getPairAsync(secret, "");
+		const pair = await getPairAsync(secret);
 		env = new ProviderEnvironment(config, pair);
+	} else {
+		env.logger.debug("Env already defined");
 	}
 
 	await env.isReady();
 
-	// Start the scheduled job
+	// Start the scheduled jobs
 	if (env.pair) {
 		storeCaptchasExternally(env.pair, env.config).catch((err) => {
 			console.error("Failed to start scheduler:", err);
 		});
+		getClientList(env.pair, env.config).catch((err) => {
+			console.error("Failed to get client list:", err);
+		});
 	}
 
-	return startApi(env, admin);
+	return startApi(env, admin, port);
+}
+
+export async function startDev(env?: ProviderEnvironment, admin?: boolean) {
+	start(env, admin, 9238);
+	return await start(env, admin);
 }

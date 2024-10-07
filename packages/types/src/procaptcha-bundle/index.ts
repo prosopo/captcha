@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { LanguageSchema } from "@prosopo/locale";
+import type { ProcaptchaToken } from "@prosopo/types";
+
 export enum FeaturesEnum {
 	Image = "image",
 	Pow = "pow",
@@ -18,3 +22,17 @@ export enum FeaturesEnum {
 }
 
 export type Features = `${FeaturesEnum}`;
+
+export interface ProcaptchaRenderOptions {
+	siteKey: string;
+	theme?: "light" | "dark";
+	captchaType?: Features;
+	callback?: string | ((token: ProcaptchaToken) => void);
+	"challenge-valid-length"?: string; // seconds for successful challenge to be valid
+	"chalexpired-callback"?: string | (() => void);
+	"expired-callback"?: string | (() => void);
+	"open-callback"?: string | (() => void);
+	"close-callback"?: string | (() => void);
+	"error-callback"?: string | (() => void);
+	language?: typeof LanguageSchema;
+}

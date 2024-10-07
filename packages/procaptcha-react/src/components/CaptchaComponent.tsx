@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { useTranslation } from "@prosopo/common";
+import { useTranslation } from "@prosopo/locale-browser";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { darkTheme, lightTheme } from "@prosopo/web-components";
@@ -105,9 +105,7 @@ const CaptchaComponent = ({
 									{t("WIDGET.SELECT_ALL")}
 									{":"}
 									&nbsp;
-									<span style={{ textTransform: "capitalize" }}>
-										{`${at(challenge.captchas, index).target}`}
-									</span>
+									<span>{`${t(at(challenge.captchas, index).target)} `}</span>
 								</p>
 								<p
 									style={{

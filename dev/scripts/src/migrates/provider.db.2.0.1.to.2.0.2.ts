@@ -1,3 +1,11 @@
+import { loadEnv } from "@prosopo/dotenv";
+import { CaptchaStatus } from "@prosopo/types";
+import {
+	type PoWCaptchaStored,
+	type UserCommitment,
+	UserCommitmentRecord,
+} from "@prosopo/types-database";
+import { at } from "@prosopo/util";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,14 +19,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { loadEnv } from "@prosopo/dotenv";
-import { CaptchaStatus } from "@prosopo/types";
-import {
-	type PoWCaptchaStored,
-	type UserCommitment,
-	UserCommitmentRecord,
-} from "@prosopo/types-database";
-import { at } from "@prosopo/util";
 import { MongoClient } from "mongodb";
 
 loadEnv();
@@ -138,6 +138,7 @@ const migrateUserCommitments = async () => {
 			dappAccount: dappContract,
 			datasetId,
 			ipAddress: "NO_IP_ADDRESS",
+			headers: {},
 			lastUpdatedTimestamp: requestedAtTimestamp,
 			providerAccount,
 			requestedAtTimestamp,
@@ -248,6 +249,7 @@ const migratePowCaptchas = async () => {
 			providerSignature: "NO_SIGNATURE_MIGRATED",
 			difficulty: 4,
 			ipAddress: "NO_IP_ADDRESS",
+			headers: {},
 			userSubmitted: true,
 			serverChecked: false,
 		};

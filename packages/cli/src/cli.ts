@@ -27,7 +27,7 @@ async function main() {
 	const envPath = loadEnv();
 
 	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-	const config: ProsopoConfigOutput = getConfig(undefined, undefined, {
+	const config: ProsopoConfigOutput = getConfig(undefined, {
 		solved: { count: 2 },
 		unsolved: { count: 0 },
 	});
@@ -53,11 +53,19 @@ async function main() {
 
 	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
 	if (processedArgs.api) {
-		await new ReloadingAPI(envPath, config, pair, processedArgs)
-			.start()
-			.then(() => {
-				log.info("Reloading API started...");
-			});
+		if (process.env.NODE_ENV === "development") {
+			await new ReloadingAPI(envPath, config, pair, processedArgs)
+				.startDev()
+				.then(() => {
+					log.info("Reloading API started...");
+				});
+		} else {
+			await new ReloadingAPI(envPath, config, pair, processedArgs)
+				.start()
+				.then(() => {
+					log.info("Reloading API started...");
+				});
+		}
 	} else {
 		process.exit(0);
 	}

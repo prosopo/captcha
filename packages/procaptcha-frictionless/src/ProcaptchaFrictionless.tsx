@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { isBot } from "@prosopo/detector";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
@@ -34,7 +35,7 @@ export const ProcaptchaFrictionless = ({
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
 	const [componentToRender, setComponentToRender] = useState(
-		<ProcaptchaPlaceholder darkMode={config.theme} />,
+		<ProcaptchaPlaceholder config={config} callbacks={callbacks} />,
 	);
 
 	useEffect(() => {
@@ -52,7 +53,7 @@ export const ProcaptchaFrictionless = ({
 		};
 
 		detectAndSetComponent();
-	}, [config, callbacks, detectBot]);
+	}, [config, callbacks, detectBot, config.language]);
 
 	return componentToRender;
 };

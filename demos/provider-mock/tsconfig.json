@@ -8,10 +8,7 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../dev/config"
-		},
-		{
-			"path": "../../packages/cli"
+			"path": "../../packages/provider"
 		},
 		{
 			"path": "../../packages/common"

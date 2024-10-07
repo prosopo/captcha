@@ -7,9 +7,6 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../util"
-		},
-		{
 			"path": "../types"
 		}
 	]

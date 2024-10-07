@@ -19,10 +19,13 @@
 			"path": "../common"
 		},
 		{
-			"path": "../load-balancer"
+			"path": "../locale-browser"
 		},
 		{
 			"path": "../procaptcha"
+		},
+		{
+			"path": "../procaptcha-common"
 		},
 		{
 			"path": "../types"

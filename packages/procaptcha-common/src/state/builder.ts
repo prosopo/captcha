@@ -14,9 +14,9 @@
 import type {
 	Account,
 	CaptchaResponseBody,
+	ProcaptchaApiInterface,
 	ProcaptchaState,
 	ProcaptchaStateUpdateFn,
-	ProsopoCaptchaApiInterface,
 	TCaptchaSubmitResult,
 } from "@prosopo/types";
 
@@ -59,7 +59,7 @@ export const useProcaptcha = (
 	const [index, setIndex] = useState(0);
 	const [solutions, setSolutions] = useState([] as string[][]);
 	const [captchaApi, setCaptchaApi] = useRefAsState<
-		ProsopoCaptchaApiInterface | undefined
+		ProcaptchaApiInterface | undefined
 	>(useRef, undefined);
 	const [showModal, setShowModal] = useState(false);
 	const [challenge, setChallenge] = useState<CaptchaResponseBody | undefined>(
@@ -78,6 +78,8 @@ export const useProcaptcha = (
 	const [successfullChallengeTimeout, setSuccessfullChallengeTimeout] =
 		useRefAsState<NodeJS.Timeout | undefined>(useRef, undefined);
 	const [sendData, setSendData] = useState(false);
+	const [attemptCount, setAttemptCount] = useState(0);
+	const [error, setError] = useState<string | undefined>(undefined);
 	return [
 		// the state
 		{
@@ -94,6 +96,8 @@ export const useProcaptcha = (
 			timeout,
 			successfullChallengeTimeout,
 			sendData,
+			attemptCount,
+			error,
 		},
 		// and method to update the state
 		(nextState: Partial<ProcaptchaState>) => {
@@ -118,6 +122,9 @@ export const useProcaptcha = (
 			if (nextState.successfullChallengeTimeout !== undefined)
 				setSuccessfullChallengeTimeout(nextState.timeout);
 			if (nextState.sendData !== undefined) setSendData(nextState.sendData);
+			if (nextState.attemptCount !== undefined)
+				setAttemptCount(nextState.attemptCount);
+			if (nextState.error !== undefined) setError(nextState.error);
 		},
 	];
 };

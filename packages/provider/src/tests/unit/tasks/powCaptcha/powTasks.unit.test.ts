@@ -20,8 +20,12 @@ import {
 	CaptchaStatus,
 	POW_SEPARATOR,
 	type PoWChallengeId,
+	type RequestHeaders,
 } from "@prosopo/types";
-import type { Database, PoWCaptchaStored } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaStored,
+} from "@prosopo/types-database";
 import { verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
@@ -39,14 +43,22 @@ vi.mock("@polkadot/util", () => ({
 	stringToHex: vi.fn(),
 }));
 
-vi.mock("@prosopo/util", async (importOriginal) => {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	const actual = (await importOriginal()) as Record<string, any>;
-	return {
-		...actual,
-		verifyRecency: vi.fn(),
-	};
-});
+vi.mock(
+	"@prosopo/util",
+	async (
+		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			| Record<string, any>
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			| PromiseLike<Record<string, any>>,
+	) => {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const actual = (await importOriginal()) as Record<string, any>;
+		return {
+			...actual,
+			verifyRecency: vi.fn(),
+		};
+	},
+);
 
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
@@ -54,7 +66,7 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 }));
 
 describe("PowCaptchaManager", () => {
-	let db: Database;
+	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let powCaptchaManager: PowCaptchaManager;
 
@@ -64,7 +76,7 @@ describe("PowCaptchaManager", () => {
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecord: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
-		} as unknown as Database;
+		} as unknown as IProviderDatabase;
 
 		pair = {
 			sign: vi.fn(),
@@ -114,6 +126,7 @@ describe("PowCaptchaManager", () => {
 			const nonce = 12345;
 			const timeout = 1000;
 			const ipAddress = "ipAddress";
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
 				difficulty,
@@ -124,6 +137,7 @@ describe("PowCaptchaManager", () => {
 				userSubmitted: false,
 				serverChecked: false,
 				ipAddress,
+				headers,
 				providerSignature,
 				lastUpdatedTimestamp: Date.now(),
 			};
@@ -152,6 +166,7 @@ describe("PowCaptchaManager", () => {
 				timeout,
 				userSignature,
 				ipAddress,
+				headers,
 			];
 
 			const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -217,6 +232,7 @@ describe("PowCaptchaManager", () => {
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
 			const ipAddress = "ipAddress";
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
 				dappAccount: pair.address,
@@ -226,6 +242,7 @@ describe("PowCaptchaManager", () => {
 				userSubmitted: false,
 				serverChecked: false,
 				ipAddress,
+				headers,
 				providerSignature: "testSignature",
 				difficulty,
 				lastUpdatedTimestamp: 0,
@@ -235,7 +252,7 @@ describe("PowCaptchaManager", () => {
 				return true;
 			});
 
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);
@@ -252,6 +269,7 @@ describe("PowCaptchaManager", () => {
 					timeout,
 					timestampSignature,
 					ipAddress,
+					headers,
 				),
 			).toBe(false);
 

@@ -10,8 +10,14 @@ concurrency:
     cancel-in-progress: true
 
 env:
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
     CARGO_TERM_COLOR: always
-    GH_TOKEN: ${{ github.token }}
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
+defaults:
+    run:
+        shell: bash
 
 jobs:
     build:
@@ -55,32 +61,25 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
+            - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
-            - name: Restore cache
-              uses: actions/cache/restore@v3
+            - name: Restore npm cache
+              uses: actions/cache/restore@v4
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
-                      node_modules
+                      ~/.npm
                       ~/.cache/Cypress
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      project-cache-${{ github.event.pull_request.head.ref || github.ref }}-${{ runner.os }}-${{ runner.arch }}-
+                      npm-${{ runner.os }}-${{ runner.arch }}-
 
             - run: ls -la ~/.cache/Cypress || true
-            - run: ls -la protocol/cargo-cache || true
-            - run: ls -la protocol/target/ink || true
-            - run: ls -la node_modules || true
-            - run: ls -la ~/
+            - run: ls -la ~/.npm || true
             - run: ls -la .

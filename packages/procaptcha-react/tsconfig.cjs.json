@@ -14,13 +14,19 @@
 	],
 	"references": [
 		{
-			"path": "../api/tsconfig.cjs.json"
-		},
-		{
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../locale-browser/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-common/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"

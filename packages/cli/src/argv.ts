@@ -18,6 +18,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
 	commandProviderSetDataset,
+	commandSiteKeyRegister,
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
@@ -45,6 +46,7 @@ export function processArgs(
 		} as const)
 		.command(commandProviderSetDataset(pair, config, { logger }))
 		.command(commandStoreCaptchasExternally(pair, config, { logger }))
+		.command(commandSiteKeyRegister(pair, config, { logger }))
 		.command(commandVersion(pair, config, { logger }))
 		.parse();
 }

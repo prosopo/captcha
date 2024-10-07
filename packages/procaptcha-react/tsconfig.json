@@ -10,13 +10,19 @@
 
 	"references": [
 		{
-			"path": "../api"
-		},
-		{
 			"path": "../common"
 		},
 		{
+			"path": "../locale-browser"
+		},
+		{
 			"path": "../procaptcha"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../types"
 		},
 		{
 			"path": "../util"

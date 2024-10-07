@@ -15,22 +15,24 @@ import { stringToHex } from "@polkadot/util/string";
 import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
 import { sleep } from "@prosopo/procaptcha";
-import { buildUpdateState, getDefaultEvents } from "@prosopo/procaptcha-common";
+import {
+	buildUpdateState,
+	getDefaultEvents,
+	getRandomActiveProvider,
+	providerRetry,
+} from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
-	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
-	type RandomProvider,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import { at, solvePoW } from "@prosopo/util";
+import { solvePoW } from "@prosopo/util";
 
 export const Manager = (
 	configInput: ProcaptchaClientConfigInput,
@@ -57,14 +59,14 @@ export const Manager = (
 
 	const clearTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.timeout);
+		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
 	};
 
 	const clearSuccessfulChallengeTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.successfullChallengeTimeout);
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
 		// then clear the timeout from the state
 		updateState({ successfullChallengeTimeout: undefined });
 	};
@@ -126,140 +128,139 @@ export const Manager = (
 	};
 
 	const start = async () => {
-		if (state.loading) {
-			return;
-		}
-		if (state.isHuman) {
-			return;
-		}
+		await providerRetry(
+			async () => {
+				if (state.loading) {
+					return;
+				}
+				if (state.isHuman) {
+					return;
+				}
 
-		resetState();
+				resetState();
 
-		// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
-		updateState({
-			loading: true,
-		});
+				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+				updateState({
+					loading: true,
+				});
+				updateState({ attemptCount: state.attemptCount + 1 });
 
-		const config = getConfig();
+				const config = getConfig();
 
-		// check if account exists in extension
-		const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+				// check if account exists in extension
+				const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
 
-		// use the passed in account (could be web3) or create a new account
-		const userAccount =
-			config.userAccountAddress ||
-			(await ext.getAccount(config)).account.address;
+				// use the passed in account (could be web3) or create a new account
+				const user = await ext.getAccount(config);
+				const userAccount = user.account.address;
 
-		// set the account created or injected by the extension
-		updateState({
-			account: { account: { address: userAccount } },
-		});
+				// set the account created or injected by the extension
+				updateState({
+					account: { account: { address: userAccount } },
+				});
 
-		// snapshot the config into the state
-		updateState({ dappAccount: config.account.address });
+				// snapshot the config into the state
+				updateState({ dappAccount: config.account.address });
 
-		// allow UI to catch up with the loading state
-		await sleep(100);
+				// allow UI to catch up with the loading state
+				await sleep(100);
 
-		// check if account has been provided in config (doesn't matter in web2 mode)
-		if (!config.web2 && !config.userAccountAddress) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
-				context: { error: "Account address has not been set for web3 mode" },
-			});
-		}
-
-		// get a random provider
-		const getRandomProviderResponse = getRandomActiveProvider();
-
-		const events = getDefaultEvents(onStateUpdate, state, callbacks);
-
-		const providerUrl = getRandomProviderResponse.provider.url;
-
-		const providerApi = new ProviderApi(providerUrl, getDappAccount());
-
-		const challenge = await providerApi.getPowCaptchaChallenge(
-			userAccount,
-			getDappAccount(),
-		);
-
-		const solution = solvePoW(challenge.challenge, challenge.difficulty);
-
-		const user = await ext.getAccount(getConfig());
-
-		const signer = user.extension?.signer;
-
-		if (!signer || !signer.signRaw) {
-			throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
-				context: {
-					error:
-						"Signer is not defined, cannot sign message to prove account ownership",
-				},
-			});
-		}
-
-		const userTimestampSignature = await signer.signRaw({
-			address: userAccount,
-			data: stringToHex(challenge[ApiParams.timestamp].toString()),
-			type: "bytes",
-		});
-
-		const verifiedSolution = await providerApi.submitPowCaptchaSolution(
-			challenge,
-			getAccount().account.account.address,
-			getDappAccount(),
-			solution,
-			userTimestampSignature.signature.toString(),
-			config.captchas.pow.verifiedTimeout,
-		);
-		if (verifiedSolution[ApiParams.verified]) {
-			updateState({
-				isHuman: true,
-				loading: false,
-			});
-
-			events.onHuman(
-				encodeProcaptchaOutput({
-					[ApiParams.providerUrl]: providerUrl,
-					[ApiParams.user]: getAccount().account.account.address,
-					[ApiParams.dapp]: getDappAccount(),
-					[ApiParams.challenge]: challenge.challenge,
-					[ApiParams.nonce]: solution,
-					[ApiParams.timestamp]: challenge.timestamp,
-					[ApiParams.signature]: {
-						[ApiParams.provider]: challenge.signature.provider,
-						[ApiParams.user]: {
-							[ApiParams.timestamp]:
-								userTimestampSignature.signature.toString(),
+				// check if account has been provided in config (doesn't matter in web2 mode)
+				if (!config.web2 && !config.userAccountAddress) {
+					throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+						context: {
+							error: "Account address has not been set for web3 mode",
 						},
-					},
-				}),
-			);
-			setValidChallengeTimeout();
-		}
-	};
+					});
+				}
 
-	const getRandomActiveProvider = (): RandomProvider => {
-		const randomIntBetween = (min: number, max: number) =>
-			Math.floor(Math.random() * (max - min + 1) + min);
+				// get a random provider
+				const getRandomProviderResponse = await getRandomActiveProvider(
+					getConfig(),
+				);
 
-		// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
-		//  to ensure that the random selection was completed within a certain timeframe
+				const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
-		const environment = getConfig().defaultEnvironment;
-		const PROVIDERS = loadBalancer(environment);
+				const providerUrl = getRandomProviderResponse.provider.url;
 
-		const randomProvderObj = at(
-			PROVIDERS,
-			randomIntBetween(0, PROVIDERS.length - 1),
-		);
-		return {
-			providerAccount: randomProvderObj.address,
-			provider: {
-				url: randomProvderObj.url,
-				datasetId: randomProvderObj.datasetId,
-				datasetIdContent: randomProvderObj.datasetIdContent,
+				const providerApi = new ProviderApi(providerUrl, getDappAccount());
+
+				const challenge = await providerApi.getPowCaptchaChallenge(
+					userAccount,
+					getDappAccount(),
+				);
+
+				if (challenge.error) {
+					updateState({
+						error: challenge.error,
+						loading: false,
+					});
+				} else {
+					const solution = solvePoW(challenge.challenge, challenge.difficulty);
+
+					const signer = user.extension?.signer;
+
+					if (!signer || !signer.signRaw) {
+						throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+							context: {
+								error:
+									"Signer is not defined, cannot sign message to prove account ownership",
+							},
+						});
+					}
+
+					const userTimestampSignature = await signer.signRaw({
+						address: userAccount,
+						data: stringToHex(challenge[ApiParams.timestamp].toString()),
+						type: "bytes",
+					});
+
+					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
+						challenge,
+						getAccount().account.account.address,
+						getDappAccount(),
+						solution,
+						userTimestampSignature.signature.toString(),
+						config.captchas.pow.verifiedTimeout,
+					);
+					if (verifiedSolution[ApiParams.verified]) {
+						updateState({
+							isHuman: true,
+							loading: false,
+						});
+
+						events.onHuman(
+							encodeProcaptchaOutput({
+								[ApiParams.providerUrl]: providerUrl,
+								[ApiParams.user]: getAccount().account.account.address,
+								[ApiParams.dapp]: getDappAccount(),
+								[ApiParams.challenge]: challenge.challenge,
+								[ApiParams.nonce]: solution,
+								[ApiParams.timestamp]: challenge.timestamp,
+								[ApiParams.signature]: {
+									[ApiParams.provider]: challenge.signature.provider,
+									[ApiParams.user]: {
+										[ApiParams.timestamp]:
+											userTimestampSignature.signature.toString(),
+									},
+								},
+							}),
+						);
+						setValidChallengeTimeout();
+					} else {
+						updateState({
+							isHuman: false,
+							loading: false,
+						});
+						events.onFailed();
+					}
+				}
 			},
-		};
+			start,
+			resetState,
+			state.attemptCount,
+			10,
+		);
 	};
 
 	return {

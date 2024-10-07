@@ -10,10 +10,34 @@ on:
                 type: string
                 description: Version number (e.g. 1.2.3)
                 required: true
+            src:
+                type: string
+                description: Source branch name (e.g. staging)
+                required: true
+                default: staging
+            interim:
+                type: string
+                description: Interim branch name (e.g. release/1.2.3). Leave empty to use 'release/<version_number>'.
+                required: false
+            dest:
+                type: string
+                description: Destination branch name (e.g. main)
+                required: true
+                default: main
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
+
+env:
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    CARGO_TERM_COLOR: always
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
+defaults:
+    run:
+        shell: bash
 
 jobs:
     bump_version:
@@ -57,37 +81,92 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: '.nvmrc'
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+
+            - run: mkdir -p ~/.npm
+            - run: mkdir -p ~/.cache/Cypress
+
+            - name: Restore npm cache
+              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
+              uses: actions/cache/restore@v4
+              with:
+                  # must restore all cache dirs, and they must exist ahead of this!
+                  path: |
+                      ~/.npm
+                      ~/.cache/Cypress
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+                  key: some-unused-cache-key
+                  restore-keys: |
+                      npm-${{ runner.os }}-${{ runner.arch }}-
 
             - name: Bump version
-              env:
-                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                  
-                    # set the branch name
-                    BRANCH_NAME="release/${{ github.event.inputs.version }}"
+                set -euo pipefail # stop on errors, print commands, fail on pipe fails
 
-                    # make a new branch for the version changes
-                    git switch -c $BRANCH_NAME
+                # set the author in git
+                git config user.name "prosoponator[bot]"
+                git config user.email "dev@prosopo.io"
 
-                    # find all package.json files, recursively
-                    pkgJsons=$(find . -name package.json -prune -not -path '*/node_modules/*' -not -path '*/.next/*')
-                    # replace the version in all package.json files
-                    xargs -I % sh -c "cat % | jq '.version = \"${{ github.event.inputs.version }}\"' > %.new && mv %.new %" <<< "$pkgJsons"
+                # checkout the src branch
+                git checkout ${{ github.event.inputs.src }}
 
-                    # set the author in git
-                    git config user.name "prosoponator[bot]"
-                    git config user.email "dev@prosopo.io"
+                INTERIM="${{ github.event.inputs.interim}}"
+                # set the interim branch name to release/<version_number> if not provided
+                INTERIM="${INTERIM:-release/${{ github.event.inputs.version }}}"
 
-                    # commit the version changes
-                    git add .
-                    git commit -m "Bump version to ${{ github.event.inputs.version }}"
+                # make a new branch for the version changes
+                git switch -c $INTERIM
 
-                    # push version changes
-                    git push --set-upstream origin $BRANCH_NAME
-                  
-                    git fetch origin main
+                pkgJsons=$(find "${{ github.workspace }}" -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**" | xargs -I "{}"  echo {} | sed s/\"//g)
+                echo $pkgJsons
+                # get the package "name" out of each pkgJson
+                pkgNames=$(xargs -I % sh -c "jq -r '.name' %" <<< "$pkgJsons")
+                echo $pkgNames
+                while IFS= read -r pkgJson; do
+                    echo "Bumping version in $pkgJson"
+                    # for each package in the workspace, set the version number
+                    cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > tmp
+                    mv tmp $pkgJson
+                    while IFS= read -r pkgName; do
+                        # for each package in the workspace, check whether it is in the dependencies of the current package
+                        # if so, bump the version number in the dependencies
+                        cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
+                        mv tmp $pkgJson
+                        cat $pkgJson | jq "if .devDependencies[\"$pkgName\"] then .devDependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
+                        mv tmp $pkgJson 
+                    done <<< "$pkgNames"
+                done <<< "$pkgJsons"
 
-                    # create a PR for the release
-                    gh pr create --base main --title "Release ${{ github.event.inputs.version }}" --fill
+                # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
+                envFiles=$(find . -iregex ".*\/\.?env\.\w+" -not -iname "*\.js" -not -iname "*\.ts" -not -path "./node_modules/**")
+                echo "Bumping version in env files: $envFiles"
+                for envFile in $envFiles; do
+                    sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
+                done
+
+                # the json may be poorly formatted now, so we need to fix it
+                npm i
+                npm run -w @prosopo/scripts build
+                npm run -w @prosopo/lint build
+                npm run lint-fix
+
+                # commit the version changes
+                git add .
+                git commit -m "Bump version to ${{ github.event.inputs.version }}"
+
+                # push version changes
+                git push --set-upstream origin $INTERIM
+                
+                # fetch the dest branch
+                git fetch origin ${{ github.event.inputs.dest }}
+
+                # create a PR for the release
+                gh pr create --base ${{ github.event.inputs.dest }} --title "Release ${{ github.event.inputs.version }}" --fill
+

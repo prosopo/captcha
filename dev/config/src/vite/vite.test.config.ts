@@ -41,7 +41,7 @@ export default function () {
 				`src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`,
 			],
 			watch: false,
-			watchExclude: ["**/node_modules/**", "**/dist/**"],
+			exclude: ["**/node_modules/**", "**/dist/**"],
 			logHeapUsage: true,
 			coverage: {
 				enabled: true,

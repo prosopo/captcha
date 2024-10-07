@@ -18,7 +18,7 @@ import type {
 import { object } from "zod";
 import { ApiParams } from "../api/index.js";
 import type { CaptchaResponseBody } from "../provider/index.js";
-import type { ProsopoCaptchaApiInterface } from "./api.js";
+import type { ProcaptchaApiInterface } from "./api.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 import { type ProcaptchaToken, ProcaptchaTokenSpec } from "./token.js";
 /**
@@ -61,7 +61,7 @@ export interface ProcaptchaState {
 	isHuman: boolean; // is the user human?
 	index: number; // the index of the captcha round currently being shown
 	solutions: string[][]; // the solutions for each captcha round
-	captchaApi: ProsopoCaptchaApiInterface | undefined; // the captcha api instance for managing captcha challenge. undefined if not set up
+	captchaApi: ProcaptchaApiInterface | undefined; // the captcha api instance for managing captcha challenge. undefined if not set up
 	challenge: CaptchaResponseBody | undefined; // the captcha challenge from the provider. undefined if not set up
 	showModal: boolean; // whether to show the modal or not
 	loading: boolean; // whether the captcha is loading or not
@@ -71,6 +71,8 @@ export interface ProcaptchaState {
 	timeout: NodeJS.Timeout | undefined; // the timer for the captcha challenge. undefined if not set
 	successfullChallengeTimeout: NodeJS.Timeout | undefined; // the timer for the captcha challenge. undefined if not set
 	sendData: boolean; // whether to trigger sending user event data (mouse, keyboard, touch) to the provider
+	attemptCount: number; // Number of attempts to successfully complete captcha without errors
+	error: string | undefined; // any error message
 }
 
 /**
