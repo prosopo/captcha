@@ -125,3 +125,30 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+
+[sources.mongo]
+type = "docker_logs"
+include_labels = ["vector.mongo=true"]
+
+[transforms.mongo_format]
+type = "remap"
+inputs = ["mongo"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$OO_HOST"
+# TODO del more
+'''
+
+# send to openobserve
+[sinks.openobserve_mongo]
+type = "http"
+inputs = ["mongo_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_mongo/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
