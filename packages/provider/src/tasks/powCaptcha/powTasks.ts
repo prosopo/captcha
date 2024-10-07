@@ -53,19 +53,8 @@ export class PowCaptchaManager {
 		origin: string,
 		powDifficulty?: number,
 	): Promise<PoWCaptcha> {
-		console.log("\n ----- \n powDifficulty", powDifficulty, "\n ----- \n");
+		const difficulty = powDifficulty || 4;
 
-		const difficulty = powDifficulty;
-
-		if (!difficulty) {
-			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: {
-					failedFuncName: this.getPowCaptchaChallenge.name,
-					userAccount,
-					dappAccount,
-				},
-			});
-		}
 		const requestedAtTimestamp = Date.now();
 
 		// Use blockhash, userAccount and dappAccount for string for challenge
