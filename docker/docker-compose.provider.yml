@@ -56,7 +56,6 @@ services:
         profiles:
             - development
         image: mongo:7.0.14
-        command: ["mongod", "--logpath", "/proc/1/fd/1", "--logFormat", "json"] # log in json format to stdout
         # volumes:
         #   - ./db:/data/db
         ports:
@@ -81,7 +80,6 @@ services:
             - production
             - staging
         image: mongo:7.0.14
-        command: ["mongod", "--logpath", "/proc/1/fd/1", "--logFormat", "json"] # log in json format to stdout
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.mongo=true" # enable logging as a provider
