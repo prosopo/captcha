@@ -1,3 +1,9 @@
+# enable vector's api
+[api]
+enabled = true
+# only allow localhost to hit the api
+address = "127.0.0.1:8686"
+
 # take logs from docker containers with the correct label set
 [sources.provider]
 type = "docker_logs"
