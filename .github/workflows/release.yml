@@ -7,6 +7,10 @@ on:
         branches: [main, staging]
     workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
     GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
     GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
@@ -60,7 +64,7 @@ jobs:
 
             - name: Restore npm cache
               if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
-              uses: actions/cache/restore@v3
+              uses: actions/cache/restore@v4
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
@@ -73,7 +77,7 @@ jobs:
                   restore-keys: |
                       npm-${{ runner.os }}-${{ runner.arch }}-
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             - name: Detect env
               id: env
@@ -127,7 +131,7 @@ jobs:
                     exit 1
                 fi
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               with:
                   node-version-file: '.nvmrc'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
@@ -138,6 +142,12 @@ jobs:
             - run: npm run build:all
             - run: npm run build:all:cjs
             - run: npm run bundle:all
+
+            - name: Purge gh prerelease
+              if: ${{ steps.env.outputs.gh_prerelease }}
+              continue-on-error: true # don't fail the workflow if the release doesn't exist
+              run: |
+                  gh release delete "${{ steps.env.outputs.gh_release_tag }}" --yes --cleanup-tag
 
             - name: Github release
               continue-on-error: true # don't fail the workflow if the release already exists
