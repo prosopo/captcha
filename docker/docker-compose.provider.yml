@@ -142,6 +142,7 @@ services:
             - production
             - staging
         image: containrrr/watchtower
+        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never"]
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.provider=true" # enable logging as a provider
