@@ -98,7 +98,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { error: err, code: 400 },
+					context: { error: err, code: 400, user: req.body.user, dapp: req.body.dapp },
 				}),
 			);
 		}
@@ -119,13 +119,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
+					context: { code: 400, error: err, body: req.body },
 				}),
 			);
 		}
 
+		const user = parsed[ApiParams.user];
+		const dapp = parsed[ApiParams.dapp];
+
 		try {
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
+
+
 
 			if (!clientRecord) {
 				return res.json({
@@ -137,8 +142,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			// TODO allow the dapp to override the length of time that the request hash is valid for
 			const result: DappUserSolutionResult =
 				await tasks.imgCaptchaManager.dappUserSolution(
-					parsed[ApiParams.user],
-					parsed[ApiParams.dapp],
+					user,
+					dapp,
 					parsed[ApiParams.requestHash],
 					parsed[ApiParams.captchas],
 					parsed[ApiParams.signature].user.requestHash,
@@ -159,7 +164,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.UNKNOWN", {
-					context: { code: 400, error: err },
+					context: { code: 400, error: err, user, dapp },
 				}),
 			);
 		}
@@ -235,7 +240,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
+					context: { code: 400, error: err, user: req.body.user, dapp: req.body.dapp },
 				}),
 			);
 		}
@@ -280,7 +285,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
+					context: { code: 400, error: err, user: req.body.user, dapp: req.body.dapp },
 				}),
 			);
 		}

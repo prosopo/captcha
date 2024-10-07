@@ -11,12 +11,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export default {
-	watch: false,
-	mode: "development",
-	server: {
-		https: false,
-		host: true,
-		cors: true,
-	},
-};
+
+import { loadEnv } from "@prosopo/dotenv";
+import { type UserConfig, defineConfig } from "vite";
+
+export default defineConfig(({ command, mode }) => {
+	loadEnv();
+	return {
+		watch: false,
+		mode: "development",
+		server: {
+			https: false,
+			host: true,
+			cors: true,
+		},
+		define: {
+			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY,
+			),
+			"import.meta.env.PROSOPO_SERVER_URL": JSON.stringify(
+				process.env.PROSOPO_SERVER_URL,
+			),
+		},
+	} as UserConfig;
+});

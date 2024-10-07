@@ -20,6 +20,7 @@ import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
+import { registerSiteKey } from "@prosopo/provider/dist/tests/integration/registerSitekey.js";
 import {
 	type IDappAccount,
 	type IProviderAccount,
@@ -146,6 +147,8 @@ export async function setup(force: boolean) {
 		await setupProvider(env, defaultProvider);
 
 		env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`);
+
+		await registerSiteKey(defaultDapp.pair.address);
 
 		if (!hasProviderAccount) {
 			await updateEnvFile({

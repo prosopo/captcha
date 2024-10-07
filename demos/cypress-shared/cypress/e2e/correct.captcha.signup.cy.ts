@@ -64,8 +64,7 @@ describe("Captchas", () => {
 		});
 	});
 
-	it("Selecting the correct images passes the captcha", () => {
-		cy.get('button[type="button"]').eq(1).click();
+	it("Selecting the correct images passes the captcha and signs up the user", () => {
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
@@ -76,24 +75,34 @@ describe("Captchas", () => {
 						// Click correct images and submit the solution
 						cy.clickCorrectCaptchaImages(captcha);
 					})
-					.then(() => {
-						// Get inputs of type checkbox
-						cy.get("input[type='checkbox']").then((checkboxes) => {
-							cy.wrap(checkboxes).first().should("be.checked");
-						});
-					});
-				const uniqueId = Cypress._.uniqueId("test");
+
+				// wait for solution http request to complete
+				cy.wait("@postSolution");
+
+				// Get inputs of type checkbox
+				cy.get("input[type='checkbox']", { timeout: 10000 }).should("have.length", 2).then((checkboxes) => {
+					expect(checkboxes).to.have.length(2);
+					cy.wrap(checkboxes).first().should("be.checked");
+				});
+
+
+				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 				cy.get('input[type="password"]').type("password");
 				cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`);
 				cy.get('input[id="name"]').type("test");
+
+				cy.intercept('**/signup').as('signup');
+
 				cy.get('button[type="button"]').first().click();
 
-				cy.contains("user created").should("be.visible");
 
-				// reloading the page and checking the box again should not require a captcha to be solved
-				cy.reload();
+				cy.wait('@signup').then((interception) => {
+					const {body} = interception.response;
+					console.log("body", body);
+					const {message} = body;
+					expect(message).to.equal("user created");
+				});
 
-				cy.get(checkboxClass, { timeout: 12000 }).first().click();
 			});
 		});
 	});

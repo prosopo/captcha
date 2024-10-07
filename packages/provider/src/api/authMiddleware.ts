@@ -44,7 +44,7 @@ const extractHeaders = (req: Request) => {
 
 	if (!signature || !timestamp) {
 		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
-			context: { error: "Missing signature or block number", code: 400 },
+			context: { error: "Missing signature or timestamp", code: 400 },
 		});
 	}
 

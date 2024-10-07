@@ -30,6 +30,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+import {authMiddleware} from "@prosopo/provider/dist/api/authMiddleware.js";
 
 function startApi(
 	env: ProviderEnvironment,
@@ -51,7 +52,7 @@ function startApi(
 	apiApp.use(prosopoVerifyRouter(env));
 
 	if (admin) {
-		apiApp.use(prosopoAdminRouter(env));
+		apiApp.use(prosopoAdminRouter(env), authMiddleware(env));
 	}
 
 	// Rate limiting
