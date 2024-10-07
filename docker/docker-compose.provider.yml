@@ -180,7 +180,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "vector", "validate", "/etc/vector/vector.toml"]
-            interval: 1d
+            interval: 30s
             timeout: 10s
             retries: 1
             start_period: 10s
