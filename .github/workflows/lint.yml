@@ -5,6 +5,11 @@ name: lint
 on:
     pull_request:
         branches: [main, dev, staging, release/*]
+        types: 
+            - opened # when a PR is opened
+            - synchronize # when a PR is pushed to
+            - reopened # when a PR is reopened
+            - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
     workflow_dispatch:
 
 concurrency:
