@@ -30,6 +30,8 @@ services:
         image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
@@ -80,6 +82,8 @@ services:
         image: mongo:7.0.14
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
@@ -109,6 +113,8 @@ services:
             - ../.env.${NODE_ENV}
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
@@ -138,6 +144,8 @@ services:
         image: containrrr/watchtower
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         env_file:
             - ../.env.${NODE_ENV}
@@ -157,6 +165,7 @@ services:
             - ../.env.${NODE_ENV}
         labels:
             - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+            - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./provider.vector.toml:/etc/vector/vector.toml
