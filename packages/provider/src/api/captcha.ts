@@ -98,7 +98,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { error: err, code: 400, user: req.body.user, dapp: req.body.dapp },
+					context: {
+						error: err,
+						code: 400,
+						user: req.body.user,
+						dapp: req.body.dapp,
+					},
 				}),
 			);
 		}
@@ -129,8 +134,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
-
-
 
 			if (!clientRecord) {
 				return res.json({
@@ -240,7 +243,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err, user: req.body.user, dapp: req.body.dapp },
+					context: {
+						code: 400,
+						error: err,
+						user: req.body.user,
+						dapp: req.body.dapp,
+					},
 				}),
 			);
 		}
@@ -285,7 +293,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error(err);
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err, user: req.body.user, dapp: req.body.dapp },
+					context: {
+						code: 400,
+						error: err,
+						user: req.body.user,
+						dapp: req.body.dapp,
+					},
 				}),
 			);
 		}

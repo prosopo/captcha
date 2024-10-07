@@ -24,13 +24,13 @@ import {
 	prosopoVerifyRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
+import { authMiddleware } from "@prosopo/provider/dist/api/authMiddleware.js";
 import type { CombinedApiPaths } from "@prosopo/types";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
-import {authMiddleware} from "@prosopo/provider/dist/api/authMiddleware.js";
 
 function startApi(
 	env: ProviderEnvironment,

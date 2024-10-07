@@ -69,40 +69,38 @@ describe("Captchas", () => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
 				// Solve the captchas
-				cy.get("@captchas")
-					.each((captcha: Captcha) => {
-						cy.log("in each function");
-						// Click correct images and submit the solution
-						cy.clickCorrectCaptchaImages(captcha);
-					})
+				cy.get("@captchas").each((captcha: Captcha) => {
+					cy.log("in each function");
+					// Click correct images and submit the solution
+					cy.clickCorrectCaptchaImages(captcha);
+				});
 
 				// wait for solution http request to complete
 				cy.wait("@postSolution");
 
 				// Get inputs of type checkbox
-				cy.get("input[type='checkbox']", { timeout: 10000 }).should("have.length", 2).then((checkboxes) => {
-					expect(checkboxes).to.have.length(2);
-					cy.wrap(checkboxes).first().should("be.checked");
-				});
-
+				cy.get("input[type='checkbox']", { timeout: 10000 })
+					.should("have.length", 2)
+					.then((checkboxes) => {
+						expect(checkboxes).to.have.length(2);
+						cy.wrap(checkboxes).first().should("be.checked");
+					});
 
 				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 				cy.get('input[type="password"]').type("password");
 				cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`);
 				cy.get('input[id="name"]').type("test");
 
-				cy.intercept('**/signup').as('signup');
+				cy.intercept("**/signup").as("signup");
 
 				cy.get('button[type="button"]').first().click();
 
-
-				cy.wait('@signup').then((interception) => {
-					const {body} = interception.response;
+				cy.wait("@signup").then((interception) => {
+					const { body } = interception.response;
 					console.log("body", body);
-					const {message} = body;
+					const { message } = body;
 					expect(message).to.equal("user created");
 				});
-
 			});
 		});
 	});

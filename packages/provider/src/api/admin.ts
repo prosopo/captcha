@@ -26,7 +26,6 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();
 	const tasks = new Tasks(env);
 
-
 	router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
 		try {
 			const result = await tasks.datasetManager.providerSetDataset(req.body);
