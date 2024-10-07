@@ -150,10 +150,8 @@ services:
                 max-file: '1'
     vector:
         profiles:
-            - production-x86_64
-            - production-arm64
-            - staging-x86_64
-            - staging-arm64
+            - production
+            - staging
         image: timberio/vector:latest
         env_file:
             - ../.env.${NODE_ENV}
