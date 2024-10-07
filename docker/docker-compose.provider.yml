@@ -170,6 +170,7 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./provider.vector.toml:/etc/vector/vector.toml
+            - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
         networks:
             - internal
             - external
