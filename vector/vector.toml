@@ -17,7 +17,54 @@ del(.stream)
 del(.timestamp)
 '''
 
-# print to console
+# print to console the provider logs
+#[sinks.console]
+#type = "console"
+#inputs = ["provider_format"]
+#encoding.codec = "json"
+
+# send provider logs to openobserve
+[sinks.openobserve_provider]
+type = "http"
+inputs = ["provider_log_format"]
+uri = "$OO_URL_PROVIDER"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+
+# listen to docker events for containers starting+ending
+[sources.docker]
+type = "exec"
+# only containers with the correct label are listened to
+command = [ "docker", "events", "--format", "json", "--filter", "label=vector.docker=true", "--filter", "event=start", "--filter", "event=stop", "--filter", "event=restart", "--filter", "event=die", "--filter", "event=pause", "--filter", "event=unpause", "--filter", "event=kill", "--filter", "event=oom" ]
+mode = "streaming"
+decoding.codec = "json"
+
+# delete useless info and add the host to identify what machine the logs are coming from
+[transforms.docker_format]
+type = "remap"
+inputs = ["stdin"]
+source = '''
+.host="$OO_HOST"
+del(.id)
+del(.from)
+del(.host)
+del(.Type)
+.name=.Actor.Attributes.name
+del(.Actor)
+del(.scope)
+del(.time)
+del(.timeNano)
+del(.source_type)
+del(.timestamp)
+'''
+
+# print docker events to console
 [sinks.console]
 type = "console"
 inputs = ["format"]
