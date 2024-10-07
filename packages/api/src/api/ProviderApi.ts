@@ -33,7 +33,7 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type TGetImageCaptchaChallengePathAndParams,
-	UpdateProviderClientsResponse,
+	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
@@ -161,7 +161,10 @@ export default class ProviderApi
 		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
 	}
 
-	public getFrictionlessCaptcha(token: string, dapp: string): Promise<GetFrictionlessCaptchaResponse> {
+	public getFrictionlessCaptcha(
+		token: string,
+		dapp: string,
+	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
 			[ApiParams.token]: token,
 			[ApiParams.dapp]: dapp,
@@ -169,7 +172,10 @@ export default class ProviderApi
 		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
 	}
 
-	public submitUserEvents(events: StoredEvents, string: string): Promise<UpdateProviderClientsResponse> {
+	public submitUserEvents(
+		events: StoredEvents,
+		string: string,
+	): Promise<UpdateProviderClientsResponse> {
 		return this.post(ApiPaths.SubmitUserEvents, { events, string });
 	}
 

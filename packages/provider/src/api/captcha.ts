@@ -25,21 +25,21 @@ import {
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
 	GetFrictionlessCaptchaChallengeRequestBody,
-	GetFrictionlessCaptchaResponse,
+	type GetFrictionlessCaptchaResponse,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
+import type { SessionRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { v4 as uuidv4 } from "uuid";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
-import { SessionRecord } from "@prosopo/types-database";
-import { v4 as uuidv4 } from 'uuid';
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 
@@ -178,7 +178,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		try {
-			const { user, dapp, sessionId } = GetPowCaptchaChallengeRequestBody.parse(req.body);
+			const { user, dapp, sessionId } = GetPowCaptchaChallengeRequestBody.parse(
+				req.body,
+			);
 			console.log("\n ----- \n user", user, "\n ----- \n");
 			console.log("\n ----- \n dapp", dapp, "\n ----- \n");
 			console.log("\n ----- \n sessionId", sessionId, "\n ----- \n");
@@ -205,13 +207,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-				
-			}
-			else if (clientSettings?.settings?.captchaType === "pow") {
+			} else if (clientSettings?.settings?.captchaType === "pow") {
 				console.log("Direct pow is allowed");
 			} else {
 				// Throw an error
-								return res.json({
+				return res.json({
 					error: req.i18n.t("API.INCOMPATIBLE_CAPTCHA_TYPE"),
 					code: 200,
 				});
@@ -219,8 +219,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			validateAddress(user, false, 42);
 			validateAddress(dapp, false, 42);
-
-
 
 			// TODO do something with domains
 
@@ -234,7 +232,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			console.log("\n ----- \n clientSettings", clientSettings?.settings?.powDifficulty, "\n ----- \n");
+			console.log(
+				"\n ----- \n clientSettings",
+				clientSettings?.settings?.powDifficulty,
+				"\n ----- \n",
+			);
 
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
@@ -326,7 +328,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		}
 	});
 
-		/**
+	/**
 	 * Gets a frictionless captcha challenge
 	 */
 	router.post(
@@ -334,9 +336,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			try {
 				console.log("Received frictionless captcha challenge request");
-				const { token, dapp } = GetFrictionlessCaptchaChallengeRequestBody.parse(
-					req.body,
-				);
+				const { token, dapp } =
+					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 				console.log(`Parsed request body. Token: ${token}, Dapp: ${dapp}`);
 
 				const botScore = await getBotScore(token);
@@ -345,7 +346,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				console.log(`Retrieved client config for dapp: ${dapp}`, clientConfig);
 
-				const botThreshold = clientConfig?.settings?.frictionlessThreshold || 0.5;
+				const botThreshold =
+					clientConfig?.settings?.frictionlessThreshold || 0.5;
 				console.log(`Bot threshold set to: ${botThreshold}`);
 
 				if (Number(botScore) > botThreshold) {
@@ -356,25 +358,24 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					};
 					console.log("Image captcha response:", response);
 					return res.json(response);
-				} else {
-					console.log("Bot score below threshold. Proceeding with PoW captcha.");
-					const sessionRecord: SessionRecord = {
-						sessionId: uuidv4(),
-						createdAt: new Date(),
-					};
-					console.log("Created session record:", sessionRecord);
-
-					await tasks.db.storeSessionRecord(sessionRecord);
-					console.log("Stored session record in database");
-
-					const response: GetFrictionlessCaptchaResponse = {
-						[ApiParams.captchaType]: "pow",
-						[ApiParams.sessionId]: sessionRecord.sessionId,
-						[ApiParams.status]: "ok",
-					};
-					console.log("PoW captcha response:", response);
-					return res.json(response);
 				}
+				console.log("Bot score below threshold. Proceeding with PoW captcha.");
+				const sessionRecord: SessionRecord = {
+					sessionId: uuidv4(),
+					createdAt: new Date(),
+				};
+				console.log("Created session record:", sessionRecord);
+
+				await tasks.db.storeSessionRecord(sessionRecord);
+				console.log("Stored session record in database");
+
+				const response: GetFrictionlessCaptchaResponse = {
+					[ApiParams.captchaType]: "pow",
+					[ApiParams.sessionId]: sessionRecord.sessionId,
+					[ApiParams.status]: "ok",
+				};
+				console.log("PoW captcha response:", response);
+				return res.json(response);
 			} catch (err) {
 				console.error("Error in frictionless captcha challenge:", err);
 				tasks.logger.error(err);
@@ -387,13 +388,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		},
 	);
 
-		/**
+	/**
 	 * Gets public details of the provider
 	 */
 	router.post(ApiPaths.UpdateProviderClients, async (req, res, next) => {
 		try {
-			await tasks.clientTaskManager.getClientList()
-			return res.json({message: "Provider updated"});
+			await tasks.clientTaskManager.getClientList();
+			return res.json({ message: "Provider updated" });
 		} catch (err) {
 			tasks.logger.error(err);
 			return next(

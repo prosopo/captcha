@@ -324,13 +324,13 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 );
 
 export interface SessionRecord {
-  sessionId: string;
-  createdAt: Date;
+	sessionId: string;
+	createdAt: Date;
 }
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
-  sessionId: { type: String, required: true, unique: true },
-  createdAt: { type: Date, required: true },
+	sessionId: { type: String, required: true, unique: true },
+	createdAt: { type: Date, required: true },
 });
 
 export interface IProviderDatabase extends IDatabase {

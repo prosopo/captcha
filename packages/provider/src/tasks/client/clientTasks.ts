@@ -173,7 +173,11 @@ export class ClientTaskManager {
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
 
-			console.log("\n ----- \n newClientRecords", newClientRecords, "\n ----- \n");
+			console.log(
+				"\n ----- \n newClientRecords",
+				newClientRecords,
+				"\n ----- \n",
+			);
 
 			if (newClientRecords) {
 				await this.providerDB.updateClientRecords(newClientRecords);

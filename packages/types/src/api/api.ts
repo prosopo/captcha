@@ -66,9 +66,11 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse>;
-	submitUserEvents(events: StoredEvents, string: string): Promise<UpdateProviderClientsResponse>;
-	updateProviderClients(
+	submitUserEvents(
+		events: StoredEvents,
+		string: string,
 	): Promise<UpdateProviderClientsResponse>;
+	updateProviderClients(): Promise<UpdateProviderClientsResponse>;
 	getProviderStatus(): Promise<ProviderRegistered>;
 	getProviderDetails(): Promise<Provider>;
 }
