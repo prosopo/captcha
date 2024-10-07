@@ -179,7 +179,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "vector", "validate", "/etc/vector/vector.toml"]
+            test: ["CMD", "curl", "localhost:8686/health"]
             interval: 30s
             timeout: 10s
             retries: 1
