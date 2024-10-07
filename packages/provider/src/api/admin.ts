@@ -20,7 +20,6 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Router } from "express";
 import { Tasks } from "../index.js";
-import { authMiddleware } from "./authMiddleware.js";
 
 export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();

@@ -167,8 +167,8 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.requestHash]: data.requestHash,
 				[ApiParams.signature]: {
 					[ApiParams.user]: {
-						[ApiParams.requestHash]: u8aToHex(
-							pair.sign(stringToU8a(data.requestHash)),
+						[ApiParams.timestamp]: u8aToHex(
+							pair.sign(stringToU8a(data.timestamp)),
 						),
 					},
 					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],

@@ -16,13 +16,12 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	ApiPaths,
-	CaptchaStatus,
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type VerificationResponse,
 	VerifySolutionBody,
+	decodeProcaptchaOutput,
 } from "@prosopo/types";
-import { decodeProcaptchaOutput } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, {
 	type NextFunction,
@@ -45,106 +44,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const tasks = new Tasks(env);
 
 	/**
-	 * Verifies a solution and returns the verification response.
-	 * @param {Response} res - Express response object.
-	 * @param {Request} req - Express request object.
-	 * @param {NextFunction} next - Express next function.
-	 * @param {boolean} isDapp - Indicates whether the verification is for a dapp (true) or user (false).
-	 */
-	async function verifyImageSolution(
-		res: Response,
-		req: Request,
-		next: NextFunction,
-		isDapp: boolean,
-	) {
-		const parsed = VerifySolutionBody.parse(req.body);
-		try {
-			const { dappSignature, token } = parsed;
-			const { user, dapp, timestamp, commitmentId } =
-				decodeProcaptchaOutput(token);
-
-			// Verify using the appropriate pair based on isDapp flag
-			const keyPair = isDapp
-				? env.keyring.addFromAddress(dapp)
-				: env.keyring.addFromAddress(user);
-
-			// Will throw an error if the signature is invalid
-			verifySignature(dappSignature, timestamp.toString(), keyPair);
-
-			const solution = await (commitmentId
-				? tasks.imgCaptchaManager.getDappUserCommitmentById(commitmentId)
-				: tasks.imgCaptchaManager.getDappUserCommitmentByAccount(user, dapp));
-
-			// No solution exists
-			if (!solution) {
-				tasks.logger.debug("Not verified - no solution found");
-				const noSolutionResponse: VerificationResponse = {
-					[ApiParams.status]: req.t("API.USER_NOT_VERIFIED_NO_SOLUTION"),
-					[ApiParams.verified]: false,
-				};
-				return res.json(noSolutionResponse);
-			}
-
-			if (isDapp) {
-				if (solution.serverChecked) {
-					const alreadyCheckedResponse: VerificationResponse = {
-						[ApiParams.status]: req.t("API.USER_ALREADY_VERIFIED"),
-						[ApiParams.verified]: false,
-					};
-					return res.json(alreadyCheckedResponse);
-				}
-				// Mark solution as checked
-				await tasks.imgCaptchaManager.db.markDappUserCommitmentsChecked([
-					solution.id,
-				]);
-			}
-
-			// A solution exists but is disapproved
-			if (solution.result.status === CaptchaStatus.disapproved) {
-				const disapprovedResponse: VerificationResponse = {
-					[ApiParams.status]: req.t("API.USER_NOT_VERIFIED"),
-					[ApiParams.verified]: false,
-				};
-				return res.json(disapprovedResponse);
-			}
-
-			const maxVerifiedTime = parsed.maxVerifiedTime || 60 * 1000; // Default to 1 minute
-
-			// Check if solution was completed recently
-			if (maxVerifiedTime) {
-				const currentTime = Date.now();
-				const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
-
-				// A solution exists but has timed out
-				if (timeSinceCompletion > parsed.maxVerifiedTime) {
-					const expiredResponse: VerificationResponse = {
-						[ApiParams.status]: req.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
-						[ApiParams.verified]: false,
-					};
-					tasks.logger.debug("Not verified - time run out");
-					return res.json(expiredResponse);
-				}
-			}
-
-			const isApproved = solution.result.status === CaptchaStatus.approved;
-			const response: ImageVerificationResponse = {
-				[ApiParams.status]: req.t(
-					isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
-				),
-				[ApiParams.verified]: isApproved,
-				[ApiParams.commitmentId]: solution.id.toString(),
-			};
-			return res.json(response);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-				}),
-			);
-		}
-	}
-
-	/**
 	 * Verifies a dapp's solution as being approved or not
 	 *
 	 * @param {string} user - Dapp User AccountId
@@ -158,31 +57,34 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		ApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
 			try {
-				await verifyImageSolution(res, req, next, true);
-			} catch (err) {
-				return next(
-					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err },
-					}),
-				);
-			}
-		},
-	);
+				const parsed = VerifySolutionBody.parse(req.body);
+				const { dappSignature, token } = parsed;
+				const { user, dapp, timestamp, commitmentId } =
+					decodeProcaptchaOutput(token);
 
-	/**
-	 * Verifies a user's solution as being approved or not
-	 *
-	 * @param {string} user - Dapp User AccountId
-	 * @param {string} dapp - Dapp Contract AccountId
-	 * @param {string} dappUserSignature - The signature for dapp user
-	 * @param {string} commitmentId - The captcha solution to look up
-	 * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
-	 */
-	router.post(
-		ApiPaths.VerifyImageCaptchaSolutionUser,
-		async (req, res, next) => {
-			try {
-				await verifyImageSolution(res, req, next, false);
+				// Verify using the appropriate pair based on isDapp flag
+				const keyPair = env.keyring.addFromAddress(dapp);
+
+				// Will throw an error if the signature is invalid
+
+				verifySignature(dappSignature, timestamp.toString(), keyPair);
+
+				const response =
+					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
+						user,
+						dapp,
+						commitmentId,
+						parsed.maxVerifiedTime,
+					);
+
+				const verificationResponse: ImageVerificationResponse = {
+					[ApiParams.status]: req.t(response.status),
+					[ApiParams.verified]: response[ApiParams.verified],
+					...(response.commitmentId && {
+						[ApiParams.commitmentId]: response.commitmentId,
+					}),
+				};
+				res.json(verificationResponse);
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {

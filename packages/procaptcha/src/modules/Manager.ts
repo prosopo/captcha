@@ -21,7 +21,6 @@ import {
 	ProsopoEnvError,
 	ProsopoError,
 } from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	buildUpdateState,
 	getDefaultEvents,
@@ -245,16 +244,16 @@ export function Manager(
 					});
 				}
 
-				const userRequestHashSignature = await signer.signRaw({
+				const userTimestampSignature = await signer.signRaw({
 					address: account.account.address,
-					data: stringToHex(challenge.requestHash),
+					data: stringToHex(challenge[ApiParams.timestamp]),
 					type: "bytes",
 				});
 
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
-						userRequestHashSignature.signature,
+						userTimestampSignature.signature,
 						challenge.requestHash,
 						captchaSolution,
 						challenge.timestamp,
@@ -295,7 +294,7 @@ export function Manager(
 										challenge.signature.provider.requestHash,
 								},
 								[ApiParams.user]: {
-									[ApiParams.requestHash]: userRequestHashSignature.signature,
+									[ApiParams.timestamp]: userTimestampSignature.signature,
 								},
 							},
 						}),

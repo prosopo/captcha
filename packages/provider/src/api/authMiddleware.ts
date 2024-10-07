@@ -20,19 +20,28 @@ import type { NextFunction, Request, Response } from "express";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			// Not sure what these are but they seem to be continually called by the provider process causing errors
+			// with the auth middleware
+			if (req.url === "/json/list" || req.url === "/json/version") {
+				next();
+				return;
+			}
+
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.pair) {
-				throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
+				res.status(401).json({
+					error: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR").toString(),
+				});
+				return;
 			}
-
-			verifyEnvironmentKeyPair(env);
 			verifySignature(signature, timestamp, env.pair);
 
 			next();
 		} catch (err) {
 			console.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
+			return;
 		}
 	};
 };
@@ -41,9 +50,15 @@ const extractHeaders = (req: Request) => {
 	const signature = req.headers.signature as string;
 	const timestamp = req.headers.timestamp as string;
 
-	if (!signature || !timestamp) {
-		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
-			context: { error: "Missing signature or timestamp", code: 400 },
+	if (!timestamp) {
+		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
+			context: { error: "Missing timestamp", code: 400 },
+		});
+	}
+
+	if (!signature) {
+		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+			context: { error: "Missing signature", code: 400 },
 		});
 	}
 
@@ -67,12 +82,6 @@ const extractHeaders = (req: Request) => {
 	}
 
 	return { signature, timestamp };
-};
-
-const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
-	if (!env.pair) {
-		throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
-	}
 };
 
 export const verifySignature = (

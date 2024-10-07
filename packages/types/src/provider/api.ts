@@ -43,6 +43,7 @@ import {
 	ProcaptchaTokenSpec,
 	type RequestHashSignature,
 	RequestHashSignatureSchema,
+	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
 
 export enum ApiPaths {
@@ -52,7 +53,6 @@ export enum ApiPaths {
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
-	VerifyImageCaptchaSolutionUser = "/v1/prosopo/provider/image/user/verify",
 	GetProviderStatus = "/v1/prosopo/provider/status",
 	GetProviderDetails = "/v1/prosopo/provider/details",
 	SubmitUserEvents = "/v1/prosopo/provider/events",
@@ -86,7 +86,6 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyImageCaptchaSolutionUser]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
@@ -189,7 +188,7 @@ export const CaptchaSolutionBody = object({
 	[ApiParams.requestHash]: string(),
 	[ApiParams.timestamp]: string(),
 	[ApiParams.signature]: object({
-		[ApiParams.user]: RequestHashSignatureSchema,
+		[ApiParams.user]: TimestampSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
 });

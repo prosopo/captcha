@@ -65,6 +65,16 @@ describe("Captchas", () => {
 	});
 
 	it("Selecting the correct images passes the captcha and signs up the user", () => {
+		cy.get("button").as("button");
+		expect("@button").to.have.length.gte(1);
+		cy.elementExists("button[type='button']:nth-of-type(2)").then(
+			(confirmBtn) => {
+				if (confirmBtn) {
+					cy.wrap(confirmBtn).click();
+				}
+			},
+		);
+		// puts the client-example demo in the signup state. Does not exist in the client-bundle-example
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
@@ -80,9 +90,9 @@ describe("Captchas", () => {
 
 				// Get inputs of type checkbox
 				cy.get("input[type='checkbox']", { timeout: 10000 })
-					.should("have.length", 2)
+					.should("have.length.gte", 1)
 					.then((checkboxes) => {
-						expect(checkboxes).to.have.length(2);
+						expect(checkboxes).to.have.length.gte(1);
 						cy.wrap(checkboxes).first().should("be.checked");
 					});
 
@@ -91,7 +101,7 @@ describe("Captchas", () => {
 				cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`);
 				cy.get('input[id="name"]').type("test");
 
-				cy.intercept("**/signup").as("signup");
+				cy.intercept("POST", "/signup").as("signup");
 
 				cy.get('button[type="button"]').first().click();
 

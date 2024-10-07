@@ -149,7 +149,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					dapp,
 					parsed[ApiParams.requestHash],
 					parsed[ApiParams.captchas],
-					parsed[ApiParams.signature].user.requestHash,
+					parsed[ApiParams.signature].user.timestamp,
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
 					req.ip || NO_IP_ADDRESS,
