@@ -17,6 +17,9 @@
 			"path": "../detector"
 		},
 		{
+			"path": "../fingerprint"
+		},
+		{
 			"path": "../types"
 		},
 		{
