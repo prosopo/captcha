@@ -193,6 +193,10 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
+				if (!frictionlessState?.sessionId) {
+					console.error("where has my frictionlessState gone??")
+				}
+
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),

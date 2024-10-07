@@ -348,7 +348,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const botThreshold = clientConfig?.settings?.frictionlessThreshold || 0.5;
 				console.log(`Bot threshold set to: ${botThreshold}`);
 
-				if (botScore > botThreshold) {
+				if (Number(botScore) > botThreshold) {
 					console.log("Bot score exceeds threshold. Returning image captcha.");
 					const response: GetFrictionlessCaptchaResponse = {
 						[ApiParams.captchaType]: "image",
