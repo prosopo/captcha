@@ -29,7 +29,7 @@ del(.timestamp)
 [sinks.openobserve_provider]
 type = "http"
 inputs = ["provider_log_format"]
-uri = "$OO_URL_PROVIDER"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -85,7 +85,7 @@ encoding.codec = "json"
 [sinks.openobserve_docker]
 type = "http"
 inputs = ["docker_format"]
-uri = "$OO_URL_DOCKER"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_docker/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -116,7 +116,7 @@ del(.resp_headers)
 [sinks.openobserve_caddy]
 type = "http"
 inputs = ["caddy_format"]
-uri = "$OO_URL_CADDY"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_caddy/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
