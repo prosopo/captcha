@@ -160,7 +160,7 @@ services:
         profiles:
             - production
             - staging
-        image: timberio/vector:latest
+        image: prosopo/vector:${COMPOSE_PROVIDER_IMAGE_VERSION}
         env_file:
             - ../.env.${NODE_ENV}
         labels:
