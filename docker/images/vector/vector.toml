@@ -35,7 +35,7 @@ del(.timestamp)
 [sinks.openobserve_provider]
 type = "http"
 inputs = ["provider_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider/_json"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -91,7 +91,7 @@ encoding.codec = "json"
 [sinks.openobserve_docker]
 type = "http"
 inputs = ["docker_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_docker/_json"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -122,7 +122,7 @@ del(.resp_headers)
 [sinks.openobserve_caddy]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_caddy/_json"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -150,7 +150,7 @@ del(.id)
 [sinks.openobserve_mongo]
 type = "http"
 inputs = ["mongo_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_mongo/_json"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_mongo/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -177,7 +177,7 @@ del(.time)
 [sinks.openobserve_watchtower]
 type = "http"
 inputs = ["watchtower_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_watchtower/_json"
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_watchtower/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
