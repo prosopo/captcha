@@ -1,12 +1,14 @@
-[sources.in]
+# take logs from docker containers with the correct label set
+[sources.provider]
 type = "docker_logs"
 include_labels = ["vector.provider=true"]
 
-[transforms.format]
+# format the logs for a provider
+[transforms.provider_format]
 type = "remap"
-inputs = ["in"]
+inputs = ["provider"]
 source = '''
-.host="$HOST"
+.host="$OO_HOST"
 del(.container_created_at)
 del(.container_id)
 del(.host)
@@ -67,18 +69,18 @@ del(.timestamp)
 # print docker events to console
 [sinks.console]
 type = "console"
-inputs = ["format"]
+inputs = ["docker_format"]
 encoding.codec = "json"
 
 # send to openobserve
-[sinks.openobserve]
+[sinks.openobserve_docker]
 type = "http"
-inputs = ["format"]
-uri = "$URL"
+inputs = ["docker_format"]
+uri = "$OO_URL_DOCKER"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$USERNAME"
-auth.password = "$PASSWORD"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
