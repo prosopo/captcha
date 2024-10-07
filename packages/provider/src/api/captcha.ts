@@ -201,7 +201,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-			} if (!(clientSettings?.settings?.captchaType === "pow")) {
+			}
+			if (!(clientSettings?.settings?.captchaType === "pow")) {
 				// Throw an error
 				return res.json({
 					error: req.i18n.t("API.INCOMPATIBLE_CAPTCHA_TYPE"),
