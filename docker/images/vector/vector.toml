@@ -28,7 +28,7 @@ del(.timestamp)
 # send provider logs to openobserve
 [sinks.openobserve_provider]
 type = "http"
-inputs = ["provider_log_format"]
+inputs = ["provider_format"]
 uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider/_json"
 method = "post"
 auth.strategy = "basic"
@@ -59,7 +59,7 @@ decoding.codec = "json"
 # delete useless info and add the host to identify what machine the logs are coming from
 [transforms.docker_format]
 type = "remap"
-inputs = ["stdin"]
+inputs = ["docker"]
 source = '''
 .host="$OO_HOST"
 del(.id)
