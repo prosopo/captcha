@@ -96,7 +96,7 @@ describe("Captchas", () => {
 				cy.get('button[type="button"]').first().click();
 
 				cy.wait("@signup").then((interception) => {
-					const { body } = interception.response;
+					const body = interception.response?.body;
 					console.log("body", body);
 					const { message } = body;
 					expect(message).to.equal("user created");
