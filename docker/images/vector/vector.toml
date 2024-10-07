@@ -94,3 +94,34 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+
+[sources.caddy]
+type = "docker_logs"
+include_labels = ["vector.caddy=true"]
+
+[transforms.caddy_format]
+type = "remap"
+inputs = ["caddy"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$OO_HOST"
+del(.ts)
+del(.user_id)
+del(.size)
+del(.message)
+del(.resp_headers)
+'''
+
+# send to openobserve
+[sinks.openobserve_caddy]
+type = "http"
+inputs = ["caddy_format"]
+uri = "$OO_URL_CADDY"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
