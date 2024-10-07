@@ -1,3 +1,5 @@
+# Image to substitute env vars into vector.toml and start vector
+
 # docker run -it --rm --env-file vector.env -v /home/geopro/bench/captcha5/vector.toml:/etc/vector/vector.toml prosopo/vector:latest
 
 FROM timberio/vector:latest-debian
@@ -6,6 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gettext \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+COPY vector.toml /etc/vector/vector.toml
 
 # script for substituting env vars into the vector config
 RUN cat <<EOF > /main.sh
