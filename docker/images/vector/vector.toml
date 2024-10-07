@@ -159,3 +159,30 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+
+[sources.watchtower]
+type = "docker_logs"
+include_labels = ["vector.watchtower=true"]
+
+[transforms.watchtower_format]
+type = "remap"
+inputs = ["watchtower"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$OO_HOST"
+del(.time)
+'''
+
+# send to openobserve
+[sinks.openobserve_watchtower]
+type = "http"
+inputs = ["watchtower_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_watchtower/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false

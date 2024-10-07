@@ -145,7 +145,7 @@ services:
         command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--label-enable", "--interval", "30"]
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
-            - "vector.provider=true" # enable logging as a provider
+            - "vector.watchtower=true" # enable logging as a watchtower
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         env_file:
