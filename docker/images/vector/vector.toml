@@ -43,6 +43,15 @@ healthcheck.enabled = false
 [sources.docker]
 type = "exec"
 # only containers with the correct label are listened to
+# https://docs.docker.com/reference/cli/docker/system/events/#containers
+# start – Indicates that the container has been started.
+# stop – Indicates that the container has been stopped.
+# restart – Indicates that the container has been restarted.
+# die – Indicates that the container has stopped running (either due to a crash or intentional termination).
+# pause – Indicates that the container is paused, meaning it is not actively running but hasn't been stopped.
+# unpause – Indicates that the container has resumed running after being paused.
+# kill – Indicates that the container has been forcefully terminated.
+# oom – Indicates that the container was terminated due to running out of memory (Out-Of-Memory).
 command = [ "docker", "events", "--format", "json", "--filter", "label=vector.docker=true", "--filter", "event=start", "--filter", "event=stop", "--filter", "event=restart", "--filter", "event=die", "--filter", "event=pause", "--filter", "event=unpause", "--filter", "event=kill", "--filter", "event=oom" ]
 mode = "streaming"
 decoding.codec = "json"
