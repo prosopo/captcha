@@ -56,6 +56,7 @@ export enum ApiPaths {
 	VerifyImageCaptchaSolutionUser = "/v1/prosopo/provider/image/user/verify",
 	GetProviderStatus = "/v1/prosopo/provider/status",
 	GetProviderDetails = "/v1/prosopo/provider/details",
+	UpdateProviderClients = "/v1/prosopo/provider/clients",
 	SubmitUserEvents = "/v1/prosopo/provider/events",
 }
 
@@ -92,6 +93,7 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
+	[ApiPaths.UpdateProviderClients]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
@@ -218,6 +220,10 @@ export interface PendingCaptchaRequest {
 	requestedAtTimestamp: number; // unix timestamp
 	ipAddress: string;
 	headers: RequestHeaders;
+}
+
+export interface UpdateProviderClientsResponse extends ApiResponse {
+	message: string;
 }
 
 export interface ProviderRegistered {

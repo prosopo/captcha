@@ -55,6 +55,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SUBMIT_USER_EVENTS_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_USER_EVENTS_LIMIT,
 		},
+		[ApiPaths.UpdateProviderClients]: {
+			windowMs: process.env.PROSOPO_UPDATE_PROVIDER_CLIENTS_WINDOW,
+			limit: process.env.PROSOPO_UPDATE_PROVIDER_CLIENTS_LIMIT,
+		},
 		[AdminApiPaths.UpdateDataset]: {
 			windowMs: process.env.PROSOPO_UPDATE_DATASET_WINDOW,
 			limit: process.env.PROSOPO_UPDATE_DATASET_LIMIT,

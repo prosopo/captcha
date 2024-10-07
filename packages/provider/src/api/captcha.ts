@@ -211,11 +211,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				console.log("Direct pow is allowed");
 			} else {
 				// Throw an error
-				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { error: "No captcha type set", code: 400 },
-					}),
-				);
+								return res.json({
+					error: req.i18n.t("API.INCOMPATIBLE_CAPTCHA_TYPE"),
+					code: 200,
+				});
 			}
 
 			validateAddress(user, false, 42);
@@ -387,6 +386,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 		},
 	);
+
+		/**
+	 * Gets public details of the provider
+	 */
+	router.post(ApiPaths.UpdateProviderClients, async (req, res, next) => {
+		try {
+			await tasks.clientTaskManager.getClientList()
+			return res.json({message: "Provider updated"});
+		} catch (err) {
+			tasks.logger.error(err);
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: err },
+				}),
+			);
+		}
+	});
 
 	/**
 	 * Gets public details of the provider

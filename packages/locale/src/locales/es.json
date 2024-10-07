@@ -104,7 +104,8 @@
 		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuario no verificado. No se encontró solución de captcha.",
 		"USER_ALREADY_VERIFIED": "Esta solución ya ha sido verificada. El usuario debe completar un nuevo captcha.",
 		"UNKNOWN": "Error desconocido en el API",
-		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada"
+		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
+		"INCOMPATIBLE_CAPTCHA_TYPE": "Tipo di CAPTCHA errato"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parámetro inválido"
