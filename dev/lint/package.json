@@ -9,7 +9,6 @@
 		"build": "tsc --build --verbose",
 		"engines": "node dist/engines.js",
 		"refs": "node dist/refs.js",
-		"nvmrc": "node dist/nvmrc.js",
 		"workflowNames": "node dist/workflowNames.js",
 		"scripts": "node dist/scripts.js",
 		"version": "node dist/version.js",

@@ -62,7 +62,7 @@ jobs:
 
             - uses: actions/setup-node@v4
               with:
-                  node-version-file: '.nvmrc'
+                  node-version-file: 'package.json'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - name: Run
