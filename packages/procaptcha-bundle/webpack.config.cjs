@@ -21,8 +21,8 @@ const mode =
 		: "development";
 const webpackConfig = getWebpackConfig(mode);
 
-const rootDir = path.resolve(__dirname, "../..")
-console.log("Looking in",rootDir)
+const rootDir = path.resolve(__dirname, "../..");
+console.log("Looking in", rootDir);
 
 const nodeModulePaths = fg.sync("**/node_modules", {
 	onlyDirectories: true,

@@ -29,7 +29,7 @@ export const registerSiteKey = async (siteKey: string): Promise<void> => {
 	await db.updateClientRecords([
 		{
 			account: siteKey,
-			settings: { 
+			settings: {
 				captchaType: "pow",
 				domains: ["example.com"],
 				frictionlessThreshold: 0.5,
