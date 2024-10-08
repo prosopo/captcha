@@ -1,4 +1,4 @@
-import { exec } from "node:child_process";
+import { exec } from "@prosopo/util";
 import { promisify } from "node:util";
 import { getCliPkgDir } from "@prosopo/config";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
@@ -15,7 +15,6 @@ import { getCliPkgDir } from "@prosopo/config";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { assert, describe, test } from "vitest";
-const execPromise = promisify(exec);
 
 describe("provider bundle", () => {
 	test("bundle runs after bundling", async () => {
@@ -23,11 +22,12 @@ describe("provider bundle", () => {
 		const rootDir = getCliPkgDir();
 
 		// build bundle
-		await execPromise(`cd ${rootDir} && NODE_ENV=production npm run bundle`);
+		await exec(`cd ${rootDir} && NODE_ENV=production npm run bundle`, { cmdLogger: console.log });
 
 		// run bundle and get version
-		const { stdout: runOut, stderr: runErr } = await execPromise(
+		const { stdout: runOut, stderr: runErr } = await exec(
 			`cd ${rootDir} && node dist/bundle/provider.cli.bundle.js version`,
+			{ cmdLogger: console.log },
 		);
 		assert(runOut.includes("Version:"));
 	}, 120000);
