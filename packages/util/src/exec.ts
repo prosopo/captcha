@@ -44,8 +44,8 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 		let stdout = Buffer.from("");
 		let stderr = Buffer.from("");
 		// buffer all output
-		let stdoutAll = Buffer.from("");
-		let stderrAll = Buffer.from("");
+		let stdoutAll = [] as Buffer[];
+		let stderrAll = [] as Buffer[];
 
 		const handleBuffer = (buffer: Buffer, data: Buffer) => {
 			// a buffer holds some binary data
@@ -65,7 +65,7 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 
 		child.stdout.on("data", (data) => {
 			let lines = [] as string[];
-			stdoutAll = Buffer.concat([stdoutAll, data]);
+			stdoutAll.push(data);
 			({ buffer: stdout, lines } = handleBuffer(stdout, data));
 			for (const line of lines) {
 				opts?.stdoutLogger?.(line);
@@ -74,7 +74,7 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 
 		child.stderr.on("data", (data) => {
 			let lines = [] as string[];
-			stderrAll = Buffer.concat([stderrAll, data]);
+			stderrAll.push(data);
 			({ buffer: stderr, lines } = handleBuffer(stderr, data));
 			for (const line of lines) {
 				opts?.stdoutLogger?.(line);
@@ -82,19 +82,21 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 		});
 
 		child.on("close", (exitCode, signal) => {
+			const stdout = Buffer.concat(stdoutAll).toString();
+			const stderr = Buffer.concat(stderrAll).toString();
 			if (exitCode !== 0 || signal) {
 				reject({
 					cmd,
-					stdout: stdoutAll.toString(),
-					stderr: stderrAll.toString(),
+					stdout,
+					stderr,
 					exitCode: exitCode || 1,
 					signal: signal || undefined,
 				});
 			} else {
 				resolve({
 					cmd,
-					stdout: stdoutAll.toString(),
-					stderr: stderrAll.toString(),
+					stdout,
+					stderr,
 				});
 			}
 		});
