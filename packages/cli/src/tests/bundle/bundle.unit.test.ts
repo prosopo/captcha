@@ -1,6 +1,6 @@
-import { exec } from "@prosopo/util";
 import { promisify } from "node:util";
 import { getCliPkgDir } from "@prosopo/config";
+import { exec } from "@prosopo/util";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,9 @@ describe("provider bundle", () => {
 		const rootDir = getCliPkgDir();
 
 		// build bundle
-		await exec(`cd ${rootDir} && NODE_ENV=production npm run bundle`, { cmdLogger: console.log });
+		await exec(`cd ${rootDir} && NODE_ENV=production npm run bundle`, {
+			cmdLogger: console.log,
+		});
 
 		// run bundle and get version
 		const { stdout: runOut, stderr: runErr } = await exec(

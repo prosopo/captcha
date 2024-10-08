@@ -13,9 +13,9 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { getLogger, ProsopoEnvError } from "@prosopo/common";
-import { lodash } from "@prosopo/util/lodash";
+import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { exec } from "@prosopo/util";
+import { lodash } from "@prosopo/util/lodash";
 
 type TypeChainDir = {
 	dir: string;
@@ -55,7 +55,9 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
 	const name = path.basename(pathToAbis);
 	// copy the metadata
 	// TODO this is a temp fix. This functionality should be in typechain!
-	await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`, { cmdLogger: logger.info });
+	await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`, {
+		cmdLogger: logger.info,
+	});
 
 	const _ = lodash();
 

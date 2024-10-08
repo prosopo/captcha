@@ -19,12 +19,12 @@ import { getLogLevel } from "@prosopo/common";
 import { getScriptsPkgDir } from "@prosopo/config";
 import { getEnv, loadEnv } from "@prosopo/dotenv";
 import { decodeProcaptchaOutput, encodeProcaptchaOutput } from "@prosopo/types";
+import { exec } from "@prosopo/util";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { importContract } from "../contract/index.js";
 import setVersion from "../scripts/setVersion.js";
 import { setup } from "../setup/index.js";
-import { exec } from "@prosopo/util";
 const rootDir = path.resolve(".");
 
 loadEnv(rootDir);
@@ -46,7 +46,9 @@ export async function processArgs(args: string[]) {
 			async () => {
 				const env = getEnv();
 				const scripts = getScriptsPkgDir();
-				await exec(`cp -v ${scripts}/env.${env} ${scripts}/.env.${env}`, { cmdLogger: log.info });
+				await exec(`cp -v ${scripts}/env.${env} ${scripts}/.env.${env}`, {
+					cmdLogger: log.info,
+				});
 			},
 			[],
 		)

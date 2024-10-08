@@ -17,8 +17,8 @@ import path from "node:path";
 import util from "node:util";
 import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { at } from "@prosopo/util";
-import type { ProjectReference } from "typescript";
 import { exec } from "@prosopo/util";
+import type { ProjectReference } from "typescript";
 
 const logger = getLogger("Info", "config.dependencies.js");
 // find a tScOnFiG.json file
@@ -32,12 +32,14 @@ async function getPackageDir(packageName: string): Promise<string> {
 		pkg = `@prosopo/${packageName}`;
 	}
 	const pkgCommand = `npm list ${pkg} -ap`;
-	
+
 	// get package directory
 	try {
-		const { stdout: packageDir } = await exec(pkgCommand, { cmdLogger: logger.info });
+		const { stdout: packageDir } = await exec(pkgCommand, {
+			cmdLogger: logger.info,
+		});
 		return packageDir.trim() || path.resolve();
-	} catch(error) {
+	} catch (error) {
 		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
 			context: { error },
 		});
@@ -186,7 +188,7 @@ export async function getDependencies(
 		cmd = `cd ${packageDir.trim()} && ${cmd}`;
 	}
 
-	let stdout = ''
+	let stdout = "";
 	try {
 		stdout = (await exec(cmd, { cmdLogger: logger.info })).stdout;
 	} catch (error) {
