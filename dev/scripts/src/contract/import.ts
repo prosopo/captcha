@@ -13,9 +13,9 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from "@prosopo/common";
+import { getLogger, ProsopoEnvError } from "@prosopo/common";
 import { lodash } from "@prosopo/util/lodash";
-import { exec } from "../util/index.js";
+import { exec } from "@prosopo/util";
 
 type TypeChainDir = {
 	dir: string;
@@ -38,6 +38,8 @@ const replaceExtension = (file: string, ext: string): string => {
 	return parts.join(".");
 };
 
+const logger = getLogger("Info", "contract.import.ts");
+
 async function importContract(pathToAbis: string, pathToOutput: string) {
 	const verbose = false;
 	pathToAbis = path.relative(process.cwd(), pathToAbis);
@@ -47,13 +49,13 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
 		throw new ProsopoEnvError("FS.FILE_NOT_FOUND", {
 			context: { error: `Path to ABIs does not exist: ${pathToAbis}` },
 		});
-	await exec(`mkdir -p ${pathToOutput}`);
+	await exec(`mkdir -p ${pathToOutput}`, { cmdLogger: logger.info });
 	const cmd = `npx @prosopo/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`;
-	await exec(cmd);
+	await exec(cmd, { cmdLogger: logger.info });
 	const name = path.basename(pathToAbis);
 	// copy the metadata
 	// TODO this is a temp fix. This functionality should be in typechain!
-	await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`);
+	await exec(`cp ${pathToAbis}/${name}.json ${pathToOutput}/${name}.json`, { cmdLogger: logger.info });
 
 	const _ = lodash();
 
