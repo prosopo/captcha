@@ -42,7 +42,6 @@ vi.mock("@polkadot/extension-dapp", async () => {
 vi.mock(
 	"@prosopo/procaptcha-pow",
 	async () => {
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		return {
 			ProcaptchaPow: vi.fn((props: ProcaptchaProps) => {
 				return (
@@ -58,7 +57,6 @@ vi.mock(
 );
 
 vi.mock("@prosopo/procaptcha-frictionless", async () => {
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	return {
 		ProcaptchaFrictionless: vi.fn((props: ProcaptchaProps) => {
 			return (
