@@ -104,6 +104,8 @@ describe("PoW Integration Tests", () => {
 
 			const data = await response.json();
 
+			console.log("\n ---- \n data \n ---- \n", data);
+
 			expect(data).toHaveProperty("challenge");
 			expect(data).toHaveProperty("difficulty");
 			expect(data).toHaveProperty("signature");

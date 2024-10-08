@@ -185,6 +185,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
+			console.log("\n ---- \n clientRecord \n ---- \n", clientRecord);
+
 			if (!clientRecord) {
 				return res.json({
 					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
