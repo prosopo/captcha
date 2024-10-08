@@ -27,7 +27,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 				next();
 				return;
 			}
-			
+
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.pair) {

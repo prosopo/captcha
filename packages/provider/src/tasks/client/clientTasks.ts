@@ -15,7 +15,7 @@
 import type { Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
-	IUserSettings,
+	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
@@ -56,8 +56,6 @@ export class ClientTaskManager {
 		const taskID = await this.providerDB.createScheduledTaskStatus(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
-
-
 		);
 
 		console.log("\n ---- \n taskID \n ---- \n", taskID);
@@ -106,7 +104,6 @@ export class ClientTaskManager {
 				console.log("\n ---- \n commitments \n ---- \n", commitments);
 
 				console.log("\n ---- \n powRecords \n ---- \n", powRecords);
-
 			}
 
 			if (commitments.length || powRecords.length) {
@@ -212,7 +209,10 @@ export class ClientTaskManager {
 		}
 	}
 
-	async registerSiteKey(siteKey: string, settings: IUserSettings): Promise<void> {
+	async registerSiteKey(
+		siteKey: string,
+		settings: IUserSettings,
+	): Promise<void> {
 		console.log("\n ---- \n dbnam \n ---- \n", siteKey);
 		await this.providerDB.updateClientRecords([
 			{
