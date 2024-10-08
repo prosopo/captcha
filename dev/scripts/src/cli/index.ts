@@ -24,7 +24,7 @@ import { hideBin } from "yargs/helpers";
 import { importContract } from "../contract/index.js";
 import setVersion from "../scripts/setVersion.js";
 import { setup } from "../setup/index.js";
-import { exec } from "../util/index.js";
+import { exec } from "@prosopo/util";
 const rootDir = path.resolve(".");
 
 loadEnv(rootDir);
@@ -46,7 +46,7 @@ export async function processArgs(args: string[]) {
 			async () => {
 				const env = getEnv();
 				const scripts = getScriptsPkgDir();
-				await exec(`cp -v ${scripts}/env.${env} ${scripts}/.env.${env}`);
+				await exec(`cp -v ${scripts}/env.${env} ${scripts}/.env.${env}`, { cmdLogger: log.info });
 			},
 			[],
 		)
