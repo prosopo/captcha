@@ -21,6 +21,13 @@ import type { Tasks } from "../index.js";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			// Not sure what these are but they seem to be continually called by the provider process causing errors
+			// with the auth middleware
+			if (req.url === "/json/list" || req.url === "/json/version") {
+				next();
+				return;
+			}
+			
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.pair) {

@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
@@ -50,16 +51,26 @@ export class ClientTaskManager {
 			ScheduledTaskStatus.Completed,
 		);
 
+		console.log("\n ---- \n lastTask \n ---- \n", lastTask);
+
 		const taskID = await this.providerDB.createScheduledTaskStatus(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
+
+
 		);
+
+		console.log("\n ---- \n taskID \n ---- \n", taskID);
 
 		try {
 			let commitments = await this.providerDB.getUnstoredDappUserCommitments();
 
+			console.log("\n ---- \n commitments \n ---- \n", commitments);
+
 			let powRecords =
 				await this.providerDB.getUnstoredDappUserPoWCommitments();
+
+			console.log("\n ---- \n powRecords \n ---- \n", powRecords);
 
 			// filter to only get records that have been updated since the last task
 			if (lastTask) {
@@ -91,6 +102,11 @@ export class ClientTaskManager {
 							!commitment.lastUpdatedTimestamp)
 					);
 				});
+
+				console.log("\n ---- \n commitments \n ---- \n", commitments);
+
+				console.log("\n ---- \n powRecords \n ---- \n", powRecords);
+
 			}
 
 			if (commitments.length || powRecords.length) {
@@ -196,10 +212,12 @@ export class ClientTaskManager {
 		}
 	}
 
-	async registerSiteKey(siteKey: string): Promise<void> {
+	async registerSiteKey(siteKey: string, settings: IUserSettings): Promise<void> {
+		console.log("\n ---- \n dbnam \n ---- \n", siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
+				settings: settings,
 			} as ClientRecord,
 		]);
 	}

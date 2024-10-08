@@ -47,8 +47,8 @@ export interface IUserData {
 }
 
 export interface IUserSettings {
-	frictionlessThreshold: number;
-	powDifficulty: number;
-	domains: string[];
-	captchaType: "image" | "pow" | "frictionless";
+	frictionlessThreshold?: number;
+	powDifficulty?: number;
+	domains?: string[];
+	captchaType?: "image" | "pow" | "frictionless";
 }

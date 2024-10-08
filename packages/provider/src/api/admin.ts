@@ -15,6 +15,7 @@ import { Logger, logError } from "@prosopo/common";
 import {
 	AdminApiPaths,
 	type ApiResponse,
+	RegisterSitekeyBody,
 	VerifyPowCaptchaSolutionBody,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -43,8 +44,10 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
 	router.post(AdminApiPaths.SiteKeyRegister, async (req, res, next) => {
 		try {
-			const parsed = VerifyPowCaptchaSolutionBody.parse(req.body);
-			await tasks.clientTaskManager.registerSiteKey(parsed.siteKey);
+			console.log("\n ---- \n req.body \n ---- \n", req.body);
+			const { siteKey, settings } = RegisterSitekeyBody.parse(req.body);
+			const temp = settings || {};
+			await tasks.clientTaskManager.registerSiteKey(siteKey, temp);
 			const response: ApiResponse = {
 				status: "success",
 			};
