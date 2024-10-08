@@ -263,11 +263,6 @@ export function Manager(
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
 
-				if (!isHuman && !state.loading) {
-					// user failed the captcha for some reason according to the provider
-					events.onFailed();
-				}
-
 				// update the state with the result of the submission
 				updateState({
 					submission,
@@ -300,6 +295,8 @@ export function Manager(
 						}),
 					);
 					setValidChallengeTimeout();
+				} else {
+					events.onFailed();
 				}
 			},
 			start,
