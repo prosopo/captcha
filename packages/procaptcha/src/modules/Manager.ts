@@ -43,7 +43,7 @@ import {
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { at, hashToHex } from "@prosopo/util";
-import { sleep } from "../utils/utils.js";
+import { sleep } from "@prosopo/util";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
 import storage from "./storage.js";
 
