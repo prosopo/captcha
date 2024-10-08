@@ -31,7 +31,8 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 
 			if (!env.pair) {
 				res.status(401).json({
-					error: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR").toString(),
+					error: "Unauthorized",
+					message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
 				});
 				return;
 			}
