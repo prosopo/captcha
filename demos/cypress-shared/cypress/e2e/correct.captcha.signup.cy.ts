@@ -88,13 +88,8 @@ describe("Captchas", () => {
 				// wait for solution http request to complete
 				cy.wait("@postSolution");
 
-				// Get inputs of type checkbox
-				cy.get("input[type='checkbox']", { timeout: 10000 })
-					.should("have.length.gte", 1)
-					.then((checkboxes) => {
-						expect(checkboxes).to.have.length.gte(1);
-						cy.wrap(checkboxes).first().should("be.checked");
-					});
+				// Get checked checkboxes
+				cy.get("input[type='checkbox']:checked").should("have.length.gte", 1);
 
 				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 				cy.get('input[type="password"]').type("password");

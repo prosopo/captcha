@@ -263,7 +263,7 @@ export function Manager(
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
 
-				if (!isHuman) {
+				if (!isHuman && !state.loading) {
 					// user failed the captcha for some reason according to the provider
 					events.onFailed();
 				}

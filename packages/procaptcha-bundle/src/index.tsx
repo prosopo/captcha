@@ -12,29 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import { Procaptcha } from "@prosopo/procaptcha-react";
-import type {
-	ProcaptchaClientConfigOutput,
-	ProcaptchaRenderOptions,
-} from "@prosopo/types";
+import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { createRoot } from "react-dom/client";
 import { getCaptchaType } from "./util/captchaType.js";
 import {
 	extractParams,
 	getConfig,
 	getProcaptchaScript,
 } from "./util/config.js";
-import {
-	getDefaultCallbacks,
-	getWindowCallback,
-	setUserCallbacks,
-} from "./util/defaultCallbacks.js";
-import { setLanguage } from "./util/language.js";
-import { setTheme } from "./util/theme.js";
-import { setValidChallengeLength } from "./util/timeout.js";
+import { getWindowCallback } from "./util/defaultCallbacks.js";
+import { renderLogic } from "./util/renderLogic.js";
 
 const BUNDLE_NAME = "procaptcha.bundle.js";
 
@@ -55,39 +42,6 @@ const implicitRender = () => {
 		const captchaType = getCaptchaType(elements);
 
 		renderLogic(elements, getConfig(siteKey), { captchaType, siteKey });
-	}
-};
-
-const renderLogic = (
-	elements: Element[],
-	config: ProcaptchaClientConfigOutput,
-	renderOptions?: ProcaptchaRenderOptions,
-) => {
-	for (const element of elements) {
-		const callbacks = getDefaultCallbacks(element);
-
-		setUserCallbacks(renderOptions, callbacks, element);
-		setTheme(renderOptions, element, config);
-		setValidChallengeLength(renderOptions, element, config);
-		setLanguage(renderOptions, element, config);
-
-		switch (renderOptions?.captchaType) {
-			case "pow":
-				createRoot(element).render(
-					<ProcaptchaPow config={config} callbacks={callbacks} />,
-				);
-				break;
-			case "frictionless":
-				createRoot(element).render(
-					<ProcaptchaFrictionless config={config} callbacks={callbacks} />,
-				);
-				break;
-			default:
-				createRoot(element).render(
-					<Procaptcha config={config} callbacks={callbacks} />,
-				);
-				break;
-		}
 	}
 };
 

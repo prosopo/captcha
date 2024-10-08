@@ -179,7 +179,7 @@ export function setUserCallbacks(
 
 	if (renderOptions?.["failed-callback"]) {
 		if (typeof renderOptions["failed-callback"] === "function") {
-			callbacks.onOpen = renderOptions["failed-callback"];
+			callbacks.onFailed = renderOptions["failed-callback"];
 		} else {
 			const onFailedCallbackName =
 				typeof renderOptions?.["failed-callback"] === "string"
