@@ -18,11 +18,12 @@ import { exec } from "../exec.js";
 describe("exec", () => {
 	test("valid cmd exit 0", async () => {
 		try {
-			const result = await exec("echo hello world");
+			const cmd = "echo hello world"
+			const result = await exec(cmd);
 			expect(result).toStrictEqual({
+				cmd,
 				stdout: "hello world\n",
 				stderr: "",
-				code: 0,
 			});
 		} catch (e) {
 			fail("expected command to succeed");
@@ -30,27 +31,32 @@ describe("exec", () => {
 	});
 
 	test("invalid cmd", async () => {
+		const cmd = "some-invalid-command"
 		try {
-			const result = await exec("some-invalid-command");
+			const result = await exec(cmd);
+			console.log(result)
 			fail("expected command to fail");
 		} catch (e) {
 			expect(e).toStrictEqual({
+				cmd,
 				stdout: "",
-				stderr: "sh: 1: some-invalid-command: not found\n",
-				code: 127,
+				stderr: `/bin/sh: 1: ${cmd}: not found\n`,
+				exitCode: 127,
 			});
 		}
 	});
 
 	test("valid cmd exit !0", async () => {
+		const cmd = "test 1 -eq 2"
 		try {
-			const result = await exec('test "1" "==" "2"');
+			const result = await exec(cmd);
 			fail("expected command to fail");
 		} catch (e) {
 			expect(e).toStrictEqual({
+				cmd,
 				stdout: "",
 				stderr: "",
-				code: 1,
+				exitCode: 1,
 			});
 		}
 	});

@@ -85,13 +85,16 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 			const stdout = Buffer.concat(stdoutAll).toString();
 			const stderr = Buffer.concat(stderrAll).toString();
 			if (exitCode !== 0 || signal) {
-				reject({
+				const result: ExecFailed = {
 					cmd,
 					stdout,
 					stderr,
 					exitCode: exitCode || 1,
-					signal: signal || undefined,
-				});
+				}
+				if(signal) {
+					result.signal = signal;
+				}
+				reject(result);
 			} else {
 				resolve({
 					cmd,
