@@ -18,7 +18,7 @@ import { exec } from "../exec.js";
 describe("exec", () => {
 	test("valid cmd exit 0", async () => {
 		try {
-			const cmd = "echo hello world"
+			const cmd = "echo hello world";
 			const result = await exec(cmd);
 			expect(result).toStrictEqual({
 				cmd,
@@ -31,10 +31,10 @@ describe("exec", () => {
 	});
 
 	test("invalid cmd", async () => {
-		const cmd = "some-invalid-command"
+		const cmd = "some-invalid-command";
 		try {
 			const result = await exec(cmd);
-			console.log(result)
+			console.log(result);
 			fail("expected command to fail");
 		} catch (e) {
 			expect(e).toStrictEqual({
@@ -47,7 +47,7 @@ describe("exec", () => {
 	});
 
 	test("valid cmd exit !0", async () => {
-		const cmd = "test 1 -eq 2"
+		const cmd = "test 1 -eq 2";
 		try {
 			const result = await exec(cmd);
 			fail("expected command to fail");
