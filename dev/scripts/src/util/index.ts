@@ -13,5 +13,4 @@
 // limitations under the License.
 export * from "./loadContractFiles.js";
 export * from "./updateEnv.js";
-export * from "./exec.js";
 export * from "./fluxLogDappDetails.js";
