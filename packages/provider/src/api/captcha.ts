@@ -133,6 +133,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		const dapp = parsed[ApiParams.dapp];
 
 		try {
+			validateAddress(user, false, 42);
+			validateAddress(dapp, false, 42);
+
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
 			if (!clientRecord) {

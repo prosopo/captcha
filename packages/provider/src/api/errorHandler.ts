@@ -1,4 +1,3 @@
-import { type ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,10 @@ import { type ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // We need the unused params to make express recognise this function as an error handler
+import { type ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
+import { i18n as i18next } from "@prosopo/locale";
 import type { NextFunction, Request, Response } from "express";
-import type { ZodError } from "zod";
+import { ZodError } from "zod";
 
 export const handleErrors = (
 	err: ProsopoApiError | SyntaxError | ZodError,
@@ -27,11 +28,15 @@ export const handleErrors = (
 	while (err instanceof ProsopoBaseError && err.context && err.context.error) {
 		err = err.context.error;
 	}
-	const message = err.message;
+	let message = err.message;
 
-	response
-		.writeHead(code, JSON.stringify(message), {
-			"content-type": "application/json",
-		})
-		.end();
+	if (err instanceof ZodError) {
+		message = i18next.t("CAPTCHA.PARSE_ERROR");
+	}
+
+	response.set("content-type", "application/json");
+	response.status(code);
+	response.statusMessage =
+		typeof message === "object" ? JSON.stringify(message) : message.toString();
+	response.send({ error: err });
 };
