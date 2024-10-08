@@ -1,6 +1,6 @@
+import { fail } from "node:assert";
 import { describe, expect, test } from "vitest";
 import { exec } from "../exec.js";
-import { fail } from "assert";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,40 +18,40 @@ import { fail } from "assert";
 describe("exec", () => {
 	test("valid cmd exit 0", async () => {
 		try {
-			const result = await exec('echo hello world')
+			const result = await exec("echo hello world");
 			expect(result).toStrictEqual({
-				stdout: 'hello world\n',
-				stderr: '',
+				stdout: "hello world\n",
+				stderr: "",
 				code: 0,
-			})
+			});
 		} catch (e) {
-			fail('expected command to succeed')
+			fail("expected command to succeed");
 		}
 	});
 
 	test("invalid cmd", async () => {
 		try {
-			const result = await exec('some-invalid-command')
-			fail('expected command to fail')
+			const result = await exec("some-invalid-command");
+			fail("expected command to fail");
 		} catch (e) {
 			expect(e).toStrictEqual({
-				stdout: '',
-				stderr: 'sh: 1: some-invalid-command: not found\n',
+				stdout: "",
+				stderr: "sh: 1: some-invalid-command: not found\n",
 				code: 127,
-			})
+			});
 		}
-	})
+	});
 
 	test("valid cmd exit !0", async () => {
 		try {
-			const result = await exec('test "1" "==" "2"')
-			fail('expected command to fail')
+			const result = await exec('test "1" "==" "2"');
+			fail("expected command to fail");
 		} catch (e) {
 			expect(e).toStrictEqual({
-				stdout: '',
-				stderr: '',
+				stdout: "",
+				stderr: "",
 				code: 1,
-			})
+			});
 		}
-	})
+	});
 });
