@@ -35,6 +35,9 @@ const bundleWebpackConfig = {
 			"@polkadot/x-textencoder": path.resolve(
 				"../../node_modules/@polkadot/x-textencoder",
 			),
+			"@fingerprintjs/fingerprintjs": path.resolve(
+				"../fingerprint/node_modules/@fingerprintjs/fingerprintjs",
+			),
 		},
 	},
 };
