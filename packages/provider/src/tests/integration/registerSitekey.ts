@@ -21,7 +21,7 @@ export const registerSiteKey = async (siteKey: string): Promise<void> => {
 	const port = process.env.PROSOPO_DATABASE_PORT || 27017;
 	const db = new ProviderDatabase(
 		`mongodb://${username}:${pw}@${host}:${port}`,
-		process.env.PROSOPO_DATABASE_NAME || "prosopo_test",
+		process.env.PROSOPO_DATABASE_NAME || "prosopo",
 		process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
 	);
 	await db.connect();
