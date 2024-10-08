@@ -42,6 +42,7 @@ export default (mode: string) => {
 		},
 		externals: {
 			"node:url": "commonjs url",
+			"node:child_process": "commonjs child_process",
 			url: "commonjs url",
 		},
 		entry: "./src/index.tsx",
