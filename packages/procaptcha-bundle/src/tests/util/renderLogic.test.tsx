@@ -83,6 +83,7 @@ describe("Config utility functions", () => {
 		context.window = dom.window;
 		// @ts-ignore
 		global.window = dom.window;
+		// @ts-ignore
 		global.document = dom.window.document;
 		vi.clearAllMocks();
 	});
@@ -138,6 +139,8 @@ describe("Config utility functions", () => {
 		script["data-open-callback"] = "onOpen";
 		// @ts-ignore
 		script["data-failed-callback"] = "onFailed";
+		// @ts-ignore
+		script["data-reset-callback"] = "onReset";
 		document.body.appendChild(script);
 
 		const onHuman = () => console.log("onHuman");
@@ -147,6 +150,7 @@ describe("Config utility functions", () => {
 		const onClose = () => console.log("onClose");
 		const onOpen = () => console.log("onOpen");
 		const onFailed = () => console.log("onFailed");
+		const onReset = () => console.log("onReset");
 
 		expect(ctx.window).toBeDefined();
 
@@ -162,6 +166,7 @@ describe("Config utility functions", () => {
 		ctx.window.onClose = onClose;
 		ctx.window.onOpen = onOpen;
 		ctx.window.onFailed = onFailed;
+		ctx.window.onReset = onReset;
 
 		const callbacks = {
 			onHuman,
@@ -171,6 +176,7 @@ describe("Config utility functions", () => {
 			onClose,
 			onOpen,
 			onFailed,
+			onReset,
 		};
 
 		const config = ProcaptchaConfigSchema.parse({
@@ -187,6 +193,7 @@ describe("Config utility functions", () => {
 		await vi.waitFor(() => {
 			expect(ProcaptchaPow).toHaveBeenCalledTimes(1);
 			// hack to get mock calls
+			// @ts-ignore
 			const call = ProcaptchaPow.mock.calls[0];
 			const props = { config, callbacks };
 			// TODO update when expect(ProcaptchaPow).toHaveBeenCalledWith is working with deep equality

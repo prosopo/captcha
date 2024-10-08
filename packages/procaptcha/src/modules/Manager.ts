@@ -399,6 +399,7 @@ export function Manager(
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	/**

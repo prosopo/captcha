@@ -52,6 +52,9 @@ export const getDefaultCallbacks = (element: Element) => ({
 	onFailed: () => {
 		console.log("Challenge failed");
 	},
+	onReset: () => {
+		console.log("Captcha widget reset");
+	},
 });
 
 export function setUserCallbacks(
@@ -64,6 +67,7 @@ export function setUserCallbacks(
 		onClose: () => void;
 		onOpen: () => void;
 		onFailed: () => void;
+		onReset: () => void;
 	},
 	element: Element,
 ) {
@@ -187,6 +191,19 @@ export function setUserCallbacks(
 					: element.getAttribute("data-failed-callback");
 			if (onFailedCallbackName)
 				callbacks.onFailed = getWindowCallback(onFailedCallbackName);
+		}
+	}
+	// reset callback
+	if (renderOptions?.["reset-callback"]) {
+		if (typeof renderOptions["reset-callback"] === "function") {
+			callbacks.onReset = renderOptions["reset-callback"];
+		} else {
+			const onResetCallbackName =
+				typeof renderOptions?.["reset-callback"] === "string"
+					? renderOptions?.["reset-callback"]
+					: element.getAttribute("data-reset-callback");
+			if (onResetCallbackName)
+				callbacks.onReset = getWindowCallback(onResetCallbackName);
 		}
 	}
 }

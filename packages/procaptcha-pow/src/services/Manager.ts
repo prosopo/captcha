@@ -113,6 +113,7 @@ export const Manager = (
 		clearTimeout();
 		clearSuccessfulChallengeTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	const setValidChallengeTimeout = () => {
