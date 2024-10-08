@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import child_process from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
 import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { at } from "@prosopo/util";
 import type { ProjectReference } from "typescript";
+import { exec } from "@prosopo/util";
 
 const logger = getLogger("Info", "config.dependencies.js");
-const exec = util.promisify(child_process.exec);
 // find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/;
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/;
@@ -33,15 +32,16 @@ async function getPackageDir(packageName: string): Promise<string> {
 		pkg = `@prosopo/${packageName}`;
 	}
 	const pkgCommand = `npm list ${pkg} -ap`;
-	logger.info(`Running command ${pkgCommand}`);
+	
 	// get package directory
-	const { stdout: packageDir, stderr } = await exec(pkgCommand);
-	if (stderr) {
+	try {
+		const { stdout: packageDir } = await exec(pkgCommand, { cmdLogger: logger.info });
+		return packageDir.trim() || path.resolve();
+	} catch(error) {
 		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
-			context: { stderr },
+			context: { error },
 		});
 	}
-	return packageDir.trim() || path.resolve();
 }
 
 /**
@@ -184,15 +184,17 @@ export async function getDependencies(
 	if (packageName) {
 		const packageDir = await getPackageDir(packageName);
 		cmd = `cd ${packageDir.trim()} && ${cmd}`;
-		logger.info(`Running command ${cmd} in ${packageDir}`);
 	}
 
-	const { stdout, stderr } = await exec(cmd);
-	if (stderr) {
+	let stdout = ''
+	try {
+		stdout = (await exec(cmd, { cmdLogger: logger.info })).stdout;
+	} catch (error) {
 		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
-			context: { stderr },
+			context: { error },
 		});
 	}
+
 	const deps: string[] = [];
 	const peerDeps: string[] = [];
 	// for each line, check if there is an unmet optional dependency
