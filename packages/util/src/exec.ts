@@ -44,8 +44,8 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 		let stdout = Buffer.from("");
 		let stderr = Buffer.from("");
 		// buffer all output
-		let stdoutAll = [] as Buffer[];
-		let stderrAll = [] as Buffer[];
+		const stdoutAll = [] as Buffer[];
+		const stderrAll = [] as Buffer[];
 
 		const handleBuffer = (buffer: Buffer, data: Buffer) => {
 			// a buffer holds some binary data
@@ -90,8 +90,8 @@ export const exec = (cmd: string, opts?: ExecOpts): Promise<ExecResult> => {
 					stdout,
 					stderr,
 					exitCode: exitCode || 1,
-				}
-				if(signal) {
+				};
+				if (signal) {
 					result.signal = signal;
 				}
 				reject(result);
