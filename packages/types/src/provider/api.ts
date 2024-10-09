@@ -224,9 +224,14 @@ export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
 
+export type ApiJsonError = {
+	message: string;
+	code: number;
+};
+
 export interface ApiResponse {
 	[ApiParams.status]: string;
-	[ApiParams.error]?: string;
+	[ApiParams.error]?: ApiJsonError;
 }
 
 export interface VerificationResponse extends ApiResponse {
@@ -248,7 +253,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
-	[ApiParams.error]?: string;
+	[ApiParams.error]?: ApiJsonError;
 }
 
 /**

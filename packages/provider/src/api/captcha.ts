@@ -98,10 +98,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
-				return res.json({
-					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
-					code: 200,
-				});
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
 			}
 
 			const taskData =
@@ -181,10 +182,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
 			if (!clientRecord) {
-				return res.json({
-					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
-					code: 200,
-				});
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
 			}
 
 			// TODO allow the dapp to override the length of time that the request hash is valid for
@@ -254,10 +256,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
-				return res.json({
-					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
-					code: 200,
-				});
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
 			}
 
 			// TODO do something with domains
@@ -367,10 +370,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
-				return res.json({
-					error: req.i18n.t("API.SITE_KEY_NOT_REGISTERED"),
-					code: 200,
-				});
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
 			}
 
 			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(

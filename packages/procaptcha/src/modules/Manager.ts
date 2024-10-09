@@ -149,7 +149,7 @@ export function Manager(
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: challenge.error,
+						error: challenge.error.message,
 					});
 				} else {
 					if (challenge.captchas.length <= 0) {

@@ -14,6 +14,7 @@
 // We need the unused params to make express recognise this function as an error handler
 import { type ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
 import { i18n as i18next } from "@prosopo/locale";
+import type { ApiJsonError } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
@@ -25,10 +26,7 @@ export const handleErrors = (
 ) => {
 	const code = "code" in err ? err.code : 400;
 	let message = err.message;
-	let jsonError: {
-		code: string | number;
-		message: string | Record<string, unknown>;
-	} = { code, message };
+	let jsonError: ApiJsonError = { code, message };
 
 	jsonError.message = message;
 	response.statusMessage = err.message;
