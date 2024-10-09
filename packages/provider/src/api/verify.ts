@@ -23,12 +23,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import express, {
-	type NextFunction,
-	type Request,
-	type Response,
-	type Router,
-} from "express";
+import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
 import { handleErrors } from "./errorHandler.js";
