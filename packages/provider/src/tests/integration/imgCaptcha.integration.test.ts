@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { getPairAsync } from "@prosopo/contract";
+import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import {
 	ApiParams,
@@ -32,29 +32,6 @@ const solutions = datasetWithSolutionHashes;
 const baseUrl = "http://localhost:9229";
 const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
-const unRegisteredDappAccount =
-	"5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL";
-
-const getSolvedCaptchas = (
-	captchas: Captcha[],
-	solutions: typeof datasetWithSolutionHashes.captchas,
-) =>
-	captchas.map((captcha) => {
-		const solvedCaptcha = solutions.find(
-			(solvedCaptcha) =>
-				solvedCaptcha.captchaContentId === captcha.captchaContentId,
-		);
-		if (!solvedCaptcha || !solvedCaptcha.solution) {
-			throw new Error("Solution not found for captcha");
-		}
-
-		return {
-			captchaContentId: captcha.captchaContentId,
-			captchaId: captcha.captchaId,
-			salt: solvedCaptcha.salt,
-			solution: solvedCaptcha.solution,
-		};
-	});
 
 describe("Image Captcha Integration Tests", () => {
 	describe("GetImageCaptchaChallenge", () => {
@@ -81,7 +58,8 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${unRegisteredDappAccount}`;
+			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
+			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${unregisteredAccount}`;
 
 			const response = await fetch(getImageCaptchaURL, {
 				method: "GET",
@@ -91,10 +69,29 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error).toBe("Site key not registered");
+			expect(data.error?.message).toBe("Site key not registered");
+		});
+
+		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
+			const invalidSiteKey = "junk";
+			const origin = "http://localhost";
+			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${invalidSiteKey}`;
+
+			const response = await fetch(getImageCaptchaURL, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+				},
+			});
+
+			expect(response.status).toBe(400);
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data).toHaveProperty("error");
+			expect(data.error?.message).toBe("Invalid site key");
 		});
 
 		it("should fail if datasetID is incorrect", async () => {

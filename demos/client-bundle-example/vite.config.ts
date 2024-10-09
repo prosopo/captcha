@@ -21,7 +21,6 @@ export default defineConfig(({ command, mode }) => {
 		watch: false,
 		mode: "development",
 		server: {
-			https: false,
 			host: true,
 			cors: true,
 		},
