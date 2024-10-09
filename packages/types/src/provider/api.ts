@@ -46,6 +46,8 @@ import {
 	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
 
+export const ApiPrefix = "/v1/prosopo" as const;
+
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
@@ -171,6 +173,7 @@ export const CaptchaRequestBody = object({
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
+export type CaptchaRequestBodyTypeOutput = output<typeof CaptchaRequestBody>;
 
 export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.captchas]: Captcha[];
@@ -271,6 +274,10 @@ export type GetPowCaptchaChallengeRequestBodyType = zInfer<
 	typeof GetPowCaptchaChallengeRequestBody
 >;
 
+export type GetPowCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetPowCaptchaChallengeRequestBody
+>;
+
 export type ServerPowCaptchaVerifyRequestBodyType = zInfer<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
@@ -295,6 +302,10 @@ export const SubmitPowCaptchaSolutionBody = object({
 });
 
 export type SubmitPowCaptchaSolutionBodyType = zInfer<
+	typeof SubmitPowCaptchaSolutionBody
+>;
+
+export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 

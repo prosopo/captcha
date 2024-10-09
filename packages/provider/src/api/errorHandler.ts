@@ -24,19 +24,41 @@ export const handleErrors = (
 	next: NextFunction,
 ) => {
 	const code = "code" in err ? err.code : 400;
-	// unwrap the errors to get the actual error message
-	while (err instanceof ProsopoBaseError && err.context && err.context.error) {
-		err = err.context.error;
-	}
 	let message = err.message;
+	let jsonError: {
+		code: string | number;
+		message: string | Record<string, unknown>;
+	} = { code, message };
+
+	jsonError.message = message;
+	response.statusMessage = err.message;
+	// unwrap the errors to get the actual error message
+	while (err instanceof ProsopoBaseError && err.context) {
+		// base error will not have a translation key
+		jsonError.code =
+			err.context.translationKey || err.translationKey || jsonError.code;
+		jsonError.message = err.message;
+		if (err.context.error) {
+			err = err.context.error;
+		} else {
+			break;
+		}
+	}
 
 	if (err instanceof ZodError) {
 		message = i18next.t("CAPTCHA.PARSE_ERROR");
+		response.statusMessage = message;
+		if (typeof err.message === "object") {
+			jsonError = err.message;
+		} else {
+			jsonError.message = JSON.parse(err.message);
+		}
 	}
+
+	jsonError.code = jsonError.code || code;
 
 	response.set("content-type", "application/json");
 	response.status(code);
-	response.statusMessage =
-		typeof message === "object" ? JSON.stringify(message) : message.toString();
-	response.send({ error: err });
+	response.send({ error: jsonError });
+	response.end();
 };

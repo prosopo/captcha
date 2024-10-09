@@ -170,7 +170,13 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		const optionsAll = {
 			...options,
 			name: errorName,
-			context: { ...options?.context, code },
+			context: {
+				...options?.context,
+				code,
+				...(error instanceof ProsopoBaseError && error.translationKey
+					? { translationKey: error.translationKey }
+					: {}),
+			},
 		};
 		super(error, optionsAll);
 		this.code = code;

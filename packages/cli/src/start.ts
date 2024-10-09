@@ -52,7 +52,8 @@ function startApi(
 	apiApp.use(prosopoVerifyRouter(env));
 
 	if (admin) {
-		apiApp.use(prosopoAdminRouter(env), authMiddleware(env));
+		apiApp.use(authMiddleware(env));
+		apiApp.use(prosopoAdminRouter(env));
 	}
 
 	// Rate limiting

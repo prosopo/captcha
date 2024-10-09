@@ -14,6 +14,7 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
@@ -22,7 +23,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 		try {
 			// Not sure what these are but they seem to be continually called by the provider process causing errors
 			// with the auth middleware
-			if (req.url === "/json/list" || req.url === "/json/version") {
+			if (req.url.indexOf(ApiPrefix) === -1) {
 				next();
 				return;
 			}

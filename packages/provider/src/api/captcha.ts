@@ -19,15 +19,18 @@ import {
 	ApiPaths,
 	type Captcha,
 	CaptchaRequestBody,
+	type CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	CaptchaSolutionBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
 	GetPowCaptchaChallengeRequestBody,
+	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
+	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -56,10 +59,41 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	const GetImageCaptchaChallengePath: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`;
 	router.get(GetImageCaptchaChallengePath, async (req, res, next) => {
+		let parsed: CaptchaRequestBodyTypeOutput;
 		try {
-			const { datasetId, user, dapp } = CaptchaRequestBody.parse(req.params);
-			validateAddress(user, false, 42);
+			parsed = CaptchaRequestBody.parse(req.params);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err },
+				}),
+			);
+		}
+
+		const { datasetId, user, dapp } = parsed;
+
+		try {
 			validateAddress(dapp, false, 42);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("API.INVALID_SITE_KEY", {
+					context: { code: 400, error: err, siteKey: dapp },
+				}),
+			);
+		}
+
+		try {
+			validateAddress(dapp, false, 42);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("API.INVALID_SITE_KEY", {
+					context: { code: 400, error: err, siteKey: dapp },
+				}),
+			);
+		}
+
+		try {
+			validateAddress(user, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -129,12 +163,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			);
 		}
 
-		const user = parsed[ApiParams.user];
-		const dapp = parsed[ApiParams.dapp];
+		const { user, dapp } = parsed;
+
+		try {
+			validateAddress(dapp, false, 42);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("API.INVALID_SITE_KEY", {
+					context: { code: 400, error: err, siteKey: dapp },
+				}),
+			);
+		}
 
 		try {
 			validateAddress(user, false, 42);
-			validateAddress(dapp, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
@@ -183,11 +225,31 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} dappAccount - Dapp address
 	 */
 	router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
-		try {
-			const { user, dapp } = GetPowCaptchaChallengeRequestBody.parse(req.body);
+		let parsed: GetPowCaptchaChallengeRequestBodyTypeOutput;
 
-			validateAddress(user, false, 42);
+		try {
+			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err },
+				}),
+			);
+		}
+
+		const { user, dapp } = parsed;
+		try {
 			validateAddress(dapp, false, 42);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("API.INVALID_SITE_KEY", {
+					context: { code: 400, error: err, siteKey: dapp },
+				}),
+			);
+		}
+
+		try {
+			validateAddress(user, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -267,9 +329,40 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {number} verifiedTimeout - the valid length of captcha solution in ms
 	 */
 	router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
+		let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
+
 		try {
-			const { challenge, difficulty, signature, nonce, verifiedTimeout, dapp } =
-				SubmitPowCaptchaSolutionBody.parse(req.body);
+			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err, body: req.body },
+				}),
+			);
+		}
+
+		const {
+			challenge,
+			difficulty,
+			signature,
+			nonce,
+			verifiedTimeout,
+			dapp,
+			user,
+		} = parsed;
+
+		try {
+			validateAddress(dapp, false, 42);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("API.INVALID_SITE_KEY", {
+					context: { code: 400, error: err, siteKey: dapp },
+				}),
+			);
+		}
+
+		try {
+			validateAddress(user, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
