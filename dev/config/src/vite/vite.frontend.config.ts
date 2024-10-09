@@ -39,6 +39,9 @@ export default async function (
 	tsConfigPaths?: string[],
 	workspaceRoot?: string,
 ): Promise<UserConfig> {
+	if (mode !== "production") {
+		mode = "development";
+	}
 	logger.info(`Running at ${dir} in ${mode} mode`);
 	const isProduction = mode === "production";
 	// NODE_ENV must be wrapped in quotes.
