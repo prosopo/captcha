@@ -23,12 +23,13 @@ import {
 	getLogger,
 } from "@prosopo/common";
 import {
+	ApiParams,
 	type CaptchaTimeoutOutput,
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
+	decodeProcaptchaOutput,
 } from "@prosopo/types";
-import { decodeProcaptchaOutput } from "@prosopo/types";
 
 export class ProsopoServer {
 	config: ProsopoServerConfigOutput;
@@ -107,6 +108,12 @@ export class ProsopoServer {
 			signatureHex,
 			timeouts.image.cachedTimeout,
 		);
+
+		if (result[ApiParams.error]) {
+			this.logger.error("Error in verification", result[ApiParams.error]);
+			return false;
+		}
+
 		return result.verified;
 	}
 
