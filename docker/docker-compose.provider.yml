@@ -17,6 +17,12 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"]  # ping the status api
+            interval: 30s
+            retries: 3
+            start_period: 30s
+            timeout: 10s
     provider:
         profiles:
             - production
@@ -24,6 +30,8 @@ services:
         image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
@@ -39,8 +47,8 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"]  # ping the status api
-            interval: 30s
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details"]  # ping the details endpoint
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -63,7 +71,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -74,6 +82,8 @@ services:
         image: mongo:6.0.17
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.mongo=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
@@ -90,7 +100,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -103,6 +113,8 @@ services:
             - ../.env.${NODE_ENV}
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.caddy=true" # enable logging as caddy
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
@@ -121,7 +133,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -130,8 +142,11 @@ services:
             - production
             - staging
         image: containrrr/watchtower
+        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--label-enable", "--interval", "30"]
         labels:
             - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.watchtower=true" # enable logging as a watchtower
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         env_file:
             - ../.env.${NODE_ENV}
@@ -142,6 +157,34 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+    vector:
+        profiles:
+            - production
+            - staging
+        image: prosopo/vector:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - ./provider.vector.toml:/etc/vector/vector.toml
+            - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:8686/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 1
+            start_period: 10s
 networks:
     internal:
         name: internal

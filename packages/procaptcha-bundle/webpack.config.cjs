@@ -13,21 +13,29 @@
 // limitations under the License.
 const getWebpackConfig = require("@prosopo/config/webpack/webpack.config");
 const path = require("node:path");
+const fg = require("fast-glob");
 const args = process.argv.slice(2);
 const mode =
 	args.indexOf("--mode") > -1
 		? args[args.indexOf("--mode") + 1]
 		: "development";
 const webpackConfig = getWebpackConfig(mode);
+
+const rootDir = path.resolve(__dirname, "../..");
+console.log("Looking in", rootDir);
+
+const nodeModulePaths = fg.sync("**/node_modules", {
+	onlyDirectories: true,
+	cwd: rootDir,
+});
+
+console.log(nodeModulePaths);
+
 const bundleWebpackConfig = {
 	...webpackConfig,
 	resolve: {
 		...webpackConfig.resolve,
-		modules: [
-			path.resolve("node_modules"),
-			path.resolve("../node_modules"),
-			path.resolve("../../node_modules"),
-		],
+		modules: nodeModulePaths,
 		alias: {
 			"@polkadot/x-textdecoder": path.resolve(
 				"../../node_modules/@polkadot/x-textdecoder",

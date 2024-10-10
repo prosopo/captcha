@@ -22,6 +22,7 @@ import type {
 	Provider,
 	ProviderRegistered,
 	RandomProvider,
+	UpdateProviderClientsResponse,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
@@ -57,7 +58,11 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse>;
-	submitUserEvents(events: StoredEvents, string: string): Promise<unknown>;
+	submitUserEvents(
+		events: StoredEvents,
+		string: string,
+	): Promise<UpdateProviderClientsResponse>;
+	updateProviderClients(): Promise<UpdateProviderClientsResponse>;
 	getProviderStatus(): Promise<ProviderRegistered>;
 	getProviderDetails(): Promise<Provider>;
 }
