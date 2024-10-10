@@ -28,6 +28,7 @@ import { at, verifyRecency } from "@prosopo/util";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const logger = getLoggerDefault();
+const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager {
 	pair: KeyringPair;
@@ -53,7 +54,7 @@ export class PowCaptchaManager {
 		origin: string,
 		powDifficulty?: number,
 	): Promise<PoWCaptcha> {
-		const difficulty = powDifficulty || 4;
+		const difficulty = powDifficulty || DEFAULT_POW_DIFFICULTY;
 
 		const requestedAtTimestamp = Date.now();
 

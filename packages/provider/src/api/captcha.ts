@@ -42,6 +42,7 @@ import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
+const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -130,6 +131,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		}
 
 		try {
+			validateAddress(parsed.dapp, false, 42);
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
 			if (!clientRecord) {
@@ -181,11 +183,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const { user, dapp, sessionId } = GetPowCaptchaChallengeRequestBody.parse(
 				req.body,
 			);
+			validateAddress(user, false, 42);
+			validateAddress(dapp, false, 42);
+
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-
 			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			console.log("\n ---- \n clientRecord \n ---- \n", clientRecord);
 
 			if (!clientRecord) {
 				return res.json({
@@ -211,9 +213,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					code: 200,
 				});
 			}
-
-			validateAddress(user, false, 42);
-			validateAddress(dapp, false, 42);
 
 			const origin = req.headers.origin;
 
@@ -282,6 +281,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const { challenge, difficulty, signature, nonce, verifiedTimeout, dapp } =
 				SubmitPowCaptchaSolutionBody.parse(req.body);
 
+			validateAddress(dapp, false, 42);
+
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -325,7 +326,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const botScore = await getBotScore(token);
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
-					clientConfig?.settings?.frictionlessThreshold || 0.5;
+					clientConfig?.settings?.frictionlessThreshold ||
+					DEFAULT_FRICTIONLESS_THRESHOLD;
 
 				if (Number(botScore) > botThreshold) {
 					const response: GetFrictionlessCaptchaResponse = {

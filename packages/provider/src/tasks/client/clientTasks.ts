@@ -51,24 +51,16 @@ export class ClientTaskManager {
 			ScheduledTaskStatus.Completed,
 		);
 
-		console.log("\n ---- \n lastTask \n ---- \n", lastTask);
-
 		const taskID = await this.providerDB.createScheduledTaskStatus(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
 		);
 
-		console.log("\n ---- \n taskID \n ---- \n", taskID);
-
 		try {
 			let commitments = await this.providerDB.getUnstoredDappUserCommitments();
 
-			console.log("\n ---- \n commitments \n ---- \n", commitments);
-
 			let powRecords =
 				await this.providerDB.getUnstoredDappUserPoWCommitments();
-
-			console.log("\n ---- \n powRecords \n ---- \n", powRecords);
 
 			// filter to only get records that have been updated since the last task
 			if (lastTask) {
@@ -100,10 +92,6 @@ export class ClientTaskManager {
 							!commitment.lastUpdatedTimestamp)
 					);
 				});
-
-				console.log("\n ---- \n commitments \n ---- \n", commitments);
-
-				console.log("\n ---- \n powRecords \n ---- \n", powRecords);
 			}
 
 			if (commitments.length || powRecords.length) {
@@ -181,8 +169,6 @@ export class ClientTaskManager {
 
 			const updatedAtTimestamp = lastTask ? lastTask.updated || 0 : 0;
 
-			console.log("updatedAtTimestamp", updatedAtTimestamp);
-
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
 
@@ -213,7 +199,6 @@ export class ClientTaskManager {
 		siteKey: string,
 		settings: IUserSettings,
 	): Promise<void> {
-		console.log("\n ---- \n dbnam \n ---- \n", siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
