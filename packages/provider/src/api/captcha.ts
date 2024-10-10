@@ -130,14 +130,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			};
 			return res.json(captchaResponse);
 		} catch (err) {
-			tasks.logger.error(err);
+			tasks.logger.error({ err, params: req.params });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
 						error: err,
-						code: 400,
-						user: req.body.user,
-						dapp: req.body.dapp,
+						code: 500,
+						params: req.params,
 					},
 				}),
 			);
@@ -211,10 +210,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			};
 			return res.json(returnValue);
 		} catch (err) {
-			tasks.logger.error(err);
+			tasks.logger.error({ err, body: req.body });
 			return next(
-				new ProsopoApiError("API.UNKNOWN", {
-					context: { code: 400, error: err, user, dapp },
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 500, siteKey: req.body.dapp },
 				}),
 			);
 		}
@@ -270,7 +269,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			if (!origin) {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { error: "origin header not found", code: 400 },
+						context: { error: "Origin header not found", code: 400 },
 					}),
 				);
 			}
@@ -308,14 +307,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
-			tasks.logger.error(err);
+			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
-						code: 400,
-						error: err,
-						user: req.body.user,
-						dapp: req.body.dapp,
+						code: 500,
+						siteKey: req.body.dapp,
 					},
 				}),
 			);
@@ -390,14 +387,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);
 		} catch (err) {
-			tasks.logger.error(err);
+			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
-						code: 400,
-						error: err,
-						user: req.body.user,
-						dapp: req.body.dapp,
+						code: 500,
+						siteKey: req.body.dapp,
 					},
 				}),
 			);
@@ -411,10 +406,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		try {
 			return res.json({ version, ...{ message: "Provider online" } });
 		} catch (err) {
-			tasks.logger.error(err);
+			tasks.logger.error({ err, params: req.params });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
+					context: { code: 500 },
 				}),
 			);
 		}

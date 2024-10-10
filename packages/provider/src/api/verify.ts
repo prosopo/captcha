@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { validateAddress } from "@polkadot/util-crypto/address";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	ApiPaths,
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
+	type ServerPowCaptchaVerifyRequestBodyOutput,
 	type VerificationResponse,
 	VerifySolutionBody,
+	type VerifySolutionBodyTypeOutput,
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -51,11 +54,38 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
+			// We can be helpful and provide a more detailed error message when there are missing fields
+			let parsed: VerifySolutionBodyTypeOutput;
 			try {
-				const parsed = VerifySolutionBody.parse(req.body);
-				const { dappSignature, token } = parsed;
+				parsed = VerifySolutionBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
+					}),
+				);
+			}
+
+			// We don't want to expose any other errors to the client except for specific situations
+			const { dappSignature, token } = parsed;
+			try {
+				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
 					decodeProcaptchaOutput(token);
+
+				// Do this before checking the db
+				validateAddress(dapp, false, 42);
+				validateAddress(user, false, 42);
+
+				// Reject any unregistered site keys
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+						}),
+					);
+				}
 
 				// Verify using the appropriate pair based on isDapp flag
 				const keyPair = env.keyring.addFromAddress(dapp);
@@ -81,9 +111,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				};
 				res.json(verificationResponse);
 			} catch (err) {
+				tasks.logger.error({ err, body: req.body });
 				return next(
-					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err },
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 500 },
 					}),
 				);
 			}
@@ -98,10 +129,39 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
 	 */
 	router.post(ApiPaths.VerifyPowCaptchaSolution, async (req, res, next) => {
+		let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
+		// We can be helpful and provide a more detailed error message when there are missing fields
 		try {
-			const { token, dappSignature, verifiedTimeout } =
-				ServerPowCaptchaVerifyRequestBody.parse(req.body);
-			const { dapp, timestamp, challenge } = decodeProcaptchaOutput(token);
+			parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err, body: req.body },
+				}),
+			);
+		}
+
+		// We don't want to expose any other errors to the client
+		try {
+			const { token, dappSignature, verifiedTimeout } = parsed;
+
+			// This can error if the token is invalid
+			const { dapp, user, timestamp, challenge } =
+				decodeProcaptchaOutput(token);
+
+			// Do this before checking the db
+			validateAddress(dapp, false, 42);
+			validateAddress(user, false, 42);
+
+			// Reject any unregistered site keys
+			const clientRecord = await tasks.db.getClientRecord(dapp);
+			if (!clientRecord) {
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
+			}
 
 			if (!challenge) {
 				const unverifiedResponse: VerificationResponse = {
@@ -131,10 +191,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			return res.json(verificationResponse);
 		} catch (err) {
-			tasks.logger.error(err);
+			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
+					context: { code: 500 },
 				}),
 			);
 		}

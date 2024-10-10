@@ -104,7 +104,7 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			});
 
-			expect(response.status).toBe(400);
+			expect(response.status).toBe(500);
 		});
 	});
 	describe("SubmitImageCaptchaSolution", () => {

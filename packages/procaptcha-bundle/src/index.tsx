@@ -97,12 +97,14 @@ const start = () => {
 
 	if (onloadUrlCallback) {
 		const onloadCallback = getWindowCallback(onloadUrlCallback);
+		let readyCalled = false;
 		// Add event listener to the script tag to call the callback function when the script is loaded
 		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
 			ready(onloadCallback);
+			readyCalled = true;
 		});
 		// or if the document has already loaded, call the callback function
-		if (document.readyState === "complete") {
+		if (document.readyState === "complete" && !readyCalled) {
 			ready(onloadCallback);
 		}
 	}

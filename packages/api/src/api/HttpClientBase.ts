@@ -25,7 +25,8 @@ export class HttpClientBase {
 			const response = await fetch(this.baseURL + input, init);
 			if (
 				!response.ok &&
-				// Only throw an error if the response is not JSON
+				// Only throw an error if the response is not JSON and not a 400 error
+				response.status !== 400 &&
 				!response.headers.get("content-type")?.includes("application/json")
 			) {
 				throw new HttpError(response.status, response.statusText, response.url);
@@ -54,7 +55,8 @@ export class HttpClientBase {
 			});
 			if (
 				!response.ok &&
-				// Only throw an error if the response is not JSON
+				// Only throw an error if the response is not JSON and not a 400 error
+				response.status !== 400 &&
 				!response.headers.get("content-type")?.includes("application/json")
 			) {
 				throw new HttpError(response.status, response.statusText, response.url);

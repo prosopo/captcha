@@ -270,6 +270,10 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 });
 
+export type ServerPowCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerPowCaptchaVerifyRequestBody
+>;
+
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
