@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
+import { ProsopoEnvError } from "@prosopo/common";
 import detect from "@prosopo/detector";
 import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
@@ -33,7 +34,7 @@ const customDetectBot: BotDetectionFunction = async (
 	const botScore: { token: string } = await detect();
 
 	if (!config.account.address) {
-		throw new Error("Hugh resolve this error!");
+		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
 	// Get random active provider
@@ -42,10 +43,6 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 	);
-
-	if (!config.account.address) {
-		throw new Error("Hugh resolve this error!");
-	}
 
 	const captcha = await providerApi.getFrictionlessCaptcha(
 		botScore.token,
