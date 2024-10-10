@@ -8,7 +8,13 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../../packages/common"
+		},
+		{
 			"path": "../../packages/contract"
+		},
+		{
+			"path": "../../packages/dotenv"
 		},
 		{
 			"path": "../../packages/server"
@@ -17,16 +23,7 @@
 			"path": "../../packages/types"
 		},
 		{
-			"path": "../../packages/common"
-		},
-		{
 			"path": "../../packages/util"
-		},
-		{
-			"path": "../../packages/server"
-		},
-		{
-			"path": "../../packages/dotenv"
 		}
 	]
 }
