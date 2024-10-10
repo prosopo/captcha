@@ -20,14 +20,10 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Router } from "express";
 import { Tasks } from "../index.js";
-import { authMiddleware } from "./authMiddleware.js";
 
 export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();
 	const tasks = new Tasks(env);
-
-	// Use the authMiddleware for all routes in this router
-	router.use(authMiddleware(env));
 
 	router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
 		try {

@@ -105,7 +105,8 @@
 		"USER_ALREADY_VERIFIED": "Cette solution a déjà été vérifiée. L'utilisateur doit compléter un nouveau captcha.",
 		"UNKNOWN": "Erreur API inconnue",
 		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée",
-		"INCOMPATIBLE_CAPTCHA_TYPE": "Type de CAPTCHA incorrect"
+		"INCOMPATIBLE_CAPTCHA_TYPE": "Type de CAPTCHA incorrect",
+		"INVALID_SITE_KEY": "Clé de site non valide"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Paramètre invalide"

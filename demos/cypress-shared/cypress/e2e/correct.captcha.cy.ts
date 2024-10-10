@@ -64,6 +64,33 @@ describe("Captchas", () => {
 		});
 	});
 
+	it("Selecting the incorrect images fails the captcha", () => {
+		cy.window()
+			.its("console")
+			.then((console) => {
+				cy.spy(console, "log").as("log");
+			});
+		cy.clickIAmHuman().then(() => {
+			// Make sure the images are loaded
+			cy.captchaImages().then(() => {
+				cy.get("@captchas").each((captcha: Captcha) => {
+					cy.log("in each function");
+					// Click correct images and submit the solution
+					cy.clickNextButton();
+				});
+			});
+			cy.get("input[type='checkbox']").then((checkboxes) => {
+				cy.wrap(checkboxes).first().should("not.be.checked");
+			});
+		});
+
+		// check the logs by going through all recorded calls
+		cy.get("@log").should(
+			"have.been.calledWith",
+			"The user failed the captcha",
+		);
+	});
+
 	it("Selecting the correct images passes the captcha", () => {
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded

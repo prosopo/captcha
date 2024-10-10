@@ -15,7 +15,6 @@ import { stringToHex } from "@polkadot/util/string";
 import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { sleep } from "@prosopo/procaptcha";
 import {
 	buildUpdateState,
 	getDefaultEvents,
@@ -33,6 +32,7 @@ import {
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
+import { sleep } from "@prosopo/util";
 import { solvePoW } from "@prosopo/util";
 
 export const Manager = (
@@ -115,6 +115,7 @@ export const Manager = (
 		clearTimeout();
 		clearSuccessfulChallengeTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	const setValidChallengeTimeout = () => {
@@ -201,8 +202,8 @@ export const Manager = (
 
 				if (challenge.error) {
 					updateState({
-						error: challenge.error,
 						loading: false,
+						error: challenge.error.message,
 					});
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);

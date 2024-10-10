@@ -5,6 +5,11 @@ name: provider_image
 on:
     pull_request:
         branches: [main, dev, staging, release/*]
+        types: 
+            - opened # when a PR is opened
+            - synchronize # when a PR is pushed to
+            - reopened # when a PR is reopened
+            - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
     workflow_dispatch:
 
 concurrency:
@@ -64,14 +69,14 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore npm cache
               if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
-              uses: actions/cache/restore@v3
+              uses: actions/cache/restore@v4
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
@@ -84,7 +89,7 @@ jobs:
                   restore-keys: |
                       npm-${{ runner.os }}-${{ runner.arch }}-
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               with:
                   node-version-file: '.nvmrc'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
@@ -107,11 +112,6 @@ jobs:
                     echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
                     NODE_ENV="production" npm run -w @prosopo/cli bundle
 
-            # Add support for more platforms with QEMU (optional)
-            # https://github.com/docker/setup-qemu-action
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v3
-
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
@@ -130,19 +130,6 @@ jobs:
                   push: false
                   tags: prosopo/provider:dev
                   outputs: type=docker,dest=provider-amd64.tar
-
-            # create the provider image for ARM64
-            - name: Build the Provider Container
-              id: build_docker_provider_arm64
-              continue-on-error: false
-              uses: docker/build-push-action@v5
-              with:
-                  context: ${{github.workspace}}
-                  file: ${{github.workspace}}/docker/images/provider.dockerfile
-                  platforms: linux/arm64
-                  push: false
-                  tags: prosopo/provider:dev
-                  outputs: type=docker,dest=provider-arm64.tar
 
             # load the AMD64 image
             - name: Load the Provider Container

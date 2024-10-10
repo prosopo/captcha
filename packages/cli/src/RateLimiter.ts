@@ -39,10 +39,6 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
 		},
-		[ApiPaths.VerifyImageCaptchaSolutionUser]: {
-			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_USER_WINDOW,
-			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_USER_LIMIT,
-		},
 		[ApiPaths.GetProviderStatus]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_STATUS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_STATUS_LIMIT,

@@ -15,7 +15,7 @@
 import { FeaturesEnum } from "@prosopo/types";
 import { JSDOM } from "jsdom";
 import { beforeEach, describe, expect, it } from "vitest";
-import { getCaptchaType } from "../util/captchaType.js";
+import { getCaptchaType } from "../../util/captchaType.js";
 
 describe("getCaptchaType", () => {
 	beforeEach(() => {
