@@ -39,8 +39,8 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"]  # ping the status api
-            interval: 30s
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details"]  # ping the details endpoint
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -63,7 +63,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -90,7 +90,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
@@ -121,7 +121,7 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
