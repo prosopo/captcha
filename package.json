@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.1.2",
+	"version": "2.1.3",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -65,12 +65,12 @@
 		"sbom:spdx": "npm sbom --sbom-format spdx > sbom.spdx.json",
 		"sbom:cyclonedx": "npm sbom --sbom-format cyclonedx > sbom.cyclonedx.json",
 		"sbom": "run-s sbom:*",
-		"ws:pkg": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgjson -- {}",
-		"ws:dir": "npm run --silent ws:ls | xargs -I {} npm run --silent pkgdir -- {}",
+		"ws:pkg": "npm run --silent ws:ls | xargs -P 100 -I {} npm run --silent pkgjson -- {}",
+		"ws:dir": "npm run --silent ws:ls | xargs -P 100 -I {} npm run --silent pkgdir -- {}",
 		"pkgjson": "f() { npx -w $1 node -e 'console.log(process.cwd()+\"/package.json\")' ;}; f",
 		"pkgdir": "f() { npx -w $1 node -e 'console.log(process.cwd())' ;}; f",
 		"depcheck": "npm run --silent ws:pkg | xargs -P 1 --verbose -I {} bash -c 'cd $(dirname {}) && npx depcheck --ignores vite,vitest,@vitest/coverage-v8,rimraf,concurrently,npm-run-all,tslib,typescript,tsx || true; echo \"\"'",
-		"deps:ls": "npm run --silent ws:pkg | xargs -I {} bash -c 'cat {} | jq .dependencies | head -n -1 | tail -n +2' | tr -d ',' | sort | uniq",
+		"deps:ls": "npm run --silent ws:pkg | xargs -P 100 -I {} bash -c 'cat {} | jq .dependencies | head -n -1 | tail -n +2' | tr -d ',' | sort | uniq",
 		"deps:dupe": "npm run deps:ls | awk -F': ' 'NF {count[$1]++; lines[$1] = lines[$1] $0 \"\\n\"} END {for (pkg in count) if (count[pkg] > 1) printf \"%s\", lines[pkg]}' | sort",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
