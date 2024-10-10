@@ -51,12 +51,14 @@ export const ApiPrefix = "/v1/prosopo" as const;
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
+	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/captcha/frictionless",
 	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/status",
 	GetProviderDetails = "/v1/prosopo/provider/details",
+	UpdateProviderClients = "/v1/prosopo/provider/clients",
 	SubmitUserEvents = "/v1/prosopo/provider/events",
 }
 
@@ -85,12 +87,14 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
 	[ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ApiPaths.GetFrictionlessCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
+	[ApiPaths.UpdateProviderClients]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
@@ -220,6 +224,10 @@ export interface PendingCaptchaRequest {
 	headers: RequestHeaders;
 }
 
+export interface UpdateProviderClientsResponse extends ApiResponse {
+	message: string;
+}
+
 export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
@@ -251,6 +259,11 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+export interface GetFrictionlessCaptchaResponse extends ApiResponse {
+	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.sessionId]?: string;
+}
+
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.error]?: ApiJsonError;
@@ -277,6 +290,7 @@ export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
@@ -314,10 +328,21 @@ export type SubmitPowCaptchaSolutionBodyType = zInfer<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 
+export const GetFrictionlessCaptchaChallengeRequestBody = object({
+	[ApiParams.dapp]: string(),
+	[ApiParams.token]: string(),
+});
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 
 export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: string(),
+});
+
+export const RegisterSitekeyBody = object({
+	[ApiParams.siteKey]: string(),
+	[ApiParams.settings]: object({
+		[ApiParams.captchaType]: string(),
+	}).optional(),
 });

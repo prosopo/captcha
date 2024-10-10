@@ -12,15 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProviderEnvironment } from "@prosopo/env";
-import { Tasks } from "@prosopo/provider";
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
-export async function registerSiteKey(
-	env: ProviderEnvironment,
-	siteKey: string,
-): Promise<void> {
-	const logger = env.logger;
-	const tasks = new Tasks(env);
-	logger.info("   - siteKeyRegister");
-	await tasks.clientTaskManager.registerSiteKey(siteKey as string, {});
-}
+export const getFingerprint = async () => {
+	const fp = await FingerprintJS.load();
+	const result = await fp.get();
+	return result.visitorId;
+};
