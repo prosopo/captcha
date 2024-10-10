@@ -30,12 +30,12 @@ export const registerSiteKey = async (siteKey: string): Promise<void> => {
 		await db.updateClientRecords([
 			{
 				account: siteKey,
-							settings: {
-				captchaType: "pow",
-				domains: ["example.com"],
-				frictionlessThreshold: 0.5,
-				powDifficulty: 4,
-			},
+				settings: {
+					captchaType: "pow",
+					domains: ["example.com"],
+					frictionlessThreshold: 0.5,
+					powDifficulty: 4,
+				},
 			} as ClientRecord,
 		]);
 		await db.connection?.close();
