@@ -13,7 +13,7 @@
 		"start": "vite serve ./src --port 9232 --config vite.config.ts",
 		"clean": "echo 'nothing to clean'"
 	},
-	"version": "2.1.2",
+	"version": "2.1.3",
 	"devDependencies": {
 		"@prosopo/dotenv": "2.1.2",
 		"@types/node": "22.5.5",
