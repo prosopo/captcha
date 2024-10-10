@@ -113,6 +113,7 @@ export const Manager = (
 		clearTimeout();
 		clearSuccessfulChallengeTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	const setValidChallengeTimeout = () => {
@@ -192,8 +193,8 @@ export const Manager = (
 
 				if (challenge.error) {
 					updateState({
-						error: challenge.error,
 						loading: false,
+						error: challenge.error.message,
 					});
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);

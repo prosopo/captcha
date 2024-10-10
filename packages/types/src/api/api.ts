@@ -45,14 +45,6 @@ export interface ProviderApiInterface {
 		commitmentId?: string,
 		maxVerifiedTime?: number,
 	): Promise<ImageVerificationResponse>;
-	verifyUser(
-		dapp: string,
-		userAccount: string,
-		blockNumber: number,
-		dappUserSignature: string,
-		commitmentId?: string,
-		maxVerifiedTime?: number,
-	): Promise<ImageVerificationResponse>;
 	getPowCaptchaChallenge(
 		userAccount: string,
 		dappAccount: string,

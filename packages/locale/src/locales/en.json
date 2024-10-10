@@ -104,7 +104,8 @@
 		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
 		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
 		"UNKNOWN": "Unknown API error",
-		"SITE_KEY_NOT_REGISTERED": "Site key not registered"
+		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
+		"INVALID_SITE_KEY": "Invalid site key"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

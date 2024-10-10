@@ -115,6 +115,7 @@ jobs:
                 git config user.email "dev@prosopo.io"
 
                 # checkout the src branch
+                git fetch --all
                 git checkout ${{ github.event.inputs.src }}
 
                 INTERIM="${{ github.event.inputs.interim}}"

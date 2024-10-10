@@ -37,6 +37,7 @@ const mockEnv = {
 describe("authMiddleware", () => {
 	it("should call next() if signature is valid", async () => {
 		const mockReq = {
+			url: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -63,6 +64,7 @@ describe("authMiddleware", () => {
 
 	it("should return 401 if signature is invalid", async () => {
 		const mockReq = {
+			url: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -93,6 +95,7 @@ describe("authMiddleware", () => {
 
 	it("should return 401 if key pair is missing", async () => {
 		const mockReq = {
+			url: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -119,5 +122,28 @@ describe("authMiddleware", () => {
 			error: "Unauthorized",
 			message: expect.any(ProsopoEnvError),
 		});
+	});
+
+	it("should call next() immediately if url does not contain /v1/prosopo", async () => {
+		const mockReq = {
+			url: "/favicon.ico",
+			headers: {
+				signature: "0x1234",
+				timestamp: new Date().getTime(),
+			},
+		} as unknown as Request;
+
+		const mockRes = {
+			status: vi.fn().mockReturnThis(),
+			json: vi.fn(),
+		} as unknown as Response;
+
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const middleware = authMiddleware(mockEnv);
+		await middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(mockRes.status).not.toHaveBeenCalled();
 	});
 });
