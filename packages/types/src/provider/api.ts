@@ -43,7 +43,10 @@ import {
 	ProcaptchaTokenSpec,
 	type RequestHashSignature,
 	RequestHashSignatureSchema,
+	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
+
+export const ApiPrefix = "/v1/prosopo" as const;
 
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
@@ -52,7 +55,6 @@ export enum ApiPaths {
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
-	VerifyImageCaptchaSolutionUser = "/v1/prosopo/provider/image/user/verify",
 	GetProviderStatus = "/v1/prosopo/provider/status",
 	GetProviderDetails = "/v1/prosopo/provider/details",
 	SubmitUserEvents = "/v1/prosopo/provider/events",
@@ -86,7 +88,6 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyImageCaptchaSolutionUser]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
@@ -172,6 +173,7 @@ export const CaptchaRequestBody = object({
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
+export type CaptchaRequestBodyTypeOutput = output<typeof CaptchaRequestBody>;
 
 export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.captchas]: Captcha[];
@@ -189,7 +191,7 @@ export const CaptchaSolutionBody = object({
 	[ApiParams.requestHash]: string(),
 	[ApiParams.timestamp]: string(),
 	[ApiParams.signature]: object({
-		[ApiParams.user]: RequestHashSignatureSchema,
+		[ApiParams.user]: TimestampSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
 });
@@ -222,9 +224,14 @@ export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
 
+export type ApiJsonError = {
+	message: string;
+	code: number;
+};
+
 export interface ApiResponse {
 	[ApiParams.status]: string;
-	[ApiParams.error]?: string;
+	[ApiParams.error]?: ApiJsonError;
 }
 
 export interface VerificationResponse extends ApiResponse {
@@ -246,7 +253,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
-	[ApiParams.error]?: string;
+	[ApiParams.error]?: ApiJsonError;
 }
 
 /**
@@ -263,12 +270,20 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 });
 
+export type ServerPowCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerPowCaptchaVerifyRequestBody
+>;
+
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetPowCaptchaChallengeRequestBody
+>;
+
+export type GetPowCaptchaChallengeRequestBodyTypeOutput = output<
 	typeof GetPowCaptchaChallengeRequestBody
 >;
 
@@ -296,6 +311,10 @@ export const SubmitPowCaptchaSolutionBody = object({
 });
 
 export type SubmitPowCaptchaSolutionBodyType = zInfer<
+	typeof SubmitPowCaptchaSolutionBody
+>;
+
+export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 
