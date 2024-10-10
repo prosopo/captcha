@@ -53,6 +53,7 @@ export const getDefaultCallbacks = (element: Element) => ({
 		console.log("Challenge failed");
 	},
 	onReset: () => {
+		removeProcaptchaResponse();
 		console.log("Captcha widget reset");
 	},
 });
