@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
@@ -168,8 +169,6 @@ export class ClientTaskManager {
 
 			const updatedAtTimestamp = lastTask ? lastTask.updated || 0 : 0;
 
-			console.log("updatedAtTimestamp", updatedAtTimestamp);
-
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
 
@@ -196,10 +195,14 @@ export class ClientTaskManager {
 		}
 	}
 
-	async registerSiteKey(siteKey: string): Promise<void> {
+	async registerSiteKey(
+		siteKey: string,
+		settings: IUserSettings,
+	): Promise<void> {
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
+				settings: settings,
 			} as ClientRecord,
 		]);
 	}
