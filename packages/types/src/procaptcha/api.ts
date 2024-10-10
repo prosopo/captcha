@@ -24,7 +24,7 @@ export interface ProcaptchaApiInterface {
 	dappAccount: string;
 	web2: boolean;
 	submitCaptchaSolution(
-		userRequestHashSignature: string,
+		userTimestampSignature: string,
 		requestHash: string,
 		solutions: CaptchaSolution[],
 		timestamp: string,

@@ -58,6 +58,9 @@ export const getDefaultEvents = (
 			onClose: () => {
 				console.info("captcha closed");
 			},
+			onReset: () => {
+				console.info("captcha reset");
+			},
 		},
 		callbacks,
 	);
