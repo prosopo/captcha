@@ -28,6 +28,7 @@ declare global {
 			): Chainable<JQuery<HTMLElement>>;
 			getSelectors(captcha: Captcha): Cypress.Chainable<string[]>;
 			clickNextButton(): Cypress.Chainable<void>;
+			elementExists(element: string): Chainable<Subject>;
 		}
 	}
 }
@@ -136,10 +137,17 @@ function clickNextButton() {
 	cy.wait(0);
 }
 
+function elementExists(selector: string) {
+	return cy
+		.window()
+		.then(($window) => $window.document.querySelector(selector));
+}
+
 Cypress.Commands.addAll({
 	clickIAmHuman,
 	captchaImages,
 	clickCorrectCaptchaImages,
 	getSelectors,
 	clickNextButton,
+	elementExists,
 });

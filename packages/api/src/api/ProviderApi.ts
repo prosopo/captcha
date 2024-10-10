@@ -16,7 +16,6 @@ import {
 	ApiPaths,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
-	CaptchaSolutionBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
@@ -69,7 +68,7 @@ export default class ProviderApi
 		userAccount: string,
 		timestamp: string,
 		providerRequestHashSignature: string,
-		userRequestHashSignature: string,
+		userTimestampSignature: string,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -79,7 +78,7 @@ export default class ProviderApi
 			[ApiParams.timestamp]: timestamp,
 			[ApiParams.signature]: {
 				[ApiParams.user]: {
-					[ApiParams.requestHash]: userRequestHashSignature,
+					[ApiParams.timestamp]: userTimestampSignature,
 				},
 				[ApiParams.provider]: {
 					[ApiParams.requestHash]: providerRequestHashSignature,
@@ -103,20 +102,6 @@ export default class ProviderApi
 		}
 
 		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload);
-	}
-
-	public verifyUser(
-		token: ProcaptchaToken,
-		dappUserSignature: string,
-		maxVerifiedTime?: number,
-	): Promise<ImageVerificationResponse> {
-		const payload: VerifySolutionBodyTypeInput = {
-			[ApiParams.token]: token,
-			[ApiParams.dappSignature]: dappUserSignature,
-			...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
-		};
-
-		return this.post(ApiPaths.VerifyImageCaptchaSolutionUser, payload);
 	}
 
 	public getPowCaptchaChallenge(

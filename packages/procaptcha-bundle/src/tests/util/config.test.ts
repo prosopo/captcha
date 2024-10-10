@@ -15,7 +15,7 @@
 import { JSDOM } from "jsdom";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { extractParams, getProcaptchaScript } from "../util/config.js";
+import { extractParams, getProcaptchaScript } from "../../util/config.js";
 
 describe("Config utility functions", () => {
 	let dom: JSDOM;

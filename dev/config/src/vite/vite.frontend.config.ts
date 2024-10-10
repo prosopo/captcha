@@ -39,6 +39,17 @@ export default async function (
 	tsConfigPaths?: string[],
 	workspaceRoot?: string,
 ): Promise<UserConfig> {
+	// Only development and production modes are allowed
+	if (mode !== "production") {
+		mode = "development";
+	}
+	// We don't have a default environment of, for example, `test` so we use the `mode` as the default
+	const allowedEnvironments = ["development", "staging", "production"];
+	const defaultEnvironment =
+		process.env.NODE_ENV && allowedEnvironments.includes(process.env.NODE_ENV)
+			? process.env.NODE_ENV
+			: mode;
+
 	logger.info(`Running at ${dir} in ${mode} mode`);
 	const isProduction = mode === "production";
 	// NODE_ENV must be wrapped in quotes.
@@ -53,9 +64,8 @@ export default async function (
 		"process.env.WS_NO_BUFFER_UTIL": JSON.stringify("true"),
 		"process.env.WS_NO_UTF_8_VALIDATE": JSON.stringify("true"),
 		"process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-		"process.env.PROSOPO_DEFAULT_ENVIRONMENT": JSON.stringify(
-			process.env.PROSOPO_DEFAULT_ENVIRONMENT || process.env.NODE_ENV || mode,
-		),
+		"process.env.PROSOPO_DEFAULT_ENVIRONMENT":
+			JSON.stringify(defaultEnvironment),
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
 			process.env.PROSOPO_SERVER_URL,
 		),

@@ -49,6 +49,12 @@ export const getDefaultCallbacks = (element: Element) => ({
 	onOpen: () => {
 		console.log("Challenge opened");
 	},
+	onFailed: () => {
+		console.log("Challenge failed");
+	},
+	onReset: () => {
+		console.log("Captcha widget reset");
+	},
 });
 
 export function setUserCallbacks(
@@ -60,6 +66,8 @@ export function setUserCallbacks(
 		onError: (error: Error) => void;
 		onClose: () => void;
 		onOpen: () => void;
+		onFailed: () => void;
+		onReset: () => void;
 	},
 	element: Element,
 ) {
@@ -170,6 +178,32 @@ export function setUserCallbacks(
 					: element.getAttribute("data-open-callback");
 			if (onOpenCallbackName)
 				callbacks.onOpen = getWindowCallback(onOpenCallbackName);
+		}
+	}
+
+	if (renderOptions?.["failed-callback"]) {
+		if (typeof renderOptions["failed-callback"] === "function") {
+			callbacks.onFailed = renderOptions["failed-callback"];
+		} else {
+			const onFailedCallbackName =
+				typeof renderOptions?.["failed-callback"] === "string"
+					? renderOptions?.["failed-callback"]
+					: element.getAttribute("data-failed-callback");
+			if (onFailedCallbackName)
+				callbacks.onFailed = getWindowCallback(onFailedCallbackName);
+		}
+	}
+	// reset callback
+	if (renderOptions?.["reset-callback"]) {
+		if (typeof renderOptions["reset-callback"] === "function") {
+			callbacks.onReset = renderOptions["reset-callback"];
+		} else {
+			const onResetCallbackName =
+				typeof renderOptions?.["reset-callback"] === "string"
+					? renderOptions?.["reset-callback"]
+					: element.getAttribute("data-reset-callback");
+			if (onResetCallbackName)
+				callbacks.onReset = getWindowCallback(onResetCallbackName);
 		}
 	}
 }
