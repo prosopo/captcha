@@ -81,7 +81,11 @@
 		"node": ">=20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
@@ -100,6 +104,9 @@
 		"typescript": "5.6.2",
 		"vite": "5.4.6",
 		"vitest": "2.1.1"
+	},
+	"overrides": {
+		"@polkadot/api": "10.13.1"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {

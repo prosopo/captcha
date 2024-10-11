@@ -55,23 +55,6 @@
 		"@prosopo/util": "2.1.4",
 		"rxjs": "7.8.1"
 	},
-	"overrides": {
-		"@polkadot/extension-inject": {
-			"@polkadot/api": {
-				"version": "10.13.1"
-			}
-		},
-		"@polkadot/extension-chains": {
-			"@polkadot/api": {
-				"version": "10.13.1"
-			}
-		},
-		"@polkadot/extension-dapp": {
-			"@polkadot/api": {
-				"version": "10.13.1"
-			}
-		}
-	},
 	"devDependencies": {
 		"@polkadot/api-augment": "10.13.1",
 		"@prosopo/config": "2.1.4",
