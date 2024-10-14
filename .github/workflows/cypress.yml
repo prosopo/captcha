@@ -5,7 +5,7 @@ name: cypress
 on:
     pull_request:
         branches: [main, dev, staging, release/*]
-        types: 
+        types:
             - opened # when a PR is opened
             - synchronize # when a PR is pushed to
             - reopened # when a PR is reopened
@@ -71,6 +71,8 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
@@ -106,6 +108,7 @@ jobs:
 
                     cp demos/client-example-server/env.development demos/client-example-server/.env.test
                     cp demos/client-example/env.development demos/client-example/.env.test
+                    cp demos/client-bundle-example/env.development demos/client-example/.env.test
                     cp dev/scripts/env.test .env.test
                     cp dev/scripts/env.test dev/scripts/.env.test
                     cp dev/scripts/env.test packages/cli/.env.test

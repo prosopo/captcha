@@ -25,9 +25,9 @@ export default (mode: string) => {
 
 	return {
 		resolve: {
-			extensions: [".js", ".jsx", ".ts", ".tsx"],
+			extensions: [".js", ".jsx", ".ts", ".tsx", ".cjs"],
 			extensionAlias: {
-				".js": [".js", ".ts"],
+				".js": [".js", ".jsx", ".ts", ".tsx"],
 			},
 			modules: moduleDirs,
 			fullySpecified: false,

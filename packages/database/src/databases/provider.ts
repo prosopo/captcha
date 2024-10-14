@@ -49,6 +49,8 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
+	type SessionRecord,
+	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
 	type StoredCaptcha,
@@ -76,6 +78,7 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
+	session = "session",
 }
 
 const PROVIDER_TABLES = [
@@ -123,6 +126,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.client,
 		modelName: "Client",
 		schema: ClientRecordSchema,
+	},
+	{
+		collectionName: TableNames.session,
+		modelName: "Session",
+		schema: SessionRecordSchema,
 	},
 ];
 
@@ -780,6 +788,40 @@ export class ProviderDatabase
 			},
 			{ upsert: false },
 		);
+	}
+
+	/**
+	 * Store a new session record
+	 */
+	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
+		try {
+			await this.tables.session.create(sessionRecord);
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
+				context: { error: err, sessionId: sessionRecord.sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
+	 * Check if a session exists and remove it if it does
+	 * @returns The session record if it existed, undefined otherwise
+	 */
+	async checkAndRemoveSession(
+		sessionId: string,
+	): Promise<SessionRecord | undefined> {
+		try {
+			const session = await this.tables.session
+				.findOneAndDelete({ sessionId })
+				.lean<SessionRecord>();
+			return session || undefined;
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_CHECK_REMOVE_FAILED", {
+				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
 	}
 
 	/** @description Remove processed Dapp User captcha solutions from the user solution table

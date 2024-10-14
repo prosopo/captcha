@@ -118,30 +118,24 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 										>
 											<div
 												style={{
-													display:
-														!state.loading && !state.error ? "flex" : "none",
+													display: "flex",
 												}}
 											>
-												<Checkbox
-													themeColor={themeColor}
-													onChange={manager.start}
-													checked={state.isHuman}
-													labelText={t("WIDGET.I_AM_HUMAN")}
-													error={state.error}
-													aria-label="human checkbox"
-												/>
-											</div>
-											<div
-												style={{
-													display: state.loading ? "flex" : "none",
-												}}
-											>
-												<div style={{ display: "inline-flex" }}>
+												{state.loading ? (
 													<LoadingSpinner
 														themeColor={themeColor}
 														aria-label="Loading spinner"
 													/>
-												</div>
+												) : (
+													<Checkbox
+														themeColor={themeColor}
+														onChange={manager.start}
+														checked={state.isHuman}
+														labelText={t("WIDGET.I_AM_HUMAN")}
+														error={state.error}
+														aria-label="human checkbox"
+													/>
+												)}
 											</div>
 										</div>
 									</div>

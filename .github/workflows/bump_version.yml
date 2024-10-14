@@ -82,6 +82,8 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             - uses: actions/setup-node@v4
               with:
@@ -115,7 +117,14 @@ jobs:
                 git config user.email "dev@prosopo.io"
 
                 # checkout the src branch
+                git fetch --all
                 git checkout ${{ github.event.inputs.src }}
+
+                # check the source branch (e.g. staging) is up-to-date with the dest branch (e.g. main)
+                if [ "$(git rev-list --count HEAD..origin/${{ github.event.inputs.dest }})" -ne 0 ]; then
+                    echo "Source branch ${{ github.event.inputs.src }} is not up-to-date with destination branch ${{ github.event.inputs.dest }}. PR destination branch into the source branch and try again."
+                    exit 1
+                fi
 
                 INTERIM="${{ github.event.inputs.interim}}"
                 # set the interim branch name to release/<version_number> if not provided

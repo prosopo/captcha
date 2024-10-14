@@ -39,10 +39,6 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
 		},
-		[ApiPaths.VerifyImageCaptchaSolutionUser]: {
-			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_USER_WINDOW,
-			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_USER_LIMIT,
-		},
 		[ApiPaths.GetProviderStatus]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_STATUS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_STATUS_LIMIT,
@@ -54,6 +50,10 @@ export const getRateLimitConfig = () => {
 		[ApiPaths.SubmitUserEvents]: {
 			windowMs: process.env.PROSOPO_SUBMIT_USER_EVENTS_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_USER_EVENTS_LIMIT,
+		},
+		[ApiPaths.UpdateProviderClients]: {
+			windowMs: process.env.PROSOPO_UPDATE_PROVIDER_CLIENTS_WINDOW,
+			limit: process.env.PROSOPO_UPDATE_PROVIDER_CLIENTS_LIMIT,
 		},
 		[AdminApiPaths.UpdateDataset]: {
 			windowMs: process.env.PROSOPO_UPDATE_DATASET_WINDOW,
@@ -70,6 +70,10 @@ export const getRateLimitConfig = () => {
 		[AdminApiPaths.ProviderUpdate]: {
 			windowMs: process.env.PROSOPO_PROVIDER_UPDATE_WINDOW,
 			limit: process.env.PROSOPO_PROVIDER_UPDATE_LIMIT,
+		},
+		[ApiPaths.GetFrictionlessCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
 		},
 	};
 };

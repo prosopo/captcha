@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/tx",
-	"version": "2.1.2",
+	"version": "2.1.4",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"scripts": {
@@ -37,11 +37,11 @@
 		"@polkadot/types": "10.13.1",
 		"@polkadot/types-codec": "10.13.1",
 		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "2.1.2",
-		"@prosopo/types": "2.1.2"
+		"@prosopo/common": "2.1.4",
+		"@prosopo/types": "2.1.4"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.1.2",
+		"@prosopo/config": "2.1.4",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"npm-run-all": "4.1.5",

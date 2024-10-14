@@ -64,6 +64,8 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             # make cache dirs, these must exist before doing cache stuff
             - run: mkdir -p ~/.npm
