@@ -78,6 +78,8 @@ jobs:
                       npm-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             - name: Detect env
               id: env
