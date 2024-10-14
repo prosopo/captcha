@@ -1,8 +1,15 @@
-# Run prosoponator bot on any comments
+# update staging on push to main
 
-name: prosoponator_bot
+name: update_staging
 
-on: issue_comment
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
     GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
@@ -10,14 +17,8 @@ env:
     CARGO_TERM_COLOR: always
     NODE_OPTIONS: "--max-old-space-size=4096"
 
-defaults:
-    run:
-        shell: bash
-
 jobs:
-    comment:
-        # This job only runs for pull request comments
-        if: ${{ github.event.issue.pull_request && github.event.pull_request.draft == false }}
+    deploy:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
@@ -62,15 +63,17 @@ jobs:
               with:
                   submodules: "recursive"
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: '.nvmrc'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
-            - name: Run
-              env:
-                  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+            - name: PR main into staging
               run: |
-                  npm ci
-                  cd dev/prosoponator-bot
-                  npx tsx src/bot.ts
+                set -euo pipefail # stop on errors, print commands, fail on pipe fails
+
+                # set the author in git
+                git config user.name "prosoponator[bot]"
+                git config user.email "dev@prosopo.io"
+
+                # checkout the src branch
+                git fetch --all
+                git checkout main
+
+                # create a PR for the release
+                gh pr create --base staging --title "Bring staging up to date with main" --fill
