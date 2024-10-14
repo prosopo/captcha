@@ -96,10 +96,7 @@ jobs:
 
             - run: npm ci
 
-            # build the packages
-            - name: Build packages
-              run: |
-                  npm run -w @prosopo/scripts build
+            - run: npm run -w @prosopo/cli build
 
             # build the cli production bundle
             - name: Build cli production bundle
