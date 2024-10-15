@@ -47,17 +47,17 @@ export const renderLogic = (
 				root = createRoot(element, { identifierPrefix });
 				root.render(<ProcaptchaPow config={config} callbacks={callbacks} />);
 				break;
-			case "frictionless":
+			case "image":
+				console.log("rendering image");
+				root = createRoot(element, { identifierPrefix });
+				root.render(<Procaptcha config={config} callbacks={callbacks} />);
+				break;
+			default:
 				console.log("rendering frictionless");
 				root = createRoot(element, { identifierPrefix });
 				root.render(
 					<ProcaptchaFrictionless config={config} callbacks={callbacks} />,
 				);
-				break;
-			default:
-				console.log("rendering image");
-				root = createRoot(element, { identifierPrefix });
-				root.render(<Procaptcha config={config} callbacks={callbacks} />);
 				break;
 		}
 		roots.push(root);

@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY vector.toml /etc/vector/vector.toml
+COPY docker/images/vector/vector.toml /etc/vector/vector.toml
 
 # script for substituting env vars into the vector config
 RUN cat <<EOF > /main.sh
