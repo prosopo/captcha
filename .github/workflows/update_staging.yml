@@ -63,6 +63,12 @@ jobs:
               with:
                   submodules: "recursive"
 
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: 'package.json'
+                  
+            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+
             - name: PR main into staging
               run: |
                 set -euo pipefail # stop on errors, print commands, fail on pipe fails
