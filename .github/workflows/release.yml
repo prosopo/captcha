@@ -158,6 +158,7 @@ jobs:
 
             - name: Mark Github release as prerelease
               if: ${{ steps.env.outputs.gh_prerelease }}
+              continue-on-error: true # don't fail the workflow if the release can't be resolved
               run: |
                   gh release edit "${{ steps.env.outputs.gh_release_tag }}" --prerelease
 
