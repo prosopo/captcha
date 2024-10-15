@@ -1,3 +1,4 @@
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,4 +12,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./utils.js";
+import getBotScoreFromPayload from "./decodePayload.js";
+
+export const getBotScore = async (payload: string) => {
+	const logger = getLogger(LogLevel.enum.info, "provider.get_bot_score");
+	try {
+		const botScore = await getBotScoreFromPayload(payload);
+
+		if (botScore === undefined) {
+			return 1;
+		}
+
+		return botScore;
+	} catch (error) {
+		logger.error(error);
+		return 1;
+	}
+};

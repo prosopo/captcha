@@ -43,18 +43,22 @@ import {
 	ProcaptchaTokenSpec,
 	type RequestHashSignature,
 	RequestHashSignatureSchema,
+	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
+
+export const ApiPrefix = "/v1/prosopo" as const;
 
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
+	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/captcha/frictionless",
 	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
-	VerifyImageCaptchaSolutionUser = "/v1/prosopo/provider/image/user/verify",
 	GetProviderStatus = "/v1/prosopo/provider/status",
 	GetProviderDetails = "/v1/prosopo/provider/details",
+	UpdateProviderClients = "/v1/prosopo/provider/clients",
 	SubmitUserEvents = "/v1/prosopo/provider/events",
 }
 
@@ -83,13 +87,14 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
 	[ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ApiPaths.GetFrictionlessCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyImageCaptchaSolutionUser]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
+	[ApiPaths.UpdateProviderClients]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
@@ -172,6 +177,7 @@ export const CaptchaRequestBody = object({
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
+export type CaptchaRequestBodyTypeOutput = output<typeof CaptchaRequestBody>;
 
 export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.captchas]: Captcha[];
@@ -189,7 +195,7 @@ export const CaptchaSolutionBody = object({
 	[ApiParams.requestHash]: string(),
 	[ApiParams.timestamp]: string(),
 	[ApiParams.signature]: object({
-		[ApiParams.user]: RequestHashSignatureSchema,
+		[ApiParams.user]: TimestampSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
 });
@@ -218,13 +224,22 @@ export interface PendingCaptchaRequest {
 	headers: RequestHeaders;
 }
 
+export interface UpdateProviderClientsResponse extends ApiResponse {
+	message: string;
+}
+
 export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
 
+export type ApiJsonError = {
+	message: string;
+	code: number;
+};
+
 export interface ApiResponse {
 	[ApiParams.status]: string;
-	[ApiParams.error]?: string;
+	[ApiParams.error]?: ApiJsonError;
 }
 
 export interface VerificationResponse extends ApiResponse {
@@ -244,9 +259,14 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+export interface GetFrictionlessCaptchaResponse extends ApiResponse {
+	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.sessionId]?: string;
+}
+
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
-	[ApiParams.error]?: string;
+	[ApiParams.error]?: ApiJsonError;
 }
 
 /**
@@ -263,12 +283,21 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 });
 
+export type ServerPowCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerPowCaptchaVerifyRequestBody
+>;
+
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetPowCaptchaChallengeRequestBody
+>;
+
+export type GetPowCaptchaChallengeRequestBodyTypeOutput = output<
 	typeof GetPowCaptchaChallengeRequestBody
 >;
 
@@ -299,6 +328,21 @@ export type SubmitPowCaptchaSolutionBodyType = zInfer<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 
+export const GetFrictionlessCaptchaChallengeRequestBody = object({
+	[ApiParams.dapp]: string(),
+	[ApiParams.token]: string(),
+});
+export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitPowCaptchaSolutionBody
+>;
+
 export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: string(),
+});
+
+export const RegisterSitekeyBody = object({
+	[ApiParams.siteKey]: string(),
+	[ApiParams.settings]: object({
+		[ApiParams.captchaType]: string(),
+	}).optional(),
 });

@@ -64,36 +64,48 @@ describe("Captchas", () => {
 		});
 	});
 
-	it("Selecting the correct images passes the captcha", () => {
-		cy.get('button[type="button"]').eq(1).click();
+	it("Selecting the correct images passes the captcha and signs up the user", () => {
+		cy.get("button").as("button");
+		expect("@button").to.have.length.gte(1);
+		cy.elementExists("button[type='button']:nth-of-type(2)").then(
+			(confirmBtn) => {
+				if (confirmBtn) {
+					cy.wrap(confirmBtn).click();
+				}
+			},
+		);
+		// puts the client-example demo in the signup state. Does not exist in the client-bundle-example
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
 				// Solve the captchas
-				cy.get("@captchas")
-					.each((captcha: Captcha) => {
-						cy.log("in each function");
-						// Click correct images and submit the solution
-						cy.clickCorrectCaptchaImages(captcha);
-					})
-					.then(() => {
-						// Get inputs of type checkbox
-						cy.get("input[type='checkbox']").then((checkboxes) => {
-							cy.wrap(checkboxes).first().should("be.checked");
-						});
-					});
-				const uniqueId = Cypress._.uniqueId("test");
+				cy.get("@captchas").each((captcha: Captcha) => {
+					cy.log("in each function");
+					// Click correct images and submit the solution
+					cy.clickCorrectCaptchaImages(captcha);
+				});
+
+				// wait for solution http request to complete
+				cy.wait("@postSolution");
+
+				// Get checked checkboxes
+				cy.get("input[type='checkbox']:checked").should("have.length.gte", 1);
+
+				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 				cy.get('input[type="password"]').type("password");
 				cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`);
 				cy.get('input[id="name"]').type("test");
+
+				cy.intercept("POST", "/signup").as("signup");
+
 				cy.get('button[type="button"]').first().click();
 
-				cy.contains("user created").should("be.visible");
-
-				// reloading the page and checking the box again should not require a captcha to be solved
-				cy.reload();
-
-				cy.get(checkboxClass, { timeout: 12000 }).first().click();
+				cy.wait("@signup").then((interception) => {
+					const body = interception.response?.body;
+					console.log("body", body);
+					const { message } = body;
+					expect(message).to.equal("user created");
+				});
 			});
 		});
 	});

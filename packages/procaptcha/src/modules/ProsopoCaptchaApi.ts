@@ -85,7 +85,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 	}
 
 	public async submitCaptchaSolution(
-		userRequestHashSignature: string,
+		userTimestampSignature: string,
 		requestHash: string,
 		solutions: CaptchaSolution[],
 		timestamp: string,
@@ -118,7 +118,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 				this.userAccount,
 				timestamp,
 				providerRequestHashSignature,
-				userRequestHashSignature,
+				userTimestampSignature,
 			);
 		} catch (error) {
 			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {

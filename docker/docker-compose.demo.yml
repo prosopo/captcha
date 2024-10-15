@@ -1,7 +1,7 @@
 # https://docs.docker.com/cloud/ecs-integration/
 services:
     database:
-        image: mongo:5.0.4
+        image: mongo:6.0.17
         ports:
             - '27017:27017'
         environment:

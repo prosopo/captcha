@@ -39,12 +39,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = props.config;
 	const themeColor = config.theme === "light" ? "light" : "dark";
+	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
-	const manager = useRef(Manager(config, state, updateState, callbacks));
+	const manager = useRef(
+		Manager(config, state, updateState, callbacks, props.frictionlessState),
+	);
 	const captchaRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {

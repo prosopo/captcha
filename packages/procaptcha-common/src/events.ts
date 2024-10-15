@@ -61,6 +61,9 @@ export const getDefaultEvents = (
 			onReload: () => {
 				console.info("captcha reloaded");
 			},
+			onReset: () => {
+				console.info("captcha reset");
+			},
 		},
 		callbacks,
 	);

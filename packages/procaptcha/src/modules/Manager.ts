@@ -21,7 +21,6 @@ import {
 	ProsopoEnvError,
 	ProsopoError,
 } from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	buildUpdateState,
 	getDefaultEvents,
@@ -43,7 +42,7 @@ import {
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { at, hashToHex } from "@prosopo/util";
-import { sleep } from "../utils/utils.js";
+import { sleep } from "@prosopo/util";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
 import storage from "./storage.js";
 
@@ -150,7 +149,7 @@ export function Manager(
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: challenge.error,
+						error: challenge.error.message,
 					});
 				} else {
 					if (challenge.captchas.length <= 0) {
@@ -245,16 +244,16 @@ export function Manager(
 					});
 				}
 
-				const userRequestHashSignature = await signer.signRaw({
+				const userTimestampSignature = await signer.signRaw({
 					address: account.account.address,
-					data: stringToHex(challenge.requestHash),
+					data: stringToHex(challenge[ApiParams.timestamp]),
 					type: "bytes",
 				});
 
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
-						userRequestHashSignature.signature,
+						userTimestampSignature.signature,
 						challenge.requestHash,
 						captchaSolution,
 						challenge.timestamp,
@@ -263,11 +262,6 @@ export function Manager(
 
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
-
-				if (!isHuman) {
-					// user failed the captcha for some reason according to the provider
-					events.onFailed();
-				}
 
 				// update the state with the result of the submission
 				updateState({
@@ -295,12 +289,14 @@ export function Manager(
 										challenge.signature.provider.requestHash,
 								},
 								[ApiParams.user]: {
-									[ApiParams.requestHash]: userRequestHashSignature.signature,
+									[ApiParams.timestamp]: userTimestampSignature.signature,
 								},
 							},
 						}),
 					);
 					setValidChallengeTimeout();
+				} else {
+					events.onFailed();
 				}
 			},
 			start,
@@ -411,6 +407,7 @@ export function Manager(
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	/**
