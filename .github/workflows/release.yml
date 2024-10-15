@@ -126,7 +126,7 @@ jobs:
                         echo "docker_latest_tag=staging"; 
                         echo "docker_version_tag=staging";
                         echo "gh_release_tag=staging-release"
-                        echo "gh_prelease=true"
+                        echo "gh_prerelease=true"
                     } >> $GITHUB_OUTPUT
                 else
                     echo "cannot deploy from branch ${{ github.ref }}"
