@@ -51,13 +51,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const captchaRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-
-
 		if (config.language) {
 			i18n.changeLanguage(config.language);
 		}
-
-
 	}, [config.language]);
 
 	return (

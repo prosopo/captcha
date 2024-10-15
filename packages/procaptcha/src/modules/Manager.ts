@@ -397,7 +397,7 @@ export function Manager(
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
-			events.onExpired();throw new
+			events.onExpired();
 		}, timeMillis);
 
 		updateState({ successfullChallengeTimeout });

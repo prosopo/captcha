@@ -278,8 +278,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-			}
-			else if (!(clientSettings?.settings?.captchaType === "pow")) {
+			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
 				// Throw an error
 				return next(
 					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
