@@ -47,10 +47,10 @@ export const getDefaultEvents = (
 				stateUpdater({ sendData: !state.sendData });
 			},
 			onExpired: () => {
-				alert("Completed challenge has expired, please try again");
+				console.info("Completed challenge has expired, please try again");
 			},
 			onChallengeExpired: () => {
-				alert("Uncompleted challenge has expired, please try again");
+				console.info("Uncompleted challenge has expired, please try again");
 			},
 			onOpen: () => {
 				console.info("captcha opened");

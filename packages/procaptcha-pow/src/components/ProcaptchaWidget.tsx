@@ -46,30 +46,18 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
-		Manager(config, state, updateState, callbacks, props.frictionlessState),
+		Manager(config, state, updateState, callbacks, frictionlessState),
 	);
 	const captchaRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		const element = captchaRef.current;
-		if (!element) return;
 
-		const form = element.closest("form");
-		if (!form) return;
-
-		const handleSubmit = () => {
-			manager.current.resetState();
-		};
-
-		form.addEventListener("submit", handleSubmit);
 
 		if (config.language) {
 			i18n.changeLanguage(config.language);
 		}
 
-		return () => {
-			form.removeEventListener("submit", handleSubmit);
-		};
+
 	}, [config.language]);
 
 	return (
