@@ -3,8 +3,7 @@
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha demo: Simple page</title>
-    <script id="procaptchaScript" type="module" src="
-https://staging-js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
     <script type="text/javascript">
         window.onCaptchaFailed = function () {
             console.log('The user failed the captcha')
@@ -133,20 +132,20 @@ https://staging-js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
         </div>
         <div class="mui-textfield mui-textfield--float-label">
             <!-- Dev sitekey -->
-            <!-- <div
+            <div
                     class="procaptcha"
                     data-theme="light"
                     data-sitekey="%PROSOPO_SITE_KEY%"
                     data-failed-callback="onCaptchaFailed"
-            ></div> -->
+            ></div>
         </div>
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
-        <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
+               <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
     </form>
 </div>
 <script type="module">
     // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-    import {render} from 'https://staging-js.prosopo.io/js/procaptcha.bundle.js'
+    import {render} from './assets/procaptcha.bundle.js'
 
     // Define a callback function to be called when the CAPTCHA is verified
     function onCaptchaVerified(output) {
@@ -157,7 +156,7 @@ https://staging-js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
     const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
     render(captchaContainer, {
-        siteKey: "5GnX51iXf1SFTHW6K9J1unYRtubDRTKrQwWEXvktbxck6YoC",
+        siteKey: import.meta.env.PROSOPO_SITE_KEY,
         theme: 'dark',
         callback: onCaptchaVerified,
         "failed-callback": function () {
