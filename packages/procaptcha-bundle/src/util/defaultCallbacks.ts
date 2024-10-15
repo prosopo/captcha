@@ -37,7 +37,6 @@ export const getDefaultCallbacks = (element: Element) => ({
 	},
 	onExpired: () => {
 		removeProcaptchaResponse();
-		alert("Completed challenge has expired, please try again");
 	},
 	onError: (error: Error) => {
 		removeProcaptchaResponse();

@@ -315,6 +315,17 @@ export function Manager(
 		events.onClose();
 	};
 
+	const reload = async () => {
+		// disable the time limit
+		clearTimeout();
+		// abandon the captcha process
+		resetState();
+		// trigger the onClose event
+		events.onClose();
+		// start the captcha process again
+		await start();
+	};
+
 	/**
 	 * (De)Select an image from the solution for the current round. If the hash is already in the solutions list, it will be removed (deselected) and if not it will be added (selected).
 	 * @param hash the hash of the image
@@ -375,7 +386,7 @@ export function Manager(
 
 	const clearTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.timeout);
+		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
 	};
@@ -458,5 +469,6 @@ export function Manager(
 		submit,
 		select,
 		nextRound,
+		reload,
 	};
 }
