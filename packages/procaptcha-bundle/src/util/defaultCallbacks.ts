@@ -49,6 +49,7 @@ export const getDefaultCallbacks = (element: Element) => ({
 		console.log("Challenge opened");
 	},
 	onFailed: () => {
+		alert("Captcha challenge failed. Please try again");
 		console.log("Challenge failed");
 	},
 	onReset: () => {
