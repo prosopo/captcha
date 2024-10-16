@@ -234,7 +234,7 @@ export interface ProviderRegistered {
 
 export type ApiJsonError = {
 	message: string;
-	code: string | number;
+	code: number;
 };
 
 export interface ApiResponse {
