@@ -39,33 +39,21 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = props.config;
 	const themeColor = config.theme === "light" ? "light" : "dark";
+	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
-	const manager = useRef(Manager(config, state, updateState, callbacks));
-	const captchaRef = useRef<HTMLInputElement | null>(null);
+	const manager = useRef(
+		Manager(config, state, updateState, callbacks, frictionlessState),
+	);
+	const captchaRef = useRef<HTMLInputElement>(null);
+
 	useEffect(() => {
-		const element = captchaRef.current;
-		if (!element) return;
-
-		const form = element.closest("form");
-		if (!form) return;
-
-		const handleSubmit = () => {
-			manager.current.resetState();
-		};
-
-		form.addEventListener("submit", handleSubmit);
-
 		if (config.language) {
 			i18n.changeLanguage(config.language);
 		}
-
-		return () => {
-			form.removeEventListener("submit", handleSubmit);
-		};
 	}, [config.language]);
 
 	return (

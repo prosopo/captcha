@@ -105,6 +105,7 @@
 		"USER_ALREADY_VERIFIED": "Esta solução já foi verificada. O usuário deve completar um novo captcha.",
 		"UNKNOWN": "Erro desconhecido na API",
 		"SITE_KEY_NOT_REGISTERED": "Chave do site não registrada",
+		"INCORRECT_CAPTCHA_TYPE": "Tipo de CAPTCHA incorreto",
 		"INVALID_SITE_KEY": "Chave de site inválida"
 	},
 	"CLI": {

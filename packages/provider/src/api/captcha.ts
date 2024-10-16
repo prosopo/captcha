@@ -25,6 +25,8 @@ import {
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
+	GetFrictionlessCaptchaChallengeRequestBody,
+	type GetFrictionlessCaptchaResponse,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
@@ -33,13 +35,17 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
+import type { SessionRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { v4 as uuidv4 } from "uuid";
+import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
+const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -238,7 +244,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			);
 		}
 
-		const { user, dapp } = parsed;
+		const { user, dapp, sessionId } = parsed;
 		try {
 			validateAddress(dapp, false, 42);
 		} catch (err) {
@@ -252,6 +258,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		try {
 			validateAddress(user, false, 42);
 
+			const clientSettings = await tasks.db.getClientRecord(dapp);
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -262,7 +269,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			// TODO do something with domains
+			if (sessionId) {
+				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
+				if (!sessionRecord) {
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: { error: "Session ID not found", code: 400 },
+						}),
+					);
+				}
+			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
+				// Throw an error
+				return next(
+					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
+			}
 
 			const origin = req.headers.origin;
 
@@ -278,6 +301,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				user,
 				dapp,
 				origin,
+				clientSettings?.settings?.powDifficulty,
 			);
 
 			await tasks.db.storePowCaptchaRecord(
@@ -364,6 +388,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		try {
 			validateAddress(user, false, 42);
 
+			validateAddress(dapp, false, 42);
+
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -394,6 +420,70 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						code: 500,
 						siteKey: req.body.dapp,
 					},
+				}),
+			);
+		}
+	});
+
+	/**
+	 * Gets a frictionless captcha challenge
+	 */
+	router.post(
+		ApiPaths.GetFrictionlessCaptchaChallenge,
+		async (req, res, next) => {
+			try {
+				const { token, dapp } =
+					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+				const botScore = await getBotScore(token);
+				const clientConfig = await tasks.db.getClientRecord(dapp);
+				const botThreshold =
+					clientConfig?.settings?.frictionlessThreshold ||
+					DEFAULT_FRICTIONLESS_THRESHOLD;
+
+				if (Number(botScore) > botThreshold) {
+					const response: GetFrictionlessCaptchaResponse = {
+						[ApiParams.captchaType]: "image",
+						[ApiParams.status]: "ok",
+					};
+					return res.json(response);
+				}
+				const sessionRecord: SessionRecord = {
+					sessionId: uuidv4(),
+					createdAt: new Date(),
+				};
+
+				await tasks.db.storeSessionRecord(sessionRecord);
+
+				const response: GetFrictionlessCaptchaResponse = {
+					[ApiParams.captchaType]: "pow",
+					[ApiParams.sessionId]: sessionRecord.sessionId,
+					[ApiParams.status]: "ok",
+				};
+				return res.json(response);
+			} catch (err) {
+				console.error("Error in frictionless captcha challenge:", err);
+				tasks.logger.error(err);
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: err },
+					}),
+				);
+			}
+		},
+	);
+
+	/**
+	 * Gets public details of the provider
+	 */
+	router.post(ApiPaths.UpdateProviderClients, async (req, res, next) => {
+		try {
+			await tasks.clientTaskManager.getClientList();
+			return res.json({ message: "Provider updated" });
+		} catch (err) {
+			tasks.logger.error(err);
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: err },
 				}),
 			);
 		}
