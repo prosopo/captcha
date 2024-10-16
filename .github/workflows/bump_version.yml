@@ -119,6 +119,7 @@ jobs:
                 # checkout the src branch
                 git fetch --all
                 git checkout ${{ github.event.inputs.src }}
+                git pull
 
                 # check the source branch (e.g. staging) is up-to-date with the dest branch (e.g. main)
                 if [ "$(git rev-list --count HEAD..origin/${{ github.event.inputs.dest }})" -ne "0" ]; then
