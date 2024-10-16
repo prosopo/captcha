@@ -24,12 +24,20 @@ export const handleErrors = (
 	response: Response,
 	next: NextFunction,
 ) => {
+	const { code, statusMessage, jsonError } = unwrapError(err);
+	response.statusMessage = statusMessage;
+	response.set("content-type", "application/json");
+	response.status(code);
+	response.send({ error: jsonError });
+	response.end();
+};
+
+export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 	const code = "code" in err ? err.code : 400;
 	let message = err.message;
 	let jsonError: ApiJsonError = { code, message };
-
+	let statusMessage = err.message;
 	jsonError.message = message;
-	response.statusMessage = err.message;
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
 		// base error will not have a translation key
@@ -45,7 +53,7 @@ export const handleErrors = (
 
 	if (err instanceof ZodError) {
 		message = i18next.t("CAPTCHA.PARSE_ERROR");
-		response.statusMessage = message;
+		statusMessage = message;
 		if (typeof err.message === "object") {
 			jsonError = err.message;
 		} else {
@@ -54,9 +62,5 @@ export const handleErrors = (
 	}
 
 	jsonError.code = jsonError.code || code;
-
-	response.set("content-type", "application/json");
-	response.status(code);
-	response.send({ error: jsonError });
-	response.end();
+	return { code, statusMessage, jsonError };
 };
