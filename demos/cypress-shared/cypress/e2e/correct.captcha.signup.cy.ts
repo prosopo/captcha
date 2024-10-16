@@ -98,7 +98,7 @@ describe("Captchas", () => {
 
 				cy.intercept("POST", "/signup").as("signup");
 
-				cy.get('button[type="button"]').first().click();
+				cy.get('button[data-cy="submit-button"]').first().click();
 
 				cy.wait("@signup").then((interception) => {
 					const body = interception.response?.body;

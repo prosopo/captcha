@@ -52,8 +52,4 @@
 	log {
 		output file /var/log/caddy/{$CADDY_DOMAIN}.log
 	}
-
-	log {
-		output stdout
-	}
 }

@@ -42,7 +42,7 @@ export default (
 				await env.isReady();
 				const siteKey = argv.sitekey;
 				const tasks = new Tasks(env);
-				await tasks.clientTaskManager.registerSiteKey(siteKey as string);
+				await tasks.clientTaskManager.registerSiteKey(siteKey as string, {});
 				logger.info(`Site Key ${argv.sitekey} registered`);
 			} catch (err) {
 				logger.error(err);
