@@ -139,7 +139,7 @@ services:
             - production
             - staging
         image: containrrr/watchtower
-        command: ["--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30"]
+        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30"]
         labels:
             - "vector.watchtower=true" # enable logging as a watchtower
             - "vector.docker=true" # log docker events
