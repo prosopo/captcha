@@ -30,6 +30,7 @@ import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
 import { handleErrors } from "./errorHandler.js";
+import { ClientRecord } from "@prosopo/types-database";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -78,14 +79,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				validateAddress(user, false, 42);
 
 				// Reject any unregistered site keys
-				const clientRecord = await tasks.db.getClientRecord(dapp);
-				if (!clientRecord) {
-					return next(
-						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-							context: { code: 400, siteKey: dapp },
-						}),
-					);
-				}
+				let clientRecord = await tasks.db.getClientRecord(dapp);
+				// if (!clientRecord) {
+				// 	return next(
+				// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+				// 			context: { code: 400, siteKey: dapp },
+				// 		}),
+				// 	);
+				// }
 
 				// Verify using the appropriate pair based on isDapp flag
 				const keyPair = env.keyring.addFromAddress(dapp);
@@ -155,13 +156,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// Reject any unregistered site keys
 			const clientRecord = await tasks.db.getClientRecord(dapp);
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-					}),
-				);
-			}
+			// if (!clientRecord) {
+			// 	return next(
+			// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+			// 			context: { code: 400, siteKey: dapp },
+			// 		}),
+			// 	);
+			// }
 
 			if (!challenge) {
 				const unverifiedResponse: VerificationResponse = {

@@ -103,13 +103,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-					}),
-				);
-			}
+			// if (!clientRecord) {
+			// 	return next(
+			// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+			// 			context: { code: 400, siteKey: dapp },
+			// 		}),
+			// 	);
+			// }
 
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
@@ -186,13 +186,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-					}),
-				);
-			}
+			// if (!clientRecord) {
+			// 	return next(
+			// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+			// 			context: { code: 400, siteKey: dapp },
+			// 		}),
+			// 	);
+			// }
 
 			// TODO allow the dapp to override the length of time that the request hash is valid for
 			const result: DappUserSolutionResult =
@@ -261,13 +261,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-					}),
-				);
-			}
+			// if (!clientRecord) {
+			// 	return next(
+			// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+			// 			context: { code: 400, siteKey: dapp },
+			// 		}),
+			// 	);
+			// }
 
 			if (sessionId) {
 				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
@@ -278,14 +278,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
-				// Throw an error
-				return next(
-					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
-						context: { code: 400, siteKey: dapp },
-					}),
-				);
 			}
+			//  else if (!(clientSettings?.settings?.captchaType === "pow")) {
+			// 	// Throw an error
+			// 	return next(
+			// 		new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
+			// 			context: { code: 400, siteKey: dapp },
+			// 		}),
+			// 	);
+			// }
 
 			const origin = req.headers.origin;
 
@@ -392,13 +393,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-					}),
-				);
-			}
+			// if (!clientRecord) {
+			// 	return next(
+			// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+			// 			context: { code: 400, siteKey: dapp },
+			// 		}),
+			// 	);
+			// }
 
 			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 				challenge,
