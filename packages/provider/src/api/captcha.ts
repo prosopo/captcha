@@ -64,6 +64,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @return {Captcha} - The Captcha data
 	 */
 	const GetImageCaptchaChallengePath: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`;
+
 	router.get(GetImageCaptchaChallengePath, async (req, res, next) => {
 		let parsed: CaptchaRequestBodyTypeOutput;
 		try {

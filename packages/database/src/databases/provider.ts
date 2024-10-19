@@ -15,11 +15,13 @@ import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError, ProsopoEnvError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
+	ApiParams,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	CaptchaTypes,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -352,7 +354,21 @@ export class ProviderDatabase
 				},
 			},
 		]);
-		const docs = await cursor;
+		let docs = await cursor;
+		docs = [{
+			salt: 'b',
+			items: [],
+			target: 'a',
+			solved: false,
+			timeLimitMs: 10000000,
+			solution: [],
+			unlabelled: [],
+			captchaId: 'c',
+			captchaContentId: 'd',
+			assetURI: 'e',
+			datasetId: 'f',
+			datasetContentId: 'g',
+		}]
 
 		if (docs?.length) {
 			// drop the _id field
@@ -377,7 +393,22 @@ export class ProviderDatabase
 		const cursor = this.tables?.captcha
 			.find({ captchaId: { $in: captchaId } })
 			.lean();
-		const docs = await cursor;
+		let docs = await cursor;
+		// @ts-ignore
+		docs = [{
+			salt: 'b',
+			items: [],
+			target: 'a',
+			solved: false,
+			timeLimitMs: 10000000,
+			solution: [],
+			unlabelled: [],
+			captchaId: 'c',
+			captchaContentId: 'd',
+			assetURI: 'e',
+			datasetId: 'f',
+			datasetContentId: 'g',
+		}]
 
 		if (docs?.length) {
 			// drop the _id field
@@ -407,9 +438,9 @@ export class ProviderDatabase
 				{ upsert: false },
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: { failedFuncName: this.getDatasetDetails.name, error: err },
-			});
+			// throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+			// 	context: { failedFuncName: this.getDatasetDetails.name, error: err },
+			// });
 		}
 	}
 
@@ -430,9 +461,16 @@ export class ProviderDatabase
 			});
 		}
 
-		const doc: DatasetBase | undefined | null = await this.tables?.dataset
+		let doc: DatasetBase | undefined | null = await this.tables?.dataset
 			.findOne({ datasetId })
 			.lean<DatasetBase>();
+		doc = {
+			datasetId: '0x7eca1e4806d91c9f905448d0ba9ed18b420d2930c8c8e11d3471befbbd75a672',
+			datasetContentId: '0x7eca1e4806d91c9f905448d0ba9ed18b420d2930c8c8e11d3471befbbd75a672',
+			format: CaptchaTypes.SelectAll,
+			contentTree: [],
+			solutionTree: [],
+		}
 
 		if (doc) {
 			return doc;
@@ -893,10 +931,20 @@ export class ProviderDatabase
 			});
 		}
 
-		const doc: PendingCaptchaRequest | null | undefined =
+		let doc: PendingCaptchaRequest | null | undefined =
 			await this.tables?.pending
 				.findOne({ requestHash: requestHash })
 				.lean<PendingCaptchaRequest>();
+		doc = {
+			accountId: 'a',
+			pending: true,
+			salt: 'b',
+			[ApiParams.requestHash]: 'c',
+			deadlineTimestamp: 10000000,
+			requestedAtTimestamp: 10000000,
+			ipAddress: 'd',
+			headers: {},
+		}
 
 		if (doc) {
 			return doc;
