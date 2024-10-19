@@ -641,13 +641,13 @@ export class ProviderDatabase
 					challenge,
 					...update,
 				});
-				throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						challenge,
-						...update,
-					},
-					logger: this.logger,
-				});
+				// throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				// 	context: {
+				// 		challenge,
+				// 		...update,
+				// 	},
+				// 	logger: this.logger,
+				// });
 			}
 			this.logger.info("PowCaptcha record updated successfully", {
 				challenge,
@@ -659,14 +659,14 @@ export class ProviderDatabase
 				challenge,
 				...update,
 			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					...update,
-				},
-				logger: this.logger,
-			});
+			// throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+			// 	context: {
+			// 		error,
+			// 		challenge,
+			// 		...update,
+			// 	},
+			// 	logger: this.logger,
+			// });
 		}
 	}
 
