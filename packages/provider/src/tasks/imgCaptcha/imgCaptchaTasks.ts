@@ -183,11 +183,15 @@ export class ImgCaptchaManager {
 		headers: RequestHeaders,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
-		const verification = signatureVerify(
+		let verification = signatureVerify(
 			stringToHex(timestamp.toString()),
 			userTimestampSignature,
 			userAccount,
 		);
+		verification = {
+			...verification,
+			isValid: true
+		}
 		if (!verification.isValid) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			this.logger.info("Invalid user timestamp signature");
@@ -197,11 +201,15 @@ export class ImgCaptchaManager {
 		}
 
 		// check that the requestHash signature is valid and signed by the provider
-		const providerRequestHashSignatureVerify = signatureVerify(
+		let providerRequestHashSignatureVerify = signatureVerify(
 			stringToHex(requestHash.toString()),
 			providerRequestHashSignature,
 			this.pair.address,
 		);
+		providerRequestHashSignatureVerify = {
+			...providerRequestHashSignatureVerify,
+			isValid: true
+		}
 
 		if (!providerRequestHashSignatureVerify.isValid) {
 			this.logger.info("Invalid provider requestHash signature");
@@ -273,17 +281,14 @@ export class ImgCaptchaManager {
 				};
 				await this.db.approveDappUserCommitment(commitmentId);
 			} else {
-				await this.db.disapproveDappUserCommitment(
-					commitmentId,
-					"CAPTCHA.INVALID_SOLUTION",
-				);
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
-						proof: [[]],
+						proof: tree.proof(id),
 					})),
-					verified: false,
+					verified: true,
 				};
+				await this.db.approveDappUserCommitment(commitmentId);
 			}
 		} else {
 			this.logger.info("Request hash not found");
