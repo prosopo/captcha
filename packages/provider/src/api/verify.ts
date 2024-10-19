@@ -79,7 +79,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				validateAddress(user, false, 42);
 
 				// Reject any unregistered site keys
-				let clientRecord = await tasks.db.getClientRecord(dapp);
+				const clientRecord = await tasks.db.getClientRecord(dapp);
 				// if (!clientRecord) {
 				// 	return next(
 				// 		new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
