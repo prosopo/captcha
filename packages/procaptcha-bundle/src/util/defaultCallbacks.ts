@@ -37,7 +37,6 @@ export const getDefaultCallbacks = (element: Element) => ({
 	},
 	onExpired: () => {
 		removeProcaptchaResponse();
-		alert("Completed challenge has expired, please try again");
 	},
 	onError: (error: Error) => {
 		removeProcaptchaResponse();
@@ -50,9 +49,11 @@ export const getDefaultCallbacks = (element: Element) => ({
 		console.log("Challenge opened");
 	},
 	onFailed: () => {
+		alert("Captcha challenge failed. Please try again");
 		console.log("Challenge failed");
 	},
 	onReset: () => {
+		removeProcaptchaResponse();
 		console.log("Captcha widget reset");
 	},
 });

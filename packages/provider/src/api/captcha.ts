@@ -278,13 +278,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-			}
-			if (!(clientSettings?.settings?.captchaType === "pow")) {
+			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
 				// Throw an error
-				return res.json({
-					error: req.i18n.t("API.INCORRECT_CAPTCHA_TYPE"),
-					code: 200,
-				});
+				return next(
+					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
+						context: { code: 400, siteKey: dapp },
+					}),
+				);
 			}
 
 			const origin = req.headers.origin;

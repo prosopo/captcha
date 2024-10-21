@@ -144,6 +144,7 @@ source = '''
 .host="$OO_HOST"
 del(.t)
 del(.id)
+del(._timestamp)
 '''
 
 # send to openobserve

@@ -29,7 +29,6 @@ services:
             - staging
         image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -81,7 +80,6 @@ services:
             - staging
         image: mongo:6.0.17
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -112,7 +110,6 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -142,9 +139,8 @@ services:
             - production
             - staging
         image: containrrr/watchtower
-        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--label-enable", "--interval", "30"]
+        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30"]
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.watchtower=true" # enable logging as a watchtower
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -165,11 +161,9 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
-            - ./provider.vector.toml:/etc/vector/vector.toml
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
         networks:
             - internal
