@@ -21,7 +21,7 @@ export enum Tier {
 
 export const TierMonthlyLimits = {
 	[Tier.Free]: {
-		verificationRequests: 100000,
+		verificationRequests: 20000,
 	},
 	[Tier.Professional]: {
 		verificationRequests: 1000000,
