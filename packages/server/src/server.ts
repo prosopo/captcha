@@ -91,7 +91,10 @@ export class ProsopoServer {
 				this.logger.error("PoW captcha is not recent");
 				return {
 					verified: false,
-					status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+					error: {
+						code: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
+						message: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+					},
 				};
 			}
 			return await providerApi.submitPowCaptchaVerify(
@@ -106,7 +109,10 @@ export class ProsopoServer {
 			this.logger.error("Image captcha is not recent");
 			return {
 				verified: false,
-				status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+				error: {
+					code: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
+					message: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+				},
 			};
 		}
 		return await providerApi.verifyDappUser(
@@ -127,8 +133,19 @@ export class ProsopoServer {
 		try {
 			const payload = decodeProcaptchaOutput(token);
 
-			const { providerUrl, challenge, timestamp } =
+			const { providerUrl, challenge, timestamp, dapp } =
 				ProcaptchaOutputSchema.parse(payload);
+
+			if (dapp !== this.pair?.address) {
+				this.logger.error("Dapp address does not match address in token");
+				return {
+					verified: false,
+					error: {
+						code: "API.INVALID_SECRET_KEY",
+						message: i18n.t("API.INVALID_SECRET_KEY"),
+					},
+				};
+			}
 
 			if (providerUrl) {
 				return await this.verifyProvider(

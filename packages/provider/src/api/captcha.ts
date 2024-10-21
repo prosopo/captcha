@@ -450,6 +450,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const sessionRecord: SessionRecord = {
 					sessionId: uuidv4(),
 					createdAt: new Date(),
+					botScore: Number(botScore),
 				};
 
 				await tasks.db.storeSessionRecord(sessionRecord);
