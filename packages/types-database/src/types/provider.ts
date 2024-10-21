@@ -326,6 +326,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 export interface SessionRecord {
 	sessionId: string;
 	createdAt: Date;
+	botScore: number;
 }
 
 export const SessionRecordSchema = new Schema<SessionRecord>({

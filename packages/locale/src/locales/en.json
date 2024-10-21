@@ -106,7 +106,10 @@
 		"UNKNOWN": "Unknown API error",
 		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
 		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
-		"INVALID_SITE_KEY": "Invalid site key"
+		"INVALID_SITE_KEY": "Invalid site key",
+		"MISSING_BODY": "Missing body",
+		"INVALID_URL": "Invalid URL",
+		"INVALID_SECRET_KEY": "Invalid secret key"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"
