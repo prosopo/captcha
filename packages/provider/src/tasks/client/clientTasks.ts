@@ -20,7 +20,12 @@ import {
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
+import type {
+	ClientRecord,
+	IProviderDatabase,
+	PoWCaptchaStored,
+	UserCommitment,
+} from "@prosopo/types-database";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -63,7 +68,7 @@ export class ClientTaskManager {
 				await this.providerDB.getUnstoredDappUserPoWCommitments();
 
 			// filter to only get records that have been updated since the last task
-			if (lastTask) {
+			if (lastTask?.updated) {
 				this.logger.info(
 					`Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
 				);
@@ -74,24 +79,30 @@ export class ClientTaskManager {
 					taskID,
 				);
 
-				commitments = commitments.filter(
-					(commitment) =>
-						lastTask.updated &&
-						commitment.lastUpdatedTimestamp &&
-						(commitment.lastUpdatedTimestamp > lastTask.updated ||
-							!commitment.lastUpdatedTimestamp),
+				const isCommitmentUpdated = (
+					commitment: UserCommitment | PoWCaptchaStored,
+				): boolean => {
+					const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+					return (
+						!lastUpdatedTimestamp ||
+						!storedAtTimestamp ||
+						lastUpdatedTimestamp > storedAtTimestamp
+					);
+				};
+
+				const commitmentUpdated = (
+					commitment: UserCommitment | PoWCaptchaStored,
+				): boolean => {
+					return !!lastTask.updated && isCommitmentUpdated(commitment);
+				};
+
+				commitments = commitments.filter((commitment) =>
+					commitmentUpdated(commitment),
 				);
 
-				powRecords = powRecords.filter((commitment) => {
-					return (
-						lastTask.updated &&
-						commitment.lastUpdatedTimestamp &&
-						// either the update stamp is more recent than the last time this task ran or there is no update stamp,
-						// so it is a new record
-						(commitment.lastUpdatedTimestamp > lastTask.updated ||
-							!commitment.lastUpdatedTimestamp)
-					);
-				});
+				powRecords = powRecords.filter((commitment) =>
+					commitmentUpdated(commitment),
+				);
 			}
 
 			if (commitments.length || powRecords.length) {

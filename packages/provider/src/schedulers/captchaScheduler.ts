@@ -12,21 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProviderEnvironment } from "@prosopo/env";
-import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
+import { Worker, isMainThread, threadId } from "node:worker_threads";
+import { getLoggerDefault } from "@prosopo/common";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
-import { Tasks } from "../tasks/tasks.js";
-import { checkIfTaskIsRunning } from "../util.js";
 
-export async function storeCaptchasExternally(
-	pair: KeyringPair,
-	config: ProsopoConfigOutput,
-) {
-	const env = new ProviderEnvironment(config, pair);
-	await env.isReady();
-
-	const tasks = new Tasks(env);
+export async function storeCaptchasExternally(config: ProsopoConfigOutput) {
+	const logger = getLoggerDefault();
+	logger.log(
+		`Main script - isMainThread: ${isMainThread}, threadId: ${threadId}, pid: ${process.pid}`,
+	);
 
 	// Set the cron schedule to run on user configured schedule or every hour
 	const defaultSchedule = "0 * * * *";
@@ -36,22 +31,28 @@ export async function storeCaptchasExternally(
 			: defaultSchedule
 		: defaultSchedule;
 
-	const job = new CronJob(cronSchedule, async () => {
-		const taskRunning = await checkIfTaskIsRunning(
-			ScheduledTaskNames.StoreCommitmentsExternal,
-			env.getDb(),
+	const job = new CronJob(cronSchedule, () => {
+		logger.log(`Creating worker - from main thread: ${threadId}`);
+		const worker = new Worker(
+			new URL("../workers/storeCaptchaWorker.js", import.meta.url),
+			{
+				workerData: { config },
+			},
 		);
-		env.logger.info(
-			`${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
-		);
-		if (!taskRunning) {
-			env.logger.info(
-				`${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
-			);
-			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
-				env.logger.error(err);
-			});
-		}
+
+		worker.on("message", (message) => {
+			logger.log(`Worker message: ${message}`);
+		});
+
+		worker.on("error", (error) => {
+			logger.error(`Worker error: ${error}`);
+		});
+
+		worker.on("exit", (code) => {
+			if (code !== 0) {
+				logger.error(`Worker stopped with exit code ${code}`);
+			}
+		});
 	});
 
 	job.start();
