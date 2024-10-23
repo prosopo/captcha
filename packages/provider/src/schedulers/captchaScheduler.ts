@@ -24,7 +24,7 @@ export async function storeCaptchasExternally(config: ProsopoConfigOutput) {
 	);
 
 	// Set the cron schedule to run on user configured schedule or every hour
-	const defaultSchedule = "*/5 * * * * *";
+	const defaultSchedule = "0 * * * *";
 	const cronSchedule = config.scheduledTasks?.captchaScheduler
 		? config.scheduledTasks.captchaScheduler.schedule
 			? config.scheduledTasks.captchaScheduler.schedule
