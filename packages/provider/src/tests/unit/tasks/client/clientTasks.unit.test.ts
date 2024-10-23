@@ -225,7 +225,7 @@ describe("ClientTaskManager", () => {
 	it("should not store commitments externally if they have been stored", async () => {
 		const mockCommitments: Pick<
 			UserCommitment,
-			"id" | "lastUpdatedTimestamp"
+			"id" | "lastUpdatedTimestamp"| "storedAtTimestamp"
 		>[] = [
 			{
 				id: "commitment1",
@@ -237,7 +237,7 @@ describe("ClientTaskManager", () => {
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
-			"challenge" | "lastUpdatedTimestamp"
+			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
 			{
 				challenge: "1234567___userAccount___dappAccount",
