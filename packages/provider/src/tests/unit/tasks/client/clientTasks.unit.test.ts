@@ -225,7 +225,7 @@ describe("ClientTaskManager", () => {
 	it("should not store commitments externally if they have been stored", async () => {
 		const mockCommitments: Pick<
 			UserCommitment,
-			"id" | "lastUpdatedTimestamp"| "storedAtTimestamp"
+			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
 			{
 				id: "commitment1",
