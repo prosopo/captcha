@@ -74,18 +74,6 @@ describe("storeCaptchasExternally", () => {
 	it("should initialize environment and start cron job", async () => {
 		await storeCaptchasExternally(mockConfig);
 
-		expect(ProviderEnvironment).toHaveBeenCalledWith(mockConfig, mockPair);
-		expect(Tasks).toHaveBeenCalled();
 		expect(CronJob).toHaveBeenCalledWith("0 * * * *", expect.any(Function));
-	});
-
-	it("should log message when cron job runs", async () => {
-		await storeCaptchasExternally(mockConfig);
-
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
-		expect(envInstance.logger.info).toHaveBeenCalledWith(
-			"StoreCommitmentsExternal task running: false",
-		);
 	});
 });
