@@ -14,11 +14,12 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { ProviderEnvironment } from "@prosopo/env";
-import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
+import { storeCaptchaWorker } from "../../../workers/storeCaptchaWorker.js";
 
 vi.mock("@prosopo/env", () => ({
 	ProviderEnvironment: vi.fn().mockImplementation(() => ({
@@ -56,6 +57,30 @@ vi.mock("../../../util.js", () => ({
 	checkIfTaskIsRunning: vi.fn().mockResolvedValue(false),
 }));
 
+vi.mock("node:worker_threads", () => ({
+	isMainThread: vi.fn().mockReturnValue(true),
+	threadId: vi.fn().mockReturnValue(0),
+	parentPort: {
+		postMessage: vi.fn(),
+	},
+	Worker: vi.fn().mockImplementation((url, options) => ({
+		on: vi.fn(),
+	})),
+	workerData: {
+		config: {
+			account: {
+				secret:
+					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
+			},
+			scheduledTasks: {
+				captchaScheduler: {
+					schedule: "0 * * * *",
+				},
+			},
+		},
+	},
+}));
+
 describe("storeCaptchasExternally", () => {
 	let mockPair: KeyringPair;
 	let mockConfig: ProsopoConfigOutput;
@@ -75,5 +100,21 @@ describe("storeCaptchasExternally", () => {
 		await storeCaptchasExternally(mockConfig);
 
 		expect(CronJob).toHaveBeenCalledWith("0 * * * *", expect.any(Function));
+	});
+
+	it("should initialize environment and start cron job", async () => {
+		await storeCaptchaWorker();
+		expect(ProviderEnvironment).toHaveBeenCalled();
+		expect(Tasks).toHaveBeenCalled();
+	});
+
+	it("should log message when cron job runs", async () => {
+		await storeCaptchaWorker();
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
+		expect(envInstance.logger.info).toHaveBeenNthCalledWith(
+			1,
+			"StoreCommitmentsExternal task running: false",
+		);
 	});
 });

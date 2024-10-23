@@ -23,13 +23,9 @@ import { ScheduledTaskNames } from "@prosopo/types";
 import { Tasks } from "../tasks/tasks.js";
 import { checkIfTaskIsRunning } from "../util.js";
 
-async function runTask() {
+export const storeCaptchaWorker = async () => {
 	const config = workerData.config;
-	const secret =
-		process.env.PROSOPO_PROVIDER_MNEMONIC ||
-		process.env.PROSOPO_PROVIDER_SEED ||
-		process.env.PROSOPO_PROVIDER_URI ||
-		process.env.PROSOPO_PROVIDER_JSON;
+	const secret = config.account.secret;
 
 	const pair = await getPairAsync(secret);
 
@@ -60,6 +56,8 @@ async function runTask() {
 		parentPort.postMessage(
 			`Store Captcha task completed in worker thread: ${threadId}`,
 		);
-}
+};
 
-runTask();
+if (!isMainThread) {
+	storeCaptchaWorker();
+}
