@@ -61,13 +61,15 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
             - name: Restore npm cache
-              uses: actions/cache/restore@v3
+              uses: actions/cache/restore@v4
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |

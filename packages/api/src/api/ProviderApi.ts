@@ -16,9 +16,9 @@ import {
 	ApiPaths,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
-	CaptchaSolutionBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type ImageVerificationResponse,
@@ -32,6 +32,7 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type TGetImageCaptchaChallengePathAndParams,
+	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
@@ -69,7 +70,7 @@ export default class ProviderApi
 		userAccount: string,
 		timestamp: string,
 		providerRequestHashSignature: string,
-		userRequestHashSignature: string,
+		userTimestampSignature: string,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -79,7 +80,7 @@ export default class ProviderApi
 			[ApiParams.timestamp]: timestamp,
 			[ApiParams.signature]: {
 				[ApiParams.user]: {
-					[ApiParams.requestHash]: userRequestHashSignature,
+					[ApiParams.timestamp]: userTimestampSignature,
 				},
 				[ApiParams.provider]: {
 					[ApiParams.requestHash]: providerRequestHashSignature,
@@ -105,27 +106,15 @@ export default class ProviderApi
 		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload);
 	}
 
-	public verifyUser(
-		token: ProcaptchaToken,
-		dappUserSignature: string,
-		maxVerifiedTime?: number,
-	): Promise<ImageVerificationResponse> {
-		const payload: VerifySolutionBodyTypeInput = {
-			[ApiParams.token]: token,
-			[ApiParams.dappSignature]: dappUserSignature,
-			...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
-		};
-
-		return this.post(ApiPaths.VerifyImageCaptchaSolutionUser, payload);
-	}
-
 	public getPowCaptchaChallenge(
 		user: string,
 		dapp: string,
+		sessionId?: string,
 	): Promise<GetPowCaptchaResponse> {
 		const body: GetPowCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 		return this.post(ApiPaths.GetPowCaptchaChallenge, body);
 	}
@@ -157,7 +146,21 @@ export default class ProviderApi
 		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
 	}
 
-	public submitUserEvents(events: StoredEvents, string: string) {
+	public getFrictionlessCaptcha(
+		token: string,
+		dapp: string,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		const body = {
+			[ApiParams.token]: token,
+			[ApiParams.dapp]: dapp,
+		};
+		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
+	}
+
+	public submitUserEvents(
+		events: StoredEvents,
+		string: string,
+	): Promise<UpdateProviderClientsResponse> {
 		return this.post(ApiPaths.SubmitUserEvents, { events, string });
 	}
 
@@ -167,6 +170,10 @@ export default class ProviderApi
 
 	public getProviderDetails(): Promise<Provider> {
 		return this.fetch(ApiPaths.GetProviderDetails);
+	}
+
+	public updateProviderClients(): Promise<UpdateProviderClientsResponse> {
+		return this.post(ApiPaths.UpdateProviderClients, {});
 	}
 
 	public submitPowCaptchaVerify(

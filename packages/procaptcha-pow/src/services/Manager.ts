@@ -15,7 +15,6 @@ import { stringToHex } from "@polkadot/util/string";
 import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { sleep } from "@prosopo/procaptcha";
 import {
 	buildUpdateState,
 	getDefaultEvents,
@@ -25,6 +24,7 @@ import {
 import {
 	type Account,
 	ApiParams,
+	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
@@ -32,6 +32,7 @@ import {
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
+import { sleep } from "@prosopo/util";
 import { solvePoW } from "@prosopo/util";
 
 export const Manager = (
@@ -39,6 +40,7 @@ export const Manager = (
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
+	frictionlessState?: FrictionlessState,
 ) => {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -113,6 +115,7 @@ export const Manager = (
 		clearTimeout();
 		clearSuccessfulChallengeTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	const setValidChallengeTimeout = () => {
@@ -174,10 +177,16 @@ export const Manager = (
 					});
 				}
 
-				// get a random provider
-				const getRandomProviderResponse = await getRandomActiveProvider(
-					getConfig(),
-				);
+				let getRandomProviderResponse = undefined;
+
+				if (frictionlessState?.provider) {
+					getRandomProviderResponse = frictionlessState.provider;
+				} else {
+					// get a random provider
+					getRandomProviderResponse = await getRandomActiveProvider(
+						getConfig(),
+					);
+				}
 
 				const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -188,12 +197,13 @@ export const Manager = (
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
+					frictionlessState?.sessionId,
 				);
 
 				if (challenge.error) {
 					updateState({
-						error: challenge.error,
 						loading: false,
+						error: challenge.error.message,
 					});
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);
@@ -247,6 +257,12 @@ export const Manager = (
 							}),
 						);
 						setValidChallengeTimeout();
+					} else {
+						updateState({
+							isHuman: false,
+							loading: false,
+						});
+						events.onFailed();
 					}
 				}
 			},

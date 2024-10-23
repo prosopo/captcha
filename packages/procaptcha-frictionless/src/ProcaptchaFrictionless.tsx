@@ -1,4 +1,3 @@
-import { isBot } from "@prosopo/detector";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +11,50 @@ import { isBot } from "@prosopo/detector";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { i18n } from "@prosopo/locale-browser";
+
+import { ProviderApi } from "@prosopo/api";
+import { ProsopoEnvError } from "@prosopo/common";
+import detect from "@prosopo/detector";
+import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
-import type {
-	BotDetectionFunction,
-	ProcaptchaFrictionlessProps,
+import {
+	type BotDetectionFunction,
+	type FrictionlessState,
+	type ProcaptchaClientConfigOutput,
+	ProcaptchaConfigSchema,
+	type ProcaptchaFrictionlessProps,
 } from "@prosopo/types";
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
 import { useEffect, useState } from "react";
 
-const customDetectBot: BotDetectionFunction = async () => {
-	return await isBot().then((result) => {
-		const bot = result.isBot;
-		return { bot };
-	});
+const customDetectBot: BotDetectionFunction = async (
+	config: ProcaptchaClientConfigOutput,
+) => {
+	const botScore: { token: string } = await detect();
+
+	if (!config.account.address) {
+		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+	}
+
+	// Get random active provider
+	const provider = await getRandomActiveProvider(config);
+	const providerApi = new ProviderApi(
+		provider.provider.url,
+		config.account.address,
+	);
+
+	const captcha = await providerApi.getFrictionlessCaptcha(
+		botScore.token,
+		config.account.address,
+	);
+
+	return {
+		captchaType: captcha.captchaType,
+		sessionId: captcha.sessionId,
+		provider: provider,
+		status: captcha.status,
+	};
 };
 
 export const ProcaptchaFrictionless = ({
@@ -39,24 +67,38 @@ export const ProcaptchaFrictionless = ({
 	);
 
 	useEffect(() => {
+		const configOutput = ProcaptchaConfigSchema.parse(config);
+
 		const detectAndSetComponent = async () => {
-			const result = await detectBot();
-			if (result.bot) {
+			try {
+				const result = await detectBot(configOutput);
+
+				if (result.captchaType === "image") {
+					setComponentToRender(
+						<Procaptcha config={config} callbacks={callbacks} />,
+					);
+				} else {
+					const frictionlessState: FrictionlessState = {
+						provider: result.provider,
+						sessionId: result.sessionId,
+					};
+					setComponentToRender(
+						<ProcaptchaPow
+							config={config}
+							callbacks={callbacks}
+							frictionlessState={frictionlessState}
+						/>,
+					);
+				}
+			} catch (error) {
+				console.error(error);
 				setComponentToRender(
 					<Procaptcha config={config} callbacks={callbacks} />,
-				);
-			} else {
-				setComponentToRender(
-					<ProcaptchaPow config={config} callbacks={callbacks} />,
 				);
 			}
 		};
 
 		detectAndSetComponent();
-
-		if (config.language) {
-			i18n.changeLanguage(config.language);
-		}
 	}, [config, callbacks, detectBot, config.language]);
 
 	return componentToRender;

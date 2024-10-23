@@ -24,6 +24,7 @@ import {
 	prosopoVerifyRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
+import { authMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
 import cors from "cors";
 import express from "express";
@@ -51,6 +52,7 @@ function startApi(
 	apiApp.use(prosopoVerifyRouter(env));
 
 	if (admin) {
+		apiApp.use(authMiddleware(env));
 		apiApp.use(prosopoAdminRouter(env));
 	}
 

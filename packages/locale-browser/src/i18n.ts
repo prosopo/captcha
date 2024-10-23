@@ -57,4 +57,4 @@ i18n
 		}
 	}, undefined);
 
-export default i18n;
+export default i18n as typeof i18n;

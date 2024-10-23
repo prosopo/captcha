@@ -1,0 +1,189 @@
+# enable vector's api
+[api]
+enabled = true
+# only allow localhost to hit the api
+address = "127.0.0.1:8686"
+
+# take logs from docker containers with the correct label set
+[sources.provider]
+type = "docker_logs"
+include_labels = ["vector.provider=true"]
+
+# format the logs for a provider
+[transforms.provider_format]
+type = "remap"
+inputs = ["provider"]
+source = '''
+.host="$OO_HOST"
+del(.container_created_at)
+del(.container_id)
+del(.host)
+del(.image)
+del(.label)
+del(.source_type)
+del(.stream)
+del(.timestamp)
+'''
+
+# print to console the provider logs
+#[sinks.console]
+#type = "console"
+#inputs = ["provider_format"]
+#encoding.codec = "json"
+
+# send provider logs to openobserve
+[sinks.openobserve_provider]
+type = "http"
+inputs = ["provider_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+
+# listen to docker events for containers starting+ending
+[sources.docker]
+type = "exec"
+# only containers with the correct label are listened to
+# https://docs.docker.com/reference/cli/docker/system/events/#containers
+# start – Indicates that the container has been started.
+# stop – Indicates that the container has been stopped.
+# restart – Indicates that the container has been restarted.
+# die – Indicates that the container has stopped running (either due to a crash or intentional termination).
+# pause – Indicates that the container is paused, meaning it is not actively running but hasn't been stopped.
+# unpause – Indicates that the container has resumed running after being paused.
+# kill – Indicates that the container has been forcefully terminated.
+# oom – Indicates that the container was terminated due to running out of memory (Out-Of-Memory).
+command = [ "docker", "events", "--format", "json", "--filter", "label=vector.docker=true", "--filter", "event=start", "--filter", "event=stop", "--filter", "event=restart", "--filter", "event=die", "--filter", "event=pause", "--filter", "event=unpause", "--filter", "event=kill", "--filter", "event=oom" ]
+mode = "streaming"
+decoding.codec = "json"
+
+# delete useless info and add the host to identify what machine the logs are coming from
+[transforms.docker_format]
+type = "remap"
+inputs = ["docker"]
+source = '''
+.host="$OO_HOST"
+del(.id)
+del(.from)
+del(.host)
+del(.Type)
+.name=.Actor.Attributes.name
+del(.Actor)
+del(.scope)
+del(.time)
+del(.timeNano)
+del(.source_type)
+del(.timestamp)
+'''
+
+# print docker events to console
+[sinks.console]
+type = "console"
+inputs = ["docker_format"]
+encoding.codec = "json"
+
+# send to openobserve
+[sinks.openobserve_docker]
+type = "http"
+inputs = ["docker_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+
+[sources.caddy]
+type = "docker_logs"
+include_labels = ["vector.caddy=true"]
+
+[transforms.caddy_format]
+type = "remap"
+inputs = ["caddy"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$OO_HOST"
+del(.ts)
+del(.user_id)
+del(.size)
+del(.message)
+del(.resp_headers)
+'''
+
+# send to openobserve
+[sinks.openobserve_caddy]
+type = "http"
+inputs = ["caddy_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+
+[sources.mongo]
+type = "docker_logs"
+include_labels = ["vector.mongo=true"]
+
+[transforms.mongo_format]
+type = "remap"
+inputs = ["mongo"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$OO_HOST"
+del(.t)
+del(.id)
+del(._timestamp)
+'''
+
+# send to openobserve
+[sinks.openobserve_mongo]
+type = "http"
+inputs = ["mongo_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_mongo/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+
+[sources.watchtower]
+type = "docker_logs"
+include_labels = ["vector.watchtower=true"]
+
+[transforms.watchtower_format]
+type = "remap"
+inputs = ["watchtower"]
+source = '''
+.=parse_json!(string!(.message))
+.host="$OO_HOST"
+del(.time)
+'''
+
+# send to openobserve
+[sinks.openobserve_watchtower]
+type = "http"
+inputs = ["watchtower_format"]
+uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_watchtower/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false

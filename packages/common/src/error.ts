@@ -1,4 +1,3 @@
-import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 
 type BaseErrorOptions<ContextType> = {
@@ -169,7 +170,13 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		const optionsAll = {
 			...options,
 			name: errorName,
-			context: { ...options?.context, code },
+			context: {
+				...options?.context,
+				code,
+				...(error instanceof ProsopoBaseError && error.translationKey
+					? { translationKey: error.translationKey }
+					: {}),
+			},
 		};
 		super(error, optionsAll);
 		this.code = code;
