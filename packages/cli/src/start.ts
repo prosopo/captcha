@@ -95,7 +95,7 @@ export async function start(
 
 	// Start the scheduled jobs
 	if (env.pair) {
-		storeCaptchasExternally(env.pair, env.config).catch((err) => {
+		storeCaptchasExternally(env.config).catch((err) => {
 			console.error("Failed to start scheduler:", err);
 		});
 		getClientList(env.pair, env.config).catch((err) => {

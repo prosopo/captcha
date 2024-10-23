@@ -12,21 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
+import { Worker, isMainThread, threadId } from "node:worker_threads";
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProviderEnvironment } from "@prosopo/env";
-import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
-import { Tasks } from "../tasks/tasks.js";
-import { checkIfTaskIsRunning } from "../util.js";
 
 export async function storeCaptchasExternally(
-	pair: KeyringPair,
 	config: ProsopoConfigOutput,
 ) {
-	const env = new ProviderEnvironment(config, pair);
-	await env.isReady();
-
-	const tasks = new Tasks(env);
+	console.log(
+		`Main script - isMainThread: ${isMainThread}, threadId: ${threadId}, pid: ${process.pid}`,
+	);
 
 	// Set the cron schedule to run on user configured schedule or every hour
 	const defaultSchedule = "0 * * * *";
@@ -36,22 +33,28 @@ export async function storeCaptchasExternally(
 			: defaultSchedule
 		: defaultSchedule;
 
-	const job = new CronJob(cronSchedule, async () => {
-		const taskRunning = await checkIfTaskIsRunning(
-			ScheduledTaskNames.StoreCommitmentsExternal,
-			env.getDb(),
+	const job = new CronJob(cronSchedule, () => {
+		console.log(`Creating worker - from main thread: ${threadId}`);
+		const worker = new Worker(
+			path.resolve("../provider/dist/workers/storeCaptchaWorker.js"),
+			{
+				workerData: { config },
+			},
 		);
-		env.logger.info(
-			`${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
-		);
-		if (!taskRunning) {
-			env.logger.info(
-				`${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
-			);
-			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
-				env.logger.error(err);
-			});
-		}
+
+		worker.on("message", (message) => {
+			console.log(`Worker message: ${message}`);
+		});
+
+		worker.on("error", (error) => {
+			console.error(`Worker error: ${error}`);
+		});
+
+		worker.on("exit", (code) => {
+			if (code !== 0) {
+				console.error(`Worker stopped with exit code ${code}`);
+			}
+		});
 	});
 
 	job.start();

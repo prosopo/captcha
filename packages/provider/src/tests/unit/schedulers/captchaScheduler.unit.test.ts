@@ -72,7 +72,7 @@ describe("storeCaptchasExternally", () => {
 	});
 
 	it("should initialize environment and start cron job", async () => {
-		await storeCaptchasExternally(mockPair, mockConfig);
+		await storeCaptchasExternally(mockConfig);
 
 		expect(ProviderEnvironment).toHaveBeenCalledWith(mockConfig, mockPair);
 		expect(Tasks).toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe("storeCaptchasExternally", () => {
 	});
 
 	it("should log message when cron job runs", async () => {
-		await storeCaptchasExternally(mockPair, mockConfig);
+		await storeCaptchasExternally(mockConfig);
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
