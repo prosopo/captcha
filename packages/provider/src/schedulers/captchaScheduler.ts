@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
 import { Worker, isMainThread, threadId } from "node:worker_threads";
-import type { KeyringPair } from "@polkadot/keyring/types";
+import { getLoggerDefault } from "@prosopo/common";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
 
-export async function storeCaptchasExternally(
-	config: ProsopoConfigOutput,
-) {
-	console.log(
+export async function storeCaptchasExternally(config: ProsopoConfigOutput) {
+	const logger = getLoggerDefault();
+	logger.log(
 		`Main script - isMainThread: ${isMainThread}, threadId: ${threadId}, pid: ${process.pid}`,
 	);
 
 	// Set the cron schedule to run on user configured schedule or every hour
-	const defaultSchedule = "0 * * * *";
+	const defaultSchedule = "*/5 * * * * *";
 	const cronSchedule = config.scheduledTasks?.captchaScheduler
 		? config.scheduledTasks.captchaScheduler.schedule
 			? config.scheduledTasks.captchaScheduler.schedule
@@ -34,25 +32,25 @@ export async function storeCaptchasExternally(
 		: defaultSchedule;
 
 	const job = new CronJob(cronSchedule, () => {
-		console.log(`Creating worker - from main thread: ${threadId}`);
+		logger.log(`Creating worker - from main thread: ${threadId}`);
 		const worker = new Worker(
-			path.resolve("../provider/dist/workers/storeCaptchaWorker.js"),
+			new URL("../workers/storeCaptchaWorker.js", import.meta.url),
 			{
 				workerData: { config },
 			},
 		);
 
 		worker.on("message", (message) => {
-			console.log(`Worker message: ${message}`);
+			logger.log(`Worker message: ${message}`);
 		});
 
 		worker.on("error", (error) => {
-			console.error(`Worker error: ${error}`);
+			logger.error(`Worker error: ${error}`);
 		});
 
 		worker.on("exit", (code) => {
 			if (code !== 0) {
-				console.error(`Worker stopped with exit code ${code}`);
+				logger.error(`Worker stopped with exit code ${code}`);
 			}
 		});
 	});
