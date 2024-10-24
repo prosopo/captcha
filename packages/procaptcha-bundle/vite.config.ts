@@ -49,16 +49,13 @@ for (const packageName of packages) {
 }
 console.log(`${workspaceRoot}/packages/locale/src/locales/.*.json`);
 
-const copyOptionsLocale = {
+const copyDir = {
 	srcDir: `${workspaceRoot}/packages/locale/src/locales`,
-	destDir: [
-		`${workspaceRoot}/packages/procaptcha-bundle/dist/bundle`,
-		...copyTo,
-	],
+	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
 };
 
 const localFiles = await fg.glob(
-	`${workspaceRoot}/packages/locale/src/locales/*.json`,
+	`${workspaceRoot}/packages/locale/src/locales/**/*.json`,
 );
 
 console.log(localFiles);
@@ -112,22 +109,20 @@ export default defineConfig(async ({ command, mode }) => {
 		//assetsInclude: [new RegExp(`${workspaceRoot}/packages/locale/src/locales/.*.json`)],
 		plugins: [
 			{
-				name: "copy-locale-files",
+				name: "copy-dir",
 				async writeBundle() {
-					if (copyOptionsLocale) {
-						for (const destDir of copyOptionsLocale.destDir) {
-							for (const file of fs.readdirSync(copyOptionsLocale.srcDir)) {
-								fs.mkdirSync(`${destDir}/locale/`, { recursive: true });
-								fs.copyFileSync(
-									path.join(copyOptionsLocale.srcDir, file),
-									path.join(`${destDir}/locale/`, file),
-								);
-							}
+					if (copyDir) {
+						const containingFolder = path.dirname(copyDir.destDir);
+						if (!fs.existsSync(containingFolder)) {
+							fs.mkdirSync(containingFolder, { recursive: true });
 						}
+						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
+							recursive: true,
+						});
 					}
 				},
 			},
-			...frontendConfig.plugins,
+			...(frontendConfig.plugins ? frontendConfig.plugins : []),
 		],
 	};
 });

@@ -128,9 +128,6 @@ export default async function (
 
 	logger.info("Bundle name", bundleName);
 	return {
-		ssr: {
-			target: "webworker",
-		},
 		server: {
 			host: "127.0.0.1",
 		},
@@ -146,7 +143,7 @@ export default async function (
 				"chrome60",
 				"edge18",
 				"firefox60",
-				"node12",
+				"node22",
 				"safari11",
 			],
 			drop,

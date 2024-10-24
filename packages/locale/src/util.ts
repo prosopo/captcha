@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import { z } from "zod";
-import translationEn from "./locales/en.json" assert { type: "json" };
+import translationEn from "./locales/en/translation.json" assert {
+	type: "json",
+};
 
 export function isClientSide(): boolean {
 	return !!(

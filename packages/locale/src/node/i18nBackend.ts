@@ -14,13 +14,13 @@
 
 // @ts-nocheck
 
+import path from "node:path";
 import i18n, { type InitOptions } from "i18next";
 import Backend from "i18next-http-backend";
-import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import HttpBackend from "i18next-http-backend";
+import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import resourcesToBackend from "i18next-resources-to-backend";
-import path from "node:path";
-import {LanguageSchema} from "../translations.js";
+import { LanguageSchema } from "../translations.js";
 
 const commonOptions = {
 	debug: false,
@@ -29,14 +29,18 @@ const commonOptions = {
 		// @ts-ignore
 		backends: [
 			HttpBackend, // if you need to check translation files from server
-			resourcesToBackend((language, namespace) => import(path.resolve(`./${language}`))),
+			resourcesToBackend(
+				(language, namespace) => import(`./${language}/${namespace}.json`),
+			),
 		],
 		// the most important part that allows you to lazy-load translations
 		// @ts-ignore
-		backendOptions: [{
-			loadPath: './{{lng}}.json'
-		}]
-	}
+		backendOptions: [
+			{
+				loadPath: "./{{lng}}/{{ns}}.json",
+			},
+		],
+	},
 };
 
 const nodeOptions: InitOptions = {};

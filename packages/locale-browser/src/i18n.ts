@@ -18,10 +18,9 @@ import { LanguageSchema } from "@prosopo/locale";
 import i18n from "i18next";
 import { default as LanguageDetector } from "i18next-browser-languagedetector";
 import ChainedBackend from "i18next-chained-backend";
-import HttpBackend from "i18next-http-backend";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next";
-
+console.log(`${import.meta.url.split("/").slice(0, -1).join("/")}`);
 i18n
 	.use(ChainedBackend)
 	.use(initReactI18next)
@@ -48,15 +47,20 @@ i18n
 				// @ts-ignore
 				backends: [
 					//HttpBackend, // if you need to check translation files from server
-					resourcesToBackend(
-						(language, namespace) => import(`./locale/${language}.json`),
-					),
+					resourcesToBackend(async (language, namespace) => {
+						const jsonTranslation = /*#__PURE__*/ await import(
+							`${import.meta.url.split("/").slice(0, -1).join("/")}/locales/${language}/${namespace}.json`,
+							{ assert: { type: "json" } }
+						);
+						console.log("jsonTranslation", jsonTranslation);
+						return jsonTranslation;
+					}),
 				],
 				// the most important part that allows you to lazy-load translations
 				// @ts-ignore
 				backendOptions: [
 					{
-						loadPath: "./locale/{{lng}}.json",
+						loadPath: `${import.meta.url.split("/").slice(0, -1).join("/")}/locales/{{lng}}/{{ns}}.json`,
 					},
 				],
 			},
