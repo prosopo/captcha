@@ -17,6 +17,7 @@ import {
 	type ZodObject,
 	type ZodOptional,
 	array,
+	coerce,
 	type input,
 	number,
 	object,
@@ -141,8 +142,8 @@ const createRateLimitSchemaWithDefaults = (
 			(schemas, [path, defaults]) => {
 				const enumPath = path as CombinedApiPaths;
 				schemas[enumPath] = object({
-					windowMs: number().optional().default(defaults.windowMs),
-					limit: number().optional().default(defaults.limit),
+					windowMs: coerce.number().optional().default(defaults.windowMs),
+					limit: coerce.number().optional().default(defaults.limit),
 				});
 
 				return schemas;
