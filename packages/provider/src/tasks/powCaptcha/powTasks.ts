@@ -26,6 +26,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+import {Address4, Address6} from "ip-address";
 
 const logger = getLoggerDefault();
 const DEFAULT_POW_DIFFICULTY = 4;
@@ -88,7 +89,7 @@ export class PowCaptchaManager {
 		nonce: number,
 		timeout: number,
 		userTimestampSignature: string,
-		ipAddress: string,
+		ipAddress: Address4 | Address6,
 		headers: RequestHeaders,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections

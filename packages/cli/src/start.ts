@@ -24,7 +24,7 @@ import {
 	prosopoVerifyRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import { authMiddleware } from "@prosopo/provider";
+import { authMiddleware, blockMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
 import cors from "cors";
 import express from "express";
@@ -48,6 +48,8 @@ function startApi(
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	apiApp.use(i18nMiddleware({}));
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
 	apiApp.use(prosopoRouter(env));
 	apiApp.use(prosopoVerifyRouter(env));
 

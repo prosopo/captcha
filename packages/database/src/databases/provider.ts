@@ -35,6 +35,9 @@ import {
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
 import {
+	type BlockRule,
+	type BlockRuleRecord,
+	BlockRuleRecordSchema,
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
@@ -67,6 +70,7 @@ import {
 import type { DeleteResult } from "mongodb";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
+import {Long} from "mongodb";
 
 enum TableNames {
 	captcha = "captcha",
@@ -79,6 +83,7 @@ enum TableNames {
 	powcaptcha = "powcaptcha",
 	client = "client",
 	session = "session",
+	blockrules = "blockrules",
 }
 
 const PROVIDER_TABLES = [
@@ -131,6 +136,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.session,
 		modelName: "Session",
 		schema: SessionRecordSchema,
+	},
+	{
+		collectionName: TableNames.blockrules,
+		modelName: "BlockRules",
+		schema: BlockRuleRecordSchema,
 	},
 ];
 
@@ -504,7 +514,7 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: string,
+		ipAddress: BigInt,
 		headers: RequestHeaders,
 		serverChecked = false,
 		userSubmitted = false,
@@ -855,7 +865,7 @@ export class ProviderDatabase
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: string,
+		ipAddress: BigInt,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1310,5 +1320,34 @@ export class ProviderDatabase
 			.findOne({ account })
 			.lean<ClientRecord>();
 		return doc ? doc : undefined;
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async getBlockRuleRecord(
+		ipAddress: BigInt,
+	): Promise<BlockRuleRecord | undefined> {
+		console.log("query", { ipAddress: Number(ipAddress) })
+		const doc = await this.tables?.blockrules
+			.findOne({ ipAddress: Number(ipAddress) })
+			.lean<BlockRuleRecord>();
+		console.log("Found rule", doc)
+		return doc ? doc : undefined;
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async storeBlockRuleRecords(rules: BlockRule[]) {
+		await this.tables?.blockrules.bulkWrite(
+			rules.map((rule) => ({
+				updateOne: {
+					filter: { ipAddress: rule.ipAddress },
+					update: { $set: rule },
+					upsert: true,
+				},
+			})),
+		);
 	}
 }
