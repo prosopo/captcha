@@ -49,6 +49,7 @@ import {
 	nativeEnum,
 	object,
 	string,
+	bigint,
 	type infer as zInfer,
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
@@ -87,7 +88,7 @@ export interface StoredCaptcha {
 	};
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
-	ipAddress: string;
+	ipAddress: BigInt;
 	headers: RequestHeaders;
 	userSubmitted: boolean;
 	serverChecked: boolean;
@@ -115,7 +116,7 @@ export const UserCommitmentSchema = object({
 	id: string(),
 	result: CaptchaResultSchema,
 	userSignature: string(),
-	ipAddress: string(),
+	ipAddress: bigint(),
 	headers: object({}).catchall(string()),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
@@ -181,7 +182,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
 			error: { type: String, required: false },
 		},
 		difficulty: { type: Number, required: true },
-		ipAddress: { type: String, required: true },
+		ipAddress: { type: BigInt, required: true },
 		headers: { type: Object, required: true },
 		userSignature: { type: String, required: false },
 		userSubmitted: { type: Boolean, required: true },
@@ -209,7 +210,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		error: { type: String, required: false },
 	},
-	ipAddress: { type: String, required: true },
+	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
@@ -280,7 +281,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>(
 		requestHash: { type: String, required: true },
 		deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 		requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
-		ipAddress: { type: String, required: true },
+		ipAddress: { type: BigInt, required: true },
 		headers: { type: Object, required: true },
 	},
 	{ expireAfterSeconds: ONE_WEEK },
@@ -323,14 +324,40 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 	{ expireAfterSeconds: ONE_WEEK },
 );
 
-export interface SessionRecord {
+export type Session = {
 	sessionId: string;
 	createdAt: Date;
-}
+};
+
+export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
 	sessionId: { type: String, required: true, unique: true },
 	createdAt: { type: Date, required: true },
+});
+
+export type BlockRule = {
+	ipAddress: BigInt;
+	global: boolean;
+};
+
+// A rule to block users based on headers such as IP. Global rules apply to all clients.
+export type BlockRuleRecord = mongoose.Document & BlockRule;
+
+export const BlockRuleRecordSchema = new Schema<BlockRuleRecord>({
+	ipAddress: { type: BigInt, required: true, unique: true },
+	global: { type: Boolean, required: true },
+});
+
+// Links to a block rule in the block rule collection. One rule can be shared by many clients.
+export type ClientBlockRuleRecord = mongoose.Document & {
+	ruleId: ObjectId;
+	dappAccount: string;
+};
+
+export const ClientBlockRuleRecordSchema = new Schema<ClientBlockRuleRecord>({
+	ruleId: { type: Schema.ObjectId, required: true },
+	dappAccount: { type: String, required: true },
 });
 
 export interface IProviderDatabase extends IDatabase {
@@ -370,7 +397,7 @@ export interface IProviderDatabase extends IDatabase {
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: string,
+		ipAddress: BigInt,
 		headers: RequestHeaders,
 	): Promise<void>;
 
@@ -472,7 +499,7 @@ export interface IProviderDatabase extends IDatabase {
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: string,
+		ipAddress: BigInt,
 		headers: RequestHeaders,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
@@ -495,7 +522,11 @@ export interface IProviderDatabase extends IDatabase {
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
-	storeSessionRecord(sessionRecord: SessionRecord): Promise<void>;
+	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
-	checkAndRemoveSession(sessionId: string): Promise<SessionRecord | undefined>;
+	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getBlockRuleRecord(ipAddress: BigInt): Promise<BlockRuleRecord | undefined>;
+
+	storeBlockRuleRecords(rules: BlockRule[]): Promise<void>;
 }

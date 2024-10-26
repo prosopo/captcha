@@ -21,11 +21,14 @@ import {
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type {
+	BlockRule,
 	ClientRecord,
 	IProviderDatabase,
 	PoWCaptchaStored,
 	UserCommitment,
 } from "@prosopo/types-database";
+import {Address6} from "ip-address"
+import {getIPAddress} from "../../util.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -216,5 +219,10 @@ export class ClientTaskManager {
 				settings: settings,
 			} as ClientRecord,
 		]);
+	}
+
+	async addBlockRules(ips: string[], global: boolean): Promise<void> {
+		const rules: BlockRule[] = ips.map((ip) => ({ ipAddress: getIPAddress(ip).bigInt(), global }));
+		await this.providerDB.storeBlockRuleRecords(rules);
 	}
 }

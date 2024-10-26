@@ -33,6 +33,7 @@ import type {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
+import {Address6} from "ip-address";
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -151,7 +152,7 @@ describe("ImgCaptchaManager", () => {
 			const datasetId = "datasetId";
 			const userAccount = "userAccount";
 			const dataset = { datasetId, captchas: [] };
-			const ipAddress = "0.0.0.0";
+			const ipAddress = new Address6("0.0.0.0");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -180,7 +181,7 @@ describe("ImgCaptchaManager", () => {
 		it("should throw an error if dataset details are not found", async () => {
 			const datasetId = "datasetId";
 			const userAccount = "userAccount";
-			const ipAddress = "0.0.0.0";
+			const ipAddress = new Address6("0.0.0.0");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -322,7 +323,7 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: 0,
-			ipAddress: "0.0.0.0",
+			ipAddress: new Address6("0.0.0.0").bigInt(),
 			headers: { a: "1", b: "2", c: "3" },
 			lastUpdatedTimestamp: Date.now(),
 		};
@@ -367,7 +368,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: 0,
-				ipAddress: "0.0.0.0",
+				ipAddress: new Address6("0.0.0.0").bigInt(),
 				headers: { a: "1", b: "2", c: "3" },
 				lastUpdatedTimestamp: Date.now(),
 			},
