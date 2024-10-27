@@ -42,8 +42,8 @@ import express, { type Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
+import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
-import {getIPAddress} from "../util.js";
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
@@ -195,7 +195,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					parsed[ApiParams.signature].user.timestamp,
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
-					getIPAddress(req.ip||"").bigInt(),
+					getIPAddress(req.ip || "").bigInt(),
 					flatten(req.headers, ","),
 				);
 

@@ -30,10 +30,10 @@ import type {
 	IProviderDatabase,
 	UserCommitment,
 } from "@prosopo/types-database";
+import { Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
-import {Address6} from "ip-address";
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({

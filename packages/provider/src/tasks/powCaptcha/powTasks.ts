@@ -25,8 +25,8 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import type { Address4, Address6 } from "ip-address";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
-import {Address4, Address6} from "ip-address";
 
 const logger = getLoggerDefault();
 const DEFAULT_POW_DIFFICULTY = 4;

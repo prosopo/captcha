@@ -27,13 +27,13 @@ import type {
 	PoWCaptchaStored,
 } from "@prosopo/types-database";
 import { verifyRecency } from "@prosopo/util";
+import { Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import {Address6} from "ip-address";
 
 vi.mock("@polkadot/util-crypto", () => ({
 	signatureVerify: vi.fn(),
