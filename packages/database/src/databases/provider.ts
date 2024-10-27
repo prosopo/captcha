@@ -36,6 +36,7 @@ import {
 } from "@prosopo/types";
 import {
 	type BlockRule,
+	type BlockRuleMongo,
 	type BlockRuleRecord,
 	BlockRuleRecordSchema,
 	CaptchaRecordSchema,
@@ -68,9 +69,9 @@ import {
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
 import type { DeleteResult } from "mongodb";
+import { Long } from "mongodb";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
-import {Long} from "mongodb";
 
 enum TableNames {
 	captcha = "captcha",
@@ -514,7 +515,7 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: BigInt,
+		ipAddress: bigint,
 		headers: RequestHeaders,
 		serverChecked = false,
 		userSubmitted = false,
@@ -865,7 +866,7 @@ export class ProviderDatabase
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: BigInt,
+		ipAddress: bigint,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1326,13 +1327,13 @@ export class ProviderDatabase
 	 * @description Check if a request has a blocking rule associated with it
 	 */
 	async getBlockRuleRecord(
-		ipAddress: BigInt,
-	): Promise<BlockRuleRecord | undefined> {
-		console.log("query", { ipAddress: Number(ipAddress) })
+		ipAddress: bigint,
+	): Promise<BlockRuleMongo | undefined> {
+		console.log("query", { ipAddress: Number(ipAddress) });
 		const doc = await this.tables?.blockrules
 			.findOne({ ipAddress: Number(ipAddress) })
-			.lean<BlockRuleRecord>();
-		console.log("Found rule", doc)
+			.lean<BlockRuleMongo>();
+		console.log("Found rule", doc);
 		return doc ? doc : undefined;
 	}
 

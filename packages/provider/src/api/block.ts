@@ -17,13 +17,12 @@ import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import {Address6} from "ip-address";
-import {getIPAddress} from "../util.js";
+import { Address6 } from "ip-address";
+import { getIPAddress } from "../util.js";
 
 export const blockMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			console.log("In block middleware", req.url)
 			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
 			if (req.url.indexOf(ApiPrefix) === -1) {
 				next();
@@ -35,11 +34,9 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 				console.log("No IP", req.ip);
 				return res.status(401).json({ error: "Unauthorized" });
 			}
-			console.log("Looking for IP", req.ip);
-			const ipAddress = getIPAddress(req.ip || "")
+			const ipAddress = getIPAddress(req.ip || "");
 			const rule = await env.getDb().getBlockRuleRecord(ipAddress.bigInt());
-			console.log("rule.ipAddress", rule?.ipAddress)
-			if (rule && rule.ipAddress === ipAddress.bigInt()) {
+			if (rule && BigInt(rule.ipAddress) === ipAddress.bigInt()) {
 				// block by IP address globally
 				if (rule.global) {
 					return res.status(401).json({ error: "Unauthorized" });
@@ -50,9 +47,9 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 			}
 
 			next();
-			return
+			return;
 		} catch (err) {
-			console.error("Auth Middleware Error:", err);
+			console.error("Block Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}

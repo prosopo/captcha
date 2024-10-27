@@ -45,11 +45,11 @@ import {
 	type ZodType,
 	any,
 	array,
+	bigint,
 	boolean,
 	nativeEnum,
 	object,
 	string,
-	bigint,
 	type infer as zInfer,
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
@@ -88,7 +88,7 @@ export interface StoredCaptcha {
 	};
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
-	ipAddress: BigInt;
+	ipAddress: bigint;
 	headers: RequestHeaders;
 	userSubmitted: boolean;
 	serverChecked: boolean;
@@ -337,12 +337,16 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 });
 
 export type BlockRule = {
-	ipAddress: BigInt;
+	ipAddress: bigint;
 	global: boolean;
 };
 
 // A rule to block users based on headers such as IP. Global rules apply to all clients.
 export type BlockRuleRecord = mongoose.Document & BlockRule;
+
+export type BlockRuleMongo = Omit<BlockRuleRecord, "ipAddress"> & {
+	ipAddress: number;
+};
 
 export const BlockRuleRecordSchema = new Schema<BlockRuleRecord>({
 	ipAddress: { type: BigInt, required: true, unique: true },
@@ -397,7 +401,7 @@ export interface IProviderDatabase extends IDatabase {
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: BigInt,
+		ipAddress: bigint,
 		headers: RequestHeaders,
 	): Promise<void>;
 
@@ -499,7 +503,7 @@ export interface IProviderDatabase extends IDatabase {
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: BigInt,
+		ipAddress: bigint,
 		headers: RequestHeaders,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
@@ -526,7 +530,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
-	getBlockRuleRecord(ipAddress: BigInt): Promise<BlockRuleRecord | undefined>;
+	getBlockRuleRecord(ipAddress: bigint): Promise<BlockRuleMongo | undefined>;
 
 	storeBlockRuleRecords(rules: BlockRule[]): Promise<void>;
 }

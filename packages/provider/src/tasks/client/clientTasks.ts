@@ -27,8 +27,8 @@ import type {
 	PoWCaptchaStored,
 	UserCommitment,
 } from "@prosopo/types-database";
-import {Address6} from "ip-address"
-import {getIPAddress} from "../../util.js";
+import { Address6 } from "ip-address";
+import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -222,7 +222,10 @@ export class ClientTaskManager {
 	}
 
 	async addBlockRules(ips: string[], global: boolean): Promise<void> {
-		const rules: BlockRule[] = ips.map((ip) => ({ ipAddress: getIPAddress(ip).bigInt(), global }));
+		const rules: BlockRule[] = ips.map((ip) => ({
+			ipAddress: getIPAddress(ip).bigInt(),
+			global,
+		}));
 		await this.providerDB.storeBlockRuleRecords(rules);
 	}
 }

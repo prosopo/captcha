@@ -221,7 +221,7 @@ export interface PendingCaptchaRequest {
 	[ApiParams.requestHash]: string;
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: BigInt;
+	ipAddress: bigint;
 	headers: RequestHeaders;
 }
 
