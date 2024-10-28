@@ -11,12 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
 	type ZodNumber,
 	type ZodObject,
 	type ZodOptional,
 	array,
+	coerce,
 	type input,
 	number,
 	object,
@@ -47,6 +50,8 @@ import {
 } from "../procaptcha/index.js";
 
 export const ApiPrefix = "/v1/prosopo" as const;
+
+export type IPAddress = Address4 | Address6;
 
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
@@ -141,8 +146,8 @@ const createRateLimitSchemaWithDefaults = (
 			(schemas, [path, defaults]) => {
 				const enumPath = path as CombinedApiPaths;
 				schemas[enumPath] = object({
-					windowMs: number().optional().default(defaults.windowMs),
-					limit: number().optional().default(defaults.limit),
+					windowMs: coerce.number().optional().default(defaults.windowMs),
+					limit: coerce.number().optional().default(defaults.limit),
 				});
 
 				return schemas;
@@ -220,7 +225,7 @@ export interface PendingCaptchaRequest {
 	[ApiParams.requestHash]: string;
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: string;
+	ipAddress: bigint;
 	headers: RequestHeaders;
 }
 

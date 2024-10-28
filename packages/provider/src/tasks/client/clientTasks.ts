@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { validateAddress } from "@polkadot/util-crypto/address";
 import type { Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -20,7 +21,16 @@ import {
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
+import {
+	BlockRuleType,
+	type ClientRecord,
+	type IPAddressBlockRule,
+	type IProviderDatabase,
+	type PoWCaptchaStored,
+	type UserAccountBlockRule,
+	type UserCommitment,
+} from "@prosopo/types-database";
+import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -63,7 +73,7 @@ export class ClientTaskManager {
 				await this.providerDB.getUnstoredDappUserPoWCommitments();
 
 			// filter to only get records that have been updated since the last task
-			if (lastTask) {
+			if (lastTask?.updated) {
 				this.logger.info(
 					`Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
 				);
@@ -74,24 +84,30 @@ export class ClientTaskManager {
 					taskID,
 				);
 
-				commitments = commitments.filter(
-					(commitment) =>
-						lastTask.updated &&
-						commitment.lastUpdatedTimestamp &&
-						(commitment.lastUpdatedTimestamp > lastTask.updated ||
-							!commitment.lastUpdatedTimestamp),
+				const isCommitmentUpdated = (
+					commitment: UserCommitment | PoWCaptchaStored,
+				): boolean => {
+					const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+					return (
+						!lastUpdatedTimestamp ||
+						!storedAtTimestamp ||
+						lastUpdatedTimestamp > storedAtTimestamp
+					);
+				};
+
+				const commitmentUpdated = (
+					commitment: UserCommitment | PoWCaptchaStored,
+				): boolean => {
+					return !!lastTask.updated && isCommitmentUpdated(commitment);
+				};
+
+				commitments = commitments.filter((commitment) =>
+					commitmentUpdated(commitment),
 				);
 
-				powRecords = powRecords.filter((commitment) => {
-					return (
-						lastTask.updated &&
-						commitment.lastUpdatedTimestamp &&
-						// either the update stamp is more recent than the last time this task ran or there is no update stamp,
-						// so it is a new record
-						(commitment.lastUpdatedTimestamp > lastTask.updated ||
-							!commitment.lastUpdatedTimestamp)
-					);
-				});
+				powRecords = powRecords.filter((commitment) =>
+					commitmentUpdated(commitment),
+				);
 			}
 
 			if (commitments.length || powRecords.length) {
@@ -205,5 +221,39 @@ export class ClientTaskManager {
 				settings: settings,
 			} as ClientRecord,
 		]);
+	}
+
+	async addIPBlockRules(
+		ips: string[],
+		global: boolean,
+		dappAccount?: string,
+	): Promise<void> {
+		const rules: IPAddressBlockRule[] = ips.map((ip) => {
+			return {
+				ip: Number(getIPAddress(ip).bigInt()),
+				global,
+				type: BlockRuleType.ipAddress,
+				dappAccount,
+			};
+		});
+		await this.providerDB.storeIPBlockRuleRecords(rules);
+	}
+
+	async addUserBlockRules(
+		userAccounts: string[],
+		dappAccount: string,
+	): Promise<void> {
+		validateAddress(dappAccount, false, 42);
+		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
+			validateAddress(userAccount, false, 42);
+			return {
+				dappAccount,
+				userAccount,
+				type: BlockRuleType.userAccount,
+				// TODO don't store global on these
+				global: false,
+			};
+		});
+		await this.providerDB.storeUserBlockRuleRecords(rules);
 	}
 }
