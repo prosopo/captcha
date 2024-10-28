@@ -40,6 +40,16 @@ export default (
 					demandOption: true,
 					desc: "The ips to be blocked",
 				} as const)
+				.option("users", {
+					type: "array" as const,
+					demandOption: true,
+					desc: "The users to be blocked",
+				} as const)
+				.option("dapp", {
+					type: "string" as const,
+					demandOption: true,
+					desc: "The users to be blocked",
+				} as const)
 				.option("global", {
 					type: "string" as const,
 					demandOption: true,
@@ -51,10 +61,19 @@ export default (
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 				const tasks = new Tasks(env);
-				await tasks.clientTaskManager.addBlockRules(
-					argv.ips as unknown as string[],
-					argv.global as boolean,
-				);
+				if (argv.ips) {
+					await tasks.clientTaskManager.addIPBlockRules(
+						argv.ips as unknown as string[],
+						argv.global as boolean,
+					);
+				}
+				if (argv.users) {
+					await tasks.clientTaskManager.addUserBlockRules(
+						argv.users as unknown as string[],
+						argv.dapp as unknown as string,
+						argv.global as boolean,
+					);
+				}
 				logger.info("IP Block rules added");
 			} catch (err) {
 				logger.error(err);

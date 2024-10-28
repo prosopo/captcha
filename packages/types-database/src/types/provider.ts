@@ -336,33 +336,54 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	createdAt: { type: Date, required: true },
 });
 
-export type BlockRule = {
-	ipAddress: bigint;
+type BlockRule = {
 	global: boolean;
+	type: BlockRuleType;
 };
+
+export enum BlockRuleType {
+	ipAddress = "ipAddress",
+	userAccount = "userAccount",
+}
+
+export interface IPAddressBlockRule extends BlockRule {
+	ip: number;
+}
+
+export interface UserAccountBlockRule extends BlockRule {
+	dappAccount: string;
+	userAccount: string;
+}
 
 // A rule to block users based on headers such as IP. Global rules apply to all clients.
-export type BlockRuleRecord = mongoose.Document & BlockRule;
+export type IPBlockRuleRecord = mongoose.Document & IPAddressBlockRule;
+export type UserAccountBlockRuleRecord = mongoose.Document &
+	UserAccountBlockRule;
 
-export type BlockRuleMongo = Omit<BlockRuleRecord, "ipAddress"> & {
-	ipAddress: number;
+export type IPBlockRuleMongo = Omit<IPBlockRuleRecord, "ip"> & {
+	ip: number;
 };
 
-export const BlockRuleRecordSchema = new Schema<BlockRuleRecord>({
-	ipAddress: { type: BigInt, required: true, unique: true },
+export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
+	ip: { type: Number, required: true, unique: true },
 	global: { type: Boolean, required: true },
+	type: { type: String, enum: BlockRuleType, required: true },
 });
 
-// Links to a block rule in the block rule collection. One rule can be shared by many clients.
-export type ClientBlockRuleRecord = mongoose.Document & {
-	ruleId: ObjectId;
-	dappAccount: string;
-};
+IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
 
-export const ClientBlockRuleRecordSchema = new Schema<ClientBlockRuleRecord>({
-	ruleId: { type: Schema.ObjectId, required: true },
-	dappAccount: { type: String, required: true },
-});
+export const UserAccountBlockRuleSchema =
+	new Schema<UserAccountBlockRuleRecord>({
+		dappAccount: { type: String, required: true },
+		userAccount: { type: String, required: true },
+		global: { type: Boolean, required: true },
+		type: { type: String, enum: BlockRuleType, required: true },
+	});
+
+UserAccountBlockRuleSchema.index(
+	{ dappAccount: 1, userAccount: 1 },
+	{ unique: true },
+);
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -530,7 +551,16 @@ export interface IProviderDatabase extends IDatabase {
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
-	getBlockRuleRecord(ipAddress: bigint): Promise<BlockRuleMongo | undefined>;
+	getIPBlockRuleRecord(
+		ipAddress: bigint,
+	): Promise<IPBlockRuleMongo | undefined>;
 
-	storeBlockRuleRecords(rules: BlockRule[]): Promise<void>;
+	storeIPBlockRuleRecords(rules: IPAddressBlockRule[]): Promise<void>;
+
+	getUserBlockRuleRecord(
+		userAccount: string,
+		dappAccount: string,
+	): Promise<UserAccountBlockRuleRecord | undefined>;
+
+	storeUserBlockRuleRecords(rules: UserAccountBlockRule[]): Promise<void>;
 }

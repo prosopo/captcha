@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
 	type ZodNumber,
@@ -48,6 +50,8 @@ import {
 } from "../procaptcha/index.js";
 
 export const ApiPrefix = "/v1/prosopo" as const;
+
+export type IPAddress = Address4 | Address6;
 
 export enum ApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
