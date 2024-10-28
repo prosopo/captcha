@@ -13,6 +13,7 @@
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
+import { validateAddress } from "@polkadot/util-crypto/address";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -35,15 +36,31 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 				return res.status(401).json({ error: "Unauthorized" });
 			}
 			const ipAddress = getIPAddress(req.ip || "");
-			const rule = await env.getDb().getBlockRuleRecord(ipAddress.bigInt());
-			if (rule && BigInt(rule.ipAddress) === ipAddress.bigInt()) {
+			const rule = await env.getDb().getIPBlockRuleRecord(ipAddress.bigInt());
+			if (rule && BigInt(rule.ip) === ipAddress.bigInt()) {
 				// block by IP address globally
 				if (rule.global) {
 					return res.status(401).json({ error: "Unauthorized" });
 				}
 
 				// check if this rule applies to this client
-				// TODO - we need to ensure client is always in the same place in the request object
+				// TODO - we need to ensure client site key is always in the same place in the request object
+			}
+
+			const userAccount = req.body.user;
+			const dappAccount = req.body.dapp;
+			if (userAccount && dappAccount) {
+				const rule = await env
+					.getDb()
+					.getUserBlockRuleRecord(userAccount, dappAccount);
+
+				if (
+					rule &&
+					rule.userAccount === userAccount &&
+					rule.dappAccount === dappAccount
+				) {
+					return res.status(401).json({ error: "Unauthorized" });
+				}
 			}
 
 			next();

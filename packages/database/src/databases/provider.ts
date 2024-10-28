@@ -35,14 +35,12 @@ import {
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
 import {
-	type BlockRule,
-	type BlockRuleMongo,
-	type BlockRuleRecord,
-	BlockRuleRecordSchema,
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	type IPBlockRuleRecord,
+	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	PendingRecordSchema,
@@ -61,6 +59,9 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
+	type UserAccountBlockRule,
+	type UserAccountBlockRuleRecord,
+	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -68,8 +69,8 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
+import type { IPBlockRuleMongo } from "@prosopo/types-database";
 import type { DeleteResult } from "mongodb";
-import { Long } from "mongodb";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
@@ -84,7 +85,8 @@ enum TableNames {
 	powcaptcha = "powcaptcha",
 	client = "client",
 	session = "session",
-	blockrules = "blockrules",
+	ipblockrules = "ipblockrules",
+	userblockrules = "userblockrules",
 }
 
 const PROVIDER_TABLES = [
@@ -139,9 +141,14 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.blockrules,
-		modelName: "BlockRules",
-		schema: BlockRuleRecordSchema,
+		collectionName: TableNames.ipblockrules,
+		modelName: "IPBlockRules",
+		schema: IPBlockRuleRecordSchema,
+	},
+	{
+		collectionName: TableNames.userblockrules,
+		modelName: "IPBlockRules",
+		schema: UserAccountBlockRuleSchema,
 	},
 ];
 
@@ -1326,25 +1333,54 @@ export class ProviderDatabase
 	/**
 	 * @description Check if a request has a blocking rule associated with it
 	 */
-	async getBlockRuleRecord(
+	async getIPBlockRuleRecord(
 		ipAddress: bigint,
-	): Promise<BlockRuleMongo | undefined> {
-		console.log("query", { ipAddress: Number(ipAddress) });
-		const doc = await this.tables?.blockrules
-			.findOne({ ipAddress: Number(ipAddress) })
-			.lean<BlockRuleMongo>();
-		console.log("Found rule", doc);
+	): Promise<IPBlockRuleMongo | undefined> {
+		const doc = await this.tables?.ipblockrules
+			.findOne({ ip: Number(ipAddress) })
+			.lean<IPBlockRuleMongo>();
 		return doc ? doc : undefined;
 	}
 
 	/**
 	 * @description Check if a request has a blocking rule associated with it
 	 */
-	async storeBlockRuleRecords(rules: BlockRule[]) {
-		await this.tables?.blockrules.bulkWrite(
+	async storeIPBlockRuleRecords(rules: IPBlockRuleRecord[]) {
+		await this.tables?.ipblockrules.bulkWrite(
 			rules.map((rule) => ({
 				updateOne: {
-					filter: { ipAddress: rule.ipAddress },
+					filter: { ip: rule.ip },
+					update: { $set: rule },
+					upsert: true,
+				},
+			})),
+		);
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async getUserBlockRuleRecord(
+		userAccount: string,
+		dappAccount: string,
+	): Promise<UserAccountBlockRuleRecord | undefined> {
+		const doc = await this.tables?.userblockrules
+			.findOne({ dappAccount, userAccount })
+			.lean<UserAccountBlockRuleRecord>();
+		return doc ? doc : undefined;
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async storeUserBlockRuleRecords(rules: UserAccountBlockRule[]) {
+		await this.tables?.userblockrules.bulkWrite(
+			rules.map((rule) => ({
+				updateOne: {
+					filter: {
+						dappAccount: rule.dappAccount,
+						userAccount: rule.userAccount,
+					},
 					update: { $set: rule },
 					upsert: true,
 				},

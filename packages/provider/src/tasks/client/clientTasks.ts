@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { validateAddress } from "@polkadot/util-crypto/address";
 import type { Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -20,14 +21,16 @@ import {
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type {
-	BlockRule,
-	ClientRecord,
-	IProviderDatabase,
-	PoWCaptchaStored,
-	UserCommitment,
+import {
+	BlockRuleType,
+	type ClientRecord,
+	type IPAddressBlockRule,
+	type IProviderDatabase,
+	type PoWCaptchaStored,
+	type UserAccountBlockRule,
+	type UserAccountBlockRuleRecord,
+	type UserCommitment,
 } from "@prosopo/types-database";
-import { Address6 } from "ip-address";
 import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
@@ -221,11 +224,32 @@ export class ClientTaskManager {
 		]);
 	}
 
-	async addBlockRules(ips: string[], global: boolean): Promise<void> {
-		const rules: BlockRule[] = ips.map((ip) => ({
-			ipAddress: getIPAddress(ip).bigInt(),
-			global,
-		}));
-		await this.providerDB.storeBlockRuleRecords(rules);
+	async addIPBlockRules(ips: string[], global: boolean): Promise<void> {
+		const rules: IPAddressBlockRule[] = ips.map((ip) => {
+			return {
+				ip: Number(getIPAddress(ip).bigInt()),
+				global,
+				type: BlockRuleType.ipAddress,
+			};
+		});
+		await this.providerDB.storeIPBlockRuleRecords(rules);
+	}
+
+	async addUserBlockRules(
+		userAccounts: string[],
+		dappAccount: string,
+		global: boolean,
+	): Promise<void> {
+		validateAddress(dappAccount);
+		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
+			validateAddress(userAccount);
+			return {
+				dappAccount,
+				userAccount,
+				global,
+				type: BlockRuleType.userAccount,
+			};
+		});
+		await this.providerDB.storeUserBlockRuleRecords(rules);
 	}
 }

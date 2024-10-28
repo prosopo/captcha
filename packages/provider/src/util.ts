@@ -66,7 +66,7 @@ export async function checkIfTaskIsRunning(
 	return false;
 }
 
-export const getIPAddress = (ipAddressString: string) => {
+export const getIPAddress = (ipAddressString: string): Address4 | Address6 => {
 	try {
 		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
 			return new Address4(ipAddressString);
