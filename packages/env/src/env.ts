@@ -117,7 +117,6 @@ export class Environment implements ProsopoEnvironment {
 		try {
 			if (this.config.database) {
 				const dbConfig = this.config.database[this.defaultEnvironment];
-				console.log("dbConfig", dbConfig);
 				if (dbConfig) {
 					this.db = new ProviderDatabase(
 						dbConfig.endpoint,
