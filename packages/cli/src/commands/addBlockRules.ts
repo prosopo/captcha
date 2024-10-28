@@ -37,17 +37,17 @@ export default (
 			yargs
 				.option("ips", {
 					type: "array" as const,
-					demandOption: true,
+					demandOption: false,
 					desc: "The ips to be blocked",
 				} as const)
 				.option("users", {
 					type: "array" as const,
-					demandOption: true,
+					demandOption: false,
 					desc: "The users to be blocked",
 				} as const)
 				.option("dapp", {
 					type: "string" as const,
-					demandOption: true,
+					demandOption: false,
 					desc: "The users to be blocked",
 				} as const)
 				.option("global", {
