@@ -147,7 +147,7 @@ const PROVIDER_TABLES = [
 	},
 	{
 		collectionName: TableNames.userblockrules,
-		modelName: "IPBlockRules",
+		modelName: "UserAccountBlockRules",
 		schema: UserAccountBlockRuleSchema,
 	},
 ];

@@ -72,7 +72,6 @@ export default (
 					await tasks.clientTaskManager.addUserBlockRules(
 						argv.users as unknown as string[],
 						argv.dapp as unknown as string,
-						argv.global as boolean,
 					);
 				}
 				logger.info("IP Block rules added");
