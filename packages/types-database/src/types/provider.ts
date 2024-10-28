@@ -348,6 +348,7 @@ export enum BlockRuleType {
 
 export interface IPAddressBlockRule extends BlockRule {
 	ip: number;
+	dappAccount?: string;
 }
 
 export interface UserAccountBlockRule extends BlockRule {
@@ -553,6 +554,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	getIPBlockRuleRecord(
 		ipAddress: bigint,
+		dappAccount?: string,
 	): Promise<IPBlockRuleMongo | undefined>;
 
 	storeIPBlockRuleRecords(rules: IPAddressBlockRule[]): Promise<void>;
