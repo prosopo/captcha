@@ -27,13 +27,13 @@ import type {
 	PoWCaptchaStored,
 } from "@prosopo/types-database";
 import { verifyRecency } from "@prosopo/util";
-import { Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { getIPAddress } from "../../../../util.js";
 
 vi.mock("@polkadot/util-crypto", () => ({
 	signatureVerify: vi.fn(),
@@ -126,7 +126,7 @@ describe("PowCaptchaManager", () => {
 			const userSignature = "testTimestampSignature";
 			const nonce = 12345;
 			const timeout = 1000;
-			const ipAddress = new Address6("");
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
@@ -232,7 +232,7 @@ describe("PowCaptchaManager", () => {
 			const nonce = 12345;
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
-			const ipAddress = new Address6("");
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
