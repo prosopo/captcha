@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { stringToHex } from "@polkadot/util/string";
-import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
@@ -151,7 +150,9 @@ export const Manager = (
 				const config = getConfig();
 
 				// check if account exists in extension
-				const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+				const ext = config.web2
+					? new (await import("@prosopo/account")).ExtensionWeb2()
+					: new (await import("@prosopo/account")).ExtensionWeb3();
 
 				// use the passed in account (could be web3) or create a new account
 				const user = await ext.getAccount(config);
