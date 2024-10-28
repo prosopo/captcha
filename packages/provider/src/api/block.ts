@@ -36,6 +36,8 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 				return res.status(401).json({ error: "Unauthorized" });
 			}
 			const ipAddress = getIPAddress(req.ip || "");
+			const userAccount = req.body.user;
+			const dappAccount = req.body.dapp;
 			const rule = await env.getDb().getIPBlockRuleRecord(ipAddress.bigInt());
 			if (rule && BigInt(rule.ip) === ipAddress.bigInt()) {
 				// block by IP address globally
@@ -43,12 +45,20 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 					return res.status(401).json({ error: "Unauthorized" });
 				}
 
-				// check if this rule applies to this client
-				// TODO - we need to ensure client site key is always in the same place in the request object
+				if (dappAccount) {
+					const dappRule = await env
+						.getDb()
+						.getIPBlockRuleRecord(ipAddress.bigInt(), dappAccount);
+					if (
+						dappRule &&
+						dappRule.dappAccount === dappAccount &&
+						BigInt(dappRule.ip) === ipAddress.bigInt()
+					) {
+						return res.status(401).json({ error: "Unauthorized" });
+					}
+				}
 			}
 
-			const userAccount = req.body.user;
-			const dappAccount = req.body.dapp;
 			if (userAccount && dappAccount) {
 				const rule = await env
 					.getDb()

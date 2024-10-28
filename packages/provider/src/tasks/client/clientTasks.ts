@@ -224,12 +224,17 @@ export class ClientTaskManager {
 		]);
 	}
 
-	async addIPBlockRules(ips: string[], global: boolean): Promise<void> {
+	async addIPBlockRules(
+		ips: string[],
+		global: boolean,
+		dappAccount?: string,
+	): Promise<void> {
 		const rules: IPAddressBlockRule[] = ips.map((ip) => {
 			return {
 				ip: Number(getIPAddress(ip).bigInt()),
 				global,
 				type: BlockRuleType.ipAddress,
+				dappAccount,
 			};
 		});
 		await this.providerDB.storeIPBlockRuleRecords(rules);

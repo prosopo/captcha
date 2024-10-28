@@ -65,6 +65,7 @@ export default (
 					await tasks.clientTaskManager.addIPBlockRules(
 						argv.ips as unknown as string[],
 						argv.global as boolean,
+						argv.dapp as unknown as string,
 					);
 				}
 				if (argv.users) {
