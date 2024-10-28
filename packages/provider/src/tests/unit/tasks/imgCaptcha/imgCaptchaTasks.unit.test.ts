@@ -48,9 +48,12 @@ vi.mock("@polkadot/util", () => ({
 	u8aToHex: vi.fn(),
 	stringToHex: vi.fn(),
 }));
-vi.mock("../../../../util.js", () => ({
-	shuffleArray: vi.fn(),
-}));
+vi.mock("../../../../util.js", async (importOriginal) => {
+	return {
+		...(await importOriginal<typeof import("../../../../util.js")>()),
+		shuffleArray: vi.fn(),
+	};
+});
 vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 	buildTreeAndGetCommitmentId: vi.fn(),
 }));
