@@ -35,6 +35,9 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 				console.log("No IP", req.ip);
 				return res.status(401).json({ error: "Unauthorized" });
 			}
+
+			await env.isReady();
+
 			const ipAddress = getIPAddress(req.ip || "");
 			const userAccount = req.body.user;
 			const dappAccount = req.body.dapp;

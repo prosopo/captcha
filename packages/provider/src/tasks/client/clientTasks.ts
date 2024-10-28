@@ -28,7 +28,6 @@ import {
 	type IProviderDatabase,
 	type PoWCaptchaStored,
 	type UserAccountBlockRule,
-	type UserAccountBlockRuleRecord,
 	type UserCommitment,
 } from "@prosopo/types-database";
 import { getIPAddress } from "../../util.js";
@@ -243,16 +242,16 @@ export class ClientTaskManager {
 	async addUserBlockRules(
 		userAccounts: string[],
 		dappAccount: string,
-		global: boolean,
 	): Promise<void> {
-		validateAddress(dappAccount);
+		validateAddress(dappAccount, false, 42);
 		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
-			validateAddress(userAccount);
+			validateAddress(userAccount, false, 42);
 			return {
 				dappAccount,
 				userAccount,
-				global,
 				type: BlockRuleType.userAccount,
+				// TODO don't store global on these
+				global: false,
 			};
 		});
 		await this.providerDB.storeUserBlockRuleRecords(rules);
