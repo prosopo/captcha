@@ -14,7 +14,6 @@
 import { cryptoWaitReady } from "@polkadot/util-crypto";
 import { randomAsHex } from "@polkadot/util-crypto/random";
 import { stringToHex } from "@polkadot/util/string";
-import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import {
 	ProsopoDatasetError,
@@ -423,7 +422,9 @@ export function Manager(
 		}
 
 		// check if account exists in extension
-		const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+		const ext = config.web2
+			? new (await import("@prosopo/account")).ExtensionWeb2()
+			: new (await import("@prosopo/account")).ExtensionWeb3();
 		const account = await ext.getAccount(config);
 		// Store the account in local storage
 		storage.setAccount(account.account.address);

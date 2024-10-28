@@ -15,11 +15,12 @@
 import { default as Signer } from "@polkadot/extension-base/page/Signer";
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
+
+// TODO replace these with local implementations
 import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { cryptoWaitReady } from "@polkadot/util-crypto";
-import { entropyToMnemonic } from "@polkadot/util-crypto/mnemonic/bip39";
 import type { KeypairType } from "@polkadot/util-crypto/types";
+
 import { stringToU8a } from "@polkadot/util/string";
 import { u8aToHex } from "@polkadot/util/u8a";
 import { hexHash } from "@prosopo/common";
@@ -28,6 +29,7 @@ import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { picassoCanvas } from "@prosopo/util";
 import { version } from "@prosopo/util";
 import { Extension } from "./Extension.js";
+import { entropyToMnemonic } from "./entropyToMnemonic.js";
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair };
 
@@ -85,7 +87,6 @@ export class ExtensionWeb2 extends Extension {
 	private async createAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<AccountWithKeyPair> {
-		await cryptoWaitReady();
 		const params = {
 			area: { width: 300, height: 300 },
 			offsetParameter: 2001000001,
