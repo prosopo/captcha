@@ -103,7 +103,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 
 				const verificationResponse: ImageVerificationResponse = {
-					[ApiParams.status]: req.t(response.status),
+					[ApiParams.status]: req.t(response.status || "API.USER_NOT_VERIFIED"),
 					[ApiParams.verified]: response[ApiParams.verified],
 					...(response.commitmentId && {
 						[ApiParams.commitmentId]: response.commitmentId,
