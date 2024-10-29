@@ -433,7 +433,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
-				console.log("\n----\n FRICTIONLESS RULESSS \  --- \n", ipAddress)
 				const isIpBlocked = await tasks.frictionlessManager.checkIpRules(
 					ipAddress,
 					dapp,

@@ -53,8 +53,7 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 						.getDb()
 						.getIPBlockRuleRecord(ipAddress.bigInt(), dappAccount);
 					if (
-						dappRule &&
-						dappRule.hardBlock &&
+						dappRule?.hardBlock &&
 						dappRule.dappAccount === dappAccount &&
 						BigInt(dappRule.ip) === ipAddress.bigInt()
 					) {

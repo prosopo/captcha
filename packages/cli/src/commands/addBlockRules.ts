@@ -62,7 +62,7 @@ export default (
 					default: false,
 					desc: "Hardblock stops requests, softblock informs frictionless",
 				} as const),
-				handler: async (argv: ArgumentsCamelCase) => {
+		handler: async (argv: ArgumentsCamelCase) => {
 			try {
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
