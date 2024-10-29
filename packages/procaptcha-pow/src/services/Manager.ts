@@ -151,10 +151,18 @@ export const Manager = (
 				const config = getConfig();
 
 				// check if account exists in extension
-				const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+				const selectAccount = async () => {
+					console.log("frictionlessState", frictionlessState);
+					if (frictionlessState) {
+						return frictionlessState.userAccount;
+					}
+					const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+					return await ext.getAccount(config);
+				};
 
 				// use the passed in account (could be web3) or create a new account
-				const user = await ext.getAccount(config);
+				const user = await selectAccount();
+				console.log("user", user);
 				const userAccount = user.account.address;
 
 				// set the account created or injected by the extension

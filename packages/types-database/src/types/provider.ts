@@ -339,6 +339,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 type BlockRule = {
 	global: boolean;
 	type: BlockRuleType;
+	hardBlock: boolean;
 };
 
 export enum BlockRuleType {
