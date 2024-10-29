@@ -48,8 +48,7 @@
 		header_up X-http.request.tls.client.public_key "{http.request.tls.client.public_key:-none}"
 	}
 
-	# logs. Note this is not limited, truncated or rotated whatsoever, so it grows over time!
 	log {
-		output file /var/log/caddy/{$CADDY_DOMAIN}.log
+		format json
 	}
 }
