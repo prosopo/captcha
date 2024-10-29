@@ -75,7 +75,7 @@ export class ClientTaskManager {
 				this.logger,
 			);
 
-			// Process commitments with cursor
+			// Process image commitments with cursor
 			let processedCommitments = 0;
 			await this.processBatchesWithCursor(
 				async (skip: number) =>
@@ -119,7 +119,6 @@ export class ClientTaskManager {
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch);
-						console.log(captchaDB.getTables());
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 						);
@@ -277,9 +276,6 @@ export class ClientTaskManager {
 				`Processed batch of ${batch.length} records, offset: ${skip}`,
 			);
 			skip += batch.length;
-
-			// Optional: Add delay between batches if needed
-			// await new Promise(resolve => setTimeout(resolve, 100));
 		}
 	}
 }
