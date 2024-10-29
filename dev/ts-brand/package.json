@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/ts-brand",
-	"version": "2.1.6",
+	"version": "2.1.8",
 	"description": "Brand your TypeScript types",
 	"main": "./dist/index.js",
 	"type": "module",
@@ -24,7 +24,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/config": "2.1.6",
+		"@prosopo/config": "2.1.8",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {

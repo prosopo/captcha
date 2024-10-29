@@ -17,6 +17,7 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	commandAddBlockRules,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandStoreCaptchasExternally,
@@ -44,6 +45,7 @@ export function processArgs(
 			default: false,
 			type: "boolean",
 		} as const)
+		.command(commandAddBlockRules(pair, config, { logger }))
 		.command(commandProviderSetDataset(pair, config, { logger }))
 		.command(commandStoreCaptchasExternally(pair, config, { logger }))
 		.command(commandSiteKeyRegister(pair, config, { logger }))

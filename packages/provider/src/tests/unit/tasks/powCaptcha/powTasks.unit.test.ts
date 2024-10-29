@@ -33,6 +33,7 @@ import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { getIPAddress } from "../../../../util.js";
 
 vi.mock("@polkadot/util-crypto", () => ({
 	signatureVerify: vi.fn(),
@@ -125,7 +126,7 @@ describe("PowCaptchaManager", () => {
 			const userSignature = "testTimestampSignature";
 			const nonce = 12345;
 			const timeout = 1000;
-			const ipAddress = "ipAddress";
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
@@ -136,7 +137,7 @@ describe("PowCaptchaManager", () => {
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
-				ipAddress,
+				ipAddress: ipAddress.bigInt(),
 				headers,
 				providerSignature,
 				lastUpdatedTimestamp: Date.now(),
@@ -231,7 +232,7 @@ describe("PowCaptchaManager", () => {
 			const nonce = 12345;
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
-			const ipAddress = "ipAddress";
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
@@ -241,7 +242,7 @@ describe("PowCaptchaManager", () => {
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
-				ipAddress,
+				ipAddress: ipAddress.bigInt(),
 				headers,
 				providerSignature: "testSignature",
 				difficulty,
