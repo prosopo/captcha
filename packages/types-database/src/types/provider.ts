@@ -379,6 +379,7 @@ export const UserAccountBlockRuleSchema =
 		dappAccount: { type: String, required: true },
 		userAccount: { type: String, required: true },
 		global: { type: Boolean, required: true },
+		hardBlock: { type: Boolean, required: true },
 		type: { type: String, enum: BlockRuleType, required: true },
 	});
 
