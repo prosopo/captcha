@@ -14,10 +14,11 @@
 
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
-import type { ProcaptchaCallbacks } from "./manager.js";
+import type { Account, ProcaptchaCallbacks } from "./manager.js";
 
 export type FrictionlessState = {
 	provider: RandomProvider;
+	userAccount: Account;
 	sessionId?: string;
 };
 
