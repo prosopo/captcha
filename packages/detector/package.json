@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector",
-	"version": "2.1.8",
+	"version": "2.1.9",
 	"main": "src/index.js",
 	"engines": {
 		"node": ">=20",
