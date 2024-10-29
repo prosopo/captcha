@@ -87,7 +87,7 @@ export class ClientTaskManager {
 					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
 						? batch.filter((commitment) =>
-								this.isCommitmentUpdated(commitment, lastUpdated),
+								this.isCommitmentUpdated(commitment),
 							)
 						: batch;
 
@@ -113,7 +113,7 @@ export class ClientTaskManager {
 					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) =>
-								this.isCommitmentUpdated(record, lastUpdated),
+								this.isCommitmentUpdated(record),
 							)
 						: batch;
 
@@ -251,7 +251,6 @@ export class ClientTaskManager {
 
 	private isCommitmentUpdated(
 		commitment: UserCommitment | PoWCaptchaStored,
-		lastUpdated: number,
 	): boolean {
 		const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
 		return (
@@ -271,10 +270,6 @@ export class ClientTaskManager {
 			if (!batch.length) break;
 
 			await processBatch(batch);
-
-			this.logger.info(
-				`Processed batch of ${batch.length} records, offset: ${skip}`,
-			);
 			skip += batch.length;
 		}
 	}
