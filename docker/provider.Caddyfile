@@ -3,6 +3,15 @@
 	http_port {$CADDY_HTTP_PORT:80}
 	auto_https {$CADDY_AUTO_HTTPS:disable_redirects}
 	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
+
+	servers {
+		timeouts {
+			read_body 15s
+			read_header 10s
+			write 15s
+			idle 5m
+		}
+	}
 }
 
 {$CADDY_DOMAIN} {
@@ -17,6 +26,8 @@
 
 	# reverse proxy to the provider container
 	reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider}:{$CADDY_PROVIDER_PORT:9229} {
+		# https://caddyserver.com/docs/caddyfile/concepts#placeholders
+		# https://caddyserver.com/docs/json/apps/http/#docs
 		
         header_up x-tls-version "{tls_version}"
 		header_up x-tls-version "^{tls_version}$" "none"
