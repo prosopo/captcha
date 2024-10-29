@@ -86,9 +86,7 @@ export class ClientTaskManager {
 				async (batch) => {
 					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) =>
-								this.isCommitmentUpdated(commitment),
-							)
+						? batch.filter((commitment) => this.isCommitmentUpdated(commitment))
 						: batch;
 
 					if (filteredBatch.length > 0) {
@@ -112,9 +110,7 @@ export class ClientTaskManager {
 				async (batch) => {
 					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((record) =>
-								this.isCommitmentUpdated(record),
-							)
+						? batch.filter((record) => this.isCommitmentUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
