@@ -61,7 +61,11 @@ export default class ProviderApi
 		const url: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/${
 			provider.datasetId
 		}/${userAccount}/${dappAccount}`;
-		return this.fetch(url);
+		return this.fetch(url, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public submitCaptchaSolution(
@@ -87,7 +91,11 @@ export default class ProviderApi
 				},
 			},
 		};
-		return this.post(ApiPaths.SubmitImageCaptchaSolution, body);
+		return this.post(ApiPaths.SubmitImageCaptchaSolution, body, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public verifyDappUser(
@@ -103,7 +111,11 @@ export default class ProviderApi
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
 		}
 
-		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload);
+		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public getPowCaptchaChallenge(
@@ -116,7 +128,11 @@ export default class ProviderApi
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
-		return this.post(ApiPaths.GetPowCaptchaChallenge, body);
+		return this.post(ApiPaths.GetPowCaptchaChallenge, body, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public submitPowCaptchaSolution(
@@ -143,7 +159,11 @@ export default class ProviderApi
 				},
 			},
 		});
-		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
+		return this.post(ApiPaths.SubmitPowCaptchaSolution, body, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public getFrictionlessCaptcha(
@@ -156,22 +176,42 @@ export default class ProviderApi
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 		};
-		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
+		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public submitUserEvents(
 		events: StoredEvents,
 		string: string,
 	): Promise<UpdateProviderClientsResponse> {
-		return this.post(ApiPaths.SubmitUserEvents, { events, string });
+		return this.post(
+			ApiPaths.SubmitUserEvents,
+			{ events, string },
+			{
+				headers: {
+					SITE_KEY: this.account,
+				},
+			},
+		);
 	}
 
 	public getProviderStatus(): Promise<ProviderRegistered> {
-		return this.fetch(ApiPaths.GetProviderStatus);
+		return this.fetch(ApiPaths.GetProviderStatus, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public getProviderDetails(): Promise<Provider> {
-		return this.fetch(ApiPaths.GetProviderDetails);
+		return this.fetch(ApiPaths.GetProviderDetails, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 
 	public updateProviderClients(): Promise<UpdateProviderClientsResponse> {
@@ -188,6 +228,10 @@ export default class ProviderApi
 			[ApiParams.dappSignature]: signatureHex,
 			[ApiParams.verifiedTimeout]: recencyLimit,
 		};
-		return this.post(ApiPaths.VerifyPowCaptchaSolution, body);
+		return this.post(ApiPaths.VerifyPowCaptchaSolution, body, {
+			headers: {
+				SITE_KEY: this.account,
+			},
+		});
 	}
 }
