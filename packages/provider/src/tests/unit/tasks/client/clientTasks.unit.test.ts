@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import type { Logger } from "@prosopo/common";
 import {
 	type ProsopoConfigOutput,
@@ -194,18 +193,18 @@ describe("ClientTaskManager", () => {
 		];
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
 			mockCommitments,
 		);
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.createScheduledTaskStatus as any).mockResolvedValue({});
+		(providerDB.createScheduledTaskStatus as any).mockResolvedValueOnce({});
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.updateScheduledTaskStatus as any).mockResolvedValue({});
+		(providerDB.updateScheduledTaskStatus as any).mockResolvedValueOnce({});
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
 
@@ -265,52 +264,61 @@ describe("ClientTaskManager", () => {
 		// Update the next ID and time (time is used as a timestamp)
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
+		logger.info("Test: Collections state updated", {
+			nextID: collections.schedulers.nextID,
+			currentTime: collections.schedulers.time,
+		});
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
 			mockCommitments,
 		);
-
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
+		logger.info("Test: Mock DB responses configured");
 
 		await clientTaskManager.storeCommitmentsExternal();
+		logger.info("Test: storeCommitmentsExternal completed");
 
+		// Verification steps with logging
 		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
+		logger.info("Test: Verified DB queries were made");
 
 		expect(providerDB.getLastScheduledTaskStatus).toHaveReturnedWith(
 			mockLastScheduledTask,
 		);
+		logger.info("Test: Verified last scheduled task status");
 
 		expect(providerDB.createScheduledTaskStatus).toHaveBeenCalledWith(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
 		);
-		// TODO either pass in this DB to the function or use mockingoose to mock mongoose
-		// expect(captchaDB.saveCaptchas).toHaveBeenCalledWith(
-		//   // Image commitments should not be stored as their updated timestamp is less than the last task `updated` timestamp
-		//   [],
-		//   // PoW commitments should be stored as they are more recent than the last task `updated` timestamp
-		//   mockPoWCommitments,
-		//   config.mongoCaptchaUri,
-		// );
+		logger.info("Test: Verified task status creation");
 
-		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledWith([]);
-		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
-			mockPoWCommitments.map((c) => c.challenge),
+		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
+		logger.info(
+			"Test: Verified no image commitments were marked as stored (expected as they're old)",
 		);
 
+		const expectedPoWChallenges = mockPoWCommitments.map((c) => c.challenge);
+		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
+			expectedPoWChallenges,
+		);
+		logger.info("Test: Verified PoW commitments were marked as stored", {
+			expectedPoWChallenges,
+		});
+
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fi
 			Number.parseInt(mockLastScheduledTask._id as any) + 1,
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
-					commitments: [],
-					powRecords: mockPoWCommitments.map((c) => c.challenge),
+					processedCommitments: 0,
+					processedPowRecords: 1,
 				},
 			},
 		);
@@ -337,10 +345,14 @@ describe("ClientTaskManager", () => {
 		collections.schedulers.time = 2;
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValue([]);
+		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+			[],
+		);
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValue([]);
+		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
+			[],
+		);
 
 		await clientTaskManager.storeCommitmentsExternal();
 
@@ -353,8 +365,8 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
-					commitments: [],
-					powRecords: [],
+					processedCommitments: 0,
+					processedPowRecords: 0,
 				},
 			},
 		);

@@ -93,7 +93,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info("Mongo Saved Image Events", result);
+			logger.info("Mongo Saved Image Events", result.upsertedCount);
 		}
 		if (powCaptchaEvents.length) {
 			const result = await this.tables.powcaptcha.bulkWrite(
@@ -109,7 +109,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info("Mongo Saved PoW Events", result);
+			logger.info("Mongo Saved PoW Events", result.upsertedCount);
 		}
 
 		await this.close();
