@@ -44,7 +44,7 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 			const rule = await env.getDb().getIPBlockRuleRecord(ipAddress.bigInt());
 			if (rule && BigInt(rule.ip) === ipAddress.bigInt()) {
 				// block by IP address globally
-				if (rule.global) {
+				if (rule.global && rule.hardBlock) {
 					return res.status(401).json({ error: "Unauthorized" });
 				}
 
@@ -53,7 +53,7 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 						.getDb()
 						.getIPBlockRuleRecord(ipAddress.bigInt(), dappAccount);
 					if (
-						dappRule &&
+						dappRule?.hardBlock &&
 						dappRule.dappAccount === dappAccount &&
 						BigInt(dappRule.ip) === ipAddress.bigInt()
 					) {
@@ -70,7 +70,8 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 				if (
 					rule &&
 					rule.userAccount === userAccount &&
-					rule.dappAccount === dappAccount
+					rule.dappAccount === dappAccount &&
+					rule.hardBlock
 				) {
 					return res.status(401).json({ error: "Unauthorized" });
 				}
