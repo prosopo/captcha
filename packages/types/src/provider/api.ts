@@ -1,3 +1,4 @@
+import type { ApiJsonError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -237,13 +238,8 @@ export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
 
-export type ApiJsonError = {
-	message: string;
-	code: number;
-};
-
 export interface ApiResponse {
-	[ApiParams.status]: string;
+	[ApiParams.status]?: string;
 	[ApiParams.error]?: ApiJsonError;
 }
 

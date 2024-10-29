@@ -327,6 +327,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
+	botScore: number;
 };
 
 export type SessionRecord = mongoose.Document & Session;
