@@ -1,5 +1,6 @@
 services:
     provider-dev:
+        container_name: provider
         profiles:
             - development
         build:
@@ -24,6 +25,7 @@ services:
             start_period: 30s
             timeout: 10s
     provider:
+        container_name: provider
         profiles:
             - production
             - staging
@@ -52,6 +54,7 @@ services:
             start_period: 30s
             timeout: 10s
     database-dev:
+        container_name: database
         profiles:
             - development
         image: mongo:6.0.17
@@ -75,6 +78,7 @@ services:
             start_period: 30s
             timeout: 10s
     database:
+        container_name: database
         profiles:
             - production
             - staging
@@ -103,6 +107,7 @@ services:
             start_period: 30s
             timeout: 10s
     caddy:
+        container_name: caddy
         profiles:
             - production
             - staging
@@ -135,6 +140,7 @@ services:
             start_period: 30s
             timeout: 10s
     watchtower:
+        container_name: watchtower
         profiles:
             - production
             - staging
@@ -154,6 +160,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
     vector:
+        container_name: vector
         profiles:
             - production
             - staging

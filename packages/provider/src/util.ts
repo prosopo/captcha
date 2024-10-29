@@ -14,10 +14,11 @@
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError } from "@prosopo/common";
+import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
 import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import { Address4, Address6 } from "ip-address";
 
 export function encodeStringAddress(address: string) {
 	try {
@@ -64,3 +65,14 @@ export async function checkIfTaskIsRunning(
 	}
 	return false;
 }
+
+export const getIPAddress = (ipAddressString: string): Address4 | Address6 => {
+	try {
+		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
+			return new Address4(ipAddressString);
+		}
+		return new Address6(ipAddressString);
+	} catch (e) {
+		throw new ProsopoEnvError("API.INVALID_IP");
+	}
+};

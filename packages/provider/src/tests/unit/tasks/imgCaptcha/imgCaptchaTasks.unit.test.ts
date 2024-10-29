@@ -32,7 +32,7 @@ import type {
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
-import { shuffleArray } from "../../../../util.js";
+import { getIPAddress, shuffleArray } from "../../../../util.js";
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -48,9 +48,12 @@ vi.mock("@polkadot/util", () => ({
 	u8aToHex: vi.fn(),
 	stringToHex: vi.fn(),
 }));
-vi.mock("../../../../util.js", () => ({
-	shuffleArray: vi.fn(),
-}));
+vi.mock("../../../../util.js", async (importOriginal) => {
+	return {
+		...(await importOriginal<typeof import("../../../../util.js")>()),
+		shuffleArray: vi.fn(),
+	};
+});
 vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 	buildTreeAndGetCommitmentId: vi.fn(),
 }));
@@ -151,7 +154,7 @@ describe("ImgCaptchaManager", () => {
 			const datasetId = "datasetId";
 			const userAccount = "userAccount";
 			const dataset = { datasetId, captchas: [] };
-			const ipAddress = "0.0.0.0";
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -180,7 +183,7 @@ describe("ImgCaptchaManager", () => {
 		it("should throw an error if dataset details are not found", async () => {
 			const datasetId = "datasetId";
 			const userAccount = "userAccount";
-			const ipAddress = "0.0.0.0";
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -322,7 +325,7 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: 0,
-			ipAddress: "0.0.0.0",
+			ipAddress: getIPAddress("1.1.1.1").bigInt(),
 			headers: { a: "1", b: "2", c: "3" },
 			lastUpdatedTimestamp: Date.now(),
 		};
@@ -367,7 +370,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: 0,
-				ipAddress: "0.0.0.0",
+				ipAddress: getIPAddress("1.1.1.1").bigInt(),
 				headers: { a: "1", b: "2", c: "3" },
 				lastUpdatedTimestamp: Date.now(),
 			},

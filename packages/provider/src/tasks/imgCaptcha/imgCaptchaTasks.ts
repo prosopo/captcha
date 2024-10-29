@@ -38,6 +38,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import type { Address4, Address6 } from "ip-address";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -82,7 +83,7 @@ export class ImgCaptchaManager {
 	async getRandomCaptchasAndRequestHash(
 		datasetId: string,
 		userAccount: string,
-		ipAddress: string,
+		ipAddress: Address4 | Address6,
 		headers: RequestHeaders,
 	): Promise<{
 		captchas: Captcha[];
@@ -147,7 +148,7 @@ export class ImgCaptchaManager {
 			salt,
 			deadlineTs,
 			currentTime,
-			ipAddress,
+			ipAddress.bigInt(),
 			headers,
 		);
 		return {
@@ -179,7 +180,7 @@ export class ImgCaptchaManager {
 		userTimestampSignature: string, // the signature to indicate ownership of account
 		timestamp: number,
 		providerRequestHashSignature: string,
-		ipAddress: string,
+		ipAddress: bigint,
 		headers: RequestHeaders,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)

@@ -39,6 +39,8 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	type IPBlockRuleRecord,
+	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	PendingRecordSchema,
@@ -57,6 +59,9 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
+	type UserAccountBlockRule,
+	type UserAccountBlockRuleRecord,
+	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -64,6 +69,7 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
+import type { IPBlockRuleMongo } from "@prosopo/types-database";
 import type { DeleteResult } from "mongodb";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
@@ -79,6 +85,8 @@ enum TableNames {
 	powcaptcha = "powcaptcha",
 	client = "client",
 	session = "session",
+	ipblockrules = "ipblockrules",
+	userblockrules = "userblockrules",
 }
 
 const PROVIDER_TABLES = [
@@ -131,6 +139,16 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.session,
 		modelName: "Session",
 		schema: SessionRecordSchema,
+	},
+	{
+		collectionName: TableNames.ipblockrules,
+		modelName: "IPBlockRules",
+		schema: IPBlockRuleRecordSchema,
+	},
+	{
+		collectionName: TableNames.userblockrules,
+		modelName: "UserAccountBlockRules",
+		schema: UserAccountBlockRuleSchema,
 	},
 ];
 
@@ -504,7 +522,7 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: string,
+		ipAddress: bigint,
 		headers: RequestHeaders,
 		serverChecked = false,
 		userSubmitted = false,
@@ -700,7 +718,10 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total
 	 */
-	async getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+	async getUnstoredDappUserCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<UserCommitmentRecord[]> {
 		const docs = await this.tables?.commitment
 			.find({
 				$or: [
@@ -708,6 +729,9 @@ export class ProviderDatabase
 					{ storedStatus: { $exists: false } },
 				],
 			})
+			.sort({ _id: 1 }) // Consistent ordering is important for pagination
+			.skip(skip)
+			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
 	}
@@ -743,9 +767,16 @@ export class ProviderDatabase
 		);
 	}
 
-	/** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
+	/**
+	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
+	 * @param {number} limit Maximum number of records to return
+	 * @param {number} skip Number of records to skip (for pagination)
+	 * @returns {Promise<PoWCaptchaRecord[]>} Array of PoW captcha records
 	 */
-	async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]> {
+	async getUnstoredDappUserPoWCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<PoWCaptchaRecord[]> {
 		const docs = await this.tables?.powcaptcha
 			.find<PoWCaptchaRecord[]>({
 				$or: [
@@ -753,7 +784,11 @@ export class ProviderDatabase
 					{ storedStatus: { $exists: false } },
 				],
 			})
+			.sort({ _id: 1 }) // Consistent ordering is important for pagination
+			.skip(skip)
+			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
+
 		return docs || [];
 	}
 
@@ -855,7 +890,7 @@ export class ProviderDatabase
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: string,
+		ipAddress: bigint,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1310,5 +1345,63 @@ export class ProviderDatabase
 			.findOne({ account })
 			.lean<ClientRecord>();
 		return doc ? doc : undefined;
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async getIPBlockRuleRecord(
+		ipAddress: bigint,
+	): Promise<IPBlockRuleMongo | undefined> {
+		const doc = await this.tables?.ipblockrules
+			.findOne({ ip: Number(ipAddress) })
+			.lean<IPBlockRuleMongo>();
+		return doc ? doc : undefined;
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async storeIPBlockRuleRecords(rules: IPBlockRuleRecord[]) {
+		await this.tables?.ipblockrules.bulkWrite(
+			rules.map((rule) => ({
+				updateOne: {
+					filter: { ip: rule.ip },
+					update: { $set: rule },
+					upsert: true,
+				},
+			})),
+		);
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async getUserBlockRuleRecord(
+		userAccount: string,
+		dappAccount: string,
+	): Promise<UserAccountBlockRuleRecord | undefined> {
+		const doc = await this.tables?.userblockrules
+			.findOne({ dappAccount, userAccount })
+			.lean<UserAccountBlockRuleRecord>();
+		return doc ? doc : undefined;
+	}
+
+	/**
+	 * @description Check if a request has a blocking rule associated with it
+	 */
+	async storeUserBlockRuleRecords(rules: UserAccountBlockRule[]) {
+		await this.tables?.userblockrules.bulkWrite(
+			rules.map((rule) => ({
+				updateOne: {
+					filter: {
+						dappAccount: rule.dappAccount,
+						userAccount: rule.userAccount,
+					},
+					update: { $set: rule },
+					upsert: true,
+				},
+			})),
+		);
 	}
 }

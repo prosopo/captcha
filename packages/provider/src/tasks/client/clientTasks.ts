@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { validateAddress } from "@polkadot/util-crypto/address";
 import type { Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -20,7 +21,16 @@ import {
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
+import {
+	BlockRuleType,
+	type ClientRecord,
+	type IPAddressBlockRule,
+	type IProviderDatabase,
+	type PoWCaptchaStored,
+	type UserAccountBlockRule,
+	type UserCommitment,
+} from "@prosopo/types-database";
+import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -57,75 +67,69 @@ export class ClientTaskManager {
 		);
 
 		try {
-			let commitments = await this.providerDB.getUnstoredDappUserCommitments();
+			const BATCH_SIZE = 1000;
+			const captchaDB = new CaptchaDatabase(
+				this.config.mongoCaptchaUri,
+				undefined,
+				undefined,
+				this.logger,
+			);
 
-			let powRecords =
-				await this.providerDB.getUnstoredDappUserPoWCommitments();
+			// Process image commitments with cursor
+			let processedCommitments = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredDappUserCommitments(
+						BATCH_SIZE,
+						skip,
+					),
+				async (batch) => {
+					const lastUpdated = lastTask?.updated || 0;
+					const filteredBatch = lastTask?.updated
+						? batch.filter((commitment) => this.isCommitmentUpdated(commitment))
+						: batch;
 
-			// filter to only get records that have been updated since the last task
-			if (lastTask) {
-				this.logger.info(
-					`Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
-				);
-				this.logger.info(
-					"Last task ran at ",
-					new Date(lastTask.updated || 0),
-					"Task ID",
-					taskID,
-				);
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas(filteredBatch, []);
+						await this.providerDB.markDappUserCommitmentsStored(
+							filteredBatch.map((commitment) => commitment.id),
+						);
+					}
+					processedCommitments += filteredBatch.length;
+				},
+			);
 
-				commitments = commitments.filter(
-					(commitment) =>
-						lastTask.updated &&
-						commitment.lastUpdatedTimestamp &&
-						(commitment.lastUpdatedTimestamp > lastTask.updated ||
-							!commitment.lastUpdatedTimestamp),
-				);
+			// Process PoW records with cursor
+			let processedPowRecords = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredDappUserPoWCommitments(
+						BATCH_SIZE,
+						skip,
+					),
+				async (batch) => {
+					const lastUpdated = lastTask?.updated || 0;
+					const filteredBatch = lastTask?.updated
+						? batch.filter((record) => this.isCommitmentUpdated(record))
+						: batch;
 
-				powRecords = powRecords.filter((commitment) => {
-					return (
-						lastTask.updated &&
-						commitment.lastUpdatedTimestamp &&
-						// either the update stamp is more recent than the last time this task ran or there is no update stamp,
-						// so it is a new record
-						(commitment.lastUpdatedTimestamp > lastTask.updated ||
-							!commitment.lastUpdatedTimestamp)
-					);
-				});
-			}
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas([], filteredBatch);
+						await this.providerDB.markDappUserPoWCommitmentsStored(
+							filteredBatch.map((record) => record.challenge),
+						);
+					}
+					processedPowRecords += filteredBatch.length;
+				},
+			);
 
-			if (commitments.length || powRecords.length) {
-				this.logger.info(
-					`Storing ${commitments.length} commitments externally`,
-				);
-
-				this.logger.info(
-					`Storing ${powRecords.length} pow challenges externally`,
-				);
-
-				const captchaDB = new CaptchaDatabase(
-					this.config.mongoCaptchaUri,
-					undefined,
-					undefined,
-					this.logger,
-				);
-
-				await captchaDB.saveCaptchas(commitments, powRecords);
-
-				await this.providerDB.markDappUserCommitmentsStored(
-					commitments.map((commitment) => commitment.id),
-				);
-				await this.providerDB.markDappUserPoWCommitmentsStored(
-					powRecords.map((powRecords) => powRecords.challenge),
-				);
-			}
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
-						commitments: commitments.map((c) => c.id),
-						powRecords: powRecords.map((pr) => pr.challenge),
+						processedCommitments,
+						processedPowRecords,
 					},
 				},
 			);
@@ -205,5 +209,64 @@ export class ClientTaskManager {
 				settings: settings,
 			} as ClientRecord,
 		]);
+	}
+
+	async addIPBlockRules(
+		ips: string[],
+		global: boolean,
+		dappAccount?: string,
+	): Promise<void> {
+		const rules: IPAddressBlockRule[] = ips.map((ip) => {
+			return {
+				ip: Number(getIPAddress(ip).bigInt()),
+				global,
+				type: BlockRuleType.ipAddress,
+				dappAccount,
+			};
+		});
+		await this.providerDB.storeIPBlockRuleRecords(rules);
+	}
+
+	async addUserBlockRules(
+		userAccounts: string[],
+		dappAccount: string,
+	): Promise<void> {
+		validateAddress(dappAccount, false, 42);
+		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
+			validateAddress(userAccount, false, 42);
+			return {
+				dappAccount,
+				userAccount,
+				type: BlockRuleType.userAccount,
+				// TODO don't store global on these
+				global: false,
+			};
+		});
+		await this.providerDB.storeUserBlockRuleRecords(rules);
+	}
+
+	private isCommitmentUpdated(
+		commitment: UserCommitment | PoWCaptchaStored,
+	): boolean {
+		const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+		return (
+			!lastUpdatedTimestamp ||
+			!storedAtTimestamp ||
+			lastUpdatedTimestamp > storedAtTimestamp
+		);
+	}
+
+	private async processBatchesWithCursor<T>(
+		fetchBatch: (skip: number) => Promise<T[]>,
+		processBatch: (batch: T[]) => Promise<void>,
+	): Promise<void> {
+		let skip = 0;
+		while (true) {
+			const batch = await fetchBatch(skip);
+			if (!batch.length) break;
+
+			await processBatch(batch);
+			skip += batch.length;
+		}
 	}
 }

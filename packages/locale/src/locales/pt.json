@@ -106,7 +106,8 @@
 		"UNKNOWN": "Erro desconhecido na API",
 		"SITE_KEY_NOT_REGISTERED": "Chave do site não registrada",
 		"INCORRECT_CAPTCHA_TYPE": "Tipo de CAPTCHA incorreto",
-		"INVALID_SITE_KEY": "Chave de site inválida"
+		"INVALID_SITE_KEY": "Chave de site inválida",
+		"INVALID_IP": "IP inválido"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parâmetro inválido"

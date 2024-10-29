@@ -35,13 +35,14 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
-import type { SessionRecord } from "@prosopo/types-database";
+import type { Session, SessionRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
+import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
 
 const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
@@ -89,16 +90,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		}
 
 		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
-
-		try {
 			validateAddress(user, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
@@ -115,7 +106,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
 					user,
-					req.ip || NO_IP_ADDRESS,
+					getIPAddress(req.ip || ""),
 					flatten(req.headers, ","),
 				);
 			const captchaResponse: CaptchaResponseBody = {
@@ -204,7 +195,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					parsed[ApiParams.signature].user.timestamp,
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
-					req.ip || NO_IP_ADDRESS,
+					getIPAddress(req.ip || "").bigInt(),
 					flatten(req.headers, ","),
 				);
 
@@ -313,7 +304,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				},
 				challenge.difficulty,
 				challenge.providerSignature,
-				req.ip || NO_IP_ADDRESS,
+				getIPAddress(req.ip || "").bigInt(),
 				flatten(req.headers, ","),
 			);
 
@@ -407,7 +398,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				nonce,
 				verifiedTimeout,
 				signature.user.timestamp,
-				req.ip || NO_IP_ADDRESS,
+				getIPAddress(req.ip || ""),
 				flatten(req.headers, ","),
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
@@ -447,7 +438,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					};
 					return res.json(response);
 				}
-				const sessionRecord: SessionRecord = {
+				const sessionRecord: Session = {
 					sessionId: uuidv4(),
 					createdAt: new Date(),
 				};
