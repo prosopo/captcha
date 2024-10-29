@@ -336,6 +336,7 @@ export type SubmitPowCaptchaSolutionBodyType = zInfer<
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.token]: string(),
+	[ApiParams.user]: string(),
 });
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody

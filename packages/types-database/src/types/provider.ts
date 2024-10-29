@@ -339,6 +339,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 type BlockRule = {
 	global: boolean;
 	type: BlockRuleType;
+	hardBlock: boolean;
 };
 
 export enum BlockRuleType {
@@ -369,6 +370,8 @@ export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
 	ip: { type: Number, required: true, unique: true },
 	global: { type: Boolean, required: true },
 	type: { type: String, enum: BlockRuleType, required: true },
+	dappAccount: { type: String, required: false },
+	hardBlock: { type: Boolean, required: false },
 });
 
 IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
@@ -378,6 +381,7 @@ export const UserAccountBlockRuleSchema =
 		dappAccount: { type: String, required: true },
 		userAccount: { type: String, required: true },
 		global: { type: Boolean, required: true },
+		hardBlock: { type: Boolean, required: false },
 		type: { type: String, enum: BlockRuleType, required: true },
 	});
 
@@ -483,13 +487,19 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
-	getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+	getUnstoredDappUserCommitments(
+		limit?: number,
+		skip?: number,
+	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
-	getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]>;
+	getUnstoredDappUserPoWCommitments(
+		limit?: number,
+		skip?: number,
+	): Promise<PoWCaptchaRecord[]>;
 
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 

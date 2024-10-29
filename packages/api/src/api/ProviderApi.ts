@@ -149,10 +149,12 @@ export default class ProviderApi
 	public getFrictionlessCaptcha(
 		token: string,
 		dapp: string,
+		user: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
 			[ApiParams.token]: token,
 			[ApiParams.dapp]: dapp,
+			[ApiParams.user]: user,
 		};
 		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
 	}
