@@ -67,81 +67,69 @@ export class ClientTaskManager {
 		);
 
 		try {
-			let commitments = await this.providerDB.getUnstoredDappUserCommitments();
+			const BATCH_SIZE = 1000;
+			const captchaDB = new CaptchaDatabase(
+				this.config.mongoCaptchaUri,
+				undefined,
+				undefined,
+				this.logger,
+			);
 
-			let powRecords =
-				await this.providerDB.getUnstoredDappUserPoWCommitments();
+			// Process image commitments with cursor
+			let processedCommitments = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredDappUserCommitments(
+						BATCH_SIZE,
+						skip,
+					),
+				async (batch) => {
+					const lastUpdated = lastTask?.updated || 0;
+					const filteredBatch = lastTask?.updated
+						? batch.filter((commitment) => this.isCommitmentUpdated(commitment))
+						: batch;
 
-			// filter to only get records that have been updated since the last task
-			if (lastTask?.updated) {
-				this.logger.info(
-					`Filtering records to only get updated records: ${JSON.stringify(lastTask)}`,
-				);
-				this.logger.info(
-					"Last task ran at ",
-					new Date(lastTask.updated || 0),
-					"Task ID",
-					taskID,
-				);
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas(filteredBatch, []);
+						await this.providerDB.markDappUserCommitmentsStored(
+							filteredBatch.map((commitment) => commitment.id),
+						);
+					}
+					processedCommitments += filteredBatch.length;
+				},
+			);
 
-				const isCommitmentUpdated = (
-					commitment: UserCommitment | PoWCaptchaStored,
-				): boolean => {
-					const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
-					return (
-						!lastUpdatedTimestamp ||
-						!storedAtTimestamp ||
-						lastUpdatedTimestamp > storedAtTimestamp
-					);
-				};
+			// Process PoW records with cursor
+			let processedPowRecords = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredDappUserPoWCommitments(
+						BATCH_SIZE,
+						skip,
+					),
+				async (batch) => {
+					const lastUpdated = lastTask?.updated || 0;
+					const filteredBatch = lastTask?.updated
+						? batch.filter((record) => this.isCommitmentUpdated(record))
+						: batch;
 
-				const commitmentUpdated = (
-					commitment: UserCommitment | PoWCaptchaStored,
-				): boolean => {
-					return !!lastTask.updated && isCommitmentUpdated(commitment);
-				};
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas([], filteredBatch);
+						await this.providerDB.markDappUserPoWCommitmentsStored(
+							filteredBatch.map((record) => record.challenge),
+						);
+					}
+					processedPowRecords += filteredBatch.length;
+				},
+			);
 
-				commitments = commitments.filter((commitment) =>
-					commitmentUpdated(commitment),
-				);
-
-				powRecords = powRecords.filter((commitment) =>
-					commitmentUpdated(commitment),
-				);
-			}
-
-			if (commitments.length || powRecords.length) {
-				this.logger.info(
-					`Storing ${commitments.length} commitments externally`,
-				);
-
-				this.logger.info(
-					`Storing ${powRecords.length} pow challenges externally`,
-				);
-
-				const captchaDB = new CaptchaDatabase(
-					this.config.mongoCaptchaUri,
-					undefined,
-					undefined,
-					this.logger,
-				);
-
-				await captchaDB.saveCaptchas(commitments, powRecords);
-
-				await this.providerDB.markDappUserCommitmentsStored(
-					commitments.map((commitment) => commitment.id),
-				);
-				await this.providerDB.markDappUserPoWCommitmentsStored(
-					powRecords.map((powRecords) => powRecords.challenge),
-				);
-			}
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
-						commitments: commitments.map((c) => c.id),
-						powRecords: powRecords.map((pr) => pr.challenge),
+						processedCommitments,
+						processedPowRecords,
 					},
 				},
 			);
@@ -255,5 +243,30 @@ export class ClientTaskManager {
 			};
 		});
 		await this.providerDB.storeUserBlockRuleRecords(rules);
+	}
+
+	private isCommitmentUpdated(
+		commitment: UserCommitment | PoWCaptchaStored,
+	): boolean {
+		const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+		return (
+			!lastUpdatedTimestamp ||
+			!storedAtTimestamp ||
+			lastUpdatedTimestamp > storedAtTimestamp
+		);
+	}
+
+	private async processBatchesWithCursor<T>(
+		fetchBatch: (skip: number) => Promise<T[]>,
+		processBatch: (batch: T[]) => Promise<void>,
+	): Promise<void> {
+		let skip = 0;
+		while (true) {
+			const batch = await fetchBatch(skip);
+			if (!batch.length) break;
+
+			await processBatch(batch);
+			skip += batch.length;
+		}
 	}
 }

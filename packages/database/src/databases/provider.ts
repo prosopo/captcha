@@ -718,7 +718,10 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total
 	 */
-	async getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+	async getUnstoredDappUserCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<UserCommitmentRecord[]> {
 		const docs = await this.tables?.commitment
 			.find({
 				$or: [
@@ -726,6 +729,9 @@ export class ProviderDatabase
 					{ storedStatus: { $exists: false } },
 				],
 			})
+			.sort({ _id: 1 }) // Consistent ordering is important for pagination
+			.skip(skip)
+			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
 	}
@@ -761,9 +767,16 @@ export class ProviderDatabase
 		);
 	}
 
-	/** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
+	/**
+	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
+	 * @param {number} limit Maximum number of records to return
+	 * @param {number} skip Number of records to skip (for pagination)
+	 * @returns {Promise<PoWCaptchaRecord[]>} Array of PoW captcha records
 	 */
-	async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]> {
+	async getUnstoredDappUserPoWCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<PoWCaptchaRecord[]> {
 		const docs = await this.tables?.powcaptcha
 			.find<PoWCaptchaRecord[]>({
 				$or: [
@@ -771,7 +784,11 @@ export class ProviderDatabase
 					{ storedStatus: { $exists: false } },
 				],
 			})
+			.sort({ _id: 1 }) // Consistent ordering is important for pagination
+			.skip(skip)
+			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
+
 		return docs || [];
 	}
 
