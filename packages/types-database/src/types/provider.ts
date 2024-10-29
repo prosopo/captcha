@@ -483,13 +483,19 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
-	getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+	getUnstoredDappUserCommitments(
+		limit?: number,
+		skip?: number,
+	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
-	getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]>;
+	getUnstoredDappUserPoWCommitments(
+		limit?: number,
+		skip?: number,
+	): Promise<PoWCaptchaRecord[]>;
 
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 
