@@ -17,35 +17,75 @@
 
 	# reverse proxy to the provider container
 	reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider}:{$CADDY_PROVIDER_PORT:9229} {
-		header_up X-TLS-Version "{tls_version:-none}"
-		header_up X-TLS-Cipher "{tls_cipher:-none}"
-		header_up X-TLS-Client-SNI "{tls_client_sni:-none}"
-		header_up X-TLS-Client-Verified "{tls_client_verified:-none}"
-		header_up X-TLS-Client-Cert-Subject "{tls_client_subject:-none}"
-		header_up X-TLS-Client-Cert-Issuer "{tls_client_issuer:-none}"
-		header_up X-TLS-Client-Cert-Serial "{tls_client_serial:-none}"
-		header_up X-TLS-Client-Cert-Fingerprint "{tls_client_fingerprint:-none}"
-		header_up X-Request-Start-Time "{start_time:-none}"
-		header_up X-Request-ID "{request_id:-none}"
-		header_up X-Scheme "{scheme:-none}"
-		header_up X-Remote-Address "{remote:-none}"
-		header_up X-Remote-IP "{remote_host:-none}"
-		header_up X-Remote-Port "{remote_port:-none}"
-		header_up X-Server-IP "{server_ip:-none}"
-		header_up X-Server-Port "{server_port:-none}"
-		header_up X-Elapsed-Time "{elapsed:-none}"
-		header_up X-Request-Protocol "{proto:-none}"
-		header_up X-Client-IP "{client_ip:-none}"
-		header_up X-Host "{host:-none}"
-		header_up X-HostPort "{hostport:-none}"
-		header_up X-tls_client_certificate_der_base64 "{tls_client_certificate_der_base64:-none}"
-		header_up X-tls_client_certificate_pem "{tls_client_certificate_pem:-none}"
-		header_up X-upstream_hostport "{upstream_hostport:-none}"
-		header_up X-http.request.uuid "{http.request.uuid:-none}"
-		header_up X-http.request.tls.resumed "{http.request.tls.resumed:-none}"
-		header_up X-http.request.tls.proto_mutual "{http.request.tls.proto_mutual:-none}"
-		header_up X-http.request.tls.client.fingerprint "{http.request.tls.client.fingerprint:-none}"
-		header_up X-http.request.tls.client.public_key "{http.request.tls.client.public_key:-none}"
+		
+        header_up x-tls-version "{tls_version}"
+		header_up x-tls-version "^{tls_version}$" "none"
+
+		header_up x-tls-client-subject "{tls_client_subject}"
+		header_up x-tls-client-subject "^{tls_client_subject}$" "none"
+
+		header_up x-tls-client-serial "{tls_client_serial}"
+		header_up x-tls-client-serial "^{tls_client_serial}$" "none"
+
+		header_up x-tls-client-issuer "{tls_client_issuer}"
+		header_up x-tls-client-issuer "^{tls_client_issuer}$" "none"
+
+		header_up x-tls-client-fingerprint "{tls_client_fingerprint}"
+		header_up x-tls-client-fingerprint "^{tls_client_fingerprint}$" "none"
+
+		header_up x-tls-client-certificate-pem "{tls_client_certificate_pem}"
+		header_up x-tls-client-certificate-pem "^{tls_client_certificate_pem}$" "none"
+
+		header_up x-tls-client-certificate-der-base64 "{tls_client_certificate_der_base64}"
+		header_up x-tls-client-certificate-der-base64 "^{tls_client_certificate_der_base64}$" "none"
+
+		header_up x-tls-cipher "{tls_cipher}"
+		header_up x-tls-cipher "^{tls_cipher}$" "none"
+
+		header_up x-remote-port "{remote_port}"
+		header_up x-remote-port "^{remote_port}$" "none"
+
+		header_up x-remote-host "{remote_host}"
+		header_up x-remote-host "^{remote_host}$" "none"
+
+		header_up x-method "{method}"
+		header_up x-method "^{method}$" "none"
+
+		header_up x-client-ip "{client_ip}"
+		header_up x-client-ip "^{client_ip}$" "none"
+
+		header_up x-duration-ms {http.request.duration}
+		header_up x-duration-ms "^{http.request.duration}$" "none"
+
+		header_up x-tls-resumed "{http.request.tls.resumed}"
+		header_up x-tls-resumed "^{http.request.tls.resumed}$" "none"
+
+		header_up x-tls-proto "{http.request.tls.proto}"
+		header_up x-tls-proto "^{http.request.tls.proto}$" "none"
+
+		header_up x-tls-proto-mutual "{http.request.tls.proto_mutual}"
+		header_up x-tls-proto-mutual "^{http.request.tls.proto_mutual}$" "none"
+
+		header_up x-tls-server-name "{http.request.tls.server_name}"
+		header_up x-tls-server-name "^{http.request.tls.server_name}$" "none"
+
+		header_up x-tls-public-key "{http.request.tls.public_key}"
+		header_up x-tls-public-key "^{http.request.tls.public_key}$" "none"
+
+		header_up x-tls-public-key-sha256 "{http.request.tls.public_key_sha256}"
+		header_up x-tls-public-key-sha256 "^{http.request.tls.public_key_sha256}$" "none"
+
+		header_up x-tls-client-san-dns-names "{http.request.tls.client.san.dns_names}"
+		header_up x-tls-client-san-dns-names "^{http.request.tls.client.san.dns_names}$" "none"
+
+		header_up x-tls-client-san-emails "{http.request.tls.client.san.emails}"
+		header_up x-tls-client-san-emails "^{http.request.tls.client.san.emails}$" "none"
+
+		header_up x-tls-client-san-ips "{http.request.tls.client.san.ips}"
+		header_up x-tls-client-san-ips "^{http.request.tls.client.san.ips}$" "none"
+
+		header_up x-tls-client-san-uris "{http.request.tls.client.san.uris}"
+		header_up x-tls-client-san-uris "^{http.request.tls.client.san.uris}$" "none"
 	}
 
 	log {
