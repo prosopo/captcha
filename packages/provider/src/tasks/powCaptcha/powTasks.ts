@@ -131,8 +131,8 @@ export class PowCaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
 				},
-				false,
-				true,
+				false, //serverchecked
+				true, // usersubmitted
 				userTimestampSignature,
 			);
 			return false;
