@@ -13,7 +13,11 @@
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
+import {
+	ProsopoApiError,
+	ProsopoEnvError,
+	getLoggerDefault,
+} from "@prosopo/common";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -127,8 +131,8 @@ export class PowCaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
 				},
-				false,
-				true,
+				false, //serverchecked
+				true, // usersubmitted
 				userTimestampSignature,
 			);
 			return false;
@@ -172,6 +176,15 @@ export class PowCaptchaManager {
 
 		if (!challengeRecord) {
 			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: {
+					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+					challenge,
+				},
+			});
+		}
+
+		if (challengeRecord.result.status !== CaptchaStatus.approved) {
+			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					challenge,
