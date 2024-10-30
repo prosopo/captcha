@@ -50,8 +50,8 @@ export class HttpClientBase {
 			const response = await fetch(this.baseURL + input, {
 				method: "POST",
 				body: JSON.stringify(body),
-				headers,
 				...init,
+				headers,
 			});
 			if (
 				!response.ok &&

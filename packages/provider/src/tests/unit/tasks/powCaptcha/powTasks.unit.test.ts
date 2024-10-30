@@ -291,6 +291,7 @@ describe("PowCaptchaManager", () => {
 				userAccount,
 				timestamp,
 				checked: false,
+				result: { status: CaptchaStatus.approved },
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
