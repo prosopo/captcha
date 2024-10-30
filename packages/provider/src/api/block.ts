@@ -39,8 +39,8 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 			await env.isReady();
 
 			const ipAddress = getIPAddress(req.ip || "");
-			const userAccount = req.body.user;
-			const dappAccount = req.body.dapp;
+			const userAccount = req.headers["Prosopo-User"] || req.body.user;
+			const dappAccount = req.headers["Prosopo-Site-Key"] || req.body.dapp;
 			const rule = await env.getDb().getIPBlockRuleRecord(ipAddress.bigInt());
 			if (rule && BigInt(rule.ip) === ipAddress.bigInt()) {
 				// block by IP address globally

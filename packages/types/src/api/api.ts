@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CaptchaSolution } from "../datasets/index.js";
-import type { StoredEvents } from "../procaptcha/index.js";
+import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
@@ -39,11 +39,9 @@ export interface ProviderApiInterface {
 		userRequestHashSignature: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
-		dapp: string,
+		token: ProcaptchaToken,
+		signature: string,
 		userAccount: string,
-		blockNumber: number,
-		dappUserSignature: string,
-		commitmentId?: string,
 		maxVerifiedTime?: number,
 	): Promise<ImageVerificationResponse>;
 	getPowCaptchaChallenge(

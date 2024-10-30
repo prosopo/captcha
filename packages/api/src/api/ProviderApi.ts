@@ -63,7 +63,8 @@ export default class ProviderApi
 		}/${userAccount}/${dappAccount}`;
 		return this.fetch(url, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
 			},
 		});
 	}
@@ -93,7 +94,8 @@ export default class ProviderApi
 		};
 		return this.post(ApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
 			},
 		});
 	}
@@ -101,6 +103,7 @@ export default class ProviderApi
 	public verifyDappUser(
 		token: ProcaptchaToken,
 		signature: string,
+		userAccount: string,
 		maxVerifiedTime?: number,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
@@ -113,7 +116,8 @@ export default class ProviderApi
 
 		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
 			},
 		});
 	}
@@ -130,7 +134,8 @@ export default class ProviderApi
 		};
 		return this.post(ApiPaths.GetPowCaptchaChallenge, body, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
 			},
 		});
 	}
@@ -161,7 +166,8 @@ export default class ProviderApi
 		});
 		return this.post(ApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
 			},
 		});
 	}
@@ -178,7 +184,8 @@ export default class ProviderApi
 		};
 		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
 			},
 		});
 	}
@@ -192,7 +199,7 @@ export default class ProviderApi
 			{ events, string },
 			{
 				headers: {
-					SITE_KEY: this.account,
+					"Prosopo-Site-Key": this.account,
 				},
 			},
 		);
@@ -201,7 +208,7 @@ export default class ProviderApi
 	public getProviderStatus(): Promise<ProviderRegistered> {
 		return this.fetch(ApiPaths.GetProviderStatus, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
 			},
 		});
 	}
@@ -209,7 +216,7 @@ export default class ProviderApi
 	public getProviderDetails(): Promise<Provider> {
 		return this.fetch(ApiPaths.GetProviderDetails, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
 			},
 		});
 	}
@@ -222,6 +229,7 @@ export default class ProviderApi
 		token: string,
 		signatureHex: string,
 		recencyLimit: number,
+		user: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -230,7 +238,8 @@ export default class ProviderApi
 		};
 		return this.post(ApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
-				SITE_KEY: this.account,
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
 			},
 		});
 	}
