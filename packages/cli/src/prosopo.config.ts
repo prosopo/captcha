@@ -96,5 +96,6 @@ export default function getConfig(
 				schedule: process.env.CLIENT_LIST_SCHEDULE,
 			},
 		},
+		lRules: process.env.L_RULES || {},
 	} as ProsopoConfigInput);
 }
