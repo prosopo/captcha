@@ -44,6 +44,8 @@ export interface IUserData {
 	originUrl: string;
 	settings?: IUserSettings;
 	updatedAtTimestamp?: Timestamp;
+	stripeCustomerId?: string;
+	id: string;
 }
 
 export interface IUserSettings {
