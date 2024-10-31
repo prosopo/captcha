@@ -67,6 +67,10 @@ export class Tasks {
 			this.logger,
 			this.db,
 		);
-		this.frictionlessManager = new FrictionlessManager(this.pair, this.db);
+		this.frictionlessManager = new FrictionlessManager(
+			this.config,
+			this.pair,
+			this.db,
+		);
 	}
 }
