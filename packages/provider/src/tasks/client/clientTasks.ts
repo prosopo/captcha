@@ -249,6 +249,52 @@ export class ClientTaskManager {
 		await this.providerDB.storeUserBlockRuleRecords(rules);
 	}
 
+	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+		// Handle empty inputs
+		if (!referrer || !clientDomain) return false;
+
+		// Always allow localhost
+		if (referrer.includes("localhost")) return true;
+
+		try {
+			// Clean up the inputs
+			const cleanReferrer = referrer.toLowerCase().trim().replace(/\/+$/, "");
+			const cleanAllowed = clientDomain
+				.toLowerCase()
+				.trim()
+				.replace(/\/+$/, "");
+
+			// Extract domain from URL if necessary
+			const getDomain = (url: string) => {
+				try {
+					// If it's a full URL, use URL parser
+					if (url.includes("://")) {
+						return new URL(url).hostname;
+					}
+					// Otherwise, clean up any paths or ports
+					const parts = url.split("/");
+					if (!parts[0]) return url;
+					const hostParts = parts[0].split(":");
+					if (!hostParts[0]) return url;
+					return hostParts[0];
+				} catch {
+					return url;
+				}
+			};
+
+			const referrerDomain = getDomain(cleanReferrer).replace(/\.$/, "");
+			const allowedDomain = getDomain(cleanAllowed).replace(/\.$/, "");
+
+			// Check if domains match exactly or if referrer is a subdomain
+			return (
+				referrerDomain === allowedDomain ||
+				referrerDomain.endsWith(`.${allowedDomain}`)
+			);
+		} catch {
+			return false;
+		}
+	}
+
 	private isCommitmentUpdated(
 		commitment: UserCommitment | PoWCaptchaStored,
 	): boolean {

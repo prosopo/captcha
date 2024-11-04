@@ -371,4 +371,120 @@ describe("ClientTaskManager", () => {
 			},
 		);
 	});
+
+	describe("isSubdomainOrExactMatch", () => {
+		it("should match exact domains", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"https://example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"http://example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"https://example.com/",
+				),
+			).toBe(true);
+		});
+
+		it("should match subdomains", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.example.com",
+					"example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"a.b.example.com",
+					"example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"dev.test.example.com",
+					"test.example.com",
+				),
+			).toBe(true);
+		});
+
+		it("should not match different domains", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch("example.com", "example.org"),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.example.com",
+					"testexample.com",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"malicious-example.com",
+				),
+			).toBe(false);
+		});
+
+		it("should handle localhost specially", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch("localhost", "anything"),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch("localhost:3000", "anything"),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch("test.localhost", "anything"),
+			).toBe(true);
+		});
+
+		it("should handle edge cases", () => {
+			expect(clientTaskManager.isSubdomainOrExactMatch("", "example.com")).toBe(
+				false,
+			);
+			expect(clientTaskManager.isSubdomainOrExactMatch("example.com", "")).toBe(
+				false,
+			);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com.",
+					"example.com",
+				),
+			).toBe(true); // trailing dot
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"example.com.",
+				),
+			).toBe(true); // trailing dot
+		});
+
+		it("should handle URLs with paths and protocols", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.example.com",
+					"https://example.com/path",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"https://example.com:3000",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"example.com:3000",
+				),
+			).toBe(true);
+		});
+	});
 });
