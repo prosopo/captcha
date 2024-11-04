@@ -250,7 +250,6 @@ export class ClientTaskManager {
 	}
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
-		// Handle empty inputs
 		if (!referrer || !clientDomain) return false;
 		try {
 			// Clean up the inputs
@@ -282,12 +281,12 @@ export class ClientTaskManager {
 			const allowedDomain = getDomain(cleanAllowedInput).replace(/\.$/, "");
 
 			// Special case for localhost - must be exact match or exact match with port
-			if (allowedDomain === "localhost") {
-				return (
-					referrerDomain === "localhost" ||
-					referrerDomain.startsWith("localhost:")
-				);
-			}
+			const isLocalhost =
+				referrerDomain === "localhost" ||
+				referrerDomain.startsWith("localhost:") ||
+				referrerDomain.startsWith("http://127.0.0.1:") ||
+				referrerDomain.startsWith("https://127.0.0.1:");
+			if (isLocalhost) return true;
 
 			// Check if domains match exactly or if referrer is a subdomain
 			return (

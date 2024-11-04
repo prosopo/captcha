@@ -23,12 +23,6 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
-			if (req.url.indexOf(ApiPrefix) === -1) {
-				next();
-				return;
-			}
-
 			let parsed: { dapp: string };
 			try {
 				parsed = DappDomainRequestBody.parse(req.body);
@@ -44,7 +38,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-			if (!clientSettings) return next(next(siteKeyNotRegisteredError(dapp)));
+			if (!clientSettings) return next(siteKeyNotRegisteredError(dapp));
 
 			const allowedDomains = clientSettings.settings?.domains;
 			if (!allowedDomains) return next(siteKeyNotRegisteredError(dapp));
