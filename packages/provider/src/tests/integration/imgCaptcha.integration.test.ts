@@ -127,6 +127,8 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			});
 
+			console.log("\n\nResponse\n\n", response);
+
 			expect(response.status).toBe(200);
 
 			const data = (await response.json()) as CaptchaResponseBody;

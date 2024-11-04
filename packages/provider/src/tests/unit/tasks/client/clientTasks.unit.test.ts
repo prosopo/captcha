@@ -448,7 +448,7 @@ describe("ClientTaskManager", () => {
 			// Invalid localhost cases
 			expect(
 				clientTaskManager.isSubdomainOrExactMatch(
-					"test.localhost",
+					"localhost.test.com",
 					"localhost",
 				),
 			).toBe(false);

@@ -20,6 +20,7 @@ import { i18nMiddleware } from "@prosopo/locale";
 import {
 	domainMiddleware,
 	getClientList,
+	handleErrors,
 	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
@@ -70,6 +71,8 @@ function startApi(
 		const enumPath = path as CombinedApiPaths;
 		apiApp.use(enumPath, rateLimit(limit));
 	}
+
+	apiApp.use(handleErrors);
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);

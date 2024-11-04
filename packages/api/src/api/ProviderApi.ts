@@ -58,10 +58,12 @@ export default class ProviderApi
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
-		const url: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/${
-			provider.datasetId
-		}/${userAccount}/${dappAccount}`;
-		return this.fetch(url, {
+		const body = {
+			[ApiParams.dapp]: dappAccount,
+			[ApiParams.user]: userAccount,
+			[ApiParams.datasetId]: provider.datasetId,
+		};
+		return this.post(ApiPaths.GetImageCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,

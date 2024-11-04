@@ -35,7 +35,6 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
-import type { Session, SessionRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
@@ -64,11 +63,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} userAccount - Dapp User AccountId
 	 * @return {Captcha} - The Captcha data
 	 */
-	const GetImageCaptchaChallengePath: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`;
-	router.get(GetImageCaptchaChallengePath, async (req, res, next) => {
+	router.post(ApiPaths.GetImageCaptchaChallenge, async (req, res, next) => {
 		let parsed: CaptchaRequestBodyTypeOutput;
 		try {
-			parsed = CaptchaRequestBody.parse(req.params);
+			parsed = CaptchaRequestBody.parse(req.body);
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {

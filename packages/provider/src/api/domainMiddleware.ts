@@ -23,18 +23,25 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			let parsed: { dapp: string };
-			try {
+			const sitekeyInParams = req.params.dapp;
+			console.log("\n\nSitekey in params\n\n", req.params);
+			let dapp: string;
+			if (sitekeyInParams) {
+				dapp = sitekeyInParams;
+			} else {
+				let parsed: { dapp: string };
+				try {
 				parsed = DappDomainRequestBody.parse(req.body);
 			} catch (err) {
 				return next(siteKeyNotRegisteredError("No sitekey provided"));
+				}
+				dapp = parsed.dapp;
 			}
-			const dapp = parsed.dapp;
 
 			try {
 				validateAddress(dapp, false, 42);
 			} catch (err) {
-				return next(siteKeyNotRegisteredError(dapp));
+				return next(invalidSiteKeyError(dapp));
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
@@ -45,6 +52,9 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 			const origin = req.headers.origin;
 			if (!origin) return next(siteKeyNotRegisteredError(dapp));
+
+			console.log("\n\nOrigin\n\n", origin);
+			console.log("\n\nAllowed Domains\n\n", allowedDomains);
 
 			for (const domain of allowedDomains) {
 				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
@@ -64,6 +74,12 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 const siteKeyNotRegisteredError = (dapp: string) => {
 	return new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+		context: { code: 400, siteKey: dapp },
+	});
+};
+
+const invalidSiteKeyError = (dapp: string) => {
+	return new ProsopoApiError("API.INVALID_SITE_KEY", {
 		context: { code: 400, siteKey: dapp },
 	});
 };
