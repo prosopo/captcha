@@ -91,7 +91,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const keyPair = env.keyring.addFromAddress(dapp);
 
 				// Will throw an error if the signature is invalid
-
 				verifySignature(dappSignature, timestamp.toString(), keyPair);
 
 				const response =

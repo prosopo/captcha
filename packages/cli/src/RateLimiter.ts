@@ -51,21 +51,9 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SUBMIT_USER_EVENTS_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_USER_EVENTS_LIMIT,
 		},
-		[AdminApiPaths.UpdateDataset]: {
-			windowMs: process.env.PROSOPO_UPDATE_DATASET_WINDOW,
-			limit: process.env.PROSOPO_UPDATE_DATASET_LIMIT,
-		},
 		[AdminApiPaths.SiteKeyRegister]: {
 			windowMs: process.env.PROSOPO_SITE_KEY_REGISTER_WINDOW,
 			limit: process.env.PROSOPO_SITE_KEY_REGISTER_LIMIT,
-		},
-		[AdminApiPaths.ProviderDeregister]: {
-			windowMs: process.env.PROSOPO_PROVIDER_DEREGISTER_WINDOW,
-			limit: process.env.PROSOPO_PROVIDER_DEREGISTER_LIMIT,
-		},
-		[AdminApiPaths.ProviderUpdate]: {
-			windowMs: process.env.PROSOPO_PROVIDER_UPDATE_WINDOW,
-			limit: process.env.PROSOPO_PROVIDER_UPDATE_LIMIT,
 		},
 		[ApiPaths.GetFrictionlessCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,

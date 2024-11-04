@@ -63,7 +63,6 @@ export enum ApiPaths {
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
-	UpdateProviderClients = "/v1/prosopo/provider/public/clients",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 }
 
@@ -80,9 +79,6 @@ export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
-	UpdateDataset = "/v1/prosopo/provider/admin/dataset",
-	ProviderDeregister = "/v1/prosopo/provider/admin/deregister",
-	ProviderUpdate = "/v1/prosopo/provider/admin/update",
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 }
 
@@ -99,10 +95,7 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
-	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
-	[AdminApiPaths.ProviderUpdate]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
