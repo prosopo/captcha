@@ -214,6 +214,7 @@ export class ClientTaskManager {
 	async addIPBlockRules(
 		ips: string[],
 		global: boolean,
+		hardBlock: boolean,
 		dappAccount?: string,
 	): Promise<void> {
 		const rules: IPAddressBlockRule[] = ips.map((ip) => {
@@ -222,6 +223,7 @@ export class ClientTaskManager {
 				global,
 				type: BlockRuleType.ipAddress,
 				dappAccount,
+				hardBlock,
 			};
 		});
 		await this.providerDB.storeIPBlockRuleRecords(rules);
@@ -229,6 +231,7 @@ export class ClientTaskManager {
 
 	async addUserBlockRules(
 		userAccounts: string[],
+		hardBlock: boolean,
 		dappAccount: string,
 	): Promise<void> {
 		validateAddress(dappAccount, false, 42);
@@ -240,6 +243,7 @@ export class ClientTaskManager {
 				type: BlockRuleType.userAccount,
 				// TODO don't store global on these
 				global: false,
+				hardBlock,
 			};
 		});
 		await this.providerDB.storeUserBlockRuleRecords(rules);

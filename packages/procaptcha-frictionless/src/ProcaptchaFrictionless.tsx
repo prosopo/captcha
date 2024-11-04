@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ExtensionWeb2 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import detect from "@prosopo/detector";
@@ -33,6 +34,8 @@ const customDetectBot: BotDetectionFunction = async (
 ) => {
 	const botScore: { token: string } = await detect();
 
+	const userAccount = await new ExtensionWeb2().getAccount(config);
+
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
@@ -47,6 +50,7 @@ const customDetectBot: BotDetectionFunction = async (
 	const captcha = await providerApi.getFrictionlessCaptcha(
 		botScore.token,
 		config.account.address,
+		userAccount.account.address,
 	);
 
 	return {
@@ -54,6 +58,7 @@ const customDetectBot: BotDetectionFunction = async (
 		sessionId: captcha.sessionId,
 		provider: provider,
 		status: captcha.status,
+		userAccount: userAccount,
 	};
 };
 
@@ -73,15 +78,21 @@ export const ProcaptchaFrictionless = ({
 			try {
 				const result = await detectBot(configOutput);
 
+				const frictionlessState: FrictionlessState = {
+					provider: result.provider,
+					sessionId: result.sessionId,
+					userAccount: result.userAccount,
+				};
+
 				if (result.captchaType === "image") {
 					setComponentToRender(
-						<Procaptcha config={config} callbacks={callbacks} />,
+						<Procaptcha
+							config={config}
+							callbacks={callbacks}
+							frictionlessState={frictionlessState}
+						/>,
 					);
 				} else {
-					const frictionlessState: FrictionlessState = {
-						provider: result.provider,
-						sessionId: result.sessionId,
-					};
 					setComponentToRender(
 						<ProcaptchaPow
 							config={config}

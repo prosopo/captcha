@@ -423,34 +423,41 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ApiPaths.GetFrictionlessCaptchaChallenge,
 		async (req, res, next) => {
 			try {
-				const { token, dapp } =
+				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
-				const botScore = await getBotScore(token);
+
+				const lScore = tasks.frictionlessManager.checkLangRules(
+					req.headers["accept-language"] || "",
+				);
+
+				const botScore = (await getBotScore(token)) + lScore;
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
 					clientConfig?.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
 
-				if (Number(botScore) > botThreshold) {
-					const response: GetFrictionlessCaptchaResponse = {
-						[ApiParams.captchaType]: "image",
-						[ApiParams.status]: "ok",
-					};
-					return res.json(response);
-				}
-				const sessionRecord: Session = {
-					sessionId: uuidv4(),
-					createdAt: new Date(),
-					botScore: Number(botScore),
-				};
+				// Check if the IP address is blocked
+				const ipAddress = getIPAddress(req.ip || "");
+				const isIpBlocked = await tasks.frictionlessManager.checkIpRules(
+					ipAddress,
+					dapp,
+				);
+				if (isIpBlocked)
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
-				await tasks.db.storeSessionRecord(sessionRecord);
+				// Check if the user is blocked
+				const isUserBlocked = await tasks.frictionlessManager.checkUserRules(
+					user,
+					dapp,
+				);
+				if (isUserBlocked)
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
-				const response: GetFrictionlessCaptchaResponse = {
-					[ApiParams.captchaType]: "pow",
-					[ApiParams.sessionId]: sessionRecord.sessionId,
-					[ApiParams.status]: "ok",
-				};
+				// If the bot score is greater than the threshold, send an image captcha
+				if (Number(botScore) > botThreshold)
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+
+				const response = await tasks.frictionlessManager.sendPowCaptcha();
 				return res.json(response);
 			} catch (err) {
 				console.error("Error in frictionless captcha challenge:", err);

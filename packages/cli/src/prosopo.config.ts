@@ -37,6 +37,17 @@ function getMongoURI(): string {
 	return mongoURI;
 }
 
+const getLRules = () => {
+	if (!process.env.L_RULES) {
+		return {};
+	}
+	try {
+		return JSON.parse(process.env.L_RULES);
+	} catch (e) {
+		return {};
+	}
+};
+
 export default function getConfig(
 	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
 	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
@@ -96,5 +107,6 @@ export default function getConfig(
 				schedule: process.env.CLIENT_LIST_SCHEDULE,
 			},
 		},
+		lRules: getLRules(),
 	} as ProsopoConfigInput);
 }

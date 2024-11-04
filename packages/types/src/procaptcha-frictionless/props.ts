@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ProcaptchaClientConfigOutput } from "../config/config.js";
+import type { Account } from "../procaptcha/manager.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
 import type {
 	GetFrictionlessCaptchaResponse,
@@ -20,6 +21,7 @@ import type {
 
 type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	provider: RandomProvider;
+	userAccount: Account;
 };
 
 export type BotDetectionFunction = (

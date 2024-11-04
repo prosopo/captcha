@@ -32,6 +32,7 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -69,6 +70,7 @@ export function Manager(
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
+	frictionlessState?: FrictionlessState,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -423,8 +425,16 @@ export function Manager(
 		}
 
 		// check if account exists in extension
-		const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
-		const account = await ext.getAccount(config);
+		const selectAccount = async () => {
+			if (frictionlessState) {
+				return frictionlessState.userAccount;
+			}
+			const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+			return await ext.getAccount(config);
+		};
+
+		const account = await selectAccount();
+
 		// Store the account in local storage
 		storage.setAccount(account.account.address);
 
