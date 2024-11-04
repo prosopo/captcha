@@ -271,6 +271,9 @@ export type ProcaptchaClientConfigOutput = output<
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
+		adminAccount: object({
+			address: string().optional(),
+		}),
 		captchas: ProsopoCaptchaCountConfigSchema.optional().default({
 			solved: { count: 1 },
 			unsolved: { count: 0 },

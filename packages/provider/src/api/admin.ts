@@ -1,4 +1,4 @@
-import { Logger, logError } from "@prosopo/common";
+import { Logger, ProsopoApiError, logError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@ import { Logger, logError } from "@prosopo/common";
 // limitations under the License.
 import {
 	AdminApiPaths,
+	ApiPaths,
 	type ApiResponse,
 	RegisterSitekeyBody,
 } from "@prosopo/types";
@@ -49,6 +50,23 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 		} catch (err) {
 			logError(err, tasks.logger);
 			res.status(500).send("An internal server error occurred.");
+		}
+	});
+
+	/**
+	 * Triggers the get clients job
+	 */
+	router.post(ApiPaths.UpdateProviderClients, async (req, res, next) => {
+		try {
+			await tasks.clientTaskManager.getClientList();
+			return res.json({ message: "Provider updated" });
+		} catch (err) {
+			tasks.logger.error(err);
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: err },
+				}),
+			);
 		}
 	});
 
