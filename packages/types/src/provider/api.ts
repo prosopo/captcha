@@ -350,6 +350,9 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.settings]: object({
 		[ApiParams.captchaType]: string(),
+		[ApiParams.domains]: array(string()),
+		[ApiParams.frictionlessThreshold]: number(),
+		[ApiParams.powDifficulty]: number(),
 	}).optional(),
 });
 
