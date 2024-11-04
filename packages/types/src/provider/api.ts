@@ -352,3 +352,7 @@ export const RegisterSitekeyBody = object({
 		[ApiParams.captchaType]: string(),
 	}).optional(),
 });
+
+export const DappDomainRequestBody = object({
+	[ApiParams.dapp]: string(),
+});

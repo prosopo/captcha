@@ -434,15 +434,42 @@ describe("ClientTaskManager", () => {
 		});
 
 		it("should handle localhost specially", () => {
+			// Valid localhost cases
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("localhost", "anything"),
+				clientTaskManager.isSubdomainOrExactMatch("localhost", "localhost"),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("localhost:3000", "anything"),
+				clientTaskManager.isSubdomainOrExactMatch(
+					"localhost:3000",
+					"localhost",
+				),
 			).toBe(true);
+
+			// Invalid localhost cases
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("test.localhost", "anything"),
-			).toBe(true);
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.localhost",
+					"localhost",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"malicious.com/localhost",
+					"localhost",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"evil.com?localhost",
+					"localhost",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"localhost.malicious.com",
+					"localhost",
+				),
+			).toBe(false);
 		});
 
 		it("should handle edge cases", () => {

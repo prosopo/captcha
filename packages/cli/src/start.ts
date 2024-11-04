@@ -22,6 +22,7 @@ import {
 	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
+	publicRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
@@ -54,9 +55,11 @@ function startApi(
 	apiApp.use(prosopoVerifyRouter(env));
 
 	if (admin) {
-		apiApp.use(authMiddleware(env));
+		apiApp.use("/v1/prosopo/provider/admin/", authMiddleware(env));
 		apiApp.use(prosopoAdminRouter(env));
 	}
+
+	apiApp.use(publicRouter(env));
 
 	// Rate limiting
 	const rateLimits = env.config.rateLimits;
