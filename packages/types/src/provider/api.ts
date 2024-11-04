@@ -99,7 +99,6 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.UpdateProviderClients]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },

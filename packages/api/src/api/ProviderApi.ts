@@ -31,7 +31,6 @@ import {
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
-	type TGetImageCaptchaChallengePathAndParams,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -221,10 +220,6 @@ export default class ProviderApi
 				"Prosopo-Site-Key": this.account,
 			},
 		});
-	}
-
-	public updateProviderClients(): Promise<UpdateProviderClientsResponse> {
-		return this.post(ApiPaths.UpdateProviderClients, {});
 	}
 
 	public submitPowCaptchaVerify(
