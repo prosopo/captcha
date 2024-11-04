@@ -25,7 +25,6 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const sitekeyInParams = req.params.dapp;
-			console.log("\n\nSitekey in params\n\n", req.params);
 			let dapp: string;
 			if (sitekeyInParams) {
 				dapp = sitekeyInParams;
@@ -46,15 +45,12 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-			console.log("\n\nClient Settings\n\n", clientSettings);
 			if (!clientSettings) throw siteKeyNotRegisteredError(dapp);
 
 			const allowedDomains = clientSettings.settings?.domains;
-			console.log("\n\nAllowed Domains\n\n", allowedDomains);
 			if (!allowedDomains) return next(siteKeyNotRegisteredError(dapp));
 
 			const origin = req.headers.origin;
-			console.log("\n\nOrigin\n\n", origin);
 			if (!origin) throw siteKeyNotRegisteredError(dapp);
 
 			for (const domain of allowedDomains) {
@@ -69,7 +65,6 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			if (err instanceof ProsopoApiError) {
 				handleErrors(err, req, res, next);
 			} else {
-				console.error("Auth Middleware Error:", err);
 				res.status(401).json({ error: "Unauthorized", message: err });
 				return;
 			}
