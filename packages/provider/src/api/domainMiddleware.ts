@@ -24,19 +24,13 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const sitekeyInParams = req.params.dapp;
-			let dapp: string;
-			if (sitekeyInParams) {
-				dapp = sitekeyInParams;
-			} else {
-				let parsed: { dapp: string };
-				try {
-					parsed = DappDomainRequestBody.parse(req.body);
-				} catch (err) {
-					throw siteKeyNotRegisteredError("No sitekey provided");
-				}
-				dapp = parsed.dapp;
+			let parsed: { dapp: string };
+			try {
+				parsed = DappDomainRequestBody.parse(req.body);
+			} catch (err) {
+				throw siteKeyNotRegisteredError("No sitekey provided");
 			}
+			const dapp = parsed.dapp;
 
 			try {
 				validateAddress(dapp, false, 42);
