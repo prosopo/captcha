@@ -41,10 +41,16 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
@@ -59,10 +65,16 @@ describe("Image Captcha Integration Tests", () => {
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "http://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${unregisteredAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body = {
+				[ApiParams.dapp]: unregisteredAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
@@ -78,10 +90,16 @@ describe("Image Captcha Integration Tests", () => {
 		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
 			const invalidSiteKey = "junk";
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${invalidSiteKey}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body = {
+				[ApiParams.dapp]: invalidSiteKey,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
@@ -96,11 +114,19 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should fail if datasetID is incorrect", async () => {
 			const datasetId = "thewrongdsetId";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${datasetId}/${userAccount}/${dappAccount}`;
+			const origin = "http://localhost";
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: datasetId,
+			};
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
+					Origin: origin,
 				},
 			});
 
@@ -118,16 +144,20 @@ describe("Image Captcha Integration Tests", () => {
 
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
 				},
 			});
-
-			console.log("\n\nResponse\n\n", response);
 
 			expect(response.status).toBe(200);
 
@@ -160,7 +190,7 @@ describe("Image Captcha Integration Tests", () => {
 				};
 			});
 
-			const body: CaptchaSolutionBodyType = {
+			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
 				[ApiParams.captchas]: temp,
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.requestHash]: data.requestHash,
@@ -184,7 +214,7 @@ describe("Image Captcha Integration Tests", () => {
 						"Content-Type": "application/json",
 						Origin: origin,
 					},
-					body: JSON.stringify(body),
+					body: JSON.stringify(solveImgCaptchaBody),
 				},
 			);
 			const jsonRes = await solveThatCaptcha.json();

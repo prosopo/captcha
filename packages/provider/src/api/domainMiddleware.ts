@@ -17,6 +17,7 @@ import { ApiPrefix, DappDomainRequestBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { Tasks } from "../tasks/index.js";
+import { handleErrors } from "./errorHandler.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	const tasks = new Tasks(env);
@@ -31,9 +32,9 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			} else {
 				let parsed: { dapp: string };
 				try {
-				parsed = DappDomainRequestBody.parse(req.body);
-			} catch (err) {
-				return next(siteKeyNotRegisteredError("No sitekey provided"));
+					parsed = DappDomainRequestBody.parse(req.body);
+				} catch (err) {
+					throw siteKeyNotRegisteredError("No sitekey provided");
 				}
 				dapp = parsed.dapp;
 			}
@@ -41,20 +42,20 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			try {
 				validateAddress(dapp, false, 42);
 			} catch (err) {
-				return next(invalidSiteKeyError(dapp));
+				throw invalidSiteKeyError(dapp);
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-			if (!clientSettings) return next(siteKeyNotRegisteredError(dapp));
+			console.log("\n\nClient Settings\n\n", clientSettings);
+			if (!clientSettings) throw siteKeyNotRegisteredError(dapp);
 
 			const allowedDomains = clientSettings.settings?.domains;
+			console.log("\n\nAllowed Domains\n\n", allowedDomains);
 			if (!allowedDomains) return next(siteKeyNotRegisteredError(dapp));
 
 			const origin = req.headers.origin;
-			if (!origin) return next(siteKeyNotRegisteredError(dapp));
-
 			console.log("\n\nOrigin\n\n", origin);
-			console.log("\n\nAllowed Domains\n\n", allowedDomains);
+			if (!origin) throw siteKeyNotRegisteredError(dapp);
 
 			for (const domain of allowedDomains) {
 				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
@@ -63,11 +64,15 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				}
 			}
 
-			return next(siteKeyNotRegisteredError(dapp));
+			throw siteKeyNotRegisteredError(dapp);
 		} catch (err) {
-			console.error("Auth Middleware Error:", err);
-			res.status(401).json({ error: "Unauthorized", message: err });
-			return;
+			if (err instanceof ProsopoApiError) {
+				handleErrors(err, req, res, next);
+			} else {
+				console.error("Auth Middleware Error:", err);
+				res.status(401).json({ error: "Unauthorized", message: err });
+				return;
+			}
 		}
 	};
 };

@@ -262,6 +262,7 @@ describe("PoW Integration Tests", () => {
 					headers: {
 						Connection: "close",
 						"Content-Type": "application/json",
+						Origin: origin,
 					},
 					body: JSON.stringify(body),
 				},

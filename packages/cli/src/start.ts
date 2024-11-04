@@ -53,10 +53,9 @@ function startApi(
 	apiApp.use(i18nMiddleware({}));
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
-
+	apiApp.use(prosopoVerifyRouter(env));
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
-	apiApp.use(prosopoVerifyRouter(env));
 
 	if (admin) {
 		apiApp.use("/v1/prosopo/provider/admin/", authMiddleware(env));
@@ -71,8 +70,6 @@ function startApi(
 		const enumPath = path as CombinedApiPaths;
 		apiApp.use(enumPath, rateLimit(limit));
 	}
-
-	apiApp.use(handleErrors);
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
