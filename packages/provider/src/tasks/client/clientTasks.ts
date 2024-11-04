@@ -252,7 +252,6 @@ export class ClientTaskManager {
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
 		try {
-			// Clean up the inputs
 			const cleanReferrer = referrer.toLowerCase().trim().replace(/\/+$/, "");
 			const cleanAllowedInput = clientDomain
 				.toLowerCase()
@@ -283,7 +282,6 @@ export class ClientTaskManager {
 			// Special case for localhost
 			if (referrerDomain === "localhost") return true;
 
-			// Check if domains match exactly or if referrer is a subdomain
 			return (
 				referrerDomain === allowedDomain ||
 				referrerDomain.endsWith(`.${allowedDomain}`)
