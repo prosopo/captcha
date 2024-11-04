@@ -425,7 +425,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
-				const botScore = await getBotScore(token);
+
+				const lScore = tasks.frictionlessManager.checkLangRules(
+					req.headers["accept-language"] || "",
+				);
+
+				const botScore = (await getBotScore(token)) + lScore;
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
 					clientConfig?.settings?.frictionlessThreshold ||

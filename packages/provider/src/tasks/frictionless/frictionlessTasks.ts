@@ -22,6 +22,7 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
+	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase, Session } from "@prosopo/types-database";
@@ -33,10 +34,16 @@ const logger = getLoggerDefault();
 const DEFAULT_POW_DIFFICULTY = 4;
 
 export class FrictionlessManager {
+	config: ProsopoConfigOutput;
 	pair: KeyringPair;
 	db: IProviderDatabase;
 
-	constructor(pair: KeyringPair, db: IProviderDatabase) {
+	constructor(
+		config: ProsopoConfigOutput,
+		pair: KeyringPair,
+		db: IProviderDatabase,
+	) {
+		this.config = config;
 		this.pair = pair;
 		this.db = db;
 	}
@@ -79,6 +86,23 @@ export class FrictionlessManager {
 			return true;
 		}
 		return false;
+	}
+
+	checkLangRules(acceptLanguage: string): number {
+		const lConfig = this.config.lRules;
+		let lScore = 0;
+		if (lConfig) {
+			const languages = acceptLanguage
+				.split(",")
+				.map((lang) => lang.trim().split(";")[0]);
+
+			for (const lang of languages) {
+				if (lang && lConfig[lang]) {
+					lScore += lConfig[lang];
+				}
+			}
+		}
+		return lScore;
 	}
 
 	sendImageCaptcha(): GetFrictionlessCaptchaResponse {
