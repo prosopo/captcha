@@ -60,11 +60,13 @@ export class PowCaptchaManager {
 		powDifficulty?: number,
 	): Promise<PoWCaptcha> {
 		const difficulty = powDifficulty || DEFAULT_POW_DIFFICULTY;
-
 		const requestedAtTimestamp = Date.now();
 
+		// Create nonce for the challenge
+		const nonce = Math.floor(Math.random() * 1000000);
+
 		// Use blockhash, userAccount and dappAccount for string for challenge
-		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}`;
+		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
 		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
 		return {
 			challenge,
