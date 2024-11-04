@@ -44,22 +44,16 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-			if (!clientSettings) {
-				return next(next(siteKeyNotRegisteredError(dapp)));
-			}
+			if (!clientSettings) return next(next(siteKeyNotRegisteredError(dapp)));
 
 			const allowedDomains = clientSettings.settings?.domains;
-			if (!allowedDomains) {
-				return next(siteKeyNotRegisteredError(dapp));
-			}
+			if (!allowedDomains) return next(siteKeyNotRegisteredError(dapp));
+
+			const origin = req.headers.origin;
+			if (!origin) return next(siteKeyNotRegisteredError(dapp));
 
 			for (const domain of allowedDomains) {
-				if (
-					tasks.clientTaskManager.isSubdomainOrExactMatch(
-						req.headers.origin,
-						domain,
-					)
-				) {
+				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
 					next();
 					return;
 				}

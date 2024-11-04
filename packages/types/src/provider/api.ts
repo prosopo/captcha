@@ -54,17 +54,17 @@ export const ApiPrefix = "/v1/prosopo" as const;
 export type IPAddress = Address4 | Address6;
 
 export enum ApiPaths {
-	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
-	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
-	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/captcha/frictionless",
-	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
-	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
-	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
-	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
-	GetProviderStatus = "/v1/prosopo/provider/status",
-	GetProviderDetails = "/v1/prosopo/provider/details",
-	UpdateProviderClients = "/v1/prosopo/provider/clients",
-	SubmitUserEvents = "/v1/prosopo/provider/events",
+	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
+	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
+	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
+	SubmitImageCaptchaSolution = "/v1/prosopo/provider/client/solution",
+	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
+	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
+	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
+	GetProviderStatus = "/v1/prosopo/provider/client/status",
+	GetProviderDetails = "/v1/prosopo/provider/public/details",
+	UpdateProviderClients = "/v1/prosopo/provider/public/clients",
+	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 }
 
 export type TGetImageCaptchaChallengePathAndParams =
