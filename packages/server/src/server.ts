@@ -137,8 +137,7 @@ export class ProsopoServer {
 		try {
 			const payload = decodeProcaptchaOutput(token);
 
-			const { providerUrl, challenge, timestamp, user } =
-			const { providerUrl, challenge, timestamp, dapp } =
+			const { providerUrl, challenge, timestamp, dapp, user } =
 				ProcaptchaOutputSchema.parse(payload);
 
 			if (dapp !== this.pair?.address) {
@@ -146,8 +145,8 @@ export class ProsopoServer {
 				return {
 					verified: false,
 					error: {
-						code: "API.INVALID_SECRET_KEY",
-						message: i18n.t("API.INVALID_SECRET_KEY"),
+						code: "API.INVALID_SITE_KEY",
+						message: i18n.t("API.INVALID_SITE_KEY"),
 					},
 				};
 			}
