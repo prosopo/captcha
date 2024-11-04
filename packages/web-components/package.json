@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/web-components",
-	"version": "2.1.8",
+	"version": "2.1.10",
 	"description": "Non business logic utilities for web applications",
 	"main": "dist/index.js",
 	"type": "module",
@@ -36,7 +36,7 @@
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.1.8",
+		"@prosopo/config": "2.1.10",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"npm-run-all": "4.1.5",

@@ -55,6 +55,12 @@ export default (
 					demandOption: true,
 					default: true,
 					desc: "Whether the ip is to be blocked globally or not",
+				} as const)
+				.option("hardBlock", {
+					type: "string" as const,
+					demandOption: true,
+					default: false,
+					desc: "Hardblock stops requests, softblock informs frictionless",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -65,12 +71,14 @@ export default (
 					await tasks.clientTaskManager.addIPBlockRules(
 						argv.ips as unknown as string[],
 						argv.global as boolean,
+						argv.hardBlock as boolean,
 						argv.dapp as unknown as string,
 					);
 				}
 				if (argv.users) {
 					await tasks.clientTaskManager.addUserBlockRules(
 						argv.users as unknown as string[],
+						argv.hardBlock as boolean,
 						argv.dapp as unknown as string,
 					);
 				}

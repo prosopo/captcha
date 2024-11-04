@@ -65,6 +65,7 @@ export class ProsopoServer {
 	 * @param timeouts
 	 * @param providerUrl
 	 * @param timestamp
+	 * @param user
 	 * @param challenge
 	 */
 	public async verifyProvider(
@@ -72,6 +73,7 @@ export class ProsopoServer {
 		timeouts: CaptchaTimeoutOutput,
 		providerUrl: string,
 		timestamp: number,
+		user: string,
 		challenge?: string,
 	): Promise<VerificationResponse> {
 		this.logger.info("Verifying with provider.");
@@ -101,6 +103,7 @@ export class ProsopoServer {
 				token,
 				signatureHex,
 				timeouts.pow.cachedTimeout,
+				user,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
@@ -118,6 +121,7 @@ export class ProsopoServer {
 		return await providerApi.verifyDappUser(
 			token,
 			signatureHex,
+			user,
 			timeouts.image.cachedTimeout,
 		);
 	}
@@ -133,6 +137,7 @@ export class ProsopoServer {
 		try {
 			const payload = decodeProcaptchaOutput(token);
 
+			const { providerUrl, challenge, timestamp, user } =
 			const { providerUrl, challenge, timestamp, dapp } =
 				ProcaptchaOutputSchema.parse(payload);
 
@@ -153,6 +158,7 @@ export class ProsopoServer {
 					this.config.timeouts,
 					providerUrl,
 					Number(timestamp),
+					user,
 					challenge,
 				);
 			}

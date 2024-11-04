@@ -18,6 +18,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
+import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 
@@ -34,6 +35,7 @@ export class Tasks {
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
+	frictionlessManager: FrictionlessManager;
 
 	constructor(env: ProviderEnvironment) {
 		this.config = env.config;
@@ -63,6 +65,11 @@ export class Tasks {
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
 			this.logger,
+			this.db,
+		);
+		this.frictionlessManager = new FrictionlessManager(
+			this.config,
+			this.pair,
 			this.db,
 		);
 	}
