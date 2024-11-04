@@ -280,13 +280,8 @@ export class ClientTaskManager {
 			const referrerDomain = getDomain(cleanReferrer).replace(/\.$/, "");
 			const allowedDomain = getDomain(cleanAllowedInput).replace(/\.$/, "");
 
-			// Special case for localhost - must be exact match or exact match with port
-			const isLocalhost =
-				referrerDomain === "localhost" ||
-				referrerDomain.startsWith("localhost:") ||
-				referrerDomain.startsWith("http://127.0.0.1:") ||
-				referrerDomain.startsWith("https://127.0.0.1:");
-			if (isLocalhost) return true;
+			// Special case for localhost
+			if (referrerDomain === "localhost") return true;
 
 			// Check if domains match exactly or if referrer is a subdomain
 			return (
