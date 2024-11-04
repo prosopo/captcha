@@ -60,7 +60,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				}
 			}
 
-			throw siteKeyNotRegisteredError(dapp);
+			throw unauthorizedOriginError();
 		} catch (err) {
 			if (err instanceof ProsopoApiError) {
 				handleErrors(err, req, res, next);
@@ -81,5 +81,11 @@ const siteKeyNotRegisteredError = (dapp: string) => {
 const invalidSiteKeyError = (dapp: string) => {
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
 		context: { code: 400, siteKey: dapp },
+	});
+};
+
+const unauthorizedOriginError = () => {
+	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
+		context: { code: 400 },
 	});
 };

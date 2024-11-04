@@ -104,8 +104,6 @@ describe("PoW Integration Tests", () => {
 
 			const data = await response.json();
 
-			console.log("\n ---- \n data \n ---- \n", data);
-
 			expect(data).toHaveProperty("challenge");
 			expect(data).toHaveProperty("difficulty");
 			expect(data).toHaveProperty("signature");
@@ -122,6 +120,22 @@ describe("PoW Integration Tests", () => {
 			});
 
 			expect(response.status).toBe(400);
+		});
+
+		it("should return an error if origin header is not valid", async () => {
+			const origin = "http://notallowed.com";
+			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+					Origin: origin,
+				},
+				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+			});
+
+			expect(response.status).toBe(400);
+			expect(response.statusText).toBe("Unauthorized origin URL");
 		});
 	});
 	describe("SubmitPowCaptchaSolution", () => {
