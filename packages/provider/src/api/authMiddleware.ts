@@ -14,6 +14,7 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { getPairAsync } from "@prosopo/contract";
 import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
@@ -36,7 +37,12 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 				});
 				return;
 			}
-			verifySignature(signature, timestamp, env.pair);
+			// Check if the message is signed by the admin account or by our own provider account
+			const verifyPair = env.config.adminAccount.address
+				? await getPairAsync(undefined, env.config.adminAccount.address)
+				: env.pair;
+
+			verifySignature(signature, timestamp, verifyPair);
 
 			next();
 		} catch (err) {

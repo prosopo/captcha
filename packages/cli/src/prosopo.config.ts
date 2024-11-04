@@ -63,6 +63,9 @@ export default function getConfig(
 			password: getPassword(who),
 			secret: getSecret(who),
 		},
+		adminAccount: {
+			address: getAddress("ADMIN"),
+		},
 		database: {
 			development: {
 				type: DatabaseTypes.enum.provider,

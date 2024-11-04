@@ -474,23 +474,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Gets public details of the provider
 	 */
-	router.post(ApiPaths.UpdateProviderClients, async (req, res, next) => {
-		try {
-			await tasks.clientTaskManager.getClientList();
-			return res.json({ message: "Provider updated" });
-		} catch (err) {
-			tasks.logger.error(err);
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-				}),
-			);
-		}
-	});
-
-	/**
-	 * Gets public details of the provider
-	 */
 	router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
 		try {
 			return res.json({ version, ...{ message: "Provider online" } });
