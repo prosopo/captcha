@@ -31,6 +31,7 @@ import {
 	type UserCommitment,
 } from "@prosopo/types-database";
 import { getIPAddress } from "../../util.js";
+import { parseUrl } from "@prosopo/util";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -258,26 +259,8 @@ export class ClientTaskManager {
 				.trim()
 				.replace(/\/+$/, "");
 
-			// Extract domain from URL if necessary
-			const getDomain = (url: string) => {
-				try {
-					// If it's a full URL, use URL parser
-					if (url.includes("://")) {
-						return new URL(url).hostname;
-					}
-					// Otherwise, clean up any paths or ports
-					const parts = url.split("/");
-					if (!parts[0]) return url;
-					const hostParts = parts[0].split(":");
-					if (!hostParts[0]) return url;
-					return hostParts[0];
-				} catch {
-					return url;
-				}
-			};
-
-			const referrerDomain = getDomain(cleanReferrer).replace(/\.$/, "");
-			const allowedDomain = getDomain(cleanAllowedInput).replace(/\.$/, "");
+			const referrerDomain = parseUrl(cleanReferrer).hostname.replace(/\.$/, "");
+			const allowedDomain = parseUrl(cleanAllowedInput).hostname.replace(/\.$/, "");
 
 			// Special case for localhost
 			if (referrerDomain === "localhost") return true;
