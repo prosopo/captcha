@@ -92,7 +92,10 @@ export async function start(
 		});
 
 		const pair = await getPairAsync(secret);
-		const authAccount = await getPairAsync(undefined, config.authAccount.address);
+		const authAccount = await getPairAsync(
+			undefined,
+			config.authAccount.address,
+		);
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
 		env.logger.debug("Env already defined");

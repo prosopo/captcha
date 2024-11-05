@@ -94,7 +94,8 @@ const siteKeyInvalidDomainError = (dapp: string) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
 		context: {
 			code: 400,
-			message: "No domains are allowed for this site key. Please fix in the Procaptcha Portal",
+			message:
+				"No domains are allowed for this site key. Please fix in the Procaptcha Portal",
 			siteKey: dapp,
 		},
 	});

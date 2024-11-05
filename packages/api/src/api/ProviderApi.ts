@@ -16,7 +16,7 @@ import {
 	ApiParams,
 	ApiPaths,
 	type ApiResponse,
-	CaptchaRequestBodyType,
+	type CaptchaRequestBodyType,
 	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,

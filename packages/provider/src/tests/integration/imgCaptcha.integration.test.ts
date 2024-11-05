@@ -17,13 +17,13 @@ import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import {
 	ApiParams,
 	ApiPaths,
-	CaptchaRequestBodyType,
-	CaptchaRequestBodyTypeOutput,
-	IUserSettings,
 	type Captcha,
+	type CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	IUserSettings,
 	type TGetImageCaptchaChallengeURL,
 } from "@prosopo/types";
 import fetch from "node-fetch";

@@ -29,16 +29,23 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 
 			const { signature, timestamp } = extractHeaders(req);
 
-			if (!env.authAccount) {
-				res.status(401).json({
-					error: "Unauthorized",
-					message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
-				});
+			if (env.authAccount) {
+				verifySignature(signature, timestamp, env.authAccount);
+				next();
 				return;
 			}
-			verifySignature(signature, timestamp, env.authAccount);
 
-			next();
+			if (env.pair) {
+				verifySignature(signature, timestamp, env.pair);
+				next();
+				return;
+			}
+
+			res.status(401).json({
+				error: "Unauthorized",
+				message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
+			});
+			return;
 		} catch (err) {
 			env.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
