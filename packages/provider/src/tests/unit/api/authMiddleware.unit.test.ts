@@ -1,6 +1,6 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
-import { Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
