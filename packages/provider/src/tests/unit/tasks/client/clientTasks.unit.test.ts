@@ -519,5 +519,82 @@ describe("ClientTaskManager", () => {
 				),
 			).toBe(true);
 		});
+
+		it("should handle exotic domain names", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"⭐⭐⭐⭐.com",
+					"⭐⭐⭐⭐.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.⭐⭐⭐⭐.com",
+					"⭐⭐⭐⭐.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"漢字漢字漢字.com",
+					"漢字漢字漢字.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.漢字漢字漢字.com",
+					"漢字漢字漢字.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"🦄.⭐.漢字.test.com",
+					"test.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					`${"a".repeat(63)}.example.com`,
+					"example.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"xn--h28h.com", // 🌟.com in punycode
+					"xn--h28h.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"café.漢字.⭐.example.com",
+					"example.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"123-456.⭐-漢字.com",
+					"⭐-漢字.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"🦄.xn--h28h.café.123-456.⭐.漢字.test.com",
+					"test.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"..⭐⭐⭐⭐..com",
+					"⭐⭐⭐⭐.com",
+				),
+			).toBe(false);
+		});
 	});
 });
