@@ -26,13 +26,8 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			let parsed: { dapp: string };
-			try {
-				parsed = DappDomainRequestBody.parse(req.body);
-			} catch (err) {
-				throw siteKeyNotRegisteredError("No sitekey provided");
-			}
-			const dapp = parsed.dapp;
+			const dapp = req.headers[",prosopo-site-key"] as string;
+			if (!dapp) throw siteKeyNotRegisteredError("No sitekey provided");
 
 			try {
 				validateAddress(dapp, false, 42);

@@ -21,6 +21,7 @@ import {
 	domainMiddleware,
 	getClientList,
 	handleErrors,
+	headerCheckMiddleware,
 	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
@@ -53,6 +54,7 @@ function startApi(
 	apiApp.use(i18nMiddleware({}));
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
+	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
 	apiApp.use(prosopoVerifyRouter(env));
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
