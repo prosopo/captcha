@@ -47,7 +47,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			if (!allowedDomains) throw siteKeyInvalidDomainError(dapp);
 
 			const origin = req.headers.origin;
-			if (!origin) throw siteKeyNotRegisteredError(dapp);
+			if (!origin) throw unauthorizedOriginError();
 
 			for (const domain of allowedDomains) {
 				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
