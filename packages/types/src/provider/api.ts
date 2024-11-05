@@ -116,7 +116,7 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: Hash;
+	datasetId: string;
 };
 
 export type RandomProvider = {

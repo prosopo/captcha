@@ -17,6 +17,9 @@ import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import {
 	ApiParams,
 	ApiPaths,
+	CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
+	IUserSettings,
 	type Captcha,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
@@ -42,7 +45,7 @@ describe("Image Captcha Integration Tests", () => {
 		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody = {
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
@@ -66,7 +69,7 @@ describe("Image Captcha Integration Tests", () => {
 			const origin = "http://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
-			const body = {
+			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: unregisteredAccount,
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
@@ -91,7 +94,7 @@ describe("Image Captcha Integration Tests", () => {
 			const invalidSiteKey = "junk";
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
-			const body = {
+			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: invalidSiteKey,
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
@@ -116,7 +119,7 @@ describe("Image Captcha Integration Tests", () => {
 			const datasetId = "thewrongdsetId";
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
-			const body = {
+			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: datasetId,
@@ -145,7 +148,7 @@ describe("Image Captcha Integration Tests", () => {
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody = {
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,

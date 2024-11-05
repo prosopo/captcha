@@ -16,6 +16,8 @@ import {
 	ApiParams,
 	ApiPaths,
 	type ApiResponse,
+	CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -59,7 +61,7 @@ export default class ProviderApi
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
-		const body = {
+		const body: CaptchaRequestBodyType = {
 			[ApiParams.dapp]: dappAccount,
 			[ApiParams.user]: userAccount,
 			[ApiParams.datasetId]: provider.datasetId,
