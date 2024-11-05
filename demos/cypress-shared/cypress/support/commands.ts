@@ -35,7 +35,7 @@ declare global {
 
 export const checkboxClass = '[type="checkbox"]';
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
-	cy.intercept("GET", "**/prosopo/provider/captcha/**").as("getCaptcha");
+	cy.intercept("GET", "**/prosopo/provider/client/captcha/**").as("getCaptcha");
 	cy.get(checkboxClass, { timeout: 12000 }).first().click();
 
 	return cy
@@ -131,7 +131,7 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton() {
-	cy.intercept("POST", "**/prosopo/provider/solution").as("postSolution");
+	cy.intercept("POST", "**/prosopo/provider/client/solution").as("postSolution");
 	// Go to the next captcha or submit solution
 	cy.get('button[data-cy="button-next"]').click({ force: true });
 	cy.wait(0);
