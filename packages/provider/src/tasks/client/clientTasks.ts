@@ -253,14 +253,8 @@ export class ClientTaskManager {
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
 		try {
-			const cleanReferrer = this.cleanReferrer(referrer);
-			const cleanAllowedInput = clientDomain
-				.toLowerCase()
-				.trim()
-				.replace(/\/+$/, "");
-
-			const referrerDomain = parseUrl(cleanReferrer).hostname.replace(/\.$/, "");
-			const allowedDomain = parseUrl(cleanAllowedInput).hostname.replace(/\.$/, "");
+			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
 
 			// Special case for localhost
 			if (referrerDomain === "localhost") return true;
