@@ -30,8 +30,8 @@ import {
 	type UserAccountBlockRule,
 	type UserCommitment,
 } from "@prosopo/types-database";
-import { getIPAddress } from "../../util.js";
 import { parseUrl } from "@prosopo/util";
+import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
