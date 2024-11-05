@@ -14,8 +14,8 @@
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import { handleErrors } from "./errorHandler.js";
 import { ZodError } from "zod";
+import { handleErrors } from "./errorHandler.js";
 
 export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
