@@ -17,9 +17,9 @@ import { ProsopoApiError } from "@prosopo/common";
 import { ApiPrefix, DappDomainRequestBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
 import { handleErrors } from "./errorHandler.js";
-import { ZodError } from "zod";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	const tasks = new Tasks(env);
@@ -58,7 +58,11 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 			throw unauthorizedOriginError();
 		} catch (err) {
-			if (err instanceof ProsopoApiError || err instanceof ZodError || err instanceof SyntaxError) {
+			if (
+				err instanceof ProsopoApiError ||
+				err instanceof ZodError ||
+				err instanceof SyntaxError
+			) {
 				handleErrors(err, req, res, next);
 			} else {
 				res.status(401).json({ error: "Unauthorized", message: err });
