@@ -68,7 +68,6 @@ export default (
 					url,
 					pow_difficulty,
 				} = argv;
-				console.log(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey as string, {
 					captchaType: captcha_type as "image" | "pow" | "frictionless",

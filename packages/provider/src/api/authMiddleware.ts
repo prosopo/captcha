@@ -21,9 +21,6 @@ import type { NextFunction, Request, Response } from "express";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			console.log("---!!!---\n\nauthMiddleware\n\n---!!!---\n\n", req.url);
-			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
-
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.authAccount) {
@@ -37,7 +34,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 
 			next();
 		} catch (err) {
-			console.error("Auth Middleware Error:", err);
+			env.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}
@@ -74,7 +71,6 @@ const extractHeaders = (req: Request) => {
 	const now = new Date().getTime();
 	const ts = Number.parseInt(timestamp);
 
-	console.log("now - ts", now - ts, now, ts);
 	if (now - ts > 300000) {
 		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
 			context: { error: "Timestamp is too old", code: 400 },

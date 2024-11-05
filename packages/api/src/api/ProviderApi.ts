@@ -249,7 +249,6 @@ export default class ProviderApi
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		console.log("settings\n\n---\n\n", settings);
 		return this.post(
 			AdminApiPaths.SiteKeyRegister,
 			{ siteKey, settings },
