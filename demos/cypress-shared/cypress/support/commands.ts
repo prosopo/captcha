@@ -131,7 +131,9 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton() {
-	cy.intercept("POST", "**/prosopo/provider/client/solution").as("postSolution");
+	cy.intercept("POST", "**/prosopo/provider/client/solution").as(
+		"postSolution",
+	);
 	// Go to the next captcha or submit solution
 	cy.get('button[data-cy="button-next"]').click({ force: true });
 	cy.wait(0);
