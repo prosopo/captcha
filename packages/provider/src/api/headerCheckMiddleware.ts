@@ -20,33 +20,24 @@ import { handleErrors } from "./errorHandler.js";
 export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const user = req.headers[",prosopo-user"] as string;
-			const dapp = req.headers[",prosopo-site-key"] as string;
+			const user = req.headers["prosopo-user"] as string;
+			const dapp = req.headers["prosopo-site-key"] as string;
 
 			if (!user) {
-				throw new ProsopoApiError("GENERAL.ACCOUNT_NOT_FOUND", {
-					context: { code: 400, user: user },
-				});
+				unauthorised(res);
+				return;
 			}
 			if (!dapp) {
-				throw new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, siteKey: dapp },
-				});
+				unauthorised(res);
+				return;
 			}
 
 			next();
-			return;
 		} catch (err) {
-			if (
-				err instanceof ProsopoApiError ||
-				err instanceof ZodError ||
-				err instanceof SyntaxError
-			) {
-				handleErrors(err, req, res, next);
-			} else {
-				res.status(401).json({ error: "Unauthorized", message: err });
-				return;
-			}
+			unauthorised(res);
 		}
 	};
 };
+
+const unauthorised = (res: Response) =>
+	res.status(401).json({ error: "Unauthorized", message: "Unauthorized" });

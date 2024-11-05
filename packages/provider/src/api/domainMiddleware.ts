@@ -26,7 +26,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const dapp = req.headers[",prosopo-site-key"] as string;
+			const dapp = req.headers["prosopo-site-key"] as string;
 			if (!dapp) throw siteKeyNotRegisteredError("No sitekey provided");
 
 			try {

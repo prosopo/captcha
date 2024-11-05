@@ -57,6 +57,8 @@ describe("Image Captcha Integration Tests", () => {
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -81,6 +83,8 @@ describe("Image Captcha Integration Tests", () => {
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": unregisteredAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -106,6 +110,8 @@ describe("Image Captcha Integration Tests", () => {
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": invalidSiteKey,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -130,6 +136,8 @@ describe("Image Captcha Integration Tests", () => {
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -159,6 +167,8 @@ describe("Image Captcha Integration Tests", () => {
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -216,6 +226,8 @@ describe("Image Captcha Integration Tests", () => {
 					headers: {
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(solveImgCaptchaBody),
 				},
