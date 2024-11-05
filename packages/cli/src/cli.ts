@@ -56,7 +56,7 @@ async function main() {
 
 	log.info(`Pair address: ${pair.address}`);
 
-	const processedArgs = await processArgs(process.argv, pair, config);
+	const processedArgs = await processArgs(process.argv, pair, authAccount, config);
 
 	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
 	if (processedArgs.api) {

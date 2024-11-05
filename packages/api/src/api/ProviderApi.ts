@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+	AdminApiPaths,
 	ApiParams,
+	ApiResponse,
 	ApiPaths,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
@@ -237,6 +239,17 @@ export default class ProviderApi
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public registerSiteKey(siteKey: string, settings: Record<string, unknown>, timestamp: string, signature: string): Promise<ApiResponse> {
+		console.log("settings\n\n---\n\n", settings);
+		return this.post(AdminApiPaths.SiteKeyRegister, { siteKey, settings }, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
 			},
 		});
 	}

@@ -18,6 +18,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { Tasks } from "../tasks/index.js";
 import { handleErrors } from "./errorHandler.js";
+import { ProviderApi } from "@prosopo/api";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	const tasks = new Tasks(env);

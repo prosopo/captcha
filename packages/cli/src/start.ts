@@ -56,13 +56,12 @@ function startApi(
 	apiApp.use(prosopoVerifyRouter(env));
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
-
-	if (admin) {
-		apiApp.use("/v1/prosopo/provider/admin/", authMiddleware(env));
-		apiApp.use(prosopoAdminRouter(env));
-	}
-
+	
 	apiApp.use(publicRouter(env));
+
+	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
+	apiApp.use(prosopoAdminRouter(env));
+
 
 	// Rate limiting
 	const rateLimits = env.config.rateLimits;

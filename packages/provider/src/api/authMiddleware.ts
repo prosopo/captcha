@@ -21,22 +21,20 @@ import type { NextFunction, Request, Response } from "express";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			console.log("---!!!---\n\nauthMiddleware\n\n---!!!---\n\n", req.url);
 			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
-			if (req.url.indexOf(ApiPrefix) === -1) {
-				next();
-				return;
-			}
+
 
 			const { signature, timestamp } = extractHeaders(req);
 
-			if (!env.pair) {
+			if (!env.authAccount) {
 				res.status(401).json({
 					error: "Unauthorized",
 					message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
 				});
 				return;
 			}
-			verifySignature(signature, timestamp, env.pair);
+			verifySignature(signature, timestamp, env.authAccount);
 
 			next();
 		} catch (err) {
@@ -75,7 +73,9 @@ const extractHeaders = (req: Request) => {
 
 	// check if timestamp is from the last 5 minutes
 	const now = new Date().getTime();
-	const ts = Number.parseInt(timestamp, 10);
+	const ts = Number.parseInt(timestamp);
+
+	console.log("now - ts", now - ts, now, ts);
 	if (now - ts > 300000) {
 		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
 			context: { error: "Timestamp is too old", code: 400 },

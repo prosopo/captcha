@@ -203,6 +203,7 @@ export class ClientTaskManager {
 		siteKey: string,
 		settings: IUserSettings,
 	): Promise<void> {
+		console.log(settings);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
@@ -278,6 +279,8 @@ export class ClientTaskManager {
 
 			const referrerDomain = getDomain(cleanReferrer).replace(/\.$/, "");
 			const allowedDomain = getDomain(cleanAllowedInput).replace(/\.$/, "");
+
+			console.log(referrerDomain, allowedDomain);
 
 			// Special case for localhost
 			if (referrerDomain === "localhost") return true;
