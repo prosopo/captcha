@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
+import { ProviderApi } from "@prosopo/api";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { validateSiteKey } from "./validators.js";
-import {ProviderApi} from "@prosopo/api";
-import { u8aToHex } from "@prosopo/util";
 
 export default (
 	pair: KeyringPair,
@@ -34,31 +34,37 @@ export default (
 		command: "site_key_register_api <sitekey> <url>",
 		describe: "Register a Site Key",
 		builder: (yargs: Argv) =>
-			yargs.positional("sitekey", {
-				type: "string" as const,
-				demandOption: true,
-				desc: "The AccountId of the application to register the Site Key with",
-			} as const).option("url", {
-				type: "string" as const,
-				demandOption: true,
-				desc: "URL to register the Site Key with",
-			} as const).option("captcha_type", {
-				type: "string" as const,
-				demandOption: false,
-				desc: "Captcha type for settings",
-			} as const).option("frictionless_threshold", {
-				type: "number" as const,
-				demandOption: false,
-				desc: "Frictionless threshold for settings",
-			} as const).option("domains", {
-				type: "array" as const,
-				demandOption: false,
-				desc: "URLs for settings",
-			} as const).option("pow_difficulty", {
-				type: "number" as const,
-				demandOption: false,
-				desc: "POW difficulty for settings",
-			} as const),
+			yargs
+				.positional("sitekey", {
+					type: "string" as const,
+					demandOption: true,
+					desc: "The AccountId of the application to register the Site Key with",
+				} as const)
+				.option("url", {
+					type: "string" as const,
+					demandOption: true,
+					desc: "URL to register the Site Key with",
+				} as const)
+				.option("captcha_type", {
+					type: "string" as const,
+					demandOption: false,
+					desc: "Captcha type for settings",
+				} as const)
+				.option("frictionless_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Frictionless threshold for settings",
+				} as const)
+				.option("domains", {
+					type: "array" as const,
+					demandOption: false,
+					desc: "URLs for settings",
+				} as const)
+				.option("pow_difficulty", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "POW difficulty for settings",
+				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
 				const env = new ProviderEnvironment(config, pair, authAccount);
@@ -75,12 +81,17 @@ export default (
 				const api = new ProviderApi(url as string, pair.address);
 				const timestamp = new Date().getTime().toString();
 				const signature = u8aToHex(authAccount.sign(timestamp));
-				await api.registerSiteKey(sitekey as string, {
-					captchaType: captcha_type as "image" | "pow" | "frictionless",
-					frictionlessThreshold: frictionless_threshold as number,
-					domains: domains as string[],
-					powDifficulty: pow_difficulty as number,
-				}, timestamp, signature);
+				await api.registerSiteKey(
+					sitekey as string,
+					{
+						captchaType: captcha_type as "image" | "pow" | "frictionless",
+						frictionlessThreshold: frictionless_threshold as number,
+						domains: domains as string[],
+						powDifficulty: pow_difficulty as number,
+					},
+					timestamp,
+					signature,
+				);
 				logger.info(`Site Key ${argv.sitekey} registered`);
 			} catch (err) {
 				logger.error(err);

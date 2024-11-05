@@ -24,7 +24,6 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 			console.log("---!!!---\n\nauthMiddleware\n\n---!!!---\n\n", req.url);
 			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
 
-
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.authAccount) {

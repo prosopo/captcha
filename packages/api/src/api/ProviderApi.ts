@@ -14,8 +14,8 @@
 import {
 	AdminApiPaths,
 	ApiParams,
-	ApiResponse,
 	ApiPaths,
+	type ApiResponse,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -243,14 +243,23 @@ export default class ProviderApi
 		});
 	}
 
-	public registerSiteKey(siteKey: string, settings: Record<string, unknown>, timestamp: string, signature: string): Promise<ApiResponse> {
+	public registerSiteKey(
+		siteKey: string,
+		settings: Record<string, unknown>,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
 		console.log("settings\n\n---\n\n", settings);
-		return this.post(AdminApiPaths.SiteKeyRegister, { siteKey, settings }, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+		return this.post(
+			AdminApiPaths.SiteKeyRegister,
+			{ siteKey, settings },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
 			},
-		});
+		);
 	}
 }

@@ -31,27 +31,32 @@ export default (
 		command: "site_key_register <sitekey>",
 		describe: "Register a Site Key",
 		builder: (yargs: Argv) =>
-			yargs.positional("sitekey", {
-				type: "string" as const,
-				demandOption: true,
-				desc: "The AccountId of the application to register the Site Key with",
-			} as const).option("captcha_type", {
-				type: "string" as const,
-				demandOption: false,
-				desc: "Captcha type for settings",
-			} as const).option("frictionless_threshold", {
-				type: "number" as const,
-				demandOption: false,
-				desc: "Frictionless threshold for settings",
-			} as const).option("url", {
-				type: "array" as const,
-				demandOption: false,
-				desc: "URLs for settings",
-			} as const).option("pow_difficulty", {
-				type: "number" as const,
-				demandOption: false,
-				desc: "POW difficulty for settings",
-			} as const),
+			yargs
+				.positional("sitekey", {
+					type: "string" as const,
+					demandOption: true,
+					desc: "The AccountId of the application to register the Site Key with",
+				} as const)
+				.option("captcha_type", {
+					type: "string" as const,
+					demandOption: false,
+					desc: "Captcha type for settings",
+				} as const)
+				.option("frictionless_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Frictionless threshold for settings",
+				} as const)
+				.option("url", {
+					type: "array" as const,
+					demandOption: false,
+					desc: "URLs for settings",
+				} as const)
+				.option("pow_difficulty", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "POW difficulty for settings",
+				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
 				const env = new ProviderEnvironment(config, pair);
