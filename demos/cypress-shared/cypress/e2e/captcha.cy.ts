@@ -33,7 +33,7 @@ describe("Captchas", () => {
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 		const settings: IUserSettings = {
 			captchaType: "pow",
-			domains: ["0.com"],
+			domains: ["0.0.0.0"],
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
 		};

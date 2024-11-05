@@ -413,6 +413,12 @@ describe("ClientTaskManager", () => {
 					"test.example.com",
 				),
 			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"0.0.0.0",
+					"http://0.0.0.0:9230",
+				),
+			).toBe(true);
 		});
 
 		it("should not match different domains", () => {
