@@ -48,7 +48,7 @@ describe("Image Captcha Integration Tests", () => {
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
-				[ApiParams.datasetId]: solutions.datasetId as string,
+				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
 			const response = await fetch(getImageCaptchaURL, {

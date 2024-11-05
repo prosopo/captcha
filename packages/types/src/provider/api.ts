@@ -25,6 +25,7 @@ import {
 	object,
 	type output,
 	string,
+	union,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
@@ -170,7 +171,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: string(),
+	[ApiParams.datasetId]: union([string(), array(number())]),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
