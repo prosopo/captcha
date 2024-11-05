@@ -29,6 +29,7 @@
 		"@polkadot/keyring": "12.6.2",
 		"@polkadot/types-codec": "10.13.1",
 		"@polkadot/util-crypto": "12.6.2",
+		"@prosopo/api": "2.1.10",
 		"@prosopo/config": "2.1.10",
 		"@prosopo/common": "2.1.10",
 		"@prosopo/contract": "2.1.10",

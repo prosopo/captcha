@@ -8,6 +8,9 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../api"
+		},
+		{
 			"path": "../common"
 		},
 		{
