@@ -21,6 +21,12 @@ import type { NextFunction, Request, Response } from "express";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
+			if (req.url.indexOf(ApiPrefix) === -1) {
+				next();
+				return;
+			}
+
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (!env.authAccount) {
