@@ -18,10 +18,14 @@ import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
+	domainMiddleware,
 	getClientList,
+	handleErrors,
+	headerCheckMiddleware,
 	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
+	publicRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
@@ -48,15 +52,17 @@ function startApi(
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	apiApp.use(i18nMiddleware({}));
+	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
-	apiApp.use(prosopoRouter(env));
 	apiApp.use(prosopoVerifyRouter(env));
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
 
-	if (admin) {
-		apiApp.use(authMiddleware(env));
-		apiApp.use(prosopoAdminRouter(env));
-	}
+	apiApp.use(publicRouter(env));
+
+	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
+	apiApp.use(prosopoAdminRouter(env));
 
 	// Rate limiting
 	const rateLimits = env.config.rateLimits;
@@ -88,7 +94,11 @@ export async function start(
 		});
 
 		const pair = await getPairAsync(secret);
-		env = new ProviderEnvironment(config, pair);
+		const authAccount = await getPairAsync(
+			undefined,
+			config.authAccount.address,
+		);
+		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
 		env.logger.debug("Env already defined");
 	}

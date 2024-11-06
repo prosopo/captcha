@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+	AdminApiPaths,
 	ApiParams,
 	ApiPaths,
+	type ApiResponse,
+	type CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -31,7 +35,6 @@ import {
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
-	type TGetImageCaptchaChallengePathAndParams,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -58,10 +61,12 @@ export default class ProviderApi
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
-		const url: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/${
-			provider.datasetId
-		}/${userAccount}/${dappAccount}`;
-		return this.fetch(url, {
+		const body: CaptchaRequestBodyType = {
+			[ApiParams.dapp]: dappAccount,
+			[ApiParams.user]: userAccount,
+			[ApiParams.datasetId]: provider.datasetId,
+		};
+		return this.post(ApiPaths.GetImageCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -221,10 +226,6 @@ export default class ProviderApi
 		});
 	}
 
-	public updateProviderClients(): Promise<UpdateProviderClientsResponse> {
-		return this.post(ApiPaths.UpdateProviderClients, {});
-	}
-
 	public submitPowCaptchaVerify(
 		token: string,
 		signatureHex: string,
@@ -242,5 +243,24 @@ export default class ProviderApi
 				"Prosopo-User": user,
 			},
 		});
+	}
+
+	public registerSiteKey(
+		siteKey: string,
+		settings: Record<string, unknown>,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.SiteKeyRegister,
+			{ siteKey, settings },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 	}
 }

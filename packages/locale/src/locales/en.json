@@ -107,6 +107,7 @@
 		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
 		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
 		"INVALID_SITE_KEY": "Invalid site key",
+		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
 		"INVALID_IP": "Invalid IP"
 	},
 	"CLI": {

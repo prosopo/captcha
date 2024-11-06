@@ -17,7 +17,11 @@ import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { AdminApiPaths, type Captcha } from "@prosopo/types";
+import {
+	AdminApiPaths,
+	type Captcha,
+	type IUserSettings,
+} from "@prosopo/types";
 import { checkboxClass } from "../support/commands.js";
 
 describe("Captchas", () => {
@@ -26,6 +30,12 @@ describe("Captchas", () => {
 		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
 		const signature = u8aToHex(pair.sign(timestamp.toString()));
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		const settings: IUserSettings = {
+			captchaType: "pow",
+			domains: ["0.0.0.0"],
+			frictionlessThreshold: 0.5,
+			powDifficulty: 2,
+		};
 		await fetch(adminSiteKeyURL, {
 			method: "POST",
 			headers: {
@@ -35,6 +45,7 @@ describe("Captchas", () => {
 			},
 			body: JSON.stringify({
 				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+				settings,
 			}),
 		});
 	});

@@ -18,6 +18,9 @@ export const getURLProtocol = (url: URL) => {
 	return "https";
 };
 
+export const parseUrl = (domain: string) =>
+	new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+
 export const validateDomain = (domain: string): boolean => {
 	if (domain.length > 253) return false;
 
@@ -31,7 +34,7 @@ export const validateDomain = (domain: string): boolean => {
 	}
 
 	try {
-		new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+		parseUrl(domain);
 	} catch (e) {
 		return false;
 	}
