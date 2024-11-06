@@ -7,7 +7,7 @@
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": ">=20",
+		"node": "20",
 		"npm": ">=9"
 	},
 	"exports": {
@@ -24,7 +24,9 @@
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/common": "2.1.10",
 		"@prosopo/load-balancer": "2.1.10",
