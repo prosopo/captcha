@@ -30,11 +30,17 @@ export class Environment implements ProsopoEnvironment {
 	assetsResolver: AssetsResolver | undefined;
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
+	authAccount: KeyringPair | undefined;
 
-	constructor(config: ProsopoBasicConfigOutput, pair?: KeyringPair) {
+	constructor(
+		config: ProsopoBasicConfigOutput,
+		pair?: KeyringPair,
+		authAccount?: KeyringPair,
+	) {
 		this.config = config;
 		this.defaultEnvironment = this.config.defaultEnvironment;
 		this.pair = pair;
+		this.authAccount = authAccount;
 		this.logger = getLogger(this.config.logLevel, "ProsopoEnvironment");
 
 		this.keyring = new Keyring({

@@ -96,6 +96,8 @@ describe("PoW Integration Tests", () => {
 					Connection: "close",
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 				body: JSON.stringify(body),
 			});
@@ -117,11 +119,31 @@ describe("PoW Integration Tests", () => {
 				headers: {
 					Connection: "close",
 					"Content-Type": "application/json",
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
 			});
 
 			expect(response.status).toBe(400);
+		});
+
+		it("should return an error if origin header is not valid", async () => {
+			const origin = "http://notallowed.com";
+			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+				},
+				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+			});
+
+			expect(response.status).toBe(400);
+			expect(response.statusText).toBe("Unauthorized origin URL");
 		});
 	});
 	describe("SubmitPowCaptchaSolution", () => {
@@ -156,6 +178,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(requestBody),
 				},
@@ -193,6 +217,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(submitBody),
 				},
@@ -224,6 +250,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
 				},
@@ -262,6 +290,9 @@ describe("PoW Integration Tests", () => {
 					headers: {
 						Connection: "close",
 						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(body),
 				},
@@ -293,6 +324,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": unregisteredAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify({
 						user: userAccount,
@@ -325,6 +358,8 @@ describe("PoW Integration Tests", () => {
 				Connection: "close",
 				"Content-Type": "application/json",
 				Origin: origin,
+				"Prosopo-Site-Key": invalidSiteKey,
+				"Prosopo-User": userAccount,
 			},
 			body: JSON.stringify({ user: userAccount, dapp: invalidSiteKey }),
 		});

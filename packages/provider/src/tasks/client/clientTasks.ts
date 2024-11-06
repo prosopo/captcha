@@ -30,6 +30,7 @@ import {
 	type UserAccountBlockRule,
 	type UserCommitment,
 } from "@prosopo/types-database";
+import { parseUrl } from "@prosopo/util";
 import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
@@ -249,6 +250,28 @@ export class ClientTaskManager {
 		await this.providerDB.storeUserBlockRuleRecords(rules);
 	}
 
+	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+		if (!referrer || !clientDomain) return false;
+		try {
+			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
+
+			// Special case for localhost
+			if (referrerDomain === "localhost") return true;
+
+			return (
+				referrerDomain === allowedDomain ||
+				referrerDomain.endsWith(`.${allowedDomain}`)
+			);
+		} catch {
+			this.logger.error({
+				message: "Error in isSubdomainOrExactMatch",
+				context: { referrer, clientDomain },
+			});
+			return false;
+		}
+	}
+
 	private isCommitmentUpdated(
 		commitment: UserCommitment | PoWCaptchaStored,
 	): boolean {
@@ -272,5 +295,21 @@ export class ClientTaskManager {
 			await processBatch(batch);
 			skip += batch.length;
 		}
+	}
+
+	private cleanReferrer(referrer: string): string {
+		const lowered = referrer.toLowerCase().trim();
+
+		// Remove trailing slashes safely
+		let cleaned = lowered;
+		const MAX_SLASHES = 10;
+		let slashCount = 0;
+
+		while (cleaned.endsWith("/") && slashCount < MAX_SLASHES) {
+			cleaned = cleaned.slice(0, -1);
+			slashCount++;
+		}
+
+		return cleaned;
 	}
 }

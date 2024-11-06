@@ -60,7 +60,6 @@ export interface ProviderApiInterface {
 		events: StoredEvents,
 		string: string,
 	): Promise<UpdateProviderClientsResponse>;
-	updateProviderClients(): Promise<UpdateProviderClientsResponse>;
 	getProviderStatus(): Promise<ProviderRegistered>;
 	getProviderDetails(): Promise<Provider>;
 }

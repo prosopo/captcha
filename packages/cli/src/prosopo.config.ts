@@ -52,6 +52,7 @@ export default function getConfig(
 	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
 	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
 	who = "PROVIDER",
+	admin = "ADMIN",
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
 		logLevel: getLogLevel(),
@@ -108,5 +109,10 @@ export default function getConfig(
 			},
 		},
 		lRules: getLRules(),
+		authAccount: {
+			address: getAddress(admin),
+			password: getPassword(admin),
+			secret: getSecret(admin),
+		},
 	} as ProsopoConfigInput);
 }
