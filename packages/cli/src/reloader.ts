@@ -29,6 +29,7 @@ export default class ReloadingAPI {
 	private _envPath: string;
 	private _config: ProsopoConfigOutput;
 	private _pair: KeyringPair;
+	private _authAccount: KeyringPair;
 	private _processedArgs: AwaitedProcessedArgs;
 	private api: Server | undefined;
 	private _restarting: boolean;
@@ -38,11 +39,13 @@ export default class ReloadingAPI {
 		envPath: string,
 		config: ProsopoConfigOutput,
 		pair: KeyringPair,
+		authAccount: KeyringPair,
 		processedArgs: AwaitedProcessedArgs,
 	) {
 		this._envPath = envPath;
 		this._config = config;
 		this._pair = pair;
+		this._authAccount = authAccount;
 		this._processedArgs = processedArgs;
 		this._restarting = false;
 	}
@@ -56,7 +59,11 @@ export default class ReloadingAPI {
 		this._envWatcher = await this._watchEnv();
 		loadEnv();
 		if (!this._env && reloadEnv) {
-			const env = new ProviderEnvironment(this._config, this._pair);
+			const env = new ProviderEnvironment(
+				this._config,
+				this._pair,
+				this._authAccount,
+			);
 			await env.isReady();
 			this._env = env;
 		}
@@ -67,7 +74,11 @@ export default class ReloadingAPI {
 		log.info("Starting API");
 		this._envWatcher = await this._watchEnv();
 		loadEnv();
-		const env = new ProviderEnvironment(this._config, this._pair);
+		const env = new ProviderEnvironment(
+			this._config,
+			this._pair,
+			this._authAccount,
+		);
 		await env.isReady();
 		this.api = await startDev(env, !!this._processedArgs.adminApi);
 	}

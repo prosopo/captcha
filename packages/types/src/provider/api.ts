@@ -25,6 +25,7 @@ import {
 	object,
 	type output,
 	string,
+	union,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
@@ -54,17 +55,16 @@ export const ApiPrefix = "/v1/prosopo" as const;
 export type IPAddress = Address4 | Address6;
 
 export enum ApiPaths {
-	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
-	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
-	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/captcha/frictionless",
-	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
-	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
-	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
-	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
-	GetProviderStatus = "/v1/prosopo/provider/status",
-	GetProviderDetails = "/v1/prosopo/provider/details",
-	UpdateProviderClients = "/v1/prosopo/provider/clients",
-	SubmitUserEvents = "/v1/prosopo/provider/events",
+	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
+	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
+	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
+	SubmitImageCaptchaSolution = "/v1/prosopo/provider/client/solution",
+	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
+	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
+	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
+	GetProviderStatus = "/v1/prosopo/provider/client/status",
+	GetProviderDetails = "/v1/prosopo/provider/public/details",
+	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 }
 
 export type TGetImageCaptchaChallengePathAndParams =
@@ -80,9 +80,6 @@ export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
-	UpdateDataset = "/v1/prosopo/provider/admin/dataset",
-	ProviderDeregister = "/v1/prosopo/provider/admin/deregister",
-	ProviderUpdate = "/v1/prosopo/provider/admin/update",
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 }
 
@@ -99,11 +96,7 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.UpdateProviderClients]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
-	[AdminApiPaths.ProviderUpdate]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -124,7 +117,7 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: Hash;
+	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -178,7 +171,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: string(),
+	[ApiParams.datasetId]: union([string(), array(number())]),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -350,5 +343,12 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.settings]: object({
 		[ApiParams.captchaType]: string(),
+		[ApiParams.domains]: array(string()),
+		[ApiParams.frictionlessThreshold]: number(),
+		[ApiParams.powDifficulty]: number(),
 	}).optional(),
+});
+
+export const DappDomainRequestBody = object({
+	[ApiParams.dapp]: string(),
 });
