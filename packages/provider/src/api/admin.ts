@@ -27,6 +27,8 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 
 	router.post(AdminApiPaths.SiteKeyRegister, async (req, res, next) => {
 		try {
+			tasks.logger.info("Registering site key, request body:");
+			tasks.logger.info(req.body);
 			const { siteKey, settings } = RegisterSitekeyBody.parse(req.body);
 			const temp = settings || {};
 			await tasks.clientTaskManager.registerSiteKey(siteKey, temp);
