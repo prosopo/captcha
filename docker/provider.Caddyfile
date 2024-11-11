@@ -7,7 +7,7 @@
 
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
-	order ja3 before respond
+	order ja3 before rate_limit
 	servers {
 		listener_wrappers {
 			http_redirect
