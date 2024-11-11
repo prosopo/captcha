@@ -392,6 +392,7 @@ export const UserAccountBlockRuleSchema =
 		type: { type: String, enum: BlockRuleType, required: true },
 	});
 
+UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
 UserAccountBlockRuleSchema.index(
 	{ dappAccount: 1, userAccount: 1 },
 	{ unique: true },
