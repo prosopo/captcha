@@ -81,7 +81,7 @@ export class ImgCaptchaManager {
 	}
 
 	async getRandomCaptchasAndRequestHash(
-		datasetId: string,
+		datasetId: Hash,
 		userAccount: string,
 		ipAddress: Address4 | Address6,
 		headers: RequestHeaders,

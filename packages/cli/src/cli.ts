@@ -49,20 +49,30 @@ async function main() {
 		config.account.address,
 	);
 
+	const authAccount = await getPairAsync(
+		config.authAccount.secret,
+		config.authAccount.address,
+	);
+
 	log.info(`Pair address: ${pair.address}`);
 
-	const processedArgs = await processArgs(process.argv, pair, config);
+	const processedArgs = await processArgs(
+		process.argv,
+		pair,
+		authAccount,
+		config,
+	);
 
 	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
 	if (processedArgs.api) {
 		if (process.env.NODE_ENV === "development") {
-			await new ReloadingAPI(envPath, config, pair, processedArgs)
+			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.startDev()
 				.then(() => {
 					log.info("Reloading API started...");
 				});
 		} else {
-			await new ReloadingAPI(envPath, config, pair, processedArgs)
+			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.start()
 				.then(() => {
 					log.info("Reloading API started...");
