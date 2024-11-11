@@ -59,13 +59,16 @@ export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
-const ONE_WEEK = 60 * 60 * 24 * 7;
+const ONE_DAY = 60 * 60 * 24;
+const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
 });
+// Set an index on the account field, ascending
+ClientRecordSchema.index({ account: 1 });
 
 export enum StoredStatusNames {
 	notStored = "notStored",
@@ -193,7 +196,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
 );
 
 // Set an index on the captchaId field, ascending
-PoWCaptchaRecordSchema.index({ captchaId: 1 });
+PoWCaptchaRecordSchema.index({ challenge: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -331,10 +334,13 @@ export type Session = {
 
 export type SessionRecord = mongoose.Document & Session;
 
-export const SessionRecordSchema = new Schema<SessionRecord>({
-	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true },
-});
+export const SessionRecordSchema = new Schema<SessionRecord>(
+	{
+		sessionId: { type: String, required: true, unique: true },
+		createdAt: { type: Date, required: true },
+	},
+	{ expireAfterSeconds: ONE_DAY },
+);
 
 type BlockRule = {
 	global: boolean;
@@ -353,7 +359,7 @@ export interface IPAddressBlockRule extends BlockRule {
 }
 
 export interface UserAccountBlockRule extends BlockRule {
-	dappAccount: string;
+	dappAccount?: string;
 	userAccount: string;
 }
 
@@ -375,10 +381,11 @@ export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
 });
 
 IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
+IPBlockRuleRecordSchema.index({ ip: 1, dappAccount: 1 }, { unique: true });
 
 export const UserAccountBlockRuleSchema =
 	new Schema<UserAccountBlockRuleRecord>({
-		dappAccount: { type: String, required: true },
+		dappAccount: { type: String, required: false },
 		userAccount: { type: String, required: true },
 		global: { type: Boolean, required: true },
 		hardBlock: { type: Boolean, required: false },
