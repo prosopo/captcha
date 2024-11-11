@@ -79,6 +79,7 @@ export default (
 					await tasks.clientTaskManager.addUserBlockRules(
 						argv.users as unknown as string[],
 						argv.hardBlock as boolean,
+						argv.global as boolean,
 						argv.dapp as unknown as string,
 					);
 				}
