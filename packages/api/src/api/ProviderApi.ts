@@ -25,6 +25,7 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type IUserSettings,
 	type ImageVerificationResponse,
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
@@ -247,7 +248,7 @@ export default class ProviderApi
 
 	public registerSiteKey(
 		siteKey: string,
-		settings: Record<string, unknown>,
+		settings: IUserSettings,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
