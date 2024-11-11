@@ -2,7 +2,7 @@
 	"name": "@prosopo/provider-container",
 	"type": "module",
 	"engines": {
-		"node": ">=20",
+		"node": "20",
 		"npm": ">=9"
 	},
 	"version": "2.1.10"
