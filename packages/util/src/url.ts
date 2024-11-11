@@ -22,6 +22,7 @@ export const parseUrl = (domain: string) =>
 	new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
 
 export const validateDomain = (domain: string): boolean => {
+	if (domain === "*") return true;
 	if (domain.length > 253) return false;
 
 	// https://stackoverflow.com/a/57129472/1178971
