@@ -111,7 +111,7 @@ services:
         profiles:
             - production
             - staging
-        image: caddy:2
+        image: prosopo/caddy:latest
         env_file:
             - ../.env.${NODE_ENV}
         labels:

@@ -233,7 +233,8 @@ export class ClientTaskManager {
 	async addUserBlockRules(
 		userAccounts: string[],
 		hardBlock: boolean,
-		dappAccount: string,
+		global: boolean,
+		dappAccount?: string,
 	): Promise<void> {
 		validateAddress(dappAccount, false, 42);
 		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
@@ -242,8 +243,7 @@ export class ClientTaskManager {
 				dappAccount,
 				userAccount,
 				type: BlockRuleType.userAccount,
-				// TODO don't store global on these
-				global: false,
+				global,
 				hardBlock,
 			};
 		});
@@ -252,6 +252,7 @@ export class ClientTaskManager {
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
+		if (clientDomain === "*") return true;
 		try {
 			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
 			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
