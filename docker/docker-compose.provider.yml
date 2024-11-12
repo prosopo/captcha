@@ -11,8 +11,8 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
+            internal:
+                ipv4_address: 172.18.0.2
         logging:
             driver: 'json-file'
             options:
@@ -40,8 +40,8 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
+            internal:
+                ipv4_address: 172.18.0.3
         logging:
             driver: 'json-file'
             options:
@@ -65,7 +65,8 @@ services:
         env_file:
             - ../dev/scripts/.env.development
         networks:
-            - internal
+            internal:
+                ipv4_address: 172.18.0.4
         logging:
             driver: 'json-file'
             options:
@@ -94,7 +95,8 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         networks:
-            - internal
+            internal:
+                ipv4_address: 172.18.0.5
         logging:
             driver: 'json-file'
             options:
@@ -127,7 +129,9 @@ services:
             - caddy_data:/data
             - caddy_config:/config
         networks:
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.6
         logging:
             driver: 'json-file'
             options:
@@ -190,6 +194,11 @@ networks:
     internal:
         name: internal
         internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
     external:
         name: external
 volumes:
