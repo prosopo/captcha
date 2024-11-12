@@ -7,11 +7,9 @@
 
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
-	order ja3 before rate_limit
 	servers {
 		listener_wrappers {
 			http_redirect
-			ja3
 			tls
 		}
 		timeouts {
@@ -54,8 +52,6 @@
 		}
 		log_key
 	}
-
-	ja3 sort_ja3 true
 
 	# reverse proxy to the provider container
 	reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider}:{$CADDY_PROVIDER_PORT:9229} {
