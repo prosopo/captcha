@@ -35,6 +35,10 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
+import {
+	FrictionlessToken,
+	FrictionlessTokenRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
@@ -423,6 +427,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+				// Check if the token has already been used
+				const isTokenUsed = await tasks.db.checkFrictionlessTokenRecord(token);
+				if (isTokenUsed) {
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+				}
+
+				// Store the token
+				await tasks.db.storeFrictionlessTokenRecord({ token });
 
 				const lScore = tasks.frictionlessManager.checkLangRules(
 					req.headers["accept-language"] || "",

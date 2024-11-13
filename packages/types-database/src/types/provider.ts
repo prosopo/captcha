@@ -327,6 +327,20 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 	{ expireAfterSeconds: ONE_WEEK },
 );
 
+export type FrictionlessToken = {
+	token: string;
+};
+
+export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
+
+export const FrictionlessTokenRecordSchema =
+	new Schema<FrictionlessTokenRecord>(
+		{
+			token: { type: String, required: true, unique: true },
+		},
+		{ expireAfterSeconds: ONE_DAY },
+	);
+
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
@@ -565,6 +579,10 @@ export interface IProviderDatabase extends IDatabase {
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
+
+	storeFrictionlessTokenRecord(tokenRecord: FrictionlessToken): Promise<void>;
+
+	checkFrictionlessTokenRecord(token: string): Promise<boolean>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
