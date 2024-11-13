@@ -341,6 +341,8 @@ export const FrictionlessTokenRecordSchema =
 		{ expireAfterSeconds: ONE_DAY },
 	);
 
+FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
