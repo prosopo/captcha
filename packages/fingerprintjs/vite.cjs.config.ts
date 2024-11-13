@@ -11,18 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { blake2AsHex } from "@polkadot/util-crypto/blake2";
-import { arrayJoin } from "./array.js";
-export const HEX_HASH_BIT_LENGTH = 256;
+import path from "node:path";
+import { ViteCommonJSConfig } from "@prosopo/config";
 
-export function hexHash(
-	data: string | Uint8Array,
-	bitLength?: 256 | 512 | 64 | 128 | 384 | undefined,
-): string {
-	// default bit length is 256
-	return blake2AsHex(data, bitLength);
-}
-
-export function hexHashArray<T>(arr: T[]): string {
-	return hexHash(arrayJoin(arr));
+export default function () {
+	return ViteCommonJSConfig(
+		"detector",
+		path.resolve("./tsconfig.cjs.json"),
+		"src/index.js",
+	);
 }
