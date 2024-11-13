@@ -39,6 +39,8 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	type FrictionlessToken,
+	FrictionlessTokenRecordSchema,
 	type IPBlockRuleRecord,
 	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
@@ -69,7 +71,10 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type { IPBlockRuleMongo } from "@prosopo/types-database";
+import type {
+	FrictionlessTokenRecord,
+	IPBlockRuleMongo,
+} from "@prosopo/types-database";
 import type { DeleteResult } from "mongodb";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
@@ -84,6 +89,7 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
+	frictionlessToken = "frictionlessToken",
 	session = "session",
 	ipblockrules = "ipblockrules",
 	userblockrules = "userblockrules",
@@ -134,6 +140,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.client,
 		modelName: "Client",
 		schema: ClientRecordSchema,
+	},
+	{
+		collectionName: TableNames.frictionlessToken,
+		modelName: "FrictionlessToken",
+		schema: FrictionlessTokenRecordSchema,
 	},
 	{
 		collectionName: TableNames.session,
@@ -823,6 +834,28 @@ export class ProviderDatabase
 			},
 			{ upsert: false },
 		);
+	}
+
+	/**
+	 * Store a new frictionless token record
+	 */
+	async storeFrictionlessTokenRecord(
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId> {
+		const doc =
+			await this.tables.frictionlessToken.create<FrictionlessTokenRecord>(
+				tokenRecord,
+			);
+		return doc._id;
+	}
+
+	/**
+	 * Check if a frictionless token record exists.
+	 * Used to ensure that a token is not used more than once.
+	 */
+	async checkFrictionlessTokenRecord(token: string): Promise<boolean> {
+		const record = await this.tables.frictionlessToken.findOne({ token });
+		return !!record;
 	}
 
 	/**

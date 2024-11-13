@@ -39,7 +39,7 @@ import {
 	TimestampSchema,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import type mongoose from "mongoose";
+import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
 	type ZodType,
@@ -327,9 +327,26 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 	{ expireAfterSeconds: ONE_WEEK },
 );
 
+export type FrictionlessToken = {
+	token: string;
+};
+
+export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
+
+export const FrictionlessTokenRecordSchema =
+	new Schema<FrictionlessTokenRecord>(
+		{
+			token: { type: String, required: true, unique: true },
+		},
+		{ expireAfterSeconds: ONE_DAY },
+	);
+
+FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
+	tokenId: ObjectId;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -338,6 +355,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>(
 	{
 		sessionId: { type: String, required: true, unique: true },
 		createdAt: { type: Date, required: true },
+		tokenId: {
+			type: mongoose.Schema.Types.ObjectId,
+		},
 	},
 	{ expireAfterSeconds: ONE_DAY },
 );
@@ -565,6 +585,12 @@ export interface IProviderDatabase extends IDatabase {
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
+
+	storeFrictionlessTokenRecord(
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId>;
+
+	checkFrictionlessTokenRecord(token: string): Promise<boolean>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
