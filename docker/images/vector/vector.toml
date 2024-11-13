@@ -8,6 +8,7 @@ address = "127.0.0.1:8686"
 [sources.provider]
 type = "docker_logs"
 include_labels = ["vector.provider=true"]
+decoding.codec = "json"
 
 # format the logs for a provider
 [transforms.provider_format]
@@ -15,14 +16,6 @@ type = "remap"
 inputs = ["provider"]
 source = '''
 .host="$OO_HOST"
-del(.container_created_at)
-del(.container_id)
-del(.host)
-del(.image)
-del(.label)
-del(.source_type)
-del(.stream)
-del(.timestamp)
 '''
 
 # print to console the provider logs
@@ -70,7 +63,6 @@ source = '''
 .host="$OO_HOST"
 del(.id)
 del(.from)
-del(.host)
 del(.Type)
 .name=.Actor.Attributes.name
 del(.Actor)
