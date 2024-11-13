@@ -39,6 +39,7 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	type FrictionlessToken,
 	FrictionlessTokenRecordSchema,
 	type IPBlockRuleRecord,
 	IPBlockRuleRecordSchema,
@@ -839,9 +840,13 @@ export class ProviderDatabase
 	 * Store a new frictionless token record
 	 */
 	async storeFrictionlessTokenRecord(
-		tokenRecord: FrictionlessTokenRecord,
-	): Promise<void> {
-		await this.tables.frictionlessToken.create(tokenRecord);
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId> {
+		const doc =
+			await this.tables.frictionlessToken.create<FrictionlessTokenRecord>(
+				tokenRecord,
+			);
+		return doc._id;
 	}
 
 	/**

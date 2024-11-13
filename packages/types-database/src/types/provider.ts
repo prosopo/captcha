@@ -39,7 +39,7 @@ import {
 	TimestampSchema,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import type mongoose from "mongoose";
+import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
 	type ZodType,
@@ -346,6 +346,7 @@ FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
+	tokenId: ObjectId;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -354,6 +355,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>(
 	{
 		sessionId: { type: String, required: true, unique: true },
 		createdAt: { type: Date, required: true },
+		tokenId: {
+			type: mongoose.Types.ObjectId,
+			ref: "FrictionlessToken", // Reference to FrictionlessToken Schema
+		},
 	},
 	{ expireAfterSeconds: ONE_DAY },
 );
@@ -582,7 +587,9 @@ export interface IProviderDatabase extends IDatabase {
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
-	storeFrictionlessTokenRecord(tokenRecord: FrictionlessToken): Promise<void>;
+	storeFrictionlessTokenRecord(
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId>;
 
 	checkFrictionlessTokenRecord(token: string): Promise<boolean>;
 

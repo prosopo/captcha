@@ -435,7 +435,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Store the token
-				await tasks.db.storeFrictionlessTokenRecord({ token });
+				const tokenId = await tasks.db.storeFrictionlessTokenRecord({ token });
 
 				const lScore = tasks.frictionlessManager.checkLangRules(
 					req.headers["accept-language"] || "",
@@ -468,7 +468,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				if (Number(botScore) > botThreshold)
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
-				const response = await tasks.frictionlessManager.sendPowCaptcha();
+				const response =
+					await tasks.frictionlessManager.sendPowCaptcha(tokenId);
 				return res.json(response);
 			} catch (err) {
 				console.error("Error in frictionless captcha challenge:", err);
