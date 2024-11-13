@@ -32,8 +32,6 @@ async function main() {
 		unsolved: { count: 0 },
 	});
 
-	log.info(config);
-
 	if (config.devOnlyWatchEvents) {
 		log.warn(
 			`
