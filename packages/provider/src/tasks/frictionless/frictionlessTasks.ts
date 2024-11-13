@@ -28,6 +28,7 @@ import {
 import type { IProviderDatabase, Session } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import type { Address4, Address6 } from "ip-address";
+import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
 const logger = getLoggerDefault();
@@ -112,10 +113,13 @@ export class FrictionlessManager {
 		};
 	}
 
-	async sendPowCaptcha(): Promise<GetFrictionlessCaptchaResponse> {
+	async sendPowCaptcha(
+		tokenId: ObjectId,
+	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
 			createdAt: new Date(),
+			tokenId: tokenId,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
