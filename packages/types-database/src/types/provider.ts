@@ -356,8 +356,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>(
 		sessionId: { type: String, required: true, unique: true },
 		createdAt: { type: Date, required: true },
 		tokenId: {
-			type: mongoose.Types.ObjectId,
-			ref: "FrictionlessToken", // Reference to FrictionlessToken Schema
+			type: mongoose.Schema.Types.ObjectId,
 		},
 	},
 	{ expireAfterSeconds: ONE_DAY },
