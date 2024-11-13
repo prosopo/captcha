@@ -1,0 +1,27 @@
+{
+	"name": "@prosopo/fingerprintjs",
+	"version": "2.1.11",
+	"main": "src/fp.js",
+	"types": "dist/fp.d.ts",
+	"engines": {
+		"node": "20",
+		"npm": ">=9"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"clean": "tsc --build --clean"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/fp.esm.js",
+			"require": "./dist/fp.cjs.js"
+		}
+	},
+	"dependencies": {
+		"tslib": "^2.4.1"
+	},
+	"type": "module",
+	"sideEffects": false
+}
