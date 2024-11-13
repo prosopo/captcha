@@ -8,13 +8,14 @@ address = "127.0.0.1:8686"
 [sources.provider]
 type = "docker_logs"
 include_labels = ["vector.provider=true"]
-decoding.codec = "json"
 
 # format the logs for a provider
 [transforms.provider_format]
 type = "remap"
 inputs = ["provider"]
 source = '''
+.=parse_json!(string!(.message))
+del(.message)
 .host="$OO_HOST"
 '''
 
