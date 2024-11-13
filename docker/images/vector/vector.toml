@@ -16,6 +16,8 @@ inputs = ["provider"]
 source = '''
 .=parse_json!(string!(.message))
 del(.message)
+del(.timestamp)
+del(._timestamp)
 .host="$OO_HOST"
 '''
 
@@ -72,6 +74,7 @@ del(.time)
 del(.timeNano)
 del(.source_type)
 del(.timestamp)
+del(._timestamp)
 '''
 
 # print docker events to console
@@ -104,6 +107,8 @@ inputs = ["caddy"]
 source = '''
 .=parse_json!(string!(.message))
 .host="$OO_HOST"
+del(.timestamp)
+del(._timestamp)
 del(.ts)
 del(.user_id)
 del(.size)
@@ -137,6 +142,7 @@ source = '''
 .host="$OO_HOST"
 del(.t)
 del(.id)
+del(.timestamp)
 del(._timestamp)
 '''
 
