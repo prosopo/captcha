@@ -5,7 +5,7 @@ name: provider_image
 on:
     pull_request:
         branches: [main, dev, staging, release/*]
-        types: 
+        types:
             - opened # when a PR is opened
             - synchronize # when a PR is pushed to
             - reopened # when a PR is reopened
@@ -151,7 +151,7 @@ jobs:
                     sleep 20s
                     docker logs "$CONTAINER" >& provider.log
                     cat provider.log
-                    grep -oE "Version: \".*\"" provider.log || (cat provider.log && exit 1)
+                    grep -oE "Version: \\\\\".*\\\\\"" provider.log || (cat provider.log && exit 1)
 
             - name: Build the provider-mock package
               id: build_provider_mock_package
