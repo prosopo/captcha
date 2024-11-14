@@ -434,9 +434,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 				}
 
-				// Store the token
-				const tokenId = await tasks.db.storeFrictionlessTokenRecord({ token });
-
 				const lScore = tasks.frictionlessManager.checkLangRules(
 					req.headers["accept-language"] || "",
 				);
@@ -446,6 +443,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const botThreshold =
 					clientConfig?.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
+
+				// Store the token
+				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+					token,
+					score: botScore,
+					threshold: botThreshold,
+				});
 
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
