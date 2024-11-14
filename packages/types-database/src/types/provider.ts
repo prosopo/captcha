@@ -329,6 +329,8 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 
 export type FrictionlessToken = {
 	token: string;
+	score: number;
+	threshold: number;
 };
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
@@ -337,6 +339,8 @@ export const FrictionlessTokenRecordSchema =
 	new Schema<FrictionlessTokenRecord>(
 		{
 			token: { type: String, required: true, unique: true },
+			score: { type: Number, required: true },
+			threshold: { type: Number, required: true },
 		},
 		{ expireAfterSeconds: ONE_DAY },
 	);
