@@ -172,7 +172,7 @@ export class ClientTaskManager {
 				this.logger,
 			);
 
-			const updatedAtTimestamp = lastTask ? lastTask.updated || 0 : 0;
+			const updatedAtTimestamp = 0;
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
