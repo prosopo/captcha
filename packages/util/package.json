@@ -34,6 +34,7 @@
 		"@noble/hashes": "1.5.0",
 		"@prosopo/config": "2.1.13",
 		"dotenv": "16.4.5",
+		"express": "4.21.1",
 		"lodash": "4.17.21",
 		"seedrandom": "3.0.5"
 	},
@@ -42,8 +43,8 @@
 		"@types/seedrandom": "3.0.8",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
-		"npm-run-all": "4.1.5",
 		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
