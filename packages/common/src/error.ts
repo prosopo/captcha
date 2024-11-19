@@ -68,14 +68,12 @@ export abstract class ProsopoBaseError<
 	}
 
 	private logError(logger: Logger, logLevel: LogLevel) {
-		const errorFormatter = "\n*************** ERROR ***************\n";
-		const errorName = `Error Type: ${this.name}\n`;
 		const errorParams = JSON.stringify(
 			{ error: this.message, context: this.context },
 			null,
 			4,
 		);
-		const errorMessage = `${errorFormatter}${errorName}${errorParams}`;
+		const errorMessage = { errorType: this.name, errorParams };
 		logger[logLevel](errorMessage);
 	}
 }
