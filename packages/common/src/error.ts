@@ -68,11 +68,7 @@ export abstract class ProsopoBaseError<
 	}
 
 	private logError(logger: Logger, logLevel: LogLevel) {
-		const errorParams = JSON.stringify(
-			{ error: this.message, context: this.context },
-			null,
-			4,
-		);
+		const errorParams = { error: this.message, context: this.context };
 		const errorMessage = { errorType: this.name, errorParams };
 		logger[logLevel](errorMessage);
 	}
