@@ -52,7 +52,6 @@ export function getLoggerDefault(): Logger {
 	return defaultLogger;
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: we should be able to log anything we want, plus we can't control what external libraries log
 const JSONReporter = (
 	message: LogObject,
 	context: {
