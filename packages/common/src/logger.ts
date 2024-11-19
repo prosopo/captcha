@@ -14,6 +14,8 @@
 import consola, {
 	LogLevels as ConsolaLogLevels,
 	createConsola,
+	type ConsolaOptions,
+	type LogObject,
 } from "consola/browser";
 import { enum as zEnum, type infer as zInfer } from "zod";
 import { ProsopoEnvError } from "./error.js";
@@ -51,8 +53,17 @@ export function getLoggerDefault(): Logger {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: we should be able to log anything we want, plus we can't control what external libraries log
-const JSONReporter = (message: any) => {
-	process.stderr.write(`${JSON.stringify(message)}\n`);
+const JSONReporter = (
+	message: LogObject,
+	context: {
+		options: ConsolaOptions;
+	},
+) => {
+	if (context.options.level === ConsolaLogLevels.error) {
+		process.stderr.write(`${JSON.stringify(message)}\n`);
+	} else {
+		process.stdout.write(`${JSON.stringify(message)}\n`);
+	}
 };
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {

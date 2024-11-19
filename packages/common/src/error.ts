@@ -64,12 +64,12 @@ export abstract class ProsopoBaseError<
 			this.translationKey = error;
 			this.context = options?.context;
 		}
-		if (!options?.silent) this.logError(logger, logLevel);
+		if (!options?.silent) this.logError(logger, logLevel, options?.name);
 	}
 
-	private logError(logger: Logger, logLevel: LogLevel) {
+	private logError(logger: Logger, logLevel: LogLevel, errorName?: string) {
 		const errorParams = { error: this.message, context: this.context };
-		const errorMessage = { errorType: this.name, errorParams };
+		const errorMessage = { errorType: errorName || this.name, errorParams };
 		logger[logLevel](errorMessage);
 	}
 }
