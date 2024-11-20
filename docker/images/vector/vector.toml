@@ -20,7 +20,6 @@ del(.timestamp)
 del(._timestamp)
 .host="$OO_HOST"
 del(.date)
-del(.level)
 '''
 
 # print to console the provider logs
