@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/gh-actions",
-	"version": "2.1.13",
+	"version": "2.1.14",
 	"description": "",
 	"private": true,
 	"scripts": {
@@ -15,8 +15,8 @@
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
-		"npm-run-all": "4.1.5",
 		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
@@ -25,7 +25,8 @@
 	},
 	"dependencies": {
 		"@octokit/graphql": "8.1.1",
-		"axios": "1.7.7"
+		"axios": "1.7.7",
+		"express": "4.21.1"
 	},
 	"main": "dist/index.js",
 	"type": "module",
