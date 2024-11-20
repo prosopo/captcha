@@ -61,7 +61,7 @@ async function main() {
 		config,
 	);
 
-	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
+	log.info({ cliArgs: processedArgs });
 	if (processedArgs.api) {
 		if (process.env.NODE_ENV === "development") {
 			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)

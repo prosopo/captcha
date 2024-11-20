@@ -102,7 +102,11 @@ export const verifySignature = (
 
 	if (!pair.verify(timestamp, u8Sig, pair.publicKey)) {
 		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
-			context: { error: "Signature verification failed", code: 401 },
+			context: {
+				error: "Signature verification failed",
+				code: 401,
+				account: pair.publicKey,
+			},
 		});
 	}
 };
