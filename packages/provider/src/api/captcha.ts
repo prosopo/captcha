@@ -267,7 +267,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				if (!sessionRecord) {
 					return next(
 						new ProsopoApiError("API.BAD_REQUEST", {
-							context: { error: "Session ID not found", code: 400 },
+							context: {
+								error: "Session ID not found",
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
 						}),
 					);
 				}
@@ -275,7 +280,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Throw an error
 				return next(
 					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
-						context: { code: 400, siteKey: dapp },
+						context: { code: 400, siteKey: dapp, user },
 					}),
 				);
 			}
@@ -285,7 +290,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			if (!origin) {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { error: "Origin header not found", code: 400 },
+						context: {
+							error: "Origin header not found",
+							code: 400,
+							siteKey: dapp,
+							user,
+						},
 					}),
 				);
 			}
@@ -330,6 +340,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					context: {
 						code: 500,
 						siteKey: req.body.dapp,
+						user: req.body.user,
 					},
 				}),
 			);
