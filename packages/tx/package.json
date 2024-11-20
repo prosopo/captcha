@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/tx",
-	"version": "2.1.13",
+	"version": "2.1.14",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"scripts": {
@@ -37,12 +37,12 @@
 		"@polkadot/types": "10.13.1",
 		"@polkadot/types-codec": "10.13.1",
 		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "2.1.13",
-		"@prosopo/types": "2.1.13",
+		"@prosopo/common": "2.1.14",
+		"@prosopo/types": "2.1.14",
 		"express": "4.21.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.1.13",
+		"@prosopo/config": "2.1.14",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
