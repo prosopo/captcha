@@ -19,6 +19,7 @@ del(.message)
 del(.timestamp)
 del(._timestamp)
 .host="$OO_HOST"
+del(.date)
 '''
 
 # print to console the provider logs
@@ -75,6 +76,9 @@ del(.timeNano)
 del(.source_type)
 del(.timestamp)
 del(._timestamp)
+del(.pid)
+del(.stream)
+del(.command)
 '''
 
 # print docker events to console
@@ -114,6 +118,8 @@ del(.user_id)
 del(.size)
 del(.message)
 del(.resp_headers)
+del(.bytes_read)
+del(.logger)
 '''
 
 # send to openobserve
@@ -141,6 +147,7 @@ source = '''
 .=parse_json!(string!(.message))
 .host="$OO_HOST"
 del(.time)
+del(.notify)
 '''
 
 # send to openobserve
