@@ -80,7 +80,7 @@ export function getEnvFile(
 		searchPath = path.resolve(searchPath, "..");
 		levelCount += 1;
 		if (levelCount > 10) {
-			logger.error(
+			logger.warn(
 				`Checked ${levelCount} directories above, stopping search for ${fileNameFull}.`,
 			);
 			break;
