@@ -16,8 +16,8 @@ import {
 	type ProcaptchaRenderOptions,
 	type ProcaptchaToken,
 } from "@prosopo/types";
-import { getParentForm } from "./form.js";
 import { reset } from "../index.js";
+import { getParentForm } from "./form.js";
 
 export const getWindowCallback = (callbackName: string) => {
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
