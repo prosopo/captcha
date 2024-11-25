@@ -67,50 +67,66 @@ export const ProcaptchaFrictionless = ({
 	callbacks,
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
-	const [componentToRender, setComponentToRender] = useState(
-		<ProcaptchaPlaceholder config={config} callbacks={callbacks} />,
-	);
+	const [frictionlessLoading, setFrictionlessLoading] = useState(false);
+	const configOutput = ProcaptchaConfigSchema.parse(config);
 
-	useEffect(() => {
-		const configOutput = ProcaptchaConfigSchema.parse(config);
+	const frictionlessConfig = {
+		...config,
+		startOnRender: true,
+	};
 
-		const detectAndSetComponent = async () => {
-			try {
-				const result = await detectBot(configOutput);
+	const detectAndSetComponent = async () => {
+		setComponentToRender(
+			<ProcaptchaPlaceholder
+				config={config}
+				callbacks={callbacks}
+				frictionlessLoading={true}
+				detectAndSetComponent={() => {}}
+			/>,
+		);
 
-				const frictionlessState: FrictionlessState = {
-					provider: result.provider,
-					sessionId: result.sessionId,
-					userAccount: result.userAccount,
-				};
+		try {
+			const result = await detectBot(configOutput);
 
-				if (result.captchaType === "image") {
-					setComponentToRender(
-						<Procaptcha
-							config={config}
-							callbacks={callbacks}
-							frictionlessState={frictionlessState}
-						/>,
-					);
-				} else {
-					setComponentToRender(
-						<ProcaptchaPow
-							config={config}
-							callbacks={callbacks}
-							frictionlessState={frictionlessState}
-						/>,
-					);
-				}
-			} catch (error) {
-				console.error(error);
+			const frictionlessState: FrictionlessState = {
+				provider: result.provider,
+				sessionId: result.sessionId,
+				userAccount: result.userAccount,
+			};
+
+			if (result.captchaType === "image") {
 				setComponentToRender(
-					<Procaptcha config={config} callbacks={callbacks} />,
+					<Procaptcha
+						config={frictionlessConfig}
+						callbacks={callbacks}
+						frictionlessState={frictionlessState}
+					/>,
+				);
+			} else {
+				setComponentToRender(
+					<ProcaptchaPow
+						config={frictionlessConfig}
+						callbacks={callbacks}
+						frictionlessState={frictionlessState}
+					/>,
 				);
 			}
-		};
+		} catch (error) {
+			console.error(error);
+			setComponentToRender(
+				<Procaptcha config={frictionlessConfig} callbacks={callbacks} />,
+			);
+		}
+	};
 
-		detectAndSetComponent();
-	}, [config, callbacks, detectBot, config.language]);
+	const [componentToRender, setComponentToRender] = useState(
+		<ProcaptchaPlaceholder
+			config={config}
+			callbacks={callbacks}
+			frictionlessLoading={false}
+			detectAndSetComponent={detectAndSetComponent}
+		/>,
+	);
 
 	return componentToRender;
 };

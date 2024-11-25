@@ -17,6 +17,7 @@ import {
 	type ProcaptchaToken,
 } from "@prosopo/types";
 import { getParentForm } from "./form.js";
+import { reset } from "../index.js";
 
 export const getWindowCallback = (callbackName: string) => {
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
@@ -54,6 +55,7 @@ export const getDefaultCallbacks = (element: Element) => ({
 	},
 	onReset: () => {
 		removeProcaptchaResponse();
+		reset();
 		console.log("Captcha widget reset");
 	},
 });
@@ -197,14 +199,23 @@ export function setUserCallbacks(
 	// reset callback
 	if (renderOptions?.["reset-callback"]) {
 		if (typeof renderOptions["reset-callback"] === "function") {
-			callbacks.onReset = renderOptions["reset-callback"];
+			const fn = renderOptions["reset-callback"];
+			callbacks.onReset = () => {
+				removeProcaptchaResponse();
+				reset();
+				fn();
+			};
 		} else {
 			const onResetCallbackName =
 				typeof renderOptions?.["reset-callback"] === "string"
 					? renderOptions?.["reset-callback"]
 					: element.getAttribute("data-reset-callback");
 			if (onResetCallbackName)
-				callbacks.onReset = getWindowCallback(onResetCallbackName);
+				callbacks.onReset = () => {
+					removeProcaptchaResponse();
+					reset();
+					getWindowCallback(onResetCallbackName)();
+				};
 		}
 	}
 }
