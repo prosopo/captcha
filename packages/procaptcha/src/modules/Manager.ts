@@ -58,7 +58,6 @@ const defaultState = (): Partial<ProcaptchaState> => {
 		isHuman: false,
 		captchaApi: undefined,
 		account: undefined,
-		// don't handle timeout here, this should be handled by the state management
 	};
 };
 
@@ -112,7 +111,6 @@ export function Manager(
 				}
 				await cryptoWaitReady();
 
-				resetState();
 				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
 				updateState({ loading: true });
 				updateState({
@@ -158,26 +156,12 @@ export function Manager(
 						throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
 					}
 
-					// setup timeout, taking the timeout from the individual captcha or the global default
-					const timeMillis: number = challenge.captchas
-						.map(
-							(captcha) =>
-								captcha.timeLimitMs || config.captchas.image.challengeTimeout,
-						)
-						.reduce((a: number, b: number) => a + b);
-					const timeout = setTimeout(() => {
-						events.onChallengeExpired();
-						// expired, disallow user's claim to be human
-						updateState({ isHuman: false, showModal: false, loading: false });
-					}, timeMillis);
-
 					// update state with new challenge
 					updateState({
 						index: 0,
 						solutions: challenge.captchas.map(() => []),
 						challenge,
 						showModal: true,
-						timeout,
 					});
 				}
 			},
@@ -191,9 +175,6 @@ export function Manager(
 	const submit = async () => {
 		await providerRetry(
 			async () => {
-				// disable the time limit, user has submitted their solution in time
-				clearTimeout();
-
 				if (!state.challenge) {
 					throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
 						context: { error: "Cannot submit, no Captcha found in state" },
@@ -296,7 +277,6 @@ export function Manager(
 							},
 						}),
 					);
-					setValidChallengeTimeout();
 				} else {
 					events.onFailed();
 				}
@@ -309,17 +289,15 @@ export function Manager(
 	};
 
 	const cancel = async () => {
-		// disable the time limit
-		clearTimeout();
 		// abandon the captcha process
 		resetState();
 		// trigger the onClose event
 		events.onClose();
+		// trigger full reset
+		callbacks?.onReset?.();
 	};
 
 	const reload = async () => {
-		// disable the time limit
-		clearTimeout();
 		// abandon the captcha process
 		resetState();
 		// trigger the onClose event
@@ -386,28 +364,7 @@ export function Manager(
 		return new ProviderApi(providerUrl, config.account.address);
 	};
 
-	const clearTimeout = () => {
-		// clear the timeout
-		window.clearTimeout(Number(state.timeout));
-		// then clear the timeout from the state
-		updateState({ timeout: undefined });
-	};
-
-	const setValidChallengeTimeout = () => {
-		const timeMillis: number = configOptional.captchas.image.solutionTimeout;
-		const successfullChallengeTimeout = setTimeout(() => {
-			// Human state expired, disallow user's claim to be human
-			updateState({ isHuman: false });
-
-			events.onExpired();
-		}, timeMillis);
-
-		updateState({ successfullChallengeTimeout });
-	};
-
 	const resetState = () => {
-		// clear timeout just in case a timer is still active (shouldn't be)
-		clearTimeout();
 		updateState(defaultState());
 		events.onReset();
 	};

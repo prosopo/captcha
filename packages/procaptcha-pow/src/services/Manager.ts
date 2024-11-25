@@ -211,6 +211,8 @@ export const Manager = (
 						loading: false,
 						error: challenge.error.message,
 					});
+					events.onFailed();
+					callbacks?.onReset?.();
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);
 

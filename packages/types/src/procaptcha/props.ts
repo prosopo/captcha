@@ -32,3 +32,8 @@ export interface ProcaptchaProps {
 	callbacks?: Partial<ProcaptchaCallbacks>;
 	frictionlessState?: FrictionlessState;
 }
+
+export interface ProcaptchaPlaceholderProps extends ProcaptchaProps {
+	detectAndSetComponent: () => void;
+	frictionlessLoading: boolean;
+}

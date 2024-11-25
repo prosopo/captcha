@@ -54,6 +54,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		}
 	}, [config.language]);
 
+	if (config.startOnRender) {
+		manager.start();
+		config.startOnRender = false;
+	}
+
 	return (
 		<div>
 			<div

@@ -30,6 +30,8 @@ export const ProcaptchaPow = (props: ProcaptchaProps) => (
 			<ProcaptchaPlaceholder
 				config={props.config}
 				callbacks={props.callbacks}
+				frictionlessLoading={true}
+				detectAndSetComponent={() => {}}
 			/>
 		}
 	>

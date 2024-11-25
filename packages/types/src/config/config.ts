@@ -261,6 +261,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
+		startOnRender: boolean().optional().default(false),
 	}),
 );
 
