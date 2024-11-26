@@ -14,15 +14,12 @@ include_labels = ["vector.provider=true"]
 type = "remap"
 inputs = ["provider"]
 source = '''
-.host="$OO_HOST"
-del(.container_created_at)
-del(.container_id)
-del(.host)
-del(.image)
-del(.label)
-del(.source_type)
-del(.stream)
+.=parse_json!(string!(.message))
+del(.message)
 del(.timestamp)
+del(._timestamp)
+.host="$OO_HOST"
+del(.date)
 '''
 
 # print to console the provider logs
@@ -70,7 +67,6 @@ source = '''
 .host="$OO_HOST"
 del(.id)
 del(.from)
-del(.host)
 del(.Type)
 .name=.Actor.Attributes.name
 del(.Actor)
@@ -79,6 +75,10 @@ del(.time)
 del(.timeNano)
 del(.source_type)
 del(.timestamp)
+del(._timestamp)
+del(.pid)
+del(.stream)
+del(.command)
 '''
 
 # print docker events to console
@@ -111,11 +111,15 @@ inputs = ["caddy"]
 source = '''
 .=parse_json!(string!(.message))
 .host="$OO_HOST"
+del(.timestamp)
+del(._timestamp)
 del(.ts)
 del(.user_id)
 del(.size)
 del(.message)
 del(.resp_headers)
+del(.bytes_read)
+del(.logger)
 '''
 
 # send to openobserve
@@ -123,35 +127,6 @@ del(.resp_headers)
 type = "http"
 inputs = ["caddy_format"]
 uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = false
-
-[sources.mongo]
-type = "docker_logs"
-include_labels = ["vector.mongo=true"]
-
-[transforms.mongo_format]
-type = "remap"
-inputs = ["mongo"]
-source = '''
-.=parse_json!(string!(.message))
-.host="$OO_HOST"
-del(.t)
-del(.id)
-del(._timestamp)
-'''
-
-# send to openobserve
-[sinks.openobserve_mongo]
-type = "http"
-inputs = ["mongo_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_mongo/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -172,6 +147,7 @@ source = '''
 .=parse_json!(string!(.message))
 .host="$OO_HOST"
 del(.time)
+del(.notify)
 '''
 
 # send to openobserve

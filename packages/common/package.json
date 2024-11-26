@@ -1,11 +1,11 @@
 {
 	"name": "@prosopo/common",
-	"version": "2.1.10",
+	"version": "2.1.14",
 	"description": "Prosopo common library",
 	"main": "./dist/index.js",
 	"type": "module",
 	"engines": {
-		"node": ">=20",
+		"node": "20",
 		"npm": ">=9"
 	},
 	"exports": {
@@ -25,17 +25,18 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/locale": "2.1.10",
+		"@prosopo/locale": "2.1.14",
 		"consola": "3.2.3",
+		"express": "4.21.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.1.10",
+		"@prosopo/config": "2.1.14",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
-		"dotenv": "16.4.5",
-		"npm-run-all": "4.1.5",
 		"del-cli": "6.0.0",
+		"dotenv": "16.4.5",
+		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",

@@ -30,6 +30,7 @@ import {
 	type UserAccountBlockRule,
 	type UserCommitment,
 } from "@prosopo/types-database";
+import { parseUrl } from "@prosopo/util";
 import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
@@ -171,7 +172,7 @@ export class ClientTaskManager {
 				this.logger,
 			);
 
-			const updatedAtTimestamp = lastTask ? lastTask.updated || 0 : 0;
+			const updatedAtTimestamp = 0;
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -232,7 +233,8 @@ export class ClientTaskManager {
 	async addUserBlockRules(
 		userAccounts: string[],
 		hardBlock: boolean,
-		dappAccount: string,
+		global: boolean,
+		dappAccount?: string,
 	): Promise<void> {
 		validateAddress(dappAccount, false, 42);
 		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
@@ -241,12 +243,34 @@ export class ClientTaskManager {
 				dappAccount,
 				userAccount,
 				type: BlockRuleType.userAccount,
-				// TODO don't store global on these
-				global: false,
+				global,
 				hardBlock,
 			};
 		});
 		await this.providerDB.storeUserBlockRuleRecords(rules);
+	}
+
+	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+		if (!referrer || !clientDomain) return false;
+		if (clientDomain === "*") return true;
+		try {
+			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
+
+			// Special case for localhost
+			if (referrerDomain === "localhost") return true;
+
+			return (
+				referrerDomain === allowedDomain ||
+				referrerDomain.endsWith(`.${allowedDomain}`)
+			);
+		} catch {
+			this.logger.error({
+				message: "Error in isSubdomainOrExactMatch",
+				context: { referrer, clientDomain },
+			});
+			return false;
+		}
 	}
 
 	private isCommitmentUpdated(
@@ -272,5 +296,21 @@ export class ClientTaskManager {
 			await processBatch(batch);
 			skip += batch.length;
 		}
+	}
+
+	private cleanReferrer(referrer: string): string {
+		const lowered = referrer.toLowerCase().trim();
+
+		// Remove trailing slashes safely
+		let cleaned = lowered;
+		const MAX_SLASHES = 10;
+		let slashCount = 0;
+
+		while (cleaned.endsWith("/") && slashCount < MAX_SLASHES) {
+			cleaned = cleaned.slice(0, -1);
+			slashCount++;
+		}
+
+		return cleaned;
 	}
 }

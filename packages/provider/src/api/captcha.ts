@@ -35,7 +35,10 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
-import type { Session, SessionRecord } from "@prosopo/types-database";
+import {
+	FrictionlessToken,
+	FrictionlessTokenRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, version } from "@prosopo/util";
 import express, { type Router } from "express";
@@ -64,11 +67,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} userAccount - Dapp User AccountId
 	 * @return {Captcha} - The Captcha data
 	 */
-	const GetImageCaptchaChallengePath: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}`;
-	router.get(GetImageCaptchaChallengePath, async (req, res, next) => {
+	router.post(ApiPaths.GetImageCaptchaChallenge, async (req, res, next) => {
 		let parsed: CaptchaRequestBodyTypeOutput;
 		try {
-			parsed = CaptchaRequestBody.parse(req.params);
+			parsed = CaptchaRequestBody.parse(req.body);
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
@@ -107,7 +109,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					datasetId,
 					user,
 					getIPAddress(req.ip || ""),
-					flatten(req.headers, ","),
+					flatten(req.headers),
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
@@ -196,7 +198,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					Number.parseInt(parsed[ApiParams.timestamp]),
 					parsed[ApiParams.signature].provider.requestHash,
 					getIPAddress(req.ip || "").bigInt(),
-					flatten(req.headers, ","),
+					flatten(req.headers),
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -265,7 +267,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				if (!sessionRecord) {
 					return next(
 						new ProsopoApiError("API.BAD_REQUEST", {
-							context: { error: "Session ID not found", code: 400 },
+							context: {
+								error: "Session ID not found",
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
 						}),
 					);
 				}
@@ -273,7 +280,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Throw an error
 				return next(
 					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
-						context: { code: 400, siteKey: dapp },
+						context: { code: 400, siteKey: dapp, user },
 					}),
 				);
 			}
@@ -283,7 +290,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			if (!origin) {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { error: "Origin header not found", code: 400 },
+						context: {
+							error: "Origin header not found",
+							code: 400,
+							siteKey: dapp,
+							user,
+						},
 					}),
 				);
 			}
@@ -305,7 +317,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				challenge.difficulty,
 				challenge.providerSignature,
 				getIPAddress(req.ip || "").bigInt(),
-				flatten(req.headers, ","),
+				flatten(req.headers),
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
@@ -328,6 +340,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					context: {
 						code: 500,
 						siteKey: req.body.dapp,
+						user: req.body.user,
 					},
 				}),
 			);
@@ -399,7 +412,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				verifiedTimeout,
 				signature.user.timestamp,
 				getIPAddress(req.ip || ""),
-				flatten(req.headers, ","),
+				flatten(req.headers),
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);
@@ -425,11 +438,29 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
-				const botScore = await getBotScore(token);
+
+				// Check if the token has already been used
+				const isTokenUsed = await tasks.db.checkFrictionlessTokenRecord(token);
+				if (isTokenUsed) {
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+				}
+
+				const lScore = tasks.frictionlessManager.checkLangRules(
+					req.headers["accept-language"] || "",
+				);
+
+				const botScore = (await getBotScore(token)) + lScore;
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
 					clientConfig?.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
+
+				// Store the token
+				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+					token,
+					score: botScore,
+					threshold: botThreshold,
+				});
 
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
@@ -452,7 +483,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				if (Number(botScore) > botThreshold)
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
-				const response = await tasks.frictionlessManager.sendPowCaptcha();
+				const response =
+					await tasks.frictionlessManager.sendPowCaptcha(tokenId);
 				return res.json(response);
 			} catch (err) {
 				console.error("Error in frictionless captcha challenge:", err);
@@ -465,39 +497,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 		},
 	);
-
-	/**
-	 * Gets public details of the provider
-	 */
-	router.post(ApiPaths.UpdateProviderClients, async (req, res, next) => {
-		try {
-			await tasks.clientTaskManager.getClientList();
-			return res.json({ message: "Provider updated" });
-		} catch (err) {
-			tasks.logger.error(err);
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-				}),
-			);
-		}
-	});
-
-	/**
-	 * Gets public details of the provider
-	 */
-	router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
-		try {
-			return res.json({ version, ...{ message: "Provider online" } });
-		} catch (err) {
-			tasks.logger.error({ err, params: req.params });
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
-				}),
-			);
-		}
-	});
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.

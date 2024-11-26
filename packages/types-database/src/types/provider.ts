@@ -39,7 +39,7 @@ import {
 	TimestampSchema,
 } from "@prosopo/types";
 import type { DeleteResult } from "mongodb";
-import type mongoose from "mongoose";
+import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
 	type ZodType,
@@ -59,13 +59,16 @@ export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
-const ONE_WEEK = 60 * 60 * 24 * 7;
+const ONE_DAY = 60 * 60 * 24;
+const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
 });
+// Set an index on the account field, ascending
+ClientRecordSchema.index({ account: 1 });
 
 export enum StoredStatusNames {
 	notStored = "notStored",
@@ -193,7 +196,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
 );
 
 // Set an index on the captchaId field, ascending
-PoWCaptchaRecordSchema.index({ captchaId: 1 });
+PoWCaptchaRecordSchema.index({ challenge: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -324,17 +327,44 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 	{ expireAfterSeconds: ONE_WEEK },
 );
 
+export type FrictionlessToken = {
+	token: string;
+	score: number;
+	threshold: number;
+};
+
+export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
+
+export const FrictionlessTokenRecordSchema =
+	new Schema<FrictionlessTokenRecord>(
+		{
+			token: { type: String, required: true, unique: true },
+			score: { type: Number, required: true },
+			threshold: { type: Number, required: true },
+		},
+		{ expireAfterSeconds: ONE_DAY },
+	);
+
+FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
+	tokenId: ObjectId;
 };
 
 export type SessionRecord = mongoose.Document & Session;
 
-export const SessionRecordSchema = new Schema<SessionRecord>({
-	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true },
-});
+export const SessionRecordSchema = new Schema<SessionRecord>(
+	{
+		sessionId: { type: String, required: true, unique: true },
+		createdAt: { type: Date, required: true },
+		tokenId: {
+			type: mongoose.Schema.Types.ObjectId,
+		},
+	},
+	{ expireAfterSeconds: ONE_DAY },
+);
 
 type BlockRule = {
 	global: boolean;
@@ -353,7 +383,7 @@ export interface IPAddressBlockRule extends BlockRule {
 }
 
 export interface UserAccountBlockRule extends BlockRule {
-	dappAccount: string;
+	dappAccount?: string;
 	userAccount: string;
 }
 
@@ -375,16 +405,18 @@ export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
 });
 
 IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
+IPBlockRuleRecordSchema.index({ ip: 1, dappAccount: 1 }, { unique: true });
 
 export const UserAccountBlockRuleSchema =
 	new Schema<UserAccountBlockRuleRecord>({
-		dappAccount: { type: String, required: true },
+		dappAccount: { type: String, required: false },
 		userAccount: { type: String, required: true },
 		global: { type: Boolean, required: true },
 		hardBlock: { type: Boolean, required: false },
 		type: { type: String, enum: BlockRuleType, required: true },
 	});
 
+UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
 UserAccountBlockRuleSchema.index(
 	{ dappAccount: 1, userAccount: 1 },
 	{ unique: true },
@@ -557,6 +589,12 @@ export interface IProviderDatabase extends IDatabase {
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
+
+	storeFrictionlessTokenRecord(
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId>;
+
+	checkFrictionlessTokenRecord(token: string): Promise<boolean>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 

@@ -25,20 +25,10 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 	const router = Router();
 	const tasks = new Tasks(env);
 
-	router.post(AdminApiPaths.UpdateDataset, async (req, res, next) => {
-		try {
-			const result = await tasks.datasetManager.providerSetDataset(req.body);
-
-			console.info(`Dataset update complete: ${result}`);
-			res.status(200).send(result);
-		} catch (err) {
-			logError(err, tasks.logger);
-			res.status(500).send("An internal server error occurred.");
-		}
-	});
-
 	router.post(AdminApiPaths.SiteKeyRegister, async (req, res, next) => {
 		try {
+			tasks.logger.info("Registering site key, request body:");
+			tasks.logger.info(req.body);
 			const { siteKey, settings } = RegisterSitekeyBody.parse(req.body);
 			const temp = settings || {};
 			await tasks.clientTaskManager.registerSiteKey(siteKey, temp);

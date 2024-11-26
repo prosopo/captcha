@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/prosoponator-bot",
-	"version": "2.1.10",
+	"version": "2.1.14",
 	"description": "",
 	"private": true,
 	"scripts": {
@@ -15,8 +15,8 @@
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
-		"npm-run-all": "4.1.5",
 		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
@@ -25,12 +25,13 @@
 	},
 	"dependencies": {
 		"@actions/core": "1.10.1",
-		"@actions/github": "6.0.0"
+		"@actions/github": "6.0.0",
+		"express": "4.21.1"
 	},
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
-		"node": ">=20",
+		"node": "20",
 		"npm": ">=9"
 	}
 }

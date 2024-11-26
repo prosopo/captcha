@@ -106,6 +106,7 @@
 		"UNKNOWN": "Error desconocido en el API",
 		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
 		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
+		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
 		"INVALID_SITE_KEY": "Clave de sitio no válida",
 		"INVALID_IP": "IP no válida"
 	},

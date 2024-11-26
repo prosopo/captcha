@@ -329,12 +329,12 @@ document.getElementById('procaptcha-script').addEventListener('load', function (
 ### React Demo
 
 You can view an end-to-end example of how to implement Procaptcha in a React application in
-our [client-example](/modules/_prosopo_client_example.html)
-and [client-example-server](/modules/_prosopo_client_example_server.html) packages. Details
+our [client-example](https://github.com/prosopo/captcha/tree/main/demos/client-example)
+and [client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server) packages. Details
 of how to run the examples are in the documentation at the previous links.
 
 ### HTML Demo
 
 You can view an example of the bundle being used in a simple HTML page in
-the [client-bundle-example](/modules/_prosopo_client_bundle_example.html). This example is
+the [client-bundle-example](https://github.com/prosopo/captcha/tree/main/demos/client-bundle-example). This example is
 frontend only.

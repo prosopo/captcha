@@ -294,6 +294,12 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoClientUri: string().optional(),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
+		lRules: record(string(), number()).optional(),
+		authAccount: object({
+			address: string().optional(),
+			secret: string().optional(),
+			password: string().optional(),
+		}),
 	}),
 );
 

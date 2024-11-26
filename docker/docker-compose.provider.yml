@@ -11,8 +11,9 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.2
         logging:
             driver: 'json-file'
             options:
@@ -40,8 +41,9 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.3
         logging:
             driver: 'json-file'
             options:
@@ -53,6 +55,10 @@ services:
             retries: 3
             start_period: 30s
             timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     database-dev:
         container_name: database
         profiles:
@@ -65,7 +71,8 @@ services:
         env_file:
             - ../dev/scripts/.env.development
         networks:
-            - internal
+            internal:
+                ipv4_address: 172.18.0.4
         logging:
             driver: 'json-file'
             options:
@@ -94,7 +101,8 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         networks:
-            - internal
+            internal:
+                ipv4_address: 172.18.0.5
         logging:
             driver: 'json-file'
             options:
@@ -111,7 +119,7 @@ services:
         profiles:
             - production
             - staging
-        image: caddy:2
+        image: prosopo/caddy:latest
         env_file:
             - ../.env.${NODE_ENV}
         labels:
@@ -127,7 +135,9 @@ services:
             - caddy_data:/data
             - caddy_config:/config
         networks:
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.6
         logging:
             driver: 'json-file'
             options:
@@ -145,7 +155,7 @@ services:
             - production
             - staging
         image: containrrr/watchtower
-        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30"]
+        command: ["--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30", "--include-restarting"]
         labels:
             - "vector.watchtower=true" # enable logging as a watchtower
             - "vector.docker=true" # log docker events
@@ -190,6 +200,11 @@ networks:
     internal:
         name: internal
         internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
     external:
         name: external
 volumes:

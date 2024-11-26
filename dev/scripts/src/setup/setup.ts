@@ -131,8 +131,9 @@ export async function setup(force: boolean) {
 		const config = defaultConfig();
 		const providerSecret = config.account.secret;
 		const pair = await getPairAsync(providerSecret);
+		const authAccount = await getPairAsync(config.authAccount.secret);
 
-		const env = new ProviderEnvironment(defaultConfig(), pair);
+		const env = new ProviderEnvironment(defaultConfig(), pair, authAccount);
 		await env.isReady();
 
 		defaultProvider.secret = mnemonic;
