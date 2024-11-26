@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import z from "zod";
-import translationsDe from "./locales/de.json" assert { type: "json" };
-import translationsEn from "./locales/en.json" assert { type: "json" };
-import translationsEs from "./locales/es.json" assert { type: "json" };
-import translationsFr from "./locales/fr.json" assert { type: "json" };
-import translationsIt from "./locales/it.json" assert { type: "json" };
-import translationsPtBR from "./locales/pt-BR.json" assert { type: "json" };
-import translationsPt from "./locales/pt.json" assert { type: "json" };
+import translationsDe from "./locales/de.json" with { type: "json" };
+import translationsEn from "./locales/en.json" with { type: "json" };
+import translationsEs from "./locales/es.json" with { type: "json" };
+import translationsFr from "./locales/fr.json" with { type: "json" };
+import translationsIt from "./locales/it.json" with { type: "json" };
+import translationsPtBR from "./locales/pt-BR.json" with { type: "json" };
+import translationsPt from "./locales/pt.json" with { type: "json" };
 
 export const Languages = ["de", "en", "es", "fr", "it", "pt", "pt-BR"] as const;
 
