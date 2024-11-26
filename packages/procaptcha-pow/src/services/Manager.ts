@@ -55,7 +55,6 @@ export const Manager = (
 			isHuman: false,
 			captchaApi: undefined,
 			account: undefined,
-			// don't handle timeout here, this should be handled by the state management
 		};
 	};
 

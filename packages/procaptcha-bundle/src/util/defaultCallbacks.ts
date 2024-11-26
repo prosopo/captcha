@@ -55,7 +55,6 @@ export const getDefaultCallbacks = (element: Element) => ({
 	},
 	onReset: () => {
 		removeProcaptchaResponse();
-		reset();
 		console.log("Captcha widget reset");
 	},
 });
