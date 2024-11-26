@@ -22,7 +22,7 @@ import {
 	type Captcha,
 	type IUserSettings,
 } from "@prosopo/types";
-import { checkboxClass, webComponentTag } from "../support/commands.js";
+import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 describe("Captchas", () => {
 	before(async () => {
@@ -69,7 +69,7 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
-			cy.get(webComponentTag).shadow().find(checkboxClass).should("be.visible");
+			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
 		});
@@ -90,11 +90,7 @@ describe("Captchas", () => {
 					cy.clickNextButton();
 				});
 			});
-			cy.get(webComponentTag)
-				.shadow()
-				.find(checkboxClass)
-				.first()
-				.should("not.be.checked");
+			getWidgetElement(checkboxClass).first().should("not.be.checked");
 		});
 
 		// check the logs by going through all recorded calls
@@ -117,11 +113,7 @@ describe("Captchas", () => {
 					})
 					.then(() => {
 						// Get inputs of type checkbox
-						cy.get(webComponentTag)
-							.shadow()
-							.find(checkboxClass)
-							.first()
-							.should("be.checked");
+						getWidgetElement(checkboxClass).first().should("be.checked");
 					});
 			});
 		});

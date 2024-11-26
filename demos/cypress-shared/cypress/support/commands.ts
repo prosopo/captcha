@@ -39,17 +39,21 @@ declare global {
 }
 
 export const checkboxClass = '[type="checkbox"]';
-export const webComponentTag = "prosopo-procaptcha";
+
+export function getWidgetElement(
+	selector: string,
+	options: object = {},
+): Chainable<JQuery<HTMLElement>> {
+	options = { ...options, includeShadowDom: true };
+
+	return cy.get(selector, options);
+}
 
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 		"getCaptcha",
 	);
-	cy.get(webComponentTag)
-		.shadow()
-		.find(checkboxClass, { timeout: 12000 })
-		.first()
-		.click();
+	getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
 
 	return cy
 		.wait("@getCaptcha", { timeout: 36000 })
@@ -80,32 +84,24 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	return cy
-		.get("prosopo-procaptcha") // Get all elements with the tag name 'prosopo-procaptcha'
-		.each(($el) => {
-			cy.wrap($el)
-				.shadow()
-				.then(($shadow) => {
-					const $p = $shadow.find("p");
-
-					if (0 === $p.length) {
-						return;
-					}
-
-					cy.wrap($p)
-						.should("be.visible")
-						.parent()
-						.parent()
-						.parent()
-						.parent()
-						.children()
-						.next()
-						.children()
-						.first()
-						.children()
-						.as("captchaImages");
-				});
+	return getWidgetElement("p").then(($p) => {
+		const $pWithText = $p.filter((index, el) => {
+			return Cypress.$(el).text().includes("all containing");
 		});
+
+		cy.wrap($pWithText)
+			.should("be.visible")
+			.parent()
+			.parent()
+			.parent()
+			.parent()
+			.children()
+			.next()
+			.children()
+			.first()
+			.children()
+			.as("captchaImages");
+	});
 }
 
 function getSelectors(captcha: Captcha) {
@@ -145,16 +141,13 @@ function clickCorrectCaptchaImages(
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
 			// Click the correct images
-			cy.get(webComponentTag)
-				.shadow()
-				.find(selectors.join(", "))
-				.then((elements) => {
-					if (elements.length > 0) {
-						cy.wrap(elements).click({ multiple: true });
-					}
-					console.log("No images to select");
-					cy.clickNextButton();
-				});
+			getWidgetElement(selectors.join(", ")).then((elements) => {
+				if (elements.length > 0) {
+					cy.wrap(elements).click({ multiple: true });
+				}
+				console.log("No images to select");
+				cy.clickNextButton();
+			});
 		});
 	});
 }
@@ -164,10 +157,7 @@ function clickNextButton() {
 		"postSolution",
 	);
 	// Go to the next captcha or submit solution
-	cy.get(webComponentTag)
-		.shadow()
-		.find('button[data-cy="button-next"]')
-		.click({ force: true });
+	getWidgetElement('button[data-cy="button-next"]').click({ force: true });
 	cy.wait(0);
 }
 
