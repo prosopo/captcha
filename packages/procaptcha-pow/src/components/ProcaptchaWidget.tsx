@@ -56,6 +56,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		}
 	}, [config.language]);
 
+	if (config.startOnRender) {
+		manager.current.start();
+		config.startOnRender = false;
+	}
+
 	return (
 		<div ref={captchaRef}>
 			<div

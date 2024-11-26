@@ -88,6 +88,7 @@ declare global {
 const start = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
+	console.log("Starting Procaptcha");
 	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
 
 	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit

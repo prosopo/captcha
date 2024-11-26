@@ -16,6 +16,7 @@ import {
 	type ProcaptchaRenderOptions,
 	type ProcaptchaToken,
 } from "@prosopo/types";
+import { reset } from "../index.js";
 import { getParentForm } from "./form.js";
 
 export const getWindowCallback = (callbackName: string) => {
@@ -197,14 +198,23 @@ export function setUserCallbacks(
 	// reset callback
 	if (renderOptions?.["reset-callback"]) {
 		if (typeof renderOptions["reset-callback"] === "function") {
-			callbacks.onReset = renderOptions["reset-callback"];
+			const fn = renderOptions["reset-callback"];
+			callbacks.onReset = () => {
+				removeProcaptchaResponse();
+				reset();
+				fn();
+			};
 		} else {
 			const onResetCallbackName =
 				typeof renderOptions?.["reset-callback"] === "string"
 					? renderOptions?.["reset-callback"]
 					: element.getAttribute("data-reset-callback");
 			if (onResetCallbackName)
-				callbacks.onReset = getWindowCallback(onResetCallbackName);
+				callbacks.onReset = () => {
+					removeProcaptchaResponse();
+					reset();
+					getWindowCallback(onResetCallbackName)();
+				};
 		}
 	}
 }

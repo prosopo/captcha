@@ -13,7 +13,9 @@
 // limitations under the License.
 /** @jsxImportSource @emotion/react */
 
-import type { ProcaptchaProps } from "@prosopo/types";
+import { useTranslation } from "@prosopo/locale-browser";
+import type { ProcaptchaPlaceholderProps } from "@prosopo/types";
+import Checkbox from "./Checkbox.js";
 import { ContainerDiv, WidthBasedStylesDiv } from "./Containers.js";
 import { LoadingSpinner } from "./LoadingSpinner.js";
 import Logo from "./Logo.js";
@@ -32,9 +34,12 @@ import { darkTheme, lightTheme } from "./theme.js";
 export const ProcaptchaPlaceholder = ({
 	config,
 	callbacks,
-}: ProcaptchaProps) => {
+	frictionlessLoading,
+	detectAndSetComponent,
+}: ProcaptchaPlaceholderProps) => {
 	const themeColor = config.theme === "light" ? "light" : "dark";
 	const theme = config.theme === "light" ? lightTheme : darkTheme;
+	const { t } = useTranslation();
 	return (
 		<div>
 			<div
@@ -85,10 +90,20 @@ export const ProcaptchaPlaceholder = ({
 												}}
 											>
 												<div style={{ display: "inline-flex" }}>
-													<LoadingSpinner
-														themeColor={themeColor}
-														aria-label="Loading spinner"
-													/>
+													{frictionlessLoading ? (
+														<LoadingSpinner
+															themeColor={themeColor}
+															aria-label="Loading spinner"
+														/>
+													) : (
+														<Checkbox
+															checked={false}
+															onChange={detectAndSetComponent}
+															themeColor={themeColor}
+															labelText={t("WIDGET.I_AM_HUMAN")}
+															aria-label="human checkbox"
+														/>
+													)}
 												</div>
 											</div>
 										</div>

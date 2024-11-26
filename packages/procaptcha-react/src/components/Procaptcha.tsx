@@ -29,6 +29,8 @@ const Procaptcha = (props: ProcaptchaProps) => (
 			<ProcaptchaPlaceholder
 				config={props.config}
 				callbacks={props.callbacks}
+				frictionlessLoading={false}
+				detectAndSetComponent={() => {}}
 			/>
 		}
 	>
