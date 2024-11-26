@@ -55,6 +55,10 @@ services:
             retries: 3
             start_period: 30s
             timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     database-dev:
         container_name: database
         profiles:
