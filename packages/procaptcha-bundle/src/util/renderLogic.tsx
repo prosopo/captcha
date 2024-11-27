@@ -1,3 +1,5 @@
+import createCache from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,37 +28,75 @@ import { setValidChallengeLength } from "./timeout.js";
 
 const identifierPrefix = "procaptcha-";
 
+function makeShadowRoot(
+	element: Element,
+	renderOptions?: ProcaptchaRenderOptions,
+): ShadowRoot {
+	// todo maybe introduce customCSS in renderOptions.
+	const customCss = "";
+
+	const wrapperElement = document.createElement("prosopo-procaptcha");
+
+	const wrapperShadow = wrapperElement.attachShadow({ mode: "open" });
+	wrapperShadow.innerHTML +=
+		'<style>:host{all:initial!important;}:host *{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
+	wrapperShadow.innerHTML +=
+		"" !== customCss ? `<style>${customCss}</style>` : "";
+
+	element.appendChild(wrapperElement);
+
+	return wrapperShadow;
+}
+
 export const renderLogic = (
 	elements: Element[],
 	config: ProcaptchaClientConfigOutput,
 	renderOptions?: ProcaptchaRenderOptions,
 ) => {
 	const roots: Root[] = [];
+
 	for (const element of elements) {
 		const callbacks = getDefaultCallbacks(element);
+		const shadowRoot = makeShadowRoot(element, renderOptions);
 
 		setUserCallbacks(renderOptions, callbacks, element);
 		setTheme(renderOptions, element, config);
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
 
+		const emotionCache = createCache({
+			key: "procaptcha",
+			prepend: true,
+			container: shadowRoot,
+		});
+
 		let root: Root | null = null;
 		switch (renderOptions?.captchaType) {
 			case "pow":
 				console.log("rendering pow");
-				root = createRoot(element, { identifierPrefix });
-				root.render(<ProcaptchaPow config={config} callbacks={callbacks} />);
+				root = createRoot(shadowRoot, { identifierPrefix });
+				root.render(
+					<CacheProvider value={emotionCache}>
+						<ProcaptchaPow config={config} callbacks={callbacks} />
+					</CacheProvider>,
+				);
 				break;
 			case "image":
 				console.log("rendering image");
-				root = createRoot(element, { identifierPrefix });
-				root.render(<Procaptcha config={config} callbacks={callbacks} />);
+				root = createRoot(shadowRoot, { identifierPrefix });
+				root.render(
+					<CacheProvider value={emotionCache}>
+						<Procaptcha config={config} callbacks={callbacks} />
+					</CacheProvider>,
+				);
 				break;
 			default:
 				console.log("rendering frictionless");
-				root = createRoot(element, { identifierPrefix });
+				root = createRoot(shadowRoot, { identifierPrefix });
 				root.render(
-					<ProcaptchaFrictionless config={config} callbacks={callbacks} />,
+					<CacheProvider value={emotionCache}>
+						<ProcaptchaFrictionless config={config} callbacks={callbacks} />
+					</CacheProvider>,
 				);
 				break;
 		}
