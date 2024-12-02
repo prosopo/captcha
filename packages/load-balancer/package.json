@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/load-balancer",
-	"version": "2.1.14",
+	"version": "2.1.15",
 	"description": "Provider load balancer",
 	"main": "dist/index.js",
 	"type": "module",
@@ -31,9 +31,9 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "2.1.14",
-		"@prosopo/config": "2.1.14",
-		"@prosopo/types": "2.1.14",
+		"@prosopo/common": "2.1.15",
+		"@prosopo/config": "2.1.15",
+		"@prosopo/types": "2.1.15",
 		"express": "4.21.1"
 	},
 	"devDependencies": {
