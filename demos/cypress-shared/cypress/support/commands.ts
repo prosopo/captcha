@@ -22,23 +22,38 @@ declare global {
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
 		interface Chainable<Subject = any> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
+
 			captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>;
+
 			clickCorrectCaptchaImages(
 				captcha: Captcha,
 			): Chainable<JQuery<HTMLElement>>;
+
 			getSelectors(captcha: Captcha): Cypress.Chainable<string[]>;
+
 			clickNextButton(): Cypress.Chainable<void>;
+
 			elementExists(element: string): Chainable<Subject>;
 		}
 	}
 }
 
 export const checkboxClass = '[type="checkbox"]';
+
+export function getWidgetElement(
+	selector: string,
+	options: object = {},
+): Chainable<JQuery<HTMLElement>> {
+	options = { ...options, includeShadowDom: true };
+
+	return cy.get(selector, options);
+}
+
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 		"getCaptcha",
 	);
-	cy.get(checkboxClass, { timeout: 12000 }).first().click();
+	getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
 
 	return cy
 		.wait("@getCaptcha", { timeout: 36000 })
@@ -69,19 +84,24 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	return cy
-		.xpath("//p[contains(text(),'all containing')]", { timeout: 4000 })
-		.should("be.visible")
-		.parent()
-		.parent()
-		.parent()
-		.parent()
-		.children()
-		.next()
-		.children()
-		.first()
-		.children()
-		.as("captchaImages");
+	return getWidgetElement("p").then(($p) => {
+		const $pWithText = $p.filter((index, el) => {
+			return Cypress.$(el).text().includes("all containing");
+		});
+
+		cy.wrap($pWithText)
+			.should("be.visible")
+			.parent()
+			.parent()
+			.parent()
+			.parent()
+			.children()
+			.next()
+			.children()
+			.first()
+			.children()
+			.as("captchaImages");
+	});
 }
 
 function getSelectors(captcha: Captcha) {
@@ -121,7 +141,7 @@ function clickCorrectCaptchaImages(
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
 			// Click the correct images
-			cy.get(selectors.join(", ")).then((elements) => {
+			getWidgetElement(selectors.join(", ")).then((elements) => {
 				if (elements.length > 0) {
 					cy.wrap(elements).click({ multiple: true });
 				}
@@ -137,7 +157,7 @@ function clickNextButton() {
 		"postSolution",
 	);
 	// Go to the next captcha or submit solution
-	cy.get('button[data-cy="button-next"]').click({ force: true });
+	getWidgetElement('button[data-cy="button-next"]').click({ force: true });
 	cy.wait(0);
 }
 

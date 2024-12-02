@@ -22,7 +22,7 @@ import {
 	type Captcha,
 	type IUserSettings,
 } from "@prosopo/types";
-import { checkboxClass } from "../support/commands.js";
+import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 describe("Captchas", () => {
 	before(async () => {
@@ -69,7 +69,7 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
-			cy.get(checkboxClass).should("be.visible");
+			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
 		});
@@ -100,7 +100,10 @@ describe("Captchas", () => {
 				cy.wait("@postSolution");
 
 				// Get checked checkboxes
-				cy.get("input[type='checkbox']:checked").should("have.length.gte", 1);
+				getWidgetElement(`${checkboxClass}:checked`).should(
+					"have.length.gte",
+					1,
+				);
 
 				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 				cy.get('input[type="password"]').type("password");
