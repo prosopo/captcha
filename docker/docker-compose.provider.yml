@@ -101,6 +101,7 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         networks:
+            external:
             internal:
                 ipv4_address: 172.18.0.5
         logging:
