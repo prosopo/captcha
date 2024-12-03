@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import type z from "zod";
+import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import {
 	type BaseContextParams,
 	type BaseErrorOptions,
 	ProsopoBaseError,
 } from "./index.js";
 
-export const zodParse = <T>(schema: z.ZodType<T>, value: unknown): T => {
+export const zodParse = <T, U extends ZodRawShape>(schema: ZodObject<U, UnknownKeysParam, ZodTypeAny, T, T>, value: unknown): T => {
 	const result = schema.safeParse(value);
 	if (result.success) {
 		return result.data;
