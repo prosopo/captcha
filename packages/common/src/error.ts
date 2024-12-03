@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
+import type { z } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 
-type BaseErrorOptions<ContextType> = {
+export type BaseErrorOptions<ContextType> = {
 	name?: string;
 	translationKey?: TranslationKey;
 	logger?: Logger;
@@ -24,18 +25,20 @@ type BaseErrorOptions<ContextType> = {
 	silent?: boolean;
 };
 
-interface BaseContextParams {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO remove any
+export interface BaseContextParams {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	[key: string]: any;
 	failedFuncName?: string;
 }
 
-type EnvContextParams = BaseContextParams & { missingEnvVars?: string[] };
-type ContractContextParams = BaseContextParams;
-type DBContextParams = BaseContextParams & { captchaId?: string[] };
-type CliContextParams = BaseContextParams;
-type DatasetContextParams = BaseContextParams;
-type ApiContextParams = BaseContextParams & { code?: number };
+export type EnvContextParams = BaseContextParams & {
+	missingEnvVars?: string[];
+};
+export type ContractContextParams = BaseContextParams;
+export type DBContextParams = BaseContextParams & { captchaId?: string[] };
+export type CliContextParams = BaseContextParams;
+export type DatasetContextParams = BaseContextParams;
+export type ApiContextParams = BaseContextParams & { code?: number };
 
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
@@ -174,5 +177,21 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		};
 		super(error, optionsAll);
 		this.code = code;
+	}
+}
+
+export type ZodParseParams = BaseContextParams & { zodErrors?: z.ZodIssue[] };
+
+export class ProsopoZodParseError extends ProsopoBaseError<ZodParseParams> {
+	constructor(msg: string, options: BaseErrorOptions<ZodParseParams>) {
+		const errorName = options?.name || "ProsopoParseError";
+		const optionsAll = {
+			...options,
+			name: errorName,
+			context: {
+				...options.context,
+			},
+		};
+		super(msg, optionsAll);
 	}
 }
