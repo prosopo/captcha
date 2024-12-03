@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.1.15",
+	"version": "2.1.16",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -26,14 +26,14 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/common": "2.1.15",
-		"@prosopo/load-balancer": "2.1.15",
-		"@prosopo/types": "2.1.15",
-		"@prosopo/util": "2.1.15",
+		"@prosopo/common": "2.1.16",
+		"@prosopo/load-balancer": "2.1.16",
+		"@prosopo/types": "2.1.16",
+		"@prosopo/util": "2.1.16",
 		"express": "4.21.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.1.15",
+		"@prosopo/config": "2.1.16",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
