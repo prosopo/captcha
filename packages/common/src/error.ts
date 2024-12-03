@@ -179,3 +179,19 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		this.code = code;
 	}
 }
+
+export type ZodParseParams = BaseContextParams & { zodErrors?: z.ZodIssue[] };
+
+export class ProsopoZodParseError extends ProsopoBaseError<ZodParseParams> {
+	constructor(msg: string, options: BaseErrorOptions<ZodParseParams>) {
+		const errorName = options?.name || "ProsopoParseError";
+		const optionsAll = {
+			...options,
+			name: errorName,
+			context: {
+				...options.context,
+			},
+		};
+		super(msg, optionsAll);
+	}
+}

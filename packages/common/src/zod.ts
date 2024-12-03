@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type z from "zod";
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from "zod";
-import {
-	type BaseContextParams,
-	type BaseErrorOptions,
-	ProsopoBaseError,
-} from "./index.js";
+import { ProsopoZodParseError } from "./error.js";
 
 export const zodParse = <T, U extends ZodRawShape>(schema: ZodObject<U, UnknownKeysParam, ZodTypeAny, T, T>, value: unknown): T => {
 	const result = schema.safeParse(value);
@@ -40,19 +35,3 @@ export const zodParse = <T, U extends ZodRawShape>(schema: ZodObject<U, UnknownK
 		},
 	});
 };
-
-export type ZodParseParams = BaseContextParams & { zodErrors?: z.ZodIssue[] };
-
-export class ProsopoZodParseError extends ProsopoBaseError<ZodParseParams> {
-	constructor(msg: string, options: BaseErrorOptions<ZodParseParams>) {
-		const errorName = options?.name || "ProsopoParseError";
-		const optionsAll = {
-			...options,
-			name: errorName,
-			context: {
-				...options.context,
-			},
-		};
-		super(msg, optionsAll);
-	}
-}
