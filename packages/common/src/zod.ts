@@ -15,7 +15,10 @@
 import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import { ProsopoZodParseError } from "./error.js";
 
-export const zodParse = <T, U extends ZodRawShape>(schema: ZodObject<U, UnknownKeysParam, ZodTypeAny, T, T>, value: unknown): T => {
+export const zodParse = <T, U extends ZodRawShape>(
+	schema: ZodObject<U, UnknownKeysParam, ZodTypeAny, T, T>,
+	value: unknown,
+): T => {
 	const result = schema.safeParse(value);
 	if (result.success) {
 		return result.data;
