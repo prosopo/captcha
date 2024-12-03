@@ -26,7 +26,8 @@ export type BaseErrorOptions<ContextType> = {
 };
 
 export interface BaseContextParams {
-	[key: string]: unknown;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	[key: string]: any;
 	failedFuncName?: string;
 }
 
