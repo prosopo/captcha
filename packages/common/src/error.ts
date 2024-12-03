@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
-import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 import type { z } from "zod";
+import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 
 export type BaseErrorOptions<ContextType> = {
 	name?: string;
@@ -31,7 +31,9 @@ export interface BaseContextParams {
 	failedFuncName?: string;
 }
 
-export type EnvContextParams = BaseContextParams & { missingEnvVars?: string[] };
+export type EnvContextParams = BaseContextParams & {
+	missingEnvVars?: string[];
+};
 export type ContractContextParams = BaseContextParams;
 export type DBContextParams = BaseContextParams & { captchaId?: string[] };
 export type CliContextParams = BaseContextParams;
