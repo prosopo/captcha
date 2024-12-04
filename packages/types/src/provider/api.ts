@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ApiJsonError } from "@prosopo/common";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -229,11 +230,6 @@ export interface UpdateProviderClientsResponse extends ApiResponse {
 export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
-
-export type ApiJsonError = {
-	message: string;
-	code: number;
-};
 
 export interface ApiResponse {
 	[ApiParams.status]: string;

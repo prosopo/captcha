@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
+import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
+import type { ApiJsonError } from "./types.js";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
@@ -176,3 +178,36 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		this.code = code;
 	}
 }
+
+export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
+	const code = "code" in err ? err.code : 400;
+	let message = err.message;
+	let jsonError: ApiJsonError = { code, message };
+	let statusMessage = err.message;
+	jsonError.message = message;
+	// unwrap the errors to get the actual error message
+	while (err instanceof ProsopoBaseError && err.context) {
+		// base error will not have a translation key
+		jsonError.code =
+			err.context.translationKey || err.translationKey || jsonError.code;
+		jsonError.message = err.message;
+		if (err.context.error) {
+			err = err.context.error;
+		} else {
+			break;
+		}
+	}
+
+	if (err instanceof ZodError) {
+		message = i18next.t("CAPTCHA.PARSE_ERROR");
+		statusMessage = message;
+		if (typeof err.message === "object") {
+			jsonError = err.message;
+		} else {
+			jsonError.message = JSON.parse(err.message);
+		}
+	}
+
+	jsonError.code = jsonError.code || code;
+	return { code, statusMessage, jsonError };
+};
