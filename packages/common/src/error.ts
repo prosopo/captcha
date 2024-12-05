@@ -202,7 +202,7 @@ export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 	}
 
 	if (isZodError(err)) {
-		message = i18next.t("CAPTCHA.PARSE_ERROR");
+		message = i18next.t("API.PARSE_ERROR");
 		statusMessage = message;
 		if (typeof err.message === "object") {
 			jsonError = err.message;

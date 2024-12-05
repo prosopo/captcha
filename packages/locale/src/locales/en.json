@@ -110,7 +110,8 @@
 		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
-		"INVALID_BODY": "Invalid body"
+		"INVALID_BODY": "Invalid body",
+		"PARSE_ERROR": "Error parsing request"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

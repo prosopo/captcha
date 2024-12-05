@@ -110,7 +110,8 @@
 		"INVALID_SITE_KEY": "Chave de site inválida",
 		"INVALID_IP": "IP inválido",
 		"INVALID_URL": "URL inválido",
-		"INVALID_BODY": "Corpo inválido"
+		"INVALID_BODY": "Corpo inválido",
+		"PARSE_ERROR": "Erro ao analisar a resposta"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parâmetro inválido"

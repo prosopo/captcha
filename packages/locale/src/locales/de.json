@@ -110,7 +110,8 @@
 		"INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
 		"INVALID_IP": "Ungültige IP",
 		"INVALID_URL": "Ungültiger URL",
-		"INVALID_BODY": "Ungültiger Körper"
+		"INVALID_BODY": "Ungültiger Körper",
+		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ungültiger Parameter"

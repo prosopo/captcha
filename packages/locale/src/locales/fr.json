@@ -110,7 +110,8 @@
 		"INVALID_SITE_KEY": "Clé de site non valide",
 		"INVALID_IP": "IP invalide",
 		"INVALID_URL": "URL inválida",
-		"INVALID_BODY": "Cuerpo inválido"
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Erreur d'analyse de la demande"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Paramètre invalide"
