@@ -200,7 +200,8 @@ export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 			break;
 		}
 	}
-	if (err instanceof ZodError) {
+
+	if (isZodError(err)) {
 		message = i18next.t("CAPTCHA.PARSE_ERROR");
 		statusMessage = message;
 		if (typeof err.message === "object") {
@@ -213,3 +214,9 @@ export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 	jsonError.code = jsonError.code || code;
 	return { code, statusMessage, jsonError };
 };
+
+export function isZodError(err: unknown): err is ZodError {
+	return Boolean(
+		err && (err instanceof ZodError || (err as ZodError).name === "ZodError"),
+	);
+}
