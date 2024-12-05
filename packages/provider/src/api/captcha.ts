@@ -26,29 +26,21 @@ import {
 	type CaptchaSolutionResponse,
 	type DappUserSolutionResult,
 	GetFrictionlessCaptchaChallengeRequestBody,
-	type GetFrictionlessCaptchaResponse,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
-	type TGetImageCaptchaChallengePathAndParams,
 } from "@prosopo/types";
-import {
-	FrictionlessToken,
-	FrictionlessTokenRecord,
-} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { flatten, version } from "@prosopo/util";
+import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
-import { v4 as uuidv4 } from "uuid";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
 
-const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**

@@ -33,7 +33,10 @@ describe("handleErrors", () => {
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
-		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT");
+		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
+			context: { code: 400 },
+		});
+		console.log(error);
 
 		handleErrors(error, mockRequest, mockResponse, mockNext);
 
@@ -43,11 +46,12 @@ describe("handleErrors", () => {
 		);
 		expect(mockResponse.send).toHaveBeenCalledWith({
 			error: {
-				code: "CONTRACT.INVALID_DATA_FORMAT",
+				code: 400,
+				key: "CONTRACT.INVALID_DATA_FORMAT",
 				message: "Invalid data format",
 			},
 		});
-		expect(mockResponse.status).toHaveBeenCalledWith(500);
+		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
@@ -136,7 +140,8 @@ describe("handleErrors", () => {
 		expect(mockResponse.status).toHaveBeenCalledWith(500);
 		expect(mockResponse.send).toHaveBeenCalledWith({
 			error: {
-				code: "GENERAL.ENVIRONMENT_NOT_READY",
+				code: 500,
+				key: "GENERAL.ENVIRONMENT_NOT_READY",
 				message: "Environment not ready",
 			},
 		});
