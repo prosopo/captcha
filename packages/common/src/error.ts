@@ -72,6 +72,9 @@ export abstract class ProsopoBaseError<
 	private logError(logger: Logger, logLevel: LogLevel, errorName?: string) {
 		const errorParams = { error: this.message, context: this.context };
 		const errorMessage = { errorType: errorName || this.name, errorParams };
+		if (logLevel === "debug") {
+			logger.debug(this.stack);
+		}
 		logger[logLevel](errorMessage);
 	}
 }
@@ -181,15 +184,15 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 
 export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 	const code = "code" in err ? err.code : 400;
-	let message = err.message;
+	let message = i18next.t(err.message);
 	let jsonError: ApiJsonError = { code, message };
 	let statusMessage = err.message;
 	jsonError.message = message;
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
 		// base error will not have a translation key
-		jsonError.code =
-			err.context.translationKey || err.translationKey || jsonError.code;
+		jsonError.key =
+			err.context.translationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = err.message;
 		if (err.context.error) {
 			err = err.context.error;
@@ -197,7 +200,6 @@ export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 			break;
 		}
 	}
-
 	if (err instanceof ZodError) {
 		message = i18next.t("CAPTCHA.PARSE_ERROR");
 		statusMessage = message;

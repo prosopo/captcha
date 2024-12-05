@@ -108,7 +108,9 @@
 		"INCORRECT_CAPTCHA_TYPE": "Falscher CAPTCHA-Typ",
 		"UNAUTHORIZED_ORIGIN_URL": "Nicht autorisierte Ursprungs-URL",
 		"INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
-		"INVALID_IP": "Ungültige IP"
+		"INVALID_IP": "Ungültige IP",
+		"INVALID_URL": "Ungültiger URL",
+		"INVALID_BODY": "Ungültiger Körper"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ungültiger Parameter"
