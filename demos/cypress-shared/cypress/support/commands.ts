@@ -84,7 +84,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	return getWidgetElement("p").then(($p) => {
+	return getWidgetElement(".prosopo-modalInner p").then(($p) => {
 		const $pWithText = $p.filter((index, el) => {
 			return Cypress.$(el).text().includes("all containing");
 		});
