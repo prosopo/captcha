@@ -24,7 +24,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"i18next": "21.9.2",
 		"i18next-http-backend": "1.4.5",
 		"i18next-http-middleware": "3.6.0",

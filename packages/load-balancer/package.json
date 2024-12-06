@@ -34,7 +34,7 @@
 		"@prosopo/common": "2.1.16",
 		"@prosopo/config": "2.1.16",
 		"@prosopo/types": "2.1.16",
-		"express": "4.21.1"
+		"express": "4.21.2"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",

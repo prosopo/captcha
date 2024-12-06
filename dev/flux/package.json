@@ -28,7 +28,7 @@
 		"@prosopo/config": "2.1.16",
 		"@prosopo/dotenv": "2.1.16",
 		"@prosopo/util": "2.1.16",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"openpgp": "5.11.2",
 		"qs": "6.13.0",
 		"socket.io-client": "4.7.5",
