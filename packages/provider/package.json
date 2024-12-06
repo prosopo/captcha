@@ -38,7 +38,7 @@
 		"@prosopo/types-env": "2.1.16",
 		"@prosopo/util": "2.1.16",
 		"cron": "3.1.7",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"ip-address": "10.0.1",
 		"node-fetch": "3.3.2",
 		"uuid": "10.0.0",

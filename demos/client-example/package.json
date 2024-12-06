@@ -23,7 +23,7 @@
 		"@prosopo/vite-plugin-watch-workspace": "2.1.16",
 		"@types/react-dom": "18.3.0",
 		"@vitejs/plugin-react": "4.3.1",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"react": "18.3.1",
 		"react-dom": "18.3.1",
 		"react-router-dom": "6.26.2"

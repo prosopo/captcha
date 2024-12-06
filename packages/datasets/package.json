@@ -41,7 +41,7 @@
 		"@prosopo/common": "2.1.16",
 		"@prosopo/types": "2.1.16",
 		"@prosopo/util": "2.1.16",
-		"express": "4.21.1"
+		"express": "4.21.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.1.16",

@@ -40,7 +40,7 @@
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "2.1.16",
 		"@prosopo/locale": "2.1.16",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"ip-address": "10.0.1",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8"

@@ -40,7 +40,7 @@
 		"@prosopo/util": "2.1.16",
 		"@typegoose/auto-increment": "4.6.0",
 		"cors": "2.8.5",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"jsonwebtoken": "9.0.2",
 		"mongodb-memory-server": "10.0.0",
 		"mongoose": "8.6.2",
