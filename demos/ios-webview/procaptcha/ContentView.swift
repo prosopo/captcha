@@ -12,8 +12,8 @@ struct WebView: UIViewRepresentable {
         let webViewConfiguration = WKWebViewConfiguration()
         webViewConfiguration.preferences.javaScriptEnabled = true
 
-        configuration.preferences.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
-        configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+        webViewConfiguration.preferences.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
+        webViewConfiguration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
 
         // Set up user content controller for message handling (logging)
         let userContentController = WKUserContentController()
