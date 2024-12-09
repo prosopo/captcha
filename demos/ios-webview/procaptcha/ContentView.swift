@@ -93,7 +93,7 @@ struct ContentView: View {
 <html>
 <head>
 <title>Procaptcha</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
 </head>
 <body>
