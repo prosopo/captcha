@@ -69,6 +69,9 @@ const CaptchaComponent = ({
 					boxShadow: "rgba(255, 255, 255, 0.2) 0px 0px 4px",
 					borderRadius: "4px",
 					backgroundColor: theme.palette.background.default,
+					userSelect: 'none',
+					touchAction: 'none',
+					overscrollBehavior: 'none',
 				}}
 			>
 				<div
