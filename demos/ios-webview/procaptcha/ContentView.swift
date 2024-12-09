@@ -46,7 +46,7 @@ struct WebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
         webView.navigationDelegate = context.coordinator
-        //webView.isInspectable = true
+        webView.isInspectable = true
         
         //DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
             webView.loadHTMLString(htmlString, baseURL: nil)
