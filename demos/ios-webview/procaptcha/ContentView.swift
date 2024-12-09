@@ -49,7 +49,8 @@ struct WebView: UIViewRepresentable {
         webView.isInspectable = true
         
         //DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-            webView.loadHTMLString(htmlString, baseURL: nil)
+        // baseURL must be set for localstorage to work. If localstorage is not required, it can be set to nil. Localstorage errors appear like "SecurityError: The operation is insecure."
+            webView.loadHTMLString(htmlString, baseURL: URL(string: "https://prosopo.io"))
         //}
         
         return webView
