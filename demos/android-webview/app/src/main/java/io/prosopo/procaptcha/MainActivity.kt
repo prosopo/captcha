@@ -138,7 +138,8 @@ class MainActivity : AppCompatActivity() {
                         <a href="https://prosopo.io">Link</a>
                         <input type="text" name="email" placeholder="Email" />
                         <input type="password" name="password" placeholder="Password" />
-                        <div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC"></div>
+                        <p>image</p>
+                        <div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="image"></div>
                         <br />
                         <input type="submit" value="Submit" />
                     </form>
