@@ -100,10 +100,6 @@ struct ContentView: View {
 <form action="" method="POST">
 <input type="text" name="email" placeholder="Email" />
 <input type="password" name="password" placeholder="Password" />
-<p>frictionless</p>
-<div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="frictionless"></div>
-<p>pow</p>
-<div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="pow"></div>
 <p>image</p>
 <div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="image"></div>
 <br />
