@@ -46,44 +46,12 @@ export const CaptchaWidget = ({
 		[themeColor],
 	);
 
-	const isTouchDevice = "ontouchstart" in window;
-
-	// Assumes a 3x3 grid, could be made more generic
 	const fullSpacing = `${theme.spacing.unit}px`;
 	const halfSpacing = `${theme.spacing.half}px`;
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	const paddingForImageColumns: { [key: number]: any } = {
-		0: {
-			paddingLeft: 0,
-			paddingRight: halfSpacing,
-			paddingTop: halfSpacing,
-			paddingBottom: halfSpacing,
-		},
-		1: {
-			paddingLeft: halfSpacing,
-			paddingRight: halfSpacing,
-			paddingTop: halfSpacing,
-			paddingBottom: halfSpacing,
-		},
-		2: {
-			paddingLeft: halfSpacing,
-			paddingRight: 0,
-			paddingTop: halfSpacing,
-			paddingBottom: halfSpacing,
-		},
-	};
-
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	const paddingForImageRows: { [key: number]: any } = {
-		0: { paddingTop: fullSpacing },
-		2: { paddingBottom: fullSpacing },
-	};
 
 	return (
 		<div
 			style={{
-				paddingRight: 0.5,
-				paddingBottom: 0.5,
 				// expand to full height / width of parent
 				width: "100%",
 				height: "100%",
@@ -91,41 +59,44 @@ export const CaptchaWidget = ({
 				display: "flex",
 				flexDirection: "row",
 				flexWrap: "wrap",
+				justifyContent: 'space-between',
+				paddingBottom: halfSpacing,
+				paddingRight: halfSpacing,
 			}}
 		>
 			{items.map((item, index) => {
 				const hash = getHash(item);
 				const imageStyle: Properties<string | number, string> = {
-					...paddingForImageColumns[index % 3],
-					...paddingForImageRows[Math.floor(index / 3)],
 					// enable the items in the grid to grow in width to use up excess space
 					flexGrow: 1,
 					// make the width of each item 1/3rd of the width overall, i.e. 3 columns
 					flexBasis: "33.3333%",
 					// include the padding / margin / border in the width
 					boxSizing: "border-box",
+					paddingLeft: halfSpacing,
+					paddingTop: halfSpacing,
 				};
 				return (
 					<div style={imageStyle} key={item.hash}>
 						<div
 							style={{
+								position: "relative",
 								cursor: "pointer",
 								height: "100%",
 								width: "100%",
 								border: 1,
+								padding: 0,
+								margin: 0,
 								borderStyle: "solid",
 								borderColor: theme.palette.grey[300],
 							}}
-							onClick={isTouchDevice ? undefined : () => onClick(hash)}
-							onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
+							onClick={() => onClick(hash)}
 						>
-							<div>
+							
 								<img
 									style={{
 										width: "100%", // image should be full width / height of the item
 										backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
-										opacity:
-											solution.includes(hash) && isTouchDevice ? "50%" : "100%", // iphone workaround
 										display: "block", // removes whitespace below imgs
 										objectFit: "contain", // contain the entire image in the img tag
 										aspectRatio: "1/1", // force AR to be 1, letterboxing images with different aspect ratios
@@ -135,28 +106,9 @@ export const CaptchaWidget = ({
 									// biome-ignore lint/a11y/noRedundantAlt: has to contain image
 									alt={`Captcha image ${index + 1}`}
 								/>
-							</div>
-
-							<div
-								style={{
-									// relative to where the element _should_ be positioned
-									position: "relative",
-									// make the overlay the full height/width of an item
-									width: "100%",
-									height: "100%",
-									// shift it up 100% to overlay the item element
-									top: "-100%",
-									visibility: solution.includes(hash) ? "visible" : "hidden",
-									// transition on opacity upon (de)selection
-									transition: "opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-									opacity: 1,
-								}}
-							>
 								<div
 									style={{
-										// make the overlay absolute positioned compare to its container
 										position: "absolute",
-										// spread across 100% width/height of the item box
 										top: 0,
 										left: 0,
 										bottom: 0,
@@ -169,6 +121,7 @@ export const CaptchaWidget = ({
 										justifyContent: "center",
 										// make bg half opacity, i.e. shadowing the item's img
 										backgroundColor: "rgba(0,0,0,0.5)",
+										visibility: solution.includes(hash) ? "visible" : "hidden",
 									}}
 								>
 									<svg
@@ -193,7 +146,6 @@ export const CaptchaWidget = ({
 										<path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
 									</svg>
 								</div>
-							</div>
 						</div>
 					</div>
 				);
