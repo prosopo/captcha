@@ -27,17 +27,25 @@ cp dev/scripts/env.test .env.test
 cp dev/scripts/env.test dev/scripts/.env.test
 cp dev/scripts/env.test packages/cli/.env.test
 cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-NODE_ENV="test" npm run setup
 ```
 
-### 4. E2E Client Tests
+### 4. Running E2E Client Tests Locally 
 
 #### 4.1) Launching services
 
-The necessary services are docked. To start them, run the following:
+The DB is docked, and to start the DB service, run the following:
 
 ```
 docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+NODE_ENV="test" npm run setup
+```
+
+> Note: the second command should be called once per the container lifetime, and adds the initial data, like domains,
+> siteKeys, etc.
+
+Then start the services:
+
+```
 npm run -w @prosopo/client-example-server build && NODE_ENV=test npm run start:server
 NODE_ENV=test npm run start:demo
 NODE_ENV=test npm run start:provider:admin
@@ -57,7 +65,7 @@ After the tests finish, stop the Docker services with:
 docker compose --file ./docker/docker-compose.test.yml down
 ```
 
-### 5. E2E Bundle Tests
+### 5. Running E2E Bundle Tests Locally
 
 #### 5.1) Launching Services
 
