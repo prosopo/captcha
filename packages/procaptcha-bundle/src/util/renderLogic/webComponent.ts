@@ -12,38 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 class WebComponent {
-	public addToElement(element: Element): ShadowRoot {
-		const webComponent = this.makeWebComponent();
-		const shadowRoot = this.addShadowDom(webComponent);
+    public addToElement(componentTag: string, element: Element): ShadowRoot {
+        const webComponent = this.makeWebComponent(componentTag);
+        const shadowRoot = this.addShadowDom(webComponent);
 
-		element.appendChild(webComponent);
+        element.appendChild(webComponent);
 
-		return shadowRoot;
-	}
+        return shadowRoot;
+    }
 
-	protected makeWebComponent(): HTMLElement {
-		return document.createElement("prosopo-procaptcha");
-	}
+    protected makeWebComponent(componentTag: string): HTMLElement {
+        return document.createElement(componentTag);
+    }
 
-	protected getBaseShadowStyles(): string {
-		// todo maybe introduce customCSS in renderOptions.
-		const customCss = "";
+    protected getBaseShadowStyles(): string {
+        // todo maybe introduce customCSS in renderOptions.
+        const customCss = "";
 
-		let baseStyles =
-			'<style>:host{all:initial!important;}:host *{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
-		baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
+        let baseStyles =
+            '<style>:host{all:initial!important;}:host *{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
+        baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
 
-		return baseStyles;
-	}
+        return baseStyles;
+    }
 
-	protected addShadowDom(webComponent: HTMLElement): ShadowRoot {
-		// fixme check if shadowRoot is already attached.
-		const shadowRoot = webComponent.attachShadow({ mode: "open" });
+    protected addShadowDom(webComponent: HTMLElement): ShadowRoot {
+        const shadowRoot = webComponent.attachShadow({mode: "open"});
 
-		shadowRoot.innerHTML += this.getBaseShadowStyles();
+        shadowRoot.innerHTML += this.getBaseShadowStyles();
 
-		return shadowRoot;
-	}
+        return shadowRoot;
+    }
 }
 
-export { WebComponent };
+export {WebComponent};

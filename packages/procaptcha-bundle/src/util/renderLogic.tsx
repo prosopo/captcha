@@ -12,31 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-	FeaturesEnum,
-	type ProcaptchaClientConfigOutput,
-	type ProcaptchaRenderOptions,
+    FeaturesEnum,
+    type ProcaptchaClientConfigOutput,
+    type ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import { CaptchaRenderer } from "./renderLogic/captcha/captchaRenderer.js";
-import { WebComponent } from "./renderLogic/webComponent.js";
-import { WidgetRenderer } from "./renderLogic/widgetRenderer.js";
+import {CaptchaRenderer} from "./renderLogic/captcha/captchaRenderer.js";
+import {WebComponent} from "./renderLogic/webComponent.js";
+import {WidgetRenderer} from "./renderLogic/widgetRenderer.js";
 
 const widgetRenderer = new WidgetRenderer(
-	new WebComponent(),
-	new CaptchaRenderer(),
+    new WebComponent(),
+    new CaptchaRenderer(),
 );
 
 export const renderLogic = (
-	elements: Element[],
-	config: ProcaptchaClientConfigOutput,
-	renderOptions?: ProcaptchaRenderOptions,
+    elements: Element[],
+    config: ProcaptchaClientConfigOutput,
+    renderOptions?: ProcaptchaRenderOptions,
 ) => {
-	return widgetRenderer.renderElements(
-		{
-			identifierPrefix: "procaptcha-",
-			defaultCaptchaType: FeaturesEnum.Frictionless,
-		},
-		elements,
-		config,
-		renderOptions,
-	);
+    return widgetRenderer.renderElements(
+        {
+            identifierPrefix: "procaptcha-",
+            webComponentTag: "prosopo-procaptcha",
+            defaultCaptchaType: FeaturesEnum.Frictionless,
+        },
+        elements,
+        config,
+        renderOptions,
+    );
 };
